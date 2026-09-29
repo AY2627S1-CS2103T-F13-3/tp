@@ -3,7 +3,7 @@ layout: page
 title: User Guide
 ---
 
-AddressBook Level 3 (AB3) is a **desktop application for managing contacts, optimized for use through a Command Line Interface (CLI)** while retaining the benefits of a Graphical User Interface (GUI). If you type quickly, AB3 can help you manage contacts faster than traditional GUI applications.
+PonHub is a desktop app for tuition centre administrators to keep student, tutor, and parent details together with lessons and student attendance. Its command box lets you work quickly from the keyboard while the graphical interface shows the records and results.
 
 * Table of Contents
 {:toc}
@@ -13,33 +13,24 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 ## Quick start
 
 1. Ensure that Java `25` or later is installed on your computer.<br>
-   **Mac users:** Ensure you have the precise JDK version prescribed [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
+   **Mac users:** Follow the JDK installation instructions [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
-1. Download the latest `.jar` file from [here](https://github.com/se-edu/addressbook-level3/releases).
+1. Download the latest PonHub `.jar` file from the project's Releases page.
 
-1. Copy the file to the folder you want to use as the _home folder_ for your AddressBook.
+1. Put the JAR file in the folder you want to use for PonHub. Keep this folder when moving or backing up your data.
 
-1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar addressbook.jar`.<br>
-   A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
-   ![Ui](images/Ui.png)
+1. Open a terminal in that folder and run `java -jar FILENAME.jar`, replacing `FILENAME.jar` with the downloaded file's name. The PonHub window should open.
 
-1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
-   Some example commands you can try:
+1. Enter a command in the command box and press Enter. Start with `help`, then try this example workflow:<br>
 
-   * `list` : Lists all contacts.
+   * `add r/tutor n/Mei Lim p/92345678` — adds a tutor.
+   * `add r/student n/Alex Tan l/S2 pp/91234567` — adds a student and their parent contact number.
+   * `list r/student` — shows students and their displayed indices.
+   * `addlesson 1 d/Mon t/1600-1730 s/Math tu/Mei Lim r/R1` — adds a lesson for the student displayed at index `1`.
 
-   * `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01` : Adds a contact named `John Doe` to the Address Book.
-
-   * `delete 3` : Deletes the 3rd contact shown in the current list.
-
-   * `clear` : Deletes all contacts.
-
-   * `exit` : Exits the app.
-
-1. Refer to the [Features](#features) section below for details of each command.
+   The indices in commands refer to the current displayed list, so check the list before using an index. See the [Command summary](#command-summary) for more commands.
 
 --------------------------------------------------------------------------------------------------------------------
-
 ## Features
 
 <div markdown="block" class="alert alert-info">
@@ -173,26 +164,35 @@ _Details coming soon ..._
 
 ## FAQ
 
-**Q**: How do I transfer my data to another computer?<br>
-**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous AddressBook home folder.
+**Q**: How do I transfer my PonHub data to another computer?<br>
+**A**: Close PonHub on both computers. Install the same or a compatible PonHub version on the new computer, then copy the `data` folder from the folder containing the old JAR to the folder containing the new JAR. Keep a backup of the original folder until you have opened PonHub and checked your records on the new computer.
+
+**Q**: Which index should I use for a student or lesson?<br>
+**A**: Use the number shown in the current list. Filtering or searching can change displayed indices. For attendance, provide both the student index and the lesson index shown for that student.
 
 --------------------------------------------------------------------------------------------------------------------
 
 ## Known issues
 
-1. **When using multiple screens**, if you move the application to a secondary screen, and later switch to using only the primary screen, the GUI will open off-screen. The remedy is to delete the `preferences.json` file created by the application before running the application again.
-2. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
+PonHub-specific known issues have not yet been documented in this guide.
 
 --------------------------------------------------------------------------------------------------------------------
 
 ## Command summary
 
-Action | Format, Examples
---------|------------------
-**Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 t/friend t/colleague`
-**Clear** | `clear`
-**Delete** | `delete INDEX`<br> e.g., `delete 3`
-**Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
-**Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List** | `list`
-**Help** | `help`
+Action | Format and example
+-------|-------------------
+**Add student** | `add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]`<br>e.g., `add r/student n/Alex Tan l/S2 pp/91234567`
+**Add tutor** | `add r/tutor n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]`<br>e.g., `add r/tutor n/Mei Lim p/92345678`
+**Add parent** | `add r/parent n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]`<br>e.g., `add r/parent n/Pat Tan p/91234567`
+**List people** | `list [r/ROLE]`<br>e.g., `list r/student`
+**Delete person** | `delete INDEX`<br>e.g., `delete 2`
+**Add lesson** | `addlesson INDEX d/DAY t/START-END s/SUBJECT tu/TUTOR_NAME r/ROOM`<br>e.g., `addlesson 1 d/Mon t/1600-1730 s/Math tu/Mei Lim r/R1`
+**Delete lesson** | `deletelesson INDEX LESSON_INDEX`<br>e.g., `deletelesson 1 2`
+**Search** | `search c/CATEGORY [FILTER_PREFIX/VALUE]...`<br>e.g., `search c/student s/Math d/Mon`
+**Mark attendance** | `mark STUDENT_INDEX LESSON_INDEX d/DATE s/STATUS`<br>e.g., `mark 1 2 d/2026-09-18 s/present`
+**Remove attendance mark** | `unmark STUDENT_INDEX LESSON_INDEX d/DATE`<br>e.g., `unmark 1 2 d/2026-09-18`
+**Help** | `help [COMMAND]`<br>e.g., `help add`
+**Exit** | `exit`
+
+`ROLE` is `student`, `tutor`, or `parent`. `CATEGORY` in `search` selects the kind of result; available filters depend on that category. Square brackets mean optional input and are not typed.
