@@ -288,6 +288,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 ### Use cases
 
 For the use cases below, the **System** is `PonHub` and the **Actor** is the tuition centre administrator.
+The documented person, lesson, attendance, search, and help operations accept all required details in one keyboard-entered command. PonHub validates each command and saves data changes without requiring a field prompt, preview, or separate confirmation. Guided previews and the class workflows are planned extensions; UC-04's shared-class model still needs reconciliation with the per-student recurring lesson model.
 
 #### UC-01: Add a person record
 
@@ -297,48 +298,41 @@ For the use cases below, the **System** is `PonHub` and the **Actor** is the tui
 
 **Main success scenario**
 
-1. The administrator requests to add a student, tutor or parent.
-2. PonHub displays the fields required for the selected role.
-3. The administrator enters the person's details.
-4. PonHub validates the fields and checks for exact and possible duplicates.
-5. PonHub shows the normalized record for confirmation.
-6. The administrator confirms the addition.
-7. PonHub creates and saves the record, refreshes the person list and reports success.
+1. The administrator enters one `add` command containing the selected role and all required person details.
+2. PonHub validates the command, normalizes the details, and checks for an exact duplicate.
+3. PonHub saves one new person record, refreshes the person list, and reports success.
 
 **Extensions**
 
-* 3a. A required field is missing, invalid, repeated or unsupported: PonHub explains the problem, keeps valid input and resumes at step 3.
-* 4a. An exact duplicate exists: PonHub rejects the addition and the use case ends.
-* 4b. Possible duplicates exist: PonHub shows the matches. The administrator cancels, ending the use case, or chooses to continue at step 5.
-* 6a. The administrator cancels: no record is created and the use case ends.
-* 7a. Saving fails: PonHub rolls back the addition, reports the failure and the use case ends.
+* 1a. A required field is missing, invalid, repeated, or unsupported: PonHub explains the problem without changing data. The administrator may correct and resubmit the command at step 1.
+* 2a. An exact duplicate exists: PonHub rejects the addition without changing data, and the use case ends.
+* 2b. The administrator explicitly requests a planned guided preview: PonHub shows the normalized record and any possible duplicate matches before saving. The administrator cancels with no change, or confirms and resumes at step 3.
+* 3a. Saving fails: PonHub rolls back the addition, reports the failure, and the use case ends.
 
-**Postconditions:** One valid, non-duplicate person record is stored and visible. Existing records are unchanged.
+**Postconditions:** On success, one valid, non-duplicate person record is stored and visible. Existing records are unchanged.
 
 #### UC-02: Find and review operational records
 
 **Related user stories:** US-04, US-05, US-06, US-22, US-29, US-38, US-39, US-40, US-41
 
-**Preconditions:** PonHub is running and has loaded the stored person, lesson and class records.
+**Preconditions:** PonHub is running and has loaded the stored person, lesson, and class records.
 
 **Main success scenario**
 
-1. The administrator requests a list or search of people, lessons or classes.
-2. PonHub displays the available categories, filters, sorting options and saved searches.
-3. The administrator supplies search conditions such as role, name, level, tutor, subject or lesson day.
-4. PonHub validates the conditions and searches the relevant records.
-5. PonHub displays each distinct match once, ordered or grouped as requested, with relevant relationship context and highlighted matches.
-6. The administrator opens a result or requests a class-list export.
-7. PonHub displays the selected details or generates the requested export.
+1. The administrator enters `list` or one `search` command with a category and any filters needed.
+2. PonHub validates the command and searches the relevant records.
+3. PonHub displays each distinct match once, with the requested ordering or grouping and relevant relationship context.
+4. The administrator opens a result or requests a class-list export.
+5. PonHub displays the selected details or generates the requested export.
 
 **Extensions**
 
-* 3a. The administrator uses a guided advanced-search form: PonHub supplies valid filters and completion, then resumes at step 3.
-* 4a. A condition is invalid or incompatible with the selected category: PonHub explains the valid syntax and resumes at step 3.
-* 4b. A command may be misspelled: PonHub suggests the closest valid command. If accepted, resume at step 4.
-* 5a. No record matches: PonHub displays a successful empty result and the use case ends.
-* 5b. The administrator asks to save the search: PonHub stores the named search and resumes at step 5.
-* 7a. The export cannot be generated: PonHub reports the failure without changing stored records and the use case ends.
+* 1a. The administrator uses a planned guided advanced-search form: PonHub supplies valid filters and completion, then submits the completed search at step 2.
+* 2a. A condition is invalid or incompatible with the selected category: PonHub explains the valid syntax without changing stored records. The administrator may resubmit at step 1.
+* 2b. A command may be misspelled: PonHub suggests the closest valid command. If accepted, the administrator resumes at step 1.
+* 3a. No record matches: PonHub displays a successful empty result, and the use case ends.
+* 3b. The administrator asks to save the search: PonHub stores the named search and resumes at step 3.
+* 5a. The export cannot be generated: PonHub reports the failure without changing stored records, and the use case ends.
 
 **Postconditions:** The requested view is displayed. Stored operational data is unchanged; a saved search or export exists only if requested.
 
@@ -350,85 +344,69 @@ For the use cases below, the **System** is `PonHub` and the **Actor** is the tui
 
 **Main success scenario**
 
-1. The administrator selects a student and requests a recurring lesson.
-2. PonHub displays the student's lessons and the relevant tutor and room schedules.
-3. The administrator enters the day, start and end times, subject, tutor and room, or selects a reusable lesson template.
-4. PonHub validates the student, tutor, values and time range.
-5. PonHub checks the proposed slot for tutor and room clashes.
-6. PonHub displays the proposed lesson for confirmation.
-7. The administrator confirms the lesson.
-8. PonHub saves it, updates the student and tutor timetables, and reports success.
+1. The administrator enters one `addlesson` command with the student's displayed index, day, start and end times, subject, tutor, and room.
+2. PonHub validates the student, tutor, values, time range, and proposed slot against tutor and room bookings.
+3. PonHub saves the recurring lesson, updates the student's lesson list and affected timetables, and reports success.
 
 **Extensions**
 
-* 3a. The administrator edits an existing lesson: PonHub pre-fills its details and resumes at step 3.
-* 4a. A value is missing or invalid, or the tutor does not exist: PonHub explains the problem and resumes at step 3.
-* 5a. The tutor or room is already booked: PonHub identifies the conflict and resumes at step 3.
-* 6a. The administrator cancels: no schedule is changed and the use case ends.
-* 8a. The administrator assigns a replacement tutor or cancels one occurrence: PonHub changes only that occurrence, saves it and the use case ends.
-* 8b. The administrator requests deletion but attendance exists: PonHub blocks deletion and the use case ends.
-* 8c. Saving fails: PonHub restores the previous schedule, reports the failure and the use case ends.
+* 1a. The administrator enters `deletelesson INDEX LESSON_INDEX` instead. PonHub validates both indices and checks for linked attendance. If none exists, PonHub removes and saves the selected lesson, renumbers the remaining lessons, frees its tutor and room booking, and reports success. The use case ends.
+* 1a1. The selected lesson has linked attendance: PonHub blocks deletion, identifies the dependency, changes nothing, and the use case ends.
+* 1b. The administrator requests a planned optional preview before adding or deleting a lesson: PonHub shows the affected lesson. The administrator cancels with no change or submits the one-shot command at step 1.
+* 1c. The administrator requests a planned edit, replacement tutor, or cancellation for one occurrence: PonHub changes and saves only the intended lesson or occurrence, then the use case ends.
+* 2a. A value is missing or invalid, or the tutor does not exist: PonHub explains the problem without changing the schedule. The administrator may resubmit at step 1.
+* 2b. The tutor or room is already booked: PonHub rejects the addition, identifies the conflict, and the use case ends.
+* 3a. Saving an addition, deletion, or occurrence change fails: PonHub restores the previous schedule, reports the failure, and the use case ends.
 
-**Postconditions:** A clash-free recurring lesson or occurrence-level change is stored, and affected timetable views are current.
+**Postconditions:** On success, a clash-free recurring lesson is stored, an unreferenced lesson is removed, or a planned occurrence-level change is saved. A deleted lesson's booking is released; affected lesson and timetable views are current. Failed operations leave the previous schedule unchanged.
 
 #### UC-04: Manage class membership and a make-up booking
 
 **Related user stories:** US-17, US-18, US-19, US-20, US-24, US-25, US-48
 
-**Preconditions:** The student and relevant tutor records exist. For enrolment or make-up booking, the class exists.
+**Preconditions:** The student and relevant tutor records exist. For enrolment, removal, or make-up booking, the class exists. These shared-class operations are planned and do not yet have finalized command syntax.
 
 **Main success scenario**
 
-1. The administrator opens class management and selects a class.
-2. PonHub displays its tutor, schedule, room, capacity, roster, remaining places and waiting list.
-3. The administrator selects a student and requests regular enrolment or a one-off make-up place.
-4. PonHub validates the records, checks for duplicate membership, timetable conflicts and available capacity.
-5. PonHub previews the change and its effect on remaining places.
-6. The administrator confirms the change.
-7. PonHub records and saves the enrolment or reservation, updates the roster and capacity, and reports success.
+1. The administrator submits one complete request identifying the class, student, and action: regular enrolment, removal, or a one-off make-up reservation.
+2. PonHub validates the records and action. For an addition or reservation, it checks for duplicate membership, timetable conflicts, and available capacity; for removal, it checks that the student is enrolled.
+3. PonHub applies and saves the selected addition, reservation, or removal, updates the roster and remaining capacity, and reports success.
 
 **Extensions**
 
-* 1a. The class does not exist: the administrator enters its name, tutor, day, time, room and capacity. PonHub checks conflicts, creates the class, then resumes at step 2.
-* 3a. The administrator starts from a recorded absence: PonHub pre-fills the student and missed lesson, then resumes at step 3.
-* 3b. The administrator requests removal from a class: PonHub previews the removal and resumes at step 6.
-* 4a. The class is full: PonHub offers to add the student to the waiting list. If accepted, it saves the waiting-list position and the use case ends.
-* 4b. No suitable place is available during a requested swap: PonHub records a pending swap request and the use case ends.
-* 4c. The student is already enrolled or has a timetable conflict: PonHub rejects the change and resumes at step 3.
-* 7a. Saving fails: PonHub restores the previous roster and capacity, reports the failure and the use case ends.
+* 1a. The class does not exist: the administrator submits its name, tutor, day, time, room, and capacity as a separate creation request. PonHub checks conflicts and saves the class, then the administrator resumes at step 1.
+* 1b. The administrator starts from a recorded absence in a planned guided flow: PonHub pre-fills the student and missed lesson, then resumes at step 1.
+* 2a. The class is full for an addition: PonHub offers a waiting-list place. If accepted, it saves the position and the use case ends.
+* 2b. No suitable place is available during a requested swap: PonHub records a pending swap request, and the use case ends.
+* 2c. An addition duplicates an enrolment or conflicts with the timetable, or a removal targets a student who is not enrolled: PonHub rejects the change without modifying the roster. The administrator may resubmit at step 1.
+* 3a. Saving fails: PonHub restores the previous roster and capacity, reports the failure, and the use case ends.
 
-**Postconditions:** The class roster, remaining capacity and any related wait-list, swap or make-up record are consistent and saved.
+**Postconditions:** On success, the requested enrolment, removal, or one-off reservation is saved; the roster and remaining capacity reflect that action. Any related waiting-list, swap, or make-up record remains consistent. Failed operations leave the previous state unchanged.
 
 #### UC-05: Record attendance and follow up
 
 **Related user stories:** US-11, US-12, US-21, US-26, US-43, US-44, US-45, US-46, US-49
 
-**Preconditions:** The student or class, recurring lesson and selected lesson occurrence exist.
+**Preconditions:** The student, recurring lesson, and selected lesson occurrence exist.
 
 **Main success scenario**
 
-1. The administrator opens today's lessons or finds a lesson and date.
-2. PonHub displays the roster and any attendance already recorded for that occurrence.
-3. The administrator marks students present, absent, late or excused, individually or in bulk, and optionally adds absence notes.
-4. PonHub validates the date, occurrence and statuses.
-5. PonHub shows which attendance entries will be created or updated.
-6. The administrator confirms the entries.
-7. PonHub saves one authoritative entry per student and occurrence, updates the display, attendance summaries and absence list, and reports success.
-8. The administrator selects any follow-up needed for an absence.
-9. PonHub records the feedback, make-up link or fee adjustment selected by the administrator.
+1. The administrator enters one `mark INDEX LESSON_INDEX d/DATE s/STATUS` command with `present` or `absent` for the selected occurrence.
+2. PonHub validates the student, lesson, date, weekday, and status.
+3. PonHub creates or updates the one attendance entry for that student, lesson, and date, saves it, refreshes the lesson display and attendance summaries, and reports success.
 
 **Extensions**
 
-* 3a. The administrator uses clickable controls instead of a command: PonHub records the same pending statuses and resumes at step 4.
-* 4a. The date is invalid or does not match the lesson's weekday: PonHub rejects the input and resumes at step 1.
-* 5a. The same status is already recorded: PonHub reports that no change is needed and resumes at step 8.
-* 5b. A different status exists: PonHub previews a correction and resumes at step 6.
-* 5c. The administrator requests removal of an erroneous entry: PonHub previews the removal and resumes at step 6.
-* 5d. There is no attendance record to remove: PonHub reports this and resumes at step 2.
-* 7a. Saving fails: PonHub restores the previous attendance state, reports the failure and the use case ends.
-* 8a. No follow-up is needed: the use case ends.
+* 1a. The administrator enters `unmark INDEX LESSON_INDEX d/DATE` instead. PonHub validates the student, lesson, and date, removes and saves the specified attendance entry, refreshes the lesson display and summaries, leaves the recurring lesson unchanged, and reports success. The use case ends.
+* 1a1. No entry exists for the selected date: PonHub reports that there is nothing to unmark, changes nothing, and the use case ends.
+* 1b. In a planned extension, the administrator records late or excused status, notes, or bulk attendance using a complete command or clickable controls. PonHub validates, saves, and displays the selected entries, then the use case ends.
+* 2a. The date is invalid or does not match the lesson's weekday, or the status is invalid: PonHub rejects the command without changing attendance. The administrator may resubmit at step 1.
+* 3a. The same status is already recorded: PonHub reports that no change is needed, and the use case ends.
+* 3b. A different status exists: PonHub updates the existing entry at step 3 instead of creating a duplicate.
+* 3c. Saving a mark or unmark fails: PonHub restores the previous attendance state, reports the failure, and the use case ends.
+* 3d. Follow-up is needed after an absence: the administrator may separately record feedback, a make-up link, or a fee adjustment. PonHub saves the selected follow-up, and the use case ends.
 
-**Postconditions:** Attendance is saved without duplicate entries, summaries are current and any selected follow-up is linked to the absence.
+**Postconditions:** On success, one authoritative status is stored for the selected student, lesson, and date, or the selected entry is removed by `unmark`. Summaries reflect the saved state and the recurring lesson remains unchanged. Failed operations leave attendance unchanged.
 
 #### UC-06: Remove, archive or restore a record
 
@@ -438,24 +416,19 @@ For the use cases below, the **System** is `PonHub` and the **Actor** is the tui
 
 **Main success scenario**
 
-1. The administrator selects a person and requests deletion or archiving.
-2. PonHub previews the target and any linked lessons or attendance, and asks for confirmation.
-3. The administrator confirms the requested action.
-4. PonHub verifies that the action will not break existing references.
-5. PonHub deletes an eligible obsolete record or archives a withdrawn student, saves the change and updates the active list.
-6. PonHub reports success and makes the last change available for undo.
+1. The administrator enters one `delete INDEX` command for the target in the currently displayed person list.
+2. PonHub validates the index and checks that no lesson or attendance record depends on the person.
+3. PonHub deletes and saves the eligible person record, updates the current list and displayed indices, and reports success.
 
 **Extensions**
 
-* 3a. The administrator cancels: PonHub changes nothing and the use case ends.
-* 4a. Linked lesson or attendance records prevent deletion: PonHub blocks deletion, identifies the dependencies and resumes at step 1.
-* 4b. The administrator chooses archiving instead: PonHub retains history, hides the student from the active list and resumes at step 6.
-* 5a. Saving fails: PonHub restores the prior state, reports the failure and the use case ends.
-* 6a. The administrator requests undo: PonHub restores the immediately preceding state, saves it and reports success.
-* 6b. No change is available to undo: PonHub reports the error without changing data and the use case ends.
-* 6c. The administrator selects an archived student and requests restoration: PonHub returns the student to the active list, saves the change and the use case ends.
+* 1a. The administrator requests a planned optional deletion preview: PonHub shows the target and linked records. The administrator cancels with no change or submits `delete INDEX` at step 1.
+* 1b. The administrator requests planned archiving of a withdrawn student instead: PonHub saves the archived state, retains history, hides the student from the active list, and the use case ends.
+* 2a. Linked lesson or attendance records prevent deletion: PonHub blocks it, identifies the dependencies, changes nothing, and the use case ends.
+* 3a. Saving fails: PonHub restores the prior state, reports the failure, and the use case ends.
+* 3b. The administrator later requests planned undo or restoration of an archived student: PonHub saves the restored state and updates the active list. If no change is available to undo, it reports this without changing data.
 
-**Postconditions:** The record is safely deleted, archived or restored without broken references; the resulting state is saved.
+**Postconditions:** On success, the eligible record is deleted, or a planned archive or restore action is saved without broken references. Failed operations leave the previous state unchanged.
 
 #### UC-07: Get help and recover from a command-entry error
 
@@ -465,22 +438,19 @@ For the use cases below, the **System** is `PonHub` and the **Actor** is the tui
 
 **Main success scenario**
 
-1. The administrator requests help, focuses the command field or begins entering a command.
-2. PonHub displays command categories, completion options, syntax, examples and relevant shortcuts.
-3. The administrator chooses a help topic or accepts a completed command.
-4. PonHub displays detailed guidance or validates the completed command.
-5. The administrator enters any required parameters and submits the command.
-6. PonHub executes the valid command and displays its result.
+1. The administrator enters `help` or `help COMMAND` in one command.
+2. PonHub displays the command catalogue or the selected command's syntax and examples.
+3. The administrator enters a complete command using the guidance.
+4. PonHub validates and executes the command, then displays its result.
 
 **Extensions**
 
-* 1a. Help is requested without a topic: PonHub shows the first page of the full command catalogue and resumes at step 3.
-* 3a. The catalogue spans multiple pages: the administrator requests the next or previous page; PonHub displays it and resumes at step 3.
-* 4a. The command name is unknown or misspelled: PonHub suggests a likely command and resumes at step 3.
-* 4b. Required parameters are missing or invalid: PonHub shows inline guidance and an example, preserves valid input and resumes at step 5.
-* 4c. The administrator uses a shortcut or alternative help form: PonHub maps it to the corresponding command and resumes at step 4.
-* 6a. The chosen command fails for a domain-specific reason: PonHub reports the error, changes no data and the use case ends.
-* 6b. Help is requested repeatedly: PonHub refreshes the same guidance without changing data and the use case ends.
+* 2a. The administrator needs only the help catalogue: PonHub leaves the current records and selection unchanged, and the use case ends.
+* 2b. The catalogue spans multiple pages: the administrator requests the next or previous page; PonHub displays it and resumes at step 2.
+* 3a. The command name is unknown or misspelled: PonHub suggests a likely command and resumes at step 3.
+* 3b. Required parameters are missing or invalid: PonHub shows guidance and an example without changing data. The administrator may correct and resubmit at step 3.
+* 3c. The administrator uses a planned shortcut, completion, or alternative help form: PonHub maps it to the corresponding command and resumes at step 3.
+* 4a. The chosen command fails for a domain-specific reason: PonHub reports the error, changes no data, and the use case ends.
 
 **Postconditions:** The requested guidance remains visible, or the selected command has completed with clear feedback.
 
