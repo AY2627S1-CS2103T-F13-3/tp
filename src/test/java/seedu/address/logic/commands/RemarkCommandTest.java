@@ -74,4 +74,13 @@ public class RemarkCommandTest {
         assertFalse(command.equals(null));
         assertFalse(command.equals("note"));
     }
+
+    @Test
+    public void toStringMethod() {
+        Index index = Index.fromOneBased(1);
+        Remark remark = new Remark("note");
+        RemarkCommand command = new RemarkCommand(index, remark);
+        String expected = RemarkCommand.class.getCanonicalName() + "{index=" + index + ", remark=" + remark + "}";
+        assertEquals(expected, command.toString());
+    }
 }
