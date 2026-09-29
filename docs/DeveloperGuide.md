@@ -259,31 +259,79 @@ _{Explain here how the data archiving feature will be implemented}_
 
 ### Product scope
 
-**Target user profile**:
+**Target user profile**: Tuition centre administrative staff who maintain student, tutor and parent records and coordinate lessons and attendance.
 
-* has a need to manage a significant number of contacts
-* prefers desktop apps over other types of applications
-* can type fast
-* prefers typing to mouse interactions
-* is reasonably comfortable using CLI apps
+* **Usage context**: During enrolment, timetable planning and daily lesson administration, staff need to find contacts, allocate tutors and rooms, record attendance, and follow up on absences and lesson changes.
+* **User characteristics**: Staff understand tuition operations and work repeatedly with names, contact details, student levels and lesson schedules. They need quick record retrieval, clear feedback on invalid changes, and command examples while learning the application.
+* **Current problems**: Keeping contact details, schedules and attendance consistent requires repeated checking. Staff need to avoid tutor or room clashes, find the right parent contact promptly, and identify missed lessons that need follow-up.
 
-**Value proposition**: Manage contacts faster than with a typical mouse-driven GUI application.
+**Value proposition**: For tuition centre administrative staff who need to keep people, lessons and attendance organised, PonHub provides a single place to manage and search these records, with scheduling checks and attendance tracking to support reliable daily administration.
 
+Compared with maintaining separate contact lists, timetables and attendance records, PonHub connects the information needed for routine tasks and checks conflicting or invalid changes. Planned requirements such as make-up booking extend this support to absence follow-up.
 
 ### User stories
 
-Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unlikely to have) - `*`
+These stories describe identified requirements, including requirements beyond the MVP; they do not imply completed functionality.
 
-| Priority | As a …​                                    | I want to …​                     | So that I can…​                                                        |
-| -------- | ------------------------------------------ | ------------------------------ | ---------------------------------------------------------------------- |
-| `* * *`  | new user                                   | see usage instructions         | refer to instructions when I forget how to use the App                 |
-| `* * *`  | user                                       | add a new person               |                                                                        |
-| `* * *`  | user                                       | delete a person                | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by name          | locate details of persons without having to go through the entire list |
-| `* *`    | user                                       | hide private contact details   | minimize chance of someone else seeing them by accident                |
-| `*`      | user with many persons in the address book | sort persons by name           | locate a person easily                                                 |
+Priorities: **High** (must-have core requirements), **Medium** (useful extensions), **Low** (future consideration).
+Medium and Low priorities are proposed.
 
-*{More to be added}*
+**† Scope to reconcile**: US-17 to US-20 retain the 15 September planning notes' must-have designation for shared classes,
+capacity, enrolment, and make-up booking. These workflows need reconciliation with the feature specification's per-student
+recurring lesson model before implementation. Starting a make-up booking directly from an absence (US-48) is a separate
+Medium-priority extension.
+
+| ID | Priority | As a … | I want to … | So that I can … |
+| --- | --- | --- | --- | --- |
+| US-01 | High | tuition centre administrator | add students with their level and parent contact number | keep student records and contact a parent when needed. |
+| US-02 | High | tuition centre administrator | add tutors with their contact details | maintain the information needed for lesson allocation and communication. |
+| US-03 | High | tuition centre administrator | keep optional separate parent contact records | find parent details independently of a student's record. |
+| US-04 | High | tuition centre administrator | list all people or only students, parents or tutors | review the relevant records quickly. |
+| US-05 | High | tuition centre administrator | search student, parent and tutor records by identifying details and find parents or tutors associated with a student or lesson | retrieve the right contact information promptly. |
+| US-06 | High | tuition centre administrator | filter relevant student and lesson records by tutor, subject or lesson day | find the records needed for a specific teaching session. |
+| US-07 | High | tuition centre administrator | remove obsolete person records while preventing removal of records still referenced by lessons or attendance | keep the records tidy without breaking existing links. |
+| US-08 | High | tuition centre administrator | add a student's recurring lesson with its day, time, subject, tutor and room | maintain an organised teaching schedule. |
+| US-09 | High | tuition centre administrator | have proposed lessons that conflict with existing tutor or room bookings rejected | avoid double-booking teaching resources. |
+| US-10 | High | tuition centre administrator | remove an unneeded recurring lesson only when it has no linked attendance records | keep the schedule current without breaking attendance links. |
+| US-11 | High | tuition centre administrator | mark a student present or absent for a particular lesson and date | keep an accurate record of each lesson occurrence. |
+| US-12 | High | tuition centre administrator | correct or remove an erroneous attendance entry without deleting the lesson | fix recording mistakes while preserving the schedule. |
+| US-13 | High | tuition centre administrator | view available commands with their syntax and examples | learn how to complete tasks and recover from command mistakes. |
+| US-14 | High | tuition centre administrator | have successful changes saved and available when I reopen PonHub | continue my work without re-entering records. |
+| US-15 | High | tuition centre administrator | have attempts to add an exact duplicate person record rejected | avoid storing the same record twice. |
+| US-16 | High | tuition centre administrator | view a tutor's weekly timetable | tell the tutor which lessons they are assigned to teach. |
+| US-17 | High† | tuition centre administrator | check a class roster and its remaining places | decide whether a new enrolment or make-up student can be accommodated. |
+| US-18 | High† | tuition centre administrator | enrol a student in a class or remove their enrolment | keep class membership and available places up to date. |
+| US-19 | High† | tuition centre administrator | reserve a one-off place in a suitable class for a student who missed a lesson | arrange a make-up lesson without changing the student's regular schedule. |
+| US-20 | High† | tuition centre administrator | create a named recurring class with its tutor, day, time, room and capacity | organise teaching slots for a group of students. |
+| US-21 | Medium | tuition centre administrator | identify students who missed a lesson | follow up with parents and decide whether make-up arrangements or fee adjustments are needed. |
+| US-22 | Medium | tuition centre administrator | sort students by name and filter or group them by level | review the relevant records in a clear order. |
+| US-23 | Medium | tuition centre administrator | archive withdrawn students, hide them from the default active list and restore them when needed | keep the active list manageable while retaining past records. |
+| US-24 | Medium | tuition centre administrator | maintain a waiting list for a full class | offer newly available places in the order students joined the list. |
+| US-25 | Medium | tuition centre administrator | track pending class-swap requests | follow up on outstanding transfers. |
+| US-26 | Medium | tuition centre administrator | record lesson feedback from students or parents | follow up on reported concerns. |
+| US-27 | Medium | tuition centre administrator | assign a replacement tutor for one lesson occurrence | cover a tutor's absence while retaining the regular tutor for other lessons. |
+| US-28 | Medium | tuition centre administrator | cancel one lesson occurrence without deleting its recurring schedule | handle a holiday or closure without rebuilding future lessons. |
+| US-29 | Medium | tuition centre administrator | export a class list with student names, class details and contact information | share or print the information needed by tutors. |
+| US-30 | Medium | tuition centre administrator | review possible duplicate student matches before saving a new record | avoid duplicate records that are similar but not identical. |
+| US-31 | Medium | tuition centre administrator | undo my last change | recover from an accidental edit or deletion. |
+| US-32 | Medium | tuition centre administrator | use command shortcuts and an alternative command-help form | complete frequent tasks with less typing. |
+| US-33 | Medium | tuition centre administrator | receive command completion, inline input guidance and suggestions for misspelled commands | enter valid commands more easily. |
+| US-34 | Medium | tuition centre administrator | record names, contact numbers and education levels beyond the MVP formats | represent a wider range of people accurately. |
+| US-35 | Medium | tuition centre administrator | preview the person or lesson affected by a deletion | check its consequences before removing it. |
+| US-36 | Medium | tuition centre administrator | reuse recurring lesson templates | assign similar lessons without re-entering the same details. |
+| US-37 | Medium | tuition centre administrator | edit an existing lesson directly | update its details without deleting and recreating it. |
+| US-38 | Medium | tuition centre administrator | combine alternative search conditions and exclude unwanted matches | express more complex searches. |
+| US-39 | Medium | tuition centre administrator | receive spelling suggestions, relevance ordering and highlighted search matches | identify the intended records more easily. |
+| US-40 | Medium | tuition centre administrator | save and reuse searches | repeat common lookups without entering every filter again. |
+| US-41 | Medium | tuition centre administrator | use a guided advanced-search form and filter completion | construct valid searches without recalling every prefix. |
+| US-42 | Medium | tuition centre administrator | browse a long command-help catalogue in manageable pages | read all available help within the application. |
+| US-43 | Medium | tuition centre administrator | record late or excused attendance and notes explaining absences | distinguish different attendance circumstances. |
+| US-44 | Medium | tuition centre administrator | mark attendance for an entire class in one operation | process attendance efficiently. |
+| US-45 | Medium | tuition centre administrator | mark attendance using clickable controls | record attendance without remembering command syntax. |
+| US-46 | Medium | tuition centre administrator | view attendance percentage summaries | identify patterns that need follow-up. |
+| US-47 | Medium | tuition centre administrator | see today's scheduled lessons automatically | start daily attendance work quickly. |
+| US-48 | Medium | tuition centre administrator | start a make-up booking directly from a recorded absence | connect follow-up arrangements to the missed lesson. |
+| US-49 | Low | tuition centre administrator | track tuition fees and adjustments associated with student attendance | follow up on payments and fee changes when needed. |
 
 ### Use cases
 
@@ -317,15 +365,52 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 ### Non-Functional Requirements
 
 1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
-2.  Should be able to hold up to 1000 persons without noticeable sluggishness in performance for typical usage.
-3.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
-
-*{More to be added}*
+2.  Should be able to hold up to 1,000 persons, 1,000 recurring lessons, and 10,000 attendance records without noticeable sluggishness during typical usage.
+3.  Common operations should update the GUI within 2 seconds on the team's documented reference machine.
+3.  A user with above average typing speed for regular English text (i.e. not code or system administration commands) should be able to accomplish most recurring tasks faster using commands than using the mouse.
+4.  The product should be for a single user and use one local data store, without requiring user accounts, concurrent access, or live synchronisation.
+5.  The product should be packaged into a single executable `.jar` file and should not require an installer.
+6.  The product file size should remain below 100 MB to ensure efficient storage and distribution.
+7.  The GUI should display correctly and without layout issues on screen resolutions of 1920×1080 and higher at 100% and 125% scale.
+8.  The GUI should remain usable (i.e. all functions remain accessible even if the layout is suboptimal) at screen resolutions of 1280×720 and higher at 150% scale.
+9.  All operational data must be stored locally in a human-readable text file without using a database management system.
+10. All successful data changes must be saved automatically and reliably. Failed validation or saving must leave both the in-memory data and stored data file unchanged.
+11. All person, lesson, and attendance data must remain on the user's computer and must never be transmitted over the internet.
+12. The application should function offline without requiring an internet connection or a team-owned remote server.
+13. Invalid inputs must not crash the application or modify existing data. The application should display a specific error message explaining how the user can correct the input.
+14. The application should be implemented primarily using object-oriented programming, with clear separation between the UI, Logic, Model, and Storage components.
+15. The JUnit-based automated test suite should achieve at least 70% line coverage, and all automated tests should pass before a release.
 
 ### Glossary
 
 * **Mainstream OS**: Windows, Linux, Unix, or macOS
-* **Private contact detail**: A contact detail that is not meant to be shared with others
+* **AddressBook-Level3 (AB3)**: The upstream SE-EDU desktop application that is incrementally evolved into PonHub
+* **Person record**: A stored record representing one student, tutor, or parent and containing the fields required for that role
+* **Role**: The `student`, `tutor`, or `parent` category assigned to a person record, which determines its required fields and applicable operations
+* **Recurring lesson**: A weekly lesson assigned to a student, with a day, start time, end time, subject, tutor, and room
+* **Lesson occurrence**: One dated instance of a recurring lesson
+* **Attendance record**: A stored record containing the attendance status of one student for one lesson occurrence
+* **Attendance status**: The recorded state of a student for a lesson occurrence, such as `present` or `absent`
+* **Attendance key**: The combination of student, lesson, and date that uniquely identifies one attendance record
+* **Exact duplicate person**: A person record with the same role, normalised name, and identifying contact number as an existing record
+* **Displayed index**: The one-based position of a record in the currently displayed list; it is not a permanent identifier and may change when the list is filtered or reordered
+* **Prefix**: A short marker in a command that identifies the type of information represented by the following value
+* **Parser**: The Logic component that converts raw command text into validated parameters and a command object
+* **Command**: An executable request representing one user operation in PonHub
+* **Referential integrity**: The rule that prevents a record from being removed while another lesson or attendance record still refers to it
+* **Atomic update**: An all-or-nothing change where either the complete operation is saved successfully or none of it is applied
+* **Rollback**: The restoration of the previous valid state after an operation cannot be completed or saved
+* **Human-readable data file**: The local text file used to store PonHub data in a form that can be inspected and edited without a database management system
+* **Tutor clash**: An overlap between lessons assigned to the same tutor on the same day and during an overlapping time range
+* **Room clash**: An overlap between lessons assigned to the same room on the same day and during an overlapping time range
+* **Class (planned)**: A planned shared recurring teaching slot with a tutor, day, time, room, capacity, and roster; it is distinct from the current per-student recurring lesson model
+* **Enrolment (planned)**: The continuing membership of a student in a class
+* **Roster (planned)**: The list of students enrolled in or holding a one-off reservation for a class or lesson occurrence
+* **Capacity (planned)**: The maximum number of students that a class can contain
+* **Make-up booking (planned)**: A one-off reservation in a suitable class for a student who missed a regular lesson, without changing the student's recurring schedule
+* **Waiting list (planned)**: An ordered queue of students requesting a place in a class that has reached its capacity
+* **Class-swap request (planned)**: A pending request to move a student from one class to another when the transfer cannot be completed immediately
+* **Archived student (planned)**: A withdrawn student record retained for historical reference but hidden from the default active-student list
 
 --------------------------------------------------------------------------------------------------------------------
 
