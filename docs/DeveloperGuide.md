@@ -365,15 +365,52 @@ Medium-priority extension.
 ### Non-Functional Requirements
 
 1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
-2.  Should be able to hold up to 1000 persons without noticeable sluggishness in performance for typical usage.
-3.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
-
-*{More to be added}*
+2.  Should be able to hold up to 1,000 persons, 1,000 recurring lessons, and 10,000 attendance records without noticeable sluggishness during typical usage.
+3.  Common operations should update the GUI within 2 seconds on the team's documented reference machine.
+3.  A user with above average typing speed for regular English text (i.e. not code or system administration commands) should be able to accomplish most recurring tasks faster using commands than using the mouse.
+4.  The product should be for a single user and use one local data store, without requiring user accounts, concurrent access, or live synchronisation.
+5.  The product should be packaged into a single executable `.jar` file and should not require an installer.
+6.  The product file size should remain below 100 MB to ensure efficient storage and distribution.
+7.  The GUI should display correctly and without layout issues on screen resolutions of 1920×1080 and higher at 100% and 125% scale.
+8.  The GUI should remain usable (i.e. all functions remain accessible even if the layout is suboptimal) at screen resolutions of 1280×720 and higher at 150% scale.
+9.  All operational data must be stored locally in a human-readable text file without using a database management system.
+10. All successful data changes must be saved automatically and reliably. Failed validation or saving must leave both the in-memory data and stored data file unchanged.
+11. All person, lesson, and attendance data must remain on the user's computer and must never be transmitted over the internet.
+12. The application should function offline without requiring an internet connection or a team-owned remote server.
+13. Invalid inputs must not crash the application or modify existing data. The application should display a specific error message explaining how the user can correct the input.
+14. The application should be implemented primarily using object-oriented programming, with clear separation between the UI, Logic, Model, and Storage components.
+15. The JUnit-based automated test suite should achieve at least 70% line coverage, and all automated tests should pass before a release.
 
 ### Glossary
 
 * **Mainstream OS**: Windows, Linux, Unix, or macOS
-* **Private contact detail**: A contact detail that is not meant to be shared with others
+* **AddressBook-Level3 (AB3)**: The upstream SE-EDU desktop application that is incrementally evolved into PonHub
+* **Person record**: A stored record representing one student, tutor, or parent and containing the fields required for that role
+* **Role**: The `student`, `tutor`, or `parent` category assigned to a person record, which determines its required fields and applicable operations
+* **Recurring lesson**: A weekly lesson assigned to a student, with a day, start time, end time, subject, tutor, and room
+* **Lesson occurrence**: One dated instance of a recurring lesson
+* **Attendance record**: A stored record containing the attendance status of one student for one lesson occurrence
+* **Attendance status**: The recorded state of a student for a lesson occurrence, such as `present` or `absent`
+* **Attendance key**: The combination of student, lesson, and date that uniquely identifies one attendance record
+* **Exact duplicate person**: A person record with the same role, normalised name, and identifying contact number as an existing record
+* **Displayed index**: The one-based position of a record in the currently displayed list; it is not a permanent identifier and may change when the list is filtered or reordered
+* **Prefix**: A short marker in a command that identifies the type of information represented by the following value
+* **Parser**: The Logic component that converts raw command text into validated parameters and a command object
+* **Command**: An executable request representing one user operation in PonHub
+* **Referential integrity**: The rule that prevents a record from being removed while another lesson or attendance record still refers to it
+* **Atomic update**: An all-or-nothing change where either the complete operation is saved successfully or none of it is applied
+* **Rollback**: The restoration of the previous valid state after an operation cannot be completed or saved
+* **Human-readable data file**: The local text file used to store PonHub data in a form that can be inspected and edited without a database management system
+* **Tutor clash**: An overlap between lessons assigned to the same tutor on the same day and during an overlapping time range
+* **Room clash**: An overlap between lessons assigned to the same room on the same day and during an overlapping time range
+* **Class (planned)**: A planned shared recurring teaching slot with a tutor, day, time, room, capacity, and roster; it is distinct from the current per-student recurring lesson model
+* **Enrolment (planned)**: The continuing membership of a student in a class
+* **Roster (planned)**: The list of students enrolled in or holding a one-off reservation for a class or lesson occurrence
+* **Capacity (planned)**: The maximum number of students that a class can contain
+* **Make-up booking (planned)**: A one-off reservation in a suitable class for a student who missed a regular lesson, without changing the student's recurring schedule
+* **Waiting list (planned)**: An ordered queue of students requesting a place in a class that has reached its capacity
+* **Class-swap request (planned)**: A pending request to move a student from one class to another when the transfer cannot be completed immediately
+* **Archived student (planned)**: A withdrawn student record retained for historical reference but hidden from the default active-student list
 
 --------------------------------------------------------------------------------------------------------------------
 
