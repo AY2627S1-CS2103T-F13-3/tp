@@ -187,7 +187,7 @@ Action | Format and example
 **Add parent** | `add r/parent n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]`<br>e.g., `add r/parent n/Pat Tan p/91234567`
 **List people** | `list [r/ROLE]`<br>e.g., `list r/student`
 **Delete person** | `delete INDEX`<br>e.g., `delete 2`
-**Add lesson** | `addlesson INDEX d/DAY t/START-END s/SUBJECT tu/TUTOR_NAME r/ROOM`<br>e.g., `addlesson 1 d/Mon t/1600-1730 s/Math tu/Mei Lim r/R1`
+**Add lesson** | `addlesson INDEX d/DAY st/START_TIME et/END_TIME s/SUBJECT tu/TUTOR_NAME rm/ROOM`
 **Delete lesson** | `deletelesson INDEX LESSON_INDEX`<br>e.g., `deletelesson 1 2`
 **Search** | `search c/CATEGORY [FILTER_PREFIX/VALUE]...`<br>e.g., `search c/student s/Math d/Mon`
 **Mark attendance** | `mark STUDENT_INDEX LESSON_INDEX d/DATE s/STATUS`<br>e.g., `mark 1 2 d/2026-09-18 s/present`
