@@ -259,31 +259,79 @@ _{Explain here how the data archiving feature will be implemented}_
 
 ### Product scope
 
-**Target user profile**:
+**Target user profile**: Tuition centre administrative staff who maintain student, tutor and parent records and coordinate lessons and attendance.
 
-* has a need to manage a significant number of contacts
-* prefers desktop apps over other types of applications
-* can type fast
-* prefers typing to mouse interactions
-* is reasonably comfortable using CLI apps
+* **Usage context**: During enrolment, timetable planning and daily lesson administration, staff need to find contacts, allocate tutors and rooms, record attendance, and follow up on absences and lesson changes.
+* **User characteristics**: Staff understand tuition operations and work repeatedly with names, contact details, student levels and lesson schedules. They need quick record retrieval, clear feedback on invalid changes, and command examples while learning the application.
+* **Current problems**: Keeping contact details, schedules and attendance consistent requires repeated checking. Staff need to avoid tutor or room clashes, find the right parent contact promptly, and identify missed lessons that need follow-up.
 
-**Value proposition**: Manage contacts faster than with a typical mouse-driven GUI application.
+**Value proposition**: For tuition centre administrative staff who need to keep people, lessons and attendance organised, PonHub provides a single place to manage and search these records, with scheduling checks and attendance tracking to support reliable daily administration.
 
+Compared with maintaining separate contact lists, timetables and attendance records, PonHub connects the information needed for routine tasks and checks conflicting or invalid changes. Planned requirements such as make-up booking extend this support to absence follow-up.
 
 ### User stories
 
-Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unlikely to have) - `*`
+These stories describe identified requirements, including requirements beyond the MVP; they do not imply completed functionality.
 
-| Priority | As a …​                                    | I want to …​                     | So that I can…​                                                        |
-| -------- | ------------------------------------------ | ------------------------------ | ---------------------------------------------------------------------- |
-| `* * *`  | new user                                   | see usage instructions         | refer to instructions when I forget how to use the App                 |
-| `* * *`  | user                                       | add a new person               |                                                                        |
-| `* * *`  | user                                       | delete a person                | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by name          | locate details of persons without having to go through the entire list |
-| `* *`    | user                                       | hide private contact details   | minimize chance of someone else seeing them by accident                |
-| `*`      | user with many persons in the address book | sort persons by name           | locate a person easily                                                 |
+Priorities: **High** (must-have core requirements), **Medium** (useful extensions), **Low** (future consideration).
+Medium and Low priorities are proposed.
 
-*{More to be added}*
+**† Scope to reconcile**: US-17 to US-20 retain the 15 September planning notes' must-have designation for shared classes,
+capacity, enrolment, and make-up booking. These workflows need reconciliation with the feature specification's per-student
+recurring lesson model before implementation. Starting a make-up booking directly from an absence (US-48) is a separate
+Medium-priority extension.
+
+| ID | Priority | As a … | I want to … | So that I can … |
+| --- | --- | --- | --- | --- |
+| US-01 | High | tuition centre administrator | add students with their level and parent contact number | keep student records and contact a parent when needed. |
+| US-02 | High | tuition centre administrator | add tutors with their contact details | maintain the information needed for lesson allocation and communication. |
+| US-03 | High | tuition centre administrator | keep optional separate parent contact records | find parent details independently of a student's record. |
+| US-04 | High | tuition centre administrator | list all people or only students, parents or tutors | review the relevant records quickly. |
+| US-05 | High | tuition centre administrator | search student, parent and tutor records by identifying details and find parents or tutors associated with a student or lesson | retrieve the right contact information promptly. |
+| US-06 | High | tuition centre administrator | filter relevant student and lesson records by tutor, subject or lesson day | find the records needed for a specific teaching session. |
+| US-07 | High | tuition centre administrator | remove obsolete person records while preventing removal of records still referenced by lessons or attendance | keep the records tidy without breaking existing links. |
+| US-08 | High | tuition centre administrator | add a student's recurring lesson with its day, time, subject, tutor and room | maintain an organised teaching schedule. |
+| US-09 | High | tuition centre administrator | have proposed lessons that conflict with existing tutor or room bookings rejected | avoid double-booking teaching resources. |
+| US-10 | High | tuition centre administrator | remove an unneeded recurring lesson only when it has no linked attendance records | keep the schedule current without breaking attendance links. |
+| US-11 | High | tuition centre administrator | mark a student present or absent for a particular lesson and date | keep an accurate record of each lesson occurrence. |
+| US-12 | High | tuition centre administrator | correct or remove an erroneous attendance entry without deleting the lesson | fix recording mistakes while preserving the schedule. |
+| US-13 | High | tuition centre administrator | view available commands with their syntax and examples | learn how to complete tasks and recover from command mistakes. |
+| US-14 | High | tuition centre administrator | have successful changes saved and available when I reopen PonHub | continue my work without re-entering records. |
+| US-15 | High | tuition centre administrator | have attempts to add an exact duplicate person record rejected | avoid storing the same record twice. |
+| US-16 | High | tuition centre administrator | view a tutor's weekly timetable | tell the tutor which lessons they are assigned to teach. |
+| US-17 | High† | tuition centre administrator | check a class roster and its remaining places | decide whether a new enrolment or make-up student can be accommodated. |
+| US-18 | High† | tuition centre administrator | enrol a student in a class or remove their enrolment | keep class membership and available places up to date. |
+| US-19 | High† | tuition centre administrator | reserve a one-off place in a suitable class for a student who missed a lesson | arrange a make-up lesson without changing the student's regular schedule. |
+| US-20 | High† | tuition centre administrator | create a named recurring class with its tutor, day, time, room and capacity | organise teaching slots for a group of students. |
+| US-21 | Medium | tuition centre administrator | identify students who missed a lesson | follow up with parents and decide whether make-up arrangements or fee adjustments are needed. |
+| US-22 | Medium | tuition centre administrator | sort students by name and filter or group them by level | review the relevant records in a clear order. |
+| US-23 | Medium | tuition centre administrator | archive withdrawn students, hide them from the default active list and restore them when needed | keep the active list manageable while retaining past records. |
+| US-24 | Medium | tuition centre administrator | maintain a waiting list for a full class | offer newly available places in the order students joined the list. |
+| US-25 | Medium | tuition centre administrator | track pending class-swap requests | follow up on outstanding transfers. |
+| US-26 | Medium | tuition centre administrator | record lesson feedback from students or parents | follow up on reported concerns. |
+| US-27 | Medium | tuition centre administrator | assign a replacement tutor for one lesson occurrence | cover a tutor's absence while retaining the regular tutor for other lessons. |
+| US-28 | Medium | tuition centre administrator | cancel one lesson occurrence without deleting its recurring schedule | handle a holiday or closure without rebuilding future lessons. |
+| US-29 | Medium | tuition centre administrator | export a class list with student names, class details and contact information | share or print the information needed by tutors. |
+| US-30 | Medium | tuition centre administrator | review possible duplicate student matches before saving a new record | avoid duplicate records that are similar but not identical. |
+| US-31 | Medium | tuition centre administrator | undo my last change | recover from an accidental edit or deletion. |
+| US-32 | Medium | tuition centre administrator | use command shortcuts and an alternative command-help form | complete frequent tasks with less typing. |
+| US-33 | Medium | tuition centre administrator | receive command completion, inline input guidance and suggestions for misspelled commands | enter valid commands more easily. |
+| US-34 | Medium | tuition centre administrator | record names, contact numbers and education levels beyond the MVP formats | represent a wider range of people accurately. |
+| US-35 | Medium | tuition centre administrator | preview the person or lesson affected by a deletion | check its consequences before removing it. |
+| US-36 | Medium | tuition centre administrator | reuse recurring lesson templates | assign similar lessons without re-entering the same details. |
+| US-37 | Medium | tuition centre administrator | edit an existing lesson directly | update its details without deleting and recreating it. |
+| US-38 | Medium | tuition centre administrator | combine alternative search conditions and exclude unwanted matches | express more complex searches. |
+| US-39 | Medium | tuition centre administrator | receive spelling suggestions, relevance ordering and highlighted search matches | identify the intended records more easily. |
+| US-40 | Medium | tuition centre administrator | save and reuse searches | repeat common lookups without entering every filter again. |
+| US-41 | Medium | tuition centre administrator | use a guided advanced-search form and filter completion | construct valid searches without recalling every prefix. |
+| US-42 | Medium | tuition centre administrator | browse a long command-help catalogue in manageable pages | read all available help within the application. |
+| US-43 | Medium | tuition centre administrator | record late or excused attendance and notes explaining absences | distinguish different attendance circumstances. |
+| US-44 | Medium | tuition centre administrator | mark attendance for an entire class in one operation | process attendance efficiently. |
+| US-45 | Medium | tuition centre administrator | mark attendance using clickable controls | record attendance without remembering command syntax. |
+| US-46 | Medium | tuition centre administrator | view attendance percentage summaries | identify patterns that need follow-up. |
+| US-47 | Medium | tuition centre administrator | see today's scheduled lessons automatically | start daily attendance work quickly. |
+| US-48 | Medium | tuition centre administrator | start a make-up booking directly from a recorded absence | connect follow-up arrangements to the missed lesson. |
+| US-49 | Low | tuition centre administrator | track tuition fees and adjustments associated with student attendance | follow up on payments and fee changes when needed. |
 
 ### Use cases
 
