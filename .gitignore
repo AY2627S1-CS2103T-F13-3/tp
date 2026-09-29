@@ -1,10 +1,12 @@
 # Gradle build files
 /.gradle/
 /build/
+/bin/
 src/main/resources/docs/
 
-# IDEA files
+# IDEA / VSCode files
 /.idea/
+/.vscode/
 /out/
 /*.iml
 
