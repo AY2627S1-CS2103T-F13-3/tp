@@ -9,15 +9,13 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ## Project team
 
-### John Doe
+### Zhu Zhi Yu
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/ultramanarm.png" width="200px">
 
 [[homepage](http://www.comp.nus.edu.sg/~damithch)]
 [[github](https://github.com/johndoe)]
 [[portfolio](team/johndoe.md)]
-
-* Role: Project Advisor
 
 ### Vincent Lin
 
@@ -25,34 +23,21 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 [[github](http://github.com/gugrusaurus)]
 
-* Role: Team Lead
-* Responsibilities: UI
+### Benjamin Ng
 
-### Johnny Doe
-
-<img src="images/johndoe.png" width="200px">
+<img src="images/ben58882.png" width="200px">
 
 [[github](http://github.com/johndoe)] [[portfolio](team/johndoe.md)]
 
-* Role: Developer
-* Responsibilities: Data
+### Ernest Chua
 
-### Jean Doe
-
-<img src="images/johndoe.png" width="200px">
+<img src="images/ernestchuaa.png" width="200px">
 
 [[github](http://github.com/johndoe)]
 [[portfolio](team/johndoe.md)]
 
-* Role: Developer
-* Responsibilities: Dev Ops + Threading
+### Yang Shuo
 
-### James Doe
+<img src="images/ys000009.png" width="200px">
 
-<img src="images/johndoe.png" width="200px">
-
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
-
-* Role: Developer
-* Responsibilities: UI
+[[github](https://github.com/ys000009)]
