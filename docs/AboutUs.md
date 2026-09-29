@@ -16,29 +16,40 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 [[github](https://github.com/ultramanarm)]
 
 * Role: Developer
-* Responsibilities: Developer Guide — target user profile, value proposition, and prioritised user stories
+* Responsibilities: Testing + Data, Developer Guide
 
 ### Vincent Lin
 
 <img src="images/gugrusaurus.png" width="200px">
 
-[[github](http://github.com/gugrusaurus)]
+[[github](https://github.com/gugrusaurus)]
+
+* Role: Deliverables and Deadline
+* Responsibilities: Ensure project deliverables are done on time and in the right format.
 
 ### Benjamin Ng
 
 <img src="images/ben58882.png" width="200px">
 
-[[github](http://github.com/johndoe)] [[portfolio](team/johndoe.md)]
+[[github](https://github.com/ben58882)]
+
+* Role: Developer
+* Responsibilities: Model, UI, Storage
 
 ### Ernest Chua
 
 <img src="images/ernestchuaa.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[github](https://github.com/ErnestChuaa)]
+
+* Role: Code Quality, Documentation
+* Responsibilities: In charge of documentation quality and code quality
 
 ### Yang Shuo
 
 <img src="images/ys000009.png" width="200px">
 
 [[github](https://github.com/ys000009)]
+
+* Role: Developer
+* Responsibilities: DevOps + Integration
