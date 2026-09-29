@@ -19,12 +19,11 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 * Role: Project Advisor
 
-### Jane Doe
+### Vincent Lin
 
-<img src="images/johndoe.png" width="200px">
+<img src="docs/images/gugrusaurus.png" width="200px">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[github](http://github.com/gugrusaurus)]
 
 * Role: Team Lead
 * Responsibilities: UI
