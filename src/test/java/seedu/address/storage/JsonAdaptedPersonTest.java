@@ -11,11 +11,17 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import seedu.address.commons.exceptions.IllegalValueException;
+import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
+import seedu.address.testutil.PersonBuilder;
 
 public class JsonAdaptedPersonTest {
     private static final String INVALID_NAME = "R@chel";
@@ -31,6 +37,21 @@ public class JsonAdaptedPersonTest {
     private static final List<JsonAdaptedTag> VALID_TAGS = BENSON.getTags().stream()
             .map(JsonAdaptedTag::new)
             .collect(Collectors.toList());
+
+    @Test
+    public void json_roundTrip_preservesRemark() throws Exception {
+        Person original = new PersonBuilder(BENSON).withRemark("Likes swimming").build();
+        String json = JsonUtil.toJsonString(new JsonAdaptedPerson(original));
+        assertEquals(original, JsonUtil.fromJsonString(json, JsonAdaptedPerson.class).toModelType());
+    }
+
+    @Test
+    public void json_missingRemark_loadsOlderData() throws Exception {
+        String json = JsonUtil.toJsonString(new JsonAdaptedPerson(BENSON));
+        ObjectNode node = (ObjectNode) new ObjectMapper().readTree(json);
+        node.remove("remark");
+        assertEquals(BENSON, JsonUtil.fromJsonString(node.toString(), JsonAdaptedPerson.class).toModelType());
+    }
 
     @Test
     public void toModelType_validPersonDetails_returnsPerson() throws Exception {
