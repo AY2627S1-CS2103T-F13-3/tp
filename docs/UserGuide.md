@@ -15,7 +15,7 @@ PonHub is a desktop app for tuition centre administrators to keep student, tutor
 1. Ensure that Java `25` or later is installed on your computer.<br>
    **Mac users:** Follow the JDK installation instructions [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
-1. Download the latest PonHub `.jar` file from the project's Releases page.
+1. Download the latest PonHub `.jar` file from the [project's Releases page](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases).
 
 1. Put the JAR file in the folder you want to use for PonHub. Keep this folder when moving or backing up your data.
 
@@ -26,7 +26,7 @@ PonHub is a desktop app for tuition centre administrators to keep student, tutor
    * `add r/tutor n/Mei Lim p/92345678` — adds a tutor.
    * `add r/student n/Alex Tan l/S2 pp/91234567` — adds a student and their parent contact number.
    * `list r/student` — shows students and their displayed indices.
-   * `addlesson 1 d/Mon t/1600-1730 s/Math tu/Mei Lim r/R1` — adds a lesson for the student displayed at index `1`.
+   * `addlesson 1 d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1` — adds a lesson for the student displayed at index `1`.
 
    The indices in commands refer to the current displayed list, so check the list before using an index. See the [Command summary](#command-summary) for more commands.
 
