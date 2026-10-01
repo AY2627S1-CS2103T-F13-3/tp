@@ -392,9 +392,9 @@ The documented person, lesson, attendance, search, and help operations accept al
 
 **Main success scenario**
 
-1. The administrator enters one `addlesson` command with the student's displayed index, day, start and end times, subject, tutor, and room.
-2. PonHub validates the student, tutor, values, time range, and proposed slot against tutor and room bookings.
-3. PonHub saves the recurring lesson, updates the student's lesson list and affected timetables, and reports success.
+1. The administrator enters one `addlesson` command with the student's displayed index, day, start and end times, subject, tutor's full name (`tu/`), and room. The administrator also supplies the tutor's phone number (`tp/`) when tutors share that name; it may be supplied for a unique name too.
+2. PonHub resolves exactly one tutor by full name, ignoring letter case and repeated spaces, and by exact phone number if supplied. It validates the student, remaining values, time range, and proposed slot against that tutor record's bookings and room bookings.
+3. PonHub saves the recurring lesson linked to the resolved tutor record, updates the student's lesson list and affected timetables, and reports success.
 
 **Extensions**
 
@@ -402,8 +402,9 @@ The documented person, lesson, attendance, search, and help operations accept al
 * 1a1. The selected lesson has linked attendance: PonHub blocks deletion, identifies the dependency, changes nothing, and the use case ends.
 * 1b. The administrator requests a planned optional preview before adding or deleting a lesson: PonHub shows the affected lesson. The administrator cancels with no change or submits the one-shot command at step 1.
 * 1c. The administrator requests a planned edit, replacement tutor, or cancellation for one occurrence: PonHub changes and saves only the intended lesson or occurrence, then the use case ends.
-* 2a. A value is missing or invalid, or the tutor does not exist: PonHub explains the problem without changing the schedule. The administrator may resubmit at step 1.
+* 2a. A value is missing or invalid, or no tutor matches the supplied full name and optional phone number: PonHub explains the problem without changing the schedule. A supplied phone number is never ignored to fall back to a name-only match. The administrator may resubmit at step 1.
 * 2b. The tutor or room is already booked: PonHub rejects the addition, identifies the conflict, and the use case ends.
+* 2c. Several tutors match the name and no phone number is supplied: PonHub rejects the command without changing data and asks for `tp/TUTOR_PHONE`. The administrator checks the matching tutors' phone numbers, restores the student list and rechecks the student's displayed index, then resubmits at step 1 with the intended tutor's name and phone number.
 * 3a. Saving an addition, deletion, or occurrence change fails: PonHub restores the previous schedule, reports the failure, and the use case ends.
 
 **Postconditions:** On success, a clash-free recurring lesson is stored, an unreferenced lesson is removed, or a planned occurrence-level change is saved. A deleted lesson's booking is released; affected lesson and timetable views are current. Failed operations leave the previous schedule unchanged.
