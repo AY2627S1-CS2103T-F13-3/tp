@@ -28,7 +28,7 @@ PonHub is a desktop app for tuition centre administrators to keep student, tutor
    * `list r/student` — shows students and their displayed indices.
    * `addlesson 1 d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1` — adds a lesson for the student displayed at index `1`.
 
-   The indices in commands refer to the current displayed list, so check the list before using an index. See the [Command summary](#command-summary) for more commands.
+   The indices in commands refer to the current displayed list, so check the list before using an index. This example assumes exactly one tutor named Mei Lim. If tutors share a name, use the `tp/` qualifier described under Adding a recurring lesson. See the [Command summary](#command-summary) for more commands.
 
 --------------------------------------------------------------------------------------------------------------------
 ## Features
@@ -168,7 +168,7 @@ Assigns a weekly recurring lesson to an existing student.
 
 #### Format
 
-`addlesson INDEX d/DAY st/START_TIME et/END_TIME s/SUBJECT tu/TUTOR_NAME rm/ROOM`
+`addlesson INDEX d/DAY st/START_TIME et/END_TIME s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
 
 #### Parameters
 
@@ -179,14 +179,15 @@ Assigns a weekly recurring lesson to an existing student.
 | `st/START_TIME` | Start time in four-digit, 24-hour HHMM format, such as `0900` or `1600`. |
 | `et/END_TIME` | End time in four-digit, 24-hour HHMM format. It must be later than the start time on the same day. |
 | `s/SUBJECT` | Between 1 and 50 characters using letters, digits and spaces. Repeated spaces are reduced to one. |
-| `tu/TUTOR_NAME` | The name of an existing tutor. Matching ignores letter case and repeated spaces. |
+| `tu/TUTOR_NAME` | The full name of an existing tutor. Matching ignores letter case and repeated spaces, but does not accept partial names. |
+| `tp/TUTOR_PHONE` | Optional when the name identifies exactly one tutor; required when several tutors share that name. Use that tutor's complete recorded phone number: 3–15 digits without spaces or punctuation. Leading zeros are retained and must match exactly. |
 | `rm/ROOM` | Between 1 and 10 letters or digits, without spaces or punctuation. |
 
-All parameters are required. Valid times range from `0000` to `2359`, with minutes from `00` to `59`. Overnight lessons are not supported.
+All parameters except `tp/` are required. If supplied, `tp/` must match the phone number of the tutor named by `tu/`, even when that name is unique. Valid times range from `0000` to `2359`, with minutes from `00` to `59`. Overnight lessons are not supported.
 
 #### Example
 
-First, use `list r/student` and check the student's index. Assuming Alex Tan is displayed at index 1 and Mei Lim already exists as a tutor:
+First, use `list r/student` and check the student's index. Assuming Alex Tan is displayed at index 1 and exactly one tutor is named Mei Lim:
 `addlesson 1 d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1`
 
 #### Expected result
@@ -196,10 +197,25 @@ PonHub adds the lesson to Alex's lesson list and displays:
 
 The student's card shows the lesson's index, day, time, subject, tutor and room.
 
+#### Selecting between tutors with the same name
+
+Two tutors may share the same name if their phone numbers differ. Without `tp/`, PonHub accepts `tu/` only when its full name matches exactly one tutor. If several tutors match, it rejects the command without changing any data and asks you to supply `tp/TUTOR_PHONE`. It does not select the first match automatically.
+
+When `tp/` is supplied, the name and phone number must identify the same tutor record. If no record matches both values, PonHub rejects the command without changing any data; it does not fall back to matching the name alone.
+
+For example, suppose two tutors are named Mei Lim, with phone numbers 92345678 and 93456789. To assign the second tutor:
+
+1. Enter `search c/tutor n/Mei Lim` and check the matching tutors' names and phone numbers. Search uses partial name matching, so check the full name of the intended tutor.
+2. Enter `list r/student` and check the intended student's index again. The tutor search changes the displayed person list, so do not reuse a student index without checking it.
+3. If Alex Tan is now displayed at index 1, enter:
+   `addlesson 1 d/Mon st/1600 et/1730 s/Math tu/Mei Lim tp/93456789 rm/R1`
+
+The `tp/` qualifier is specific to `addlesson`. To search for a tutor by phone number, use the existing `p/` filter, for example `search c/tutor p/93456789`.
+
 #### Scheduling checks
 
 PonHub rejects a lesson if its time overlaps with an existing lesson on the same day involving either:
-* The same tutor.
+* The same selected tutor record. Different tutors with the same name are checked separately.
 * The same room.
 
 A rejected addition does not create a partial lesson record.
@@ -209,7 +225,9 @@ A rejected addition does not create a partial lesson record.
 | Problem | How to correct it |
 |---------|-------------------|
 | The selected person is a tutor or parent. | Run `list r/student` and use the intended student's displayed index. |
-| The tutor cannot be found. | Add the tutor first, then use their recorded name. |
+| No tutor matches the supplied name, or the supplied name and phone number together. | Check the tutor's full recorded name and phone number. Add the tutor first if their record does not exist. |
+| Several tutors match the name and `tp/` is omitted. | Check the tutors' phone numbers, then retry with `tp/TUTOR_PHONE`. Restore the student list and recheck the student's index as described above. |
+| The tutor phone contains spaces or punctuation, or is outside 3–15 digits. | Use the complete recorded phone number, including any leading zeros. |
 | The day is written as `Monday`. | Use `Mon`. |
 | A time is written as `4pm`, `16:00` or `930`. | Use four digits, such as `1600` or `0930`. |
 | The end time is equal to or earlier than the start time. | Choose a later end time on the same day. |
@@ -443,7 +461,7 @@ Action | Format and example
 **Add parent** | `add r/parent n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]`<br>e.g., `add r/parent n/Pat Tan p/91234567`
 **List people** | `list [r/ROLE]`<br>e.g., `list r/student`
 **Delete person** | `delete INDEX`<br>e.g., `delete 2`
-**Add lesson** | `addlesson INDEX d/DAY st/START_TIME et/END_TIME s/SUBJECT tu/TUTOR_NAME rm/ROOM`
+**Add lesson** | `addlesson INDEX d/DAY st/START_TIME et/END_TIME s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
 **Delete lesson** | `deletelesson INDEX LESSON_INDEX`<br>e.g., `deletelesson 1 2`
 **Search** | `search c/CATEGORY [FILTER_PREFIX/VALUE]...`<br>e.g., `search c/student s/Math d/Mon`
 **Mark attendance** | `mark STUDENT_INDEX LESSON_INDEX d/DATE s/STATUS`<br>e.g., `mark 1 2 d/2026-09-18 s/present`
