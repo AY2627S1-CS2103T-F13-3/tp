@@ -24,8 +24,8 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 [[github](https://github.com/gugrusaurus)]
 
-* Role: Deliverables and Deadline
-* Responsibilities: Ensure project deliverables are done on time and in the right format.
+* Role: Developer, Deliverables and Deadlines, Documentation
+* Responsibilities: Implement attendance marking and unmarking; coordinate project deliverables and deadlines to ensure timely submissions in the required format; maintain the README, UI mockup, and non-feature sections of the User Guide.
 
 ### Benjamin Ng
 
