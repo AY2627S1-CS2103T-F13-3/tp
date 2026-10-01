@@ -58,4 +58,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 [[github](https://github.com/ys000009)]
 
 * Role: Developer
-* Responsibilities: DevOps + Integration
+* Responsibilities:
+    * Recurring-lesson addition and deletion
+    * DevOps and integration
+    * Developer Guide non-functional requirements and glossary
