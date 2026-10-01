@@ -33,8 +33,11 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 [[github](https://github.com/ben58882)]
 
-* Role: Developer
-* Responsibilities: Model, UI, Storage
+* Role: Developer (Model, UI and Storage)
+* Responsibilities:
+  * Develop Model filtering and UI results for search and lesson-information retrieval.
+  * Maintain Storage persistence for person and lesson records.
+  * Write Developer Guide use cases.
 
 ### Ernest Chua
 
