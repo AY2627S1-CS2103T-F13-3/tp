@@ -43,7 +43,10 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 [[github](https://github.com/ErnestChuaa)]
 
 * Role: Code Quality, Documentation
-* Responsibilities: In charge of documentation quality and code quality
+* Responsibilities:
+  * Implement and maintain the help command and command assistance.
+  * Coordinate code quality and the integration of project documentation.
+  * Author and maintain the User Guide's feature descriptions and command summary.
 
 ### Yang Shuo
 
