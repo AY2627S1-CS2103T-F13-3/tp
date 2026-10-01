@@ -16,7 +16,10 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 [[github](https://github.com/ultramanarm)]
 
 * Role: Developer
-* Responsibilities: Testing + Data, Developer Guide
+* Responsibilities:
+  * Implement and maintain commands to add, delete, and list student, tutor, and parent records.
+  * Coordinate testing and maintain representative sample data.
+  * Maintain the Developer Guide's target user profile, value proposition, and prioritised user stories.
 
 ### Vincent Lin
 
