@@ -183,6 +183,26 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Lesson scheduling value contracts
+
+The lesson scheduling foundation is represented by immutable value objects in `model.lesson`. These objects validate and
+normalize scheduling input before later lesson commands or persistence code use it:
+
+* `LessonId` is a stable identifier consisting of `L` followed by a positive `long` sequence number. Lower-case prefixes
+  are normalized, leading zeros are rejected, and advancing beyond `Long.MAX_VALUE` fails explicitly instead of wrapping.
+  The canonical aggregate introduced in a later increment will own allocation state so committed IDs are not reused.
+* `LessonDay` accepts the case-insensitive abbreviations `Mon` through `Sun` and stores their canonical display form.
+* `LessonTime` accepts exactly four digits in 24-hour `HHMM` format and retains leading zeros when displayed.
+* `LessonTimeSlot` combines one weekday with a start and end time. Its end must be strictly later than its start, so
+  overnight lessons are rejected. Slots are treated as half-open ranges: `[start, end)`. As a result, adjacent slots do
+  not overlap, and equal time ranges on different weekdays do not clash.
+* `Subject` contains 1–50 letters, digits or spaces after trimming and reducing repeated spaces to one.
+* `Room` contains 1–10 letters or digits. It is normalized to upper case so room comparisons do not miss clashes because
+  of letter case.
+
+This increment establishes domain contracts only. It does not activate or advertise a lesson command; lesson creation,
+global tutor/room clash checks, ID allocation and persistence are integrated in later increments.
+
 ### Inline help
 
 `HelpCommand` returns guidance in an ordinary `CommandResult`, with no separate-window or exit flag. It never mutates Model data, filters or preferences. `LogicManager` returns help before the inherited unconditional save path, so help works even when operational storage is unwritable and does not create or rewrite the data file. General change detection and rollback for other commands remain Vincent's integration work.
