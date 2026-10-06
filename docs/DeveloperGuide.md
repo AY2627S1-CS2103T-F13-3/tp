@@ -156,6 +156,69 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
+### Search criteria parsing foundation
+
+Issue #64 adds an independently testable search specification. `SearchCriteriaParser.parse(String)` consumes the
+arguments after a future `search` command word and returns immutable `SearchCriteria`. It is a criteria parser rather
+than an implementation of `Parser<T extends Command>`, because this increment produces a value object instead of a
+command. Runtime routing and help topics will be connected with the later search commands.
+
+`SearchCategory`, `SearchField` and `SearchCriteria` are in `seedu.address.model.search`. The specification has no model,
+UI, storage or lesson-record dependency. `SearchField` owns the prefix/category matrix and validation rules;
+`SearchCriteria` defensively copies its filters, exposes an unmodifiable map and supplies field-level matching.
+
+#### Supported criteria
+
+The required category is `c/student`, `c/parent`, `c/tutor` or `c/lesson`, ignoring category-value case.
+Category-only input is valid and imposes no field restrictions. Prefixes are lowercase, may occur in any order and
+may appear only once, including `c/`. This matrix preserves the [User Guide's search specification](UserGuide.md):
+
+| Prefix | Field | Student | Parent | Tutor | Lesson | Matching |
+|--------|-------|---------|--------|-------|--------|----------|
+| `n/` | Result person's name | Yes | Yes | Yes | — | Partial text |
+| `l/` | Student education level | Yes | — | — | — | Exact level |
+| `p/` | Result person's own phone | Yes | Yes | Yes | — | Exact digits |
+| `pp/` | Student's parent phone | Yes | — | — | — | Exact digits |
+| `e/` | Email address | Yes | Yes | Yes | — | Partial text |
+| `a/` | Postal address | Yes | Yes | Yes | — | Partial text |
+| `sn/` | Associated student's name | — | Yes | Yes | Yes | Partial text |
+| `d/` | Lesson weekday | Yes | Yes | Yes | Yes | Exact weekday |
+| `st/` | Lesson start time | Yes | Yes | Yes | Yes | Exact HHMM |
+| `et/` | Lesson end time | Yes | Yes | Yes | Yes | Exact HHMM |
+| `s/` | Lesson subject | Yes | Yes | Yes | Yes | Partial text |
+| `tu/` | Lesson tutor's name | Yes | Yes | — | Yes | Partial text |
+| `rm/` | Lesson room | Yes | Yes | Yes | Yes | Partial text |
+
+Text queries are stripped of surrounding whitespace and stored in lowercase using `Locale.ROOT`. Matching uses
+case-insensitive substring containment, so `n/al` can match `Sally Tan`, `s/Math` can match `Add Math`, and
+`e/@example` can match `mei@example.com`. Text fragments are accepted without requiring a complete valid name,
+email address or lesson field. `tu/` remains a partial tutor-name query; tutor-category name searches use `n/`.
+
+Phone filters require 3–15 ASCII digits, retain leading zeros and match the complete number. Levels accept only
+`P1`–`P6`, `S1`–`S5`, `JC1` and `JC2`, normalized to uppercase. Weekdays accept only `Mon`, `Tue`, `Wed`, `Thu`, `Fri`,
+`Sat` and `Sun`, normalized to lowercase. Times require four digits from `0000` to `2359`, with valid minutes.
+Start or end may be supplied independently; when both are present, end must be later than start on the same day.
+
+`SearchCriteria.matches(SearchField, String)` checks one supplied condition. An omitted filter imposes no restriction;
+an absent optional field fails a supplied filter. Exact-field comparisons use the same validation/normalization as
+the queries. Query integration must combine all supplied filters and preserve the existing same-student/same-lesson
+rules. This foundation validates relational criteria without traversing records or building a relationship graph.
+
+#### Errors and integration boundary
+
+The parser throws `ParseException` for missing/unknown categories, unexpected preamble, blank values, repeated
+prefixes, unknown prefixes, category-incompatible filters, invalid exact values and non-increasing time ranges.
+Slashes in values and line breaks in arguments are rejected. All prefix-shaped tokens at whitespace boundaries are
+recognized, including unknown ones: `c/student n/Alex xyz/no` reports unsupported `xyz/` instead of absorbing it into
+the name query. Horizontal whitespace can separate prefixes. Programmer-supplied null arguments raise
+`NullPointerException`; direct construction of invalid criteria raises `IllegalArgumentException`.
+
+The parser and criteria operate only on their inputs and perform no writes, ID allocation or filtering of live
+lists. Tests cover every documented prefix/category combination, normalization, partial/exact matching, retained
+phone zeros, day/level/time boundaries, unknown/blank/repeated fields, time ranges and criteria immutability.
+The existing command parser still rejects `search`; user-visible execution, results and help will be activated
+with the runtime integration issues. The current User Guide's filter scope is preserved.
+
 ### Person record foundation
 
 The person record foundation provides immutable student, tutor, and parent records for subsequent person commands and shared-lesson integration.
