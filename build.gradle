@@ -10,6 +10,8 @@ application {
     mainClass = 'seedu.address.Main'
 }
 
+version = '1.2'
+
 java {
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
@@ -72,7 +74,7 @@ dependencies {
 }
 
 shadowJar {
-    archiveFileName = 'addressbook.jar'
+    archiveFileName = 'ponhub.jar'
 }
 
 defaultTasks 'clean', 'test'

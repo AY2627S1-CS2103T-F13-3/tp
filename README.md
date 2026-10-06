@@ -4,19 +4,13 @@
 
 # PonHub
 
-PonHub helps tuition centre administrators manage students, tutors, lessons, and attendance through a fast, keyboard-focused interface.
+PonHub is being developed for tuition centre administrators to manage people, shared lessons, enrolment and dated attendance through a keyboard-focused desktop interface. The shared-lesson target lets two students join one lesson and retains attendance history after unenrolment.
 
-Built for admins who like to keep both hands on the keyboard, PonHub lets you find the people you need, arrange lessons, and keep track of who showed up — without all the unnecessary clicking.
+The current Week 8 help increment provides `help` and `help COMMAND` in Result Display, with the same guidance through the Help menu and F1. It still uses inherited contact commands; role-aware people, lesson and attendance features await integration. Read the User Guide's current command summary before using its planned workflow. The existing UI image is awaiting Ben's final integrated capture.
 
-- **Find who you're looking for, fast.** Search students, tutors, parents, and lessons using a powerful command-based interface.
-- **Manage your talent.** Add students and tutors, assign lessons, and make sure nobody gets double-booked.
-- **Keep attendance under control.** Mark who's present, who's absent, and correct mistakes when things get a little messy.
-- **Get straight to the action.** PonHub is designed around a CLI-style workflow for users who prefer typing commands over navigating endless menus.
-- **Everything in one place.** Student details, parent contacts, lesson schedules, and attendance records are kept organised and easy to access.
-
-PonHub is made for tuition centre admins who want their administrative work to be **quick, smooth, and satisfying**.
-
-Because managing attendance shouldn't be hard.
+* [User Guide](docs/UserGuide.md)
+* [Developer Guide](docs/DeveloperGuide.md)
+* [Project website](https://ay2627s1-cs2103t-f13-3.github.io/tp/)
 
 ##### Acknowledgements
 

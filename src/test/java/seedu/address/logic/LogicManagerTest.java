@@ -1,6 +1,7 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
@@ -12,6 +13,7 @@ import static seedu.address.testutil.TypicalPersons.AMY;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -68,6 +70,42 @@ public class LogicManagerTest {
     public void execute_validCommand_success() throws Exception {
         String listCommand = ListCommand.COMMAND_WORD;
         assertCommandSuccess(listCommand, ListCommand.MESSAGE_SUCCESS, model);
+    }
+
+    @Test
+    public void execute_help_doesNotCreateOperationalDataFile() throws Exception {
+        logic.execute("help");
+        logic.execute("help add");
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+    }
+
+    @Test
+    public void execute_helpWithUnavailableStorage_preservesFilteredModel() throws Exception {
+        model.addPerson(AMY);
+        model.updateFilteredPersonList(person -> false);
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.updateFilteredPersonList(person -> false);
+        JsonAddressBookStorage failingStorage = new JsonAddressBookStorage(temporaryFolder.resolve("unwritable.json")) {
+            @Override
+            public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+                throw new IOException("Help must not save operational data");
+            }
+        };
+        logic = new LogicManager(model, new StorageManager(failingStorage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json"))));
+        assertCommandSuccess("help", CommandCatalog.getOverview(), expectedModel);
+        for (String topic : CommandCatalog.getCommandWords()) {
+            assertCommandSuccess("help " + topic, CommandCatalog.getUsage(topic).orElseThrow(), expectedModel);
+        }
+        assertEquals(java.util.List.of(), logic.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_withdrawnCommands_preservesModel() {
+        model.addPerson(AMY);
+        for (String input : new String[]{"edit 1 n/Alex", "clear", "find Amy"}) {
+            assertParseException(input, MESSAGE_UNKNOWN_COMMAND);
+        }
     }
 
     @Test
