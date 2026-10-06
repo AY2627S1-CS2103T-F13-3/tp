@@ -44,8 +44,8 @@ public class FileUtil {
     }
 
     /**
-     * Atomically replaces a file with the given UTF-8 string, creating parent directories if needed.
-     * Fails if the filesystem cannot perform atomic replacement; no direct-write fallback is used.
+     * Safely saves a UTF-8 string, creating parent directories and following existing symbolic links.
+     * Prefers atomic replacement and uses a recovery backup when atomic moves are unsupported.
      */
     public static void writeToFile(Path file, String content) throws IOException {
         new AtomicFileWriter().write(file, content);

@@ -145,24 +145,32 @@ The `Storage` component,
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
 
-#### Atomic JSON saves
+#### Safe JSON saves
 
-Address-book data and user preferences use the same atomic file writer. JSON serialization completes
-before filesystem writing begins. The writer creates missing parent directories, writes and closes a
-unique UTF-8 temporary file beside the destination, then requests an atomic move onto the destination.
-The destination is not pre-created. A successful save exposes the complete new file; failures while
-writing the temporary file leave an existing destination unchanged (or a new destination absent).
+Address-book data and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
+Existing destinations are resolved to their real paths, so saving through a symbolic link updates its
+target and preserves the link. Dangling/cyclic links and inaccessible destinations fail before writing.
+New files use a resolved parent directory, creating missing directories as needed. Concurrent external
+changes to links/files and multiple application instances are not coordinated.
 
-If atomic moves or atomic replacement of an existing target are unsupported by the filesystem provider,
-the save fails and reports the I/O error. There is no non-atomic replacement fallback. Temporary files
-are removed after failures when possible; cleanup errors are attached to the original exception rather
-than masking it. A successful move consumes the temporary file. Created parent directories can remain
-after a failed save, and abrupt process termination can leave a temporary file behind.
+A complete temporary sibling file is written and closed before atomic replacement is attempted.
+Only `AtomicMoveNotSupportedException` selects the fallback; permission and other move errors propagate.
+The fallback first copies the existing destination into a unique sibling `.ponhub-backup-*.bak` file.
+If backup creation/copy fails, replacement is not attempted. After a failed ordinary replacement, the
+writer restores the old bytes from that backup (or removes a partial destination for a first save).
+If restoration also fails, the complete backup is retained and its path is included in the error;
+restore it before continuing or restarting. Never delete such a backup without recovering its contents.
 
-This protects against partial overwrites, but does not promise durability after power loss, preserve
-all previous file attributes, or coordinate concurrent application instances. Replacing a file requires
-permissions on its parent directory; the new file has the temporary file's attributes. Save failures
-still do not roll back in-memory command changes; that is separate transaction work.
+After success, backup cleanup is best effort: a cleanup failure is logged without reporting the committed
+save as failed. Other cleanup failures are suppressed on the primary error. Parent directories or
+recovery/temporary files can remain after failures or abrupt termination.
+
+The fallback permits saving on filesystems without atomic moves, but is not atomic: concurrent readers
+can observe an incomplete destination during replacement/recovery. Its guarantee is a recoverable old
+copy, not uninterrupted access at the original path. Neither path promises power-loss durability or
+preserves all previous file attributes. Save failures still do not roll back in-memory command changes;
+that is separate transaction work. Read-only commands currently still save, but unsupported atomic
+moves alone no longer make those saves fail.
 
 ### Common classes
 
