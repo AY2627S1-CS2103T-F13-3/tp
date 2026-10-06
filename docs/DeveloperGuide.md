@@ -16,7 +16,7 @@ title: Developer Guide
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
 * Ernest's Week 8 help increment used OpenAI Codex to inspect the repository, generate and revise the command catalogue, inline-help implementation, regression tests, and Ernest's documentation coordination changes. This attribution covers that increment; it does not claim authorship of teammates' feature implementations or imply teammate review has occurred.
-* Zhu Zhi Yu used OpenAI Codex to prepare the dormant person-card display projection, FXML renderer, display tests, isolated developer preview, and the related integration and manual-testing documentation. This attribution covers that card increment.
+* Zhu Zhi Yu used OpenAI Codex to prepare the dormant person-card display projection, FXML renderer, projection and renderer tests, isolated developer preview, Linux CI virtual-display setup, and the related integration and manual-testing documentation. This attribution covers that card increment.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -247,7 +247,7 @@ Tests exercise each registered help topic and its example through the actual rou
 
 `PersonRecordCard(PersonRecord, int)` loads `PersonRecordCard.fxml` and renders the projection. The heading, identity, and detail labels wrap with no fixed card height. The future list-cell host must size the card to the available cell width and provide vertical scrolling; `PersonRecordCardPreview` demonstrates that host with the current theme. Stable IDs never become displayed indices, and no second writable person store is introduced.
 
-Automated projection tests cover all roles, absent/present contacts, required fields, exact display values, long text, index/ID separation, immutable detail lines, and invalid inputs. The developer preview exercises the actual FXML separately from the application and uses fixture records without loading or saving operational files. Its layout procedure appears below.
+Automated projection tests cover all roles, absent/present contacts, required fields, exact display values, long text, index/ID separation, immutable detail lines, and invalid inputs. Renderer regression tests load the actual FXML on the JavaFX application thread and check the displayed values and wrapping. Linux CI runs the Gradle checks under a virtual display; developers on Linux without a display can likewise run `xvfb-run --auto-servernum ./gradlew check coverage` with Xvfb installed. The developer preview exercises the actual FXML separately from the application and uses fixture records without loading or saving operational files. Its layout procedure appears below.
 
 ### Search criteria parsing foundation
 
