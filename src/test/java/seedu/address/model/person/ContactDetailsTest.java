@@ -21,6 +21,17 @@ public class ContactDetailsTest {
     }
 
     @Test
+    public void constructor_populatedOptionalFields_preservesContactDetails() {
+        ContactDetails details = new ContactDetails(new Name("Alex Tan"), Optional.of(new Phone("0012345678")),
+                Optional.of(new Email("alex@example.com")), Optional.of(new Address("12 Main Street")));
+
+        assertEquals(new Name("Alex Tan"), details.getName());
+        assertEquals("0012345678", details.getPhone().orElseThrow().value);
+        assertEquals(Optional.of(new Email("alex@example.com")), details.getEmail());
+        assertEquals(Optional.of(new Address("12 Main Street")), details.getAddress());
+    }
+
+    @Test
     public void constructor_nullFields_throwsNullPointerException() {
         Name name = new Name("Alex Tan");
         assertThrows(NullPointerException.class, () -> new ContactDetails(null));
@@ -75,5 +86,17 @@ public class ContactDetailsTest {
         assertNotEquals(original, new ContactDetails(new Name("Alex TAN")));
         assertNotEquals(original, null);
         assertNotEquals(original, name);
+    }
+
+    @Test
+    public void equalsAndHashCode_populatedContacts_matchesIndependentValues() {
+        ContactDetails original = new ContactDetails(new Name("Alex Tan"), Optional.of(new Phone("0012345678")),
+                Optional.of(new Email("alex@example.com")), Optional.of(new Address("12 Main Street")));
+        ContactDetails same = new ContactDetails(new Name("Alex Tan"), Optional.of(new Phone("0012345678")),
+                Optional.of(new Email("alex@example.com")), Optional.of(new Address("12 Main Street")));
+
+        assertEquals(original, same);
+        assertEquals(same, original);
+        assertEquals(original.hashCode(), same.hashCode());
     }
 }
