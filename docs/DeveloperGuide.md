@@ -11,7 +11,7 @@ title: Developer Guide
 
 * PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
-* Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search and inline-help increments.
+* Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search, inline-help, and atomic-save increments.
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
@@ -172,6 +172,33 @@ The `Storage` component,
 * can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
+
+#### Safe JSON saves
+
+Address-book data and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
+Existing destinations are resolved to their real paths, so saving through a symbolic link updates its
+target and preserves the link. Dangling/cyclic links and inaccessible destinations fail before writing.
+New files use a resolved parent directory, creating missing directories as needed. Concurrent external
+changes to links/files and multiple application instances are not coordinated.
+
+A complete temporary sibling file is written and closed before atomic replacement is attempted.
+Only `AtomicMoveNotSupportedException` selects the fallback; permission and other move errors propagate.
+The fallback first copies the existing destination into a unique sibling `.ponhub-backup-*.bak` file.
+If backup creation/copy fails, replacement is not attempted. After a failed ordinary replacement, the
+writer restores the old bytes from that backup (or removes a partial destination for a first save).
+If restoration also fails, the complete backup is retained and its path is included in the error;
+restore it before continuing or restarting. Never delete such a backup without recovering its contents.
+
+After success, backup cleanup is best effort: a cleanup failure is logged without reporting the committed
+save as failed. Other cleanup failures are suppressed on the primary error. Parent directories or
+recovery/temporary files can remain after failures or abrupt termination.
+
+The fallback permits saving on filesystems without atomic moves, but is not atomic: concurrent readers
+can observe an incomplete destination during replacement/recovery. Its guarantee is a recoverable old
+copy, not uninterrupted access at the original path. Neither path promises power-loss durability or
+preserves all previous file attributes. Save failures still do not roll back in-memory command changes;
+that is separate transaction work. Help skips saving; other read-only commands currently still save,
+but unsupported atomic moves alone no longer make those saves fail.
 
 ### Common classes
 

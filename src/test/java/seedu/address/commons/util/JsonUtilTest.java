@@ -1,11 +1,16 @@
 package seedu.address.commons.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import com.fasterxml.jackson.annotation.JsonValue;
 
 import seedu.address.testutil.SerializableTestClass;
 import seedu.address.testutil.TestUtil;
@@ -37,6 +42,21 @@ public class JsonUtilTest {
         assertEquals(serializableTestClass.getName(), SerializableTestClass.getNameTestValue());
         assertEquals(serializableTestClass.getListOfLocalDateTimes(), SerializableTestClass.getListTestValues());
         assertEquals(serializableTestClass.getMapOfIntegerToString(), SerializableTestClass.getHashMapTestValues());
+    }
+
+    @Test
+    public void saveJsonFile_serializationFailure_preservesDestination(@TempDir Path directory) throws IOException {
+        Path target = directory.resolve("data.json");
+        Files.writeString(target, "original");
+        assertThrows(IOException.class, () -> JsonUtil.saveJsonFile(new UnserializableValue(), target));
+        assertEquals("original", Files.readString(target));
+    }
+
+    private static class UnserializableValue {
+        @JsonValue
+        public String value() {
+            throw new IllegalStateException("Cannot serialize");
+        }
     }
 
     //TODO: @Test jsonUtil_readJsonStringToObjectInstance_correctObject()
