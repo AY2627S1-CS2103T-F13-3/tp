@@ -24,6 +24,16 @@ public class StudentTest {
     }
 
     @Test
+    public void constructor_optionalContactFields_preservesStudentContactDetails() {
+        Student student = createStudentWithContactDetails("00012345", "alex@example.com", "12 Main Street");
+
+        assertEquals(Optional.of(new Phone("00012345")), student.getContactDetails().getPhone());
+        assertEquals(Optional.of(new Email("alex@example.com")), student.getContactDetails().getEmail());
+        assertEquals(Optional.of(new Address("12 Main Street")), student.getContactDetails().getAddress());
+        assertEquals(new Phone("91234567"), student.getParentPhone());
+    }
+
+    @Test
     public void constructor_nonStudentIds_throwsIllegalArgumentException() {
         ContactDetails details = new ContactDetails(new Name("Alex Tan"));
         EducationLevel level = new EducationLevel("S2");
@@ -96,8 +106,44 @@ public class StudentTest {
         assertNotEquals(original, original.getContactDetails());
     }
 
+    @Test
+    public void equals_ownPhoneChange_distinguishesStateWithoutChangingDuplicateKey() {
+        Student original = createStudentWithContactDetails("91234567", "alex@example.com", "12 Main Street");
+        Student changed = createStudentWithContactDetails("92345678", "alex@example.com", "12 Main Street");
+
+        assertNotEquals(original, changed);
+        assertTrue(original.isDuplicateOf(changed));
+        assertTrue(changed.isDuplicateOf(original));
+    }
+
+    @Test
+    public void equals_emailChange_distinguishesStateWithoutChangingDuplicateKey() {
+        Student original = createStudentWithContactDetails("91234567", "alex@example.com", "12 Main Street");
+        Student changed = createStudentWithContactDetails("91234567", "alex.tan@example.com", "12 Main Street");
+
+        assertNotEquals(original, changed);
+        assertTrue(original.isDuplicateOf(changed));
+        assertTrue(changed.isDuplicateOf(original));
+    }
+
+    @Test
+    public void equals_addressChange_distinguishesStateWithoutChangingDuplicateKey() {
+        Student original = createStudentWithContactDetails("91234567", "alex@example.com", "12 Main Street");
+        Student changed = createStudentWithContactDetails("91234567", "alex@example.com", "34 Main Street");
+
+        assertNotEquals(original, changed);
+        assertTrue(original.isDuplicateOf(changed));
+        assertTrue(changed.isDuplicateOf(original));
+    }
+
     private static Student createStudent(String id, String name, String level, String parentPhone) {
         return new Student(new PersonId(id), new ContactDetails(new Name(name)),
                 new EducationLevel(level), new Phone(parentPhone));
+    }
+
+    private static Student createStudentWithContactDetails(String phone, String email, String address) {
+        ContactDetails details = new ContactDetails(new Name("Alex Tan"), Optional.of(new Phone(phone)),
+                Optional.of(new Email(email)), Optional.of(new Address(address)));
+        return new Student(new PersonId("S1"), details, new EducationLevel("S2"), new Phone("91234567"));
     }
 }
