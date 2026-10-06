@@ -10,7 +10,7 @@ title: Developer Guide
 ## **Acknowledgements**
 
 * PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
-* Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student record foundation's model classes, automated tests, and design documentation. This acknowledgement covers that bounded contribution.
+* Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
 * Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search and inline-help increments.
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
@@ -256,9 +256,9 @@ relationship-filter contract in #64. The shared-lesson target above and the
 [User Guide](UserGuide.html#planned-shared-lesson-workflow) instead use tutor IDs and a narrower initial filter set.
 Feature owners must reconcile these contracts before registering runtime search commands or help.
 
-### Student record foundation
+### Person record foundation
 
-The student record foundation provides reusable domain types for subsequent person commands and shared-lesson integration.
+The person record foundation provides immutable student, tutor, and parent records for subsequent person commands and shared-lesson integration.
 The current command, UI, and JSON aggregate still use the inherited AB3 `Person` model; integrating the new types with these components is follow-up work.
 
 | Type | Implemented contract |
@@ -267,15 +267,18 @@ The current command, UI, and JSON aggregate still use the inherited AB3 `Person`
 | `PersonId` | Represents a stable role-prefixed identifier, such as `S1`, `T1`, or `P1`, with a positive `long` sequence number and no leading zeros. Input is trimmed and case-normalized. |
 | `EducationLevel` | Accepts `P1`–`P6`, `S1`–`S5`, `JC1`, or `JC2`, normalizing trimmed input to uppercase. |
 | `ContactDetails` | Composes a required `Name` with optional `Phone`, `Email`, and `Address` values. It reuses the existing contact value types and requires any supplied phone number to contain 3–15 digits. |
+| `PersonRecord` | Provides common access to a record's stable ID, contact details, name, and role, and declares `isDuplicateOf(PersonRecord)` for role-specific duplicate matching. |
 | `Student` | Composes a student-role `PersonId`, `ContactDetails`, `EducationLevel`, and required parent `Phone`. The parent phone must contain 3–15 digits; the student's own phone, email, and address remain optional. |
+| `Tutor` | Composes a tutor-role `PersonId` and `ContactDetails`. Its own phone is required; email and address remain optional. |
+| `Parent` | Composes a parent-role `PersonId` and `ContactDetails`. Its own phone is required; email and address remain optional. |
 
-`ContactDetails` and `Student` are immutable. `Student` is a standalone domain class composed from the common contact abstraction; it does not extend the inherited `Person` class. Its constructor rejects a tutor or parent ID.
+`Student`, `Tutor`, and `Parent` implement `PersonRecord` and compose immutable `ContactDetails`; none extends the inherited `Person` class. Each constructor rejects IDs for another role. `Tutor#getPhone()` and `Parent#getPhone()` expose their required own phone, which follows the same 3–15 digit limit as other supplied phone values.
 
 **Validation boundary:** `Name`, `Email`, and `Address` still enforce their inherited AB3 validation rules. This foundation does not yet implement the User Guide's wider name punctuation and field-format or length rules; [issue #61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61) tracks that alignment. Contact details preserve the supplied display values; name normalization is used only for duplicate matching.
 
-**Identity and duplicates:** The stable `PersonId` identifies a record independently of its contact details or position in a displayed list. `Student#isDuplicateOf(Student)` instead compares the student's name, ignoring case and repeated spaces, together with the exact parent phone number. Different IDs or optional contact details do not distinguish otherwise duplicate students. This operation identifies a duplicate candidate; aggregate-level rejection is part of later command integration.
+**Identity, equality, and duplicates:** The stable `PersonId` identifies a record independently of its contact details or position in a displayed list. Value equality compares the ID and all stored fields, including optional contact details and the student's education level and parent phone. `isDuplicateOf(PersonRecord)` instead requires the same role and compares the name, ignoring case and repeated spaces, together with the required identifying phone: the parent phone for students or the record's own phone for tutors and parents. Different IDs, optional contact details, or student education levels do not distinguish otherwise duplicate records. A null or different-role argument is not a duplicate. This operation identifies a duplicate candidate; aggregate-level rejection is part of later command integration.
 
-**Planned relationships:** `Student` does not contain lesson or attendance collections. The planned shared-lesson model will keep canonical lessons and student–lesson membership outside the student record, referring to stable IDs so several students can share one lesson. Dated attendance and the storage of these relationships are separate follow-up work.
+**Planned relationships:** The person records do not contain lesson or attendance collections. The planned shared-lesson model will keep canonical lessons and student–lesson membership outside the student record, referring to stable IDs so several students can share one lesson. Separate parent records remain optional; future parent links will use exact equality between a parent's own phone and a student's stored parent phone, without requiring a stored `Parent` object in `Student`. Relationship lookup, dated attendance, and the storage of these relationships are separate follow-up work.
 
 ### \[Proposed\] Undo/redo feature
 
