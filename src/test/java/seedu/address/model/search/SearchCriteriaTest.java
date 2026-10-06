@@ -116,6 +116,8 @@ public class SearchCriteriaTest {
         assertThrows(IllegalArgumentException.class, () ->
                 new SearchCriteria(SearchCategory.STUDENT, Map.of(SearchField.NAME, "Alex\nTan")));
         assertThrows(IllegalArgumentException.class, () ->
+                new SearchCriteria(SearchCategory.STUDENT, Map.of(SearchField.NAME, "Alex\rTan")));
+        assertThrows(IllegalArgumentException.class, () ->
                 new SearchCriteria(SearchCategory.STUDENT, Map.of(SearchField.PHONE, "12")));
         assertThrows(IllegalArgumentException.class, () ->
                 new SearchCriteria(SearchCategory.LESSON,
@@ -147,5 +149,18 @@ public class SearchCriteriaTest {
         } finally {
             Locale.setDefault(original);
         }
+    }
+
+    @Test
+    public void toString_normalizedCriteria_includeCategoryAndFilters() {
+        SearchCriteria criteria = new SearchCriteria(SearchCategory.STUDENT,
+                Map.of(SearchField.NAME, " Alex ", SearchField.LEVEL, "s2"));
+        String expected = SearchCriteria.class.getCanonicalName()
+                + "{category=STUDENT, filters={NAME=alex, LEVEL=S2}}";
+        assertEquals(expected, criteria.toString());
+
+        SearchCriteria categoryOnly = new SearchCriteria(SearchCategory.LESSON, Map.of());
+        assertEquals(SearchCriteria.class.getCanonicalName() + "{category=LESSON, filters={}}",
+                categoryOnly.toString());
     }
 }
