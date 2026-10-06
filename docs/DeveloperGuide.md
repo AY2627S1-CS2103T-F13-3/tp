@@ -11,7 +11,7 @@ title: Developer Guide
 
 * PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
-* Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search and inline-help increments.
+* Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search, inline-help, and atomic-save increments.
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
@@ -197,8 +197,8 @@ The fallback permits saving on filesystems without atomic moves, but is not atom
 can observe an incomplete destination during replacement/recovery. Its guarantee is a recoverable old
 copy, not uninterrupted access at the original path. Neither path promises power-loss durability or
 preserves all previous file attributes. Save failures still do not roll back in-memory command changes;
-that is separate transaction work. Read-only commands currently still save, but unsupported atomic
-moves alone no longer make those saves fail.
+that is separate transaction work. Help skips saving; other read-only commands currently still save,
+but unsupported atomic moves alone no longer make those saves fail.
 
 ### Common classes
 

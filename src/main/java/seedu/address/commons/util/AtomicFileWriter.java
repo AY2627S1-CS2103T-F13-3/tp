@@ -58,12 +58,16 @@ class AtomicFileWriter {
         return target;
     }
 
-    /** Writes and closes the temporary file before replacement. */
+    /**
+     * Writes and closes the temporary file before replacement.
+     */
     void writeTemporary(Path temporary, String content) throws IOException {
         Files.writeString(temporary, content, StandardCharsets.UTF_8);
     }
 
-    /** Falls back only when the provider explicitly reports unsupported atomic moves. */
+    /**
+     * Falls back only when the provider explicitly reports unsupported atomic moves.
+     */
     void replace(Path temporary, Path target) throws IOException {
         try {
             moveAtomically(temporary, target);
@@ -120,17 +124,23 @@ class AtomicFileWriter {
         }
     }
 
-    /** Requests an atomic move without an unsafe implicit retry. */
+    /**
+     * Requests an atomic move without an unsafe implicit retry.
+     */
     void moveAtomically(Path temporary, Path target) throws IOException {
         Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
     }
 
-    /** Moves a staged file after a complete recovery backup has been created, if needed. */
+    /**
+     * Moves a staged file after a complete recovery backup has been created, if needed.
+     */
     void moveNormally(Path temporary, Path target) throws IOException {
         Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
     }
 
-    /** Copies old data to a backup, or restores it after a failed ordinary move. */
+    /**
+     * Copies old data to a backup, or restores it after a failed ordinary move.
+     */
     void copyFile(Path source, Path target) throws IOException {
         Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
     }
@@ -143,7 +153,9 @@ class AtomicFileWriter {
         }
     }
 
-    /** Removes a temporary or backup file when it is no longer needed for recovery. */
+    /**
+     * Removes a temporary or backup file when it is no longer needed for recovery.
+     */
     void deleteTemporary(Path temporary) throws IOException {
         Files.deleteIfExists(temporary);
     }
