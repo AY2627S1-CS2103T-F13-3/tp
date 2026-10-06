@@ -11,7 +11,7 @@ import seedu.address.commons.util.ToStringBuilder;
  * An immutable student record with a stable ID, education level, and required parent contact.
  * Shared lesson membership and dated attendance are maintained separately from the student record.
  */
-public final class Student {
+public final class Student implements PersonRecord {
 
     public static final String MESSAGE_ID_CONSTRAINTS = "Student records require a student person ID.";
 
@@ -36,14 +36,17 @@ public final class Student {
         this.parentPhone = parentPhone;
     }
 
+    @Override
     public PersonId getId() {
         return id;
     }
 
+    @Override
     public ContactDetails getContactDetails() {
         return contactDetails;
     }
 
+    @Override
     public Name getName() {
         return contactDetails.getName();
     }
@@ -57,13 +60,14 @@ public final class Student {
     }
 
     /**
-     * Returns whether another student has the same normalized name and parent phone.
+     * Returns whether another record is a student with the same normalized name and parent phone.
      * Stable IDs, education levels, and optional contact fields do not change this duplicate key.
      */
-    public boolean isDuplicateOf(Student other) {
-        return other != null
-                && contactDetails.getNormalizedName().equals(other.contactDetails.getNormalizedName())
-                && parentPhone.equals(other.parentPhone);
+    @Override
+    public boolean isDuplicateOf(PersonRecord other) {
+        return other instanceof Student otherStudent
+                && contactDetails.getNormalizedName().equals(otherStudent.contactDetails.getNormalizedName())
+                && parentPhone.equals(otherStudent.parentPhone);
     }
 
     @Override
