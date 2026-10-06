@@ -12,7 +12,7 @@ title: Developer Guide
 * PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
 * Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search, inline-help, and atomic-save increments.
-* Zhu Zhi Yu used OpenAI Codex to document the confirmed person command-index boundary, related integration requirements, and manual checks. This acknowledgement covers that documentation update.
+* Zhu Zhi Yu used OpenAI Codex to document the confirmed person command-index boundary and reconcile shared-lesson command formats, staged search scope, legacy recovery policy, use cases, and manual checks. This acknowledgement covers those documentation changes; feature implementations remain with their owners.
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
@@ -40,19 +40,36 @@ When registering or withdrawing a command, update catalogue/router tests, its UG
 
 ### Shared-lesson target contract
 
-The coordination target supplied for Week 8 uses one authoritative people collection, one independent Lesson collection, and separate dated Attendance records. Common contact behavior belongs in the person abstraction; Student holds education level and parent contact. Student must not own copies of shared lessons. Each Lesson owns `enrolledStudentIds`; derive student lessons, rosters and tutor schedules from that association. Attendance has the unique key student ID + lesson ID + date, with `present` or `absent`; a missing entry is unrecorded.
+The broader team integration target uses one authoritative people collection, one independent Lesson collection, and separate dated Attendance records. Student composes common contact details and holds education level and parent contact. Student must not own copies of shared lessons. Each Lesson owns `enrolledStudentIds`; derive student lessons, rosters and tutor schedules from that association. Attendance has the unique key student ID + lesson ID + date, with `present` or `absent`; a missing entry is unrecorded.
 
-**Confirmed person-selector boundary:** Commands select a person using a positive one-based index from the current filtered **people list**, following AB3's command-input convention. This applies to deletion and to the student selector for enrolment, unenrolment, attendance, history, and student-specific lesson retrieval when those routes are integrated. An index selects the card at that position in the current people view, not that position in the unfiltered collection, a lesson roster, or a lesson/history result. Validate the range and required role, then resolve the index once to the selected record's stable `PersonId` before invoking Model or query APIs. Reuse that resolved ID throughout the operation; later view refreshes must not select another record by reinterpreting the index.
+**Confirmed person-selector boundary:** `INDEX` and `STUDENT_INDEX` arguments use a positive one-based position in the current filtered **people list**, following AB3's command-input convention. This applies to deletion and to the student selector for enrolment, unenrolment, attendance, history, and student-specific lesson retrieval when those routes are integrated. An index selects the card at that position in the current people view, not that position in the unfiltered collection, a lesson roster, or a lesson/history result. Validate the range and required role, then resolve the index once to the selected record's stable `PersonId` before invoking Model or query APIs. Reuse that resolved ID throughout the operation; later view refreshes must not select another record by reinterpreting the index. Lesson creation has the separate named-tutor lookup described below, which also resolves once to a stable ID.
 
-Stable person IDs such as `S1`, `T1` and `P1` remain displayed, stored, and used by internal lookup, queries, relationships and persistence. Cards distinguish the current-view index from the stable ID. Filtering or reordering renumbers the people view from one without changing stored identities. Stable lesson IDs such as `L1` also remain displayed and persisted; their command argument format is a separate pending choice. Lesson catalogue, roster and history results use separate views and preserve the current people filter, order and indices. Their row positions never replace people-list command selectors.
+Stable person IDs such as `S1`, `T1` and `P1` remain displayed, stored, and used by internal lookup, queries, relationships and persistence. Cards distinguish the current-view index from the stable ID. Filtering or reordering renumbers the people view from one without changing stored identities. Stable lesson IDs such as `L1` remain displayed and persisted; all command references to an existing lesson use `lid/LESSON_ID`, for example `lid/L1`. Lesson catalogue, roster and history results use separate views and preserve the current people filter, order and indices. Their row positions never replace people-list command selectors.
 
-The planned lesson-catalogue filter is `lessons [si/STUDENT_INDEX]`. Its optional student selector follows the same current people-list index and Student-role validation, then passes the resolved stable ID to the internal student-lesson query. It replaces the tracker's earlier external `sid/STUDENT_ID` form; internal Student-ID query APIs remain ID-based. This planned route is not yet active.
+The planned lesson-catalogue filter is `lessons [si/STUDENT_INDEX]`. Its optional student selector follows the same current people-list index and Student-role validation, then passes the resolved stable ID to the internal student-lesson query. Internal Student-ID query APIs remain ID-based. This planned route is not yet active.
 
-**Remaining owner reconciliation:** The person index-versus-ID command choice is settled. Lesson-creation tutor selection still differs between tracker #59's full name plus optional phone and the guide's tutor-ID form; lesson arguments still differ between prefixed stable IDs (`lid/L1`), positional stable IDs (`L1`) and obsolete per-student lesson indices (`LESSON_INDEX`). The supported search-filter scope and older per-student versus shared-lesson use cases also remain to be reconciled. Those separate conflicts are not resolved by this person-selector update, and no pending command becomes available merely because its target contract is documented.
+**Tutor selection:** `addlesson` resolves `tu/TUTOR_NAME` as a normalized full name, ignoring letter case and repeated spaces. Optional `tp/TUTOR_PHONE` must match the tutor's exact phone number; never ignore a supplied phone to fall back to the name. Reject zero matches or ambiguity without changing data, and request a disambiguating phone when needed. Search `tu/` instead matches a case-insensitive name fragment. Tutor-category name search uses `n/`. Stable person IDs are not external lookup selectors for these commands.
+
+The planned shared-lesson routes are:
+
+| Action | Format |
+| --- | --- |
+| Create lesson | `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` |
+| Enrol / unenrol | `enrol STUDENT_INDEX lid/LESSON_ID` / `unenrol STUDENT_INDEX lid/LESSON_ID` |
+| Delete lesson | `deletelesson lid/LESSON_ID` |
+| Catalogue | `lessons [si/STUDENT_INDEX]` |
+| Lesson detail | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` |
+| Mark / correct | `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present\|absent` |
+| Unmark | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` |
+| History | `history STUDENT_INDEX [lid/LESSON_ID]` |
+
+The complete [search matrix](#supported-criteria) remains the planned target. Own-contact searches can be integrated first, followed by the relational families. Each delivered route advertises only its available filters; staging does not silently remove the remaining filters from the target. Documenting a route does not activate it.
 
 Create lessons with empty rosters. Tutor and room clashes are checked once per shared lesson; student timetable clashes are checked on enrolment. Time intervals are half-open so adjacent bookings are allowed. Unenrolment removes membership and retains attendance. New attendance requires membership; existing history can be corrected or unmarked after unenrolment. Block student deletion for enrolment/history, tutor deletion for lesson references, and lesson deletion for enrolment/history. Deleting a separate Parent preserves the student's stored parent phone; parent links derive from matching phone values.
 
-All mutations go through Model APIs using stable identities after command-boundary resolution. Complete aggregate copy/reset/equality and snapshots cover people, lessons, memberships, attendance and allocation state. Vincent coordinates validated versioned JSON and transactional saves; failed saves must restore data and active views before those commands are enabled. The canonical runtime cutover must connect a compatible people view, index resolution, guarded commands and persistence together. Do not persist displayed indices or introduce a second people store; verify that separate lesson/roster/history results preserve the people view used by the next command. Preferences remain separate. Capacity, waiting lists, make-ups, fees, lesson editing, occurrence cancellation, undo/redo and advanced search remain future scope.
+All mutations go through Model APIs using stable identities after command-boundary resolution. Complete aggregate copy/reset/equality and independent snapshots cover people, lessons, memberships, attendance and monotonic allocation state; deleted committed IDs are not reused. Vincent coordinates validated versioned JSON and transactional saves; failed saves must restore data and active views before those commands are enabled. The canonical runtime cutover must connect a compatible people view, index resolution, guarded commands and persistence together. Do not persist displayed indices or introduce a second people store; verify that separate lesson/roster/history results preserve the people view used by the next command. Preferences remain separate. Capacity, waiting lists, make-ups, export, saved searches, archiving, richer attendance statuses or notes, attendance percentages, fees, lesson editing, occurrence cancellation, undo/redo and guided advanced search are future extensions.
+
+**Iteration boundary:** The [Week 8 course instructions](https://nus-cs2103-ay2627-s1.github.io/website/schedule/week8/project.html) call for small first increments towards the simplest MVP. Each member should aim for a meaningful reviewed and merged code PR. An individual feature need not be complete end-to-end, but intermediate versions must remain working; this iteration requires no product release. The broader team target remains visible in [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59). Carry unfinished work into v1.3 honestly. Compatible loading and rollback remain safety requirements when a mutation is activated, rather than a requirement to finish every planned feature in Week 8.
 
 Zhu owns people/testing; Yang Shuo owns lessons/enrolment/attendance; Ben owns retrieval/views; Vincent owns saving/loading/attendance history; Ernest owns routing/help and documentation coordination. Each owner authors their own feature documentation in the existing UG/DG. Ernest reconciles shared conventions and examples without taking ownership of those implementations.
 
@@ -211,6 +228,14 @@ preserves all previous file attributes. Save failures still do not roll back in-
 that is separate transaction work. Help skips saving; other read-only commands currently still save,
 but unsupported atomic moves alone no longer make those saves fail.
 
+#### Planned protected loading and legacy upgrade
+
+These are requirements for the first canonical cutover, not behavior delivered by the inherited loader. Keep the inherited runtime until the compatible canonical Model, codecs, people commands and protected loader are activated together. The new runtime must classify the configured file before decoding: missing data may start a fresh supported root; valid supported versioned data loads only after complete domain, identity and reference validation. Unreadable, corrupt, unsupported-version and unversioned AB3 files produce controlled errors, actionable recovery guidance and no operational writes to the rejected file. Preserve its original bytes through help, list, exit and attempted mutations; saving preferences remains separate.
+
+The initial upgrade policy is deliberate backup and manual re-entry into a separate new supported store. An unversioned AB3 contact does not contain enough information to infer a Student, Tutor or Parent role, and a Student additionally needs its level and parent phone. Do not invent those values, discard invalid records, or convert the original in place. Once the canonical build is available, tell the administrator to close the app, preserve a backup of the original data folder, deliberately start that compatible build in a separate empty folder, and re-enter records with explicitly chosen roles and required fields using the delivered commands. The preserved original and backup are not operational write targets; only the explicitly chosen new supported root is writable. Check the new records before retiring the old working folder. A migration importer and application-level export are future extensions; this policy does not introduce an `import`, `export` or `recover` command.
+
+The contact changes in #61 can reject formerly accepted numeric-only names, long phones or slash-containing addresses, or reveal duplicates after normalization. Diagnose the affected values without overwriting the rejected data. Inspect the local JSON read-only; if the older build is needed to inspect contacts, use an additional working copy, never the preserved original or backup. The administrator supplies any corrections and missing role information. Correctly human-edited supported JSON must load: document the delivered schema, preserve valid stable IDs and allocation state, and validate all relationships without requiring users to avoid editing the file. An invalid edit is rejected as a whole with its bytes preserved. The [planned manual checks](#planned-canonical-loading-and-recovery) cover this boundary.
+
 ### Common classes
 
 Classes used by multiple components are in the `seedu.address.commons` package.
@@ -309,10 +334,13 @@ the name query. Horizontal whitespace can separate prefixes. Programmer-supplied
 The parser and criteria operate only on their inputs and perform no writes, ID allocation or filtering of live
 lists. Tests cover every documented prefix/category combination, normalization, partial/exact matching, retained
 phone zeros, day/level/time boundaries, unknown/blank/repeated fields, time ranges and criteria immutability.
-The active router still rejects `search`. This standalone foundation follows the earlier tutor-name and
-relationship-filter contract in #64. The [User Guide](UserGuide.html#planned-shared-lesson-workflow) still describes
-tutor-ID queries and a narrower initial filter set. These search conflicts remain separate from the confirmed
-person command-index boundary; feature owners must reconcile them before registering runtime search commands or help.
+The active router still rejects `search`. The full matrix above is the retained planned search contract, including
+partial tutor-name queries and relationship filters. Own-field search can be activated as an earlier slice; later
+relational slices must retain same-student/same-lesson conjunctions and distinct-ID results. For example, a parent
+search combining `sn/Alex` and `s/Math` must find a matching lesson for that same linked Alex, rather than use one
+child for the name and another for the subject. A student's combined day/subject filters must match one enrolled
+lesson. Lesson results must count each shared lesson once and include empty lessons when the supplied filters allow
+them. Feature owners update routing, help and guides for each activated slice without reducing the outstanding target.
 
 ### Person record foundation
 
@@ -340,94 +368,11 @@ The current command, UI, and JSON aggregate still use the inherited AB3 `Person`
 
 **Planned relationships:** The person records do not contain lesson or attendance collections. The planned shared-lesson model will keep canonical lessons and student–lesson membership outside the student record, referring to stable IDs so several students can share one lesson. Separate parent records remain optional; future parent links will use exact equality between a parent's own phone and a student's stored parent phone, without requiring a stored `Parent` object in `Student`. Relationship lookup, dated attendance, and the storage of these relationships are separate follow-up work.
 
-### \[Proposed\] Undo/redo feature
+### Future undo/redo and archiving
 
-#### Proposed Implementation
+Undo/redo and student archiving are future extensions. The inherited AB3 undo diagrams and `VersionedAddressBook` example do not describe an implemented PonHub mechanism. No undo, redo, archive or restore route is registered in the current command catalogue.
 
-The proposed undo/redo mechanism is facilitated by `VersionedAddressBook`. It extends `AddressBook` with an undo/redo history, stored internally as an `addressBookStateList` and `currentStatePointer`. Additionally, it implements the following operations:
-
-* `VersionedAddressBook#commit()` — Saves the current address book state in its history.
-* `VersionedAddressBook#undo()` — Restores the previous address book state from its history.
-* `VersionedAddressBook#redo()` — Restores a previously undone address book state from its history.
-
-These operations are exposed in the `Model` interface as `Model#commitAddressBook()`, `Model#undoAddressBook()` and `Model#redoAddressBook()` respectively.
-
-Given below is an example usage scenario and how the undo/redo mechanism behaves at each step.
-
-Step 1. The user launches the application for the first time. The `VersionedAddressBook` will be initialized with the initial address book state, and the `currentStatePointer` pointing to that single address book state.
-
-![UndoRedoState0](images/UndoRedoState0.png)
-
-Step 2. The user executes `delete 5` command to delete the 5th person in the current filtered people list. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
-
-![UndoRedoState1](images/UndoRedoState1.png)
-
-Step 3. The user executes `add n/David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
-
-![UndoRedoState2](images/UndoRedoState2.png)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
-
-</div>
-
-Step 4. The user now decides that adding the person was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
-
-![UndoRedoState3](images/UndoRedoState3.png)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index 0, pointing to the initial AddressBook state, then there are no previous AddressBook states to restore. The `undo` command uses `Model#canUndoAddressBook()` to check if this is the case. If so, it will return an error to the user rather
-than attempting to perform the undo.
-
-</div>
-
-The following sequence diagram shows how an undo operation goes through the `Logic` component:
-
-![UndoSequenceDiagram](images/UndoSequenceDiagram-Logic.png)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `UndoCommand` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
-
-</div>
-
-Similarly, how an undo operation goes through the `Model` component is shown below:
-
-![UndoSequenceDiagram](images/UndoSequenceDiagram-Model.png)
-
-The `redo` command does the opposite — it calls `Model#redoAddressBook()`, which shifts the `currentStatePointer` once to the right, pointing to the previously undone state, and restores the address book to that state.
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index `addressBookStateList.size() - 1`, pointing to the latest address book state, then there are no undone AddressBook states to restore. The `redo` command uses `Model#canRedoAddressBook()` to check if this is the case. If so, it will return an error to the user rather than attempting to perform the redo.
-
-</div>
-
-Step 5. The user then decides to execute the command `list`. Commands that do not modify the address book, such as `list`, will usually not call `Model#commitAddressBook()`, `Model#undoAddressBook()` or `Model#redoAddressBook()`. Thus, the `addressBookStateList` remains unchanged.
-
-![UndoRedoState4](images/UndoRedoState4.png)
-
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …​` command. This is the behavior that most modern desktop applications follow.
-
-![UndoRedoState5](images/UndoRedoState5.png)
-
-The following activity diagram summarizes what happens when a user executes a new command:
-
-<img src="images/CommitActivityDiagram.png" width="250" />
-
-#### Design considerations:
-
-**Aspect: How undo & redo execute:**
-
-* **Alternative 1 (current choice):** Saves the entire address book.
-  * Pros: Easy to implement.
-  * Cons: May have performance issues in terms of memory usage.
-
-* **Alternative 2:** Individual command knows how to undo/redo by
-  itself.
-  * Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
-  * Cons: We must ensure that the implementation of each individual command is correct.
-
-_{more aspects and alternatives to be added}_
-
-### \[Proposed\] Data archiving
-
-_{Explain here how the data archiving feature will be implemented}_
-
+Failed-command rollback is part of safe canonical integration and is separate from user-requested undo. A future undo or archive design must preserve shared-lesson and attendance references, stable identity and the rule against reusing committed IDs. Feature owners will document its actual commands and persistence behavior if that extension is implemented.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -456,15 +401,10 @@ Compared with maintaining separate contact lists, timetables and attendance reco
 
 ### User stories
 
-These stories describe identified requirements, including requirements beyond the MVP; they do not imply completed functionality.
+These stories describe the broader shared-lesson target and future ideas; they do not imply completed functionality or require every High-priority story to be delivered in Week 8.
 
-Priorities: **High** (must-have core requirements), **Medium** (useful extensions), **Low** (future consideration).
-Medium and Low priorities are proposed.
-
-**† Scope to reconcile**: US-17 to US-20 retain the 15 September planning notes' must-have designation for shared classes,
-capacity, enrolment, and make-up booking. These workflows need reconciliation with the feature specification's per-student
-recurring lesson model before implementation. Starting a make-up booking directly from an absence (US-48) is a separate
-Medium-priority extension.
+Priorities: **High** (core shared-lesson target), **Medium** (future extensions), **Low** (future consideration).
+The target includes shared rosters and regular enrolment. Capacity, make-up reservations and waiting lists are future work, as are export, saved searches, archive/restore, richer attendance and percentages, fees and guided workflows. Medium and Low priorities remain proposals for later iterations.
 
 | ID | Priority | As a … | I want to … | So that I can … |
 | --- | --- | --- | --- | --- |
@@ -475,19 +415,19 @@ Medium-priority extension.
 | US-05 | High | tuition centre administrator | search student, parent and tutor records by identifying details and find parents or tutors associated with a student or lesson | retrieve the right contact information promptly. |
 | US-06 | High | tuition centre administrator | filter relevant student and lesson records by tutor, subject or lesson day | find the records needed for a specific teaching session. |
 | US-07 | High | tuition centre administrator | remove obsolete person records while preventing removal of records still referenced by lessons or attendance | keep the records tidy without breaking existing links. |
-| US-08 | High | tuition centre administrator | add a student's recurring lesson with its day, time, subject, tutor and room | maintain an organised teaching schedule. |
+| US-08 | High | tuition centre administrator | add a shared recurring lesson with its day, time, subject, tutor and room | maintain an organised teaching schedule. |
 | US-09 | High | tuition centre administrator | have proposed lessons that conflict with existing tutor or room bookings rejected | avoid double-booking teaching resources. |
-| US-10 | High | tuition centre administrator | remove an unneeded recurring lesson only when it has no linked attendance records | keep the schedule current without breaking attendance links. |
+| US-10 | High | tuition centre administrator | remove an unneeded shared lesson only when it has no enrolled students or linked attendance | keep the schedule current without breaking membership or attendance links. |
 | US-11 | High | tuition centre administrator | mark a student present or absent for a particular lesson and date | keep an accurate record of each lesson occurrence. |
 | US-12 | High | tuition centre administrator | correct or remove an erroneous attendance entry without deleting the lesson | fix recording mistakes while preserving the schedule. |
 | US-13 | High | tuition centre administrator | view available commands with their syntax and examples | learn how to complete tasks and recover from command mistakes. |
 | US-14 | High | tuition centre administrator | have successful changes saved and available when I reopen PonHub | continue my work without re-entering records. |
 | US-15 | High | tuition centre administrator | have attempts to add an exact duplicate person record rejected | avoid storing the same record twice. |
 | US-16 | High | tuition centre administrator | view a tutor's weekly timetable | tell the tutor which lessons they are assigned to teach. |
-| US-17 | High† | tuition centre administrator | check a class roster and its remaining places | decide whether a new enrolment or make-up student can be accommodated. |
-| US-18 | High† | tuition centre administrator | enrol a student in a class or remove their enrolment | keep class membership and available places up to date. |
-| US-19 | High† | tuition centre administrator | reserve a one-off place in a suitable class for a student who missed a lesson | arrange a make-up lesson without changing the student's regular schedule. |
-| US-20 | High† | tuition centre administrator | create a named recurring class with its tutor, day, time, room and capacity | organise teaching slots for a group of students. |
+| US-17 | High | tuition centre administrator | view the current roster of a shared lesson | check which students are enrolled in the teaching slot. |
+| US-18 | High | tuition centre administrator | enrol a student in a shared lesson or remove their enrolment | keep regular membership up to date while retaining past attendance. |
+| US-19 | Medium | tuition centre administrator | reserve a one-off place in a suitable class for a student who missed a lesson | arrange a make-up lesson without changing the student's regular schedule. |
+| US-20 | High | tuition centre administrator | create and discover a shared recurring lesson before enrolling any students | prepare teaching slots independently of enrolment. |
 | US-21 | Medium | tuition centre administrator | identify students who missed a lesson | follow up with parents and decide whether make-up arrangements or fee adjustments are needed. |
 | US-22 | Medium | tuition centre administrator | sort students by name and filter or group them by level | review the relevant records in a clear order. |
 | US-23 | Medium | tuition centre administrator | archive withdrawn students, hide them from the default active list and restore them when needed | keep the active list manageable while retaining past records. |
@@ -521,9 +461,9 @@ Medium-priority extension.
 ### Use cases
 
 For the use cases below, the **System** is `PonHub` and the **Actor** is the tuition centre administrator.
-The documented person, lesson, attendance, search, and help operations accept all required details in one keyboard-entered command. PonHub validates each command and saves data changes without requiring a field prompt, preview, or separate confirmation. Guided previews and the class workflows are planned extensions; UC-04's shared-class model still needs reconciliation with the per-student recurring lesson model.
+The person, shared-lesson, attendance, search, and help operations accept all required details in one keyboard-entered command. These are target use cases; only the routes listed under [Current increment and command integration](#current-increment-and-command-integration) are active today. Canonical mutations validate and save the complete change without requiring a field prompt, preview, or separate confirmation. Read-only retrieval does not save operational data. Guided previews, capacity, make-ups and other explicitly labeled future extensions are outside the core flows.
 
-Person selectors in these target use cases are positive indices from the current filtered people list. Resolve the selected record once to its stable ID and enforce any required Student role; another result view does not supply that index. Older lesson selector and tutor-selection details below remain subject to the separate reconciliation noted in the integration contract.
+Person selectors in these target use cases are positive indices from the current filtered people list. Resolve the selected record once to its stable ID and enforce any required Student role; another result view does not supply that index. Existing shared lessons are selected by `lid/LESSON_ID`. Creating a lesson uses a normalized full tutor name and optional exact phone; search uses partial tutor-name text.
 
 #### UC-01: Add a person record
 
@@ -548,123 +488,123 @@ Person selectors in these target use cases are positive indices from the current
 
 #### UC-02: Find and review operational records
 
-**Related user stories:** US-04, US-05, US-06, US-22, US-29, US-38, US-39, US-40, US-41
+**Related user stories:** US-04, US-05, US-06, US-16, US-17
 
-**Preconditions:** PonHub is running and has loaded the stored person, lesson, and class records.
-
-**Main success scenario**
-
-1. The administrator enters `list` or one `search` command with a category and any filters needed.
-2. PonHub validates the command and searches the relevant records.
-3. PonHub displays each distinct match once, with the requested ordering or grouping and relevant relationship context.
-4. The administrator opens a result or requests a class-list export.
-5. PonHub displays the selected details or generates the requested export.
-
-**Extensions**
-
-* 1a. The administrator uses a planned guided advanced-search form: PonHub supplies valid filters and completion, then submits the completed search at step 2.
-* 2a. A condition is invalid or incompatible with the selected category: PonHub explains the valid syntax without changing stored records. The administrator may resubmit at step 1.
-* 2b. A command may be misspelled: PonHub suggests the closest valid command. If accepted, the administrator resumes at step 1.
-* 3a. No record matches: PonHub displays a successful empty result, and the use case ends.
-* 3b. The administrator asks to save the search: PonHub stores the named search and resumes at step 3.
-* 5a. The export cannot be generated: PonHub reports the failure without changing stored records, and the use case ends.
-
-**Postconditions:** The requested view is displayed. Stored operational data is unchanged; a saved search or export exists only if requested.
-
-#### UC-03: Schedule and maintain a recurring lesson
-
-**Related user stories:** US-08, US-09, US-10, US-16, US-27, US-28, US-36, US-37, US-47
-
-**Preconditions:** The student and regular tutor records exist. PonHub has loaded current tutor and room bookings.
+**Preconditions:** PonHub is running with the relevant canonical records and retrieval routes integrated. Available search filters are documented for the delivered slice.
 
 **Main success scenario**
 
-1. The administrator enters one `addlesson` command with the student's index from the current filtered people list, day, start and end times, subject, tutor's full name (`tu/`), and room. The administrator also supplies the tutor's phone number (`tp/`) when tutors share that name; it may be supplied for a unique name too.
-2. PonHub resolves the people-list index once to a stable student ID and validates the Student role. It resolves exactly one tutor by full name, ignoring letter case and repeated spaces, and by exact phone number if supplied. It validates the remaining values, time range, and proposed slot against that tutor record's bookings and room bookings.
-3. PonHub saves the recurring lesson linked to the resolved tutor record, updates the student's lesson list and affected timetables, and reports success.
+1. The administrator enters `list`, `lessons`, or one `search c/CATEGORY` command with any available filters needed.
+2. PonHub validates the request and retrieves the relevant records, combining relational filters according to the same-student/same-lesson rules.
+3. PonHub displays each distinct match once in the documented order, with its count and relevant relationship context. People results replace the current people filter and are numbered from one; lesson results preserve that people view.
+4. To review a shared lesson, the administrator reads its stable ID from the results and enters `showlesson lid/LESSON_ID`, optionally with `d/YYYY-MM-DD` for dated attendance.
+5. PonHub displays the current roster and requested dated attendance without changing operational data or the people list. For a date, missing attendance is shown as unrecorded, separately from present or absent.
 
 **Extensions**
 
-* 1a. The administrator enters `deletelesson INDEX LESSON_INDEX` instead. Here `INDEX` selects a Student from the current filtered people list and is resolved once to the stable student ID. PonHub validates the lesson selector and checks for linked attendance. If none exists, PonHub removes and saves the selected lesson, renumbers the remaining lessons, frees its tutor and room booking, and reports success. The use case ends. The older positional lesson format remains pending reconciliation with the shared-lesson target.
-* 1a1. The selected lesson has linked attendance: PonHub blocks deletion, identifies the dependency, changes nothing, and the use case ends.
-* 1b. The administrator requests a planned optional preview before adding or deleting a lesson: PonHub shows the affected lesson. The administrator cancels with no change or submits the one-shot command at step 1.
-* 1c. The administrator requests a planned edit, replacement tutor, or cancellation for one occurrence: PonHub changes and saves only the intended lesson or occurrence, then the use case ends.
-* 2a. A value is missing or invalid, or no tutor matches the supplied full name and optional phone number: PonHub explains the problem without changing the schedule. A supplied phone number is never ignored to fall back to a name-only match. The administrator may resubmit at step 1.
-* 2b. The tutor or room is already booked: PonHub rejects the addition, identifies the conflict, and the use case ends.
-* 2c. Several tutors match the name and no phone number is supplied: PonHub rejects the command without changing data and asks for `tp/TUTOR_PHONE`. The administrator checks the matching tutors' phone numbers, restores the intended people list/filter and rechecks the student's current index, then resubmits at step 1 with the intended tutor's name and phone number.
-* 3a. Saving an addition, deletion, or occurrence change fails: PonHub restores the previous schedule, reports the failure, and the use case ends.
+* 1a. The administrator runs `lessons si/STUDENT_INDEX`: PonHub resolves the current people-list index once to a Student ID and shows that student's current lessons. An invalid index or wrong role is rejected without altering records or the people view.
+* 2a. A condition is invalid, unavailable in this slice or incompatible with the category: PonHub explains the supported syntax without changing data. The administrator may resubmit at step 1.
+* 3a. No record matches: PonHub displays a successful empty result, and the use case ends. Unfiltered catalogue retrieval includes shared lessons with empty rosters.
+* 4a. The lesson does not exist or the date is invalid: PonHub reports the error without changing data or the people list.
 
-**Postconditions:** On success, a clash-free recurring lesson is stored, an unreferenced lesson is removed, or a planned occurrence-level change is saved. A deleted lesson's booking is released; affected lesson and timetable views are current. Failed operations leave the previous schedule unchanged.
+**Postconditions:** The requested read-only view is displayed. Operational data is unchanged; lesson and roster results preserve the current people filter, order and indices.
 
-#### UC-04: Manage class membership and a make-up booking
+**Future extensions:** Sorting/grouping controls, guided search, spelling suggestions, export and saved searches belong to US-22, US-29 and US-38 to US-41. They are not steps required by this core flow and have no promised command syntax here.
 
-**Related user stories:** US-17, US-18, US-19, US-20, US-24, US-25, US-48
+#### UC-03: Create or delete an independent shared lesson
 
-**Preconditions:** The student and relevant tutor records exist. For enrolment, removal, or make-up booking, the class exists. These shared-class operations are planned; the student's command selector is the current people-list index, while class selector syntax still requires reconciliation.
+**Related user stories:** US-08, US-09, US-10, US-20
+
+**Preconditions:** The tutor exists. PonHub has loaded the shared lesson catalogue and tutor/room bookings; compatible mutation and persistence support is integrated. Creating a lesson does not require a student.
 
 **Main success scenario**
 
-1. The administrator submits one complete request identifying the class, the student's index in the current filtered people list, and the action: regular enrolment, removal, or a one-off make-up reservation.
-2. PonHub resolves that index once to a stable student ID, validates the Student role, and validates the class and action. For an addition or reservation, it checks for duplicate membership, timetable conflicts, and available capacity; for removal, it checks that the student is enrolled.
-3. PonHub applies and saves the selected addition, reservation, or removal, updates the roster and remaining capacity, and reports success.
+1. The administrator enters `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`, supplying a full tutor name and an optional exact phone number.
+2. PonHub resolves exactly one tutor by normalized full name and, when supplied, exact phone. It validates the remaining values, same-day time range and proposed slot against that tutor's bookings and room bookings.
+3. PonHub saves one independent shared Lesson linked to the tutor's stable ID, allocates its stable Lesson ID, starts an empty roster, refreshes relevant views and reports success.
 
 **Extensions**
 
-* 1a. The class does not exist: the administrator submits its name, tutor, day, time, room, and capacity as a separate creation request. PonHub checks conflicts and saves the class, then the administrator resumes at step 1.
-* 1b. The administrator starts from a recorded absence in a planned guided flow: PonHub pre-fills the student and missed lesson, then resumes at step 1.
-* 2a. The class is full for an addition: PonHub offers a waiting-list place. If accepted, it saves the position and the use case ends.
-* 2b. No suitable place is available during a requested swap: PonHub records a pending swap request, and the use case ends.
-* 2c. An addition duplicates an enrolment or conflicts with the timetable, or a removal targets a student who is not enrolled: PonHub rejects the change without modifying the roster. The administrator may resubmit at step 1.
-* 3a. Saving fails: PonHub restores the previous roster and capacity, reports the failure, and the use case ends.
+* 1a. The administrator instead enters `deletelesson lid/LESSON_ID`. PonHub finds that shared lesson and checks both its current roster and retained attendance references. If neither exists, it removes and saves only the lesson, releases its tutor/room booking and reports success. Surviving lesson IDs do not change; the use case ends.
+* 1a1. The lesson has enrolled students or retained attendance: PonHub blocks deletion, identifies the dependency and changes nothing. It does not cascade into student or attendance deletion.
+* 2a. A value is missing or invalid, or no tutor matches the full name and optional phone: PonHub explains the problem without changing the schedule. A supplied phone is never ignored to fall back to a name-only match.
+* 2b. The tutor or room has an overlapping booking on that weekday: PonHub rejects the addition and identifies the conflict. Adjacent half-open intervals are allowed.
+* 2c. Several tutors match the name without a disambiguating phone: PonHub rejects the command and requests `tp/TUTOR_PHONE`. The administrator checks the intended tutor's phone and resubmits the complete command. No student selector is part of lesson creation.
+* 3a. Saving an addition or deletion fails: PonHub restores the complete prior data and active views, reports the failure and ends the use case.
 
-**Postconditions:** On success, the requested enrolment, removal, or one-off reservation is saved; the roster and remaining capacity reflect that action. Any related waiting-list, swap, or make-up record remains consistent. Failed operations leave the previous state unchanged.
+**Postconditions:** One clash-free shared lesson with an empty roster is stored, or one unreferenced lesson is removed. Adding a student later does not recreate the lesson or book its tutor/room again. Failed operations preserve the prior schedule and allocation state.
 
-#### UC-05: Record attendance and follow up
+**Future extensions:** Lesson templates, edits, replacement tutors, one-occurrence cancellation and automatic today views are separate later requirements (US-27, US-28, US-36, US-37 and US-47).
 
-**Related user stories:** US-11, US-12, US-21, US-26, US-43, US-44, US-45, US-46, US-49
+#### UC-04: Enrol or unenrol a student in a shared lesson
 
-**Preconditions:** The student, recurring lesson, and selected lesson occurrence exist.
+**Related user stories:** US-17, US-18
+
+**Preconditions:** The Student and shared Lesson exist. The administrator has listed or searched people and checked the intended student's current position. Canonical membership mutation and persistence support is integrated.
 
 **Main success scenario**
 
-1. The administrator enters one `mark INDEX LESSON_INDEX d/DATE s/STATUS` command with `present` or `absent` for the selected occurrence. `INDEX` is the student's position in the current filtered people list, not a roster position or stable ID; the lesson argument retains the older format pending reconciliation.
-2. PonHub resolves that index once to a stable student ID, checks the Student role, and validates the lesson, date, weekday, and status.
-3. PonHub creates or updates the one attendance entry for that student, lesson, and date, saves it, refreshes the lesson display and attendance summaries, and reports success.
+1. The administrator enters `enrol STUDENT_INDEX lid/LESSON_ID` using the student's current index in the displayed filtered people list and the lesson's stable ID.
+2. PonHub resolves the index once to a Student ID, validates the role and lesson, rejects duplicate membership and checks for overlap with that student's other enrolled lessons.
+3. PonHub adds that Student ID to the shared lesson's roster, saves the complete change and refreshes derived student lessons and roster results without replacing the people list.
 
 **Extensions**
 
-* 1a. The administrator enters `unmark INDEX LESSON_INDEX d/DATE` instead. PonHub resolves `INDEX` once through the current filtered people list to the stable student ID, checks the Student role, validates the lesson and date, removes and saves the specified attendance entry, refreshes the lesson display and summaries, leaves the recurring lesson unchanged, and reports success. The use case ends.
-* 1a1. No entry exists for the selected date: PonHub reports that there is nothing to unmark, changes nothing, and the use case ends.
-* 1b. In a planned extension, the administrator records late or excused status, notes, or bulk attendance using a complete command or clickable controls. PonHub validates, saves, and displays the selected entries, then the use case ends.
-* 2a. The date is invalid or does not match the lesson's weekday, or the status is invalid: PonHub rejects the command without changing attendance. The administrator may resubmit at step 1.
-* 3a. The same status is already recorded: PonHub reports that no change is needed, and the use case ends.
-* 3b. A different status exists: PonHub updates the existing entry at step 3 instead of creating a duplicate.
-* 3c. Saving a mark or unmark fails: PonHub restores the previous attendance state, reports the failure, and the use case ends.
-* 3d. Follow-up is needed after an absence: the administrator may separately record feedback, a make-up link, or a fee adjustment. PonHub saves the selected follow-up, and the use case ends.
+* 1a. The administrator instead enters `unenrol STUDENT_INDEX lid/LESSON_ID`. PonHub resolves the Student once, requires current membership, removes only that membership and saves it. Dated attendance remains available; the shared lesson and student remain stored.
+* 2a. The people-list index is out of range, selects another role or the lesson does not exist: PonHub explains the problem and changes nothing.
+* 2b. Enrolment duplicates current membership or conflicts with the student's timetable, or unenrolment targets a non-member: PonHub rejects the change without modifying data.
+* 3a. Saving fails: PonHub restores the previous aggregate and active views, reports the failure and ends the use case.
 
-**Postconditions:** On success, one authoritative status is stored for the selected student, lesson, and date, or the selected entry is removed by `unmark`. Summaries reflect the saved state and the recurring lesson remains unchanged. Failed operations leave attendance unchanged.
+**Postconditions:** Current membership reflects the successful command; dated attendance and stable identities are unchanged. Tutor and room bookings are still owned by the one shared lesson and are not repeated per student. Failed operations preserve prior data and views.
 
-#### UC-06: Remove, archive or restore a record
+**Future extensions:** Capacity limits, remaining places, waiting lists, swaps and one-off make-up reservations are outside this core membership flow (US-19, US-24, US-25 and US-48).
 
-**Related user stories:** US-07, US-23, US-31, US-35
+#### UC-05: Record, correct or retrieve dated attendance
 
-**Preconditions:** The target person record exists and PonHub has loaded its lesson and attendance links.
+**Related user stories:** US-11, US-12, US-14, US-21
+
+**Preconditions:** The Student and shared Lesson exist. The administrator has listed or searched people and checked the student's current people-list position. Canonical attendance and persistence support is integrated.
 
 **Main success scenario**
 
-1. The administrator enters one `delete INDEX` command for the target in the current filtered people list.
-2. PonHub validates the positive index, resolves it once to the target's stable person ID, and checks that no lesson or attendance record depends on that person.
-3. PonHub deletes and saves the eligible person record, updates the current list and displayed indices, and reports success.
+1. The administrator enters `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/STATUS`, using `present` or `absent` and the student's current filtered people-list index.
+2. PonHub resolves the index once to a Student ID, checks the role and validates the lesson, real date, weekday and status. A new attendance key requires current enrolment; an existing key can be corrected after unenrolment.
+3. PonHub creates or updates the one record keyed by Student ID, Lesson ID and date, saves the complete change, refreshes dated attendance results and reports success. A missing record is unrecorded, not absent.
 
 **Extensions**
 
-* 1a. The administrator requests a planned optional deletion preview: PonHub shows the target and linked records. The administrator cancels with no change or submits `delete INDEX` at step 1.
-* 1b. The administrator requests planned archiving of a withdrawn student instead: PonHub saves the archived state, retains history, hides the student from the active list, and the use case ends.
-* 2a. Linked lesson or attendance records prevent deletion: PonHub blocks it, identifies the dependencies, changes nothing, and the use case ends.
-* 3a. Saving fails: PonHub restores the prior state, reports the failure, and the use case ends.
-* 3b. The administrator later requests planned undo or restoration of an archived student: PonHub saves the restored state and updates the active list. If no change is available to undo, it reports this without changing data.
+* 1a. The administrator instead enters `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD`. PonHub resolves and validates the Student, lesson and date, removes only the existing dated record and saves the change. Current enrolment and the shared lesson are unchanged. Existing historical attendance can be unmarked after unenrolment.
+* 1a1. No entry exists for the specified key: PonHub reports that there is nothing to unmark and changes nothing.
+* 1b. The administrator enters `history STUDENT_INDEX [lid/LESSON_ID]`. PonHub resolves the Student once and displays their retained dated attendance, optionally filtered by the shared lesson. History includes former enrolments and preserves the people list. This read-only request does not save operational data.
+* 2a. The index, role, lesson, date, weekday or status is invalid, or a new mark has no current membership: PonHub rejects the command and explains the problem without changing data.
+* 3a. The same status already exists: PonHub reports no change and performs no operational save.
+* 3b. A different status exists: PonHub corrects that key instead of adding a duplicate, including after unenrolment.
+* 3c. Saving a mark or unmark fails: PonHub restores the previous aggregate and active views, reports the failure and ends the use case.
 
-**Postconditions:** On success, the eligible record is deleted, or a planned archive or restore action is saved without broken references. Failed operations leave the previous state unchanged.
+**Postconditions:** A successful mutation stores one authoritative status for the key or removes only that key. History remains independent of current membership. Failed operations preserve attendance and views; remaining attendance references still block student and lesson deletion.
+
+**Future extensions:** Feedback, late/excused statuses, notes, bulk/clickable attendance, percentages, make-up links and fee adjustments are not core attendance promises (US-26, US-43 to US-46, US-48 and US-49).
+
+#### UC-06: Delete an unreferenced person
+
+**Related user stories:** US-07
+
+**Preconditions:** The target person exists. The administrator has listed or searched people and checked their current position; canonical guarded deletion and persistence support is integrated.
+
+**Main success scenario**
+
+1. The administrator enters `delete INDEX` for the target in the current filtered people list.
+2. PonHub validates the positive index, resolves it once to the stable person ID and checks role-specific dependencies: Student membership or attendance, or Lessons assigned to a Tutor. Deleting a separate Parent does not remove a Student's stored parent phone.
+3. PonHub deletes and saves only the eligible person record, preserves the current filter, refreshes displayed positions and reports success. Surviving stable IDs and relationships remain unchanged.
+
+**Extensions**
+
+* 2a. The index is invalid or dependencies prevent deletion: PonHub identifies the problem and changes nothing. Linked records are never deleted automatically.
+* 3a. Saving fails: PonHub restores the prior aggregate and people view, reports the failure and ends the use case.
+
+**Postconditions:** One eligible record is deleted without broken references, or the previous state remains unchanged. Recheck displayed positions before selecting another person.
+
+**Future extensions:** Optional previews, student archiving/restoration and undo are separate later requirements (US-23, US-31 and US-35), rather than supported alternatives to this command.
 
 #### UC-07: Get help and recover from a command-entry error
 
@@ -696,7 +636,7 @@ Person selectors in these target use cases are positive indices from the current
 
 1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
 2.  Should be able to hold up to 1,000 persons, 1,000 recurring lessons, and 10,000 attendance records without noticeable sluggishness during typical usage.
-3.  Common operations should update the GUI within 2 seconds on the team's documented reference machine.
+3.  Team performance target: common operations should update the GUI within 2 seconds on a reference machine recorded with its hardware, OS, Java version and test dataset. The reference machine and measured results are still to be documented; this guide does not claim the target has been verified.
 3.  A user with above average typing speed for regular English text (i.e. not code or system administration commands) should be able to accomplish most recurring tasks faster using commands than using the mouse.
 4.  The product should be for a single user and use one local data store, without requiring user accounts, concurrent access, or live synchronisation.
 5.  The product should be packaged into a single executable `.jar` file and should not require an installer.
@@ -709,7 +649,7 @@ Person selectors in these target use cases are positive indices from the current
 12. The application should function offline without requiring an internet connection or a team-owned remote server.
 13. Invalid inputs must not crash the application or modify existing data. The application should display a specific error message explaining how the user can correct the input.
 14. The application should be implemented primarily using object-oriented programming, with clear separation between the UI, Logic, Model, and Storage components.
-15. The JUnit-based automated test suite should achieve at least 70% line coverage, and all automated tests should pass before a release.
+15. Team testing target: the JUnit-based automated test suite should achieve at least 70% line coverage, and all automated tests should pass before a release. The percentage is the team's own goal, not a course-mandated minimum; coverage does not replace behavior-focused regression and integration checks.
 
 ### Glossary
 
@@ -717,7 +657,7 @@ Person selectors in these target use cases are positive indices from the current
 * **AddressBook-Level3 (AB3)**: The upstream SE-EDU desktop application that is incrementally evolved into PonHub
 * **Person record**: A stored record representing one student, tutor, or parent and containing the fields required for that role
 * **Role**: The `student`, `tutor`, or `parent` category assigned to a person record, which determines its required fields and applicable operations
-* **Recurring lesson**: A weekly lesson assigned to a student, with a day, start time, end time, subject, tutor, and room
+* **Shared recurring lesson**: An independent weekly teaching slot with a stable Lesson ID, day, start/end time, subject, tutor and room; its roster may contain zero or more Student IDs
 * **Lesson occurrence**: One dated instance of a recurring lesson
 * **Attendance record**: A stored record containing the attendance status of one student for one lesson occurrence
 * **Attendance status**: The recorded state of a student for a lesson occurrence, such as `present` or `absent`
@@ -725,6 +665,8 @@ Person selectors in these target use cases are positive indices from the current
 * **Exact duplicate person**: A person record with the same role, normalised name, and identifying contact number as an existing record
 * **Displayed person index**: The positive one-based position in the current filtered people list used to select a person in a command; it is distinct from a stable ID and may change when that people view is filtered or reordered. Lesson, roster and history row positions do not supply person command indices
 * **Stable person ID**: The role-prefixed identity stored for a person and used in internal lookup, queries, relationships and persistence; commands resolve a displayed person index once to this identity
+* **Stable lesson ID**: The `L`-prefixed identity of a shared Lesson, persisted and used in attendance references; existing lessons are selected in commands with `lid/LESSON_ID`, never a per-student lesson index
+* **Tutor lookup**: Lesson creation resolves a normalized full tutor name and optional exact phone to one Tutor ID; search uses partial tutor-name text instead
 * **Prefix**: A short marker in a command that identifies the type of information represented by the following value
 * **Parser**: The Logic component that converts raw command text into validated parameters and a command object
 * **Command**: An executable request representing one user operation in PonHub
@@ -734,14 +676,15 @@ Person selectors in these target use cases are positive indices from the current
 * **Human-readable data file**: The local text file used to store PonHub data in a form that can be inspected and edited without a database management system
 * **Tutor clash**: An overlap between lessons assigned to the same tutor on the same day and during an overlapping time range
 * **Room clash**: An overlap between lessons assigned to the same room on the same day and during an overlapping time range
-* **Class (planned)**: A planned shared recurring teaching slot with a tutor, day, time, room, capacity, and roster; it is distinct from the current per-student recurring lesson model
-* **Enrolment (planned)**: The continuing membership of a student in a class
-* **Roster (planned)**: The list of students enrolled in or holding a one-off reservation for a class or lesson occurrence
-* **Capacity (planned)**: The maximum number of students that a class can contain
-* **Make-up booking (planned)**: A one-off reservation in a suitable class for a student who missed a regular lesson, without changing the student's recurring schedule
-* **Waiting list (planned)**: An ordered queue of students requesting a place in a class that has reached its capacity
-* **Class-swap request (planned)**: A pending request to move a student from one class to another when the transfer cannot be completed immediately
-* **Archived student (planned)**: A withdrawn student record retained for historical reference but hidden from the default active-student list
+* **Class**: A tuition-centre term for a shared recurring lesson; core membership uses the Lesson-owned roster, with capacity and one-off reservations deferred
+* **Enrolment**: A Student's current membership in a shared Lesson; removing membership retains dated attendance
+* **Roster**: The current enrolled Student IDs owned by one shared Lesson, from which displayed student records are derived
+* **History**: Retained dated attendance keyed by Student ID, Lesson ID and date, independent of current membership
+* **Capacity (future)**: A later limit on the number of students in a class
+* **Make-up booking (future)**: A one-off reservation in a suitable class for a student who missed a regular lesson, without changing regular membership
+* **Waiting list (future)**: An ordered queue of students requesting a place in a class that has reached a later capacity limit
+* **Class-swap request (future)**: A pending request to move a student when a transfer cannot be completed immediately
+* **Archived student (future)**: A withdrawn student retained for historical reference but hidden from the default active-student list
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -756,11 +699,11 @@ Person selectors in these target use cases are positive indices from the current
 5. Run `edit 1 n/Alex`, `clear`, and `find Alex`. Expect `Unknown command.` and unchanged people/data. Run `list extra` and `exit extra`; expect their usage messages and no list change or exit.
 6. Compare the operational file before and after help; it must be byte-for-byte unchanged, and a missing operational file must remain missing. The automated failing-storage test covers help without operational write access. Preference saving at application shutdown remains separate.
 
-Repeat the topic/example checks whenever a feature owner registers another command. Final shared-lesson workflow and published-site checks remain pending the owners' integration; passing help checks alone does not establish v1.2 product readiness.
+Repeat the topic/example checks whenever a feature owner registers another command. Broader shared-lesson workflow and published-site checks remain pending the owners' integration; passing help checks alone does not establish completion of the broader team target. That complete target is separate from the Week 8 first-increment requirement.
 
 ### Planned person-index integration checks
 
-Run these checks when the canonical people view and corresponding commands are activated. They are acceptance checks for the confirmed selector boundary, not claims that the current inherited runtime supports shared lessons or stable person IDs. Use each command's delivered lesson syntax; the unresolved lesson-selector choice is separate from the confirmed person index.
+Run these checks when the canonical people view and corresponding commands are activated. They are acceptance checks for the confirmed selector boundary, not claims that the current inherited runtime supports shared lessons or stable person IDs. Existing lesson references use `lid/LESSON_ID` throughout these target routes.
 
 1. Prepare records with different stable IDs and current-view positions. Filter the people list to two Students whose IDs are, for example, `S2` and `S5`; verify their cards show positions `1` and `2` separately from those IDs. `delete 1` must target the first current card, subject to its relationship guards, rather than person `S1` or the first unfiltered record. Verify `delete S2`, zero, a negative index and an index beyond the current people-list size are rejected without changing data.
 2. Exercise each activated enrolment, unenrolment, mark, unmark and history command using the student's current people-list index. Verify the command resolves that index once to the same stable Student ID used by its internal query or mutation. A stable ID such as `S2` supplied where the student index is required must be rejected. A Tutor or Parent at a valid position must fail a Student-only command without changing data; a valid roster row position is not a substitute for the people-list index.
@@ -791,9 +734,9 @@ testers are expected to do more *exploratory* testing.
    1. Relaunch the app by double-clicking the JAR file.<br>
        Expected: The most recent window size and location are retained.
 
-1. _{ more test cases …​ }_
-
 ### Deleting a person
+
+The following small deletion checks apply to the current inherited contact runtime. Canonical guarded deletion must also pass the planned person-index and shared-lesson checks.
 
 1. Deleting a person while all persons are being shown
 
@@ -808,12 +751,25 @@ testers are expected to do more *exploratory* testing.
    1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
       Expected: Similar to previous.
 
-1. _{ more test cases …​ }_
+### Planned shared-lesson workflow checks
 
-### Saving data
+Run these as the corresponding routes become available, using an isolated supported dataset. They verify the broader target rather than adding a complete-workflow requirement to every Week 8 PR.
 
-1. Dealing with missing/corrupted data files
+1. Add one Tutor and two Students, read the assigned IDs, and create one lesson with `addlesson d/Mon st/1600 et/1730 s/Math tu/FULL_NAME tp/EXACT_PHONE rm/R1`, replacing the tutor placeholders with the added tutor's values. The catalogue must show the new lesson once with an empty roster. Substitute the actual returned Lesson ID for `L1` in every later `lid/` argument.
+2. Run `list r/student`, check both current positions and use them in `enrol STUDENT_INDEX lid/L1`. Both students must refer to the same Lesson ID; the tutor and room booking must still exist only once. Check student clashes separately from global tutor/room clashes, including adjacent times.
+3. Keep that people view while running `lessons`, `lessons si/STUDENT_INDEX` and `showlesson lid/L1`. Verify the people filter/order/indices remain unchanged. A roster position must not be reinterpreted as a people-list selector.
+4. For each student, mark Monday `2026-10-05` with `mark STUDENT_INDEX lid/L1 d/2026-10-05 s/present` or `s/absent`. Verify one record per student/lesson/date, same-status no-op, correction and explicit unrecorded display for another Monday without a mark.
+5. Unenrol one student using `unenrol STUDENT_INDEX lid/L1`. `history STUDENT_INDEX lid/L1` must retain their record. Correction and `unmark STUDENT_INDEX lid/L1 d/2026-10-05` must work for that existing key; a new mark without membership must be rejected. Check Student and Lesson deletion guards before and after removing their remaining dependencies.
+6. Exercise each activated search filter from the full matrix, including a parent with two linked children and a student with two differently scheduled lessons. Combined filters must not take the name from one child and the lesson from another, or the day from one lesson and the subject from another. Verify distinct-ID counts, successful empty results and empty-lesson discovery when appropriate.
+7. Restart and verify IDs, global creation order, membership and retained attendance. Trigger a save failure in an isolated test seam and verify the aggregate, allocation state and active views are restored. Read-only list/query/history/help operations must not rewrite operational data in the integrated runtime. Record the actual build, platform and results; do not treat unperformed checks as passes.
 
-   1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
+### Planned canonical loading and recovery
 
-1. _{ more test cases …​ }_
+These checks apply when protected loading is activated. The current inherited loader does not yet guarantee rejected-file preservation; never use an original dataset for destructive failure experiments. Use copies in disposable test folders and keep the preserved original and backup outside all configured operational paths.
+
+1. In a deliberately separate empty folder, launch the canonical build with no operational file. Expect a valid fresh supported root. Add delivered records and restart; expect successful restoration. This does not authorize replacing a legacy or rejected file in an existing folder.
+2. Close the app and make a valid manual edit to supported versioned JSON using its delivered schema, such as correcting a contact value while preserving valid IDs, allocation state and references. Restart; expect the edited records to load. Repeat with valid memberships and dated history. Human editing must remain usable.
+3. In independent copies, test malformed JSON, a null root/record, wrong record shapes, duplicate IDs or normalized duplicate people, dangling references, impossible dates, invalid allocation state, unreadable files and unsupported versions. Even a future-version file resembling legacy `persons` must be rejected before domain decoding or any write. Expect a controlled diagnostic and recovery instructions rather than a crash.
+4. Capture each rejected file's bytes, then attempt help/list/exit and a data mutation wherever the failure state permits them. The rejected operational bytes must remain identical, and mutations must be blocked. If startup exits safely instead, verify it reports the reason and performs no operational write. Preferences are checked separately.
+5. Test an unversioned AB3 file and formerly accepted contacts rejected by #61. Expect no guessed roles, silent conversion, record dropping or empty writable fallback. Follow the backup/manual re-entry guidance in a separate empty folder with explicitly chosen roles. Verify only the new supported root is writable and that the old file and preserved backup remain unchanged.
+6. Correct an invalid supported file on a working copy while the app is closed, then restart and verify complete validation succeeds. If recovery uses an older build for inspection, use another working copy rather than the preserved original or backup. Record actual outcomes and the implemented error/recovery path in the UG/DG when this feature lands; no importer or recovery command is assumed.
