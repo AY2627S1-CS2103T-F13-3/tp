@@ -12,6 +12,7 @@ title: Developer Guide
 * PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
 * Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search, inline-help, and atomic-save increments.
+* Zhu Zhi Yu used OpenAI Codex to align the assigned product scope and prioritized user stories with the shared-lesson target, preserving the distinction between delivered foundations, planned runtime features, and future extensions. This attribution covers that documentation update.
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
@@ -441,17 +442,17 @@ _{Explain here how the data archiving feature will be implemented}_
 
 Compared with maintaining separate contact lists, timetables and attendance records, PonHub connects the information needed for routine tasks and checks conflicting or invalid changes. Planned requirements such as make-up booking extend this support to absence follow-up.
 
+**Shared-lesson MVP target:** Lessons are created independently of student enrolment, including lessons with empty rosters. Each shared `Lesson` owns its currently enrolled student IDs; student lessons, rosters, and tutor schedules are retrieved from that canonical membership rather than copied into each student. Attendance is a separate dated record for one student and one lesson. Unenrolment removes current membership and retains attendance history; an existing historical entry can still be corrected or removed. A missing attendance entry means unrecorded, distinct from present and absent.
+
+**Delivered versus planned:** The [student foundation (#57)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/57), [tutor and parent foundations (#62)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/62), [search criteria foundation (#64)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/64), and [lesson scheduling values (#63)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/63) provide independently tested APIs. [Inline help (#68)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/68) and [safe file replacement (#66)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/66) are connected to the active inherited contact runtime. Canonical people and shared-lesson runtime integration remain tracked in [#70](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/70), [#76](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/76), and their dependent command, storage, and retrieval issues. The requirements below describe the intended product; they do not claim that role-aware commands, shared lessons, enrolment, attendance, or history are currently available. Each feature owner updates implementation evidence and feature documentation as those increments are delivered.
+
 ### User stories
 
 These stories describe identified requirements, including requirements beyond the MVP; they do not imply completed functionality.
 
-Priorities: **High** (must-have core requirements), **Medium** (useful extensions), **Low** (future consideration).
-Medium and Low priorities are proposed.
+Priorities: **High** identifies core requirements of the planned shared-lesson MVP, with the search stories' exact scope still awaiting the separate reconciliation below. **Medium** and **Low** identify future extensions, with proposed priorities; they are outside the current MVP target. Capacity, waiting lists, make-ups, fees, undo/redo, lesson editing, and occurrence cancellation remain future scope.
 
-**† Scope to reconcile**: US-17 to US-20 retain the 15 September planning notes' must-have designation for shared classes,
-capacity, enrolment, and make-up booking. These workflows need reconciliation with the feature specification's per-student
-recurring lesson model before implementation. Starting a make-up booking directly from an absence (US-48) is a separate
-Medium-priority extension.
+Shared lessons, current membership, and retained dated attendance are separate concepts in these stories. The stories specify user goals without choosing command syntax. Exact command selectors and the supported search-filter scope remain subject to the separate owner reconciliation recorded in [#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60) and the implementation sections above.
 
 | ID | Priority | As a … | I want to … | So that I can … |
 | --- | --- | --- | --- | --- |
@@ -462,19 +463,19 @@ Medium-priority extension.
 | US-05 | High | tuition centre administrator | search student, parent and tutor records by identifying details and find parents or tutors associated with a student or lesson | retrieve the right contact information promptly. |
 | US-06 | High | tuition centre administrator | filter relevant student and lesson records by tutor, subject or lesson day | find the records needed for a specific teaching session. |
 | US-07 | High | tuition centre administrator | remove obsolete person records while preventing removal of records still referenced by lessons or attendance | keep the records tidy without breaking existing links. |
-| US-08 | High | tuition centre administrator | add a student's recurring lesson with its day, time, subject, tutor and room | maintain an organised teaching schedule. |
-| US-09 | High | tuition centre administrator | have proposed lessons that conflict with existing tutor or room bookings rejected | avoid double-booking teaching resources. |
-| US-10 | High | tuition centre administrator | remove an unneeded recurring lesson only when it has no linked attendance records | keep the schedule current without breaking attendance links. |
-| US-11 | High | tuition centre administrator | mark a student present or absent for a particular lesson and date | keep an accurate record of each lesson occurrence. |
-| US-12 | High | tuition centre administrator | correct or remove an erroneous attendance entry without deleting the lesson | fix recording mistakes while preserving the schedule. |
+| US-08 | High | tuition centre administrator | create a shared recurring lesson independently of student enrolment, with its day, time, subject, tutor and room | prepare teaching slots before students join them. |
+| US-09 | High | tuition centre administrator | have shared lessons that overlap existing tutor or room bookings rejected while allowing adjacent time slots | avoid double-booking teaching resources. |
+| US-10 | High | tuition centre administrator | remove an unneeded shared lesson only when its roster is empty and it has no linked attendance records | keep the schedule current without breaking membership or history links. |
+| US-11 | High | tuition centre administrator | mark an enrolled student present or absent for a particular shared lesson and date | keep each student's attendance independent for the same lesson occurrence. |
+| US-12 | High | tuition centre administrator | correct or remove an existing dated attendance entry even after the student leaves the lesson | fix recording mistakes while preserving the lesson and remaining history. |
 | US-13 | High | tuition centre administrator | view available commands with their syntax and examples | learn how to complete tasks and recover from command mistakes. |
 | US-14 | High | tuition centre administrator | have successful changes saved and available when I reopen PonHub | continue my work without re-entering records. |
 | US-15 | High | tuition centre administrator | have attempts to add an exact duplicate person record rejected | avoid storing the same record twice. |
-| US-16 | High | tuition centre administrator | view a tutor's weekly timetable | tell the tutor which lessons they are assigned to teach. |
-| US-17 | High† | tuition centre administrator | check a class roster and its remaining places | decide whether a new enrolment or make-up student can be accommodated. |
-| US-18 | High† | tuition centre administrator | enrol a student in a class or remove their enrolment | keep class membership and available places up to date. |
-| US-19 | High† | tuition centre administrator | reserve a one-off place in a suitable class for a student who missed a lesson | arrange a make-up lesson without changing the student's regular schedule. |
-| US-20 | High† | tuition centre administrator | create a named recurring class with its tutor, day, time, room and capacity | organise teaching slots for a group of students. |
+| US-16 | High | tuition centre administrator | retrieve a tutor's weekly timetable from the canonical shared lessons | tell the tutor which lessons they are assigned to teach without counting a shared lesson more than once. |
+| US-17 | High | tuition centre administrator | view the current roster of a shared lesson | see which students are currently enrolled, separately from their dated attendance. |
+| US-18 | High | tuition centre administrator | enrol a student in a shared lesson or remove their enrolment while preventing duplicate membership and student timetable clashes | keep current membership valid without erasing attendance history. |
+| US-19 | Medium | tuition centre administrator | reserve a one-off place in a suitable class for a student who missed a lesson | arrange a make-up lesson without changing the student's regular schedule. |
+| US-20 | High | tuition centre administrator | enrol several students in the same existing shared lesson | manage one teaching slot and its roster without duplicating the lesson or its tutor and room bookings. |
 | US-21 | Medium | tuition centre administrator | identify students who missed a lesson | follow up with parents and decide whether make-up arrangements or fee adjustments are needed. |
 | US-22 | Medium | tuition centre administrator | sort students by name and filter or group them by level | review the relevant records in a clear order. |
 | US-23 | Medium | tuition centre administrator | archive withdrawn students, hide them from the default active list and restore them when needed | keep the active list manageable while retaining past records. |
@@ -486,7 +487,7 @@ Medium-priority extension.
 | US-29 | Medium | tuition centre administrator | export a class list with student names, class details and contact information | share or print the information needed by tutors. |
 | US-30 | Medium | tuition centre administrator | review possible duplicate student matches before saving a new record | avoid duplicate records that are similar but not identical. |
 | US-31 | Medium | tuition centre administrator | undo my last change | recover from an accidental edit or deletion. |
-| US-32 | Medium | tuition centre administrator | use command shortcuts and an alternative command-help form | complete frequent tasks with less typing. |
+| US-32 | Medium | tuition centre administrator | use additional command shortcuts or aliases | complete frequent tasks with less typing. |
 | US-33 | Medium | tuition centre administrator | receive command completion, inline input guidance and suggestions for misspelled commands | enter valid commands more easily. |
 | US-34 | Medium | tuition centre administrator | record names, contact numbers and education levels beyond the MVP formats | represent a wider range of people accurately. |
 | US-35 | Medium | tuition centre administrator | preview the person or lesson affected by a deletion | check its consequences before removing it. |
@@ -504,11 +505,16 @@ Medium-priority extension.
 | US-47 | Medium | tuition centre administrator | see today's scheduled lessons automatically | start daily attendance work quickly. |
 | US-48 | Medium | tuition centre administrator | start a make-up booking directly from a recorded absence | connect follow-up arrangements to the missed lesson. |
 | US-49 | Low | tuition centre administrator | track tuition fees and adjustments associated with student attendance | follow up on payments and fee changes when needed. |
+| US-50 | Medium | tuition centre administrator | set a class capacity and check its remaining places before enrolment or make-up booking | decide whether another student can be accommodated. |
+| US-51 | High | tuition centre administrator | retrieve a student's dated attendance history, optionally for one lesson, after unenrolment as well as during membership | follow up on past attendance without relying on the current roster. |
+| US-52 | High | tuition centre administrator | distinguish an unrecorded lesson occurrence from a present or absent attendance entry | identify attendance that still needs to be recorded. |
+| US-53 | High | tuition centre administrator | retrieve the canonical lesson catalogue, including shared lessons with empty rosters, and a student's currently enrolled lessons | discover available teaching slots and review each student's current schedule. |
+| US-54 | High | tuition centre administrator | use stable person and lesson identities unchanged by filtering and restart, with deleted IDs never reused | keep record references reliable as displayed lists change. |
 
 ### Use cases
 
 For the use cases below, the **System** is `PonHub` and the **Actor** is the tuition centre administrator.
-The documented person, lesson, attendance, search, and help operations accept all required details in one keyboard-entered command. PonHub validates each command and saves data changes without requiring a field prompt, preview, or separate confirmation. Guided previews and the class workflows are planned extensions; UC-04's shared-class model still needs reconciliation with the per-student recurring lesson model.
+These use cases describe target behavior, rather than current runtime availability. Target operations accept required details in one keyboard-entered command and validate and save changes without a separate field prompt or confirmation. The detailed flows below still contain older per-student scheduling and future capacity/make-up requirements; their alignment with the shared-lesson target remains documentation coordination under [#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60). Guided previews, capacity, and make-ups remain future scope as defined in the story legend.
 
 #### UC-01: Add a person record
 
