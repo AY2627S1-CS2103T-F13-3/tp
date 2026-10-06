@@ -171,6 +171,8 @@ The current command, UI, and JSON aggregate still use the inherited AB3 `Person`
 
 `ContactDetails` and `Student` are immutable. `Student` is a standalone domain class composed from the common contact abstraction; it does not extend the inherited `Person` class. Its constructor rejects a tutor or parent ID.
 
+**Validation boundary:** `Name`, `Email`, and `Address` still enforce their inherited AB3 validation rules. This foundation does not yet implement the User Guide's wider name punctuation and field-format or length rules; [issue #61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61) tracks that alignment. Contact details preserve the supplied display values; name normalization is used only for duplicate matching.
+
 **Identity and duplicates:** The stable `PersonId` identifies a record independently of its contact details or position in a displayed list. `Student#isDuplicateOf(Student)` instead compares the student's name, ignoring case and repeated spaces, together with the exact parent phone number. Different IDs or optional contact details do not distinguish otherwise duplicate students. This operation identifies a duplicate candidate; aggregate-level rejection is part of later command integration.
 
 **Planned relationships:** `Student` does not contain lesson or attendance collections. The planned shared-lesson model will keep canonical lessons and student–lesson membership outside the student record, referring to stable IDs so several students can share one lesson. Dated attendance and the storage of these relationships are separate follow-up work.
