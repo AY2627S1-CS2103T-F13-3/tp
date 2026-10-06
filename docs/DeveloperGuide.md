@@ -16,6 +16,7 @@ title: Developer Guide
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
 * Ernest's Week 8 help increment used OpenAI Codex to inspect the repository, generate and revise the command catalogue, inline-help implementation, regression tests, and Ernest's documentation coordination changes. This attribution covers that increment; it does not claim authorship of teammates' feature implementations or imply teammate review has occurred.
+* Zhu Zhi Yu used OpenAI Codex to prepare the dormant person-card display projection, FXML renderer, display tests, isolated developer preview, and the related integration and manual-testing documentation. This attribution covers that card increment.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -237,6 +238,16 @@ global tutor/room clash checks, ID allocation and persistence are integrated in 
 The Help menu and F1 invoke `MainWindow.executeCommand("help")`. Both display exactly the same guidance as typed help while retaining the command-box draft and person selection. `ResultDisplay` uses a read-only wrapped TextArea with scrolling and resets to the beginning of each new result. Existing F1 handling for focused text controls remains in place. The unused inherited HelpWindow is not constructed or reachable through supported help entry points.
 
 Tests exercise each registered help topic and its example through the actual router, malformed topics, locale-independent matching, filter/data/preference preservation, and help with failing storage. GUI selection, menu/F1 and scroll behavior have a separate manual procedure below.
+
+### Prepared person record cards
+
+[Issue #119](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/119) implements the independent card portion of [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77). `PersonRecordCard` renders the already merged immutable `Student`, `Tutor`, and `Parent` records. It remains dormant: `MainWindow`, the active list route, and the inherited `PersonCard` still use the existing runtime. Role-filtered listing, counts, aggregate wiring, and the coordinated cutover remain later work under #77 and #85.
+
+`PersonRecordCardData(PersonRecord, int)` creates immutable display text with a positive current-view position. The heading shows that position and the supplied name; a separate identity line shows the role and stable ID. Student details include education level and required parent phone, followed by optional own phone, email, and address. Tutor and parent details include required own phone plus optional email and address. Missing optional fields display `Not provided`. The projection preserves display case, spacing, and phone zeros, accepts only the known record types, and mutates neither the record nor a registry.
+
+`PersonRecordCard(PersonRecord, int)` loads `PersonRecordCard.fxml` and renders the projection. The heading, identity, and detail labels wrap with no fixed card height. The future list-cell host must size the card to the available cell width and provide vertical scrolling; `PersonRecordCardPreview` demonstrates that host with the current theme. Stable IDs never become displayed indices, and no second writable person store is introduced.
+
+Automated projection tests cover all roles, absent/present contacts, required fields, exact display values, long text, index/ID separation, immutable detail lines, and invalid inputs. The developer preview exercises the actual FXML separately from the application and uses fixture records without loading or saving operational files. Its layout procedure appears below.
 
 ### Search criteria parsing foundation
 
@@ -741,6 +752,25 @@ The documented person, lesson, attendance, search, and help operations accept al
 6. Compare the operational file before and after help; it must be byte-for-byte unchanged, and a missing operational file must remain missing. The automated failing-storage test covers help without operational write access. Preference saving at application shutdown remains separate.
 
 Repeat the topic/example checks whenever a feature owner registers another command. Final shared-lesson workflow and published-site checks remain pending the owners' integration; passing help checks alone does not establish v1.2 product readiness.
+
+### Dormant person-card developer preview
+
+These checks exercise prepared components, not a supported application command. Run `seedu.address.ui.PersonRecordCardPreview.main` from the IDE's test source set with Java 25 and the test runtime classpath. It opens an isolated fixture list and never reads or writes application records or preferences.
+
+1. Launch with the width and height arguments below. The effective logical sizes approximate the listed display conditions; repeat with actual system scaling on an available corresponding display when checking platform-specific fonts.
+
+   | Display condition | Fixture arguments |
+   | --- | --- |
+   | 1280×720 at 150% | `853 480` |
+   | 1920×1080 at 100% | `1920 1080` |
+   | 1920×1080 at 125% | `1536 864` |
+
+2. Check the student: `1.` is its current-view position, while `S9223372036854775807` is its stable ID. The level and parent phone remain readable; own phone, email, and address show `Not provided`.
+3. Check the tutor's long name, unbroken email, and postal address. Expect every complete value to wrap within the available width, including leading phone zeros, with no overlap or ellipsis hiding content.
+4. Launch with `320 480` to stress a narrow people panel. Scroll through the whole tutor card to the parent card. Expect the required parent own phone, separate role/ID line, and missing optional fields to remain readable; no horizontal scrolling is needed.
+5. Close the preview. Active application routes and operational files remain unaffected. Repeat these checks in the actual people view when #77/#85 activate its canonical wiring.
+
+Local verification rendered the actual FXML at all four logical sizes and checked wrapped-label widths, complete preferred text height, and access to the last card by scrolling. This verifies effective viewport behavior rather than actual OS scaling on every supported platform.
 
 Given below are instructions to test the app manually.
 
