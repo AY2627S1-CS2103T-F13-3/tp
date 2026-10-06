@@ -44,11 +44,11 @@ public class FileUtil {
     }
 
     /**
-     * Writes given string to a file.
-     * Will create the file if it does not exist yet.
+     * Safely saves a UTF-8 string, creating parent directories and following existing symbolic links.
+     * Prefers atomic replacement and uses a recovery backup when atomic moves are unsupported.
      */
     public static void writeToFile(Path file, String content) throws IOException {
-        Files.write(file, content.getBytes(CHARSET));
+        new AtomicFileWriter().write(file, content);
     }
 
 }

@@ -11,7 +11,7 @@ title: Developer Guide
 
 * PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, the ordered people registry and its import/export state, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
-* Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search and inline-help increments.
+* Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search, inline-help, and atomic-save increments.
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
@@ -173,6 +173,33 @@ The `Storage` component,
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
 
+#### Safe JSON saves
+
+Address-book data and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
+Existing destinations are resolved to their real paths, so saving through a symbolic link updates its
+target and preserves the link. Dangling/cyclic links and inaccessible destinations fail before writing.
+New files use a resolved parent directory, creating missing directories as needed. Concurrent external
+changes to links/files and multiple application instances are not coordinated.
+
+A complete temporary sibling file is written and closed before atomic replacement is attempted.
+Only `AtomicMoveNotSupportedException` selects the fallback; permission and other move errors propagate.
+The fallback first copies the existing destination into a unique sibling `.ponhub-backup-*.bak` file.
+If backup creation/copy fails, replacement is not attempted. After a failed ordinary replacement, the
+writer restores the old bytes from that backup (or removes a partial destination for a first save).
+If restoration also fails, the complete backup is retained and its path is included in the error;
+restore it before continuing or restarting. Never delete such a backup without recovering its contents.
+
+After success, backup cleanup is best effort: a cleanup failure is logged without reporting the committed
+save as failed. Other cleanup failures are suppressed on the primary error. Parent directories or
+recovery/temporary files can remain after failures or abrupt termination.
+
+The fallback permits saving on filesystems without atomic moves, but is not atomic: concurrent readers
+can observe an incomplete destination during replacement/recovery. Its guarantee is a recoverable old
+copy, not uninterrupted access at the original path. Neither path promises power-loss durability or
+preserves all previous file attributes. Save failures still do not roll back in-memory command changes;
+that is separate transaction work. Help skips saving; other read-only commands currently still save,
+but unsupported atomic moves alone no longer make those saves fail.
+
 ### Common classes
 
 Classes used by multiple components are in the `seedu.address.commons` package.
@@ -182,6 +209,26 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 ## **Implementation**
 
 This section describes some noteworthy details on how certain features are implemented.
+
+### Lesson scheduling value contracts
+
+The lesson scheduling foundation is represented by immutable value objects in `model.lesson`. These objects validate and
+normalize scheduling input before later lesson commands or persistence code use it:
+
+* `LessonId` is a stable identifier consisting of `L` followed by a positive `long` sequence number. Lower-case prefixes
+  are normalized, leading zeros are rejected, and advancing beyond `Long.MAX_VALUE` fails explicitly instead of wrapping.
+  The canonical aggregate introduced in a later increment will own allocation state so committed IDs are not reused.
+* `LessonDay` accepts the case-insensitive abbreviations `Mon` through `Sun` and stores their canonical display form.
+* `LessonTime` accepts exactly four digits in 24-hour `HHMM` format and retains leading zeros when displayed.
+* `LessonTimeSlot` combines one weekday with a start and end time. Its end must be strictly later than its start, so
+  overnight lessons are rejected. Slots are treated as half-open ranges: `[start, end)`. As a result, adjacent slots do
+  not overlap, and equal time ranges on different weekdays do not clash.
+* `Subject` contains 1–50 letters, digits or spaces after trimming and reducing repeated spaces to one.
+* `Room` contains 1–10 letters or digits. It is normalized to upper case so room comparisons do not miss clashes because
+  of letter case.
+
+This increment establishes domain contracts only. It does not activate or advertise a lesson command; lesson creation,
+global tutor/room clash checks, ID allocation and persistence are integrated in later increments.
 
 ### Inline help
 
