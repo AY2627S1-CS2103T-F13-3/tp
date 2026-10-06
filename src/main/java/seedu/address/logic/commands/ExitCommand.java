@@ -9,7 +9,11 @@ public class ExitCommand extends Command {
 
     public static final String COMMAND_WORD = "exit";
 
-    public static final String MESSAGE_EXIT_ACKNOWLEDGEMENT = "Exiting Address Book as requested ...";
+    public static final String MESSAGE_USAGE = "Usage: exit\n"
+            + "Closes PonHub. No parameters.\n"
+            + "Example: exit";
+
+    public static final String MESSAGE_EXIT_ACKNOWLEDGEMENT = "Exiting PonHub as requested ...";
 
     @Override
     public CommandResult execute(Model model) {

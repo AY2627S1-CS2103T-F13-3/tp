@@ -15,36 +15,81 @@ PonHub is a desktop app for tuition centre administrators to keep student, tutor
 1. Ensure that Java `25` or later is installed on your computer.<br>
    **Mac users:** Follow the JDK installation instructions [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
-1. Download the latest PonHub `.jar` file from the [project's Releases page](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases).
+1. Use the JAR built from this increment, or download a matching PonHub build from the [project's Releases page](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases) after publication. Contributors can build `build/libs/ponhub.jar` with `./gradlew shadowJar`; see [DevOps](DevOps.html#build-automation). Week 8 does not require a public release, so an older released JAR may have different commands.
 
 1. Put the JAR file in the folder you want to use for PonHub. Keep this folder when moving or backing up your data.
 
 1. Open a terminal in that folder and run `java -jar FILENAME.jar`, replacing `FILENAME.jar` with the downloaded file's name. The PonHub window should open.
 
-1. Enter a command in the command box and press Enter. Start with `help`, then try this example workflow:<br>
+1. Enter a command in the command box and press Enter. Start with `help`, then `help add`. The current increment supports inherited contact records:
 
-   * `add r/tutor n/Mei Lim p/92345678` — adds a tutor.
-   * `add r/student n/Alex Tan l/S2 pp/91234567` — adds a student and their parent contact number.
-   * `list r/student` — shows students and their displayed indices.
-   * `addlesson 1 d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1` — adds a lesson for the student displayed at index `1`.
+   * `add n/Mei Lim p/92345678 e/mei@example.com a/10 Clementi Road` adds a contact.
+   * `list` displays all contacts.
+   * `help delete` explains deletion by the current displayed index.
+   * `help ADD` shows the same guidance as `help add`.
+   * `exit` closes PonHub.
 
-   The indices in commands refer to the current displayed list, so check the list before using an index. This example assumes exactly one tutor named Mei Lim. If tutors share a name, use the `tp/` qualifier described under Adding a recurring lesson. See the [Command summary](#command-summary) for more commands.
+## Current command summary
+
+This Week 8 increment implements local inline help. The active routes below still use inherited contact data. Role-aware people, stable IDs, lessons, enrolment, attendance, history and search are planned for integration; their specifications follow under [Planned shared-lesson workflow](#planned-shared-lesson-workflow). Type `help` to inspect the commands available in your build. The inherited `edit`, `clear` and `find` routes are withdrawn.
+
+| Action | Format | Example |
+| --- | --- | --- |
+| Add contact | `add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]...` | `add n/Mei Lim p/92345678 e/mei@example.com a/10 Clementi Road` |
+| List contacts | `list` | `list` |
+| Delete contact | `delete INDEX` | `delete 1` |
+| Get help | `help [COMMAND]` | `help add` |
+| Exit | `exit` | `exit` |
+
+`INDEX` is a positive integer referring to the currently displayed contact list. Contact fields name, phone, email and address are required by the current add parser. Tags may repeat; other add prefixes may appear only once. `list` and `exit` accept no arguments. IDs such as `S1` are part of the planned contract and are not accepted by the current contact parser.
+
+### Viewing command help: `help`
+
+**Format:** `help [COMMAND]`
+
+`help` shows the current supported-command catalogue in Result Display. `help add`, `help delete`, `help list`, `help help` and `help exit` show a command's syntax and example. Topic names are case-insensitive, so `help ADD` is accepted; the command word `help` remains lowercase. Asking for exit guidance does not exit the application.
+
+Choose **Help > Help** or press **F1** for the same catalogue, including when focus is in the command box or Result Display. Menu/F1 preserve unfinished command text. Help preserves records, the active person filter, order, selection and preferences. Typed help clears the submitted command in the usual way. Help needs no internet connection and does not save operational data.
+
+Long guidance wraps within Result Display. Scroll vertically to read the rest; each new result starts at the top.
+
+* `help remove` returns `Unknown command: 'remove'. Type 'help' to see available commands.` Unavailable topics such as `help addlesson` receive the same kind of feedback until their commands are integrated.
+* `help add delete` returns `Invalid command format!` followed by `Usage: help [COMMAND]` and its explanation. Supply at most one topic.
+* `edit`, `clear` and `find` return `Unknown command.` They are absent from the catalogue.
 
 --------------------------------------------------------------------------------------------------------------------
-## Features
 
-PonHub helps tuition centre administrators manage student, tutor and parent records, schedule recurring lessons, search for relevant information, and record attendance.
+## Planned shared-lesson workflow
 
-### Reading the command formats
+The following sections define the supplied v1.2 integration target. They are not commands delivered by this help increment. Feature owners will update their implementation details and examples when each feature becomes available.
 
-* Words in uppercase, such as `NAME`, are placeholders. Replace them with your own values.
-* Square brackets indicate optional parameters. Do not type the brackets.
-* Type command names and prefixes in lowercase. Some parameter values, such as roles and weekdays, accept either uppercase or lowercase.
-* Supply each prefix at most once. For commands with prefixed parameters, the prefixes may appear in any order.
-* `INDEX` refers to a person's number in the currently displayed person list. Filtering, searching, adding or deleting records can change these numbers. Check the displayed list before using an index.
-* `LESSON_INDEX` refers to a lesson's number within the selected student's lesson list.
-* Indices must be positive integers without leading zeros. For example, `1` is valid; `0`, `01`, `-1` and `1.5` are invalid.
-* Omit an optional parameter when its value is unknown. Supplying its prefix with an empty value is invalid.
+### Reading the planned command formats
+
+* Uppercase words are placeholders; replace them with your values. Square brackets indicate optional input and are not typed.
+* Use displayed, stable IDs: `S1` for a student, `T1` for a tutor, `P1` for a parent and `L1` for a shared lesson. Filtering changes display positions, not IDs. Stored references and IDs survive restarts.
+* `PERSON_ID` is a student, tutor or parent ID; `STUDENT_ID`, `TUTOR_ID` and `LESSON_ID` must identify the appropriate kind of record.
+* Type command names and prefixes in lowercase. Supply each prefix at most once, in any order. Omit unknown optional fields; do not supply blank values.
+
+### Planned quick start
+
+After these commands and persistence are integrated, a fresh dataset can use this workflow. Read the actual IDs returned by additions; existing data may allocate different IDs.
+
+```text
+add r/tutor n/Mei Lim p/92345678
+add r/student n/Alex Tan l/S2 pp/91234567
+add r/student n/Jamie Tan l/S2 pp/91234567
+addlesson d/Mon st/1600 et/1730 s/Math tu/T1 rm/R1
+enrol S1 L1
+enrol S2 L1
+search c/lesson
+mark S1 L1 d/2026-10-05 s/present
+mark S2 L1 d/2026-10-05 s/absent
+unenrol S2 L1
+history S2 lid/L1
+mark S2 L1 d/2026-10-05 s/present
+```
+
+Expect one shared lesson with two students before unenrolment. Jamie's dated history remains visible and correctable after leaving. Restart and verify the same IDs, roster and history. No record means unrecorded, rather than absent.
 
 ### 1. Adding a person: `add`
 
@@ -70,9 +115,9 @@ Creates a student, tutor or parent record.
 
 For email addresses, the local part before `@` may contain English letters, digits, periods, underscores, `%`, `+` and `-`. It must not begin or end with a period or contain consecutive periods. Domain labels may contain English letters, digits and hyphens. The domain must contain at least two dot-separated labels, with no leading or trailing hyphens in a label. Its final label must contain 2–63 English letters. Email spelling and letter case are preserved.
 
-**Current increment:** These contact rules are implemented. The role-specific formats above describe the planned people workflow. Until that workflow is available, use `add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]`; all four contact fields are required for this inherited add command. The existing `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]` command uses the same contact rules. Saved contacts must also satisfy these rules when loaded; old records with numeric names, phones longer than 15 digits, slash-containing addresses or single-label email domains will fail validation.
+**Current increment:** These contact rules are implemented. The role-specific formats above describe the planned people workflow. Until that workflow is available, use `add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]`; all four contact fields are required for this inherited add command. The `edit` route is withdrawn and is unavailable in this build. Saved contacts must also satisfy these rules when loaded; old records with numeric names, phones longer than 15 digits, slash-containing addresses or single-label email domains will fail validation.
 
-**Testing older data:** Back up the data file before testing this increment. If an older file fails validation, the inherited loader opens an empty address book, and a successful command such as `list` can overwrite that file. Protected loading is pending; use a test copy of your data.
+**Testing older data:** Back up the data file before testing this increment. If an older file fails validation, the inherited loader opens an empty address book, and a successful command such as `list` can overwrite that file. Help does not save operational data. Protected loading is pending; use a test copy of your data.
 
 #### Examples
 
@@ -103,7 +148,7 @@ A duplicate is rejected with:
 
 ### 2. Listing people: `list`
 
-Displays all people or only people with a specified role.
+Displays all people or only people with a specified role, including each stable ID.
 
 #### Format
 
@@ -120,7 +165,7 @@ Displays all people or only people with a specified role.
 
 #### Expected result
 
-People appear in creation order, with displayed indices starting at 1.
+People appear in creation order with stable IDs. Display positions are not command selectors.
 
 Example feedback:
 `Listed 3 person(s) with role: student.`
@@ -134,309 +179,94 @@ An empty result is valid. PonHub displays a count of zero and `No persons to dis
 
 ### 3. Deleting a person: `delete`
 
-Removes one person from the currently displayed person list.
+Removes one person identified by a stable person ID.
 
 #### Format
 
-`delete INDEX`
+`delete PERSON_ID`
 
 #### Example
 
 1. `list r/parent`
-2. Check the displayed parent list, then enter:
-   `delete 1`
-   This removes the parent currently displayed at index 1.
+2. Check the intended parent's ID, then enter `delete P1` if their ID is `P1`.
 
 #### Expected result
 
 PonHub displays a confirmation such as:
 `Deleted person: parent - Pat Tan.`
 
-The current filter is preserved, and the remaining people are renumbered from 1.
+The current filter is preserved. Remaining people keep their IDs.
 
 #### Restrictions
 
-* The index must exist in the current person list.
+* The ID must identify an existing person.
 * Only one person can be deleted per command.
-* Deletion is blocked if the person contains or is referenced by lesson or attendance records. Linked records are not deleted automatically.
+* Student deletion is blocked while enrolled or referenced by attendance. Tutor deletion is blocked while a lesson references the tutor. Linked records are not deleted automatically; removing a student never removes a shared lesson.
 * Deleting a separate parent record does not erase the parent phone number stored on a student's record.
 
 If dependencies prevent deletion, PonHub displays:
 `Cannot delete person: linked lesson or attendance records exist. Remove or reassign the links first.`
 
-Check the displayed indices again after each deletion before deleting another person.
+Check the intended ID before deleting another person.
 
-### 4. Adding a recurring lesson: `addlesson`
+### 4. Creating and deleting shared lessons
 
-Assigns a weekly recurring lesson to an existing student.
+**Create:** `addlesson d/DAY st/TIME et/TIME s/SUBJECT tu/TUTOR_ID rm/ROOM`
 
-#### Format
+Example: `addlesson d/Mon st/1600 et/1730 s/Math tu/T1 rm/R1`.
 
-`addlesson INDEX d/DAY st/START_TIME et/END_TIME s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
+The tutor must already exist. Use `Mon` through `Sun` and four-digit 24-hour HHMM times. Start must be earlier than end on the same day. A successful addition returns a stable lesson ID, such as `L1`, with an empty roster. Tutor and room bookings must not overlap another lesson on that weekday; adjacent intervals are allowed. Adding more students to this lesson does not book the tutor or room again.
 
-#### Parameters
+**Delete:** `deletelesson LESSON_ID`, for example `deletelesson L1`.
 
-| Parameter | Description and accepted values |
-|-----------|---------------------------------|
-| `INDEX` | The student's index in the currently displayed person list. It must refer to a student. |
-| `d/DAY` | `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat` or `Sun`. Values are case-insensitive. |
-| `st/START_TIME` | Start time in four-digit, 24-hour HHMM format, such as `0900` or `1600`. |
-| `et/END_TIME` | End time in four-digit, 24-hour HHMM format. It must be later than the start time on the same day. |
-| `s/SUBJECT` | Between 1 and 50 characters using letters, digits and spaces. Repeated spaces are reduced to one. |
-| `tu/TUTOR_NAME` | The full name of an existing tutor. Matching ignores letter case and repeated spaces, but does not accept partial names. |
-| `tp/TUTOR_PHONE` | Optional when the name identifies exactly one tutor; required when several tutors share that name. Use that tutor's complete recorded phone number: 3–15 digits without spaces or punctuation. Leading zeros are retained and must match exactly. |
-| `rm/ROOM` | Between 1 and 10 letters or digits, without spaces or punctuation. |
+Deletion is blocked while the roster is non-empty or attendance refers to the lesson. It never removes student records. Once an unreferenced lesson is deleted, its tutor and room times become available again. Cancelling one occurrence and editing a lesson are future scope.
 
-All parameters except `tp/` are required. If supplied, `tp/` must match the phone number of the tutor named by `tu/`, even when that name is unique. Valid times range from `0000` to `2359`, with minutes from `00` to `59`. Overnight lessons are not supported.
+### 5. Enrolling and unenrolling students
 
-#### Example
+**Enrol:** `enrol STUDENT_ID LESSON_ID`, for example `enrol S1 L1`.
 
-First, use `list r/student` and check the student's index. Assuming Alex Tan is displayed at index 1 and exactly one tutor is named Mei Lim:
-`addlesson 1 d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1`
+Both records must exist and the person must be a student. Duplicate enrolment and overlap with that student's other enrolled lessons are rejected. A second student can join the same shared lesson without creating another lesson or booking.
 
-#### Expected result
+**Unenrol:** `unenrol STUDENT_ID LESSON_ID`, for example `unenrol S1 L1`.
 
-PonHub adds the lesson to Alex's lesson list and displays:
-`Added lesson to Alex Tan: Mon 1600-1730 Math with Mei Lim in R1.`
+This removes current membership and retains dated attendance. It does not delete the lesson or student. Student lessons are derived from the shared lesson's roster.
 
-The student's card shows the lesson's index, day, time, subject, tutor and room.
+### 6. Searching people and shared lessons
 
-#### Selecting between tutors with the same name
+**Format:** `search c/CATEGORY [FILTER_PREFIX/VALUE]...`
 
-Two tutors may share the same name if their phone numbers differ. Without `tp/`, PonHub accepts `tu/` only when its full name matches exactly one tutor. If several tutors match, it rejects the command without changing any data and asks you to supply `tp/TUTOR_PHONE`. It does not select the first match automatically.
+Use `student`, `parent`, `tutor` or `lesson`. Category-only lesson search, `search c/lesson`, shows each shared lesson once, including empty rosters.
 
-When `tp/` is supplied, the name and phone number must identify the same tutor record. If no record matches both values, PonHub rejects the command without changing any data; it does not fall back to matching the name alone.
+| Category | Initial filters |
+| --- | --- |
+| People | `n/NAME` and applicable own-contact `p/PHONE`, `pp/PARENT_PHONE`, `e/EMAIL`, `a/ADDRESS` filters |
+| Lessons | `tu/TUTOR_ID`, `d/DAY`, `s/SUBJECT` |
 
-For example, suppose two tutors are named Mei Lim, with phone numbers 92345678 and 93456789. To assign the second tutor:
+Text matching is case-insensitive. Combined lesson filters must match the same lesson. Unsupported, blank and repeated filters are rejected. A valid search with no matches reports an empty result. Relationship searches beyond these initial filters are future scope; feature owners specify their exact matching rules during implementation.
 
-1. Enter `search c/tutor n/Mei Lim` and check the matching tutors' names and phone numbers. Search uses partial name matching, so check the full name of the intended tutor.
-2. Enter `list r/student` and check the intended student's index again. The tutor search changes the displayed person list, so do not reuse a student index without checking it.
-3. If Alex Tan is now displayed at index 1, enter:
-   `addlesson 1 d/Mon st/1600 et/1730 s/Math tu/Mei Lim tp/93456789 rm/R1`
+Examples: `search c/student n/Alex`, `search c/tutor p/92345678`, `search c/lesson tu/T1 d/Mon s/Math`.
 
-The `tp/` qualifier is specific to `addlesson`. To search for a tutor by phone number, use the existing `p/` filter, for example `search c/tutor p/93456789`.
+### 7. Recording attendance and retrieving history
 
-#### Scheduling checks
+**Mark:** `mark STUDENT_ID LESSON_ID d/DATE s/STATUS`
 
-PonHub rejects a lesson if its time overlaps with an existing lesson on the same day involving either:
-* The same selected tutor record. Different tutors with the same name are checked separately.
-* The same room.
+Example: `mark S1 L1 d/2026-10-05 s/present`.
 
-A rejected addition does not create a partial lesson record.
+Use a real date in `YYYY-MM-DD` format, matching the lesson's weekday, and status `present` or `absent`. New records require current enrolment. Marking an existing student/lesson/date corrects that record; repeating the same status does not create a duplicate. No attendance entry means unrecorded.
 
-#### Common errors
+**Unmark:** `unmark STUDENT_ID LESSON_ID d/DATE`, for example `unmark S1 L1 d/2026-10-05`.
 
-| Problem | How to correct it |
-|---------|-------------------|
-| The selected person is a tutor or parent. | Run `list r/student` and use the intended student's displayed index. |
-| No tutor matches the supplied name, or the supplied name and phone number together. | Check the tutor's full recorded name and phone number. Add the tutor first if their record does not exist. |
-| Several tutors match the name and `tp/` is omitted. | Check the tutors' phone numbers, then retry with `tp/TUTOR_PHONE`. Restore the student list and recheck the student's index as described above. |
-| The tutor phone contains spaces or punctuation, or is outside 3–15 digits. | Use the complete recorded phone number, including any leading zeros. |
-| The day is written as `Monday`. | Use `Mon`. |
-| A time is written as `4pm`, `16:00` or `930`. | Use four digits, such as `1600` or `0930`. |
-| The end time is equal to or earlier than the start time. | Choose a later end time on the same day. |
-| The tutor or room is already booked. | Choose a non-overlapping time or an available tutor or room. |
+Unmark removes only that dated record and does not change enrolment. Existing historical attendance can be corrected or unmarked after unenrolment. Students must still exist, and historical references continue to block student and lesson deletion.
 
-### 5. Deleting a recurring lesson: `deletelesson`
+**History:** `history STUDENT_ID [lid/LESSON_ID]`, for example `history S1 lid/L1`.
 
-Removes one recurring lesson from a student's record.
+History lists dated attendance, including former enrolments. Current membership must be distinguishable from historical attendance. History retrieval does not change data.
 
-#### Format
+### Planned failure and data behavior
 
-`deletelesson INDEX LESSON_INDEX`
+The integrated target saves people, shared lessons, memberships, attendance and IDs together in `data/ponhub.json`, with preferences stored separately. Validation or saving failures must leave existing data unchanged and restore active views; corrupt or unsupported files must be preserved with recovery instructions and overwrite protection. These behaviors depend on the storage owner's implementation.
 
-#### Example
-
-`deletelesson 1 2`
-Removes lesson 2 from the student currently displayed at person index 1.
-
-#### Expected result
-
-PonHub displays a confirmation such as:
-`Deleted lesson from Alex Tan: Wed 1800-1930 Science.`
-
-The student's remaining lessons are renumbered from 1.
-
-#### Restrictions
-
-* The person index must refer to a student.
-* The lesson index must exist within that student's lesson list.
-* A lesson with attendance records cannot be deleted until those records are removed.
-
-If attendance records exist, PonHub displays:
-`Cannot delete lesson: attendance records exist for this lesson. Remove them first.`
-
-This command removes the recurring lesson entry. It does not cancel only one dated occurrence. Removing attendance history to enable deletion also removes that historical information, so check the intended record carefully.
-
-### 6. Searching people and lessons: `search`
-
-Finds students, parents, tutors or lessons using one or more filters.
-
-#### Format
-
-`search c/CATEGORY [FILTER_PREFIX/VALUE]...`
-
-Use `student`, `parent`, `tutor` or `lesson` as the category. The category is required and is case-insensitive.
-
-The `...` indicates that you may supply additional supported filters; do not type it. Omitting all filters displays every record in the selected category.
-
-#### Available filters
-
-| Prefix | Searches by | Supported categories |
-|--------|-------------|----------------------|
-| `n/` | Person's name | `student`, `parent`, `tutor` |
-| `l/` | Student's education level | `student` |
-| `p/` | Person's own phone number | `student`, `parent`, `tutor` |
-| `pp/` | Student's parent phone number | `student` |
-| `e/` | Email address | `student`, `parent`, `tutor` |
-| `a/` | Postal address | `student`, `parent`, `tutor` |
-| `sn/` | Associated student's name | `parent`, `tutor`, `lesson` |
-| `d/` | Lesson weekday | `student`, `parent`, `tutor`, `lesson` |
-| `st/` | Lesson start time | `student`, `parent`, `tutor`, `lesson` |
-| `et/` | Lesson end time | `student`, `parent`, `tutor`, `lesson` |
-| `s/` | Lesson subject | `student`, `parent`, `tutor`, `lesson` |
-| `tu/` | Lesson tutor's name | `student`, `parent`, `lesson` |
-| `rm/` | Lesson room | `student`, `parent`, `tutor`, `lesson` |
-
-#### How matching works
-
-* Text filters use case-insensitive partial matching. For example, `n/tan` matches `Alex Tan`, while `s/Math` can match both `Math` and `Add Math`.
-* Phone numbers, education levels, weekdays and times use exact matching. Phone queries must contain the complete number, using 3–15 digits. Levels and weekdays accept the same values as the corresponding add commands. Times use four-digit HHMM format; if both start and end times are supplied, the end time must be later.
-* Every supplied filter must match. For example:
-  `search c/student s/Math d/Mon`
-  Finds students with a lesson whose subject contains “Math” and whose day is Monday. A student with Math on Tuesday and Science on Monday does not match: both lesson conditions must be satisfied by the same lesson.
-* For parent searches, PonHub links a parent to a student when the parent's `p/` exactly matches the student's `pp/`. It does not infer relationships from shared names or addresses. When several relationship filters are supplied, they must apply to the same linked student and, where relevant, the same lesson.
-
-#### Examples
-
-| Command | Finds |
-|---------|-------|
-| `search c/student` | All students. |
-| `search c/student n/Alex l/S2` | Secondary 2 students whose names contain “Alex”. |
-| `search c/student pp/91234567` | Students with parent contact number 91234567. |
-| `search c/parent n/Tan` | Parents whose names contain “Tan”. |
-| `search c/parent s/Math d/Mon` | Parents linked to students with a Monday lesson whose subject contains “Math”. |
-| `search c/tutor sn/Alex s/Science` | Tutors assigned a Science-matching lesson belonging to a student whose name contains “Alex”. |
-| `search c/lesson sn/Alex tu/Mei` | Lessons belonging to students whose names contain “Alex”, taught by tutors whose names contain “Mei”. |
-| `search c/lesson d/Mon st/1600 rm/R1` | Monday lessons starting exactly at 1600 whose room contains “R1”. |
-
-#### Expected result
-
-PonHub replaces the current view with matching records and displays:
-`Found N matching CATEGORY record(s).`
-
-Each person appears once, even if several of their lessons match. Matching lesson context is shown beneath the person's card.
-
-Lesson results are grouped by student and retain their existing per-student lesson indices. Their position in the search results does not create a new lesson index.
-
-If no records match, the search still succeeds and displays:
-`Found 0 matching CATEGORY record(s).`
-
-#### Things to note
-
-* Searches do not change stored records.
-* Use `n/` to search student names in the `student` category; use `sn/` to search associated student names in other supported categories.
-* Use `n/` to search tutor names in the `tutor` category; `tu/` is not accepted there.
-* Blank filters and repeated prefixes are rejected.
-* Text queries must not contain slashes or line breaks.
-* Use `list` to return to the complete person list. Before an index-based operation following a lesson search, display the relevant person list and check the indices.
-
-### 7. Recording and removing attendance: `mark` / `unmark`
-
-Records attendance for one dated occurrence of a student's recurring lesson.
-
-#### Marking attendance
-
-**Format:** `mark INDEX LESSON_INDEX d/DATE s/STATUS`
-
-**Parameters:**
-
-| Parameter | Description and accepted values |
-|-----------|---------------------------------|
-| `INDEX` | The student's index in the currently displayed person list. |
-| `LESSON_INDEX` | The lesson's index within that student's lesson list. |
-| `d/DATE` | A real calendar date in YYYY-MM-DD format. Its weekday must match the recurring lesson's scheduled day. |
-| `s/STATUS` | `present` or `absent`, case-insensitive. The stored status is lowercase. |
-
-**Example:**
-Assuming student 1's lesson 1 is scheduled on Mondays:
-`mark 1 1 d/2026-09-21 s/present`
-
-**Expected result:**
-PonHub displays a confirmation such as:
-`Marked attendance for Alex Tan: 2026-09-21 - present.`
-
-The attendance date and status appear under the student's lesson.
-
-**Correcting an existing status:**
-Run `mark` again for the same student, lesson and date with the corrected status:
-`mark 1 1 d/2026-09-21 s/absent`
-
-PonHub updates the existing entry instead of creating another one:
-`Updated attendance for Alex Tan: 2026-09-21 - absent.`
-
-If the same status is already recorded, PonHub leaves it unchanged and reports:
-`Attendance already marked for Alex Tan: 2026-09-21 - absent.`
-
-#### Removing attendance
-
-**Format:** `unmark INDEX LESSON_INDEX d/DATE`
-
-**Example:**
-`unmark 1 1 d/2026-09-21`
-
-**Expected result:**
-PonHub removes the attendance entry for that occurrence and displays:
-`Unmarked attendance for Alex Tan: 2026-09-21.`
-
-The recurring lesson remains unchanged. If no attendance entry exists for that date, PonHub reports:
-`No attendance record found for Alex Tan on 2026-09-21.`
-
-#### Things to note
-
-* A missing attendance record means attendance has not been recorded. It does not mean the student was absent.
-* Both `mark` and `unmark` require a date matching the lesson's scheduled weekday.
-* Invalid dates such as `2026-02-30` are rejected.
-* Only `present` and `absent` are supported. Values such as `late`, `excused` and `yes` are invalid.
-* Do not supply `s/STATUS` with `unmark`.
-* Attendance commands preserve the current person filter and list order.
-
-### 8. Viewing command help: `help`
-
-Displays command guidance directly in PonHub's Result Display.
-
-#### Format
-
-`help [COMMAND]`
-
-#### Examples
-
-| Command | Result |
-|---------|--------|
-| `help` | Displays the command summary. |
-| `help add` | Displays the syntax, parameters and examples for adding people. |
-| `help addlesson` | Displays guidance for adding recurring lessons. |
-| `help search` | Displays search syntax and supported filters. |
-| `help mark` | Displays attendance-marking guidance. |
-
-The optional command keyword is case-insensitive. For example, `help MARK` requests the same guidance as `help mark`.
-
-#### Expected result
-
-Help appears inside the application without opening a browser or another window. Your current person and lesson views, filters, ordering and selection remain unchanged.
-
-#### Common errors
-
-* An unknown command, such as `help remove`, produces:
-  `Unknown command: 'remove'. Type 'help' to see available commands.`
-* Supplying more than one keyword, such as `help mark attendance`, produces:
-  `Invalid command format. Usage: help [COMMAND]`
-
-### Handling unsuccessful commands
-
-When a command fails, PonHub displays an error explaining the problem. Failed commands leave stored records unchanged. If saving a change fails, PonHub restores the previous state and does not report success.
-
-Correct the reported problem and try again. If several inputs are invalid, PonHub reports the first detected error.
+The current inherited runtime uses `data/addressbook.json`. Only help skips operational saving in this increment; general rollback and protected loading are not yet delivered. Back up existing files before upgrading or editing them, and do not treat the planned recovery behavior as implemented.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -445,32 +275,30 @@ Correct the reported problem and try again. If several inputs are invalid, PonHu
 **Q**: How do I transfer my PonHub data to another computer?<br>
 **A**: Close PonHub on both computers. Install the same or a compatible PonHub version on the new computer, then copy the `data` folder from the folder containing the old JAR to the folder containing the new JAR. Keep a backup of the original folder until you have opened PonHub and checked your records on the new computer.
 
-**Q**: Which index should I use for a student or lesson?<br>
-**A**: Use the number shown in the current list. Filtering or searching can change displayed indices. For attendance, provide both the student index and the lesson index shown for that student.
+**Q**: Should I use a displayed position or an ID?<br>
+**A**: The current contact `delete` command uses a displayed index. The planned shared-lesson commands use stable IDs such as `S1` and `L1`. Check `help delete` in your build; never substitute an index for an ID.
+
+**Q**: Why is `help addlesson` unavailable?<br>
+**A**: Help lists only active commands. Shared lessons and attendance are being integrated by their owners. The planned commands below are available only after their implementations and persistence support are registered.
 
 --------------------------------------------------------------------------------------------------------------------
 
-## Known issues
+## Planned command summary
 
-PonHub-specific known issues have not yet been documented in this guide.
+| Action | Format |
+| --- | --- |
+| Add student | `add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]` |
+| Add tutor or parent | `add r/ROLE n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]` |
+| List people | `list [r/ROLE]` |
+| Delete person | `delete PERSON_ID` |
+| Create shared lesson | `addlesson d/DAY st/TIME et/TIME s/SUBJECT tu/TUTOR_ID rm/ROOM` |
+| Delete lesson | `deletelesson LESSON_ID` |
+| Enrol / unenrol | `enrol STUDENT_ID LESSON_ID` / `unenrol STUDENT_ID LESSON_ID` |
+| Search | `search c/CATEGORY [FILTER_PREFIX/VALUE]...` |
+| Mark attendance | `mark STUDENT_ID LESSON_ID d/DATE s/STATUS` |
+| Unmark attendance | `unmark STUDENT_ID LESSON_ID d/DATE` |
+| History | `history STUDENT_ID [lid/LESSON_ID]` |
+| Help | `help [COMMAND]` |
+| Exit | `exit` |
 
---------------------------------------------------------------------------------------------------------------------
-
-## Command summary
-
-Action | Format and example
--------|-------------------
-**Add student** | `add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]`<br>e.g., `add r/student n/Alex Tan l/S2 pp/91234567`
-**Add tutor** | `add r/tutor n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]`<br>e.g., `add r/tutor n/Mei Lim p/92345678`
-**Add parent** | `add r/parent n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]`<br>e.g., `add r/parent n/Pat Tan p/91234567`
-**List people** | `list [r/ROLE]`<br>e.g., `list r/student`
-**Delete person** | `delete INDEX`<br>e.g., `delete 2`
-**Add lesson** | `addlesson INDEX d/DAY st/START_TIME et/END_TIME s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
-**Delete lesson** | `deletelesson INDEX LESSON_INDEX`<br>e.g., `deletelesson 1 2`
-**Search** | `search c/CATEGORY [FILTER_PREFIX/VALUE]...`<br>e.g., `search c/student s/Math d/Mon`
-**Mark attendance** | `mark STUDENT_INDEX LESSON_INDEX d/DATE s/STATUS`<br>e.g., `mark 1 2 d/2026-09-18 s/present`
-**Remove attendance mark** | `unmark STUDENT_INDEX LESSON_INDEX d/DATE`<br>e.g., `unmark 1 2 d/2026-09-18`
-**Help** | `help [COMMAND]`<br>e.g., `help add`
-**Exit** | `exit`
-
-`ROLE` is `student`, `tutor`, or `parent`. `CATEGORY` in `search` selects the kind of result; available filters depend on that category. Square brackets mean optional input and are not typed.
+Capacity, waiting lists, make-ups, fees, lesson editing, occurrence cancellation, undo/redo and advanced search are future scope. The current build's supported commands are listed in [Current command summary](#current-command-summary).

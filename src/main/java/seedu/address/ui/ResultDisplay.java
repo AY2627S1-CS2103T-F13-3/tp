@@ -23,6 +23,8 @@ public class ResultDisplay extends UiPart<Region> {
     public void setFeedbackToUser(String feedbackToUser) {
         requireNonNull(feedbackToUser);
         resultDisplay.setText(feedbackToUser);
+        resultDisplay.positionCaret(0);
+        resultDisplay.setScrollTop(0);
     }
 
 }
