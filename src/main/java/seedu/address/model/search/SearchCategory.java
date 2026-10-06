@@ -15,6 +15,7 @@ public enum SearchCategory {
 
     /**
      * Parses a category keyword, ignoring surrounding whitespace and letter case.
+     *
      * @throws IllegalArgumentException If the keyword is not a supported category.
      */
     public static SearchCategory fromValue(String value) {

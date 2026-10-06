@@ -22,6 +22,7 @@ public class SearchCriteriaParser {
     /**
      * Parses arguments of the form {@code c/CATEGORY [PREFIX/VALUE]...}, excluding the command word.
      * Prefixes are lowercase and may occur in any order. Category-only searches are valid.
+     *
      * @throws ParseException If the input contains missing, blank, repeated, unsupported or invalid fields.
      */
     public SearchCriteria parse(String args) throws ParseException {

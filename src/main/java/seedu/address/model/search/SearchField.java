@@ -55,6 +55,7 @@ public enum SearchField {
 
     /**
      * Resolves a lowercase search prefix, including its slash.
+     *
      * @throws IllegalArgumentException If the prefix is unsupported.
      */
     public static SearchField fromPrefix(String prefix) {

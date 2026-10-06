@@ -19,6 +19,7 @@ public final class SearchCriteria {
 
     /**
      * Constructs criteria with a defensive copy of normalized filters.
+     *
      * @throws IllegalArgumentException If a filter is incompatible, invalid or has an invalid time range.
      */
     public SearchCriteria(SearchCategory category, Map<SearchField, String> filters) {
