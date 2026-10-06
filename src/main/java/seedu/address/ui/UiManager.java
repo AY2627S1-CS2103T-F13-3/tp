@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import java.nio.file.Path;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javafx.application.Platform;
@@ -10,7 +11,6 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import seedu.address.MainApp;
 import seedu.address.commons.core.LogsCenter;
-import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.Logic;
 
 /**
@@ -25,7 +25,6 @@ public class UiManager implements Ui {
 
     private Logic logic;
     private Path dataFilePath;
-    private MainWindow mainWindow;
 
     /**
      * Creates a {@code UiManager} with the given {@code Logic} and the data file path
@@ -40,34 +39,33 @@ public class UiManager implements Ui {
     public void start(Stage primaryStage) {
         logger.info("Starting UI...");
 
-        //Set the application icon.
-        primaryStage.getIcons().add(getImage(ICON_APPLICATION));
-
         try {
-            mainWindow = new MainWindow(primaryStage, logic, dataFilePath);
-            mainWindow.show(); //This should be called before creating other UI parts
-            mainWindow.fillInnerParts();
-
+            initializeMainWindow(primaryStage);
         } catch (Throwable e) {
-            logger.severe(StringUtil.getDetails(e));
-            showFatalErrorDialogAndShutdown("Fatal error during initializing", e);
+            showFatalErrorDialogAndShutdown(primaryStage, "Fatal error during initializing", e);
         }
+    }
+
+    /**
+     * Creates and displays the main window and its inner parts.
+     */
+    void initializeMainWindow(Stage primaryStage) {
+        primaryStage.getIcons().add(getImage(ICON_APPLICATION));
+        MainWindow mainWindow = new MainWindow(primaryStage, logic, dataFilePath);
+        mainWindow.show(); //This should be called before creating other UI parts
+        mainWindow.fillInnerParts();
     }
 
     private Image getImage(String imagePath) {
         return new Image(MainApp.class.getResourceAsStream(imagePath));
     }
 
-    void showAlertDialogAndWait(Alert.AlertType type, String title, String headerText, String contentText) {
-        showAlertDialogAndWait(mainWindow.getPrimaryStage(), type, title, headerText, contentText);
-    }
-
     /**
      * Shows an alert dialog on {@code owner} with the given parameters.
      * This method only returns after the user has closed the alert dialog.
      */
-    private static void showAlertDialogAndWait(Stage owner, AlertType type, String title, String headerText,
-                                               String contentText) {
+    void showAlertDialogAndWait(Stage owner, AlertType type, String title, String headerText,
+            String contentText) {
         final Alert alert = new Alert(type);
         alert.getDialogPane().getStylesheets().add("view/DarkTheme.css");
         alert.initOwner(owner);
@@ -82,9 +80,21 @@ public class UiManager implements Ui {
      * Shows an error alert dialog with {@code title} and error message, {@code e},
      * and exits the application after the user has closed the alert dialog.
      */
-    private void showFatalErrorDialogAndShutdown(String title, Throwable e) {
-        logger.severe(title + " " + e.getMessage() + StringUtil.getDetails(e));
-        showAlertDialogAndWait(Alert.AlertType.ERROR, title, e.getMessage(), e.toString());
+    private void showFatalErrorDialogAndShutdown(Stage owner, String title, Throwable e) {
+        logger.log(Level.SEVERE, title, e);
+        try {
+            showAlertDialogAndWait(owner, AlertType.ERROR, title, e.getMessage(), e.toString());
+        } catch (Throwable dialogFailure) {
+            logger.log(Level.SEVERE, "Unable to show the fatal error dialog", dialogFailure);
+        } finally {
+            shutdown();
+        }
+    }
+
+    /**
+     * Stops JavaFX and exits the process after a fatal startup error.
+     */
+    void shutdown() {
         Platform.exit();
         System.exit(1);
     }
