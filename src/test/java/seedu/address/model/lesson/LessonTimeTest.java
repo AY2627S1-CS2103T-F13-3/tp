@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Locale;
+
 import org.junit.jupiter.api.Test;
 
 public class LessonTimeTest {
@@ -41,6 +43,20 @@ public class LessonTimeTest {
     public void toString_earlyTime_retainsLeadingZeros() {
         assertEquals("0030", new LessonTime("0030").toString());
         assertEquals("0905", new LessonTime("0905").toString());
+    }
+
+    @Test
+    public void toString_nonLatinDefaultLocale_usesAsciiDigitsAndRoundTrips() {
+        Locale originalFormatLocale = Locale.getDefault(Locale.Category.FORMAT);
+        try {
+            Locale.setDefault(Locale.Category.FORMAT, Locale.forLanguageTag("ar-EG"));
+            LessonTime time = new LessonTime("0905");
+
+            assertEquals("0905", time.toString());
+            assertEquals(time, new LessonTime(time.toString()));
+        } finally {
+            Locale.setDefault(Locale.Category.FORMAT, originalFormatLocale);
+        }
     }
 
     @Test

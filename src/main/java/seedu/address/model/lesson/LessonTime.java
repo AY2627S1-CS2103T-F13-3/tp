@@ -3,6 +3,8 @@ package seedu.address.model.lesson;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import java.util.Locale;
+
 /**
  * A time of day represented externally using four-digit 24-hour HHMM format.
  * Guarantees: immutable; valid as declared in {@link #isValidLessonTime(String)}.
@@ -57,7 +59,7 @@ public final class LessonTime implements Comparable<LessonTime> {
     public String toString() {
         int hour = minutesFromMidnight / MINUTES_PER_HOUR;
         int minute = minutesFromMidnight % MINUTES_PER_HOUR;
-        return String.format("%02d%02d", hour, minute);
+        return String.format(Locale.ROOT, "%02d%02d", hour, minute);
     }
 
     @Override
