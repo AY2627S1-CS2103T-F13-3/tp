@@ -4,10 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
@@ -55,9 +59,16 @@ public class LogsCenterTest {
         String classPath = Path.of(LogsCenter.class.getProtectionDomain().getCodeSource().getLocation().toURI())
                 + File.pathSeparator
                 + Path.of(LoggingStartup.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+        List<String> commandArguments = new ArrayList<>();
+        commandArguments.add(javaExecutable.toString());
+        // Reuse the active JaCoCo agent's options so child executions contribute to the same coverage report.
+        ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
+                .filter(argument -> argument.matches("-javaagent:(?:.*[/\\\\])?jacocoagent\\.jar(?:=.*)?"))
+                .map(this::resolveJacocoDestination)
+                .forEach(commandArguments::add);
+        commandArguments.addAll(List.of("-cp", classPath, LoggingStartup.class.getName()));
         Path outputFile = temporaryDirectory.resolve("console-output.txt");
-        Process process = new ProcessBuilder(javaExecutable.toString(), "-cp", classPath,
-                LoggingStartup.class.getName())
+        Process process = new ProcessBuilder(commandArguments)
                 .directory(temporaryDirectory.toFile())
                 .redirectErrorStream(true)
                 .redirectOutput(outputFile.toFile())
@@ -73,6 +84,19 @@ public class LogsCenterTest {
                 process.destroyForcibly().waitFor(5, TimeUnit.SECONDS);
             }
         }
+    }
+
+    /**
+     * Preserves the active agent's destination when the child process changes its working directory.
+     */
+    private String resolveJacocoDestination(String argument) {
+        Matcher destinationOption = Pattern.compile("([=,]destfile=)([^,]+)").matcher(argument);
+        if (!destinationOption.find()) {
+            return argument;
+        }
+        String absoluteDestination = Path.of(destinationOption.group(2)).toAbsolutePath().toString();
+        String resolvedOption = destinationOption.group(1) + absoluteDestination;
+        return destinationOption.replaceFirst(Matcher.quoteReplacement(resolvedOption));
     }
 
     private void assertMessagesAppearOnce(String output) {
