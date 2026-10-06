@@ -114,6 +114,56 @@ How the parsing works:
 * When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 
+#### Read-only retrieval API: declarations for shared lessons
+
+`Logic` declares the following UI-facing methods for Ben's B1 retrieval contract. Their `LogicManager` implementations
+currently throw `UnsupportedOperationException` with the message `Canonical read-only retrieval is not implemented yet`.
+The canonical people, shared Lesson, Attendance and aggregate foundations must be integrated before these methods are
+used by commands or UI panels. Existing command routes continue to use the current address-book model.
+
+| Method in `Logic` | Return type | Contract once integrated |
+|-------------------|-------------|--------------------------|
+| `getLessonList()` | `ObservableList<LessonView>` | Complete shared lesson catalogue in creation order; includes empty rosters and each lesson once. |
+| `getFilteredLessonList()` | `ObservableList<LessonView>` | Lessons matching the active lesson filter, preserving catalogue order and unique lesson identities. |
+| `findLessonById(String lessonId)` | `Optional<LessonView>` | Lookup across the complete catalogue, independently of the displayed filter; a valid unknown ID returns `Optional.empty()`. |
+| `getStudentLessons(String studentId)` | `ObservableList<LessonView>` | Current membership derived from each canonical Lesson's enrolled Student IDs, in lesson creation order. |
+| `getLessonRoster(String lessonId)` | `ObservableList<StudentView>` | Current enrolled students resolved from Lesson-owned IDs, in global person creation order; an empty roster is valid. |
+| `getTutorSchedule(String tutorId)` | `ObservableList<LessonView>` | Assigned lessons, including empty rosters, ordered by weekday (Monday first), start time and then lesson ID. |
+| `getAttendanceHistory(String studentId)` | `ObservableList<AttendanceHistoryEntry>` | All recorded dated attendance, including former enrolments, ordered by date (newest first) and then lesson ID. |
+| `getAttendanceHistory(String studentId, String lessonId)` | `ObservableList<AttendanceHistoryEntry>` | The same retained history restricted to one existing lesson; current enrolment is not required. |
+
+Stable `S`/`T`/`L` IDs are passed as strings at this view boundary. During integration, `LogicManager` will validate and
+resolve them using the canonical identity types before delegating to `Model`. Null IDs will raise
+`NullPointerException`. Malformed IDs, wrong-role person IDs and unknown IDs will raise `IllegalArgumentException`,
+except that `findLessonById` returns an empty optional for a valid unknown lesson ID. An existing record with no
+matching lessons, roster members or attendance has a valid empty result. The current stubs raise
+`UnsupportedOperationException` for every call, before input validation.
+
+The read-only contracts in `seedu.address.model.query` describe result entries without introducing persisted records:
+
+* `LessonView` exposes stable lesson and tutor IDs, the tutor's current name, weekday, start/end times, subject and room.
+* `StudentView` exposes stable student ID, current name, education level, parent phone and optional own contact details.
+* `AttendanceHistoryEntry` exposes student ID, lesson ID, date, `PRESENT`/`ABSENT` status and `isCurrentlyEnrolled()`.
+  Missing attendance produces no history entry; it means unrecorded. Current membership is derived from the Lesson's
+  roster and is independent of the retained attendance key. Existing history can be inspected after unenrolment and
+  identified by student ID, lesson ID and date for later correction or removal.
+
+All list results must be unmodifiable observable views. The Model will own filtering and derivation, while
+`LogicManager` will expose those results to the UI through `Logic`. Updates replace changed read-only entries and
+notify already subscribed lists after lesson/person changes, enrolment/unenrolment, mark/unmark and rollback.
+Previously returned list objects must remain usable by UI bindings. Equal dates or schedule times use lexicographic
+lesson-ID ordering as the final tie-breaker. Lookup projections describe the state at the time of lookup.
+
+Queries preserve the current people filter/order and displayed indices, and leave stored records and identity
+allocation state unchanged. Lesson search combines its filters against one canonical Lesson. Membership comes from
+Lesson-owned enrolled Student IDs; the query layer maintains no second writable membership graph. The `search`
+command continues to enter through `Logic.execute(String)` when implemented, with command feedback in `CommandResult`
+and matching records supplied through the observable getters.
+
+This contract follows the agreed shared-lesson direction. The current User Guide's per-student `LESSON_INDEX` and
+student-grouped lesson results describe the earlier specification; the shared lesson command and result descriptions
+will be reconciled when the corresponding features are integrated.
+
 ### Model component
 **API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
 

@@ -2,6 +2,7 @@ package seedu.address.logic;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
@@ -14,16 +15,22 @@ import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
+import seedu.address.model.query.AttendanceHistoryEntry;
+import seedu.address.model.query.LessonView;
+import seedu.address.model.query.StudentView;
 import seedu.address.storage.Storage;
 
 /**
  * The main LogicManager of the app.
+ * Canonical retrieval overrides fail explicitly until the shared lesson model is integrated.
  */
 public class LogicManager implements Logic {
     public static final String FILE_OPS_ERROR_FORMAT = "Could not save data due to the following error: %s";
 
     public static final String FILE_OPS_PERMISSION_ERROR_FORMAT =
             "Could not save data to file %s due to insufficient permissions to write to the file or the folder.";
+
+    private static final String RETRIEVAL_NOT_IMPLEMENTED = "Canonical read-only retrieval is not implemented yet";
 
     private final Logger logger = LogsCenter.getLogger(LogicManager.class);
 
@@ -62,6 +69,46 @@ public class LogicManager implements Logic {
     @Override
     public ObservableList<Person> getFilteredPersonList() {
         return model.getFilteredPersonList();
+    }
+
+    @Override
+    public ObservableList<LessonView> getLessonList() {
+        throw new UnsupportedOperationException(RETRIEVAL_NOT_IMPLEMENTED);
+    }
+
+    @Override
+    public ObservableList<LessonView> getFilteredLessonList() {
+        throw new UnsupportedOperationException(RETRIEVAL_NOT_IMPLEMENTED);
+    }
+
+    @Override
+    public Optional<LessonView> findLessonById(String lessonId) {
+        throw new UnsupportedOperationException(RETRIEVAL_NOT_IMPLEMENTED);
+    }
+
+    @Override
+    public ObservableList<LessonView> getStudentLessons(String studentId) {
+        throw new UnsupportedOperationException(RETRIEVAL_NOT_IMPLEMENTED);
+    }
+
+    @Override
+    public ObservableList<StudentView> getLessonRoster(String lessonId) {
+        throw new UnsupportedOperationException(RETRIEVAL_NOT_IMPLEMENTED);
+    }
+
+    @Override
+    public ObservableList<LessonView> getTutorSchedule(String tutorId) {
+        throw new UnsupportedOperationException(RETRIEVAL_NOT_IMPLEMENTED);
+    }
+
+    @Override
+    public ObservableList<AttendanceHistoryEntry> getAttendanceHistory(String studentId) {
+        throw new UnsupportedOperationException(RETRIEVAL_NOT_IMPLEMENTED);
+    }
+
+    @Override
+    public ObservableList<AttendanceHistoryEntry> getAttendanceHistory(String studentId, String lessonId) {
+        throw new UnsupportedOperationException(RETRIEVAL_NOT_IMPLEMENTED);
     }
 
     @Override
