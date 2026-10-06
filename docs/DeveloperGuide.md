@@ -9,7 +9,8 @@ title: Developer Guide
 
 ## **Acknowledgements**
 
-* _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the originals.}_
+* PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
+* Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student record foundation's model classes, automated tests, and design documentation. This acknowledgement covers that bounded contribution.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -154,6 +155,25 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 ## **Implementation**
 
 This section describes some noteworthy details on how certain features are implemented.
+
+### Student record foundation
+
+The student record foundation provides reusable domain types for subsequent person commands and shared-lesson integration.
+The current command, UI, and JSON aggregate still use the inherited AB3 `Person` model; integrating the new types with these components is follow-up work.
+
+| Type | Implemented contract |
+| --- | --- |
+| `PersonRole` | Represents `STUDENT`, `TUTOR`, or `PARENT`. |
+| `PersonId` | Represents a stable role-prefixed identifier, such as `S1`, `T1`, or `P1`, with a positive `long` sequence number and no leading zeros. Input is trimmed and case-normalized. |
+| `EducationLevel` | Accepts `P1`–`P6`, `S1`–`S5`, `JC1`, or `JC2`, normalizing trimmed input to uppercase. |
+| `ContactDetails` | Composes a required `Name` with optional `Phone`, `Email`, and `Address` values. It reuses the existing contact value types and requires any supplied phone number to contain 3–15 digits. |
+| `Student` | Composes a student-role `PersonId`, `ContactDetails`, `EducationLevel`, and required parent `Phone`. The parent phone must contain 3–15 digits; the student's own phone, email, and address remain optional. |
+
+`ContactDetails` and `Student` are immutable. `Student` is a standalone domain class composed from the common contact abstraction; it does not extend the inherited `Person` class. Its constructor rejects a tutor or parent ID.
+
+**Identity and duplicates:** The stable `PersonId` identifies a record independently of its contact details or position in a displayed list. `Student#isDuplicateOf(Student)` instead compares the student's name, ignoring case and repeated spaces, together with the exact parent phone number. Different IDs or optional contact details do not distinguish otherwise duplicate students. This operation identifies a duplicate candidate; aggregate-level rejection is part of later command integration.
+
+**Planned relationships:** `Student` does not contain lesson or attendance collections. The planned shared-lesson model will keep canonical lessons and student–lesson membership outside the student record, referring to stable IDs so several students can share one lesson. Dated attendance and the storage of these relationships are separate follow-up work.
 
 ### \[Proposed\] Undo/redo feature
 
