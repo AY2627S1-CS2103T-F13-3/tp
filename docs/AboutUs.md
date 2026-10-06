@@ -28,7 +28,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 [[github](https://github.com/gugrusaurus)]
 
 * Role: Developer, Deliverables and Deadlines, Documentation
-* Responsibilities: Implement attendance marking and unmarking; coordinate project deliverables and deadlines to ensure timely submissions in the required format; maintain the README, UI mockup, and non-feature sections of the User Guide.
+* Responsibilities: Implement saving, validated loading and attendance-history persistence; coordinate deliverables, deadlines and milestone closeout; maintain README and quick-start material.
 
 ### Benjamin Ng
 
@@ -36,10 +36,10 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 [[github](https://github.com/ben58882)]
 
-* Role: Developer (Model, UI and Storage)
+* Role: Developer (Retrieval and Views)
 * Responsibilities:
   * Develop Model filtering and UI results for search and lesson-information retrieval.
-  * Maintain Storage persistence for person and lesson records.
+  * Implement shared-lesson, roster and attendance-history views; capture the actual integrated UI screenshot.
   * Write Developer Guide use cases.
 
 ### Ernest Chua
@@ -52,7 +52,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 * Responsibilities:
   * Implement and maintain the help command and command assistance.
   * Coordinate code quality and the integration of project documentation.
-  * Author and maintain the User Guide's feature descriptions and command summary.
+  * Maintain help documentation, shared command conventions and the command summary; reconcile each owner's own UG/DG feature contributions.
 
 ### Yang Shuo
 
@@ -62,6 +62,8 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 * Role: Developer
 * Responsibilities:
-    * Recurring-lesson addition and deletion
+    * Shared lessons, enrolment/unenrolment, and attendance marking/unmarking
     * DevOps and integration
     * Developer Guide non-functional requirements and glossary
+
+The final `docs/images/Ui.png` capture is owned by Ben. Each member documents their own feature implementation and applicable AI/reuse attribution; Ernest coordinates consistency. The existing image predates the completed shared-lesson workflow and must be replaced after integration.
