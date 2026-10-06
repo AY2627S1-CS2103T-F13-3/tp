@@ -11,6 +11,10 @@ title: Developer Guide
 
 * _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the originals.}_
 
+* PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
+* Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
+* Ernest's Week 8 help increment used OpenAI Codex to inspect the repository, generate and revise the command catalogue, inline-help implementation, regression tests, and Ernest's documentation coordination changes. This attribution covers that increment; it does not claim authorship of teammates' feature implementations or imply teammate review has occurred.
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Setting up, getting started**
@@ -20,6 +24,28 @@ Refer to the guide [_Setting up and getting started_](SettingUp.md).
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Design**
+
+### Current increment and command integration
+
+This increment implements inline help and command-specific guidance. The runtime still uses inherited AB3 people and storage. Its active commands are `add`, `delete`, `list`, `help`, and `exit`. Role-aware people, stable IDs, shared lessons, enrolment, attendance, history, and search remain integration targets until their owners' code and complete persistence support are merged. Existing domain use cases and model/storage diagrams describe the inherited implementation or proposed product, not a completed shared-lesson runtime.
+
+`CommandCatalog` is the single registration point for active parsers, short descriptions, and usage messages. `AddressBookParser` extracts the command word and delegates to it. `HelpCommandParser` accepts zero or one topic, normalizes topics with `Locale.ROOT`, and rejects unknown topics and excess arguments with actionable guidance. Help reads command-owned usage constants; it does not maintain a second copy of command syntax.
+
+Feature owners supply their parser, usage and runnable example. Register a mutation only when its aggregate, validation, and save/reload behavior work together. Replace the legacy people entries at the canonical runtime cutover; legacy `delete` must be disabled until guarded ID-based deletion is ready. `edit`, `clear`, and `find` are already withdrawn from dispatch and help in this increment. Their inherited implementation classes remain for incremental cleanup and direct regression tests.
+
+When registering or withdrawing a command, update catalogue/router tests, its UG entry and manual tests in the same PR. A summary topic must never advertise an unavailable command. `list` and `exit` now reject unexpected arguments instead of silently ignoring them.
+
+### Shared-lesson target contract
+
+The coordination target supplied for Week 8 uses one authoritative people collection, one independent Lesson collection, and separate dated Attendance records. Common contact behavior belongs in the person abstraction; Student holds education level and parent contact. Student must not own copies of shared lessons. Each Lesson owns `enrolledStudentIds`; derive student lessons, rosters and tutor schedules from that association. Attendance has the unique key student ID + lesson ID + date, with `present` or `absent`; a missing entry is unrecorded.
+
+Stable IDs such as `S1`, `T1`, `P1` and `L1` are displayed and persisted. Use IDs for commands and saved references, including `tu/T1` for lesson creation. List positions are display positions, not identities. The earlier GitHub tracker #59 uses person-index selectors and tutor-name disambiguation; this supplied ID-based target differs. Feature owners must reconcile those existing issues at integration rather than treating the inherited parser as already ID-aware.
+
+Create lessons with empty rosters. Tutor and room clashes are checked once per shared lesson; student timetable clashes are checked on enrolment. Time intervals are half-open so adjacent bookings are allowed. Unenrolment removes membership and retains attendance. New attendance requires membership; existing history can be corrected or unmarked after unenrolment. Block student deletion for enrolment/history, tutor deletion for lesson references, and lesson deletion for enrolment/history. Deleting a separate Parent preserves the student's stored parent phone; parent links derive from matching phone values.
+
+All mutations go through Model APIs. Complete aggregate copy/reset/equality and snapshots cover people, lessons, memberships, attendance and allocation state. Vincent coordinates validated versioned JSON and transactional saves; failed saves must restore data and active views before those commands are enabled. Preferences remain separate. Capacity, waiting lists, make-ups, fees, lesson editing, occurrence cancellation, undo/redo and advanced search remain future scope.
+
+Zhu owns people/testing; Yang Shuo owns lessons/enrolment/attendance; Ben owns retrieval/views; Vincent owns saving/loading/attendance history; Ernest owns routing/help and documentation coordination. Each owner authors their own feature documentation in the existing UG/DG. Ernest reconciles shared conventions and examples without taking ownership of those implementations.
 
 <div markdown="span" class="alert alert-primary">
 
@@ -111,7 +137,7 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 <img src="images/ParserClasses.png" width="600"/>
 
 How the parsing works:
-* When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
+* `AddressBookParser` delegates to the registered parser in `CommandCatalog`. An `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`) uses the other classes shown above to parse the arguments and create an `XYZCommand` object. The router returns that object as a `Command`.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 
 ### Model component
@@ -154,6 +180,14 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 ## **Implementation**
 
 This section describes some noteworthy details on how certain features are implemented.
+
+### Inline help
+
+`HelpCommand` returns guidance in an ordinary `CommandResult`, with no separate-window or exit flag. It never mutates Model data, filters or preferences. `LogicManager` returns help before the inherited unconditional save path, so help works even when operational storage is unwritable and does not create or rewrite the data file. General change detection and rollback for other commands remain Vincent's integration work.
+
+The Help menu and F1 invoke `MainWindow.executeCommand("help")`. Both display exactly the same guidance as typed help while retaining the command-box draft and person selection. `ResultDisplay` uses a read-only wrapped TextArea with scrolling and resets to the beginning of each new result. Existing F1 handling for focused text controls remains in place. The unused inherited HelpWindow is not constructed or reachable through supported help entry points.
+
+Tests exercise each registered help topic and its example through the actual router, malformed topics, locale-independent matching, filter/data/preference preservation, and help with failing storage. GUI selection, menu/F1 and scroll behavior have a separate manual procedure below.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -495,8 +529,10 @@ The documented person, lesson, attendance, search, and help operations accept al
 **Extensions**
 
 * 2a. The administrator needs only the help catalogue: PonHub leaves the current records and selection unchanged, and the use case ends.
-* 2b. The catalogue spans multiple pages: the administrator requests the next or previous page; PonHub displays it and resumes at step 2.
-* 3a. The command name is unknown or misspelled: PonHub suggests a likely command and resumes at step 3.
+* 2b. Guidance exceeds the Result Display: the administrator scrolls the wrapped text and resumes at step 2.
+* 2c. The administrator chooses Help from the menu or presses F1: PonHub executes the same overview help, preserving the command-box draft, filter and person selection.
+* 3a. The help topic is unknown or unavailable: PonHub reports the topic and instructs the administrator to type `help` for available commands.
+* 3d. More than one help topic is supplied: PonHub reports `Invalid command format!` followed by the help usage. No topic is executed.
 * 3b. Required parameters are missing or invalid: PonHub shows guidance and an example without changing data. The administrator may correct and resubmit at step 3.
 * 3c. The administrator uses a planned shortcut, completion, or alternative help form: PonHub maps it to the corresponding command and resumes at step 3.
 * 4a. The chosen command fails for a domain-specific reason: PonHub reports the error, changes no data, and the use case ends.
@@ -556,6 +592,17 @@ The documented person, lesson, attendance, search, and help operations accept al
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Appendix: Instructions for manual testing**
+
+### Inline help and supported routes
+
+1. Launch the built JAR using Java 25 in a fresh folder. Run `help`, then `help add`, `help delete`, `help list`, `help help`, and `help exit`. Each topic must match its actual active parser and supply a runnable example. Requesting `help exit` must leave the application open.
+2. Select a person card, type an unfinished command, and choose Help from the menu. Repeat with F1 while focus is in the command box and in Result Display. Expect identical overview guidance, no separate window, unchanged card selection and unchanged unfinished input.
+3. Run `help ADD`; expect the same content as `help add`. Run `help remove`, `help clear`, and `help addlesson`; expect an unknown-topic message directing you to `help`. Run `help add delete`; expect the help usage after `Invalid command format!`.
+4. Resize to the minimum width. Run `help add`, scroll to its last example and back to the top. Expect wrapped, readable text and a working vertical scrollbar. Request another topic while scrolled down; it starts at the beginning.
+5. Run `edit 1 n/Alex`, `clear`, and `find Alex`. Expect `Unknown command.` and unchanged people/data. Run `list extra` and `exit extra`; expect their usage messages and no list change or exit.
+6. Compare the operational file before and after help; it must be byte-for-byte unchanged, and a missing operational file must remain missing. The automated failing-storage test covers help without operational write access. Preference saving at application shutdown remains separate.
+
+Repeat the topic/example checks whenever a feature owner registers another command. Final shared-lesson workflow and published-site checks remain pending the owners' integration; passing help checks alone does not establish v1.2 product readiness.
 
 Given below are instructions to test the app manually.
 
