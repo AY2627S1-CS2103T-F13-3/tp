@@ -10,6 +10,7 @@ title: Developer Guide
 ## **Acknowledgements**
 
 * _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the originals.}_
+* Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with contact validation, parser integration, related automated tests, and the corresponding guide updates for [#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61).
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -154,6 +155,23 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 ## **Implementation**
 
 This section describes some noteworthy details on how certain features are implemented.
+
+### Contact validation and normalization
+
+The shared `Name`, `Phone`, `Email`, and `Address` value types enforce the contact formats in the User Guide. Their constructors and `isValid...` methods apply the same rules, including when the inherited JSON adapter loads a contact.
+
+| Type | Implemented contract |
+| --- | --- |
+| `Name` | 1–100 characters after trimming surrounding ASCII spaces and collapsing repeated spaces. Accepts English letters, spaces, apostrophes, hyphens and periods, with at least one letter. Preserves display case. |
+| `Phone` | 3–15 ASCII digits, stored as a string so leading zeros are retained. |
+| `Email` | At most 254 characters. The local part allows English letters, digits, `.`, `_`, `%`, `+` and `-`, with no leading, trailing or consecutive periods. The domain has at least two labels of letters, digits or internal hyphens; its final label contains 2–63 English letters. Preserves spelling and case. |
+| `Address` | 1–200 printable ASCII characters after trimming surrounding spaces and collapsing repeated spaces. Rejects `/`, tabs, line breaks and other control characters. |
+
+`ParserUtil#parseName` and `parseAddress` delegate normalization to their value types. The argument tokenizer removes only ordinary spaces from prefixed values, preserving control characters for validation. The command parser likewise preserves trailing control characters. This prevents invalid pasted names or addresses from becoming valid merely because a parser discarded their tabs or line breaks. Phone and email parsing retain their inherited surrounding-whitespace trimming.
+
+Normalization is applied before equality and hashing of names and addresses. Case remains significant for value equality; role-specific duplicate-name matching is a separate contract. Role-aware commands, optional fields and relationship handling are follow-up work, so the inherited add/edit command paths remain active in this increment.
+
+The JSON schema is unchanged. Previously accepted records outside the new rules fail the inherited loading checks. `MainApp` currently replaces a load failure with an empty address book, and `LogicManager` saves after every successful command, including `list`, which can overwrite the rejected file. Safe loading belongs to Vincent's [#84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84). Keep this validation change in draft until activation can preserve rejected data; this increment does not implement protected loading or migration.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -581,6 +599,21 @@ testers are expected to do more *exploratory* testing.
        Expected: The most recent window size and location are retained.
 
 1. _{ more test cases …​ }_
+
+### Contact validation in the current increment
+
+Use the inherited contact commands below; the planned role-aware commands are not required for these checks. Run them in a test copy of your data.
+
+1. Enter `add n/  Anne-Marie   O'Neil  p/00123456 e/anne%school@example.com a/  Blk 10,   #01-02  `<br>
+   Expected: One contact is added with name `Anne-Marie O'Neil`, phone `00123456`, and address `Blk 10, #01-02`. The punctuation, email and leading zeros are retained.
+1. Enter `list`, identify that contact's current index, and enter `edit INDEX n/  Anne-Marie   O'Neil  a/  Blk 11,   #02-03  `<br>
+   Expected: The address becomes `Blk 11, #02-03`; the name keeps its case and punctuation.
+1. Try `add n/Test User p/1234567890123456 e/test@example.com a/Blk 10` and `add n/Test User p/123 e/test@localhost a/Blk 10`.<br>
+   Expected: Each command reports the corresponding phone or email constraints and adds nothing.
+1. Try `add n/Test2 User p/123 e/test@example.com a/Blk 10` and `add n/Test User p/123 e/test@example.com a/Blk 10/Unit 2`.<br>
+   Expected: Each command reports the corresponding name or address constraints and adds nothing.
+1. Close and reopen the app.<br>
+   Expected: The successfully saved contact retains the normalized name/address, email and leading-zero phone.
 
 ### Deleting a person
 

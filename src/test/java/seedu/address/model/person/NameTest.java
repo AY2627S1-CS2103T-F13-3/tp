@@ -1,5 +1,7 @@
 package seedu.address.model.person;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -15,8 +17,13 @@ public class NameTest {
 
     @Test
     public void constructor_invalidName_throwsIllegalArgumentException() {
-        String invalidName = "";
-        assertThrows(IllegalArgumentException.class, () -> new Name(invalidName));
+        String[] invalidNames = {"", " ", "' - .", "12345", "Peter the 2nd", "Peter*", "Peter/Jack",
+            "Peter\tJack", "Peter\nJack", "\rPeter", "Peter\0", "Peter\u007f", "Jos\u00e9", "Peter\u00a0Jack",
+            "\u674e", "A".repeat(101)};
+        for (String invalidName : invalidNames) {
+            assertFalse(Name.isValidName(invalidName));
+            assertThrows(IllegalArgumentException.class, Name.MESSAGE_CONSTRAINTS, () -> new Name(invalidName));
+        }
     }
 
     @Test
@@ -24,18 +31,28 @@ public class NameTest {
         // null name
         assertThrows(NullPointerException.class, () -> Name.isValidName(null));
 
-        // invalid name
-        assertFalse(Name.isValidName("")); // empty string
-        assertFalse(Name.isValidName(" ")); // spaces only
-        assertFalse(Name.isValidName("^")); // only non-alphanumeric characters
-        assertFalse(Name.isValidName("peter*")); // contains non-alphanumeric characters
+        String[] validNames = {"A", "peter jack", "Capital Tan", "Anne-Marie O'Neill Jr.", "  Peter   Jack  ",
+            "A".repeat(100), "  " + "A  ".repeat(49) + "AA  "};
+        for (String validName : validNames) {
+            assertTrue(Name.isValidName(validName));
+            assertDoesNotThrow(() -> new Name(validName));
+        }
+    }
 
-        // valid name
-        assertTrue(Name.isValidName("peter jack")); // alphabets only
-        assertTrue(Name.isValidName("12345")); // numbers only
-        assertTrue(Name.isValidName("peter the 2nd")); // alphanumeric characters
-        assertTrue(Name.isValidName("Capital Tan")); // with capital letters
-        assertTrue(Name.isValidName("David Roger Jackson Ray Jr 2nd")); // long names
+    @Test
+    public void constructor_repeatedSpaces_normalizesName() {
+        Name name = new Name("  Anne-Marie   O'Neill Jr.  ");
+        assertEquals("Anne-Marie O'Neill Jr.", name.fullName);
+        assertEquals("Anne-Marie O'Neill Jr.", name.toString());
+    }
+
+    @Test
+    public void equals_normalizedNames_returnsTrue() {
+        Name normalizedName = new Name("Anne-Marie O'Neill Jr.");
+        Name unnormalizedName = new Name("  Anne-Marie   O'Neill Jr.  ");
+        assertEquals(normalizedName, unnormalizedName);
+        assertEquals(normalizedName.hashCode(), unnormalizedName.hashCode());
+        assertFalse(normalizedName.equals(new Name("anne-marie o'neill jr.")));
     }
 
     @Test

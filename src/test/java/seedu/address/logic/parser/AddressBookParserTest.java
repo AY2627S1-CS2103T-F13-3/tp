@@ -22,6 +22,8 @@ import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.Address;
+import seedu.address.model.person.Name;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
@@ -37,6 +39,42 @@ public class AddressBookParserTest {
         Person person = new PersonBuilder().build();
         AddCommand command = (AddCommand) parser.parseCommand(PersonUtil.getAddCommand(person));
         assertEquals(new AddCommand(person), command);
+    }
+
+    @Test
+    public void parseCommand_normalizedContactDetails_success() throws Exception {
+        Person person = new PersonBuilder().withName("Anne-Marie O'Neill Jr.").withPhone("00123456")
+                .withEmail("Anne+School@Example.COM").withAddress("Blk 456, Den Road, #01-355").withTags().build();
+        String contactDetails = " n/  Anne-Marie   O'Neill Jr.  p/00123456 e/Anne+School@Example.COM"
+                + " a/  Blk 456,   Den Road, #01-355  ";
+
+        assertEquals(new AddCommand(person), parser.parseCommand("add" + contactDetails));
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder(person).build();
+        assertEquals(new EditCommand(INDEX_FIRST_PERSON, descriptor),
+                parser.parseCommand("edit 1" + contactDetails + " t/"));
+    }
+
+    @Test
+    public void parseCommand_nameBoundaryControls_throwsParseException() {
+        String[] invalidNames = {"\tAnne-Marie", "Anne-Marie\n", "Anne-Marie\r", "Anne-Marie\0"};
+        for (String invalidName : invalidNames) {
+            assertThrows(ParseException.class, Name.MESSAGE_CONSTRAINTS, ()
+                    -> parser.parseCommand("add p/00123456 e/anne@example.com a/123 Main Street n/" + invalidName));
+            assertThrows(ParseException.class, Name.MESSAGE_CONSTRAINTS, ()
+                    -> parser.parseCommand("edit 1 n/" + invalidName));
+        }
+    }
+
+    @Test
+    public void parseCommand_addressBoundaryControls_throwsParseException() {
+        String[] invalidAddresses = {"\t123 Main Street", "123 Main Street\n", "123 Main Street\r",
+            "123 Main Street\0"};
+        for (String invalidAddress : invalidAddresses) {
+            assertThrows(ParseException.class, Address.MESSAGE_CONSTRAINTS, ()
+                    -> parser.parseCommand("add n/Anne-Marie p/00123456 e/anne@example.com a/" + invalidAddress));
+            assertThrows(ParseException.class, Address.MESSAGE_CONSTRAINTS, ()
+                    -> parser.parseCommand("edit 1 a/" + invalidAddress));
+        }
     }
 
     @Test

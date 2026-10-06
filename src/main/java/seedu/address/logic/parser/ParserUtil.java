@@ -37,17 +37,16 @@ public class ParserUtil {
 
     /**
      * Parses a {@code String name} into a {@code Name}.
-     * Leading and trailing whitespaces will be trimmed.
+     * Surrounding spaces are removed and repeated spaces are collapsed by {@code Name}.
      *
      * @throws ParseException if the given {@code name} is invalid.
      */
     public static Name parseName(String name) throws ParseException {
         requireNonNull(name);
-        String trimmedName = name.trim();
-        if (!Name.isValidName(trimmedName)) {
+        if (!Name.isValidName(name)) {
             throw new ParseException(Name.MESSAGE_CONSTRAINTS);
         }
-        return new Name(trimmedName);
+        return new Name(name);
     }
 
     /**
@@ -67,17 +66,16 @@ public class ParserUtil {
 
     /**
      * Parses a {@code String address} into an {@code Address}.
-     * Leading and trailing whitespaces will be trimmed.
+     * Surrounding spaces are removed and repeated spaces are collapsed by {@code Address}.
      *
      * @throws ParseException if the given {@code address} is invalid.
      */
     public static Address parseAddress(String address) throws ParseException {
         requireNonNull(address);
-        String trimmedAddress = address.trim();
-        if (!Address.isValidAddress(trimmedAddress)) {
+        if (!Address.isValidAddress(address)) {
             throw new ParseException(Address.MESSAGE_CONSTRAINTS);
         }
-        return new Address(trimmedAddress);
+        return new Address(address);
     }
 
     /**
