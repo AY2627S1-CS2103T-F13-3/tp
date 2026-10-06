@@ -11,6 +11,7 @@ title: Developer Guide
 
 * PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student record foundation's model classes, automated tests, and design documentation. This acknowledgement covers that bounded contribution.
+* Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search and inline-help increments.
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).

@@ -86,6 +86,9 @@ public final class CommandCatalog {
         return entry.parser().parse(arguments);
     }
 
+    /**
+     * Holds a command's description, usage, and parser.
+     */
     private record Entry(String description, String usage, Parser<? extends Command> parser) {
     }
 }
