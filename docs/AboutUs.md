@@ -16,7 +16,10 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 [[github](https://github.com/ultramanarm)]
 
 * Role: Developer
-* Responsibilities: Testing + Data, Developer Guide
+* Responsibilities:
+  * Implement and maintain commands to add, delete, and list student, tutor, and parent records.
+  * Coordinate testing and maintain representative sample data.
+  * Maintain the Developer Guide's target user profile, value proposition, and prioritised user stories.
 
 ### Vincent Lin
 
@@ -24,8 +27,8 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 [[github](https://github.com/gugrusaurus)]
 
-* Role: Deliverables and Deadline
-* Responsibilities: Ensure project deliverables are done on time and in the right format.
+* Role: Developer, Deliverables and Deadlines, Documentation
+* Responsibilities: Implement saving, validated loading and attendance-history persistence; coordinate deliverables, deadlines and milestone closeout; maintain README and quick-start material.
 
 ### Benjamin Ng
 
@@ -33,8 +36,11 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 [[github](https://github.com/ben58882)]
 
-* Role: Developer
-* Responsibilities: Model, UI, Storage
+* Role: Developer (Retrieval and Views)
+* Responsibilities:
+  * Develop Model filtering and UI results for search and lesson-information retrieval.
+  * Implement shared-lesson, roster and attendance-history views; capture the actual integrated UI screenshot.
+  * Write Developer Guide use cases.
 
 ### Ernest Chua
 
@@ -43,7 +49,10 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 [[github](https://github.com/ErnestChuaa)]
 
 * Role: Code Quality, Documentation
-* Responsibilities: In charge of documentation quality and code quality
+* Responsibilities:
+  * Implement and maintain the help command and command assistance.
+  * Coordinate code quality and the integration of project documentation.
+  * Maintain help documentation, shared command conventions and the command summary; reconcile each owner's own UG/DG feature contributions.
 
 ### Yang Shuo
 
@@ -52,4 +61,9 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 [[github](https://github.com/ys000009)]
 
 * Role: Developer
-* Responsibilities: DevOps + Integration
+* Responsibilities:
+    * Shared lessons, enrolment/unenrolment, and attendance marking/unmarking
+    * DevOps and integration
+    * Developer Guide non-functional requirements and glossary
+
+The final `docs/images/Ui.png` capture is owned by Ben. Each member documents their own feature implementation and applicable AI/reuse attribution; Ernest coordinates consistency. The existing image predates the completed shared-lesson workflow and must be replaced after integration.
