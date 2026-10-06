@@ -66,30 +66,33 @@ The following sections define the supplied v1.2 integration target. They are not
 ### Reading the planned command formats
 
 * Uppercase words are placeholders; replace them with your values. Square brackets indicate optional input and are not typed.
-* Use displayed, stable IDs: `S1` for a student, `T1` for a tutor, `P1` for a parent and `L1` for a shared lesson. Filtering changes display positions, not IDs. Stored references and IDs survive restarts.
-* `PERSON_ID` is a student, tutor or parent ID; `STUDENT_ID`, `TUTOR_ID` and `LESSON_ID` must identify the appropriate kind of record.
+* `INDEX` is a positive integer identifying a person's position in the currently displayed, filtered people list. `STUDENT_INDEX` uses that same list and must select a student, even when other roles are displayed. Run `list` or a people search and check the current positions before selecting a person.
+* Person cards distinguish their numbered command position from their stable ID: `S1` for a student, `T1` for a tutor or `P1` for a parent. Filtering and deletion can change positions; stable IDs and stored relationships survive those changes and restarts. Use a current position for `delete` and student operations.
+* `TUTOR_ID` and `LESSON_ID` must identify an existing tutor and shared lesson respectively. Shared lessons have stable IDs such as `L1`.
+* Lesson catalogue, roster and history results preserve the current people list, its filter and its command positions. Select a student from the people list, rather than a position in those other results.
 * Type command names and prefixes in lowercase. Supply each prefix at most once, in any order. Omit unknown optional fields; do not supply blank values.
 
 ### Planned quick start
 
-After these commands and persistence are integrated, a fresh dataset can use this workflow. Read the actual IDs returned by additions; existing data may allocate different IDs.
+After these commands and persistence are integrated, a fresh dataset can use this workflow. Read the actual IDs returned by additions; existing data may allocate different IDs. The `list r/student` result below places Alex at position 1 and Jamie at position 2. Recheck those positions when using an existing dataset.
 
 ```text
 add r/tutor n/Mei Lim p/92345678
 add r/student n/Alex Tan l/S2 pp/91234567
 add r/student n/Jamie Tan l/S2 pp/91234567
 addlesson d/Mon st/1600 et/1730 s/Math tu/T1 rm/R1
-enrol S1 L1
-enrol S2 L1
+list r/student
+enrol 1 L1
+enrol 2 L1
 search c/lesson
-mark S1 L1 d/2026-10-05 s/present
-mark S2 L1 d/2026-10-05 s/absent
-unenrol S2 L1
-history S2 lid/L1
-mark S2 L1 d/2026-10-05 s/present
+mark 1 L1 d/2026-10-05 s/present
+mark 2 L1 d/2026-10-05 s/absent
+unenrol 2 L1
+history 2 lid/L1
+mark 2 L1 d/2026-10-05 s/present
 ```
 
-Expect one shared lesson with two students before unenrolment. Jamie's dated history remains visible and correctable after leaving. Restart and verify the same IDs, roster and history. No record means unrecorded, rather than absent.
+Expect one shared lesson with two students before unenrolment. Lesson search and history results preserve Alex and Jamie's positions in the people list. Jamie's dated history remains visible and correctable after leaving. Restart and verify the same stable IDs, roster and history; run `list r/student` again before selecting a student by position. No record means unrecorded, rather than absent.
 
 ### 1. Adding a person: `add`
 
@@ -129,7 +132,7 @@ For email addresses, the local part before `@` may contain letters, digits, peri
 PonHub saves the new record and displays a confirmation such as:
 `Added person: student - Alex Tan.`
 
-The person list resets to show all roles, with the new record at the end. A new student starts with no lessons or attendance records.
+The person list resets to show all roles, with the new record at the end. Recheck its displayed positions before selecting a person in your next command. A new student starts with no lessons or attendance records.
 
 #### Things to note
 
@@ -144,7 +147,7 @@ A duplicate is rejected with:
 
 ### 2. Listing people: `list`
 
-Displays all people or only people with a specified role, including each stable ID.
+Displays all people or only people with a specified role, including each current command index and separately labelled stable ID.
 
 #### Format
 
@@ -161,7 +164,7 @@ Displays all people or only people with a specified role, including each stable 
 
 #### Expected result
 
-People appear in creation order with stable IDs. Display positions are not command selectors.
+People appear in creation order, numbered from 1 within the displayed result. Each card shows that current command index and separately identifies its role and stable ID. For example, a student with ID `S12` may appear at position `1`; student commands then use `1`. Filtering renumbers positions without changing IDs.
 
 Example feedback:
 `Listed 3 person(s) with role: student.`
@@ -172,30 +175,31 @@ An empty result is valid. PonHub displays a count of zero and `No persons to dis
 
 * Use the singular role names `student`, `tutor` and `parent`. To display everyone, enter `list`; `list r/all` is invalid.
 * Listing changes the displayed view without modifying stored records.
+* Use positions from the latest people list or people search. A previous position may select someone else after the view changes or a person is deleted.
 
 ### 3. Deleting a person: `delete`
 
-Removes one person identified by a stable person ID.
+Removes one person selected by their current displayed index in the people list.
 
 #### Format
 
-`delete PERSON_ID`
+`delete INDEX`
 
 #### Example
 
 1. `list r/parent`
-2. Check the intended parent's ID, then enter `delete P1` if their ID is `P1`.
+2. Check the intended parent's current position. If Pat Tan is at position 1 in this result, enter `delete 1`.
 
 #### Expected result
 
 PonHub displays a confirmation such as:
 `Deleted person: parent - Pat Tan.`
 
-The current filter is preserved. Remaining people keep their IDs.
+The current filter is preserved. Remaining people keep their IDs and their displayed positions are renumbered.
 
 #### Restrictions
 
-* The ID must identify an existing person.
+* `INDEX` must be a positive integer within the current people list. A stable person ID such as `P1` is not a delete selector.
 * Only one person can be deleted per command.
 * Student deletion is blocked while enrolled or referenced by attendance. Tutor deletion is blocked while a lesson references the tutor. Linked records are not deleted automatically; removing a student never removes a shared lesson.
 * Deleting a separate parent record does not erase the parent phone number stored on a student's record.
@@ -203,7 +207,7 @@ The current filter is preserved. Remaining people keep their IDs.
 If dependencies prevent deletion, PonHub displays:
 `Cannot delete person: linked lesson or attendance records exist. Remove or reassign the links first.`
 
-Check the intended ID before deleting another person.
+Check the updated people list before deleting another person.
 
 ### 4. Creating and deleting shared lessons
 
@@ -217,13 +221,21 @@ The tutor must already exist. Use `Mon` through `Sun` and four-digit 24-hour HHM
 
 Deletion is blocked while the roster is non-empty or attendance refers to the lesson. It never removes student records. Once an unreferenced lesson is deleted, its tutor and room times become available again. Cancelling one occurrence and editing a lesson are future scope.
 
+**Catalogue:** `lessons [si/STUDENT_INDEX]`.
+
+Enter `lessons` to view the lesson catalogue. To select a student for the catalogue, first run `list r/student` and check their current position. If the intended student appears at position 1, enter `lessons si/1`. PonHub resolves this position to the student's stored identity for the query. Catalogue results preserve the current people list and its indices.
+
 ### 5. Enrolling and unenrolling students
 
-**Enrol:** `enrol STUDENT_ID LESSON_ID`, for example `enrol S1 L1`.
+**Enrol:** `enrol STUDENT_INDEX LESSON_ID`.
+
+Run `list r/student` and check the intended student's current position. If the student appears at position 1 and the lesson ID is `L1`, enter `enrol 1 L1`.
 
 Both records must exist and the person must be a student. Duplicate enrolment and overlap with that student's other enrolled lessons are rejected. A second student can join the same shared lesson without creating another lesson or booking.
 
-**Unenrol:** `unenrol STUDENT_ID LESSON_ID`, for example `unenrol S1 L1`.
+**Unenrol:** `unenrol STUDENT_INDEX LESSON_ID`.
+
+Run `list r/student` and recheck the student's position. If the intended student appears at position 1, enter `unenrol 1 L1` for lesson `L1`.
 
 This removes current membership and retains dated attendance. It does not delete the lesson or student. Student lessons are derived from the shared lesson's roster.
 
@@ -242,21 +254,27 @@ Text matching is case-insensitive. Combined lesson filters must match the same l
 
 Examples: `search c/student n/Alex`, `search c/tutor p/92345678`, `search c/lesson tu/T1 d/Mon s/Math`.
 
+People searches replace the displayed people list and number its results from 1. Use those current positions for subsequent person commands. Lesson searches display separate results and preserve the current people list, its filter and its indices; lesson results do not supply person command indices.
+
 ### 7. Recording attendance and retrieving history
 
-**Mark:** `mark STUDENT_ID LESSON_ID d/DATE s/STATUS`
+**Mark:** `mark STUDENT_INDEX LESSON_ID d/DATE s/STATUS`
 
-Example: `mark S1 L1 d/2026-10-05 s/present`.
+Example: Run `list r/student`. If the intended student appears at position 1 and the lesson ID is `L1`, enter `mark 1 L1 d/2026-10-05 s/present`.
 
 Use a real date in `YYYY-MM-DD` format, matching the lesson's weekday, and status `present` or `absent`. New records require current enrolment. Marking an existing student/lesson/date corrects that record; repeating the same status does not create a duplicate. No attendance entry means unrecorded.
 
-**Unmark:** `unmark STUDENT_ID LESSON_ID d/DATE`, for example `unmark S1 L1 d/2026-10-05`.
+**Unmark:** `unmark STUDENT_INDEX LESSON_ID d/DATE`.
+
+Example: After `list r/student`, if the intended student appears at position 1, enter `unmark 1 L1 d/2026-10-05` for lesson `L1`.
 
 Unmark removes only that dated record and does not change enrolment. Existing historical attendance can be corrected or unmarked after unenrolment. Students must still exist, and historical references continue to block student and lesson deletion.
 
-**History:** `history STUDENT_ID [lid/LESSON_ID]`, for example `history S1 lid/L1`.
+**History:** `history STUDENT_INDEX [lid/LESSON_ID]`.
 
-History lists dated attendance, including former enrolments. Current membership must be distinguishable from historical attendance. History retrieval does not change data.
+Example: After `list r/student`, if the intended student appears at position 1, enter `history 1 lid/L1` to view their attendance for lesson `L1`.
+
+History lists dated attendance, including former enrolments. Current membership must be distinguishable from historical attendance. History retrieval does not change data or the current people list. Roster and history positions are not student command selectors; use the student's current position in the people list.
 
 ### Planned failure and data behavior
 
@@ -272,7 +290,7 @@ The current inherited runtime uses `data/addressbook.json`. Only help skips oper
 **A**: Close PonHub on both computers. Install the same or a compatible PonHub version on the new computer, then copy the `data` folder from the folder containing the old JAR to the folder containing the new JAR. Keep a backup of the original folder until you have opened PonHub and checked your records on the new computer.
 
 **Q**: Should I use a displayed position or an ID?<br>
-**A**: The current contact `delete` command uses a displayed index. The planned shared-lesson commands use stable IDs such as `S1` and `L1`. Check `help delete` in your build; never substitute an index for an ID.
+**A**: The current contact `delete` command and the planned `delete`, `enrol`, `unenrol`, `mark`, `unmark`, `history` and `lessons si/` selectors use the person's current position in the displayed people list. Run `list` or a people search and check that position first. Cards label stable person IDs separately; those IDs preserve stored identity and relationships. Supply a stable lesson ID such as `L1` where the format requests `LESSON_ID`, and follow the documented tutor selector for lesson creation. Check `help` for the commands available in your build.
 
 **Q**: Why is `help addlesson` unavailable?<br>
 **A**: Help lists only active commands. Shared lessons and attendance are being integrated by their owners. The planned commands below are available only after their implementations and persistence support are registered.
@@ -286,14 +304,15 @@ The current inherited runtime uses `data/addressbook.json`. Only help skips oper
 | Add student | `add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]` |
 | Add tutor or parent | `add r/ROLE n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]` |
 | List people | `list [r/ROLE]` |
-| Delete person | `delete PERSON_ID` |
+| Delete person | `delete INDEX` |
 | Create shared lesson | `addlesson d/DAY st/TIME et/TIME s/SUBJECT tu/TUTOR_ID rm/ROOM` |
 | Delete lesson | `deletelesson LESSON_ID` |
-| Enrol / unenrol | `enrol STUDENT_ID LESSON_ID` / `unenrol STUDENT_ID LESSON_ID` |
+| Lesson catalogue | `lessons [si/STUDENT_INDEX]` |
+| Enrol / unenrol | `enrol STUDENT_INDEX LESSON_ID` / `unenrol STUDENT_INDEX LESSON_ID` |
 | Search | `search c/CATEGORY [FILTER_PREFIX/VALUE]...` |
-| Mark attendance | `mark STUDENT_ID LESSON_ID d/DATE s/STATUS` |
-| Unmark attendance | `unmark STUDENT_ID LESSON_ID d/DATE` |
-| History | `history STUDENT_ID [lid/LESSON_ID]` |
+| Mark attendance | `mark STUDENT_INDEX LESSON_ID d/DATE s/STATUS` |
+| Unmark attendance | `unmark STUDENT_INDEX LESSON_ID d/DATE` |
+| History | `history STUDENT_INDEX [lid/LESSON_ID]` |
 | Help | `help [COMMAND]` |
 | Exit | `exit` |
 
