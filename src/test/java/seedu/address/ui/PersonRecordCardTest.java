@@ -17,9 +17,12 @@ import org.junit.jupiter.api.Test;
 
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
+import javafx.geometry.Orientation;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import seedu.address.MainApp;
@@ -150,10 +153,18 @@ public class PersonRecordCardTest {
 
                 view.scrollTo(2);
                 view.layout();
+                for (Node node : view.lookupAll(".scroll-bar")) {
+                    if (node instanceof ScrollBar bar && bar.isVisible()
+                            && bar.getOrientation() == Orientation.VERTICAL) {
+                        bar.setValue(bar.getMax());
+                    }
+                }
+                view.layout();
                 Region parentCard = findCard(view, "Parent · P1");
                 Bounds parentBounds = parentCard.localToScene(parentCard.getBoundsInLocal());
                 assertTrue(parentBounds.getMinY() >= 0 && parentBounds.getMaxY() <= view.getHeight() + 1,
-                        "Scrolling must expose the complete last card inside the viewport.");
+                        "Scrolling must expose the complete last card: " + parentBounds
+                                + "; viewport height=" + view.getHeight());
                 assertCardText(parentCard, "3. Beatrice Tan", "Parent · P1",
                         List.of("Phone: 00987654", "Email: Not provided", "Address: Not provided"));
             }
