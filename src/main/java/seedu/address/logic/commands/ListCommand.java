@@ -12,6 +12,10 @@ public class ListCommand extends Command {
 
     public static final String COMMAND_WORD = "list";
 
+    public static final String MESSAGE_USAGE = "Usage: list\n"
+            + "Displays all people and resets the person filter. No parameters.\n"
+            + "Example: list";
+
     public static final String MESSAGE_SUCCESS = "Listed all persons.";
 
 

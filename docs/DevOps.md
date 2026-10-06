@@ -19,8 +19,10 @@ The following commands perform common Gradle tasks.
 * **`clean`**: Deletes the files created during the previous build tasks (e.g. files in the `build` folder).<br>
   For example: `./gradlew clean`
 
-* **`shadowJar`**: Uses the Shadow plugin to create the fat JAR file `build/libs/addressbook.jar`.<br>
+* **`shadowJar`**: Uses the Shadow plugin to create the fat JAR file `build/libs/ponhub.jar`.<br>
   For example: `./gradlew shadowJar`
+
+The Week 8 increment uses Gradle version `1.2` and `MainApp.VERSION` `v1.2`. This identifies the increment, not completion of all planned shared-lesson features. For a packaged check, copy `ponhub.jar` into a fresh folder, confirm `java -version` reports Java 25, and run `java -jar ponhub.jar`. Verify Help/menu/F1 and the current supported commands there. Yang owns the final integrated product launch check; v1.2 publication is optional.
 
 * **`run`**: Builds and runs the application.<br>
   **`runShadow`**: Builds the application as a fat JAR, then runs it.

@@ -15,6 +15,8 @@ Class "{abstract}\nCommand" as Command
 
 Class "<<interface>>\nLogic" as Logic
 Class LogicManager
+Class CommandCatalog
+Class HelpCommand
 }
 
 package Model {
@@ -39,7 +41,10 @@ LogicManager --> Storage
 Storage --[hidden] Model
 Command .[hidden]up.> Storage
 Command .right.> Model
-note right of XYZCommand: XYZCommand = AddCommand, \nFindCommand, etc
+note right of XYZCommand: XYZCommand = AddCommand, \nDeleteCommand, etc
+ParserClasses ..> CommandCatalog
+HelpCommand -up-|> Command
+HelpCommand ..> CommandCatalog : guidance
 
 Logic ..> CommandResult
 LogicManager .down.> CommandResult
