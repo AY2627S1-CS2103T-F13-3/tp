@@ -11,6 +11,7 @@ title: Developer Guide
 
 * PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, the ordered people registry and its import/export state, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
+* Zhu Zhi Yu used OpenAI Codex for the detached role-filtered people-list projection and argument parser, their regression tests, and the integration notes below.
 * Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search, inline-help, and atomic-save increments.
 * Zhu Zhi Yu used OpenAI Codex to document the confirmed person command-index boundary and reconcile shared-lesson command formats, staged search scope, legacy recovery policy, use cases, and manual checks. This acknowledgement covers those documentation changes; feature implementations remain with their owners.
 * Zhu Zhi Yu used OpenAI Codex to assist with the file-logging startup fallback, its isolated regression tests, and logging documentation.
@@ -276,6 +277,44 @@ global tutor/room clash checks, ID allocation and persistence are integrated in 
 The Help menu and F1 invoke `MainWindow.executeCommand("help")`. Both display exactly the same guidance as typed help while retaining the command-box draft and person selection. `ResultDisplay` uses a read-only wrapped TextArea with scrolling and resets to the beginning of each new result. Existing F1 handling for focused text controls remains in place. The unused inherited HelpWindow is not constructed or reachable through supported help entry points.
 
 Tests exercise each registered help topic and its example through the actual router, malformed topics, locale-independent matching, filter/data/preference preservation, and help with failing storage. GUI selection, menu/F1 and scroll behavior have a separate manual procedure below.
+
+### Role-filtered people listing foundation
+
+`PersonRecordListData` prepares a read-only snapshot for the future canonical people view.
+It takes people in global creation order and an optional `PersonRole` filter, preserves the
+relative order and stable IDs of matching records, and numbers the displayed entries from one.
+For example, filtering `[T7, S4, P2, S9]` to students yields `(1, S4)` and `(2, S9)`.
+These positions are view metadata; this component implements no command selection or ID allocation.
+
+The input collection is copied, entries are immutable, and only the immutable `Student`, `Tutor`,
+and `Parent` record types are accepted. Nulls and duplicate IDs are rejected across the entire
+source snapshot, including records outside the selected role. A successful empty result has a
+count of zero and an explicit `No persons to display.` message. The projection owns no writable
+operational store and does not observe subsequent source-list changes. Integration must rebuild
+the snapshot from the canonical people collection when data or the selected filter changes,
+including after rollback. Each entry supplies the person and positive displayed position needed
+by the separately prepared person card component.
+
+`PeopleListParser` parses arguments excluding the command word. Empty arguments select all roles;
+otherwise it accepts one lowercase `r/` prefix and a case-insensitive `student`, `tutor`, or
+`parent` value. It rejects blank values, unsupported roles, repeated or unknown prefixes, preambles,
+extra arguments, and line breaks with `ParseException`. It returns only an optional role and does
+not create a command or change a filter.
+
+**Integration boundary:** These components are dormant. The active catalogue still routes bare
+`list` to the inherited list command and rejects `list r/student`. Full listing integration in
+[#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77) still requires the ordered registry and
+canonical aggregate; [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85) coordinates enabling
+the compatible people commands, protected loader, persistence and cards together. This increment
+does not complete those issues or activate the proposed User Guide listing syntax.
+
+Automated tests cover mixed-role order, filtered renumbering, stable identity, empty results,
+defensive copies, invalid snapshots, parser errors, and the unchanged active command route.
+At activation, manually run `list`, `list r/student`, `list r/TUTOR`, and `list r/parent` on a
+mixed-role dataset. Confirm displayed positions, stable IDs, creation order, counts and an empty
+role result. Run `list r/`, `list r/all`, and `list r/student r/parent`; expect actionable errors
+without changing data or the visible list. Repeat after adding a person and after a failed save
+rolls back. Those end-to-end checks remain pending runtime integration.
 
 ### Prepared person record cards
 
