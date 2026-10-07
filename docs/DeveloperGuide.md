@@ -232,6 +232,28 @@ preserves all previous file attributes. Save failures still do not roll back in-
 that is separate transaction work. Help skips saving; other read-only commands currently still save,
 but unsupported atomic moves alone no longer make those saves fail.
 
+#### JSON version detection foundation
+
+`JsonDataVersionDetector.detect(String)` classifies file contents using the existing Jackson dependency,
+without constructing Model objects, writing files or changing the current runtime loader. The planned
+PonHub envelope reserves `schemaVersion` as a positive JSON integer, initially `1`; this is a data-schema
+version, independent of the application version. Issue #79 will define and validate the remaining envelope.
+
+| Result | Meaning and later loader action |
+| ------ | ------------------------------- |
+| `LEGACY_AB3` | An unversioned object containing a `persons` array and, optionally, the textual `_comment` used by AB3 fixtures. No other root fields are accepted. Contact validity is not checked and roles are never inferred; preserve it for manual upgrade. |
+| `PONHUB_V1_CANDIDATE` | Explicit integer `schemaVersion: 1`. Continue to complete envelope/domain validation; this result alone never authorizes loading or saving. |
+| `INVALID_VERSION` | An explicit version is null, blank, a string, boolean, collection, fractional number, zero or negative. Reject without coercion. |
+| `UNSUPPORTED_VERSION` | A positive integer other than 1, including values beyond Java integer range. Reject even if `persons` looks like legacy data. |
+| `UNRECOGNIZED_FORMAT` | A non-object root or an unversioned object that does not match the legacy root, including extra unknown fields. Reject rather than ignoring fields. |
+| `MALFORMED_JSON` | Empty/invalid JSON, duplicate object keys or trailing content after the document. Reject ambiguous input. |
+
+Missing versions identify legacy data only for the strict legacy root shape. A versioned candidate can
+still contain missing or invalid records: the detector is a format gate, not a schema/domain validator.
+Callers must handle file absence and read errors separately; neither is equivalent to empty JSON.
+The protected loader in #84 must classify the same contents before domain decoding and prevent writes
+on rejection. This standalone foundation does not yet protect the inherited loader or provide migration.
+
 #### Planned protected loading and legacy upgrade
 
 These are requirements for the first canonical cutover, not behavior delivered by the inherited loader. Keep the inherited runtime until the compatible canonical Model, codecs, people commands and protected loader are activated together. The new runtime must classify the configured file before decoding: missing data may start a fresh supported root; valid supported versioned data loads only after complete domain, identity and reference validation. Unreadable, corrupt, unsupported-version and unversioned AB3 files produce controlled errors, actionable recovery guidance and no operational writes to the rejected file. Preserve its original bytes through help, list, exit and attempted mutations; saving preferences remains separate.
