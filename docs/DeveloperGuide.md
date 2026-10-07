@@ -10,9 +10,10 @@ title: Developer Guide
 ## **Acknowledgements**
 
 * PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
-* Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
+* Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, the ordered people registry and its import/export state, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
 * Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search, inline-help, and atomic-save increments.
 * Zhu Zhi Yu used OpenAI Codex for the detached role-filtered people-list projection and argument parser, their regression tests, and the integration notes below.
+* Zhu Zhi Yu used OpenAI Codex to assist with the file-logging startup fallback, its isolated regression tests, and logging documentation.
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
@@ -362,9 +363,53 @@ The current command, UI, and JSON aggregate still use the inherited AB3 `Person`
 
 **Validation boundary:** `Name`, `Email`, and `Address` still enforce their inherited AB3 validation rules. This foundation does not yet implement the User Guide's wider name punctuation and field-format or length rules; [issue #61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61) tracks that alignment. Contact details preserve the supplied display values; name normalization is used only for duplicate matching.
 
-**Identity, equality, and duplicates:** The stable `PersonId` identifies a record independently of its contact details or position in a displayed list. Value equality compares the ID and all stored fields, including optional contact details and the student's education level and parent phone. `isDuplicateOf(PersonRecord)` instead requires the same role and compares the name, ignoring case and repeated spaces, together with the required identifying phone: the parent phone for students or the record's own phone for tutors and parents. Different IDs, optional contact details, or student education levels do not distinguish otherwise duplicate records. A null or different-role argument is not a duplicate. This operation identifies a duplicate candidate; aggregate-level rejection is part of later command integration.
+**Identity, equality, and duplicates:** The stable `PersonId` identifies a record independently of its contact details or position in a displayed list. Value equality compares the ID and all stored fields, including optional contact details and the student's education level and parent phone. `isDuplicateOf(PersonRecord)` instead requires the same role and compares the name, ignoring case and repeated spaces, together with the required identifying phone: the parent phone for students or the record's own phone for tutors and parents. Different IDs, optional contact details, or student education levels do not distinguish otherwise duplicate records. A null or different-role argument is not a duplicate. `PeopleRegistry` now uses this operation to reject duplicate records; connecting that rejection to active commands remains follow-up work.
 
 **Planned relationships:** The person records do not contain lesson or attendance collections. The planned shared-lesson model will keep canonical lessons and student–lesson membership outside the student record, referring to stable IDs so several students can share one lesson. Separate parent records remain optional; future parent links will use exact equality between a parent's own phone and a student's stored parent phone, without requiring a stored `Parent` object in `Student`. Relationship lookup, dated attendance, and the storage of these relationships are separate follow-up work.
+
+### Ordered people registry foundation
+
+[Issue #70](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/70) adds `PeopleRegistry` and immutable `PeopleRegistryState` for subsequent canonical-model, command, and storage integration. The registry contains the existing immutable `Student`, `Tutor`, and `Parent` records in one global addition order. A stable `PersonId` identifies a record independently of its position in that order. The registry is dormant: active commands, cards, and saved AB3 data continue to use the inherited `Person` runtime.
+
+#### Registry APIs
+
+| API | Contract |
+| --- | --- |
+| `new PeopleRegistry()` | Creates an empty registry with zero allocated sequence numbers for every role. |
+| `new PeopleRegistry(PeopleRegistry)` | Copies records, their order, and all allocation state without sharing mutable collection state. |
+| `new PeopleRegistry(PeopleRegistryState)` | Imports a validated snapshot, retaining its record order and allocation state. |
+| `addStudent(ContactDetails, EducationLevel, Phone)` | Validates and adds a student using the required parent phone, returning the allocated `Student`. |
+| `addTutor(ContactDetails)` | Validates and adds a tutor with a required own phone, returning the allocated `Tutor`. |
+| `addParent(ContactDetails)` | Validates and adds a parent with a required own phone, returning the allocated `Parent`. |
+| `getPeople()` | Returns an immutable `List<PersonRecord>` snapshot in global addition order. Later registry changes do not alter an earlier snapshot. |
+| `getPerson(PersonId)` | Returns an `Optional<PersonRecord>` for the exact stable ID. |
+| `remove(PersonId, Predicate<PersonRecord> isReferenced)` | Consults the supplied relationship view before deleting the selected record. |
+| `exportState()` | Returns immutable `PeopleRegistryState` containing the ordered records and complete allocation map. |
+
+Each successful addition appends to the same list, regardless of role. Duplicate IDs and same-role business duplicates are rejected with `DuplicatePersonException`; the record types supply their established `isDuplicateOf` rules. A failed addition leaves records and allocation state unchanged.
+
+#### Allocation and state validation
+
+The complete `Map<PersonRole, Long> lastAllocatedSequences` stores the last successfully allocated sequence for `STUDENT`, `TUTOR`, and `PARENT`. Zero means that no ID has been allocated for that role. New IDs use positive sequences independently per role: adding `S1`, then `T1`, then `S2` leaves the global order `[S1, T1, S2]` and allocation values `STUDENT=2`, `TUTOR=1`, `PARENT=0`.
+
+Deletion never reduces an allocation value. For example, removing `S2` from that registry keeps `STUDENT=2`, so the next successful student addition receives `S3`. A value of `Long.MAX_VALUE` marks an exhausted role; another addition for that role is rejected before incrementing, with no overflow or change to registry state. Allocation values must be preserved even when every record of a role has been deleted.
+
+`PeopleRegistryState` defensively copies its ordered records and complete allocation map. It accepts only the known immutable `Student`, `Tutor`, and `Parent` implementations of `PersonRecord`, rejects duplicate IDs or business identities, and requires every allocation value to be nonnegative and at least as large as each retained ID sequence for that role. Missing role entries and invalid state are rejected. Import does not reconstruct counters from the remaining records. Copying, exporting, importing, and equality preserve both people order and allocation values, including exhausted or previously deleted sequences.
+
+The logical persistence fields are:
+
+| Field | Value to preserve |
+| --- | --- |
+| `people` | All role-specific records in global addition order, including their stable IDs. |
+| `lastAllocatedSequences` | A complete map for all three roles, including zero, deleted-record, and exhausted allocation values. |
+
+These are state contracts for [issue #79](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/79); this increment adds no JSON codec or schema change.
+
+#### Deletion and activation boundaries
+
+`remove` obtains the selected record and asks the caller's `isReferenced` predicate whether the canonical relationship view references it. A referenced record raises `ReferencedPersonException`; an unknown ID raises `PersonNotFoundException`. Neither rejection changes records, order, or allocation values. The predicate must not mutate the registry. The registry supplies this integration point without implementing lesson or attendance guards itself; later canonical-model work must pass the complete relationship check rather than maintaining a second writable store.
+
+The dormant registry can support subsequent aggregate and view foundations without replacing the active runtime. Contact validation in [issue #61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61) and protected loading in [issue #84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84) remain gates before the coordinated person-command activation in [issue #85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). Existing command selectors and shared-lesson/search contracts are unchanged by this foundation.
 
 ### \[Proposed\] Undo/redo feature
 
