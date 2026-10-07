@@ -16,6 +16,7 @@ import java.util.logging.SimpleFormatter;
  * These loggers have been configured to output messages to the console and a {@code .log} file by default,
  *   at the {@code INFO} level. A new {@code .log} file with a new numbering will be created after the log
  *   file reaches 5MB in size, up to a maximum of 5 files.<br>
+ * If the log file cannot be opened, logging continues through the console.
  */
 public class LogsCenter {
     // Change this to a lower level (e.g., Level.FINE) to enable more detailed log messages
@@ -24,13 +25,11 @@ public class LogsCenter {
     private static final int MAX_FILE_COUNT = 5;
     private static final int MAX_FILE_SIZE_IN_BYTES = (int) (Math.pow(2, 20) * 5); // 5MB
     private static final String LOG_FILE = "addressbook.log";
-    private static final Logger logger; // logger for this class
     private static Logger baseLogger; // to be used as the parent of all other loggers created by this class.
 
     // This static block ensures essential loggers are created early
     static {
         setBaseLogger();
-        logger = LogsCenter.getLogger(LogsCenter.class);
     }
 
     /**
@@ -91,7 +90,7 @@ public class LogsCenter {
             fileHandler.setLevel(Level.ALL);
             baseLogger.addHandler(fileHandler);
         } catch (IOException e) {
-            logger.warning("Error adding file handler for logger.");
+            baseLogger.log(Level.WARNING, "Unable to initialize file logging; continuing with console logging.", e);
         }
     }
 
