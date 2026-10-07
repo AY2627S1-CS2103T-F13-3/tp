@@ -9,15 +9,20 @@ import static seedu.address.testutil.TypicalPersons.IDA;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.commons.exceptions.DataLoadingException;
+import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
+import seedu.address.model.person.Person;
+import seedu.address.testutil.PersonBuilder;
 
 public class JsonAddressBookStorageTest {
     private static final Path TEST_DATA_FOLDER = Paths.get("src", "test", "data", "JsonAddressBookStorageTest");
@@ -58,6 +63,41 @@ public class JsonAddressBookStorageTest {
     @Test
     public void readAddressBook_invalidAndValidPersonAddressBook_throwDataLoadingException() {
         assertThrows(DataLoadingException.class, () -> readAddressBook("invalidAndValidPersonAddressBook.json"));
+    }
+
+    @Test
+    public void readAddressBook_largeSpaceRuns_normalizesContacts() throws Exception {
+        String spaces = " ".repeat(100_000);
+        Path filePath = testFolder.resolve("largeContacts.json");
+        JsonAdaptedPerson person = new JsonAdaptedPerson(spaces + "Anne-Marie" + spaces + "O'Neil" + spaces,
+                "00123456", "Anne+School@Example.COM", spaces + "Blk 10," + spaces + "#01-02" + spaces, List.of());
+        JsonUtil.saveJsonFile(new JsonSerializableAddressBook(List.of(person)), filePath);
+        Person expectedPerson = new PersonBuilder().withName("Anne-Marie O'Neil").withPhone("00123456")
+                .withEmail("Anne+School@Example.COM").withAddress("Blk 10, #01-02").withTags().build();
+
+        ReadOnlyAddressBook loaded = new JsonAddressBookStorage(filePath).readAddressBook().orElseThrow();
+        assertEquals(List.of(expectedPerson), loaded.getPersonList());
+    }
+
+    @Test
+    public void readAddressBook_largeInvalidContacts_throwDataLoadingException() throws Exception {
+        String spaces = " ".repeat(100_000);
+        List<JsonAdaptedPerson> invalidPersons = List.of(
+                new JsonAdaptedPerson("Anne-Marie" + spaces + "O'Neil\t", "00123456", "anne@example.com",
+                        "Blk 10", List.of()),
+                new JsonAdaptedPerson("Anne-Marie", "00123456", "anne@example.com",
+                        "Blk 10," + spaces + "#01-02\n", List.of()),
+                new JsonAdaptedPerson("Anne-Marie", "00123456", "a.".repeat(5_000) + "a@example.com",
+                        "Blk 10", List.of()));
+        Path filePath = testFolder.resolve("largeInvalidContacts.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+        for (JsonAdaptedPerson person : invalidPersons) {
+            JsonUtil.saveJsonFile(new JsonSerializableAddressBook(List.of(person)), filePath);
+            String originalJson = Files.readString(filePath);
+
+            assertThrows(DataLoadingException.class, storage::readAddressBook);
+            assertEquals(originalJson, Files.readString(filePath));
+        }
     }
 
     @Test

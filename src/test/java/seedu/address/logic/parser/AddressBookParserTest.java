@@ -16,6 +16,7 @@ import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
+import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
@@ -40,6 +41,32 @@ public class AddressBookParserTest {
                 + " a/  Blk 456,   Den Road, #01-355  ";
 
         assertEquals(new AddCommand(person), parser.parseCommand("add" + contactDetails));
+    }
+
+    @Test
+    public void parseCommand_largeSpaceRuns_normalizesContactDetails() throws Exception {
+        String spaces = " ".repeat(100_000);
+        Person person = new PersonBuilder().withName("Anne-Marie O'Neil").withPhone("00123456")
+                .withEmail("Anne+School@Example.COM").withAddress("Blk 10, #01-02").withTags().build();
+        String contactDetails = " n/" + spaces + "Anne-Marie" + spaces + "O'Neil" + spaces
+                + " p/00123456 e/Anne+School@Example.COM a/" + spaces + "Blk 10," + spaces + "#01-02" + spaces;
+
+        assertEquals(new AddCommand(person), parser.parseCommand("add" + contactDetails));
+    }
+
+    @Test
+    public void parseCommand_largeInvalidContacts_throwsParseException() {
+        String spaces = " ".repeat(100_000);
+        String invalidName = "Anne-Marie" + spaces + "O'Neil\t";
+        String invalidAddress = "Blk 10," + spaces + "#01-02\n";
+        String longEmail = "a.".repeat(5_000) + "a@example.com";
+
+        assertThrows(ParseException.class, Name.MESSAGE_CONSTRAINTS, ()
+                -> parser.parseCommand("add p/00123456 e/anne@example.com a/Blk 10 n/" + invalidName + spaces));
+        assertThrows(ParseException.class, Address.MESSAGE_CONSTRAINTS, ()
+                -> parser.parseCommand("add n/Anne-Marie p/00123456 e/anne@example.com a/" + invalidAddress + spaces));
+        assertThrows(ParseException.class, Email.MESSAGE_CONSTRAINTS, ()
+                -> parser.parseCommand("add n/Anne-Marie p/00123456 a/Blk 10 e/" + longEmail));
     }
 
     @Test

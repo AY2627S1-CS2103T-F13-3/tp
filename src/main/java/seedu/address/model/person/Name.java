@@ -3,6 +3,8 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import seedu.address.commons.util.StringUtil;
+
 /**
  * Represents a Person's name in the address book.
  * Guarantees: immutable; is valid as declared in {@link #isValidName(String)}
@@ -24,20 +26,20 @@ public class Name {
      */
     public Name(String name) {
         requireNonNull(name);
-        checkArgument(isValidName(name), MESSAGE_CONSTRAINTS);
-        fullName = normalize(name);
+        String normalizedName = StringUtil.normalizeSpaces(name);
+        checkArgument(isValidNormalizedName(normalizedName), MESSAGE_CONSTRAINTS);
+        fullName = normalizedName;
     }
 
     /**
      * Returns whether a string satisfies the name contract after space normalization.
      */
     public static boolean isValidName(String test) {
-        String normalizedName = normalize(test);
-        return normalizedName.length() <= MAX_LENGTH && normalizedName.matches(VALIDATION_REGEX);
+        return isValidNormalizedName(StringUtil.normalizeSpaces(test));
     }
 
-    private static String normalize(String name) {
-        return name.replaceAll("^ +| +$", "").replaceAll(" +", " ");
+    private static boolean isValidNormalizedName(String name) {
+        return name.length() <= MAX_LENGTH && name.matches(VALIDATION_REGEX);
     }
 
     @Override

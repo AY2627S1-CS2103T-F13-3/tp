@@ -43,10 +43,11 @@ public class ParserUtil {
      */
     public static Name parseName(String name) throws ParseException {
         requireNonNull(name);
-        if (!Name.isValidName(name)) {
+        try {
+            return new Name(name);
+        } catch (IllegalArgumentException e) {
             throw new ParseException(Name.MESSAGE_CONSTRAINTS);
         }
-        return new Name(name);
     }
 
     /**
@@ -72,10 +73,11 @@ public class ParserUtil {
      */
     public static Address parseAddress(String address) throws ParseException {
         requireNonNull(address);
-        if (!Address.isValidAddress(address)) {
+        try {
+            return new Address(address);
+        } catch (IllegalArgumentException e) {
             throw new ParseException(Address.MESSAGE_CONSTRAINTS);
         }
-        return new Address(address);
     }
 
     /**

@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.CommandCatalog;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.HelpCommand;
@@ -33,7 +34,7 @@ public class AddressBookParser {
      */
     public Command parseCommand(String userInput) throws ParseException {
         // Keep trailing control characters for argument validation instead of silently removing them.
-        final Matcher matcher = BASIC_COMMAND_FORMAT.matcher(userInput.stripLeading().replaceAll(" +$", ""));
+        final Matcher matcher = BASIC_COMMAND_FORMAT.matcher(StringUtil.trimSpaces(userInput.stripLeading()));
         if (!matcher.matches()) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE));
         }
