@@ -16,6 +16,7 @@ title: Developer Guide
 * Zhu Zhi Yu used OpenAI Codex to document the confirmed person command-index boundary and reconcile shared-lesson command formats, staged search scope, legacy recovery policy, use cases, and manual checks. This acknowledgement covers those documentation changes; feature implementations remain with their owners.
 * Zhu Zhi Yu used OpenAI Codex to assist with the file-logging startup fallback, its isolated regression tests, and logging documentation.
 * Zhu Zhi Yu used OpenAI Codex for the UI startup error-handling fix and its regression tests.
+* Zhu Zhi Yu used OpenAI Codex for dormant role-aware add argument parsing, its immutable ID-free input, regression tests, and integration documentation.
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
@@ -315,6 +316,23 @@ mixed-role dataset. Confirm displayed positions, stable IDs, creation order, cou
 role result. Run `list r/`, `list r/all`, and `list r/student r/parent`; expect actionable errors
 without changing data or the visible list. Repeat after adding a person and after a failed save
 rolls back. Those end-to-end checks remain pending runtime integration.
+
+### Role-aware addition parsing foundation
+
+[Issue #135](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/135) prepares argument parsing for [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). `RoleAwareAddParser.parse(String)` accepts arguments after the future `add` command word and returns immutable `PersonAdditionInput`. The input contains a role, composed contact details, and optional student education level and parent phone. It contains no ID, person record, registry, command execution or writable operational state.
+
+| Role | Required prefixes | Optional prefixes |
+| --- | --- | --- |
+| Student | `r/`, `n/`, `l/`, `pp/` | `p/`, `e/`, `a/` |
+| Tutor or parent | `r/`, `n/`, `p/` | `e/`, `a/` |
+
+Prefixes are lowercase and may appear once in any order. Role and education-level values are case-insensitive. Omitted optional contacts remain absent; supplied values must be nonblank. Every prefix-shaped token is recognized, so an unknown prefix after an address cannot silently become address text. Repeated prefixes, student-only fields on other roles, preambles, line breaks and control characters produce specific `ParseException` feedback. Controls are rejected before trimming, and phone values retain leading zeros. Both own and parent phones use the existing 3–15-digit role-record bound.
+
+**Contact-validation dependency:** Name, email and address validation delegates to the shared value types. Current master still has inherited contact rules; this parser does not duplicate or deliver the complete planned User Guide policy. [#61 / PR #110](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/110) supplies that policy and remains gated by protected loading. Keep this parsing increment dormant and draft while that dependency remains pending.
+
+**Activation boundary:** The existing `AddCommandParser`, router and supported-command catalogue still handle inherited contacts. The prepared parser does not check duplicate people, allocate even a provisional ID, reset the view, save data or perform rollback. Those behaviors remain #85 work after the canonical aggregate, compatible persistence, protected loading and transaction foundations are ready. At cutover, construct and commit the record through that single canonical root; never use a placeholder ID or a second writable person store.
+
+Automated checks exercise all three roles, absent/present optional contacts, argument order/case, role restrictions, missing/blank/repeated/unknown fields, controls, phone bounds, immutable input invariants and unchanged active routing. Canonical duplicate detection, siblings sharing parent phones, committed ID allocation, save/reload and failed-save restoration remain integration tests under #85.
 
 ### Prepared person record cards
 
