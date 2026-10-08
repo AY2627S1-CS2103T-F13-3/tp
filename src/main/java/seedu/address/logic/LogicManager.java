@@ -2,6 +2,7 @@ package seedu.address.logic;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
@@ -14,7 +15,12 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
+import seedu.address.model.lesson.LessonId;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.PersonId;
+import seedu.address.model.query.AttendanceHistoryEntry;
+import seedu.address.model.query.LessonView;
+import seedu.address.model.query.StudentView;
 import seedu.address.storage.Storage;
 
 /**
@@ -25,6 +31,8 @@ public class LogicManager implements Logic {
 
     public static final String FILE_OPS_PERMISSION_ERROR_FORMAT =
             "Could not save data to file %s due to insufficient permissions to write to the file or the folder.";
+
+    public static final String RETRIEVAL_UNAVAILABLE = "Shared-lesson retrieval is not implemented yet";
 
     private final Logger logger = LogsCenter.getLogger(LogicManager.class);
 
@@ -68,6 +76,46 @@ public class LogicManager implements Logic {
     @Override
     public ObservableList<Person> getFilteredPersonList() {
         return model.getFilteredPersonList();
+    }
+
+    @Override
+    public ObservableList<LessonView> getLessonList() {
+        throw new UnsupportedOperationException(RETRIEVAL_UNAVAILABLE);
+    }
+
+    @Override
+    public ObservableList<LessonView> getFilteredLessonList() {
+        throw new UnsupportedOperationException(RETRIEVAL_UNAVAILABLE);
+    }
+
+    @Override
+    public Optional<LessonView> findLessonById(LessonId lessonId) {
+        throw new UnsupportedOperationException(RETRIEVAL_UNAVAILABLE);
+    }
+
+    @Override
+    public ObservableList<LessonView> getStudentLessons(PersonId studentId) {
+        throw new UnsupportedOperationException(RETRIEVAL_UNAVAILABLE);
+    }
+
+    @Override
+    public ObservableList<StudentView> getLessonRoster(LessonId lessonId) {
+        throw new UnsupportedOperationException(RETRIEVAL_UNAVAILABLE);
+    }
+
+    @Override
+    public ObservableList<LessonView> getTutorSchedule(PersonId tutorId) {
+        throw new UnsupportedOperationException(RETRIEVAL_UNAVAILABLE);
+    }
+
+    @Override
+    public ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId) {
+        throw new UnsupportedOperationException(RETRIEVAL_UNAVAILABLE);
+    }
+
+    @Override
+    public ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId, LessonId lessonId) {
+        throw new UnsupportedOperationException(RETRIEVAL_UNAVAILABLE);
     }
 
     @Override

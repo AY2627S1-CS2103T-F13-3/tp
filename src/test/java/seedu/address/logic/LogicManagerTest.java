@@ -2,6 +2,7 @@ package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
@@ -18,6 +19,7 @@ import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.AddCommand;
@@ -29,7 +31,9 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.lesson.LessonId;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.PersonId;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
@@ -123,6 +127,34 @@ public class LogicManagerTest {
     @Test
     public void getFilteredPersonList_modifyList_throwsUnsupportedOperationException() {
         assertThrows(UnsupportedOperationException.class, () -> logic.getFilteredPersonList().remove(0));
+    }
+
+    @Test
+    public void retrievalBeforeCanonicalIntegration_failsExplicitlyWithoutChangingPeopleOrSaving() {
+        model.addPerson(AMY);
+        model.updateFilteredPersonList(person -> false);
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.updateFilteredPersonList(person -> false);
+        PersonId studentId = new PersonId("S1");
+        PersonId tutorId = new PersonId("T1");
+        LessonId lessonId = new LessonId("L1");
+        var peopleView = logic.getFilteredPersonList();
+        assertRetrievalUnavailable(logic::getLessonList);
+        assertRetrievalUnavailable(logic::getFilteredLessonList);
+        assertRetrievalUnavailable(() -> logic.findLessonById(lessonId));
+        assertRetrievalUnavailable(() -> logic.getStudentLessons(studentId));
+        assertRetrievalUnavailable(() -> logic.getLessonRoster(lessonId));
+        assertRetrievalUnavailable(() -> logic.getTutorSchedule(tutorId));
+        assertRetrievalUnavailable(() -> logic.getAttendanceHistory(studentId));
+        assertRetrievalUnavailable(() -> logic.getAttendanceHistory(studentId, lessonId));
+
+        assertEquals(expectedModel, model);
+        assertSame(peopleView, logic.getFilteredPersonList());
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+    }
+
+    private void assertRetrievalUnavailable(Executable query) {
+        assertThrows(UnsupportedOperationException.class, LogicManager.RETRIEVAL_UNAVAILABLE, query);
     }
 
     /**
