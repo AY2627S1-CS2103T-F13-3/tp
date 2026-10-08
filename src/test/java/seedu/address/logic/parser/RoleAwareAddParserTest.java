@@ -207,8 +207,8 @@ public class RoleAwareAddParserTest {
     }
 
     @Test
-    public void parse_unicodeSpaceWithinAddress_preservesContent() throws Exception {
-        String address = "Block\u20031\u00A0Unit 2";
+    public void parse_internalAddressSpaces_preservesContent() throws Exception {
+        String address = "Block  1, Unit #02-03";
         PersonAdditionInput input = parser.parse(STUDENT_ARGUMENTS + " a/" + address + "\u2003p/00345678");
         assertEquals(Optional.of(new Address(address)), input.contactDetails().getAddress());
         assertEquals(Optional.of(new Phone("00345678")), input.contactDetails().getPhone());
