@@ -45,10 +45,54 @@ public class Email {
     }
 
     /**
-     * Returns true if a given string is a valid email.
+     * Returns whether a string satisfies the inherited email rules using constant stack space.
      */
     public static boolean isValidEmail(String test) {
-        return test.matches(VALIDATION_REGEX);
+        requireNonNull(test);
+        int separatorIndex = test.indexOf('@');
+        if (separatorIndex <= 0 || separatorIndex == test.length() - 1) {
+            return false;
+        }
+
+        boolean wasAlphanumeric = false;
+        for (int i = 0; i < separatorIndex; i++) {
+            char character = test.charAt(i);
+            boolean isAlphanumeric = isAsciiAlphanumeric(character);
+            if (!isAlphanumeric && (!wasAlphanumeric || SPECIAL_CHARACTERS.indexOf(character) < 0)) {
+                return false;
+            }
+            wasAlphanumeric = isAlphanumeric;
+        }
+        if (!wasAlphanumeric) {
+            return false;
+        }
+
+        wasAlphanumeric = false;
+        boolean hasAdjacentAlphanumeric = false;
+        for (int i = separatorIndex + 1; i < test.length(); i++) {
+            char character = test.charAt(i);
+            if (isAsciiAlphanumeric(character)) {
+                hasAdjacentAlphanumeric |= wasAlphanumeric;
+                wasAlphanumeric = true;
+            } else if ((character == '-' || character == '.') && wasAlphanumeric) {
+                wasAlphanumeric = false;
+                if (character == '.') {
+                    hasAdjacentAlphanumeric = false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        // The legacy final-label regex repeats a whole label twice. Preserve its acceptance set:
+        // a label can be split into two valid pieces only within a run of alphanumeric characters.
+        return wasAlphanumeric && hasAdjacentAlphanumeric;
+    }
+
+    private static boolean isAsciiAlphanumeric(char character) {
+        return character >= 'A' && character <= 'Z'
+                || character >= 'a' && character <= 'z'
+                || character >= '0' && character <= '9';
     }
 
     @Override

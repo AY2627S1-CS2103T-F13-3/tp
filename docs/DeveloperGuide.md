@@ -13,11 +13,13 @@ title: Developer Guide
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, the ordered people registry and its import/export state, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
 * Zhu Zhi Yu used OpenAI Codex for the detached role-filtered people-list projection and argument parser, their regression tests, and the integration notes below.
 * Zhu Zhi Yu used OpenAI Codex for the dormant current-people index resolver, its role and filtered-view regression tests, and the related integration documentation.
+* Zhu Zhi Yu used OpenAI Codex to prepare representative canonical people samples, their sample-integrity and view-selection tests, and the related developer usage notes.
 * Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search, inline-help, and atomic-save increments.
 * Zhu Zhi Yu used OpenAI Codex to align the assigned product scope and prioritized user stories with the shared-lesson target, preserving the distinction between delivered foundations, planned runtime features, and future extensions. This attribution covers that documentation update.
 * Zhu Zhi Yu used OpenAI Codex to document the confirmed person command-index boundary and reconcile shared-lesson command formats, staged search scope, legacy recovery policy, use cases, and manual checks. This acknowledgement covers those documentation changes; feature implementations remain with their owners.
 * Zhu Zhi Yu used OpenAI Codex to assist with the file-logging startup fallback, its isolated regression tests, and logging documentation.
 * Zhu Zhi Yu used OpenAI Codex for the UI startup error-handling fix and its regression tests.
+* Zhu Zhi Yu used OpenAI Codex for constant-stack email validation that preserves the inherited contact rules, its parser/file-loading regressions, and the related implementation and manual-testing notes.
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
@@ -422,6 +424,35 @@ person-index procedure below remains pending actual canonical command integratio
 
 Automated projection tests cover all roles, absent/present contacts, required fields, exact display values, long text, index/ID separation, immutable detail lines, and invalid inputs. Renderer regression tests load the actual FXML on the JavaFX application thread and check the displayed values and wrapping. Linux CI runs the Gradle checks under a virtual display; developers on Linux without a display can likewise run `xvfb-run --auto-servernum ./gradlew check coverage` with Xvfb installed. The developer preview exercises the actual FXML separately from the application and uses fixture records without loading or saving operational files. Its layout procedure appears below.
 
+### Representative canonical people samples
+
+[Issue #143](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/143) prepares the people portion of
+the acceptance dataset for [#101](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101).
+`PeopleSampleDataUtil.getSamplePeopleRegistry()` returns a fresh `PeopleRegistry` on each call.
+The factory uses the registry's addition APIs, enforcing role-specific duplicate rules and
+retaining global creation order and complete allocation state. Callers can mutate one sample registry independently of
+every other invocation.
+
+The six records have deterministic creation order `T1, S1, P1, S2, T2, S3`:
+
+| IDs | Representative scenario |
+| --- | --- |
+| `S1`, `S2`, `P1` | Alex Tan and Jamie Tan share parent phone `00987654`, matching Pat Tan's own phone. Alex omits all optional contacts; Jamie supplies them. |
+| `T1`, `T2` | Both tutors are named Mei Lim, with distinct phones `00112233` and `00999888` for future name/phone disambiguation checks. `T2` omits email and address. |
+| `S1`, `S3` | Two students named Alex Tan have different parent phones, making both valid distinct records. `S3` uses `00888888`. |
+
+Phone zeros and email display case are retained. The interleaved order exercises current-view
+positions separately from stable IDs: all-role position `5` selects `T2`, while tutor-filtered
+position `2` selects that same record. The factory is dormant and leaves active AB3 sample
+loading unchanged. It supplies no lessons, enrolments, attendance or persistence format;
+those parts of #101 remain pending their feature owners' integration.
+
+Sample tests validate independent registries, required and optional contacts, the name/phone
+cases, registry export/import and continued allocation after removal. They also compose
+`PeopleListParser`, `PersonRecordListData`, `PersonIndexResolver` and `PersonRecordCardData`
+using the samples, including filtered renumbering after removal. These checks exercise the
+prepared APIs; actual canonical command, save/reload and GUI acceptance remain pending.
+
 ### Search criteria parsing foundation
 
 Issue #64 adds an independently testable search specification. `SearchCriteriaParser.parse(String)` consumes the
@@ -509,6 +540,16 @@ The current command, UI, and JSON aggregate still use the inherited AB3 `Person`
 `Student`, `Tutor`, and `Parent` implement `PersonRecord` and compose immutable `ContactDetails`; none extends the inherited `Person` class. Each constructor rejects IDs for another role. `Tutor#getPhone()` and `Parent#getPhone()` expose their required own phone, which follows the same 3–15 digit limit as other supplied phone values.
 
 **Validation boundary:** `Name`, `Email`, and `Address` still enforce their inherited AB3 validation rules. This foundation does not yet implement the User Guide's wider name punctuation and field-format or length rules; [issue #61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61) tracks that alignment. Contact details preserve the supplied display values; name normalization is used only for duplicate matching.
+
+**Current email validation:** The active contact parser and JSON loader share `Email.isValidEmail`, which scans
+ASCII characters in linear time with constant stack space. Long repeated local-part separators, domain hyphens,
+or domain labels therefore produce a value or the existing checked boundary error rather than a regex stack
+overflow. Its acceptance rules remain unchanged: single-label domains and long emails still load, the local part
+allows single `+`, `_`, `.`, or `-` separators, and domain labels allow single hyphens. The inherited final-label
+regex requires an adjacent alphanumeric pair, so `a@a-b` is rejected while `a@a-bc` is accepted. The public
+`VALIDATION_REGEX` remains the compatibility reference; bounded exhaustive regressions compare it with the scan.
+The complete contact-policy alignment in #61/#110 still requires protected loading in #84 before activation;
+this safety correction does not impose new field limits or protect the startup fallback.
 
 **Identity, equality, and duplicates:** The stable `PersonId` identifies a record independently of its contact details or position in a displayed list. Value equality compares the ID and all stored fields, including optional contact details and the student's education level and parent phone. `isDuplicateOf(PersonRecord)` instead requires the same role and compares the name, ignoring case and repeated spaces, together with the required identifying phone: the parent phone for students or the record's own phone for tutors and parents. Different IDs, optional contact details, or student education levels do not distinguish otherwise duplicate records. A null or different-role argument is not a duplicate. `PeopleRegistry` now uses this operation to reject duplicate records; connecting that rejection to active commands remains follow-up work.
 
@@ -958,6 +999,23 @@ testers are expected to do more *exploratory* testing.
    1. Relaunch the app by double-clicking the JAR file.<br>
        Expected: The most recent window size and location are retained.
 
+### Long emails in the current contact runtime
+
+Use a disposable application folder and the active `add n/NAME p/PHONE e/EMAIL a/ADDRESS` format. These checks
+cover validation safety; the planned 254-character email policy remains gated with the full contact alignment.
+
+1. In a text editor, form an email from 5,000 copies of `a.` followed by `a@example.com`. Paste it into
+   `add n/Long Email p/123 e/EMAIL a/Somewhere`, replacing `EMAIL` with that text. Expect a successful addition
+   without an uncaught error. Restart and verify the stored email is preserved.
+2. Repeat in a fresh disposable folder with 5,000 copies of `a-` after `a@`, ending in `ab`, and with 5,000
+   copies of `a.` after `a@`, ending in `ab`. Expect the same accepted-value behavior. These long inherited
+   values remain loadable even though the planned contact policy will later restrict their length.
+3. Replace the first example's suffix with `a!@example.com`, or replace the second example's final `ab` with
+   `a`. Expect the existing email constraint feedback; the command must not add a record or crash.
+4. Close the app, make a valid manual edit to the disposable JSON file using one of the accepted long emails,
+   and restart. Expect the edited email to load unchanged. Automated file-loader regressions additionally
+   verify controlled loading errors and byte preservation for invalid emails; safe startup recovery remains #84 work.
+
 ### Deleting a person
 
 The following small deletion checks apply to the current inherited contact runtime. Canonical guarded deletion must also pass the planned person-index and shared-lesson checks.
@@ -974,6 +1032,27 @@ The following small deletion checks apply to the current inherited contact runti
 
    1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
       Expected: Similar to previous.
+
+### Prepared canonical people sample checks
+
+Use these checks in isolated developer code or a debugger with the prepared classes. The
+active app does not load this fixture. The helper can be obtained with
+`PeopleSampleDataUtil.getSamplePeopleRegistry()` and its `getPeople()` result supplied to
+`PersonRecordListData`; build the selected record list from the projection's entries before
+calling `PersonIndexResolver`.
+
+1. Create two sample registries. Expect equal snapshots in order `T1, S1, P1, S2, T2, S3`.
+   Remove `P1` from one registry using the registry's unreferenced-record test seam; both
+   students' stored parent phones must remain `00987654`, and the second registry must retain
+   all six records. This fixture has no lesson or attendance references to query.
+2. Project all roles and each individual role. Expect all-role index `5` and tutor-filtered
+   index `2` to select `T2`. Pass each entry's person and displayed index to
+   `PersonRecordCardData`; expect stable IDs, required phones and `Not provided` for omitted
+   contacts, with phone zeros and email case preserved.
+3. Remove `S1` from a fresh sample and rebuild the student projection. Expect visible indices
+   `1` and `2` to select `S2` and `S3`. Export/import that registry and add a distinct student;
+   expect `S4`, with the new record appended. Export/import checks here use validated Java
+   snapshots; JSON-file and application-restart checks follow canonical persistence activation.
 
 ### Planned shared-lesson workflow checks
 
