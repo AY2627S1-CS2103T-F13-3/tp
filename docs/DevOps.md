@@ -24,6 +24,22 @@ The following commands perform common Gradle tasks.
 
 The Week 8 increment uses Gradle version `1.2` and `MainApp.VERSION` `v1.2`. This identifies the increment, not completion of all planned shared-lesson features. For a packaged check, copy `ponhub.jar` into a fresh folder, confirm `java -version` reports Java 25, and run `java -jar ponhub.jar`. Verify Help/menu/F1 and the current supported commands there. Yang owns the final integrated product launch check; v1.2 publication is optional.
 
+The single JAR stores JavaFX 17.0.7 native libraries in separate platform directories for Windows x64, Linux x64,
+macOS x64 and macOS ARM64. `Main` selects and extracts only the current directory before JavaFX starts. Native files
+are deliberately absent from the JAR root, preventing Shadow from silently resolving the same-named macOS x64 and
+ARM64 libraries by dependency order. `./gradlew check` also builds the JAR and verifies the four platform directories,
+the expected Glass library in each, the absence of root native files and unique archive paths.
+
+Packaged launch evidence on 8 October 2026 used macOS 26.6.2 ARM64 and `ponhub.jar` built from this change
+(12,920,771 bytes; SHA-256 `36ae74862907a0375fb15e17a4f0b10a09b9549d3499f1d4bbedd6c38705aaba`). The JAR was
+copied into a new writable directory and launched with an OpenJDK 25.0.3 Zulu runtime containing `java.se` and
+`jdk.unsupported`; its module list contained no JavaFX modules. The application initialized preferences and data and
+logged `Starting UI...` without an incompatible-architecture or missing-toolkit error before it was closed manually.
+The two packaged macOS Glass libraries were also inspected as distinct Mach-O ARM64 and x86_64 files. Actual launches
+on Windows x64, Linux x64, macOS x64 and Oracle Java 25.0.1 were not performed locally; the automated archive check
+and the existing three-platform CI matrix cover build-time regressions, while those platform launches remain release
+verification steps.
+
 * **`run`**: Builds and runs the application.<br>
   **`runShadow`**: Builds the application as a fat JAR, then runs it.
 

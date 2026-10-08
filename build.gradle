@@ -12,6 +12,14 @@ application {
 
 version = '1.2'
 
+ext.javaFxVersion = '17.0.7'
+
+configurations {
+    javaFxMacAarch64 {
+        transitive = false
+    }
+}
+
 java {
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
@@ -49,7 +57,6 @@ task coverage(type: JacocoReport) {
 
 dependencies {
     String jUnitVersion = '5.14.4'
-    String javaFxVersion = '17.0.7'
 
     implementation "org.openjfx:javafx-base:${javaFxVersion}:win"
     implementation "org.openjfx:javafx-base:${javaFxVersion}:mac"
@@ -64,6 +71,8 @@ dependencies {
     implementation "org.openjfx:javafx-graphics:${javaFxVersion}:mac"
     implementation "org.openjfx:javafx-graphics:${javaFxVersion}:linux"
 
+    javaFxMacAarch64 "org.openjfx:javafx-graphics:${javaFxVersion}:mac-aarch64"
+
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.7.0'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.7.4'
 
@@ -73,8 +82,79 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.14.4'
 }
 
+def stagedJavaFxNatives = layout.buildDirectory.dir('generated/javafx-natives')
+
+tasks.register('stageMacAarch64JavaFxNatives', Sync) {
+    from({
+        configurations.javaFxMacAarch64.collect { zipTree(it) }
+    }) {
+        include '*.dylib'
+    }
+    into(stagedJavaFxNatives.map {
+        it.dir('META-INF/javafx-natives/macos-aarch64')
+    })
+}
+
 shadowJar {
     archiveFileName = 'ponhub.jar'
+    dependsOn tasks.named('stageMacAarch64JavaFxNatives')
+
+    // Relocate every native library already on the runtime classpath. JavaFX otherwise looks up
+    // same-named macOS x64 and ARM64 files at the JAR root, where Shadow can retain only one.
+    eachFile { details ->
+        if (!details.path.contains('/')) {
+            if (details.name.endsWith('.dll')) {
+                details.path = "META-INF/javafx-natives/windows-x86_64/${details.name}"
+            } else if (details.name.endsWith('.so')) {
+                details.path = "META-INF/javafx-natives/linux-x86_64/${details.name}"
+            } else if (details.name.endsWith('.dylib')) {
+                details.path = "META-INF/javafx-natives/macos-x86_64/${details.name}"
+            }
+        }
+    }
+
+    from(stagedJavaFxNatives)
 }
+
+tasks.register('verifyJavaFxNativePackaging') {
+    dependsOn tasks.named('shadowJar')
+
+    doLast {
+        File jarFile = tasks.named('shadowJar').get().archiveFile.get().asFile
+        List<String> entryNames = []
+        new java.util.zip.ZipFile(jarFile).withCloseable { zipFile ->
+            entryNames = zipFile.entries().collect { it.name }
+        }
+
+        List<String> rootNatives = entryNames.findAll {
+            !it.contains('/') && (it.endsWith('.dll') || it.endsWith('.so') || it.endsWith('.dylib'))
+        }
+        if (!rootNatives.isEmpty()) {
+            throw new GradleException("Native libraries must not remain at the JAR root: ${rootNatives}")
+        }
+
+        Map<String, String> requiredLibraries = [
+            'META-INF/javafx-natives/windows-x86_64/': 'glass.dll',
+            'META-INF/javafx-natives/linux-x86_64/'  : 'libglass.so',
+            'META-INF/javafx-natives/macos-x86_64/'  : 'libglass.dylib',
+            'META-INF/javafx-natives/macos-aarch64/' : 'libglass.dylib'
+        ]
+        requiredLibraries.each { directory, library ->
+            if (!entryNames.contains(directory + library)) {
+                throw new GradleException("Missing packaged JavaFX native ${directory}${library}")
+            }
+        }
+
+        List<String> nativeEntries = entryNames.findAll {
+            it.startsWith('META-INF/javafx-natives/')
+                    && (it.endsWith('.dll') || it.endsWith('.so') || it.endsWith('.dylib'))
+        }
+        if (nativeEntries.size() != nativeEntries.toSet().size()) {
+            throw new GradleException('The packaged JavaFX native paths contain collisions')
+        }
+    }
+}
+
+check.dependsOn tasks.named('verifyJavaFxNativePackaging')
 
 defaultTasks 'clean', 'test'
