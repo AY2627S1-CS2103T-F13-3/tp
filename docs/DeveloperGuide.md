@@ -12,6 +12,7 @@ title: Developer Guide
 * PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, the ordered people registry and its import/export state, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
 * Zhu Zhi Yu used OpenAI Codex for the detached role-filtered people-list projection and argument parser, their regression tests, and the integration notes below.
+* Zhu Zhi Yu used OpenAI Codex for the dormant current-people index resolver, its role and filtered-view regression tests, and the related integration documentation.
 * Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search, inline-help, and atomic-save increments.
 * Zhu Zhi Yu used OpenAI Codex to document the confirmed person command-index boundary and reconcile shared-lesson command formats, staged search scope, legacy recovery policy, use cases, and manual checks. This acknowledgement covers those documentation changes; feature implementations remain with their owners.
 * Zhu Zhi Yu used OpenAI Codex to assist with the file-logging startup fallback, its isolated regression tests, and logging documentation.
@@ -337,6 +338,36 @@ mixed-role dataset. Confirm displayed positions, stable IDs, creation order, cou
 role result. Run `list r/`, `list r/all`, and `list r/student r/parent`; expect actionable errors
 without changing data or the visible list. Repeat after adding a person and after a failed save
 rolls back. Those end-to-end checks remain pending runtime integration.
+
+### Current people-index resolution foundation
+
+[Issue #137](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/137) prepares the shared
+selection boundary for the canonical people commands.
+
+`PersonIndexResolver.resolve(Index, List<? extends PersonRecord>)` resolves a parsed index against
+the supplied current filtered people list and returns the selected immutable record. For a view
+containing `[T7, S9, P2]`, index `2` selects `S9`. In a student-filtered view `[S9, S3]`, index `2`
+selects `S3`. The resolver does not interpret a position as an ID suffix or select from another
+collection. An empty view or out-of-range index produces a checked `CommandException` using the
+existing invalid-person-index message. Argument parsing remains the existing `ParserUtil.parseIndex`
+responsibility; this helper receives an `Index`, not a command string.
+
+`resolveStudent` resolves the same current people index once, then rejects a selected Tutor or
+Parent with specific checked feedback. It never searches a separate student-only list. Callers
+must supply the authoritative people view at execution, keep it unchanged during resolution,
+and capture the returned record's stable `PersonId` before any Model or query calls. Later view
+refreshes must not reinterpret that command's index. The resolver neither owns nor modifies the
+view, its filter, records, registry, identity counters, or storage.
+
+**Integration boundary:** This working helper remains dormant alongside the prepared listing and
+cards. Canonical commands must share one people-view source at the coordinated #77/#85 cutover.
+Guarded deletion under #91 still needs canonical lesson/enrolment/retained-attendance queries,
+compatible persistence and save-failure rollback; selecting a record does not establish that it
+can be deleted. Existing command routing and the User Guide's active-command status are unchanged.
+
+Tests cover mixed roles, filtered positions that differ from stable-ID suffixes, checked range
+and role errors, and retaining the resolved identity after a view refresh. The existing manual
+person-index procedure below remains pending actual canonical command integration.
 
 ### Prepared person record cards
 
