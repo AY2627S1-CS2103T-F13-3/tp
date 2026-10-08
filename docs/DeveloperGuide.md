@@ -18,6 +18,7 @@ title: Developer Guide
 * Zhu Zhi Yu used OpenAI Codex to document the confirmed person command-index boundary and reconcile shared-lesson command formats, staged search scope, legacy recovery policy, use cases, and manual checks. This acknowledgement covers those documentation changes; feature implementations remain with their owners.
 * Zhu Zhi Yu used OpenAI Codex to assist with the file-logging startup fallback, its isolated regression tests, and logging documentation.
 * Zhu Zhi Yu used OpenAI Codex for the UI startup error-handling fix and its regression tests.
+* Zhu Zhi Yu used OpenAI Codex for constant-stack email validation that preserves the inherited contact rules, its parser/file-loading regressions, and the related implementation and manual-testing notes.
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
@@ -468,6 +469,16 @@ The current command, UI, and JSON aggregate still use the inherited AB3 `Person`
 
 **Validation boundary:** `Name`, `Email`, and `Address` still enforce their inherited AB3 validation rules. This foundation does not yet implement the User Guide's wider name punctuation and field-format or length rules; [issue #61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61) tracks that alignment. Contact details preserve the supplied display values; name normalization is used only for duplicate matching.
 
+**Current email validation:** The active contact parser and JSON loader share `Email.isValidEmail`, which scans
+ASCII characters in linear time with constant stack space. Long repeated local-part separators, domain hyphens,
+or domain labels therefore produce a value or the existing checked boundary error rather than a regex stack
+overflow. Its acceptance rules remain unchanged: single-label domains and long emails still load, the local part
+allows single `+`, `_`, `.`, or `-` separators, and domain labels allow single hyphens. The inherited final-label
+regex requires an adjacent alphanumeric pair, so `a@a-b` is rejected while `a@a-bc` is accepted. The public
+`VALIDATION_REGEX` remains the compatibility reference; bounded exhaustive regressions compare it with the scan.
+The complete contact-policy alignment in #61/#110 still requires protected loading in #84 before activation;
+this safety correction does not impose new field limits or protect the startup fallback.
+
 **Identity, equality, and duplicates:** The stable `PersonId` identifies a record independently of its contact details or position in a displayed list. Value equality compares the ID and all stored fields, including optional contact details and the student's education level and parent phone. `isDuplicateOf(PersonRecord)` instead requires the same role and compares the name, ignoring case and repeated spaces, together with the required identifying phone: the parent phone for students or the record's own phone for tutors and parents. Different IDs, optional contact details, or student education levels do not distinguish otherwise duplicate records. A null or different-role argument is not a duplicate. `PeopleRegistry` now uses this operation to reject duplicate records; connecting that rejection to active commands remains follow-up work.
 
 **Command boundary:** A user-entered person index is resolved once through the current filtered people view to a `PersonId`; it is not passed into the `PersonId` constructor or persisted as a relationship. Internal lookup, student-lesson queries, rosters, attendance keys and storage continue to use stable IDs. Resolving an index and validating its role belongs to the planned command integration, not these immutable record constructors.
@@ -915,6 +926,23 @@ testers are expected to do more *exploratory* testing.
 
    1. Relaunch the app by double-clicking the JAR file.<br>
        Expected: The most recent window size and location are retained.
+
+### Long emails in the current contact runtime
+
+Use a disposable application folder and the active `add n/NAME p/PHONE e/EMAIL a/ADDRESS` format. These checks
+cover validation safety; the planned 254-character email policy remains gated with the full contact alignment.
+
+1. In a text editor, form an email from 5,000 copies of `a.` followed by `a@example.com`. Paste it into
+   `add n/Long Email p/123 e/EMAIL a/Somewhere`, replacing `EMAIL` with that text. Expect a successful addition
+   without an uncaught error. Restart and verify the stored email is preserved.
+2. Repeat in a fresh disposable folder with 5,000 copies of `a-` after `a@`, ending in `ab`, and with 5,000
+   copies of `a.` after `a@`, ending in `ab`. Expect the same accepted-value behavior. These long inherited
+   values remain loadable even though the planned contact policy will later restrict their length.
+3. Replace the first example's suffix with `a!@example.com`, or replace the second example's final `ab` with
+   `a`. Expect the existing email constraint feedback; the command must not add a record or crash.
+4. Close the app, make a valid manual edit to the disposable JSON file using one of the accepted long emails,
+   and restart. Expect the edited email to load unchanged. Automated file-loader regressions additionally
+   verify controlled loading errors and byte preservation for invalid emails; safe startup recovery remains #84 work.
 
 ### Deleting a person
 
