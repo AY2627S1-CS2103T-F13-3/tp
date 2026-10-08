@@ -79,7 +79,7 @@ The planned routes follow the [UG command conventions](UserGuide.html#reading-th
 | Delete lesson | `deletelesson lid/LESSON_ID` |
 | Catalogue | `lessons [si/STUDENT_INDEX]` |
 | Lesson detail | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` |
-| Mark / correct | `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present\|absent` |
+| Mark / correct | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent</code> |
 | Unmark | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` |
 | History | `history STUDENT_INDEX [lid/LESSON_ID]` |
 | Search | `search c/CATEGORY [FILTER_PREFIX/VALUE]...` |

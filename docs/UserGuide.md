@@ -376,7 +376,7 @@ These formats use the [planned command conventions](#reading-the-planned-command
 | Lesson details | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` |
 | Enrol / unenrol | `enrol STUDENT_INDEX lid/LESSON_ID` / `unenrol STUDENT_INDEX lid/LESSON_ID` |
 | Search | `search c/CATEGORY [FILTER_PREFIX/VALUE]...` |
-| Mark attendance | `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present\|absent` |
+| Mark attendance | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent</code> |
 | Unmark attendance | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` |
 | History | `history STUDENT_INDEX [lid/LESSON_ID]` |
 | Help | `help [COMMAND]` |
