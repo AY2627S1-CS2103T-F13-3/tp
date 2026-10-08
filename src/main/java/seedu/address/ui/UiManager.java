@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,14 +26,21 @@ public class UiManager implements Ui {
 
     private Logic logic;
     private Path dataFilePath;
+    private final Optional<String> dataLoadError;
 
     /**
      * Creates a {@code UiManager} with the given {@code Logic} and the data file path
      * to show in the status bar.
      */
     public UiManager(Logic logic, Path dataFilePath) {
+        this(logic, dataFilePath, Optional.empty());
+    }
+
+    /** Creates a UI that also displays recovery guidance for a protected startup session. */
+    public UiManager(Logic logic, Path dataFilePath, Optional<String> dataLoadError) {
         this.logic = logic;
         this.dataFilePath = dataFilePath;
+        this.dataLoadError = dataLoadError;
     }
 
     @Override
@@ -41,6 +49,10 @@ public class UiManager implements Ui {
 
         try {
             initializeMainWindow(primaryStage);
+            if (dataLoadError.isPresent()) {
+                showAlertDialogAndWait(primaryStage, AlertType.WARNING, "Data file protected",
+                        "Your saved data could not be loaded", dataLoadError.get());
+            }
         } catch (Throwable e) {
             showFatalErrorDialogAndShutdown(primaryStage, "Fatal error during initializing", e);
         }

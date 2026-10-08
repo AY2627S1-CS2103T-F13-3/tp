@@ -15,6 +15,7 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.Email;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 import seedu.address.testutil.PersonUtil;
@@ -28,6 +29,35 @@ public class AddressBookParserTest {
         Person person = new PersonBuilder().build();
         AddCommand command = (AddCommand) parser.parseCommand(PersonUtil.getAddCommand(person));
         assertEquals(new AddCommand(person), command);
+    }
+
+    @Test
+    public void parseCommand_addLongEmails_preservesAcceptedValues() throws Exception {
+        String[] emails = {
+            "a.".repeat(5000) + "a@example.com",
+            "a@" + "a-".repeat(5000) + "ab",
+            "a@" + "a.".repeat(5000) + "ab",
+            "a@" + "a".repeat(10000)
+        };
+        for (String email : emails) {
+            AddCommand command = (AddCommand) parser.parseCommand("add n/Long Email p/123 e/" + email + " a/Somewhere");
+            Person expected = new PersonBuilder().withName("Long Email").withPhone("123")
+                    .withEmail(email).withAddress("Somewhere").withTags().build();
+            assertEquals(new AddCommand(expected), command);
+        }
+    }
+
+    @Test
+    public void parseCommand_addLongInvalidEmails_throwsParseException() {
+        String[] emails = {
+            "a.".repeat(5000) + "a!@example.com",
+            "a@" + "a-".repeat(5000) + "a",
+            "a@" + "a.".repeat(5000) + "a"
+        };
+        for (String email : emails) {
+            String input = "add n/Long Email p/123 e/" + email + " a/Somewhere";
+            assertThrows(ParseException.class, Email.MESSAGE_CONSTRAINTS, () -> parser.parseCommand(input));
+        }
     }
 
     @Test
