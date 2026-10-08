@@ -30,6 +30,26 @@ public class AddressBookTest {
     }
 
     @Test
+    public void resetData_self_preservesPersons() {
+        AddressBook book = getTypicalAddressBook();
+        AddressBook expected = new AddressBook(book);
+        book.resetData(book);
+        assertEquals(expected, book);
+    }
+
+    @Test
+    public void resetData_snapshot_remainsIndependentAfterMutations() {
+        AddressBook book = getTypicalAddressBook();
+        AddressBook snapshot = new AddressBook(book);
+        book.removePerson(ALICE);
+        assertEquals(getTypicalAddressBook(), snapshot);
+        book.resetData(snapshot);
+        assertEquals(snapshot, book);
+        book.removePerson(ALICE);
+        assertEquals(getTypicalAddressBook(), snapshot);
+    }
+
+    @Test
     public void resetData_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> addressBook.resetData(null));
     }
