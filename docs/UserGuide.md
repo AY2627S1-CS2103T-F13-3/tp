@@ -81,7 +81,7 @@ Normal-session command rollback and the planned new-format migration policy belo
 
 ## Planned shared-lesson workflow
 
-The following sections define the supplied v1.2 integration target. They are not commands delivered by this help increment. Feature owners will update their implementation details and examples when each feature becomes available.
+The following sections record the agreed v1.3 MVP command contracts. Their availability depends on incremental integration; use the [current command summary](#current-command-summary) and your build's `help` for active routes. Feature owners update their own implementation details and examples as behavior is delivered.
 
 ### Reading the planned command formats
 
@@ -91,6 +91,7 @@ The following sections define the supplied v1.2 integration target. They are not
 * Create a lesson by supplying an existing tutor's full name with `tu/TUTOR_NAME` and, optionally, their phone with `tp/TUTOR_PHONE`. Search uses `tu/QUERY` for a fragment of the tutor's name instead.
 * Shared lessons have stable IDs such as `L1`. Use `lid/LESSON_ID` wherever a command selects a lesson; there is no per-student lesson index.
 * Lesson catalogue, roster and history results preserve the current people list, its filter and its command positions. Select a student from the people list, rather than a position in those other results.
+* `st/HHMM` and `et/HHMM` use four-digit 24-hour times. `d/` takes a weekday for lesson creation/search and a real `YYYY-MM-DD` date for attendance or dated lesson details. `s/` takes a subject for creation/search and `present` or `absent` for `mark`.
 * Type command names and prefixes in lowercase. Supply each prefix at most once, in any order. Omit unknown optional fields; do not supply blank values.
 
 ### Planned quick start
@@ -234,7 +235,7 @@ Check the updated people list before deleting another person.
 
 ### 4. Creating and deleting shared lessons
 
-**Create:** `addlesson d/DAY st/START et/END s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
+**Create:** `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
 
 Example: `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1`.
 
@@ -316,13 +317,13 @@ People searches replace the displayed people list and number its results from 1.
 
 ### 7. Recording attendance and retrieving history
 
-**Mark:** `mark STUDENT_INDEX lid/LESSON_ID d/DATE s/STATUS`
+**Mark:** `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent`
 
 Example: Run `list r/student`. If the intended student appears at position 1 and the lesson ID is `L1`, enter `mark 1 lid/L1 d/2026-10-05 s/present`.
 
 Use a real date in `YYYY-MM-DD` format, matching the lesson's weekday, and status `present` or `absent`. New records require current enrolment. Marking an existing student/lesson/date corrects that record; repeating the same status does not create a duplicate. No attendance entry means unrecorded.
 
-**Unmark:** `unmark STUDENT_INDEX lid/LESSON_ID d/DATE`.
+**Unmark:** `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD`.
 
 Example: After `list r/student`, if the intended student appears at position 1, enter `unmark 1 lid/L1 d/2026-10-05` for lesson `L1`.
 
@@ -361,20 +362,22 @@ The current inherited runtime uses `data/addressbook.json` with the [protected s
 
 ## Planned command summary
 
+These formats use the [planned command conventions](#reading-the-planned-command-formats); listing a route here does not activate it. Person/student selectors come from the current people list, while every existing-lesson selector uses a stable `lid/` reference.
+
 | Action | Format |
 | --- | --- |
 | Add student | `add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]` |
 | Add tutor or parent | `add r/ROLE n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]` |
 | List people | `list [r/ROLE]` |
 | Delete person | `delete INDEX` |
-| Create shared lesson | `addlesson d/DAY st/START et/END s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` |
+| Create shared lesson | `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` |
 | Delete lesson | `deletelesson lid/LESSON_ID` |
 | Lesson catalogue | `lessons [si/STUDENT_INDEX]` |
 | Lesson details | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` |
 | Enrol / unenrol | `enrol STUDENT_INDEX lid/LESSON_ID` / `unenrol STUDENT_INDEX lid/LESSON_ID` |
 | Search | `search c/CATEGORY [FILTER_PREFIX/VALUE]...` |
-| Mark attendance | `mark STUDENT_INDEX lid/LESSON_ID d/DATE s/STATUS` |
-| Unmark attendance | `unmark STUDENT_INDEX lid/LESSON_ID d/DATE` |
+| Mark attendance | `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present\|absent` |
+| Unmark attendance | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` |
 | History | `history STUDENT_INDEX [lid/LESSON_ID]` |
 | Help | `help [COMMAND]` |
 | Exit | `exit` |

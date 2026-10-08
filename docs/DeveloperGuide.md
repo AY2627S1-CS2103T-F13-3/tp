@@ -69,10 +69,11 @@ The planned lesson-catalogue filter is `lessons [si/STUDENT_INDEX]`. Its optiona
 
 **Tutor selection:** `addlesson` resolves `tu/TUTOR_NAME` as a normalized full name, ignoring letter case and repeated spaces. Optional `tp/TUTOR_PHONE` must match the tutor's exact phone number; never ignore a supplied phone to fall back to the name. Reject zero matches or ambiguity without changing data, and request a disambiguating phone when needed. Search `tu/` instead matches a case-insensitive name fragment. Tutor-category name search uses `n/`. Stable person IDs are not external lookup selectors for these commands.
 
-The planned shared-lesson routes are:
+The planned routes follow the [UG command conventions](UserGuide.html#reading-the-planned-command-formats) and [summary](UserGuide.html#planned-command-summary):
 
 | Action | Format |
 | --- | --- |
+| People | `add r/ROLE ...`, `list [r/ROLE]`, `delete INDEX` (role-specific required fields are in the UG) |
 | Create lesson | `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` |
 | Enrol / unenrol | `enrol STUDENT_INDEX lid/LESSON_ID` / `unenrol STUDENT_INDEX lid/LESSON_ID` |
 | Delete lesson | `deletelesson lid/LESSON_ID` |
@@ -81,6 +82,7 @@ The planned shared-lesson routes are:
 | Mark / correct | `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present\|absent` |
 | Unmark | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` |
 | History | `history STUDENT_INDEX [lid/LESSON_ID]` |
+| Search | `search c/CATEGORY [FILTER_PREFIX/VALUE]...` |
 
 The complete [search matrix](#supported-criteria) remains the planned target. Own-contact searches can be integrated first, followed by the relational families. Each delivered route advertises only its available filters; staging does not silently remove the remaining filters from the target. Documenting a route does not activate it.
 
