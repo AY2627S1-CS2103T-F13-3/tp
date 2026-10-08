@@ -5,10 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
@@ -113,6 +116,73 @@ public class ProtectedStartupTest {
         new LogicManager(model, storage).execute(ADD_COMMAND);
         assertEquals(1, model.getAddressBook().getPersonList().size());
         assertEquals(model.getAddressBook(), storage.readAddressBook().orElseThrow());
+    }
+
+    @Test
+    public void startup_danglingSymbolicLink_preservesLinkAndMissingTarget() throws Exception {
+        Path data = testFolder.resolve("data.json");
+        Path target = testFolder.resolve("missing.json");
+        try {
+            Files.createSymbolicLink(data, target.getFileName());
+        } catch (IOException | UnsupportedOperationException | SecurityException exception) {
+            assumeTrue(false, "Symbolic links unavailable: " + exception);
+        }
+        assertThrows(DataLoadingException.class, () -> new JsonAddressBookStorage(data).readAddressBook());
+        CountingStorage storage = new CountingStorage(data, testFolder.resolve("prefs.json"));
+        Model model = new MainApp().initModelManager(storage, new UserPrefs());
+        LogicManager logic = new LogicManager(model, storage);
+        assertTrue(storage.getDataLoadError().isPresent());
+        assertEquals(new AddressBook(), model.getAddressBook());
+        logic.execute("help");
+        logic.execute("list");
+        assertTrue(logic.execute("exit").isExit());
+        for (String command : new String[]{ADD_COMMAND, "delete 1"}) {
+            CommandException error = assertThrows(CommandException.class, () -> logic.execute(command));
+            assertEquals(storage.getDataLoadError().orElseThrow(), error.getMessage());
+        }
+        assertEquals(0, storage.saveCalls);
+        assertThrows(IOException.class, () -> storage.saveAddressBook(model.getAddressBook()));
+        assertEquals(new AddressBook(), model.getAddressBook());
+        assertTrue(Files.isSymbolicLink(data));
+        assertEquals(target.getFileName(), Files.readSymbolicLink(data));
+        assertTrue(Files.notExists(target, LinkOption.NOFOLLOW_LINKS));
+    }
+
+    @Test
+    public void startup_repairedFileAndSuccessfulReread_staysLockedUntilRestart() throws Exception {
+        Path data = testFolder.resolve("data.json");
+        Files.writeString(data, "{broken");
+        CountingStorage storage = new CountingStorage(data, testFolder.resolve("prefs.json"));
+        Model model = new MainApp().initModelManager(storage, new UserPrefs());
+        LogicManager logic = new LogicManager(model, storage);
+        String originalError = storage.getDataLoadError().orElseThrow();
+
+        Path fixture = Path.of("src", "test", "data", "JsonSerializableAddressBookTest",
+                "typicalPersonsAddressBook.json");
+        byte[] repaired = Files.readAllBytes(fixture);
+        Files.write(data, repaired);
+        assertEquals(getTypicalAddressBook(), storage.readAddressBook().orElseThrow());
+        assertEquals(originalError, storage.getDataLoadError().orElseThrow());
+        for (String command : new String[]{ADD_COMMAND, "delete 1"}) {
+            CommandException error = assertThrows(CommandException.class, () -> logic.execute(command));
+            assertEquals(originalError, error.getMessage());
+        }
+        logic.execute("help");
+        logic.execute("list");
+        assertTrue(logic.execute("exit").isExit());
+        assertEquals(0, storage.saveCalls);
+        assertThrows(IOException.class, () -> storage.saveAddressBook(model.getAddressBook()));
+        assertEquals(new AddressBook(), model.getAddressBook());
+        assertArrayEquals(repaired, Files.readAllBytes(data));
+
+        CountingStorage restarted = new CountingStorage(data, testFolder.resolve("prefs.json"));
+        Model restartedModel = new MainApp().initModelManager(restarted, new UserPrefs());
+        assertTrue(restarted.getDataLoadError().isEmpty());
+        assertEquals(getTypicalAddressBook(), restartedModel.getAddressBook());
+        assertArrayEquals(repaired, Files.readAllBytes(data));
+        new LogicManager(restartedModel, restarted).execute(ADD_COMMAND);
+        assertEquals(1, restarted.saveCalls);
+        assertEquals(restartedModel.getAddressBook(), restarted.readAddressBook().orElseThrow());
     }
 
     @Test
