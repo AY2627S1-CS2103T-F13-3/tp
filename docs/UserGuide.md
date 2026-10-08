@@ -12,14 +12,14 @@ PonHub is a desktop app for tuition centre administrators to keep student, tutor
 
 ## Quick start
 
-1. Ensure that Java `25` or later is installed on your computer.<br>
-   **Mac users:** Follow the JDK installation instructions [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
+1. Ensure that Java `25` is installed on your computer.<br>
+   **Mac users:** Install Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) as prescribed by the [course's Mac advisory](https://nus-cs2103-ay2627-s1.github.io/website/admin/programmingLanguages.html) and [Mac installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html). Use this installation in the terminal that launches PonHub.
 
 1. Use the JAR built from this increment, or download a matching PonHub build from the [project's Releases page](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases) after publication. Contributors can build `build/libs/ponhub.jar` with `./gradlew shadowJar`; see [DevOps](DevOps.html#build-automation). Week 8 does not require a public release, so an older released JAR may have different commands.
 
 1. Put the JAR file in the folder you want to use for PonHub. Keep this folder when moving or backing up your data.
 
-1. Open a terminal in that folder and run `java -jar FILENAME.jar`, replacing `FILENAME.jar` with the downloaded file's name. The PonHub window should open.
+1. Open a terminal in that folder, confirm `java -version` reports Java 25, and run `java -jar FILENAME.jar`, replacing `FILENAME.jar` with the downloaded file's name. The PonHub window should open.
 
 1. Enter a command in the command box and press Enter. Start with `help`, then `help add`. The current increment supports inherited contact records:
 
