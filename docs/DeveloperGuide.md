@@ -13,6 +13,7 @@ title: Developer Guide
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, the ordered people registry and its import/export state, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
 * Zhu Zhi Yu used OpenAI Codex for the detached role-filtered people-list projection and argument parser, their regression tests, and the integration notes below.
 * Zhu Zhi Yu used OpenAI Codex for the dormant current-people index resolver, its role and filtered-view regression tests, and the related integration documentation.
+* Zhu Zhi Yu used OpenAI Codex to prepare representative canonical people samples, their sample-integrity and view-selection tests, and the related developer usage notes.
 * Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search, inline-help, and atomic-save increments.
 * Zhu Zhi Yu used OpenAI Codex to align the assigned product scope and prioritized user stories with the shared-lesson target, preserving the distinction between delivered foundations, planned runtime features, and future extensions. This attribution covers that documentation update.
 * Zhu Zhi Yu used OpenAI Codex to document the confirmed person command-index boundary and reconcile shared-lesson command formats, staged search scope, legacy recovery policy, use cases, and manual checks. This acknowledgement covers those documentation changes; feature implementations remain with their owners.
@@ -379,6 +380,35 @@ person-index procedure below remains pending actual canonical command integratio
 `PersonRecordCard(PersonRecord, int)` loads `PersonRecordCard.fxml` and renders the projection. The heading, identity, and detail labels wrap with no fixed card height. The future list-cell host must size the card to the available cell width and provide vertical scrolling; `PersonRecordCardPreview` demonstrates that host with the current theme. Stable IDs never become displayed indices, and no second writable person store is introduced.
 
 Automated projection tests cover all roles, absent/present contacts, required fields, exact display values, long text, index/ID separation, immutable detail lines, and invalid inputs. Renderer regression tests load the actual FXML on the JavaFX application thread and check the displayed values and wrapping. Linux CI runs the Gradle checks under a virtual display; developers on Linux without a display can likewise run `xvfb-run --auto-servernum ./gradlew check coverage` with Xvfb installed. The developer preview exercises the actual FXML separately from the application and uses fixture records without loading or saving operational files. Its layout procedure appears below.
+
+### Representative canonical people samples
+
+[Issue #143](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/143) prepares the people portion of
+the acceptance dataset for [#101](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101).
+`PeopleSampleDataUtil.getSamplePeopleRegistry()` returns a fresh `PeopleRegistry` on each call.
+The factory uses the registry's addition APIs, enforcing role-specific duplicate rules and
+retaining global creation order and complete allocation state. Callers can mutate one sample registry independently of
+every other invocation.
+
+The six records have deterministic creation order `T1, S1, P1, S2, T2, S3`:
+
+| IDs | Representative scenario |
+| --- | --- |
+| `S1`, `S2`, `P1` | Alex Tan and Jamie Tan share parent phone `00987654`, matching Pat Tan's own phone. Alex omits all optional contacts; Jamie supplies them. |
+| `T1`, `T2` | Both tutors are named Mei Lim, with distinct phones `00112233` and `00999888` for future name/phone disambiguation checks. `T2` omits email and address. |
+| `S1`, `S3` | Two students named Alex Tan have different parent phones, making both valid distinct records. `S3` uses `00888888`. |
+
+Phone zeros and email display case are retained. The interleaved order exercises current-view
+positions separately from stable IDs: all-role position `5` selects `T2`, while tutor-filtered
+position `2` selects that same record. The factory is dormant and leaves active AB3 sample
+loading unchanged. It supplies no lessons, enrolments, attendance or persistence format;
+those parts of #101 remain pending their feature owners' integration.
+
+Sample tests validate independent registries, required and optional contacts, the name/phone
+cases, registry export/import and continued allocation after removal. They also compose
+`PeopleListParser`, `PersonRecordListData`, `PersonIndexResolver` and `PersonRecordCardData`
+using the samples, including filtered renumbering after removal. These checks exercise the
+prepared APIs; actual canonical command, save/reload and GUI acceptance remain pending.
 
 ### Search criteria parsing foundation
 
@@ -932,6 +962,27 @@ The following small deletion checks apply to the current inherited contact runti
 
    1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
       Expected: Similar to previous.
+
+### Prepared canonical people sample checks
+
+Use these checks in isolated developer code or a debugger with the prepared classes. The
+active app does not load this fixture. The helper can be obtained with
+`PeopleSampleDataUtil.getSamplePeopleRegistry()` and its `getPeople()` result supplied to
+`PersonRecordListData`; build the selected record list from the projection's entries before
+calling `PersonIndexResolver`.
+
+1. Create two sample registries. Expect equal snapshots in order `T1, S1, P1, S2, T2, S3`.
+   Remove `P1` from one registry using the registry's unreferenced-record test seam; both
+   students' stored parent phones must remain `00987654`, and the second registry must retain
+   all six records. This fixture has no lesson or attendance references to query.
+2. Project all roles and each individual role. Expect all-role index `5` and tutor-filtered
+   index `2` to select `T2`. Pass each entry's person and displayed index to
+   `PersonRecordCardData`; expect stable IDs, required phones and `Not provided` for omitted
+   contacts, with phone zeros and email case preserved.
+3. Remove `S1` from a fresh sample and rebuild the student projection. Expect visible indices
+   `1` and `2` to select `S2` and `S3`. Export/import that registry and add a distinct student;
+   expect `S4`, with the new record appended. Export/import checks here use validated Java
+   snapshots; JSON-file and application-restart checks follow canonical persistence activation.
 
 ### Planned shared-lesson workflow checks
 
