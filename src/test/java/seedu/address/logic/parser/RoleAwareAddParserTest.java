@@ -207,7 +207,7 @@ public class RoleAwareAddParserTest {
     }
 
     @Test
-    public void parse_internalAddressSpaces_preservesContent() throws Exception {
+    public void parse_internalAddressSpaces_usesSharedAddressValue() throws Exception {
         String address = "Block  1, Unit #02-03";
         PersonAdditionInput input = parser.parse(STUDENT_ARGUMENTS + " a/" + address + "\u2003p/00345678");
         assertEquals(Optional.of(new Address(address)), input.contactDetails().getAddress());
@@ -215,7 +215,7 @@ public class RoleAwareAddParserTest {
     }
 
     @Test
-    public void parse_longInternalAddressSpaces_preservesContent() throws Exception {
+    public void parse_longInternalAddressSpaces_usesSharedAddressValue() throws Exception {
         String address = "Block" + " ".repeat(20000) + "1";
         PersonAdditionInput input = parser.parse(STUDENT_ARGUMENTS + " a/\u2003" + address + "\u00A0p/00345678");
         assertEquals(Optional.of(new Address(address)), input.contactDetails().getAddress());
