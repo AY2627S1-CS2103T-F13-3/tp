@@ -21,6 +21,17 @@ public class ModelManagerTest {
     private ModelManager modelManager = new ModelManager();
 
     @Test
+    public void setAddressBook_ownAddressBook_preservesRecordsAndFilteredView() {
+        modelManager.addPerson(ALICE);
+        modelManager.addPerson(BENSON);
+        modelManager.updateFilteredPersonList(new NameContainsKeywordsPredicate(List.of("Alice")));
+        AddressBook expected = new AddressBook(modelManager.getAddressBook());
+        modelManager.setAddressBook(modelManager.getAddressBook());
+        assertEquals(expected, modelManager.getAddressBook());
+        assertEquals(List.of(ALICE), modelManager.getFilteredPersonList());
+    }
+
+    @Test
     public void constructor() {
         assertEquals(new UserPrefs(), modelManager.getUserPrefs());
         assertEquals(new GuiSettings(), modelManager.getGuiSettings());

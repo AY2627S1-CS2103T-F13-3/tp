@@ -12,6 +12,7 @@ title: Developer Guide
 * PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, the ordered people registry and its import/export state, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
 * Zhu Zhi Yu used OpenAI Codex for the detached role-filtered people-list projection and argument parser, their regression tests, and the integration notes below.
+* Zhu Zhi Yu used OpenAI Codex for the dormant current-people index resolver, its role and filtered-view regression tests, and the related integration documentation.
 * Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search, inline-help, and atomic-save increments.
 * Zhu Zhi Yu used OpenAI Codex to document the confirmed person command-index boundary and reconcile shared-lesson command formats, staged search scope, legacy recovery policy, use cases, and manual checks. This acknowledgement covers those documentation changes; feature implementations remain with their owners.
 * Zhu Zhi Yu used OpenAI Codex to assist with the file-logging startup fallback, its isolated regression tests, and logging documentation.
@@ -233,6 +234,28 @@ preserves all previous file attributes. Save failures still do not roll back in-
 that is separate transaction work. Help skips saving; other read-only commands currently still save,
 but unsupported atomic moves alone no longer make those saves fail.
 
+#### JSON version detection foundation
+
+`JsonDataVersionDetector.detect(String)` classifies file contents using the existing Jackson dependency,
+without constructing Model objects, writing files or changing the current runtime loader. The planned
+PonHub envelope reserves `schemaVersion` as a positive JSON integer, initially `1`; this is a data-schema
+version, independent of the application version. Issue #79 will define and validate the remaining envelope.
+
+| Result | Meaning and later loader action |
+| ------ | ------------------------------- |
+| `LEGACY_AB3` | An unversioned object containing a `persons` array and, optionally, the textual `_comment` used by AB3 fixtures. No other root fields are accepted. Contact validity is not checked and roles are never inferred; preserve it for manual upgrade. |
+| `PONHUB_V1_CANDIDATE` | Explicit integer `schemaVersion: 1`. Continue to complete envelope/domain validation; this result alone never authorizes loading or saving. |
+| `INVALID_VERSION` | An explicit version is null, blank, a string, boolean, collection, fractional number, zero or negative. Reject without coercion. |
+| `UNSUPPORTED_VERSION` | A positive integer other than 1, including values beyond Java integer range. Reject even if `persons` looks like legacy data. |
+| `UNRECOGNIZED_FORMAT` | A non-object root or an unversioned object that does not match the legacy root, including extra unknown fields. Reject rather than ignoring fields. |
+| `MALFORMED_JSON` | Empty/invalid JSON, duplicate object keys or trailing content after the document. Reject ambiguous input. |
+
+Missing versions identify legacy data only for the strict legacy root shape. A versioned candidate can
+still contain missing or invalid records: the detector is a format gate, not a schema/domain validator.
+Callers must handle file absence and read errors separately; neither is equivalent to empty JSON.
+The protected loader in #84 must classify the same contents before domain decoding and prevent writes
+on rejection. This standalone foundation does not yet protect the inherited loader or provide migration.
+
 #### Planned protected loading and legacy upgrade
 
 These are requirements for the first canonical cutover, not behavior delivered by the inherited loader. Keep the inherited runtime until the compatible canonical Model, codecs, people commands and protected loader are activated together. The new runtime must classify the configured file before decoding: missing data may start a fresh supported root; valid supported versioned data loads only after complete domain, identity and reference validation. Unreadable, corrupt, unsupported-version and unversioned AB3 files produce controlled errors, actionable recovery guidance and no operational writes to the rejected file. Preserve its original bytes through help, list, exit and attempted mutations; saving preferences remains separate.
@@ -317,6 +340,36 @@ role result. Run `list r/`, `list r/all`, and `list r/student r/parent`; expect 
 without changing data or the visible list. Repeat after adding a person and after a failed save
 rolls back. Those end-to-end checks remain pending runtime integration.
 
+### Current people-index resolution foundation
+
+[Issue #137](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/137) prepares the shared
+selection boundary for the canonical people commands.
+
+`PersonIndexResolver.resolve(Index, List<? extends PersonRecord>)` resolves a parsed index against
+the supplied current filtered people list and returns the selected immutable record. For a view
+containing `[T7, S9, P2]`, index `2` selects `S9`. In a student-filtered view `[S9, S3]`, index `2`
+selects `S3`. The resolver does not interpret a position as an ID suffix or select from another
+collection. An empty view or out-of-range index produces a checked `CommandException` using the
+existing invalid-person-index message. Argument parsing remains the existing `ParserUtil.parseIndex`
+responsibility; this helper receives an `Index`, not a command string.
+
+`resolveStudent` resolves the same current people index once, then rejects a selected Tutor or
+Parent with specific checked feedback. It never searches a separate student-only list. Callers
+must supply the authoritative people view at execution, keep it unchanged during resolution,
+and capture the returned record's stable `PersonId` before any Model or query calls. Later view
+refreshes must not reinterpret that command's index. The resolver neither owns nor modifies the
+view, its filter, records, registry, identity counters, or storage.
+
+**Integration boundary:** This working helper remains dormant alongside the prepared listing and
+cards. Canonical commands must share one people-view source at the coordinated #77/#85 cutover.
+Guarded deletion under #91 still needs canonical lesson/enrolment/retained-attendance queries,
+compatible persistence and save-failure rollback; selecting a record does not establish that it
+can be deleted. Existing command routing and the User Guide's active-command status are unchanged.
+
+Tests cover mixed roles, filtered positions that differ from stable-ID suffixes, checked range
+and role errors, and retaining the resolved identity after a view refresh. The existing manual
+person-index procedure below remains pending actual canonical command integration.
+
 ### Role-aware addition parsing foundation
 
 [Issue #135](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/135) prepares argument parsing for [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). `RoleAwareAddParser.parse(String)` accepts arguments after the future `add` command word and returns immutable `PersonAdditionInput`. The input contains a role, composed contact details, and optional student education level and parent phone. It contains no ID, person record, registry, command execution or writable operational state.
@@ -326,7 +379,7 @@ rolls back. Those end-to-end checks remain pending runtime integration.
 | Student | `r/`, `n/`, `l/`, `pp/` | `p/`, `e/`, `a/` |
 | Tutor or parent | `r/`, `n/`, `p/` | `e/`, `a/` |
 
-Prefixes are lowercase and may appear once in any order. Role and education-level values are case-insensitive. Omitted optional contacts remain absent; supplied values must be nonblank. Every prefix-shaped token is recognized, so an unknown prefix after an address cannot silently become address text. Repeated prefixes, student-only fields on other roles, preambles, line breaks and control characters produce specific `ParseException` feedback. Controls are rejected before trimming, and phone values retain leading zeros. Both own and parent phones use the existing 3–15-digit role-record bound.
+Prefixes are lowercase and may appear once in any order. Role and education-level values are case-insensitive. Omitted optional contacts remain absent; supplied values must be nonblank. Prefix boundaries and surrounding value spaces recognize Unicode whitespace; interior field text is preserved. Every prefix-shaped token is recognized, so an unknown prefix after an address cannot silently become address text. Repeated prefixes, student-only fields on other roles, preambles, line breaks and control characters produce specific `ParseException` feedback. Controls are rejected before trimming, and phone values retain leading zeros. Both own and parent phones use the existing 3–15-digit role-record bound.
 
 **Contact-validation dependency:** Name, email and address validation delegates to the shared value types. Current master still has inherited contact rules; this parser does not duplicate or deliver the complete planned User Guide policy. [#61 / PR #110](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/110) supplies that policy and remains gated by protected loading. Keep this parsing increment dormant and draft while that dependency remains pending.
 
