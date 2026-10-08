@@ -626,6 +626,20 @@ These are state contracts for [issue #79](https://github.com/AY2627S1-CS2103T-F1
 
 The dormant registry can support subsequent aggregate and view foundations without replacing the active runtime. Contact validation in [issue #61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61) and protected loading in [issue #84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84) remain gates before the coordinated person-command activation in [issue #85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). Existing command selectors and shared-lesson/search contracts are unchanged by this foundation.
 
+### Dated attendance records
+
+`Attendance` is a separate immutable association record; it is not nested in a Student or Lesson. Its unique
+`AttendanceKey` combines one student-role `PersonId`, one `LessonId`, and one `LocalDate`. The remaining stored field
+is `AttendanceStatus`, whose only recorded values are `present` and `absent`. A missing key means unrecorded, so no
+`unrecorded` status is stored. Current enrolment also remains outside Attendance, allowing dated history to survive
+later unenrolment.
+
+External dates are parsed using strict ASCII `YYYY-MM-DD` syntax and calendar validation, including real leap years.
+Status parsing is case-insensitive. Wrong-role person IDs, impossible dates and unknown statuses are rejected.
+`withStatus` returns a replacement record for the same key and leaves the original unchanged. Equality and hashing
+include all three key components and the status, which lets the later canonical aggregate keep one record per key and
+replace its value when correcting attendance. This foundation adds no active command, collection or persistence route.
+
 ### Future undo/redo and archiving
 
 Undo/redo and student archiving are future extensions. The inherited AB3 undo diagrams and `VersionedAddressBook` example do not describe an implemented PonHub mechanism. No undo, redo, archive or restore route is registered in the current command catalogue.
