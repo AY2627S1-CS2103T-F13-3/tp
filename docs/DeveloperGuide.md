@@ -282,7 +282,7 @@ but unsupported atomic moves alone no longer make those saves fail.
 #### JSON version detection foundation
 
 `JsonDataVersionDetector.detect(String)` classifies file contents using the existing Jackson dependency,
-without constructing Model objects, writing files or changing the current runtime loader. The planned
+without constructing Model objects or writing files. The current loader uses this gate before decoding. The planned
 PonHub envelope reserves `schemaVersion` as a positive JSON integer, initially `1`; this is a data-schema
 version, independent of the application version. Issue #79 will define and validate the remaining envelope.
 
@@ -298,8 +298,32 @@ version, independent of the application version. Issue #79 will define and valid
 Missing versions identify legacy data only for the strict legacy root shape. A versioned candidate can
 still contain missing or invalid records: the detector is a format gate, not a schema/domain validator.
 Callers must handle file absence and read errors separately; neither is equivalent to empty JSON.
-The protected loader in #84 must classify the same contents before domain decoding and prevent writes
-on rejection. This standalone foundation does not yet protect the inherited loader or provide migration.
+The current `JsonAddressBookStorage` classifies and decodes the same string. It accepts only legacy AB3
+roots in this runtime and rejects every other classification, including version-1 candidates until their
+codecs are integrated. Missing files retain the existing fresh/sample-data behavior. Only a confirmed
+missing path is treated as absent; denied access and dangling final symbolic links are loading failures.
+
+#### Current protected startup
+
+On a controlled loading failure, `StorageManager` records recovery guidance and locks operational saves
+for the rest of the session. `MainApp` creates an empty display model, not a replacement writable store.
+The UI displays a recovery warning; `LogicManager` allows only help/list/exit and bypasses saving for
+those commands in the protected session. Other commands are rejected before execution. Storage also
+rejects direct operational saves, while preferences retain their separate lifecycle. Deleting or fixing
+the file while the session is running does not unlock it: recovery requires a restart.
+
+JSON syntax, root/version errors, invalid contact records and I/O failures become controlled loading
+errors. Explicit checks reject null person/tag entries; unrelated programming errors are not swallowed.
+Valid legacy contacts still load and save normally. This safety increment does not implement the new
+aggregate codec, automatic migration, general command rollback or no-save behavior in normal sessions.
+
+Manual check: in a disposable working folder, place malformed JSON, `null`, or a versioned document in
+`data/addressbook.json` and record its bytes. Start the app and verify the recovery warning. Run help,
+list, exit and attempt add/delete; restart as necessary. The original bytes must remain unchanged and
+mutations must be blocked. Close the app, preserve the original, then restore a known-good compatible
+backup or correct JSON/access permissions and restart. Confirm valid human-edited legacy data loads.
+`ProtectedStartupTest` exercises the startup/command/storage boundary and original-byte preservation;
+`UiManagerTest` verifies the warning without requiring a real window.
 
 #### Planned protected loading and legacy upgrade
 

@@ -10,7 +10,9 @@ import static seedu.address.testutil.TypicalPersons.IDA;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -27,6 +29,57 @@ public class JsonAddressBookStorageTest {
 
     @TempDir
     public Path testFolder;
+
+    @Test
+    public void read_missingTargetAtExistingPath_throwsOnEveryPlatform() throws Exception {
+        Path path = testFolder.resolve("existing.json");
+        Files.writeString(path, "{\"persons\":[]}");
+        byte[] original = Files.readAllBytes(path);
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(path) {
+            @Override
+            String readContents(Path file) throws IOException {
+                // Exercise the existing-path branch even where real symbolic links are unavailable.
+                throw new NoSuchFileException(file.toString());
+            }
+        };
+        assertThrows(DataLoadingException.class, storage::readAddressBook);
+        assertArrayEquals(original, Files.readAllBytes(path));
+    }
+
+    @Test
+    public void read_invalidUtf8_throwsDataLoadingException() throws Exception {
+        Path path = testFolder.resolve("invalid-utf8.json");
+        Files.write(path, new byte[]{(byte) 0xc3, (byte) 0x28});
+        assertThrows(DataLoadingException.class, () -> new JsonAddressBookStorage(path).readAddressBook());
+    }
+
+    @Test
+    public void read_deniedAccess_throwsInsteadOfTreatingAsMissing() {
+        Path path = testFolder.resolve("denied.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(path) {
+            @Override
+            String readContents(Path file) throws IOException {
+                throw new AccessDeniedException(file.toString());
+            }
+        };
+        assertThrows(DataLoadingException.class, storage::readAddressBook);
+    }
+
+    @Test
+    public void read_unrelatedProgrammingFault_propagates() {
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("data.json")) {
+            @Override
+            String readContents(Path file) {
+                throw new IllegalStateException("Programming fault");
+            }
+        };
+        assertThrows(IllegalStateException.class, storage::readAddressBook);
+    }
+
+    @Test
+    public void read_directory_throwsInsteadOfTreatingAsMissing() {
+        assertThrows(DataLoadingException.class, () -> new JsonAddressBookStorage(testFolder).readAddressBook());
+    }
 
     @Test
     public void readAddressBook_nullFilePath_throwsNullPointerException() {

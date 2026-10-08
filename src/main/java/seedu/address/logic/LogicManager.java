@@ -10,7 +10,9 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.HelpCommand;
+import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -55,6 +57,13 @@ public class LogicManager implements Logic {
 
         CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
+        if (storage.getDataLoadError().isPresent()) {
+            if (!(command instanceof HelpCommand || command instanceof ListCommand || command instanceof ExitCommand)) {
+                throw new CommandException(storage.getDataLoadError().get());
+            }
+            // The protected session can display guidance and exit, but must never save operational data.
+            return command.execute(model);
+        }
         commandResult = command.execute(model);
 
         // Help must remain available even when the operational data cannot be saved.
