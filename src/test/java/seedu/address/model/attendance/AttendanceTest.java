@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 
@@ -112,6 +113,7 @@ public class AttendanceTest {
         Attendance same = new Attendance(new PersonId("s1"), new LessonId("l1"), DATE,
                 AttendanceStatus.PRESENT);
 
+        assertTrue(original.equals(original));
         assertEquals(original, same);
         assertEquals(original.hashCode(), same.hashCode());
         assertNotEquals(original,
@@ -124,5 +126,17 @@ public class AttendanceTest {
                 new Attendance(STUDENT_ID, LESSON_ID, DATE, AttendanceStatus.ABSENT));
         assertNotEquals(original, null);
         assertNotEquals(original, original.getKey());
+    }
+
+    @Test
+    public void toString_allFields_returnsFormattedStrings() {
+        Attendance attendance = new Attendance(STUDENT_ID, LESSON_ID, DATE, AttendanceStatus.PRESENT);
+        String expectedKey = AttendanceKey.class.getCanonicalName()
+                + "{studentId=" + STUDENT_ID + ", lessonId=" + LESSON_ID + ", date=" + DATE + "}";
+        String expectedAttendance = Attendance.class.getCanonicalName()
+                + "{key=" + expectedKey + ", status=" + AttendanceStatus.PRESENT + "}";
+
+        assertEquals(expectedKey, attendance.getKey().toString());
+        assertEquals(expectedAttendance, attendance.toString());
     }
 }
