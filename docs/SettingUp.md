@@ -18,8 +18,10 @@ Follow the steps below precisely. The setup may fail if you skip or change a ste
 
 First, **fork** this repo, and **clone** the fork into your computer.
 
+Use **JDK 25** for development and Java 25 when launching the packaged JAR. On macOS, follow the [course's Mac advisory](https://nus-cs2103-ay2627-s1.github.io/website/admin/programmingLanguages.html) and install **Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`)** using the [Mac installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html). This is the required macOS setup for development and release checks. Confirm `java -version` reports Java 25 in the terminal used for Gradle and JAR launches; if using SDKMAN, `sdk current java` should identify `25.0.3.fx-zulu` on macOS.
+
 If you plan to use IntelliJ IDEA (highly recommended):
-1. **Configure the JDK**: Follow the guide [_[se-edu/guides] IDEA: Configuring the JDK_](https://se-education.org/guides/tutorials/intellijJdk.html) to ensure IntelliJ is configured to use **JDK 25**.
+1. **Configure the JDK**: Follow the guide [_[se-edu/guides] IDEA: Configuring the JDK_](https://se-education.org/guides/tutorials/intellijJdk.html) to ensure IntelliJ's project SDK and Gradle JVM use **JDK 25**, including the prescribed Azul JDK with JavaFX on macOS.
 1. **Import the project as a Gradle project**: Follow the guide [_[se-edu/guides] IDEA: Importing a Gradle project_](https://se-education.org/guides/tutorials/intellijImportGradleProject.html) to import the project into IDEA.<br>
   :exclamation: Note: Importing a Gradle project is slightly different from importing a normal Java project.
 1. **Verify the setup**:

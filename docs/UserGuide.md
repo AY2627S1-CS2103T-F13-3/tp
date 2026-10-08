@@ -12,14 +12,14 @@ PonHub is a desktop app for tuition centre administrators to keep student, tutor
 
 ## Quick start
 
-1. Ensure that Java `25` or later is installed on your computer.<br>
-   **Mac users:** Follow the JDK installation instructions [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
+1. Ensure that Java `25` is installed on your computer.<br>
+   **Mac users:** Install Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) as prescribed by the [course's Mac advisory](https://nus-cs2103-ay2627-s1.github.io/website/admin/programmingLanguages.html) and [Mac installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html). Use this installation in the terminal that launches PonHub.
 
 1. Use the JAR built from this increment, or download a matching PonHub build from the [project's Releases page](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases) after publication. Contributors can build `build/libs/ponhub.jar` with `./gradlew shadowJar`; see [DevOps](DevOps.html#build-automation). Week 8 does not require a public release, so an older released JAR may have different commands.
 
 1. Put the JAR file in the folder you want to use for PonHub. Keep this folder when moving or backing up your data.
 
-1. Open a terminal in that folder and run `java -jar FILENAME.jar`, replacing `FILENAME.jar` with the downloaded file's name. The PonHub window should open.
+1. Open a terminal in that folder, confirm `java -version` reports Java 25, and run `java -jar FILENAME.jar`, replacing `FILENAME.jar` with the downloaded file's name. The PonHub window should open.
 
 1. Enter a command in the command box and press Enter. Start with `help`, then `help add`. The current increment supports inherited contact records:
 
@@ -58,6 +58,26 @@ Long guidance wraps within Result Display. Scroll vertically to read the rest; e
 * `edit`, `clear` and `find` return `Unknown command.` They are absent from the catalogue.
 
 --------------------------------------------------------------------------------------------------------------------
+
+## Data protection in the current build
+
+The current build stores contacts in `data/addressbook.json` relative to the folder from which you
+launch PonHub. Valid unversioned contact files still work. Versioned PonHub data is not supported by
+this build yet, including files marked with schema version 1.
+
+If the file is unreadable, malformed or unsupported, PonHub shows a **Data file protected** warning.
+The empty list shown in that session does **not** mean your saved records were deleted. Only `help`,
+`list` and `exit` are available; add/delete and operational saves are blocked. Preferences remain separate.
+
+To recover:
+
+1. Close PonHub and preserve a backup of the original data folder before making changes.
+2. Restore a known-good file compatible with this build, or correct the JSON/access permissions after
+   inspecting the reported error. For versioned data, use a compatible build on a separate working copy.
+3. Restart PonHub and check the loaded records. Repairing the file while the app is running does not
+   unlock that session. Do not delete the original just to dismiss the protection.
+
+Normal-session command rollback and the planned new-format migration policy below remain separate work.
 
 ## Planned shared-lesson workflow
 
@@ -322,7 +342,7 @@ The supported JSON format remains human-editable. Close PonHub and keep a backup
 
 At the first canonical-format cutover, unversioned AB3 contact data is treated as legacy data. PonHub must preserve it and reject loading it into the new store; it must not guess person roles, automatically migrate it or replace it with an empty dataset. Recovery requires a backup and a separate supported store, followed by manual re-entry. Creating that separate store is available only when the build provides documented protected initialization. This increment supplies no such setup command; an importer remains future work.
 
-The current inherited runtime uses `data/addressbook.json`. Only help skips operational saving in this increment; general rollback and protected loading are not yet delivered. Back up existing files before upgrading or editing them, and do not treat the planned recovery behavior as implemented.
+The current inherited runtime uses `data/addressbook.json` with the [protected startup behavior](#data-protection-in-the-current-build) described above. In normal sessions only help skips operational saving; general rollback and canonical-format loading are not yet delivered. Back up existing files before upgrading or editing them.
 
 --------------------------------------------------------------------------------------------------------------------
 

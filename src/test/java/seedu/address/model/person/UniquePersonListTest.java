@@ -126,6 +126,33 @@ public class UniquePersonListTest {
     }
 
     @Test
+    public void setPersons_sameList_preservesPersons() {
+        uniquePersonList.setPersons(List.of(ALICE, BOB));
+        uniquePersonList.setPersons(uniquePersonList);
+        assertEquals(List.of(ALICE, BOB), uniquePersonList.asUnmodifiableObservableList());
+    }
+
+    @Test
+    public void setPersons_ownLiveView_preservesPersonsAndView() {
+        uniquePersonList.setPersons(List.of(ALICE, BOB));
+        List<Person> view = uniquePersonList.asUnmodifiableObservableList();
+        uniquePersonList.setPersons(view);
+        assertEquals(List.of(ALICE, BOB), view);
+        uniquePersonList.setPersons(List.of(BOB));
+        assertEquals(List.of(BOB), view);
+    }
+
+    @Test
+    public void setPersons_invalidReplacement_preservesExistingPersons() {
+        uniquePersonList.setPersons(List.of(ALICE, BOB));
+        assertThrows(DuplicatePersonException.class, () -> uniquePersonList.setPersons(List.of(ALICE, ALICE)));
+        assertEquals(List.of(ALICE, BOB), uniquePersonList.asUnmodifiableObservableList());
+        assertThrows(NullPointerException.class, () -> uniquePersonList.setPersons(
+                java.util.Arrays.asList(ALICE, null)));
+        assertEquals(List.of(ALICE, BOB), uniquePersonList.asUnmodifiableObservableList());
+    }
+
+    @Test
     public void setPersons_nullUniquePersonList_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> uniquePersonList.setPersons((UniquePersonList) null));
     }

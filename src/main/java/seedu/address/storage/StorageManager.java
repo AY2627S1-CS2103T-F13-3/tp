@@ -19,6 +19,7 @@ public class StorageManager implements Storage {
     private static final Logger logger = LogsCenter.getLogger(StorageManager.class);
     private JsonAddressBookStorage addressBookStorage;
     private JsonUserPrefsStorage userPrefsStorage;
+    private String dataLoadError;
 
     /**
      * Creates a {@code StorageManager} with the given address book and user prefs storage.
@@ -56,11 +57,30 @@ public class StorageManager implements Storage {
     @Override
     public Optional<ReadOnlyAddressBook> readAddressBook() throws DataLoadingException {
         logger.fine("Attempting to read data from file: " + addressBookStorage.getAddressBookFilePath());
-        return addressBookStorage.readAddressBook();
+        try {
+            return addressBookStorage.readAddressBook();
+        } catch (DataLoadingException failure) {
+            dataLoadError = "Could not load data at " + getAddressBookFilePath().toAbsolutePath()
+                    + ". The file has not been changed. This session is protected: only help, list and exit"
+                    + " are available, and the empty view is not your saved data. Close the app and back up"
+                    + " the original data folder before recovery. Restore a known-good file compatible with"
+                    + " this build or correct its JSON/access permissions, then restart. For a versioned file,"
+                    + " use a compatible build on a separate working copy. Do not delete the original to"
+                    + " bypass this protection. Cause: " + failure.getMessage();
+            throw failure;
+        }
+    }
+
+    @Override
+    public Optional<String> getDataLoadError() {
+        return Optional.ofNullable(dataLoadError);
     }
 
     @Override
     public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+        if (dataLoadError != null) {
+            throw new IOException(dataLoadError);
+        }
         logger.fine("Attempting to write to data file: " + addressBookStorage.getAddressBookFilePath());
         addressBookStorage.saveAddressBook(addressBook);
     }

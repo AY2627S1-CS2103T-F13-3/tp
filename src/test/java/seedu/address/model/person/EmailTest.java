@@ -1,8 +1,11 @@
 package seedu.address.model.person;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
+
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
 
@@ -64,6 +67,35 @@ public class EmailTest {
         assertTrue(Email.isValidEmail("peter_jack@very-very-very-long-example.com")); // long domain name
         assertTrue(Email.isValidEmail("if.you.dream.it_you.can.do.it@example.com")); // long local part
         assertTrue(Email.isValidEmail("e1234567@u.nus.edu")); // more than one period in domain
+    }
+
+    @Test
+    public void isValidEmail_shortInputs_matchesLegacyRegex() {
+        assertLegacyValidationMatches("a0+_.-", 5, "", "@ab");
+        assertLegacyValidationMatches("a0.-", 7, "a@", "");
+        for (String email : new String[]{"A0_b+C-d.E@A0-bC.DE", "a@a-b", "a@a-b-c", "a@ab-c", "a@a-bc",
+            "a@a-b.c-d", "a@aa.b-cd", "a@bc\n", "a\n@bc", "é@bc", "a@éé", "a@ａｂ", "a@b_c",
+            "a@bc@de", "a@bc\r", "a@bc\u0000", "a@bc\u2028", "a@bc\u0085"}) {
+            assertEquals(email.matches(Email.VALIDATION_REGEX), Email.isValidEmail(email), email);
+        }
+    }
+
+    private void assertLegacyValidationMatches(String alphabet, int maximumLength, String prefix, String suffix) {
+        Pattern legacyPattern = Pattern.compile(Email.VALIDATION_REGEX);
+        int combinations = 1;
+        for (int length = 0; length <= maximumLength; length++) {
+            for (int combination = 0; combination < combinations; combination++) {
+                StringBuilder candidate = new StringBuilder(prefix);
+                int remaining = combination;
+                for (int i = 0; i < length; i++) {
+                    candidate.append(alphabet.charAt(remaining % alphabet.length()));
+                    remaining /= alphabet.length();
+                }
+                String email = candidate.append(suffix).toString();
+                assertEquals(legacyPattern.matcher(email).matches(), Email.isValidEmail(email), email);
+            }
+            combinations *= alphabet.length();
+        }
     }
 
     @Test

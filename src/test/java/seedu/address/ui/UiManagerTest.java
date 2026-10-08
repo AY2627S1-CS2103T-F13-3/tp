@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -35,6 +36,16 @@ public class UiManagerTest {
     @AfterEach
     public void tearDown() {
         logger.removeHandler(logHandler);
+    }
+
+    @Test
+    public void start_protectedSession_showsRecoveryWarningWithoutShutdown() {
+        uiManager = new UiManagerStub(Optional.of("Preserve the original and restart after recovery."));
+        uiManager.start(null);
+        assertEquals(List.of("initialize", "alert"), uiManager.events);
+        assertEquals(AlertType.WARNING, uiManager.alertType);
+        assertEquals("Data file protected", uiManager.alertTitle);
+        assertEquals("Preserve the original and restart after recovery.", uiManager.alertContent);
     }
 
     @Test
@@ -111,7 +122,11 @@ public class UiManagerTest {
         private String alertContent;
 
         UiManagerStub() {
-            super(null, null);
+            this(Optional.empty());
+        }
+
+        UiManagerStub(Optional<String> error) {
+            super(null, null, error);
         }
 
         @Override
