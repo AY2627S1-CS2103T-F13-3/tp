@@ -10,7 +10,9 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.HelpCommand;
+import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -57,8 +59,8 @@ public class LogicManager implements Logic {
         Command command = addressBookParser.parseCommand(commandText);
         commandResult = command.execute(model);
 
-        // Help must remain available even when the operational data cannot be saved.
-        if (command instanceof HelpCommand) {
+        // These commands do not modify operational data and must work even when storage is unwritable.
+        if (command instanceof HelpCommand || command instanceof ListCommand || command instanceof ExitCommand) {
             return commandResult;
         }
 

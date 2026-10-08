@@ -322,7 +322,7 @@ The supported JSON format remains human-editable. Close PonHub and keep a backup
 
 At the first canonical-format cutover, unversioned AB3 contact data is treated as legacy data. PonHub must preserve it and reject loading it into the new store; it must not guess person roles, automatically migrate it or replace it with an empty dataset. Recovery requires a backup and a separate supported store, followed by manual re-entry. Creating that separate store is available only when the build provides documented protected initialization. This increment supplies no such setup command; an importer remains future work.
 
-The current inherited runtime uses `data/addressbook.json`. Only help skips operational saving in this increment; general rollback and protected loading are not yet delivered. Back up existing files before upgrading or editing them, and do not treat the planned recovery behavior as implemented.
+The current inherited runtime uses `data/addressbook.json`. Help, list and exit do not create or rewrite this file and remain available when operational saving would fail. Preferences are saved separately on shutdown. Add/delete still save operational data; general rollback and protected loading are not yet delivered. Back up existing files before upgrading or editing them, and do not treat the planned recovery behavior as implemented.
 
 --------------------------------------------------------------------------------------------------------------------
 

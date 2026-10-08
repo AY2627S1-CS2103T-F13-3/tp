@@ -275,8 +275,8 @@ The fallback permits saving on filesystems without atomic moves, but is not atom
 can observe an incomplete destination during replacement/recovery. Its guarantee is a recoverable old
 copy, not uninterrupted access at the original path. Neither path promises power-loss durability or
 preserves all previous file attributes. Save failures still do not roll back in-memory command changes;
-that is separate transaction work. Help skips saving; other read-only commands currently still save,
-but unsupported atomic moves alone no longer make those saves fail.
+that is separate transaction work. Help, list and exit skip operational saving. Preferences retain
+their separate shutdown lifecycle. Future read-only commands must also bypass operational saving when activated.
 
 #### JSON version detection foundation
 
@@ -340,7 +340,7 @@ global tutor/room clash checks, ID allocation and persistence are integrated in 
 
 ### Inline help
 
-`HelpCommand` returns guidance in an ordinary `CommandResult`, with no separate-window or exit flag. It never mutates Model data, filters or preferences. `LogicManager` returns help before the inherited unconditional save path, so help works even when operational storage is unwritable and does not create or rewrite the data file. General change detection and rollback for other commands remain Vincent's integration work.
+`HelpCommand` returns guidance in an ordinary `CommandResult`, with no separate-window or exit flag. It never mutates Model data, filters or preferences. `LogicManager` returns help, list and exit results before the operational save path, so these commands work even when operational storage is unwritable and do not create or rewrite the data file. List still resets the visible people filter and exit still returns its exit flag. Add/delete continue to save; general change detection and rollback remain separate integration work.
 
 The Help menu and F1 invoke `MainWindow.executeCommand("help")`. Both display exactly the same guidance as typed help while retaining the command-box draft and person selection. `ResultDisplay` uses a read-only wrapped TextArea with scrolling and resets to the beginning of each new result. Existing F1 handling for focused text controls remains in place. The unused inherited HelpWindow is not constructed or reachable through supported help entry points.
 
