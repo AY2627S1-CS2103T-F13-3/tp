@@ -338,6 +338,20 @@ normalize scheduling input before later lesson commands or persistence code use 
 This increment establishes domain contracts only. It does not activate or advertise a lesson command; lesson creation,
 global tutor/room clash checks, ID allocation and persistence are integrated in later increments.
 
+### Immutable shared lesson records
+
+`Lesson` represents one canonical recurring teaching slot. It stores a stable `LessonId`, one tutor-role `PersonId`,
+the validated `LessonTimeSlot`, `Subject` and `Room`, and the set of currently enrolled student-role `PersonId` values.
+An empty roster is valid, and several students can refer to the same lesson without duplicating its tutor, room or
+schedule. Student records contain no copied `Lesson` values.
+
+The constructor defensively copies the roster and rejects Tutor or Parent IDs in it; the assigned tutor must have a
+Tutor ID. `getEnrolledStudentIds()` exposes an unmodifiable snapshot. `withEnrolledStudentIds`,
+`withEnrolledStudent`, and `withoutEnrolledStudent` return replacement `Lesson` values, leaving the original lesson
+and its stable identity unchanged. Equality, hashing, copying and string representation include every stored field,
+including roster membership. The later canonical aggregate owns lesson ordering, ID allocation, clash checks,
+persistence and duplicate-enrolment command feedback; this dormant record does not change the active runtime.
+
 ### Inline help
 
 `HelpCommand` returns guidance in an ordinary `CommandResult`, with no separate-window or exit flag. It never mutates Model data, filters or preferences. `LogicManager` returns help before the inherited unconditional save path, so help works even when operational storage is unwritable and does not create or rewrite the data file. General change detection and rollback for other commands remain Vincent's integration work.
