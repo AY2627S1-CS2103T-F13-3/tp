@@ -176,6 +176,48 @@ How the parsing works:
 
 For planned canonical person commands, parse a positive index and resolve it against the current filtered people list at execution, checking the selected role. Capture the stable person ID once before calling ID-based Model/query APIs. The inherited `delete 1` example selects the first person in the current people view; the planned guarded route retains that input convention while using stable identity internally.
 
+#### Read-only retrieval API contract (#113)
+
+`Logic` now declares the UI-facing retrieval methods below. This increment defines their signatures and read-only
+result shapes only. Until the canonical Lesson, Attendance and aggregate stores are integrated, every new method in
+`LogicManager` throws `UnsupportedOperationException` with `Shared-lesson retrieval is not implemented yet`. No new
+command or view is active, and the inherited people list continues to work.
+
+| `Logic` method | Planned result and ordering |
+| --- | --- |
+| `getLessonList()` | All shared lessons in creation order, once each, including empty rosters. |
+| `getFilteredLessonList()` | Active lesson-filter results in catalogue order, once per lesson; an empty match is valid. |
+| `findLessonById(LessonId)` | Lookup in the full catalogue regardless of filter; a valid unknown ID gives `Optional.empty()`. |
+| `getStudentLessons(PersonId)` | The student's current lessons, derived from Lesson-owned enrolled student IDs, in creation order. |
+| `getLessonRoster(LessonId)` | Current students resolved through the people registry, in people creation order; an empty roster is valid. |
+| `getTutorSchedule(PersonId)` | Assigned lessons, including empty ones, by weekday (Monday first), start time, then numeric lesson ID. |
+| `getAttendanceHistory(PersonId)` | All recorded dates for a student, newest first, then numeric lesson ID. |
+| `getAttendanceHistory(PersonId, LessonId)` | The same retained history restricted to one lesson, regardless of current enrolment. |
+
+Java callers pass `PersonId` or `LessonId`, never a displayed row position. After integration, null IDs are rejected,
+an unknown or wrong-role ID for a list query is rejected, and an existing record with no matching results yields an
+empty list. `findLessonById` alone uses an empty optional for an unknown lesson. The current declaration stubs throw
+before validating arguments. At the command boundary, `lessons si/STUDENT_INDEX` and `history STUDENT_INDEX` resolve
+the one-based position in the current people list once, check the Student role, and then pass that record's stable
+`PersonId`. Existing lessons are selected by prefixed `lid/LESSON_ID`. These result views preserve the people list,
+its filter and its command indices.
+
+The `model.query` interfaces describe projections rather than persisted records. `LessonView` exposes a `LessonId`,
+assigned tutor `PersonId` and current name, `LessonTimeSlot`, `Subject`, `Room` and current roster size.
+`StudentView` exposes a student `PersonId`, current name and level, required parent phone and optional own contact
+fields. `AttendanceHistoryEntry` exposes the student ID, lesson ID, date, recorded present/absent status and a separate
+current-enrolment flag. An absent attendance entry is unrecorded. History survives unenrolment because its source is
+the attendance store, not the current roster. Each projection describes one model state; changed records replace
+entries in the observable lists.
+
+All list results will be unmodifiable observable views. The canonical Model will own query derivation, filtering and
+refresh, while `LogicManager` exposes the results. A list object already held by the UI must remain subscribed after
+lesson/person changes, enrolment, attendance changes and successful rollback; refresh entries only after a committed
+change, or restore the pre-command results on failed save. Retrieval does not save data, alter identity allocation, or
+replace the people view. Search still enters through `Logic.execute(String)` and must follow the complete
+[`SearchField` matrix](#supported-criteria), including same-student/same-lesson matching when those slices land.
+Lesson creation resolves a normalized full tutor name; search `tu/` matches a partial tutor name.
+
 ### Model component
 **API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
 
