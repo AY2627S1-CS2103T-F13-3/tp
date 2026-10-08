@@ -18,6 +18,7 @@ import java.util.jar.JarFile;
 public final class JavaFxNativeLibraryLoader {
 
     static final String NATIVE_ROOT = "META-INF/javafx-natives/";
+    static final String NATIVE_DIRECTORY_PREFIX = "ponhub-javafx-";
 
     private JavaFxNativeLibraryLoader() {
     }
@@ -27,15 +28,22 @@ public final class JavaFxNativeLibraryLoader {
      * Running from exploded IDE/Gradle classes needs no extraction because its normal runtime classpath is retained.
      */
     public static void prepare() {
-        Path codeSource = getCodeSource();
-        if (!Files.isRegularFile(codeSource) || !codeSource.getFileName().toString().endsWith(".jar")) {
+        prepare(getCodeSource(), System.getProperty("os.name"), System.getProperty("os.arch"));
+    }
+
+    static void prepare(Path codeSource, String osName, String architecture) {
+        requireNonNull(codeSource);
+        requireNonNull(osName);
+        requireNonNull(architecture);
+        if (!Files.isRegularFile(codeSource)
+                || !codeSource.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".jar")) {
             return;
         }
 
-        String platformDirectory = getPlatformDirectory(
-                System.getProperty("os.name"), System.getProperty("os.arch"));
+        String platformDirectory = getPlatformDirectory(osName, architecture);
         try {
-            Path nativeDirectory = Files.createTempDirectory("ponhub-javafx-");
+            Path jarDirectory = requireNonNull(codeSource.toAbsolutePath().getParent());
+            Path nativeDirectory = Files.createTempDirectory(jarDirectory, NATIVE_DIRECTORY_PREFIX);
             nativeDirectory.toFile().deleteOnExit();
             try (JarFile jarFile = new JarFile(codeSource.toFile())) {
                 int extractedLibraryCount = extractPlatformLibraries(jarFile, platformDirectory, nativeDirectory);
@@ -89,9 +97,6 @@ public final class JavaFxNativeLibraryLoader {
                 continue;
             }
             Path fileName = Path.of(entry.getName()).getFileName();
-            if (fileName == null) {
-                continue;
-            }
             Path extractedLibrary = destination.resolve(fileName.toString());
             try (var libraryStream = jarFile.getInputStream(entry)) {
                 Files.copy(libraryStream, extractedLibrary, StandardCopyOption.REPLACE_EXISTING);
