@@ -612,7 +612,7 @@ Space trimming and collapse scan input linearly. Name and address construction n
 
 Normalization is applied before equality and hashing of names and addresses. Case remains significant for value equality; role-specific duplicate-name matching is a separate contract. Role-aware commands, optional-field command handling and relationships are follow-up work. The active inherited `add` route uses these validators. The dormant `EditCommandParser` also uses them in direct tests, but `edit`, `clear` and `find` remain withdrawn from the command catalogue.
 
-The JSON schema is unchanged. Previously accepted records outside the new rules fail the inherited loading checks, as do identities made duplicate by space normalization. The [current protected startup](#current-protected-startup) preserves the rejected file and presents an empty protected view with recovery guidance. It allows help, list and exit without operational saves and blocks mutations and direct storage saves. Back up the original before deliberate corrections or inspecting a working copy with an older compatible build. Broader canonical loading and legacy-cutover work remain Vincent's [#84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84); this increment does not implement migration.
+The JSON schema is unchanged. Previously accepted records outside the new rules fail the inherited loading checks, as do identities made duplicate by space normalization. The [current protected startup](#current-protected-startup) preserves the rejected file and presents an empty protected view with recovery guidance. It allows help, list and exit without operational saves and blocks mutations and direct storage saves. `ContactValidationStartupTest` exercises those boundaries, shutdown and restart with numeric names, long phones, slash addresses, single-label and oversized emails, and normalization-created duplicates. Deliberately corrected compatible data loads and saves after restarting. Back up the original before deliberate corrections or inspecting a working copy with an older compatible build. Broader canonical loading and legacy-cutover work remain Vincent's [#84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84); this increment does not implement migration.
 
 ### Ordered people registry foundation
 
@@ -1084,6 +1084,17 @@ Use the inherited contact commands below; the planned role-aware commands are no
    Expected: Each command reports the corresponding name or address constraints and adds nothing.
 1. Close and reopen the app.<br>
    Expected: The successfully saved contact retains the normalized name/address, email and leading-zero phone.
+1. In a disposable folder, prepare separate copies of a previously valid contact file containing a numeric name,
+   a phone longer than 15 digits, an address with `/`, or a single-label email domain. Also prepare two records
+   named `Alex  Tan` and `Alex Tan`, which become duplicates after normalization. Record each file's bytes and
+   start the app with it.<br>
+   Expected: Recovery guidance and an empty protected view. `help`, `list` and `exit` preserve the original bytes;
+   attempted `add` and `delete` are blocked. Closing and restarting still preserves and rejects the same file.
+1. Form an email from 5,000 copies of `a.` followed by `a@example.com`, then paste it into the inherited add
+   format. Repeat with long domain-hyphen and domain-label runs.<br>
+   Expected: Email constraint feedback without a crash or a saved contact. A saved file containing any such
+   oversized email starts a protected session with its bytes preserved. Correct a separate compatible working
+   copy deliberately, then restart; valid contact values must load and remain writable.
 
 ### Deleting a person
 
