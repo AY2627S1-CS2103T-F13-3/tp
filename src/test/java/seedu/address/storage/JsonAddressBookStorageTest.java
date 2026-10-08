@@ -1,5 +1,6 @@
 package seedu.address.storage;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -9,7 +10,9 @@ import static seedu.address.testutil.TypicalPersons.IDA;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -29,6 +32,57 @@ public class JsonAddressBookStorageTest {
 
     @TempDir
     public Path testFolder;
+
+    @Test
+    public void read_missingTargetAtExistingPath_throwsOnEveryPlatform() throws Exception {
+        Path path = testFolder.resolve("existing.json");
+        Files.writeString(path, "{\"persons\":[]}");
+        byte[] original = Files.readAllBytes(path);
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(path) {
+            @Override
+            String readContents(Path file) throws IOException {
+                // Exercise the existing-path branch even where real symbolic links are unavailable.
+                throw new NoSuchFileException(file.toString());
+            }
+        };
+        assertThrows(DataLoadingException.class, storage::readAddressBook);
+        assertArrayEquals(original, Files.readAllBytes(path));
+    }
+
+    @Test
+    public void read_invalidUtf8_throwsDataLoadingException() throws Exception {
+        Path path = testFolder.resolve("invalid-utf8.json");
+        Files.write(path, new byte[]{(byte) 0xc3, (byte) 0x28});
+        assertThrows(DataLoadingException.class, () -> new JsonAddressBookStorage(path).readAddressBook());
+    }
+
+    @Test
+    public void read_deniedAccess_throwsInsteadOfTreatingAsMissing() {
+        Path path = testFolder.resolve("denied.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(path) {
+            @Override
+            String readContents(Path file) throws IOException {
+                throw new AccessDeniedException(file.toString());
+            }
+        };
+        assertThrows(DataLoadingException.class, storage::readAddressBook);
+    }
+
+    @Test
+    public void read_unrelatedProgrammingFault_propagates() {
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(testFolder.resolve("data.json")) {
+            @Override
+            String readContents(Path file) {
+                throw new IllegalStateException("Programming fault");
+            }
+        };
+        assertThrows(IllegalStateException.class, storage::readAddressBook);
+    }
+
+    @Test
+    public void read_directory_throwsInsteadOfTreatingAsMissing() {
+        assertThrows(DataLoadingException.class, () -> new JsonAddressBookStorage(testFolder).readAddressBook());
+    }
 
     @Test
     public void readAddressBook_nullFilePath_throwsNullPointerException() {
@@ -98,6 +152,46 @@ public class JsonAddressBookStorageTest {
             assertThrows(DataLoadingException.class, storage::readAddressBook);
             assertEquals(originalJson, Files.readString(filePath));
         }
+    }
+
+    @Test
+    public void readAddressBook_oversizedEmails_throwsDataLoadingExceptionAndPreservesBytes() throws Exception {
+        String[] emails = {
+            "a.".repeat(5000) + "a@example.com",
+            "a@" + "a-".repeat(5000) + "ab",
+            "a@" + "a.".repeat(5000) + "ab",
+            "a@" + "a".repeat(10000)
+        };
+        Path filePath = testFolder.resolve("long-email.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+        for (String email : emails) {
+            writePersonWithEmail(filePath, email);
+            byte[] originalBytes = Files.readAllBytes(filePath);
+            assertThrows(DataLoadingException.class, storage::readAddressBook);
+            assertArrayEquals(originalBytes, Files.readAllBytes(filePath));
+        }
+    }
+
+    @Test
+    public void readAddressBook_longInvalidEmails_throwsDataLoadingExceptionAndPreservesBytes() throws Exception {
+        String[] emails = {
+            "a.".repeat(5000) + "a!@example.com",
+            "a@" + "a-".repeat(5000) + "a",
+            "a@" + "a.".repeat(5000) + "a"
+        };
+        Path filePath = testFolder.resolve("invalid-long-email.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(filePath);
+        for (String email : emails) {
+            writePersonWithEmail(filePath, email);
+            byte[] originalBytes = Files.readAllBytes(filePath);
+            assertThrows(DataLoadingException.class, storage::readAddressBook);
+            assertArrayEquals(originalBytes, Files.readAllBytes(filePath));
+        }
+    }
+
+    private void writePersonWithEmail(Path filePath, String email) throws IOException {
+        Files.writeString(filePath, "{\"persons\":[{\"name\":\"Long Email\",\"phone\":\"123\",\"email\":\""
+                + email + "\",\"address\":\"Somewhere\",\"tags\":[]}]}");
     }
 
     @Test

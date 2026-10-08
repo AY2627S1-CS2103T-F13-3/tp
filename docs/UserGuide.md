@@ -59,6 +59,26 @@ Long guidance wraps within Result Display. Scroll vertically to read the rest; e
 
 --------------------------------------------------------------------------------------------------------------------
 
+## Data protection in the current build
+
+The current build stores contacts in `data/addressbook.json` relative to the folder from which you
+launch PonHub. Valid unversioned contact files still work. Versioned PonHub data is not supported by
+this build yet, including files marked with schema version 1.
+
+If the file is unreadable, malformed or unsupported, PonHub shows a **Data file protected** warning.
+The empty list shown in that session does **not** mean your saved records were deleted. Only `help`,
+`list` and `exit` are available; add/delete and operational saves are blocked. Preferences remain separate.
+
+To recover:
+
+1. Close PonHub and preserve a backup of the original data folder before making changes.
+2. Restore a known-good file compatible with this build, or correct the JSON/access permissions after
+   inspecting the reported error. For versioned data, use a compatible build on a separate working copy.
+3. Restart PonHub and check the loaded records. Repairing the file while the app is running does not
+   unlock that session. Do not delete the original just to dismiss the protection.
+
+Normal-session command rollback and the planned new-format migration policy below remain separate work.
+
 ## Planned shared-lesson workflow
 
 The following sections define the supplied v1.2 integration target. They are not commands delivered by this help increment. Feature owners will update their implementation details and examples when each feature becomes available.
@@ -123,7 +143,7 @@ For email addresses, the local part before `@` may contain English letters, digi
 
 **Current increment:** These contact rules are implemented. The role-specific formats above describe the planned people workflow. Until that workflow is available, use `add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]`; all four contact fields are required for this inherited add command. The `edit` route is withdrawn and is unavailable in this build. Saved contacts must also satisfy these rules when loaded; old records with numeric names, phones longer than 15 digits, slash-containing addresses or single-label email domains will fail validation.
 
-**Testing older data:** Back up the data file before testing this increment. If an older file fails validation, the inherited loader opens an empty address book, and a successful command such as `list` can overwrite that file. Help does not save operational data. Protected loading is pending; use a test copy of your data.
+**Testing older data:** Back up the data file before testing this increment and use a working copy. If an older file fails validation, the app starts a [protected session](#data-protection-in-the-current-build): the empty view is not your saved data, only `help`, `list` and `exit` are available, and the original file is preserved. Close the app before restoring or deliberately correcting a compatible file, then restart.
 
 #### Examples
 
@@ -326,7 +346,7 @@ The supported JSON format remains human-editable. Close PonHub and keep a backup
 
 At the first canonical-format cutover, unversioned AB3 contact data is treated as legacy data. PonHub must preserve it and reject loading it into the new store; it must not guess person roles, automatically migrate it or replace it with an empty dataset. Recovery requires a backup and a separate supported store, followed by manual re-entry. Creating that separate store is available only when the build provides documented protected initialization. This increment supplies no such setup command; an importer remains future work.
 
-The current inherited runtime uses `data/addressbook.json`. Only help skips operational saving in this increment; general rollback and protected loading are not yet delivered. Back up existing files before upgrading or editing them, and do not treat the planned recovery behavior as implemented.
+The current inherited runtime uses `data/addressbook.json` with the [protected startup behavior](#data-protection-in-the-current-build) described above. In normal sessions only help skips operational saving; general rollback and canonical-format loading are not yet delivered. Back up existing files before upgrading or editing them.
 
 --------------------------------------------------------------------------------------------------------------------
 

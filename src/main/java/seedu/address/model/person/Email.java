@@ -34,10 +34,67 @@ public class Email {
     }
 
     /**
-     * Returns whether a string satisfies the email format and length constraints.
+     * Returns whether a string satisfies the email format and length constraints using constant stack space.
      */
     public static boolean isValidEmail(String test) {
-        return test.length() <= MAX_LENGTH && test.matches(VALIDATION_REGEX);
+        requireNonNull(test);
+        if (test.length() > MAX_LENGTH) {
+            return false;
+        }
+        int separatorIndex = test.indexOf('@');
+        if (separatorIndex <= 0 || separatorIndex == test.length() - 1) {
+            return false;
+        }
+
+        boolean wasPeriod = true;
+        for (int i = 0; i < separatorIndex; i++) {
+            char character = test.charAt(i);
+            if (character == '.') {
+                if (wasPeriod) {
+                    return false;
+                }
+            } else if (!isAsciiAlphanumeric(character) && "_%+-".indexOf(character) < 0) {
+                return false;
+            }
+            wasPeriod = character == '.';
+        }
+        if (wasPeriod) {
+            return false;
+        }
+
+        int labelStart = separatorIndex + 1;
+        boolean hasDomainPeriod = false;
+        for (int i = separatorIndex + 1; i < test.length(); i++) {
+            char character = test.charAt(i);
+            if (character == '.') {
+                if (i == labelStart || test.charAt(i - 1) == '-') {
+                    return false;
+                }
+                hasDomainPeriod = true;
+                labelStart = i + 1;
+            } else if (!isAsciiAlphanumeric(character) && (character != '-' || i == labelStart)) {
+                return false;
+            }
+        }
+
+        int finalLabelLength = test.length() - labelStart;
+        if (!hasDomainPeriod || finalLabelLength < 2 || finalLabelLength > 63) {
+            return false;
+        }
+        for (int i = labelStart; i < test.length(); i++) {
+            if (!isAsciiLetter(test.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isAsciiAlphanumeric(char character) {
+        return isAsciiLetter(character) || character >= '0' && character <= '9';
+    }
+
+    private static boolean isAsciiLetter(char character) {
+        return character >= 'A' && character <= 'Z' || character >= 'a' && character <= 'z';
     }
 
     @Override

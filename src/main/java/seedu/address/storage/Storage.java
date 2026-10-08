@@ -15,6 +15,14 @@ import seedu.address.model.UserPrefs;
 public interface Storage {
 
     /**
+     * Returns recovery guidance when a rejected operational file has locked this session against writes.
+     * Preferences have a separate lifecycle and are not affected by this lock.
+     */
+    default Optional<String> getDataLoadError() {
+        return Optional.empty();
+    }
+
+    /**
      * Returns the file path of the UserPrefs data file.
      */
     Path getUserPrefsFilePath();

@@ -110,6 +110,33 @@ public class AddressBookParserTest {
     }
 
     @Test
+    public void parseCommand_addOversizedEmails_throwsParseException() {
+        String[] emails = {
+            "a.".repeat(5000) + "a@example.com",
+            "a@" + "a-".repeat(5000) + "ab",
+            "a@" + "a.".repeat(5000) + "ab",
+            "a@" + "a".repeat(10000)
+        };
+        for (String email : emails) {
+            String input = "add n/Long Email p/123 e/" + email + " a/Somewhere";
+            assertThrows(ParseException.class, Email.MESSAGE_CONSTRAINTS, () -> parser.parseCommand(input));
+        }
+    }
+
+    @Test
+    public void parseCommand_addLongInvalidEmails_throwsParseException() {
+        String[] emails = {
+            "a.".repeat(5000) + "a!@example.com",
+            "a@" + "a-".repeat(5000) + "a",
+            "a@" + "a.".repeat(5000) + "a"
+        };
+        for (String email : emails) {
+            String input = "add n/Long Email p/123 e/" + email + " a/Somewhere";
+            assertThrows(ParseException.class, Email.MESSAGE_CONSTRAINTS, () -> parser.parseCommand(input));
+        }
+    }
+
+    @Test
     public void parseCommand_help() throws Exception {
         assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD) instanceof HelpCommand);
         assertEquals(new HelpCommand("add"), parser.parseCommand("help ADD"));
