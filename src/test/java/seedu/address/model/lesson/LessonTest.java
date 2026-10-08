@@ -110,6 +110,7 @@ public class LessonTest {
         Lesson original = createLesson(Set.of(new PersonId("S1")));
         Lesson same = createLesson(Set.of(new PersonId("S1")));
 
+        assertTrue(original.equals(original));
         assertEquals(original, same);
         assertEquals(original.hashCode(), same.hashCode());
         assertNotEquals(original, new Lesson(new LessonId("L2"), TUTOR_ID, TIME_SLOT, SUBJECT, ROOM,
@@ -126,6 +127,16 @@ public class LessonTest {
         assertNotEquals(original, createLesson(Set.of(new PersonId("S2"))));
         assertNotEquals(original, null);
         assertNotEquals(original, LESSON_ID);
+    }
+
+    @Test
+    public void toString_allFields_returnsFormattedString() {
+        Lesson lesson = createLesson(Set.of(new PersonId("S1")));
+        String expected = Lesson.class.getCanonicalName()
+                + "{id=" + LESSON_ID + ", tutorId=" + TUTOR_ID + ", timeSlot=" + TIME_SLOT
+                + ", subject=" + SUBJECT + ", room=" + ROOM + ", enrolledStudentIds=[S1]}";
+
+        assertEquals(expected, lesson.toString());
     }
 
     private static Lesson createLesson(Set<PersonId> enrolledStudentIds) {

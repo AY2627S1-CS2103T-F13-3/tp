@@ -35,7 +35,7 @@ public final class Lesson {
      * @throws IllegalArgumentException if the tutor ID or a roster ID has the wrong role
      */
     public Lesson(LessonId id, PersonId tutorId, LessonTimeSlot timeSlot, Subject subject, Room room,
-                  Set<PersonId> enrolledStudentIds) {
+            Set<PersonId> enrolledStudentIds) {
         requireAllNonNull(id, tutorId, timeSlot, subject, room, enrolledStudentIds);
         checkArgument(tutorId.getRole() == PersonRole.TUTOR, MESSAGE_TUTOR_ID_CONSTRAINTS);
 
