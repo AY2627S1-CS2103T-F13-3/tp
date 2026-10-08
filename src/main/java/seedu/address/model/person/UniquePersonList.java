@@ -3,6 +3,7 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -81,7 +82,7 @@ public class UniquePersonList implements Iterable<Person> {
 
     public void setPersons(UniquePersonList replacement) {
         requireNonNull(replacement);
-        internalList.setAll(replacement.internalList);
+        setPersons(replacement.internalList);
     }
 
     /**
@@ -89,12 +90,15 @@ public class UniquePersonList implements Iterable<Person> {
      * {@code persons} must not contain duplicate persons.
      */
     public void setPersons(List<Person> persons) {
-        requireAllNonNull(persons);
-        if (!personsAreUnique(persons)) {
+        requireNonNull(persons);
+        // Snapshot first: the source may be this list or an unmodifiable view backed by it.
+        List<Person> replacement = new ArrayList<>(persons);
+        requireAllNonNull(replacement);
+        if (!personsAreUnique(replacement)) {
             throw new DuplicatePersonException();
         }
 
-        internalList.setAll(persons);
+        internalList.setAll(replacement);
     }
 
     /**
