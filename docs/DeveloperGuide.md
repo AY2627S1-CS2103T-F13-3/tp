@@ -26,6 +26,7 @@ title: Developer Guide
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
 * Ernest's Week 8 help increment used OpenAI Codex to inspect the repository, generate and revise the command catalogue, inline-help implementation, regression tests, and Ernest's documentation coordination changes. This attribution covers that increment; it does not claim authorship of teammates' feature implementations or imply teammate review has occurred.
 * Ernest used OpenAI Codex for the #129 active UI field-encapsulation and Javadoc standards corrections, caller verification, and repository checks.
+* Ernest used OpenAI Codex for #60's shared architecture/command conventions and AboutUs ownership clarification. This attribution covers documentation coordination; each feature owner retains their own implementation, tests and feature documentation.
 * Zhu Zhi Yu used OpenAI Codex to prepare the dormant person-card display projection, FXML renderer, projection and renderer tests, isolated developer preview, Linux CI virtual-display setup, and the related integration and manual-testing documentation. This attribution covers that card increment.
 
 --------------------------------------------------------------------------------------------------------------------
@@ -50,7 +51,15 @@ When registering or withdrawing a command, update catalogue/router tests, its UG
 
 ### Shared-lesson target contract
 
-The broader team integration target uses one authoritative people collection, one independent Lesson collection, and separate dated Attendance records. Student composes common contact details and holds education level and parent contact. Student must not own copies of shared lessons. Each Lesson owns `enrolledStudentIds`; derive student lessons, rosters and tutor schedules from that association. Attendance has the unique key student ID + lesson ID + date, with `present` or `absent`; a missing entry is unrecorded.
+This records the accepted design in [#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60) and [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59). It is a shared contract for incremental integration, not a claim that the complete runtime is delivered. The planned canonical data root holds one ordered people collection, one independent Lesson catalogue and separate dated Attendance records.
+
+| Record or relationship | Authoritative representation |
+| --- | --- |
+| People | Immutable `Student`, `Tutor` and `Parent` records implement `PersonRecord`. `Student` composes `ContactDetails`, education level and parent phone; it does not extend legacy `Person` or own Lesson objects. |
+| Shared lessons | A Lesson stores its stable Lesson ID, Tutor ID, weekday/time, subject and room. Its `enrolledStudentIds` owns current membership. A student can join several lessons; several students can join the same lesson. |
+| Derived views | Student lessons, lesson rosters and tutor schedules resolve those IDs from the root. They do not create another writable membership graph. Empty lessons remain in the catalogue and shared lessons appear once. |
+| Attendance | One key is Student ID + Lesson ID + date. The recorded status is `present` or `absent`; no entry means unrecorded. History is independent of current membership. |
+| Parent links | Separate Parent records are optional. Derive links only when a Parent's own phone exactly equals the Student's parent phone, including leading zeros. A Student's parent phone does not require a matching Parent record. |
 
 **Confirmed person-selector boundary:** `INDEX` and `STUDENT_INDEX` arguments use a positive one-based position in the current filtered **people list**, following AB3's command-input convention. This applies to deletion and to the student selector for enrolment, unenrolment, attendance, history, and student-specific lesson retrieval when those routes are integrated. An index selects the card at that position in the current people view, not that position in the unfiltered collection, a lesson roster, or a lesson/history result. Validate the range and required role, then resolve the index once to the selected record's stable `PersonId` before invoking Model or query APIs. Reuse that resolved ID throughout the operation; later view refreshes must not select another record by reinterpreting the index. Lesson creation has the separate named-tutor lookup described below, which also resolves once to a stable ID.
 
@@ -75,13 +84,26 @@ The planned shared-lesson routes are:
 
 The complete [search matrix](#supported-criteria) remains the planned target. Own-contact searches can be integrated first, followed by the relational families. Each delivered route advertises only its available filters; staging does not silently remove the remaining filters from the target. Documenting a route does not activate it.
 
-Create lessons with empty rosters. Tutor and room clashes are checked once per shared lesson; student timetable clashes are checked on enrolment. Time intervals are half-open so adjacent bookings are allowed. Unenrolment removes membership and retains attendance. New attendance requires membership; existing history can be corrected or unmarked after unenrolment. Block student deletion for enrolment/history, tutor deletion for lesson references, and lesson deletion for enrolment/history. Deleting a separate Parent preserves the student's stored parent phone; parent links derive from matching phone values.
+**Scheduling and attendance rules:**
+
+* Create a lesson independently with an empty roster. Reject tutor or room clashes between distinct lessons on the same weekday. Check a student's clashes against their other enrolled lessons when enrolling; another student joining the same lesson does not book the tutor or room again.
+* Treat times as half-open intervals `[start, end)`: `1600–1700` and `1700–1800` are adjacent and allowed. Overlap requires `first.start < second.end` and `second.start < first.end` on the same weekday; equal times on different weekdays do not clash.
+* Unenrolment removes only current membership and retains dated attendance. New attendance requires current membership and a real date matching the lesson's weekday. An existing historical key can be corrected or unmarked after unenrolment; repeating its status does not create a second entry. Unmark removes the dated record, not membership. Unrecorded is the absence of a record, never a third stored status.
+
+**Deletion guards:** Reject a blocked deletion without changing data; never cascade to linked records.
+
+| Record to delete | Guard or retained data |
+| --- | --- |
+| Student | Block while any Lesson roster or Attendance record references the Student ID. |
+| Tutor | Block while any Lesson references the Tutor ID. |
+| Lesson | Block while its roster is non-empty or Attendance references its Lesson ID. |
+| Parent | Preserve every Student's parent-phone value; derived links disappear when the Parent record is removed. |
 
 All mutations go through Model APIs using stable identities after command-boundary resolution. Complete aggregate copy/reset/equality and independent snapshots cover people, lessons, memberships, attendance and monotonic allocation state; deleted committed IDs are not reused. Vincent coordinates validated versioned JSON and transactional saves; failed saves must restore data and active views before those commands are enabled. The canonical runtime cutover must connect a compatible people view, index resolution, guarded commands and persistence together. Do not persist displayed indices or introduce a second people store; verify that separate lesson/roster/history results preserve the people view used by the next command. Preferences remain separate. Capacity, waiting lists, make-ups, export, saved searches, archiving, richer attendance statuses or notes, attendance percentages, fees, lesson editing, occurrence cancellation, undo/redo and guided advanced search are future extensions.
 
 **Iteration boundary:** The [Week 8 course instructions](https://nus-cs2103-ay2627-s1.github.io/website/schedule/week8/project.html) call for small first increments towards the simplest MVP. Each member should aim for a meaningful reviewed and merged code PR. An individual feature need not be complete end-to-end, but intermediate versions must remain working; this iteration requires no product release. The broader team target remains visible in [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59). Carry unfinished work into v1.3 honestly. Compatible loading and rollback remain safety requirements when a mutation is activated, rather than a requirement to finish every planned feature in Week 8.
 
-Zhu owns people/testing; Yang Shuo owns lessons/enrolment/attendance; Ben owns retrieval/views; Vincent owns saving/loading/attendance history; Ernest owns routing/help and documentation coordination. Each owner authors their own feature documentation in the existing UG/DG. Ernest reconciles shared conventions and examples without taking ownership of those implementations.
+The [AboutUs ownership record](AboutUs.html#project-team) assigns people/testing to Zhu, lessons/enrolment/attendance to Yang, queries/views to Ben, storage/history/delivery to Vincent, and help/documentation coordination to Ernest. Each owner authors their own feature documentation in the existing UG/DG as behavior is delivered. Ernest reconciles shared conventions and examples without taking ownership of those implementations.
 
 <div markdown="span" class="alert alert-primary">
 
