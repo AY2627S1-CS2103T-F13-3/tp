@@ -30,7 +30,8 @@ public final class RoleAwareAddParser {
             "Add arguments must start with a prefix, for example r/student.";
 
     private static final Set<String> PREFIXES = Set.of("r/", "n/", "l/", "pp/", "p/", "e/", "a/");
-    private static final Pattern PREFIX_PATTERN = Pattern.compile("(?<!\\S)([^\\s/]+/)");
+    private static final Pattern PREFIX_PATTERN = Pattern.compile("(?<!\\S)([^\\s/]+/)",
+            Pattern.UNICODE_CHARACTER_CLASS);
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
 
     /**
@@ -84,12 +85,12 @@ public final class RoleAwareAddParser {
         Map<String, String> values = new LinkedHashMap<>();
         Matcher matcher = PREFIX_PATTERN.matcher(arguments);
         if (!matcher.find()) {
-            if (arguments.isBlank()) {
+            if (stripBoundaryWhitespace(arguments).isEmpty()) {
                 return values;
             }
             throw new ParseException(MESSAGE_PREAMBLE);
         }
-        if (!arguments.substring(0, matcher.start()).isBlank()) {
+        if (!stripBoundaryWhitespace(arguments.substring(0, matcher.start())).isEmpty()) {
             throw new ParseException(MESSAGE_PREAMBLE);
         }
         boolean hasNext;
@@ -104,13 +105,42 @@ public final class RoleAwareAddParser {
             if (values.containsKey(prefix)) {
                 throw new ParseException("Repeated add prefix '" + prefix + "'.");
             }
-            String value = arguments.substring(valueStart, valueEnd).trim();
-            if (value.isBlank()) {
+            String value = stripBoundaryWhitespace(arguments.substring(valueStart, valueEnd));
+            if (value.isEmpty()) {
                 throw new ParseException("Add prefix '" + prefix + "' requires a non-blank value.");
             }
             values.put(prefix, value);
         } while (hasNext);
         return values;
+    }
+
+    /**
+     * Strips the same Unicode whitespace recognized at prefix boundaries, preserving internal field text.
+     * Controls and line breaks have already been rejected before extraction.
+     */
+    private static String stripBoundaryWhitespace(String value) {
+        int start = 0;
+        while (start < value.length()) {
+            int codePoint = value.codePointAt(start);
+            if (!isBoundaryWhitespace(codePoint)) {
+                break;
+            }
+            start += Character.charCount(codePoint);
+        }
+
+        int end = value.length();
+        while (end > start) {
+            int codePoint = value.codePointBefore(end);
+            if (!isBoundaryWhitespace(codePoint)) {
+                break;
+            }
+            end -= Character.charCount(codePoint);
+        }
+        return value.substring(start, end);
+    }
+
+    private static boolean isBoundaryWhitespace(int codePoint) {
+        return Character.isWhitespace(codePoint) || Character.isSpaceChar(codePoint);
     }
 
     /**

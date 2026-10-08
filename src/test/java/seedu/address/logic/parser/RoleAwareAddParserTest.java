@@ -178,6 +178,51 @@ public class RoleAwareAddParserTest {
     }
 
     @Test
+    public void parse_unknownPrefixesAfterUnicodeSpaces_cannotBeAbsorbedByAddress() {
+        for (String space : new String[]{"\u2003", "\u2002", "\u3000", "\u00A0", "\u202F"}) {
+            for (String prefix : new String[]{"x/", "sid/", "R/"}) {
+                assertThrows(ParseException.class, "Unknown add prefix '" + prefix + "'.", () ->
+                        parser.parse(STUDENT_ARGUMENTS + " a/Block" + space + prefix + "value"));
+            }
+        }
+    }
+
+    @Test
+    public void parse_repeatedPrefixAfterUnicodeSpace_rejects() {
+        assertThrows(ParseException.class, "Repeated add prefix 'a/'.", () ->
+                parser.parse(ALL_STUDENT_ARGUMENTS + "\u2003a/Block 2"));
+    }
+
+    @Test
+    public void parse_unicodeBoundarySpaces_returnsEquivalentInput() throws Exception {
+        for (String space : new String[]{"\u2003", "\u2002", "\u3000", "\u00A0", "\u202F"}) {
+            String arguments = space + "r/" + space + "student" + space + "n/" + space + "Alex Tan"
+                    + space + "l/" + space + "S2" + space + "pp/" + space + "00123456"
+                    + space + "p/" + space + "00345678" + space + "e/" + space + "Alex@example.com"
+                    + space + "a/" + space + "Block 1" + space;
+            assertEquals(parser.parse(ALL_STUDENT_ARGUMENTS), parser.parse(arguments));
+            assertThrows(ParseException.class, "Add prefix 'a/' requires a non-blank value.", () ->
+                    parser.parse(STUDENT_ARGUMENTS + " a/" + space));
+        }
+    }
+
+    @Test
+    public void parse_unicodeSpaceWithinAddress_preservesContent() throws Exception {
+        String address = "Block\u20031\u00A0Unit 2";
+        PersonAdditionInput input = parser.parse(STUDENT_ARGUMENTS + " a/" + address + "\u2003p/00345678");
+        assertEquals(Optional.of(new Address(address)), input.contactDetails().getAddress());
+        assertEquals(Optional.of(new Phone("00345678")), input.contactDetails().getPhone());
+    }
+
+    @Test
+    public void parse_longInternalAddressSpaces_preservesContent() throws Exception {
+        String address = "Block" + " ".repeat(20000) + "1";
+        PersonAdditionInput input = parser.parse(STUDENT_ARGUMENTS + " a/\u2003" + address + "\u00A0p/00345678");
+        assertEquals(Optional.of(new Address(address)), input.contactDetails().getAddress());
+        assertEquals(Optional.of(new Phone("00345678")), input.contactDetails().getPhone());
+    }
+
+    @Test
     public void parse_studentFieldsForOtherRoles_reportsInappropriatePrefix() {
         for (String role : new String[]{"tutor", "parent"}) {
             for (String prefix : new String[]{"l/", "pp/"}) {
