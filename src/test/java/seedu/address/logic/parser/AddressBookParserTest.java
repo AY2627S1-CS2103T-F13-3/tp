@@ -15,7 +15,9 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 import seedu.address.testutil.PersonUtil;
@@ -32,31 +34,57 @@ public class AddressBookParserTest {
     }
 
     @Test
-    public void parseCommand_addLongEmails_preservesAcceptedValues() throws Exception {
-        String[] emails = {
-            "a.".repeat(5000) + "a@example.com",
-            "a@" + "a-".repeat(5000) + "ab",
-            "a@" + "a.".repeat(5000) + "ab",
-            "a@" + "a".repeat(10000)
-        };
-        for (String email : emails) {
-            AddCommand command = (AddCommand) parser.parseCommand("add n/Long Email p/123 e/" + email + " a/Somewhere");
-            Person expected = new PersonBuilder().withName("Long Email").withPhone("123")
-                    .withEmail(email).withAddress("Somewhere").withTags().build();
-            assertEquals(new AddCommand(expected), command);
+    public void parseCommand_normalizedContactDetails_success() throws Exception {
+        Person person = new PersonBuilder().withName("Anne-Marie O'Neill Jr.").withPhone("00123456")
+                .withEmail("Anne+School@Example.COM").withAddress("Blk 456, Den Road, #01-355").withTags().build();
+        String contactDetails = " n/  Anne-Marie   O'Neill Jr.  p/00123456 e/Anne+School@Example.COM"
+                + " a/  Blk 456,   Den Road, #01-355  ";
+
+        assertEquals(new AddCommand(person), parser.parseCommand("add" + contactDetails));
+    }
+
+    @Test
+    public void parseCommand_largeSpaceRuns_normalizesContactDetails() throws Exception {
+        String spaces = " ".repeat(100_000);
+        Person person = new PersonBuilder().withName("Anne-Marie O'Neil").withPhone("00123456")
+                .withEmail("Anne+School@Example.COM").withAddress("Blk 10, #01-02").withTags().build();
+        String contactDetails = " n/" + spaces + "Anne-Marie" + spaces + "O'Neil" + spaces
+                + " p/00123456 e/Anne+School@Example.COM a/" + spaces + "Blk 10," + spaces + "#01-02" + spaces;
+
+        assertEquals(new AddCommand(person), parser.parseCommand("add" + contactDetails));
+    }
+
+    @Test
+    public void parseCommand_largeInvalidContacts_throwsParseException() {
+        String spaces = " ".repeat(100_000);
+        String invalidName = "Anne-Marie" + spaces + "O'Neil\t";
+        String invalidAddress = "Blk 10," + spaces + "#01-02\n";
+        String longEmail = "a.".repeat(5_000) + "a@example.com";
+
+        assertThrows(ParseException.class, Name.MESSAGE_CONSTRAINTS, ()
+                -> parser.parseCommand("add p/00123456 e/anne@example.com a/Blk 10 n/" + invalidName + spaces));
+        assertThrows(ParseException.class, Address.MESSAGE_CONSTRAINTS, ()
+                -> parser.parseCommand("add n/Anne-Marie p/00123456 e/anne@example.com a/" + invalidAddress + spaces));
+        assertThrows(ParseException.class, Email.MESSAGE_CONSTRAINTS, ()
+                -> parser.parseCommand("add n/Anne-Marie p/00123456 a/Blk 10 e/" + longEmail));
+    }
+
+    @Test
+    public void parseCommand_nameBoundaryControls_throwsParseException() {
+        String[] invalidNames = {"\tAnne-Marie", "Anne-Marie\n", "Anne-Marie\r", "Anne-Marie\0"};
+        for (String invalidName : invalidNames) {
+            assertThrows(ParseException.class, Name.MESSAGE_CONSTRAINTS, ()
+                    -> parser.parseCommand("add p/00123456 e/anne@example.com a/123 Main Street n/" + invalidName));
         }
     }
 
     @Test
-    public void parseCommand_addLongInvalidEmails_throwsParseException() {
-        String[] emails = {
-            "a.".repeat(5000) + "a!@example.com",
-            "a@" + "a-".repeat(5000) + "a",
-            "a@" + "a.".repeat(5000) + "a"
-        };
-        for (String email : emails) {
-            String input = "add n/Long Email p/123 e/" + email + " a/Somewhere";
-            assertThrows(ParseException.class, Email.MESSAGE_CONSTRAINTS, () -> parser.parseCommand(input));
+    public void parseCommand_addressBoundaryControls_throwsParseException() {
+        String[] invalidAddresses = {"\t123 Main Street", "123 Main Street\n", "123 Main Street\r",
+            "123 Main Street\0"};
+        for (String invalidAddress : invalidAddresses) {
+            assertThrows(ParseException.class, Address.MESSAGE_CONSTRAINTS, ()
+                    -> parser.parseCommand("add n/Anne-Marie p/00123456 e/anne@example.com a/" + invalidAddress));
         }
     }
 
@@ -79,6 +107,33 @@ public class AddressBookParserTest {
         assertTrue(parser.parseCommand(ExitCommand.COMMAND_WORD) instanceof ExitCommand);
         assertThrows(ParseException.class, String.format(MESSAGE_INVALID_COMMAND_FORMAT, ExitCommand.MESSAGE_USAGE), ()
                 -> parser.parseCommand("exit 3"));
+    }
+
+    @Test
+    public void parseCommand_addOversizedEmails_throwsParseException() {
+        String[] emails = {
+            "a.".repeat(5000) + "a@example.com",
+            "a@" + "a-".repeat(5000) + "ab",
+            "a@" + "a.".repeat(5000) + "ab",
+            "a@" + "a".repeat(10000)
+        };
+        for (String email : emails) {
+            String input = "add n/Long Email p/123 e/" + email + " a/Somewhere";
+            assertThrows(ParseException.class, Email.MESSAGE_CONSTRAINTS, () -> parser.parseCommand(input));
+        }
+    }
+
+    @Test
+    public void parseCommand_addLongInvalidEmails_throwsParseException() {
+        String[] emails = {
+            "a.".repeat(5000) + "a!@example.com",
+            "a@" + "a-".repeat(5000) + "a",
+            "a@" + "a.".repeat(5000) + "a"
+        };
+        for (String email : emails) {
+            String input = "add n/Long Email p/123 e/" + email + " a/Somewhere";
+            assertThrows(ParseException.class, Email.MESSAGE_CONSTRAINTS, () -> parser.parseCommand(input));
+        }
     }
 
     @Test

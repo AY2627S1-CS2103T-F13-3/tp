@@ -132,14 +132,18 @@ Creates a student, tutor or parent record.
 | Parameter | Description and accepted values |
 |-----------|---------------------------------|
 | `r/ROLE` | Required. Use `student`, `tutor` or `parent`. Values are case-insensitive. |
-| `n/NAME` | Required. Between 1 and 100 characters using English letters, spaces, apostrophes, hyphens or periods, with at least one letter. Repeated spaces are reduced to one. |
+| `n/NAME` | Required. Between 1 and 100 characters using English letters (`A`–`Z`, `a`–`z`), spaces, apostrophes, hyphens or periods, with at least one letter. Surrounding spaces are removed and repeated spaces are reduced to one before measuring length. Letter case is preserved. Tabs and line breaks are not allowed. |
 | `l/LEVEL` | Required for students; not allowed for tutors or parents. Use `P1`–`P6`, `S1`–`S5`, `JC1` or `JC2`. Values are case-insensitive and displayed in uppercase. |
 | `pp/PARENT_PHONE` | Required for students; not allowed for tutors or parents. Use 3–15 digits without spaces or punctuation. |
 | `p/PHONE` | Required for tutors and parents; optional for students. Use 3–15 digits without spaces or punctuation. Leading zeros are retained. |
 | `e/EMAIL` | Optional. Use an email address such as `mei@example.com`, with no spaces and at most 254 characters. |
-| `a/ADDRESS` | Optional. Between 1 and 200 printable ASCII characters. Slashes, tabs and line breaks are not allowed. Repeated spaces are reduced to one. |
+| `a/ADDRESS` | Optional. Between 1 and 200 printable ASCII characters. Slashes, tabs and line breaks are not allowed. Surrounding spaces are removed and repeated spaces are reduced to one before measuring length. |
 
-For email addresses, the local part before `@` may contain letters, digits, periods, underscores, `%`, `+` and `-`. It must not begin or end with a period or contain consecutive periods. The domain must contain at least two dot-separated labels, with no leading or trailing hyphens in a label. Its final label must contain 2–63 letters.
+For email addresses, the local part before `@` may contain English letters, digits, periods, underscores, `%`, `+` and `-`. It must not begin or end with a period or contain consecutive periods. Domain labels may contain English letters, digits and hyphens. The domain must contain at least two dot-separated labels, with no leading or trailing hyphens in a label. Its final label must contain 2–63 English letters. Email spelling and letter case are preserved.
+
+**Current increment:** These contact rules are implemented. The role-specific formats above describe the planned people workflow. Until that workflow is available, use `add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]`; all four contact fields are required for this inherited add command. The `edit` route is withdrawn and is unavailable in this build. Saved contacts must also satisfy these rules when loaded; old records with numeric names, phones longer than 15 digits, slash-containing addresses or single-label email domains will fail validation.
+
+**Testing older data:** Back up the data file before testing this increment and use a working copy. If an older file fails validation, the app starts a [protected session](#data-protection-in-the-current-build): the empty view is not your saved data, only `help`, `list` and `exit` are available, and the original file is preserved. Close the app before restoring or deliberately correcting a compatible file, then restart.
 
 #### Examples
 

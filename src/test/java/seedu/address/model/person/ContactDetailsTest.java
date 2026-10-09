@@ -59,11 +59,11 @@ public class ContactDetailsTest {
     }
 
     @Test
-    public void getNormalizedName_caseAndSpacing_preservesDisplayName() {
+    public void getNormalizedName_caseAndSpacing_preservesDisplayCase() {
         ContactDetails details = new ContactDetails(new Name("Alex  TAN "));
 
         assertEquals("alex tan", details.getNormalizedName());
-        assertEquals("Alex  TAN ", details.getName().fullName);
+        assertEquals("Alex TAN", details.getName().fullName);
     }
 
     @Test
