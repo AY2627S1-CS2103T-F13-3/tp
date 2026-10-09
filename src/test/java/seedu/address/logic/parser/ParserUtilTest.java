@@ -72,9 +72,18 @@ public class ParserUtilTest {
 
     @Test
     public void parseName_validValueWithWhitespace_returnsTrimmedName() throws Exception {
-        String nameWithWhitespace = WHITESPACE + VALID_NAME + WHITESPACE;
+        String nameWithWhitespace = "  Rachel   Walker  ";
         Name expectedName = new Name(VALID_NAME);
         assertEquals(expectedName, ParserUtil.parseName(nameWithWhitespace));
+    }
+
+    @Test
+    public void parseName_controlCharacters_throwsParseException() {
+        String[] invalidNames = {"\t" + VALID_NAME, VALID_NAME + "\n", VALID_NAME + "\r", VALID_NAME + "\0",
+            "Rachel\tWalker", "A".repeat(101)};
+        for (String invalidName : invalidNames) {
+            assertThrows(ParseException.class, Name.MESSAGE_CONSTRAINTS, () -> ParserUtil.parseName(invalidName));
+        }
     }
 
     @Test
@@ -118,9 +127,19 @@ public class ParserUtilTest {
 
     @Test
     public void parseAddress_validValueWithWhitespace_returnsTrimmedAddress() throws Exception {
-        String addressWithWhitespace = WHITESPACE + VALID_ADDRESS + WHITESPACE;
+        String addressWithWhitespace = "  123   Main Street #0505  ";
         Address expectedAddress = new Address(VALID_ADDRESS);
         assertEquals(expectedAddress, ParserUtil.parseAddress(addressWithWhitespace));
+    }
+
+    @Test
+    public void parseAddress_controlCharacters_throwsParseException() {
+        String[] invalidAddresses = {"\t" + VALID_ADDRESS, VALID_ADDRESS + "\n", VALID_ADDRESS + "\r",
+            VALID_ADDRESS + "\0", "123\tMain Street", "Blk 12/34", "A".repeat(201)};
+        for (String invalidAddress : invalidAddresses) {
+            assertThrows(ParseException.class, Address.MESSAGE_CONSTRAINTS, ()
+                    -> ParserUtil.parseAddress(invalidAddress));
+        }
     }
 
     @Test
