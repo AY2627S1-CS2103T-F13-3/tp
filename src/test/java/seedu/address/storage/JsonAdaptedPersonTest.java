@@ -15,7 +15,9 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
+import seedu.address.testutil.PersonBuilder;
 
 public class JsonAdaptedPersonTest {
     private static final String INVALID_NAME = "R@chel";
@@ -36,6 +38,37 @@ public class JsonAdaptedPersonTest {
     public void toModelType_validPersonDetails_returnsPerson() throws Exception {
         JsonAdaptedPerson person = new JsonAdaptedPerson(BENSON);
         assertEquals(BENSON, person.toModelType());
+    }
+
+    @Test
+    public void toModelType_normalizedContactDetails_returnsNormalizedPerson() throws Exception {
+        JsonAdaptedPerson jsonPerson = new JsonAdaptedPerson("  Anne-Marie   O'Neill Jr.  ", "00123456",
+                "Anne+School@Example.COM", "  Blk 456,   Den Road, #01-355  ", VALID_TAGS);
+        Person expectedPerson = new PersonBuilder(BENSON).withName("Anne-Marie O'Neill Jr.").withPhone("00123456")
+                .withEmail("Anne+School@Example.COM").withAddress("Blk 456, Den Road, #01-355").build();
+
+        Person modelPerson = jsonPerson.toModelType();
+        assertEquals(expectedPerson, modelPerson);
+        assertEquals(expectedPerson, new JsonAdaptedPerson(modelPerson).toModelType());
+    }
+
+    @Test
+    public void toModelType_invalidContactBoundaries_throwsIllegalValueException() {
+        JsonAdaptedPerson longNamePerson = new JsonAdaptedPerson("A".repeat(101), VALID_PHONE, VALID_EMAIL,
+                VALID_ADDRESS, VALID_TAGS);
+        assertThrows(IllegalValueException.class, Name.MESSAGE_CONSTRAINTS, longNamePerson::toModelType);
+
+        JsonAdaptedPerson longPhonePerson = new JsonAdaptedPerson(VALID_NAME, "1234567890123456", VALID_EMAIL,
+                VALID_ADDRESS, VALID_TAGS);
+        assertThrows(IllegalValueException.class, Phone.MESSAGE_CONSTRAINTS, longPhonePerson::toModelType);
+
+        JsonAdaptedPerson longEmailPerson = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE,
+                "a".repeat(243) + "@example.com", VALID_ADDRESS, VALID_TAGS);
+        assertThrows(IllegalValueException.class, Email.MESSAGE_CONSTRAINTS, longEmailPerson::toModelType);
+
+        JsonAdaptedPerson controlAddressPerson = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL,
+                VALID_ADDRESS + "\n", VALID_TAGS);
+        assertThrows(IllegalValueException.class, Address.MESSAGE_CONSTRAINTS, controlAddressPerson::toModelType);
     }
 
     @Test

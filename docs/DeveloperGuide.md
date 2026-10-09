@@ -11,6 +11,7 @@ title: Developer Guide
 
 * PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, the ordered people registry and its import/export state, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
+* Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with contact validation, linear ASCII-space normalization, parser/loader integration, related automated tests, and the corresponding guide updates for [#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61).
 * Zhu Zhi Yu used OpenAI Codex for the detached role-filtered people-list projection and argument parser, their regression tests, and the integration notes below.
 * Zhu Zhi Yu used OpenAI Codex for the dormant current-people index resolver, its role and filtered-view regression tests, and the related integration documentation.
 * Zhu Zhi Yu used OpenAI Codex to prepare representative canonical people samples, their sample-integrity and view-selection tests, and the related developer usage notes.
@@ -579,23 +580,39 @@ The current command, UI, and JSON aggregate still use the inherited AB3 `Person`
 
 `Student`, `Tutor`, and `Parent` implement `PersonRecord` and compose immutable `ContactDetails`; none extends the inherited `Person` class. Each constructor rejects IDs for another role. `Tutor#getPhone()` and `Parent#getPhone()` expose their required own phone, which follows the same 3–15 digit limit as other supplied phone values.
 
-**Validation boundary:** `Name`, `Email`, and `Address` still enforce their inherited AB3 validation rules. This foundation does not yet implement the User Guide's wider name punctuation and field-format or length rules; [issue #61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61) tracks that alignment. Contact details preserve the supplied display values; name normalization is used only for duplicate matching.
+**Validation boundary:** `Name`, `Phone`, `Email`, and `Address` enforce the contracts in [Contact validation and normalization](#contact-validation-and-normalization). Names and addresses are stored after space normalization, while names preserve display case. `ContactDetails#getNormalizedName()` additionally ignores name case for duplicate matching.
 
-**Current email validation:** The active contact parser and JSON loader share `Email.isValidEmail`, which scans
-ASCII characters in linear time with constant stack space. Long repeated local-part separators, domain hyphens,
-or domain labels therefore produce a value or the existing checked boundary error rather than a regex stack
-overflow. Its acceptance rules remain unchanged: single-label domains and long emails still load, the local part
-allows single `+`, `_`, `.`, or `-` separators, and domain labels allow single hyphens. The inherited final-label
-regex requires an adjacent alphanumeric pair, so `a@a-b` is rejected while `a@a-bc` is accepted. The public
-`VALIDATION_REGEX` remains the compatibility reference; bounded exhaustive regressions compare it with the scan.
-The complete contact-policy alignment in #61/#110 still requires protected loading in #84 before activation;
-this safety correction does not impose new field limits or protect the startup fallback.
+**Current email validation:** The active contact parser and JSON loader share `Email.isValidEmail`, which
+rejects values longer than 254 characters before scanning ASCII characters in linear time with constant stack
+space. Local-part periods cannot be leading, trailing or consecutive; intermediate domain labels allow internal
+hyphens; the final label contains 2–63 English letters. Long repeated local-part separators, domain hyphens or
+domain labels produce the existing checked boundary error instead of a regex stack overflow. The public
+`VALIDATION_REGEX` remains the format reference; bounded exhaustive regressions compare it with the scan.
 
 **Identity, equality, and duplicates:** The stable `PersonId` identifies a record independently of its contact details or position in a displayed list. Value equality compares the ID and all stored fields, including optional contact details and the student's education level and parent phone. `isDuplicateOf(PersonRecord)` instead requires the same role and compares the name, ignoring case and repeated spaces, together with the required identifying phone: the parent phone for students or the record's own phone for tutors and parents. Different IDs, optional contact details, or student education levels do not distinguish otherwise duplicate records. A null or different-role argument is not a duplicate. `PeopleRegistry` now uses this operation to reject duplicate records; connecting that rejection to active commands remains follow-up work.
 
 **Command boundary:** A user-entered person index is resolved once through the current filtered people view to a `PersonId`; it is not passed into the `PersonId` constructor or persisted as a relationship. Internal lookup, student-lesson queries, rosters, attendance keys and storage continue to use stable IDs. Resolving an index and validating its role belongs to the planned command integration, not these immutable record constructors.
 
 **Planned relationships:** The person records do not contain lesson or attendance collections. The planned shared-lesson model will keep canonical lessons and student–lesson membership outside the student record, referring to stable IDs so several students can share one lesson. Separate parent records remain optional; future parent links will use exact equality between a parent's own phone and a student's stored parent phone, without requiring a stored `Parent` object in `Student`. Relationship lookup, dated attendance, and the storage of these relationships are separate follow-up work.
+
+### Contact validation and normalization
+
+The shared `Name`, `Phone`, `Email`, and `Address` value types enforce the contact formats in the User Guide. Their constructors and `isValid...` methods apply the same rules, including when the inherited JSON adapter loads a contact.
+
+| Type | Implemented contract |
+| --- | --- |
+| `Name` | 1–100 characters after trimming surrounding ASCII spaces and collapsing repeated spaces. Accepts English letters, spaces, apostrophes, hyphens and periods, with at least one letter. Preserves display case. |
+| `Phone` | 3–15 ASCII digits, stored as a string so leading zeros are retained. |
+| `Email` | At most 254 characters. The local part allows English letters, digits, `.`, `_`, `%`, `+` and `-`, with no leading, trailing or consecutive periods. The domain has at least two labels of letters, digits or internal hyphens; its final label contains 2–63 English letters. Preserves spelling and case. |
+| `Address` | 1–200 printable ASCII characters after trimming surrounding spaces and collapsing repeated spaces. Rejects `/`, tabs, line breaks and other control characters. |
+
+`ParserUtil#parseName` and `parseAddress` delegate normalization to their value types. The argument tokenizer removes only ordinary spaces from prefixed values, preserving control characters for validation. The command parser likewise preserves trailing control characters. This prevents invalid pasted names or addresses from becoming valid merely because a parser discarded their tabs or line breaks. Phone and email parsing retain their inherited surrounding-whitespace trimming.
+
+Space trimming and collapse scan input linearly. Name and address construction normalize once; parser and JSON-adapter boundaries use that construction directly and translate invalid values to their existing checked exceptions. The email length check runs before its constant-stack format scan. Automated regressions exercise the active command parser and actual JSON-file loader with 100,000-space runs, controls following those runs, and an oversized dotted email; they assert values or controlled failures without machine-specific timing limits. The inherited protected startup also blocks operational writes after a loading rejection, including successful `help`, `list` and `exit` commands and attempted mutations.
+
+Normalization is applied before equality and hashing of names and addresses. Case remains significant for value equality; role-specific duplicate-name matching is a separate contract. Role-aware commands, optional-field command handling and relationships are follow-up work. The active inherited `add` route uses these validators. The dormant `EditCommandParser` also uses them in direct tests, but `edit`, `clear` and `find` remain withdrawn from the command catalogue.
+
+The JSON schema is unchanged. Previously accepted records outside the new rules fail the inherited loading checks, as do identities made duplicate by space normalization. The [current protected startup](#current-protected-startup) preserves the rejected file and presents an empty protected view with recovery guidance. It allows help, list and exit without operational saves and blocks mutations and direct storage saves. `ContactValidationStartupTest` exercises those boundaries, shutdown and restart with numeric names, long phones, slash addresses, single-label and oversized emails, and normalization-created duplicates. Deliberately corrected compatible data loads and saves after restarting. Back up the original before deliberate corrections or inspecting a working copy with an older compatible build. Broader canonical loading and legacy-cutover work remain Vincent's [#84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84); this increment does not implement migration.
 
 ### Ordered people registry foundation
 
@@ -1055,22 +1072,29 @@ testers are expected to do more *exploratory* testing.
    1. Relaunch the app by double-clicking the JAR file.<br>
        Expected: The most recent window size and location are retained.
 
-### Long emails in the current contact runtime
+### Contact validation in the current increment
 
-Use a disposable application folder and the active `add n/NAME p/PHONE e/EMAIL a/ADDRESS` format. These checks
-cover validation safety; the planned 254-character email policy remains gated with the full contact alignment.
+Use the inherited contact commands below; the planned role-aware commands are not required for these checks. Run them in a test copy of your data.
 
-1. In a text editor, form an email from 5,000 copies of `a.` followed by `a@example.com`. Paste it into
-   `add n/Long Email p/123 e/EMAIL a/Somewhere`, replacing `EMAIL` with that text. Expect a successful addition
-   without an uncaught error. Restart and verify the stored email is preserved.
-2. Repeat in a fresh disposable folder with 5,000 copies of `a-` after `a@`, ending in `ab`, and with 5,000
-   copies of `a.` after `a@`, ending in `ab`. Expect the same accepted-value behavior. These long inherited
-   values remain loadable even though the planned contact policy will later restrict their length.
-3. Replace the first example's suffix with `a!@example.com`, or replace the second example's final `ab` with
-   `a`. Expect the existing email constraint feedback; the command must not add a record or crash.
-4. Close the app, make a valid manual edit to the disposable JSON file using one of the accepted long emails,
-   and restart. Expect the edited email to load unchanged. Automated file-loader regressions additionally
-   verify controlled loading errors and byte preservation for invalid emails; safe startup recovery remains #84 work.
+1. Enter `add n/  Anne-Marie   O'Neil  p/00123456 e/anne%school@example.com a/  Blk 10,   #01-02  `<br>
+   Expected: One contact is added with name `Anne-Marie O'Neil`, phone `00123456`, and address `Blk 10, #01-02`. The punctuation, email and leading zeros are retained.
+1. Try `add n/Test User p/1234567890123456 e/test@example.com a/Blk 10` and `add n/Test User p/123 e/test@localhost a/Blk 10`.<br>
+   Expected: Each command reports the corresponding phone or email constraints and adds nothing.
+1. Try `add n/Test2 User p/123 e/test@example.com a/Blk 10` and `add n/Test User p/123 e/test@example.com a/Blk 10/Unit 2`.<br>
+   Expected: Each command reports the corresponding name or address constraints and adds nothing.
+1. Close and reopen the app.<br>
+   Expected: The successfully saved contact retains the normalized name/address, email and leading-zero phone.
+1. In a disposable folder, prepare separate copies of a previously valid contact file containing a numeric name,
+   a phone longer than 15 digits, an address with `/`, or a single-label email domain. Also prepare two records
+   named `Alex  Tan` and `Alex Tan`, which become duplicates after normalization. Record each file's bytes and
+   start the app with it.<br>
+   Expected: Recovery guidance and an empty protected view. `help`, `list` and `exit` preserve the original bytes;
+   attempted `add` and `delete` are blocked. Closing and restarting still preserves and rejects the same file.
+1. Form an email from 5,000 copies of `a.` followed by `a@example.com`, then paste it into the inherited add
+   format. Repeat with long domain-hyphen and domain-label runs.<br>
+   Expected: Email constraint feedback without a crash or a saved contact. A saved file containing any such
+   oversized email starts a protected session with its bytes preserved. Correct a separate compatible working
+   copy deliberately, then restart; valid contact values must load and remain writable.
 
 ### Deleting a person
 
@@ -1124,7 +1148,7 @@ Run these as the corresponding routes become available, using an isolated suppor
 
 ### Planned canonical loading and recovery
 
-These checks apply when protected loading is activated. The current inherited loader does not yet guarantee rejected-file preservation; never use an original dataset for destructive failure experiments. Use copies in disposable test folders and keep the preserved original and backup outside all configured operational paths.
+These checks apply when canonical-format loading is activated. The current inherited runtime already protects rejected files, while canonical loading and initialization remain planned. Use copies in disposable test folders and keep the preserved original and backup outside all configured operational paths.
 
 1. In a deliberately separate empty folder, launch the canonical build with no operational file. Expect a valid fresh supported root. Add delivered records and restart; expect successful restoration. This does not authorize replacing a legacy or rejected file in an existing folder.
 2. Close the app and make a valid manual edit to supported versioned JSON using its delivered schema, such as correcting a contact value while preserving valid IDs, allocation state and references. Restart; expect the edited records to load. Repeat with valid memberships and dated history. Human editing must remain usable.

@@ -9,27 +9,16 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
  */
 public class Email {
 
-    private static final String SPECIAL_CHARACTERS = "+_.-";
-    public static final String MESSAGE_CONSTRAINTS = "Emails should be of the format local-part@domain "
-            + "and adhere to the following constraints:\n"
-            + "1. The local-part should only contain alphanumeric characters and these special characters, excluding "
-            + "the parentheses, (" + SPECIAL_CHARACTERS + "). The local-part may not start or end with any special "
-            + "characters.\n"
-            + "2. The local-part is followed by an '@' and then a domain name. The domain name is made up of domain "
-            + "labels separated by periods.\n"
-            + "The domain name must:\n"
-            + "    - end with a domain label at least 2 characters long\n"
-            + "    - have each domain label start and end with alphanumeric characters\n"
-            + "    - have each domain label consist of alphanumeric characters, separated only by hyphens, if any.";
-    // alphanumeric and special characters
-    private static final String ALPHANUMERIC_NO_UNDERSCORE = "[^\\W_]+"; // alphanumeric characters except underscore
-    private static final String LOCAL_PART_REGEX = "^" + ALPHANUMERIC_NO_UNDERSCORE + "([" + SPECIAL_CHARACTERS + "]"
-            + ALPHANUMERIC_NO_UNDERSCORE + ")*";
-    private static final String DOMAIN_PART_REGEX = ALPHANUMERIC_NO_UNDERSCORE
-            + "(-" + ALPHANUMERIC_NO_UNDERSCORE + ")*";
-    private static final String DOMAIN_LAST_PART_REGEX = "(" + DOMAIN_PART_REGEX + "){2,}$"; // At least two chars
-    private static final String DOMAIN_REGEX = "(" + DOMAIN_PART_REGEX + "\\.)*" + DOMAIN_LAST_PART_REGEX;
-    public static final String VALIDATION_REGEX = LOCAL_PART_REGEX + "@" + DOMAIN_REGEX;
+    public static final int MAX_LENGTH = 254;
+    public static final String MESSAGE_CONSTRAINTS =
+            "Emails must use local-part@domain with at most 254 characters and no spaces. "
+            + "The local part may contain English letters, digits, periods, underscores, %, + and -, "
+            + "but no leading, trailing or consecutive periods. "
+            + "The domain must have at least two dot-separated labels containing English letters, digits or hyphens, "
+            + "with no leading or trailing hyphens. The final label must contain 2 to 63 English letters.";
+    public static final String VALIDATION_REGEX =
+            "[A-Za-z0-9_%+-]+(?:\\.[A-Za-z0-9_%+-]+)*@"
+            + "(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\\.)+[A-Za-z]{2,63}";
 
     public final String value;
 
@@ -45,54 +34,67 @@ public class Email {
     }
 
     /**
-     * Returns whether a string satisfies the inherited email rules using constant stack space.
+     * Returns whether a string satisfies the email format and length constraints using constant stack space.
      */
     public static boolean isValidEmail(String test) {
         requireNonNull(test);
+        if (test.length() > MAX_LENGTH) {
+            return false;
+        }
         int separatorIndex = test.indexOf('@');
         if (separatorIndex <= 0 || separatorIndex == test.length() - 1) {
             return false;
         }
 
-        boolean wasAlphanumeric = false;
+        boolean wasPeriod = true;
         for (int i = 0; i < separatorIndex; i++) {
             char character = test.charAt(i);
-            boolean isAlphanumeric = isAsciiAlphanumeric(character);
-            if (!isAlphanumeric && (!wasAlphanumeric || SPECIAL_CHARACTERS.indexOf(character) < 0)) {
+            if (character == '.') {
+                if (wasPeriod) {
+                    return false;
+                }
+            } else if (!isAsciiAlphanumeric(character) && "_%+-".indexOf(character) < 0) {
                 return false;
             }
-            wasAlphanumeric = isAlphanumeric;
+            wasPeriod = character == '.';
         }
-        if (!wasAlphanumeric) {
+        if (wasPeriod) {
             return false;
         }
 
-        wasAlphanumeric = false;
-        boolean hasAdjacentAlphanumeric = false;
+        int labelStart = separatorIndex + 1;
+        boolean hasDomainPeriod = false;
         for (int i = separatorIndex + 1; i < test.length(); i++) {
             char character = test.charAt(i);
-            if (isAsciiAlphanumeric(character)) {
-                hasAdjacentAlphanumeric |= wasAlphanumeric;
-                wasAlphanumeric = true;
-            } else if ((character == '-' || character == '.') && wasAlphanumeric) {
-                wasAlphanumeric = false;
-                if (character == '.') {
-                    hasAdjacentAlphanumeric = false;
+            if (character == '.') {
+                if (i == labelStart || test.charAt(i - 1) == '-') {
+                    return false;
                 }
-            } else {
+                hasDomainPeriod = true;
+                labelStart = i + 1;
+            } else if (!isAsciiAlphanumeric(character) && (character != '-' || i == labelStart)) {
                 return false;
             }
         }
 
-        // The legacy final-label regex repeats a whole label twice. Preserve its acceptance set:
-        // a label can be split into two valid pieces only within a run of alphanumeric characters.
-        return wasAlphanumeric && hasAdjacentAlphanumeric;
+        int finalLabelLength = test.length() - labelStart;
+        if (!hasDomainPeriod || finalLabelLength < 2 || finalLabelLength > 63) {
+            return false;
+        }
+        for (int i = labelStart; i < test.length(); i++) {
+            if (!isAsciiLetter(test.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static boolean isAsciiAlphanumeric(char character) {
-        return character >= 'A' && character <= 'Z'
-                || character >= 'a' && character <= 'z'
-                || character >= '0' && character <= '9';
+        return isAsciiLetter(character) || character >= '0' && character <= '9';
+    }
+
+    private static boolean isAsciiLetter(char character) {
+        return character >= 'A' && character <= 'Z' || character >= 'a' && character <= 'z';
     }
 
     @Override
