@@ -268,6 +268,29 @@ The `Model` component,
 </div>
 
 
+#### Canonical data aggregate draft (#76)
+
+`PonHubData` holds one immutable `PonHubDataState`: ordered people and their per-role allocation
+history, shared lessons and their rosters, dated attendance, and the last allocated lesson sequence.
+`exportState()` returns a stable snapshot; copy construction and `resetData(...)` safely share immutable
+state. Replacing one container's state cannot change any previous snapshot or another container.
+
+Snapshot construction copies incoming lists and rejects duplicate IDs/attendance keys, missing or
+wrong-role references, and lesson IDs beyond the supplied counter. Historical attendance does not
+require current enrolment. Equality includes records, collection order, rosters and allocation history,
+including deleted IDs. Zero means no allocation; `Long.MAX_VALUE` means exhaustion, matching the people
+registry convention. Counters are preserved as supplied, never reconstructed from retained records.
+
+Read methods expose immutable collections and stable-ID/key lookups. The controlled replacement boundary
+accepts only a validated state; invalid construction or null replacement leaves the current state intact.
+Feature owners must preserve committed allocation history when preparing normal changes. Restore may
+reinstate earlier counters for rollback. Allocation, enrolment, deletion, attendance-editing and scheduling
+policies remain separate feature work, rather than partially implemented operations in this foundation.
+
+This draft leaves `ModelManager`, commands and JSON storage unchanged. Vincent owns snapshot/storage
+contracts; Zhu/Yang will prepare validated changes through one future Model adapter, and Ben can consume
+the read-only queries. UI filters, selection and preferences remain outside the operational snapshot.
+
 ### Storage component
 
 **API** : [`Storage.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/storage/Storage.java)
