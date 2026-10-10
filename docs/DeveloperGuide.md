@@ -376,6 +376,46 @@ backup or correct JSON/access permissions and restart. Confirm valid human-edite
 `ProtectedStartupTest` exercises the startup/command/storage boundary and original-byte preservation;
 `UiManagerTest` verifies the warning without requiring a real window.
 
+#### People-only canonical JSON storage (#79)
+
+`JsonPonHubDataCodec` converts between a complete `PonHubDataState` and the version-1 envelope below.
+`JsonPonHubDataStorage` reads one UTF-8 document into a validated candidate and uses the existing safe
+file writer for saves. These classes are not wired into startup, commands or the legacy storage path;
+protected runtime integration remains #84. Preferences remain in their existing separate file.
+
+```json
+{
+  "schemaVersion": 1,
+  "people": [
+    {"id": "S1", "role": "STUDENT", "name": "Alex", "level": "P1", "parentPhone": "00123456"}
+  ],
+  "personCounters": {"STUDENT": 1, "TUTOR": 0, "PARENT": 0},
+  "lastAllocatedLessonSequence": 0,
+  "lessons": [],
+  "attendance": []
+}
+```
+
+People array order is global creation order. Roles are `STUDENT`, `TUTOR` or `PARENT` and must agree with
+the stable ID prefix. Every record requires `id`, `role` and `name`. Students additionally require `level`
+and `parentPhone`; tutors and parents require their own `phone`. Optional `phone` (for students), `email`
+and `address` are omitted when absent, never encoded as null. Contact values are strings, preserving
+leading zeros. Unknown fields and role-inappropriate fields are rejected rather than silently discarded.
+
+All three person counters and the lesson counter are required nonnegative integers up to `Long.MAX_VALUE`
+(exhaustion). They include deleted identities and must not be recomputed from retained records. Person
+counters must cover every retained ID. Both lesson/attendance arrays must currently be empty: non-empty
+collections are rejected on both read and write until #81/#83 supply their codecs. They must never be
+dropped while rewriting a file. Serialization finishes before any filesystem write.
+
+Close the app and preserve a backup before manual editing. For example, adding `"email": "alex@example.com"`
+to the student above is valid; making a phone numeric, removing a required field, or lowering its student
+counter below 1 is rejected. Object field order and whitespace do not matter. Round-trip tests compare the
+complete snapshot, including optional-field absence, people order, deleted-ID history and exhausted counters.
+Loading classifies the version first and validates all records/counters before returning; callers install
+the candidate only on success. Loading itself never writes or changes live state. This codec supplies no
+legacy migration or rejected-file session lock; the existing protected startup remains independently active.
+
 #### Planned protected loading and legacy upgrade
 
 These are requirements for the first canonical cutover, not behavior delivered by the inherited loader. Keep the inherited runtime until the compatible canonical Model, codecs, people commands and protected loader are activated together. The new runtime must classify the configured file before decoding: missing data may start a fresh supported root; valid supported versioned data loads only after complete domain, identity and reference validation. Unreadable, corrupt, unsupported-version and unversioned AB3 files produce controlled errors, actionable recovery guidance and no operational writes to the rejected file. Preserve its original bytes through help, list, exit and attempted mutations; saving preferences remains separate.
