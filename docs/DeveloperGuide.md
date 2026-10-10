@@ -21,6 +21,7 @@ title: Developer Guide
 * Zhu Zhi Yu used OpenAI Codex to assist with the file-logging startup fallback, its isolated regression tests, and logging documentation.
 * Zhu Zhi Yu used OpenAI Codex for the UI startup error-handling fix and its regression tests.
 * Zhu Zhi Yu used OpenAI Codex for dormant role-aware add argument parsing, its immutable ID-free input, regression tests, and integration documentation.
+* Zhu Zhi Yu used OpenAI Codex for the dormant complete-state person-addition candidate, its transaction-preparation regression tests, and the related integration notes.
 * Zhu Zhi Yu used OpenAI Codex for constant-stack email validation that preserves the inherited contact rules, its parser/file-loading regressions, and the related implementation and manual-testing notes.
 * Zhu Zhi Yu used OpenAI Codex to clarify the course-prescribed Java 25 and macOS runtime setup, release verification, and manual-testing documentation.
 * Zhu Zhi Yu used OpenAI Codex for PR review and Javadoc formatting corrections in the canonical aggregate foundation (#76).
@@ -520,6 +521,26 @@ Prefixes are lowercase and may appear once in any order. Role and education-leve
 **Activation boundary:** The existing `AddCommandParser`, router and supported-command catalogue still handle legacy person records using the shared contact policy. The prepared parser does not check duplicate people, allocate even a provisional ID, reset the view, save data or perform rollback. Those behaviors remain #85 work after the canonical aggregate, compatible persistence, protected loading and transaction foundations are ready. At cutover, construct and commit the record through that single canonical root; never use a placeholder ID or a second writable person store.
 
 Automated checks exercise all three roles, absent/present optional contacts, argument order/case, role restrictions, missing/blank/repeated/unknown fields, controls, phone bounds, immutable input invariants and unchanged active routing. Canonical duplicate detection, siblings sharing parent phones, committed ID allocation, save/reload and failed-save restoration remain integration tests under #85.
+
+### Staged person-addition candidate
+
+`PersonAdditionCandidate.prepare(PonHubDataState, PersonAdditionInput)` prepares a complete immutable
+addition candidate for [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). It copies the source people
+snapshot into a temporary `PeopleRegistry`, reuses its role-specific addition and duplicate rules, and appends
+the resulting person while preserving lessons, rosters, retained attendance and lesson allocation history.
+`getCandidateState()` supplies the complete proposed state; `getAddedPerson()` supplies the proposed record
+and its ID. Preparation leaves the source and live data unchanged, including every allocation counter.
+
+This seam remains dormant. The proposed ID is not reserved in operational state, and abandoned candidates
+consume no identity. The later single-threaded transaction must prepare from its current snapshot, save the
+complete candidate successfully, and then install it before returning success or resetting the people view.
+This helper performs no persistence, rollback, command dispatch, view refresh or runtime activation. Compatible
+storage, protected loading and transaction integration still gate coordinated add/list/card activation.
+
+Regression tests cover all roles and optional contacts, siblings without a stored parent record, near-duplicate
+identities, normalized duplicate rejection, deleted-ID history, allocation exhaustion, retained relationships
+and immutable independent snapshots. Save/reload, failed-save restoration and visible success remain pending
+actual command/transaction integration.
 
 ### Prepared person record cards
 
