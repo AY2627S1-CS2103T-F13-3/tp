@@ -21,7 +21,8 @@ import seedu.address.model.person.PersonRole;
 /**
  * Immutable complete operational snapshot. Collection order and allocation history participate in equality.
  * A counter of Long.MAX_VALUE represents exhaustion; counters must never be inferred from retained records.
- * Scheduling and attendance-date rules belong to their feature layers, not this structural boundary.
+ * Global tutor and room schedule rules are validated here so restored state cannot bypass operational invariants.
+ * Attendance-date and student-enrolment rules belong to their feature layers.
  *
  * @param people Ordered people and complete per-role allocation history.
  * @param lessons Ordered shared lessons, each owning its roster.
@@ -32,7 +33,7 @@ public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, 
         long lastAllocatedLessonSequence) {
 
     /**
-     * Copies incoming collections and validates identities and references before publishing any state.
+     * Copies incoming collections and validates identities, references, and global schedules before publishing state.
      * Records are immutable and can be shared. Historical attendance does not require current enrolment.
      */
     public PonHubDataState {
@@ -59,12 +60,31 @@ public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, 
             requireRole(peopleById, record.getStudentId(), PersonRole.STUDENT);
             Lesson lesson = lessonsById.get(record.getLessonId());
             checkArgument(lesson != null, "Attendance refers to a missing lesson.");
-
         }
+        validateLessonSchedules(lessons);
     }
 
     private static void requireRole(Map<PersonId, PersonRecord> people, PersonId id, PersonRole role) {
         PersonRecord person = people.get(id);
         checkArgument(person != null && person.getRole() == role, "Missing or wrong-role person reference: " + id);
+    }
+
+    /**
+     * Rejects overlapping bookings for the same tutor or normalized room.
+     */
+    private static void validateLessonSchedules(List<Lesson> lessons) {
+        for (int i = 0; i < lessons.size(); i++) {
+            Lesson lesson = lessons.get(i);
+            for (int j = 0; j < i; j++) {
+                Lesson earlierLesson = lessons.get(j);
+                if (!lesson.getTimeSlot().overlaps(earlierLesson.getTimeSlot())) {
+                    continue;
+                }
+                checkArgument(!lesson.getTutorId().equals(earlierLesson.getTutorId()),
+                        "Tutor schedule overlap between " + earlierLesson.getId() + " and " + lesson.getId() + ".");
+                checkArgument(!lesson.getRoom().equals(earlierLesson.getRoom()),
+                        "Room schedule overlap between " + earlierLesson.getId() + " and " + lesson.getId() + ".");
+            }
+        }
     }
 }

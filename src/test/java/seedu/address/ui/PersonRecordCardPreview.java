@@ -1,23 +1,27 @@
 package seedu.address.ui;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import javafx.application.Application;
-import javafx.collections.FXCollections;
 import javafx.scene.Scene;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import seedu.address.MainApp;
+import seedu.address.model.PeopleView;
+import seedu.address.model.PonHubData;
+import seedu.address.model.PonHubDataState;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.ContactDetails;
 import seedu.address.model.person.EducationLevel;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Parent;
+import seedu.address.model.person.PeopleRegistryState;
 import seedu.address.model.person.PersonId;
 import seedu.address.model.person.PersonRecord;
+import seedu.address.model.person.PersonRole;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Student;
 import seedu.address.model.person.Tutor;
@@ -50,23 +54,11 @@ public class PersonRecordCardPreview extends Application {
     /**
      * Creates the intended list-cell host, fitting each card to its cell's available width.
      */
-    static ListView<PersonRecord> createPeopleView() {
-        ListView<PersonRecord> view = new ListView<>(FXCollections.observableArrayList(createRecords()));
-        view.setCellFactory(list -> new ListCell<>() {
-            @Override
-            protected void updateItem(PersonRecord person, boolean empty) {
-                super.updateItem(person, empty);
-                setText(null);
-                if (empty || person == null) {
-                    setGraphic(null);
-                } else {
-                    PersonRecordCard card = new PersonRecordCard(person, getIndex() + 1);
-                    card.getRoot().prefWidthProperty().bind(widthProperty());
-                    setGraphic(card.getRoot());
-                }
-            }
-        });
-        return view;
+    static Region createPeopleView() {
+        PeopleRegistryState people = new PeopleRegistryState(createRecords(),
+                Map.of(PersonRole.STUDENT, Long.MAX_VALUE, PersonRole.TUTOR, 1L, PersonRole.PARENT, 1L));
+        PonHubData data = new PonHubData(new PonHubDataState(people, List.of(), List.of(), 0));
+        return new PersonRecordListPanel(new PeopleView(data)).getRoot();
     }
 
     /**

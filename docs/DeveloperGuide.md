@@ -13,6 +13,7 @@ title: Developer Guide
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, the ordered people registry and its import/export state, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with contact validation, linear ASCII-space normalization, parser/loader integration, related automated tests, and the corresponding guide updates for [#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61).
 * Zhu Zhi Yu used OpenAI Codex for the detached role-filtered people-list projection and argument parser, their regression tests, and the integration notes below.
+* Zhu Zhi Yu used OpenAI Codex for the dormant aggregate-backed people view, production card-list panel, refresh/filter/selector and layout regressions, and their developer preview and integration notes.
 * Zhu Zhi Yu used OpenAI Codex for the dormant current-people index resolver, its role and filtered-view regression tests, and the related integration documentation.
 * Zhu Zhi Yu used OpenAI Codex to prepare representative canonical people samples, their sample-integrity and view-selection tests, and the related developer usage notes.
 * Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search, inline-help, and atomic-save increments.
@@ -25,6 +26,8 @@ title: Developer Guide
 * Zhu Zhi Yu used OpenAI Codex for constant-stack email validation that preserves the inherited contact rules, its parser/file-loading regressions, and the related implementation and manual-testing notes.
 * Zhu Zhi Yu used OpenAI Codex to clarify the course-prescribed Java 25 and macOS runtime setup, release verification, and manual-testing documentation.
 * Zhu Zhi Yu used OpenAI Codex for PR review and Javadoc formatting corrections in the canonical aggregate foundation (#76).
+* Yang Shuo (`ys000009`) used OpenAI Codex to assist with the canonical lesson scheduling APIs, aggregate
+  invariants, read-only relationship queries and guards, automated tests, and design documentation for #78.
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
@@ -276,7 +279,7 @@ The `Model` component,
 </div>
 
 
-#### Canonical data aggregate draft (#76)
+#### Canonical data aggregate (#76)
 
 `PonHubData` holds one immutable `PonHubDataState`: ordered people and their per-role allocation
 history, shared lessons and their rosters, dated attendance, and the last allocated lesson sequence.
@@ -292,12 +295,45 @@ registry convention. Counters are preserved as supplied, never reconstructed fro
 Read methods expose immutable collections and stable-ID/key lookups. The controlled replacement boundary
 accepts only a validated state; invalid construction or null replacement leaves the current state intact.
 Feature owners must preserve committed allocation history when preparing normal changes. Restore may
-reinstate earlier counters for rollback. Allocation, enrolment, deletion, attendance-editing and scheduling
-policies remain separate feature work, rather than partially implemented operations in this foundation.
+reinstate earlier counters for rollback. Lesson allocation and global tutor/room scheduling are supplied by
+the #78 API below. Enrolment, deletion and attendance-editing policies remain separate feature work.
 
-This draft leaves `ModelManager`, commands and JSON storage unchanged. Vincent owns snapshot/storage
+This aggregate leaves `ModelManager`, commands and JSON storage unchanged. Vincent owns snapshot/storage
 contracts; Zhu/Yang will prepare validated changes through one future Model adapter, and Ben can consume
 the read-only queries. UI filters, selection and preferences remain outside the operational snapshot.
+
+#### Shared lesson scheduling model APIs (#78)
+
+`PonHubData.addLesson(tutorId, timeSlot, subject, room)` is the controlled lesson-creation seam. It resolves the
+stable ID against the aggregate's people snapshot and requires an existing Tutor. It derives the next positive
+`LessonId` from `lastAllocatedLessonSequence`, creates one empty-roster `Lesson`, builds a complete candidate
+`PonHubDataState`, and installs that state only after validation succeeds. Deleted committed IDs are therefore
+not reused. Exhaustion at `Long.MAX_VALUE`, a missing/wrong-role Tutor, or any scheduling conflict leaves the
+catalogue and counter unchanged.
+
+Every complete `PonHubDataState`, including a restored or deserialized candidate, enforces the same global
+schedule invariant. Two lessons whose half-open slots overlap on the same weekday are rejected when either
+their stable Tutor IDs match or their normalized `Room` values match. Empty lessons participate in this check.
+Adjacent intervals, different weekdays, and simultaneous lessons with both different Tutors and different rooms
+are allowed. Tutor names are deliberately irrelevant to clashes; room equality uses `Room`'s locale-independent
+upper-case normalization.
+
+The aggregate exposes immutable relationship snapshots for retrieval and deletion integration:
+
+| API | Contract and owner use |
+| --- | --- |
+| `getLessons()` / `getLesson(LessonId)` | Canonical catalogue order and stable-ID lookup, including empty lessons. |
+| `getLessonRoster(LessonId)` | Current Students resolved from Lesson-owned IDs in global people creation order. |
+| `getStudentLessons(PersonId)` | Current lessons derived from roster IDs in catalogue creation order. |
+| `getAttendanceForStudent(PersonId)` / `getAttendanceForLesson(LessonId)` | Retained attendance references in aggregate storage order; neither depends on current enrolment. |
+| `isPersonReferenced(PersonRecord)` | Predicate for Zhu's guarded people deletion: Student roster/attendance and Tutor lesson references block removal; Parent links remain derived. |
+| `isLessonReferenced(LessonId)` | Guard for Yang's lesson deletion: a non-empty roster or retained Attendance blocks removal. |
+
+`PonHubData` owns normal lesson allocation and atomic state installation. `PonHubDataState` owns whole-root
+identity, reference and scheduling validation. `Lesson` remains the immutable record and sole owner of roster
+membership. Ben may build projections only from the read APIs; they never mutate records or counters. Vincent's
+serialization must preserve the supplied catalogue order and lesson allocation counter, construct the entire
+candidate snapshot before replacement, and use its validation rather than installing partial arrays.
 
 ### Storage component
 
@@ -408,7 +444,7 @@ normalize scheduling input before later lesson commands or persistence code use 
 
 * `LessonId` is a stable identifier consisting of `L` followed by a positive `long` sequence number. Lower-case prefixes
   are normalized, leading zeros are rejected, and advancing beyond `Long.MAX_VALUE` fails explicitly instead of wrapping.
-  The canonical aggregate introduced in a later increment will own allocation state so committed IDs are not reused.
+  The canonical aggregate owns allocation state so committed IDs are not reused.
 * `LessonDay` accepts the case-insensitive abbreviations `Mon` through `Sun` and stores their canonical display form.
 * `LessonTime` accepts exactly four digits in 24-hour `HHMM` format and retains leading zeros when displayed.
 * `LessonTimeSlot` combines one weekday with a start and end time. Its end must be strictly later than its start, so
@@ -418,8 +454,8 @@ normalize scheduling input before later lesson commands or persistence code use 
 * `Room` contains 1–10 letters or digits. It is normalized to upper case so room comparisons do not miss clashes because
   of letter case.
 
-This increment establishes domain contracts only. It does not activate or advertise a lesson command; lesson creation,
-global tutor/room clash checks, ID allocation and persistence are integrated in later increments.
+These value types do not activate or advertise a lesson command. The canonical aggregate now supplies lesson creation,
+global tutor/room clash checks and ID allocation; command and persistence integration remain separate increments.
 
 ### Immutable shared lesson records
 
@@ -432,8 +468,9 @@ The constructor defensively copies the roster and rejects Tutor or Parent IDs in
 Tutor ID. `getEnrolledStudentIds()` exposes an unmodifiable snapshot. `withEnrolledStudentIds`,
 `withEnrolledStudent`, and `withoutEnrolledStudent` return replacement `Lesson` values, leaving the original lesson
 and its stable identity unchanged. Equality, hashing, copying and string representation include every stored field,
-including roster membership. The later canonical aggregate owns lesson ordering, ID allocation, clash checks,
-persistence and duplicate-enrolment command feedback; this dormant record does not change the active runtime.
+including roster membership. The canonical aggregate owns lesson ordering, ID allocation and clash checks,
+while persistence and duplicate-enrolment command feedback remain separate work. This dormant record does not change
+the active runtime.
 
 ### Inline help
 
@@ -1113,6 +1150,12 @@ Run these checks when the canonical people view and corresponding commands are a
 5. After a successful person-list change, verify current-view positions are refreshed while surviving stable IDs and stored relationships remain intact. On a failed validation or save, verify the records and prior people view are preserved. Restart with supported data and confirm persisted references use stable IDs rather than previously displayed indices.
 
 ### Dormant person-card developer preview
+
+`PeopleView` now derives the current role-filtered people list from one supplied `PonHubData` root. It retains a single unmodifiable observable list, preserving global relative order and giving `PersonIndexResolver` and `PersonRecordListPanel` the same current records. The panel renders positions separately from stable IDs, shows the current count and an empty placeholder, and wraps cards inside a vertically scrolling list. It never owns a writable registry.
+
+The root does not publish mutation events. Its owner must call `refresh()` after committed state replacement or rollback, on the JavaFX application thread while controls are attached. Refresh preserves the selected role; a committed addition's reset to all roles belongs to the coordinated add workflow. Parse people-list arguments before applying `setRoleFilter`; invalid arguments leave both view and root unchanged. Command feedback can use `PersonRecordListData` with this current list and filter.
+
+This adapter and panel remain dormant: `ModelManager`, `MainWindow`, command dispatch and storage still use the inherited runtime. At #85's cutover, create the view over the single loaded canonical root, pass its list to both cards and person-index consumers, connect list/add and compatible loading together, and refresh it after commit/rollback. Do not place a parallel canonical store beside the active legacy store. #77 remains open for coordinated activation and its outstanding actual display checks; #79, #82 and #84 remain safety gates.
 
 These checks exercise prepared components, not a supported application command. Run `seedu.address.ui.PersonRecordCardPreview.main` from the IDE's test source set with Java 25 and the test runtime classpath. It opens an isolated fixture list and never reads or writes application records or preferences.
 
