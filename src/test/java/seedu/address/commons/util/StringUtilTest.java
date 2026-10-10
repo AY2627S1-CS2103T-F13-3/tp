@@ -1,5 +1,6 @@
 package seedu.address.commons.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -9,6 +10,22 @@ import java.io.FileNotFoundException;
 import org.junit.jupiter.api.Test;
 
 public class StringUtilTest {
+
+    @Test
+    public void trimSpaces_onlyAsciiSpaces_preservesOtherCharacters() {
+        assertEquals("", StringUtil.trimSpaces(""));
+        assertEquals("", StringUtil.trimSpaces(" ".repeat(100_000)));
+        assertEquals("A  B", StringUtil.trimSpaces("  A  B  "));
+        assertEquals("\tA\n\u00a0", StringUtil.trimSpaces("  \tA\n\u00a0  "));
+    }
+
+    @Test
+    public void normalizeSpaces_onlyAsciiSpaces_collapsesSpaces() {
+        assertEquals("", StringUtil.normalizeSpaces(""));
+        assertEquals("", StringUtil.normalizeSpaces(" ".repeat(100_000)));
+        assertEquals("Anne-Marie O'Neil", StringUtil.normalizeSpaces("  Anne-Marie   O'Neil  "));
+        assertEquals("\tA \n\u00a0", StringUtil.normalizeSpaces("  \tA   \n\u00a0  "));
+    }
 
     //---------------- Tests for isNonZeroUnsignedInteger --------------------------------------
 

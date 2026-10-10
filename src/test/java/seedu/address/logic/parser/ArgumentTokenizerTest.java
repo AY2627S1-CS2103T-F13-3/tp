@@ -80,6 +80,16 @@ public class ArgumentTokenizerTest {
     }
 
     @Test
+    public void tokenize_boundaryControls_preservesArgumentValue() {
+        String argsString = " \tPreamble\n p/  \tArgument value\n  -t\rOther value\0 ";
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(argsString, pSlash, dashT);
+
+        assertPreamblePresent(argMultimap, "Preamble");
+        assertArgumentPresent(argMultimap, pSlash, "\tArgument value\n");
+        assertArgumentPresent(argMultimap, dashT, "\rOther value\0");
+    }
+
+    @Test
     public void tokenize_multipleArguments() {
         // Only two arguments are present
         String argsString = "SomePreambleString -t dashT-Value p/pSlash value";

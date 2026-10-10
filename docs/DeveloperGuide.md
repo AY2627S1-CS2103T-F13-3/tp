@@ -11,6 +11,7 @@ title: Developer Guide
 
 * PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, the ordered people registry and its import/export state, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
+* Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with contact validation, linear ASCII-space normalization, parser/loader integration, related automated tests, and the corresponding guide updates for [#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61).
 * Zhu Zhi Yu used OpenAI Codex for the detached role-filtered people-list projection and argument parser, their regression tests, and the integration notes below.
 * Zhu Zhi Yu used OpenAI Codex for the dormant current-people index resolver, its role and filtered-view regression tests, and the related integration documentation.
 * Zhu Zhi Yu used OpenAI Codex to prepare representative canonical people samples, their sample-integrity and view-selection tests, and the related developer usage notes.
@@ -19,11 +20,15 @@ title: Developer Guide
 * Zhu Zhi Yu used OpenAI Codex to document the confirmed person command-index boundary and reconcile shared-lesson command formats, staged search scope, legacy recovery policy, use cases, and manual checks. This acknowledgement covers those documentation changes; feature implementations remain with their owners.
 * Zhu Zhi Yu used OpenAI Codex to assist with the file-logging startup fallback, its isolated regression tests, and logging documentation.
 * Zhu Zhi Yu used OpenAI Codex for the UI startup error-handling fix and its regression tests.
+* Zhu Zhi Yu used OpenAI Codex for dormant role-aware add argument parsing, its immutable ID-free input, regression tests, and integration documentation.
 * Zhu Zhi Yu used OpenAI Codex for constant-stack email validation that preserves the inherited contact rules, its parser/file-loading regressions, and the related implementation and manual-testing notes.
+* Zhu Zhi Yu used OpenAI Codex to clarify the course-prescribed Java 25 and macOS runtime setup, release verification, and manual-testing documentation.
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
 * Ernest's Week 8 help increment used OpenAI Codex to inspect the repository, generate and revise the command catalogue, inline-help implementation, regression tests, and Ernest's documentation coordination changes. This attribution covers that increment; it does not claim authorship of teammates' feature implementations or imply teammate review has occurred.
+* Ernest used OpenAI Codex for the #129 active UI field-encapsulation and Javadoc standards corrections, caller verification, and repository checks.
+* Ernest used OpenAI Codex for #60's shared architecture/command conventions and AboutUs ownership clarification. This attribution covers documentation coordination; each feature owner retains their own implementation, tests and feature documentation.
 * Zhu Zhi Yu used OpenAI Codex to prepare the dormant person-card display projection, FXML renderer, projection and renderer tests, isolated developer preview, Linux CI virtual-display setup, and the related integration and manual-testing documentation. This attribution covers that card increment.
 
 --------------------------------------------------------------------------------------------------------------------
@@ -48,7 +53,15 @@ When registering or withdrawing a command, update catalogue/router tests, its UG
 
 ### Shared-lesson target contract
 
-The broader team integration target uses one authoritative people collection, one independent Lesson collection, and separate dated Attendance records. Student composes common contact details and holds education level and parent contact. Student must not own copies of shared lessons. Each Lesson owns `enrolledStudentIds`; derive student lessons, rosters and tutor schedules from that association. Attendance has the unique key student ID + lesson ID + date, with `present` or `absent`; a missing entry is unrecorded.
+This records the accepted design in [#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60) and [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59). It is a shared contract for incremental integration, not a claim that the complete runtime is delivered. The planned canonical data root holds one ordered people collection, one independent Lesson catalogue and separate dated Attendance records.
+
+| Record or relationship | Authoritative representation |
+| --- | --- |
+| People | Immutable `Student`, `Tutor` and `Parent` records implement `PersonRecord`. `Student` composes `ContactDetails`, education level and parent phone; it does not extend legacy `Person` or own Lesson objects. |
+| Shared lessons | A Lesson stores its stable Lesson ID, Tutor ID, weekday/time, subject and room. Its `enrolledStudentIds` owns current membership. A student can join several lessons; several students can join the same lesson. |
+| Derived views | Student lessons, lesson rosters and tutor schedules resolve those IDs from the root. They do not create another writable membership graph. Empty lessons remain in the catalogue and shared lessons appear once. |
+| Attendance | One key is Student ID + Lesson ID + date. The recorded status is `present` or `absent`; no entry means unrecorded. History is independent of current membership. |
+| Parent links | Separate Parent records are optional. Derive links only when a Parent's own phone exactly equals the Student's parent phone, including leading zeros. A Student's parent phone does not require a matching Parent record. |
 
 **Confirmed person-selector boundary:** `INDEX` and `STUDENT_INDEX` arguments use a positive one-based position in the current filtered **people list**, following AB3's command-input convention. This applies to deletion and to the student selector for enrolment, unenrolment, attendance, history, and student-specific lesson retrieval when those routes are integrated. An index selects the card at that position in the current people view, not that position in the unfiltered collection, a lesson roster, or a lesson/history result. Validate the range and required role, then resolve the index once to the selected record's stable `PersonId` before invoking Model or query APIs. Reuse that resolved ID throughout the operation; later view refreshes must not select another record by reinterpreting the index. Lesson creation has the separate named-tutor lookup described below, which also resolves once to a stable ID.
 
@@ -58,28 +71,43 @@ The planned lesson-catalogue filter is `lessons [si/STUDENT_INDEX]`. Its optiona
 
 **Tutor selection:** `addlesson` resolves `tu/TUTOR_NAME` as a normalized full name, ignoring letter case and repeated spaces. Optional `tp/TUTOR_PHONE` must match the tutor's exact phone number; never ignore a supplied phone to fall back to the name. Reject zero matches or ambiguity without changing data, and request a disambiguating phone when needed. Search `tu/` instead matches a case-insensitive name fragment. Tutor-category name search uses `n/`. Stable person IDs are not external lookup selectors for these commands.
 
-The planned shared-lesson routes are:
+The planned routes follow the [UG command conventions](UserGuide.html#reading-the-planned-command-formats) and [summary](UserGuide.html#planned-command-summary):
 
 | Action | Format |
 | --- | --- |
+| People | `add r/ROLE ...`, `list [r/ROLE]`, `delete INDEX` (role-specific required fields are in the UG) |
 | Create lesson | `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` |
 | Enrol / unenrol | `enrol STUDENT_INDEX lid/LESSON_ID` / `unenrol STUDENT_INDEX lid/LESSON_ID` |
 | Delete lesson | `deletelesson lid/LESSON_ID` |
 | Catalogue | `lessons [si/STUDENT_INDEX]` |
 | Lesson detail | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` |
-| Mark / correct | `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present\|absent` |
+| Mark / correct | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent</code> |
 | Unmark | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` |
 | History | `history STUDENT_INDEX [lid/LESSON_ID]` |
+| Search | `search c/CATEGORY [FILTER_PREFIX/VALUE]...` |
 
 The complete [search matrix](#supported-criteria) remains the planned target. Own-contact searches can be integrated first, followed by the relational families. Each delivered route advertises only its available filters; staging does not silently remove the remaining filters from the target. Documenting a route does not activate it.
 
-Create lessons with empty rosters. Tutor and room clashes are checked once per shared lesson; student timetable clashes are checked on enrolment. Time intervals are half-open so adjacent bookings are allowed. Unenrolment removes membership and retains attendance. New attendance requires membership; existing history can be corrected or unmarked after unenrolment. Block student deletion for enrolment/history, tutor deletion for lesson references, and lesson deletion for enrolment/history. Deleting a separate Parent preserves the student's stored parent phone; parent links derive from matching phone values.
+**Scheduling and attendance rules:**
+
+* Create a lesson independently with an empty roster. Reject tutor or room clashes between distinct lessons on the same weekday. Check a student's clashes against their other enrolled lessons when enrolling; another student joining the same lesson does not book the tutor or room again.
+* Treat times as half-open intervals `[start, end)`: `1600–1700` and `1700–1800` are adjacent and allowed. Overlap requires `first.start < second.end` and `second.start < first.end` on the same weekday; equal times on different weekdays do not clash.
+* Unenrolment removes only current membership and retains dated attendance. New attendance requires current membership and a real date matching the lesson's weekday. An existing historical key can be corrected or unmarked after unenrolment; repeating its status does not create a second entry. Unmark removes the dated record, not membership. Unrecorded is the absence of a record, never a third stored status.
+
+**Deletion guards:** Reject a blocked deletion without changing data; never cascade to linked records.
+
+| Record to delete | Guard or retained data |
+| --- | --- |
+| Student | Block while any Lesson roster or Attendance record references the Student ID. |
+| Tutor | Block while any Lesson references the Tutor ID. |
+| Lesson | Block while its roster is non-empty or Attendance references its Lesson ID. |
+| Parent | Preserve every Student's parent-phone value; derived links disappear when the Parent record is removed. |
 
 All mutations go through Model APIs using stable identities after command-boundary resolution. Complete aggregate copy/reset/equality and independent snapshots cover people, lessons, memberships, attendance and monotonic allocation state; deleted committed IDs are not reused. Vincent coordinates validated versioned JSON and transactional saves; failed saves must restore data and active views before those commands are enabled. The canonical runtime cutover must connect a compatible people view, index resolution, guarded commands and persistence together. Do not persist displayed indices or introduce a second people store; verify that separate lesson/roster/history results preserve the people view used by the next command. Preferences remain separate. Capacity, waiting lists, make-ups, export, saved searches, archiving, richer attendance statuses or notes, attendance percentages, fees, lesson editing, occurrence cancellation, undo/redo and guided advanced search are future extensions.
 
 **Iteration boundary:** The [Week 8 course instructions](https://nus-cs2103-ay2627-s1.github.io/website/schedule/week8/project.html) call for small first increments towards the simplest MVP. Each member should aim for a meaningful reviewed and merged code PR. An individual feature need not be complete end-to-end, but intermediate versions must remain working; this iteration requires no product release. The broader team target remains visible in [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59). Carry unfinished work into v1.3 honestly. Compatible loading and rollback remain safety requirements when a mutation is activated, rather than a requirement to finish every planned feature in Week 8.
 
-Zhu owns people/testing; Yang Shuo owns lessons/enrolment/attendance; Ben owns retrieval/views; Vincent owns saving/loading/attendance history; Ernest owns routing/help and documentation coordination. Each owner authors their own feature documentation in the existing UG/DG. Ernest reconciles shared conventions and examples without taking ownership of those implementations.
+The [AboutUs ownership record](AboutUs.html#project-team) assigns people/testing to Zhu, lessons/enrolment/attendance to Yang, queries/views to Ben, storage/history/delivery to Vincent, and help/documentation coordination to Ernest. Each owner authors their own feature documentation in the existing UG/DG as behavior is delivered. Ernest reconciles shared conventions and examples without taking ownership of those implementations.
 
 <div markdown="span" class="alert alert-primary">
 
@@ -281,7 +309,7 @@ their separate shutdown lifecycle. Future read-only commands must also bypass op
 #### JSON version detection foundation
 
 `JsonDataVersionDetector.detect(String)` classifies file contents using the existing Jackson dependency,
-without constructing Model objects, writing files or changing the current runtime loader. The planned
+without constructing Model objects or writing files. The current loader uses this gate before decoding. The planned
 PonHub envelope reserves `schemaVersion` as a positive JSON integer, initially `1`; this is a data-schema
 version, independent of the application version. Issue #79 will define and validate the remaining envelope.
 
@@ -297,8 +325,32 @@ version, independent of the application version. Issue #79 will define and valid
 Missing versions identify legacy data only for the strict legacy root shape. A versioned candidate can
 still contain missing or invalid records: the detector is a format gate, not a schema/domain validator.
 Callers must handle file absence and read errors separately; neither is equivalent to empty JSON.
-The protected loader in #84 must classify the same contents before domain decoding and prevent writes
-on rejection. This standalone foundation does not yet protect the inherited loader or provide migration.
+The current `JsonAddressBookStorage` classifies and decodes the same string. It accepts only legacy AB3
+roots in this runtime and rejects every other classification, including version-1 candidates until their
+codecs are integrated. Missing files retain the existing fresh/sample-data behavior. Only a confirmed
+missing path is treated as absent; denied access and dangling final symbolic links are loading failures.
+
+#### Current protected startup
+
+On a controlled loading failure, `StorageManager` records recovery guidance and locks operational saves
+for the rest of the session. `MainApp` creates an empty display model, not a replacement writable store.
+The UI displays a recovery warning; `LogicManager` allows only help/list/exit and bypasses saving for
+those commands in the protected session. Other commands are rejected before execution. Storage also
+rejects direct operational saves, while preferences retain their separate lifecycle. Deleting or fixing
+the file while the session is running does not unlock it: recovery requires a restart.
+
+JSON syntax, root/version errors, invalid contact records and I/O failures become controlled loading
+errors. Explicit checks reject null person/tag entries; unrelated programming errors are not swallowed.
+Valid legacy contacts still load and save normally. This safety increment does not implement the new
+aggregate codec, automatic migration, general command rollback or no-save behavior in normal sessions.
+
+Manual check: in a disposable working folder, place malformed JSON, `null`, or a versioned document in
+`data/addressbook.json` and record its bytes. Start the app and verify the recovery warning. Run help,
+list, exit and attempt add/delete; restart as necessary. The original bytes must remain unchanged and
+mutations must be blocked. Close the app, preserve the original, then restore a known-good compatible
+backup or correct JSON/access permissions and restart. Confirm valid human-edited legacy data loads.
+`ProtectedStartupTest` exercises the startup/command/storage boundary and original-byte preservation;
+`UiManagerTest` verifies the warning without requiring a real window.
 
 #### Planned protected loading and legacy upgrade
 
@@ -337,6 +389,20 @@ normalize scheduling input before later lesson commands or persistence code use 
 
 This increment establishes domain contracts only. It does not activate or advertise a lesson command; lesson creation,
 global tutor/room clash checks, ID allocation and persistence are integrated in later increments.
+
+### Immutable shared lesson records
+
+`Lesson` represents one canonical recurring teaching slot. It stores a stable `LessonId`, one tutor-role `PersonId`,
+the validated `LessonTimeSlot`, `Subject` and `Room`, and the set of currently enrolled student-role `PersonId` values.
+An empty roster is valid, and several students can refer to the same lesson without duplicating its tutor, room or
+schedule. Student records contain no copied `Lesson` values.
+
+The constructor defensively copies the roster and rejects Tutor or Parent IDs in it; the assigned tutor must have a
+Tutor ID. `getEnrolledStudentIds()` exposes an unmodifiable snapshot. `withEnrolledStudentIds`,
+`withEnrolledStudent`, and `withoutEnrolledStudent` return replacement `Lesson` values, leaving the original lesson
+and its stable identity unchanged. Equality, hashing, copying and string representation include every stored field,
+including roster membership. The later canonical aggregate owns lesson ordering, ID allocation, clash checks,
+persistence and duplicate-enrolment command feedback; this dormant record does not change the active runtime.
 
 ### Inline help
 
@@ -413,6 +479,23 @@ can be deleted. Existing command routing and the User Guide's active-command sta
 Tests cover mixed roles, filtered positions that differ from stable-ID suffixes, checked range
 and role errors, and retaining the resolved identity after a view refresh. The existing manual
 person-index procedure below remains pending actual canonical command integration.
+
+### Role-aware addition parsing foundation
+
+[Issue #135](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/135) prepares argument parsing for [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). `RoleAwareAddParser.parse(String)` accepts arguments after the future `add` command word and returns immutable `PersonAdditionInput`. The input contains a role, composed contact details, and optional student education level and parent phone. It contains no ID, person record, registry, command execution or writable operational state.
+
+| Role | Required prefixes | Optional prefixes |
+| --- | --- | --- |
+| Student | `r/`, `n/`, `l/`, `pp/` | `p/`, `e/`, `a/` |
+| Tutor or parent | `r/`, `n/`, `p/` | `e/`, `a/` |
+
+Prefixes are lowercase and may appear once in any order. Role and education-level values are case-insensitive. Omitted optional contacts remain absent; supplied values must be nonblank. Prefix boundaries and surrounding value spaces recognize Unicode whitespace; extraction preserves interior field text for the shared validators. Their normalization and character rules govern the resulting contact values, so Unicode field separators do not expand the permitted characters inside a value. Every prefix-shaped token is recognized, so an unknown prefix after an address cannot silently become address text. Repeated prefixes, student-only fields on other roles, preambles, line breaks and control characters produce specific `ParseException` feedback. Controls are rejected before trimming, and phone values retain leading zeros. Both own and parent phones use the existing 3–15-digit role-record bound.
+
+**Shared contact policy:** Name, email and address validation delegates to the shared value types supplied by merged [#61 / PR #110](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/110). This parser reuses their validation and normalization rules without duplicating validators. The contact-policy dependency is satisfied; role-aware command activation remains separate #85 work.
+
+**Activation boundary:** The existing `AddCommandParser`, router and supported-command catalogue still handle legacy person records using the shared contact policy. The prepared parser does not check duplicate people, allocate even a provisional ID, reset the view, save data or perform rollback. Those behaviors remain #85 work after the canonical aggregate, compatible persistence, protected loading and transaction foundations are ready. At cutover, construct and commit the record through that single canonical root; never use a placeholder ID or a second writable person store.
+
+Automated checks exercise all three roles, absent/present optional contacts, argument order/case, role restrictions, missing/blank/repeated/unknown fields, controls, phone bounds, immutable input invariants and unchanged active routing. Canonical duplicate detection, siblings sharing parent phones, committed ID allocation, save/reload and failed-save restoration remain integration tests under #85.
 
 ### Prepared person record cards
 
@@ -539,23 +622,39 @@ The current command, UI, and JSON aggregate still use the inherited AB3 `Person`
 
 `Student`, `Tutor`, and `Parent` implement `PersonRecord` and compose immutable `ContactDetails`; none extends the inherited `Person` class. Each constructor rejects IDs for another role. `Tutor#getPhone()` and `Parent#getPhone()` expose their required own phone, which follows the same 3–15 digit limit as other supplied phone values.
 
-**Validation boundary:** `Name`, `Email`, and `Address` still enforce their inherited AB3 validation rules. This foundation does not yet implement the User Guide's wider name punctuation and field-format or length rules; [issue #61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61) tracks that alignment. Contact details preserve the supplied display values; name normalization is used only for duplicate matching.
+**Validation boundary:** `Name`, `Phone`, `Email`, and `Address` enforce the contracts in [Contact validation and normalization](#contact-validation-and-normalization). Names and addresses are stored after space normalization, while names preserve display case. `ContactDetails#getNormalizedName()` additionally ignores name case for duplicate matching.
 
-**Current email validation:** The active contact parser and JSON loader share `Email.isValidEmail`, which scans
-ASCII characters in linear time with constant stack space. Long repeated local-part separators, domain hyphens,
-or domain labels therefore produce a value or the existing checked boundary error rather than a regex stack
-overflow. Its acceptance rules remain unchanged: single-label domains and long emails still load, the local part
-allows single `+`, `_`, `.`, or `-` separators, and domain labels allow single hyphens. The inherited final-label
-regex requires an adjacent alphanumeric pair, so `a@a-b` is rejected while `a@a-bc` is accepted. The public
-`VALIDATION_REGEX` remains the compatibility reference; bounded exhaustive regressions compare it with the scan.
-The complete contact-policy alignment in #61/#110 still requires protected loading in #84 before activation;
-this safety correction does not impose new field limits or protect the startup fallback.
+**Current email validation:** The active contact parser and JSON loader share `Email.isValidEmail`, which
+rejects values longer than 254 characters before scanning ASCII characters in linear time with constant stack
+space. Local-part periods cannot be leading, trailing or consecutive; intermediate domain labels allow internal
+hyphens; the final label contains 2–63 English letters. Long repeated local-part separators, domain hyphens or
+domain labels produce the existing checked boundary error instead of a regex stack overflow. The public
+`VALIDATION_REGEX` remains the format reference; bounded exhaustive regressions compare it with the scan.
 
 **Identity, equality, and duplicates:** The stable `PersonId` identifies a record independently of its contact details or position in a displayed list. Value equality compares the ID and all stored fields, including optional contact details and the student's education level and parent phone. `isDuplicateOf(PersonRecord)` instead requires the same role and compares the name, ignoring case and repeated spaces, together with the required identifying phone: the parent phone for students or the record's own phone for tutors and parents. Different IDs, optional contact details, or student education levels do not distinguish otherwise duplicate records. A null or different-role argument is not a duplicate. `PeopleRegistry` now uses this operation to reject duplicate records; connecting that rejection to active commands remains follow-up work.
 
 **Command boundary:** A user-entered person index is resolved once through the current filtered people view to a `PersonId`; it is not passed into the `PersonId` constructor or persisted as a relationship. Internal lookup, student-lesson queries, rosters, attendance keys and storage continue to use stable IDs. Resolving an index and validating its role belongs to the planned command integration, not these immutable record constructors.
 
 **Planned relationships:** The person records do not contain lesson or attendance collections. The planned shared-lesson model will keep canonical lessons and student–lesson membership outside the student record, referring to stable IDs so several students can share one lesson. Separate parent records remain optional; future parent links will use exact equality between a parent's own phone and a student's stored parent phone, without requiring a stored `Parent` object in `Student`. Relationship lookup, dated attendance, and the storage of these relationships are separate follow-up work.
+
+### Contact validation and normalization
+
+The shared `Name`, `Phone`, `Email`, and `Address` value types enforce the contact formats in the User Guide. Their constructors and `isValid...` methods apply the same rules, including when the inherited JSON adapter loads a contact.
+
+| Type | Implemented contract |
+| --- | --- |
+| `Name` | 1–100 characters after trimming surrounding ASCII spaces and collapsing repeated spaces. Accepts English letters, spaces, apostrophes, hyphens and periods, with at least one letter. Preserves display case. |
+| `Phone` | 3–15 ASCII digits, stored as a string so leading zeros are retained. |
+| `Email` | At most 254 characters. The local part allows English letters, digits, `.`, `_`, `%`, `+` and `-`, with no leading, trailing or consecutive periods. The domain has at least two labels of letters, digits or internal hyphens; its final label contains 2–63 English letters. Preserves spelling and case. |
+| `Address` | 1–200 printable ASCII characters after trimming surrounding spaces and collapsing repeated spaces. Rejects `/`, tabs, line breaks and other control characters. |
+
+`ParserUtil#parseName` and `parseAddress` delegate normalization to their value types. The argument tokenizer removes only ordinary spaces from prefixed values, preserving control characters for validation. The command parser likewise preserves trailing control characters. This prevents invalid pasted names or addresses from becoming valid merely because a parser discarded their tabs or line breaks. Phone and email parsing retain their inherited surrounding-whitespace trimming.
+
+Space trimming and collapse scan input linearly. Name and address construction normalize once; parser and JSON-adapter boundaries use that construction directly and translate invalid values to their existing checked exceptions. The email length check runs before its constant-stack format scan. Automated regressions exercise the active command parser and actual JSON-file loader with 100,000-space runs, controls following those runs, and an oversized dotted email; they assert values or controlled failures without machine-specific timing limits. The inherited protected startup also blocks operational writes after a loading rejection, including successful `help`, `list` and `exit` commands and attempted mutations.
+
+Normalization is applied before equality and hashing of names and addresses. Case remains significant for value equality; role-specific duplicate-name matching is a separate contract. Role-aware commands, optional-field command handling and relationships are follow-up work. The active inherited `add` route uses these validators. The dormant `EditCommandParser` also uses them in direct tests, but `edit`, `clear` and `find` remain withdrawn from the command catalogue.
+
+The JSON schema is unchanged. Previously accepted records outside the new rules fail the inherited loading checks, as do identities made duplicate by space normalization. The [current protected startup](#current-protected-startup) preserves the rejected file and presents an empty protected view with recovery guidance. It allows help, list and exit without operational saves and blocks mutations and direct storage saves. `ContactValidationStartupTest` exercises those boundaries, shutdown and restart with numeric names, long phones, slash addresses, single-label and oversized emails, and normalization-created duplicates. Deliberately corrected compatible data loads and saves after restarting. Back up the original before deliberate corrections or inspecting a working copy with an older compatible build. Broader canonical loading and legacy-cutover work remain Vincent's [#84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84); this increment does not implement migration.
 
 ### Ordered people registry foundation
 
@@ -599,7 +698,21 @@ These are state contracts for [issue #79](https://github.com/AY2627S1-CS2103T-F1
 
 `remove` obtains the selected record and asks the caller's `isReferenced` predicate whether the canonical relationship view references it. A referenced record raises `ReferencedPersonException`; an unknown ID raises `PersonNotFoundException`. Neither rejection changes records, order, or allocation values. The predicate must not mutate the registry. The registry supplies this integration point without implementing lesson or attendance guards itself; later canonical-model work must pass the complete relationship check rather than maintaining a second writable store.
 
-The dormant registry can support subsequent aggregate and view foundations without replacing the active runtime. Contact validation in [issue #61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61) and protected loading in [issue #84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84) remain gates before the coordinated person-command activation in [issue #85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). Existing command selectors and shared-lesson/search contracts are unchanged by this foundation.
+The dormant registry can support subsequent aggregate and view foundations without replacing the active runtime. Contact validation in [issue #61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61) is merged. Broader canonical loading in [issue #84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84) and the remaining runtime prerequisites still gate coordinated person-command activation in [issue #85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). Existing command selectors and shared-lesson/search contracts are unchanged by this foundation.
+
+### Dated attendance records
+
+`Attendance` is a separate immutable association record; it is not nested in a Student or Lesson. Its unique
+`AttendanceKey` combines one student-role `PersonId`, one `LessonId`, and one `LocalDate`. The remaining stored field
+is `AttendanceStatus`, whose only recorded values are `present` and `absent`. A missing key means unrecorded, so no
+`unrecorded` status is stored. Current enrolment also remains outside Attendance, allowing dated history to survive
+later unenrolment.
+
+External dates are parsed using strict ASCII `YYYY-MM-DD` syntax and calendar validation, including real leap years.
+Status parsing is case-insensitive. Wrong-role person IDs, impossible dates and unknown statuses are rejected.
+`withStatus` returns a replacement record for the same key and leaves the original unchanged. Equality and hashing
+include all three key components and the status, which lets the later canonical aggregate keep one record per key and
+replace its value when correcting attendance. This foundation adds no active command, collection or persistence route.
 
 ### Future undo/redo and archiving
 
@@ -880,7 +993,7 @@ Person selectors in these target use cases are positive indices from the current
 
 ### Non-Functional Requirements
 
-1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
+1.  Should work on Windows, Linux and macOS using Java `25`. On macOS, use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`), as described in [Setting up and getting started](SettingUp.html#setting-up-the-project-on-your-computer).
 2.  Should be able to hold up to 1,000 persons, 1,000 recurring lessons, and 10,000 attendance records without noticeable sluggishness during typical usage.
 3.  Team performance target: common operations should update the GUI within 2 seconds on a reference machine recorded with its hardware, OS, Java version and test dataset. The reference machine and measured results are still to be documented; this guide does not claim the target has been verified.
 3.  A user with above average typing speed for regular English text (i.e. not code or system administration commands) should be able to accomplish most recurring tasks faster using commands than using the mouse.
@@ -935,6 +1048,8 @@ Person selectors in these target use cases are positive indices from the current
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Appendix: Instructions for manual testing**
+
+Use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-project-on-your-computer) for these checks. On macOS, use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) for the Mac's architecture. Confirm the terminal used for `java -jar` selects that installation and record the OS, architecture and JDK distribution/version with the test results. Additional macOS trials with other distributions, including plain Oracle JDK, are optional portability checks.
 
 ### Inline help and supported routes
 
@@ -999,22 +1114,29 @@ testers are expected to do more *exploratory* testing.
    1. Relaunch the app by double-clicking the JAR file.<br>
        Expected: The most recent window size and location are retained.
 
-### Long emails in the current contact runtime
+### Contact validation in the current increment
 
-Use a disposable application folder and the active `add n/NAME p/PHONE e/EMAIL a/ADDRESS` format. These checks
-cover validation safety; the planned 254-character email policy remains gated with the full contact alignment.
+Use the inherited contact commands below; the planned role-aware commands are not required for these checks. Run them in a test copy of your data.
 
-1. In a text editor, form an email from 5,000 copies of `a.` followed by `a@example.com`. Paste it into
-   `add n/Long Email p/123 e/EMAIL a/Somewhere`, replacing `EMAIL` with that text. Expect a successful addition
-   without an uncaught error. Restart and verify the stored email is preserved.
-2. Repeat in a fresh disposable folder with 5,000 copies of `a-` after `a@`, ending in `ab`, and with 5,000
-   copies of `a.` after `a@`, ending in `ab`. Expect the same accepted-value behavior. These long inherited
-   values remain loadable even though the planned contact policy will later restrict their length.
-3. Replace the first example's suffix with `a!@example.com`, or replace the second example's final `ab` with
-   `a`. Expect the existing email constraint feedback; the command must not add a record or crash.
-4. Close the app, make a valid manual edit to the disposable JSON file using one of the accepted long emails,
-   and restart. Expect the edited email to load unchanged. Automated file-loader regressions additionally
-   verify controlled loading errors and byte preservation for invalid emails; safe startup recovery remains #84 work.
+1. Enter `add n/  Anne-Marie   O'Neil  p/00123456 e/anne%school@example.com a/  Blk 10,   #01-02  `<br>
+   Expected: One contact is added with name `Anne-Marie O'Neil`, phone `00123456`, and address `Blk 10, #01-02`. The punctuation, email and leading zeros are retained.
+1. Try `add n/Test User p/1234567890123456 e/test@example.com a/Blk 10` and `add n/Test User p/123 e/test@localhost a/Blk 10`.<br>
+   Expected: Each command reports the corresponding phone or email constraints and adds nothing.
+1. Try `add n/Test2 User p/123 e/test@example.com a/Blk 10` and `add n/Test User p/123 e/test@example.com a/Blk 10/Unit 2`.<br>
+   Expected: Each command reports the corresponding name or address constraints and adds nothing.
+1. Close and reopen the app.<br>
+   Expected: The successfully saved contact retains the normalized name/address, email and leading-zero phone.
+1. In a disposable folder, prepare separate copies of a previously valid contact file containing a numeric name,
+   a phone longer than 15 digits, an address with `/`, or a single-label email domain. Also prepare two records
+   named `Alex  Tan` and `Alex Tan`, which become duplicates after normalization. Record each file's bytes and
+   start the app with it.<br>
+   Expected: Recovery guidance and an empty protected view. `help`, `list` and `exit` preserve the original bytes;
+   attempted `add` and `delete` are blocked. Closing and restarting still preserves and rejects the same file.
+1. Form an email from 5,000 copies of `a.` followed by `a@example.com`, then paste it into the inherited add
+   format. Repeat with long domain-hyphen and domain-label runs.<br>
+   Expected: Email constraint feedback without a crash or a saved contact. A saved file containing any such
+   oversized email starts a protected session with its bytes preserved. Correct a separate compatible working
+   copy deliberately, then restart; valid contact values must load and remain writable.
 
 ### Deleting a person
 
@@ -1068,7 +1190,7 @@ Run these as the corresponding routes become available, using an isolated suppor
 
 ### Planned canonical loading and recovery
 
-These checks apply when protected loading is activated. The current inherited loader does not yet guarantee rejected-file preservation; never use an original dataset for destructive failure experiments. Use copies in disposable test folders and keep the preserved original and backup outside all configured operational paths.
+These checks apply when canonical-format loading is activated. The current inherited runtime already protects rejected files, while canonical loading and initialization remain planned. Use copies in disposable test folders and keep the preserved original and backup outside all configured operational paths.
 
 1. In a deliberately separate empty folder, launch the canonical build with no operational file. Expect a valid fresh supported root. Add delivered records and restart; expect successful restoration. This does not authorize replacing a legacy or rejected file in an existing folder.
 2. Close the app and make a valid manual edit to supported versioned JSON using its delivered schema, such as correcting a contact value while preserving valid IDs, allocation state and references. Restart; expect the edited records to load. Repeat with valid memberships and dated history. Human editing must remain usable.

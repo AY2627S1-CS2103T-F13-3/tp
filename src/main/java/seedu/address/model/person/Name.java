@@ -3,41 +3,44 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import seedu.address.commons.util.StringUtil;
+
 /**
  * Represents a Person's name in the address book.
  * Guarantees: immutable; is valid as declared in {@link #isValidName(String)}
  */
 public class Name {
 
+    public static final int MAX_LENGTH = 100;
     public static final String MESSAGE_CONSTRAINTS =
-            "Names should only contain alphanumeric characters and spaces, and should not be blank";
-
-    /*
-     * The first character of the name must not be a whitespace,
-     * otherwise " " (a blank string) becomes a valid input.
-     */
-    public static final String VALIDATION_REGEX = "[\\p{Alnum}][\\p{Alnum} ]*";
+            "Names must contain 1 to 100 characters after trimming and collapsing spaces, "
+            + "using English letters, spaces, apostrophes, hyphens or periods, with at least one letter.";
+    public static final String VALIDATION_REGEX = "(?=.*[A-Za-z])[A-Za-z .'-]+";
 
     public final String fullName;
 
     /**
-     * Constructs a {@code Name}.
+     * Creates a {@code Name} with surrounding spaces removed and repeated spaces collapsed.
      *
      * @param name A valid name.
      */
     public Name(String name) {
         requireNonNull(name);
-        checkArgument(isValidName(name), MESSAGE_CONSTRAINTS);
-        fullName = name;
+        String normalizedName = StringUtil.normalizeSpaces(name);
+        checkArgument(isValidNormalizedName(normalizedName), MESSAGE_CONSTRAINTS);
+        fullName = normalizedName;
     }
 
     /**
-     * Returns true if a given string is a valid name.
+     * Returns whether a string satisfies the name contract after space normalization.
      */
     public static boolean isValidName(String test) {
-        return test.matches(VALIDATION_REGEX);
+        return isValidNormalizedName(StringUtil.normalizeSpaces(test));
     }
 
+    private static boolean isValidNormalizedName(String name) {
+        return name.length() <= MAX_LENGTH && name.matches(VALIDATION_REGEX);
+    }
 
     @Override
     public String toString() {

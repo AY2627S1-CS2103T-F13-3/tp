@@ -13,6 +13,45 @@ import java.util.Arrays;
 public class StringUtil {
 
     /**
+     * Returns {@code value} with surrounding ASCII spaces removed, preserving other characters.
+     */
+    public static String trimSpaces(String value) {
+        requireNonNull(value);
+        int start = 0;
+        int end = value.length();
+        while (start < end && value.charAt(start) == ' ') {
+            start++;
+        }
+        while (end > start && value.charAt(end - 1) == ' ') {
+            end--;
+        }
+        return value.substring(start, end);
+    }
+
+    /**
+     * Returns {@code value} with surrounding ASCII spaces removed and interior runs collapsed.
+     * Preserves all other characters, including controls, for subsequent field validation.
+     */
+    public static String normalizeSpaces(String value) {
+        requireNonNull(value);
+        StringBuilder normalizedValue = new StringBuilder();
+        boolean hasPendingSpace = false;
+        for (int i = 0; i < value.length(); i++) {
+            char character = value.charAt(i);
+            if (character == ' ') {
+                hasPendingSpace = true;
+            } else {
+                if (hasPendingSpace && !normalizedValue.isEmpty()) {
+                    normalizedValue.append(' ');
+                }
+                normalizedValue.append(character);
+                hasPendingSpace = false;
+            }
+        }
+        return normalizedValue.toString();
+    }
+
+    /**
      * Returns true if the {@code sentence} contains the {@code word}.
      *   Ignores case, but a full word match is required.
      *   <br>examples:<pre>

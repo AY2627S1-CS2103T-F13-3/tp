@@ -12,14 +12,14 @@ PonHub is a desktop app for tuition centre administrators to keep student, tutor
 
 ## Quick start
 
-1. Ensure that Java `25` or later is installed on your computer.<br>
-   **Mac users:** Follow the JDK installation instructions [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
+1. Ensure that Java `25` is installed on your computer.<br>
+   **Mac users:** Install Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) as prescribed by the [course's Mac advisory](https://nus-cs2103-ay2627-s1.github.io/website/admin/programmingLanguages.html) and [Mac installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html). Use this installation in the terminal that launches PonHub.
 
 1. Use the JAR built from this increment, or download a matching PonHub build from the [project's Releases page](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases) after publication. Contributors can build `build/libs/ponhub.jar` with `./gradlew shadowJar`; see [DevOps](DevOps.html#build-automation). Week 8 does not require a public release, so an older released JAR may have different commands.
 
 1. Put the JAR file in the folder you want to use for PonHub. Keep this folder when moving or backing up your data.
 
-1. Open a terminal in that folder and run `java -jar FILENAME.jar`, replacing `FILENAME.jar` with the downloaded file's name. The PonHub window should open.
+1. Open a terminal in that folder, confirm `java -version` reports Java 25, and run `java -jar FILENAME.jar`, replacing `FILENAME.jar` with the downloaded file's name. The PonHub window should open.
 
 1. Enter a command in the command box and press Enter. Start with `help`, then `help add`. The current increment supports inherited contact records:
 
@@ -59,9 +59,29 @@ Long guidance wraps within Result Display. Scroll vertically to read the rest; e
 
 --------------------------------------------------------------------------------------------------------------------
 
+## Data protection in the current build
+
+The current build stores contacts in `data/addressbook.json` relative to the folder from which you
+launch PonHub. Valid unversioned contact files still work. Versioned PonHub data is not supported by
+this build yet, including files marked with schema version 1.
+
+If the file is unreadable, malformed or unsupported, PonHub shows a **Data file protected** warning.
+The empty list shown in that session does **not** mean your saved records were deleted. Only `help`,
+`list` and `exit` are available; add/delete and operational saves are blocked. Preferences remain separate.
+
+To recover:
+
+1. Close PonHub and preserve a backup of the original data folder before making changes.
+2. Restore a known-good file compatible with this build, or correct the JSON/access permissions after
+   inspecting the reported error. For versioned data, use a compatible build on a separate working copy.
+3. Restart PonHub and check the loaded records. Repairing the file while the app is running does not
+   unlock that session. Do not delete the original just to dismiss the protection.
+
+Normal-session command rollback and the planned new-format migration policy below remain separate work.
+
 ## Planned shared-lesson workflow
 
-The following sections define the supplied v1.2 integration target. They are not commands delivered by this help increment. Feature owners will update their implementation details and examples when each feature becomes available.
+The following sections record the agreed v1.3 MVP command contracts. Their availability depends on incremental integration; use the [current command summary](#current-command-summary) and your build's `help` for active routes. Feature owners update their own implementation details and examples as behavior is delivered.
 
 ### Reading the planned command formats
 
@@ -71,6 +91,7 @@ The following sections define the supplied v1.2 integration target. They are not
 * Create a lesson by supplying an existing tutor's full name with `tu/TUTOR_NAME` and, optionally, their phone with `tp/TUTOR_PHONE`. Search uses `tu/QUERY` for a fragment of the tutor's name instead.
 * Shared lessons have stable IDs such as `L1`. Use `lid/LESSON_ID` wherever a command selects a lesson; there is no per-student lesson index.
 * Lesson catalogue, roster and history results preserve the current people list, its filter and its command positions. Select a student from the people list, rather than a position in those other results.
+* `st/HHMM` and `et/HHMM` use four-digit 24-hour times. `d/` takes a weekday for lesson creation/search and a real `YYYY-MM-DD` date for attendance or dated lesson details. `s/` takes a subject for creation/search and `present` or `absent` for `mark`.
 * Type command names and prefixes in lowercase. Supply each prefix at most once, in any order. Omit unknown optional fields; do not supply blank values.
 
 ### Planned quick start
@@ -112,14 +133,18 @@ Creates a student, tutor or parent record.
 | Parameter | Description and accepted values |
 |-----------|---------------------------------|
 | `r/ROLE` | Required. Use `student`, `tutor` or `parent`. Values are case-insensitive. |
-| `n/NAME` | Required. Between 1 and 100 characters using English letters, spaces, apostrophes, hyphens or periods, with at least one letter. Repeated spaces are reduced to one. |
+| `n/NAME` | Required. Between 1 and 100 characters using English letters (`A`–`Z`, `a`–`z`), spaces, apostrophes, hyphens or periods, with at least one letter. Surrounding spaces are removed and repeated spaces are reduced to one before measuring length. Letter case is preserved. Tabs and line breaks are not allowed. |
 | `l/LEVEL` | Required for students; not allowed for tutors or parents. Use `P1`–`P6`, `S1`–`S5`, `JC1` or `JC2`. Values are case-insensitive and displayed in uppercase. |
 | `pp/PARENT_PHONE` | Required for students; not allowed for tutors or parents. Use 3–15 digits without spaces or punctuation. |
 | `p/PHONE` | Required for tutors and parents; optional for students. Use 3–15 digits without spaces or punctuation. Leading zeros are retained. |
 | `e/EMAIL` | Optional. Use an email address such as `mei@example.com`, with no spaces and at most 254 characters. |
-| `a/ADDRESS` | Optional. Between 1 and 200 printable ASCII characters. Slashes, tabs and line breaks are not allowed. Repeated spaces are reduced to one. |
+| `a/ADDRESS` | Optional. Between 1 and 200 printable ASCII characters. Slashes, tabs and line breaks are not allowed. Surrounding spaces are removed and repeated spaces are reduced to one before measuring length. |
 
-For email addresses, the local part before `@` may contain letters, digits, periods, underscores, `%`, `+` and `-`. It must not begin or end with a period or contain consecutive periods. The domain must contain at least two dot-separated labels, with no leading or trailing hyphens in a label. Its final label must contain 2–63 letters.
+For email addresses, the local part before `@` may contain English letters, digits, periods, underscores, `%`, `+` and `-`. It must not begin or end with a period or contain consecutive periods. Domain labels may contain English letters, digits and hyphens. The domain must contain at least two dot-separated labels, with no leading or trailing hyphens in a label. Its final label must contain 2–63 English letters. Email spelling and letter case are preserved.
+
+**Current increment:** These contact rules are implemented. The role-specific formats above describe the planned people workflow. Until that workflow is available, use `add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]`; all four contact fields are required for this inherited add command. The `edit` route is withdrawn and is unavailable in this build. Saved contacts must also satisfy these rules when loaded; old records with numeric names, phones longer than 15 digits, slash-containing addresses or single-label email domains will fail validation.
+
+**Testing older data:** Back up the data file before testing this increment and use a working copy. If an older file fails validation, the app starts a [protected session](#data-protection-in-the-current-build): the empty view is not your saved data, only `help`, `list` and `exit` are available, and the original file is preserved. Close the app before restoring or deliberately correcting a compatible file, then restart.
 
 #### Examples
 
@@ -214,7 +239,7 @@ Check the updated people list before deleting another person.
 
 ### 4. Creating and deleting shared lessons
 
-**Create:** `addlesson d/DAY st/START et/END s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
+**Create:** `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
 
 Example: `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1`.
 
@@ -296,13 +321,13 @@ People searches replace the displayed people list and number its results from 1.
 
 ### 7. Recording attendance and retrieving history
 
-**Mark:** `mark STUDENT_INDEX lid/LESSON_ID d/DATE s/STATUS`
+**Mark:** `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent`
 
 Example: Run `list r/student`. If the intended student appears at position 1 and the lesson ID is `L1`, enter `mark 1 lid/L1 d/2026-10-05 s/present`.
 
 Use a real date in `YYYY-MM-DD` format, matching the lesson's weekday, and status `present` or `absent`. New records require current enrolment. Marking an existing student/lesson/date corrects that record; repeating the same status does not create a duplicate. No attendance entry means unrecorded.
 
-**Unmark:** `unmark STUDENT_INDEX lid/LESSON_ID d/DATE`.
+**Unmark:** `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD`.
 
 Example: After `list r/student`, if the intended student appears at position 1, enter `unmark 1 lid/L1 d/2026-10-05` for lesson `L1`.
 
@@ -322,7 +347,7 @@ The supported JSON format remains human-editable. Close PonHub and keep a backup
 
 At the first canonical-format cutover, unversioned AB3 contact data is treated as legacy data. PonHub must preserve it and reject loading it into the new store; it must not guess person roles, automatically migrate it or replace it with an empty dataset. Recovery requires a backup and a separate supported store, followed by manual re-entry. Creating that separate store is available only when the build provides documented protected initialization. This increment supplies no such setup command; an importer remains future work.
 
-The current inherited runtime uses `data/addressbook.json`. Help, list and exit do not create or rewrite this file and remain available when operational saving would fail. Preferences are saved separately on shutdown. Add/delete still save operational data; general rollback and protected loading are not yet delivered. Back up existing files before upgrading or editing them, and do not treat the planned recovery behavior as implemented.
+The current inherited runtime uses `data/addressbook.json` with the [protected startup behavior](#data-protection-in-the-current-build) described above. Help, list and exit do not create or rewrite this file and remain available when operational saving would fail. Preferences are saved separately on shutdown. In normal sessions add/delete still save operational data; general rollback and canonical-format loading are not yet delivered. Back up existing files before upgrading or editing them.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -341,20 +366,22 @@ The current inherited runtime uses `data/addressbook.json`. Help, list and exit 
 
 ## Planned command summary
 
+These formats use the [planned command conventions](#reading-the-planned-command-formats); listing a route here does not activate it. Person/student selectors come from the current people list, while every existing-lesson selector uses a stable `lid/` reference.
+
 | Action | Format |
 | --- | --- |
 | Add student | `add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]` |
 | Add tutor or parent | `add r/ROLE n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]` |
 | List people | `list [r/ROLE]` |
 | Delete person | `delete INDEX` |
-| Create shared lesson | `addlesson d/DAY st/START et/END s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` |
+| Create shared lesson | `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` |
 | Delete lesson | `deletelesson lid/LESSON_ID` |
 | Lesson catalogue | `lessons [si/STUDENT_INDEX]` |
 | Lesson details | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` |
 | Enrol / unenrol | `enrol STUDENT_INDEX lid/LESSON_ID` / `unenrol STUDENT_INDEX lid/LESSON_ID` |
 | Search | `search c/CATEGORY [FILTER_PREFIX/VALUE]...` |
-| Mark attendance | `mark STUDENT_INDEX lid/LESSON_ID d/DATE s/STATUS` |
-| Unmark attendance | `unmark STUDENT_INDEX lid/LESSON_ID d/DATE` |
+| Mark attendance | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent</code> |
+| Unmark attendance | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` |
 | History | `history STUDENT_INDEX [lid/LESSON_ID]` |
 | Help | `help [COMMAND]` |
 | Exit | `exit` |

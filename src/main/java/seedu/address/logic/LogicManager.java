@@ -57,6 +57,13 @@ public class LogicManager implements Logic {
 
         CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
+        if (storage.getDataLoadError().isPresent()) {
+            if (!(command instanceof HelpCommand || command instanceof ListCommand || command instanceof ExitCommand)) {
+                throw new CommandException(storage.getDataLoadError().get());
+            }
+            // The protected session can display guidance and exit, but must never save operational data.
+            return command.execute(model);
+        }
         commandResult = command.execute(model);
 
         // These commands do not modify operational data and must work even when storage is unwritable.

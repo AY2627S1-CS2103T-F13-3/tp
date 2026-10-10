@@ -24,6 +24,8 @@ The following commands perform common Gradle tasks.
 
 The Week 8 increment uses Gradle version `1.2` and `MainApp.VERSION` `v1.2`. This identifies the increment, not completion of all planned shared-lesson features. For a packaged check, copy `ponhub.jar` into a fresh folder, confirm `java -version` reports Java 25, and run `java -jar ponhub.jar`. Verify Help/menu/F1 and the current supported commands there. Yang owns the final integrated product launch check; v1.2 publication is optional.
 
+Packaged checks use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-project-on-your-computer). On macOS, use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) for the Mac's architecture. Record the OS, architecture, JDK distribution/version and actual launch result. Additional macOS trials with other distributions, including plain Oracle JDK, are optional portability checks; they are not required for the prescribed macOS acceptance check. Compatibility with Windows, Linux and macOS remains required.
+
 * **`run`**: Builds and runs the application.<br>
   **`runShadow`**: Builds the application as a fat JAR, then runs it.
 
@@ -77,5 +79,6 @@ Here are the steps to create a new release.
 
 1. Update the version number in [`MainApp.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/MainApp.java).
 1. Generate a fat JAR file using Gradle (i.e., `./gradlew shadowJar`).
+1. Verify the built JAR on Windows, Linux and macOS using the packaged-check environment above, including the prescribed Azul JDK with JavaFX on macOS. Record the actual results before publishing.
 1. Tag the repo with the version number. e.g. `v0.1`
 1. [Create a new release using GitHub](https://help.github.com/articles/creating-releases/). Upload the JAR file you created.
