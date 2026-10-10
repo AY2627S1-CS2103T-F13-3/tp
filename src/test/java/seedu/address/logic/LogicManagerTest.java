@@ -3,6 +3,7 @@ package seedu.address.logic;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
@@ -74,6 +75,56 @@ public class LogicManagerTest {
     public void execute_validCommand_success() throws Exception {
         String listCommand = ListCommand.COMMAND_WORD;
         assertCommandSuccess(listCommand, ListCommand.MESSAGE_SUCCESS, model);
+    }
+
+    @Test
+    public void execute_readOnlyCommandsWithUnavailableStorage_neverAttemptSave() throws Exception {
+        model.addPerson(AMY);
+        model.updateFilteredPersonList(person -> false);
+        ReadOnlyAddressBook expected = new seedu.address.model.AddressBook(model.getAddressBook());
+        int[] saveCalls = {0};
+        JsonAddressBookStorage failingStorage = new JsonAddressBookStorage(temporaryFolder.resolve("unwritable.json")) {
+            @Override
+            public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+                saveCalls[0]++;
+                throw new IOException("Read-only commands must not save");
+            }
+        };
+        logic = new LogicManager(model, new StorageManager(failingStorage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json"))));
+
+        assertEquals(CommandCatalog.getOverview(), logic.execute("help").getFeedbackToUser());
+        assertEquals(java.util.List.of(), logic.getFilteredPersonList());
+        assertEquals(ListCommand.MESSAGE_SUCCESS, logic.execute("list").getFeedbackToUser());
+        assertEquals(java.util.List.of(AMY), logic.getFilteredPersonList());
+        assertTrue(logic.execute("exit").isExit());
+        assertEquals(0, saveCalls[0]);
+        assertEquals(expected, model.getAddressBook());
+    }
+
+    @Test
+    public void execute_readOnlyCommands_doNotCreateOrRewriteDataFile() throws Exception {
+        Path data = temporaryFolder.resolve("addressBook.json");
+        for (String command : new String[]{"help", "list", "exit"}) {
+            logic.execute(command);
+            assertFalse(Files.exists(data));
+        }
+        // Formatting and comments would be lost if the file were rewritten from the model.
+        String original = "{\"_comment\": \"keep this formatting\", \"persons\": []}\n";
+        Files.writeString(data, original);
+        for (String command : new String[]{"help", "list", "exit"}) {
+            logic.execute(command);
+            assertEquals(original, Files.readString(data));
+        }
+    }
+
+    @Test
+    public void execute_addAndDelete_stillPersistChanges() throws Exception {
+        Path data = temporaryFolder.resolve("addressBook.json");
+        logic.execute(AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY + EMAIL_DESC_AMY + ADDRESS_DESC_AMY);
+        assertEquals(1, new JsonAddressBookStorage(data).readAddressBook().orElseThrow().getPersonList().size());
+        logic.execute("delete 1");
+        assertEquals(0, new JsonAddressBookStorage(data).readAddressBook().orElseThrow().getPersonList().size());
     }
 
     @Test

@@ -24,11 +24,13 @@ title: Developer Guide
 * Zhu Zhi Yu used OpenAI Codex for dormant role-aware add argument parsing, its immutable ID-free input, regression tests, and integration documentation.
 * Zhu Zhi Yu used OpenAI Codex for constant-stack email validation that preserves the inherited contact rules, its parser/file-loading regressions, and the related implementation and manual-testing notes.
 * Zhu Zhi Yu used OpenAI Codex to clarify the course-prescribed Java 25 and macOS runtime setup, release verification, and manual-testing documentation.
+* Zhu Zhi Yu used OpenAI Codex for PR review and Javadoc formatting corrections in the canonical aggregate foundation (#76).
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
 * Ernest's Week 8 help increment used OpenAI Codex to inspect the repository, generate and revise the command catalogue, inline-help implementation, regression tests, and Ernest's documentation coordination changes. This attribution covers that increment; it does not claim authorship of teammates' feature implementations or imply teammate review has occurred.
 * Ernest used OpenAI Codex for the #129 active UI field-encapsulation and Javadoc standards corrections, caller verification, and repository checks.
+* Ernest used OpenAI Codex for #60's shared architecture/command conventions and AboutUs ownership clarification. This attribution covers documentation coordination; each feature owner retains their own implementation, tests and feature documentation.
 * Zhu Zhi Yu used OpenAI Codex to prepare the dormant person-card display projection, FXML renderer, projection and renderer tests, isolated developer preview, Linux CI virtual-display setup, and the related integration and manual-testing documentation. This attribution covers that card increment.
 
 --------------------------------------------------------------------------------------------------------------------
@@ -59,7 +61,15 @@ The main window has a 450-by-360 logical minimum where the work area allows it. 
 
 ### Shared-lesson target contract
 
-The broader team integration target uses one authoritative people collection, one independent Lesson collection, and separate dated Attendance records. Student composes common contact details and holds education level and parent contact. Student must not own copies of shared lessons. Each Lesson owns `enrolledStudentIds`; derive student lessons, rosters and tutor schedules from that association. Attendance has the unique key student ID + lesson ID + date, with `present` or `absent`; a missing entry is unrecorded.
+This records the accepted design in [#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60) and [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59). It is a shared contract for incremental integration, not a claim that the complete runtime is delivered. The planned canonical data root holds one ordered people collection, one independent Lesson catalogue and separate dated Attendance records.
+
+| Record or relationship | Authoritative representation |
+| --- | --- |
+| People | Immutable `Student`, `Tutor` and `Parent` records implement `PersonRecord`. `Student` composes `ContactDetails`, education level and parent phone; it does not extend legacy `Person` or own Lesson objects. |
+| Shared lessons | A Lesson stores its stable Lesson ID, Tutor ID, weekday/time, subject and room. Its `enrolledStudentIds` owns current membership. A student can join several lessons; several students can join the same lesson. |
+| Derived views | Student lessons, lesson rosters and tutor schedules resolve those IDs from the root. They do not create another writable membership graph. Empty lessons remain in the catalogue and shared lessons appear once. |
+| Attendance | One key is Student ID + Lesson ID + date. The recorded status is `present` or `absent`; no entry means unrecorded. History is independent of current membership. |
+| Parent links | Separate Parent records are optional. Derive links only when a Parent's own phone exactly equals the Student's parent phone, including leading zeros. A Student's parent phone does not require a matching Parent record. |
 
 **Confirmed person-selector boundary:** `INDEX` and `STUDENT_INDEX` arguments use a positive one-based position in the current filtered **people list**, following AB3's command-input convention. This applies to deletion and to the student selector for enrolment, unenrolment, attendance, history, and student-specific lesson retrieval when those routes are integrated. An index selects the card at that position in the current people view, not that position in the unfiltered collection, a lesson roster, or a lesson/history result. Validate the range and required role, then resolve the index once to the selected record's stable `PersonId` before invoking Model or query APIs. Reuse that resolved ID throughout the operation; later view refreshes must not select another record by reinterpreting the index. Lesson creation has the separate named-tutor lookup described below, which also resolves once to a stable ID.
 
@@ -69,28 +79,43 @@ The planned lesson-catalogue filter is `lessons [si/STUDENT_INDEX]`. Its optiona
 
 **Tutor selection:** `addlesson` resolves `tu/TUTOR_NAME` as a normalized full name, ignoring letter case and repeated spaces. Optional `tp/TUTOR_PHONE` must match the tutor's exact phone number; never ignore a supplied phone to fall back to the name. Reject zero matches or ambiguity without changing data, and request a disambiguating phone when needed. Search `tu/` instead matches a case-insensitive name fragment. Tutor-category name search uses `n/`. Stable person IDs are not external lookup selectors for these commands.
 
-The planned shared-lesson routes are:
+The planned routes follow the [UG command conventions](UserGuide.html#reading-the-planned-command-formats) and [summary](UserGuide.html#planned-command-summary):
 
 | Action | Format |
 | --- | --- |
+| People | `add r/ROLE ...`, `list [r/ROLE]`, `delete INDEX` (role-specific required fields are in the UG) |
 | Create lesson | `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` |
 | Enrol / unenrol | `enrol STUDENT_INDEX lid/LESSON_ID` / `unenrol STUDENT_INDEX lid/LESSON_ID` |
 | Delete lesson | `deletelesson lid/LESSON_ID` |
 | Catalogue | `lessons [si/STUDENT_INDEX]` |
 | Lesson detail | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` |
-| Mark / correct | `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present\|absent` |
+| Mark / correct | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent</code> |
 | Unmark | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` |
 | History | `history STUDENT_INDEX [lid/LESSON_ID]` |
+| Search | `search c/CATEGORY [FILTER_PREFIX/VALUE]...` |
 
 The complete [search matrix](#supported-criteria) remains the planned target. Own-contact searches can be integrated first, followed by the relational families. Each delivered route advertises only its available filters; staging does not silently remove the remaining filters from the target. Documenting a route does not activate it.
 
-Create lessons with empty rosters. Tutor and room clashes are checked once per shared lesson; student timetable clashes are checked on enrolment. Time intervals are half-open so adjacent bookings are allowed. Unenrolment removes membership and retains attendance. New attendance requires membership; existing history can be corrected or unmarked after unenrolment. Block student deletion for enrolment/history, tutor deletion for lesson references, and lesson deletion for enrolment/history. Deleting a separate Parent preserves the student's stored parent phone; parent links derive from matching phone values.
+**Scheduling and attendance rules:**
+
+* Create a lesson independently with an empty roster. Reject tutor or room clashes between distinct lessons on the same weekday. Check a student's clashes against their other enrolled lessons when enrolling; another student joining the same lesson does not book the tutor or room again.
+* Treat times as half-open intervals `[start, end)`: `1600–1700` and `1700–1800` are adjacent and allowed. Overlap requires `first.start < second.end` and `second.start < first.end` on the same weekday; equal times on different weekdays do not clash.
+* Unenrolment removes only current membership and retains dated attendance. New attendance requires current membership and a real date matching the lesson's weekday. An existing historical key can be corrected or unmarked after unenrolment; repeating its status does not create a second entry. Unmark removes the dated record, not membership. Unrecorded is the absence of a record, never a third stored status.
+
+**Deletion guards:** Reject a blocked deletion without changing data; never cascade to linked records.
+
+| Record to delete | Guard or retained data |
+| --- | --- |
+| Student | Block while any Lesson roster or Attendance record references the Student ID. |
+| Tutor | Block while any Lesson references the Tutor ID. |
+| Lesson | Block while its roster is non-empty or Attendance references its Lesson ID. |
+| Parent | Preserve every Student's parent-phone value; derived links disappear when the Parent record is removed. |
 
 All mutations go through Model APIs using stable identities after command-boundary resolution. Complete aggregate copy/reset/equality and independent snapshots cover people, lessons, memberships, attendance and monotonic allocation state; deleted committed IDs are not reused. Vincent coordinates validated versioned JSON and transactional saves; failed saves must restore data and active views before those commands are enabled. The canonical runtime cutover must connect a compatible people view, index resolution, guarded commands and persistence together. Do not persist displayed indices or introduce a second people store; verify that separate lesson/roster/history results preserve the people view used by the next command. Preferences remain separate. Capacity, waiting lists, make-ups, export, saved searches, archiving, richer attendance statuses or notes, attendance percentages, fees, lesson editing, occurrence cancellation, undo/redo and guided advanced search are future extensions.
 
 **Iteration boundary:** The [Week 8 course instructions](https://nus-cs2103-ay2627-s1.github.io/website/schedule/week8/project.html) call for small first increments towards the simplest MVP. Each member should aim for a meaningful reviewed and merged code PR. An individual feature need not be complete end-to-end, but intermediate versions must remain working; this iteration requires no product release. The broader team target remains visible in [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59). Carry unfinished work into v1.3 honestly. Compatible loading and rollback remain safety requirements when a mutation is activated, rather than a requirement to finish every planned feature in Week 8.
 
-Zhu owns people/testing; Yang Shuo owns lessons/enrolment/attendance; Ben owns retrieval/views; Vincent owns saving/loading/attendance history; Ernest owns routing/help and documentation coordination. Each owner authors their own feature documentation in the existing UG/DG. Ernest reconciles shared conventions and examples without taking ownership of those implementations.
+The [AboutUs ownership record](AboutUs.html#project-team) assigns people/testing to Zhu, lessons/enrolment/attendance to Yang, queries/views to Ben, storage/history/delivery to Vincent, and help/documentation coordination to Ernest. Each owner authors their own feature documentation in the existing UG/DG as behavior is delivered. Ernest reconciles shared conventions and examples without taking ownership of those implementations.
 
 <div markdown="span" class="alert alert-primary">
 
@@ -251,6 +276,29 @@ The `Model` component,
 </div>
 
 
+#### Canonical data aggregate draft (#76)
+
+`PonHubData` holds one immutable `PonHubDataState`: ordered people and their per-role allocation
+history, shared lessons and their rosters, dated attendance, and the last allocated lesson sequence.
+`exportState()` returns a stable snapshot; copy construction and `resetData(...)` safely share immutable
+state. Replacing one container's state cannot change any previous snapshot or another container.
+
+Snapshot construction copies incoming lists and rejects duplicate IDs/attendance keys, missing or
+wrong-role references, and lesson IDs beyond the supplied counter. Historical attendance does not
+require current enrolment. Equality includes records, collection order, rosters and allocation history,
+including deleted IDs. Zero means no allocation; `Long.MAX_VALUE` means exhaustion, matching the people
+registry convention. Counters are preserved as supplied, never reconstructed from retained records.
+
+Read methods expose immutable collections and stable-ID/key lookups. The controlled replacement boundary
+accepts only a validated state; invalid construction or null replacement leaves the current state intact.
+Feature owners must preserve committed allocation history when preparing normal changes. Restore may
+reinstate earlier counters for rollback. Allocation, enrolment, deletion, attendance-editing and scheduling
+policies remain separate feature work, rather than partially implemented operations in this foundation.
+
+This draft leaves `ModelManager`, commands and JSON storage unchanged. Vincent owns snapshot/storage
+contracts; Zhu/Yang will prepare validated changes through one future Model adapter, and Ben can consume
+the read-only queries. UI filters, selection and preferences remain outside the operational snapshot.
+
 ### Storage component
 
 **API** : [`Storage.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/storage/Storage.java)
@@ -286,8 +334,8 @@ The fallback permits saving on filesystems without atomic moves, but is not atom
 can observe an incomplete destination during replacement/recovery. Its guarantee is a recoverable old
 copy, not uninterrupted access at the original path. Neither path promises power-loss durability or
 preserves all previous file attributes. Save failures still do not roll back in-memory command changes;
-that is separate transaction work. Help skips saving; other read-only commands currently still save,
-but unsupported atomic moves alone no longer make those saves fail.
+that is separate transaction work. Help, list and exit skip operational saving. Preferences retain
+their separate shutdown lifecycle. Future read-only commands must also bypass operational saving when activated.
 
 #### JSON version detection foundation
 
@@ -389,7 +437,7 @@ persistence and duplicate-enrolment command feedback; this dormant record does n
 
 ### Inline help
 
-`HelpCommand` returns guidance in an ordinary `CommandResult`, with no separate-window or exit flag. It never mutates Model data, filters or preferences. `LogicManager` returns help before the inherited unconditional save path, so help works even when operational storage is unwritable and does not create or rewrite the data file. General change detection and rollback for other commands remain Vincent's integration work.
+`HelpCommand` returns guidance in an ordinary `CommandResult`, with no separate-window or exit flag. It never mutates Model data, filters or preferences. `LogicManager` returns help, list and exit results before the operational save path, so these commands work even when operational storage is unwritable and do not create or rewrite the data file. List still resets the visible people filter and exit still returns its exit flag. Add/delete continue to save; general change detection and rollback remain separate integration work.
 
 The Help menu and F1 invoke `MainWindow.executeCommand("help")`. Both display exactly the same guidance as typed help while retaining the command-box draft and person selection. `ResultDisplay` uses a read-only wrapped TextArea with scrolling and resets to the beginning of each new result. Existing F1 handling for focused text controls remains in place. The unused inherited HelpWindow is not constructed or reachable through supported help entry points.
 

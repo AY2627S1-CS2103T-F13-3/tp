@@ -13,7 +13,7 @@ We are a team based in the [School of Computing, National University of Singapor
 
 [[github](https://github.com/ultramanarm)]
 
-* Role: Developer
+* Role: Developer (People and Testing)
 * Responsibilities:
   * Implement and maintain commands to add, delete, and list student, tutor, and parent records.
   * Coordinate testing and maintain representative sample data.
@@ -26,7 +26,9 @@ We are a team based in the [School of Computing, National University of Singapor
 [[github](https://github.com/gugrusaurus)]
 
 * Role: Developer, Deliverables and Deadlines, Documentation
-* Responsibilities: Implement saving, validated loading and attendance-history persistence; coordinate deliverables, deadlines and milestone closeout; maintain README and quick-start material.
+* Responsibilities:
+  * Implement saving, validated loading, rollback and retained attendance-history persistence.
+  * Coordinate deliverables, deadlines and milestone closeout; maintain README and quick-start material.
 
 ### Benjamin Ng
 
@@ -38,7 +40,7 @@ We are a team based in the [School of Computing, National University of Singapor
 * Responsibilities:
   * Develop Model filtering and UI results for search and lesson-information retrieval.
   * Implement shared-lesson, roster and attendance-history views; capture the actual integrated UI screenshot.
-  * Write Developer Guide use cases.
+  * Maintain retrieval/view feature documentation and Developer Guide use cases.
 
 ### Ernest Chua
 
@@ -46,7 +48,7 @@ We are a team based in the [School of Computing, National University of Singapor
 
 [[github](https://github.com/ErnestChuaa)]
 
-* Role: Code Quality, Documentation
+* Role: Developer (Help), Code Quality, Documentation Coordination
 * Responsibilities:
   * Implement and maintain the help command and command assistance.
   * Coordinate code quality and the integration of project documentation.
@@ -58,10 +60,12 @@ We are a team based in the [School of Computing, National University of Singapor
 
 [[github](https://github.com/ys000009)]
 
-* Role: Developer
+* Role: Developer (Lessons, Enrolment and Attendance)
 * Responsibilities:
-    * Shared lessons, enrolment/unenrolment, and attendance marking/unmarking
-    * DevOps and integration
-    * Developer Guide non-functional requirements and glossary
+  * Implement shared lessons, enrolment/unenrolment, and attendance marking/unmarking.
+  * Maintain lesson/attendance feature documentation, domain diagrams, non-functional requirements and glossary.
+  * Coordinate DevOps and packaged application verification.
 
-The final `docs/images/Ui.png` capture is owned by Ben. Each member documents their own feature implementation and applicable AI/reuse attribution; Ernest coordinates consistency. The existing image predates the completed shared-lesson workflow and must be replaced after integration.
+These responsibilities follow the [agreed shared-lesson contracts](DeveloperGuide.html#shared-lesson-target-contract). Each feature owner writes their own UG/DG sections, tests and applicable AI/reuse attribution as behavior is delivered; Ernest coordinates shared conventions and consistency. Documentation ownership does not imply that a planned feature is already active.
+
+The final `docs/images/Ui.png` capture is owned by Ben. The existing image predates the completed shared-lesson workflow and must be replaced after integration.
