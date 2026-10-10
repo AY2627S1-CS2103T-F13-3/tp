@@ -33,7 +33,9 @@ public final class PonHubData {
         this(requireNonNull(other).exportState());
     }
 
-    /** Returns a complete immutable snapshot that cannot change with subsequent edits. */
+    /**
+     * Returns a complete immutable snapshot that cannot change with subsequent edits.
+     */
     public PonHubDataState exportState() {
         return state;
     }
@@ -46,7 +48,9 @@ public final class PonHubData {
         state = requireNonNull(replacement);
     }
 
-    /** Restores another container, safely including this container itself. */
+    /**
+     * Restores another container, safely including this container itself.
+     */
     public void resetData(PonHubData replacement) {
         resetData(requireNonNull(replacement).exportState());
     }
@@ -63,16 +67,31 @@ public final class PonHubData {
         return state.attendance();
     }
 
+    /**
+     * Returns the attendance record for the supplied key, or an empty optional if absent.
+     *
+     * @throws NullPointerException if the key is null.
+     */
     public Optional<Attendance> getAttendance(AttendanceKey key) {
         requireNonNull(key);
         return getAttendance().stream().filter(record -> record.getKey().equals(key)).findFirst();
     }
 
+    /**
+     * Returns the person with the supplied stable ID, or an empty optional if absent.
+     *
+     * @throws NullPointerException if the ID is null.
+     */
     public Optional<PersonRecord> getPerson(PersonId id) {
         requireNonNull(id);
         return getPeople().stream().filter(person -> person.getId().equals(id)).findFirst();
     }
 
+    /**
+     * Returns the lesson with the supplied stable ID, or an empty optional if absent.
+     *
+     * @throws NullPointerException if the ID is null.
+     */
     public Optional<Lesson> getLesson(LessonId id) {
         requireNonNull(id);
         return getLessons().stream().filter(lesson -> lesson.getId().equals(id)).findFirst();

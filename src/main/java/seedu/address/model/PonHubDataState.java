@@ -23,10 +23,10 @@ import seedu.address.model.person.PersonRole;
  * A counter of Long.MAX_VALUE represents exhaustion; counters must never be inferred from retained records.
  * Scheduling and attendance-date rules belong to their feature layers, not this structural boundary.
  *
- * @param people ordered people and complete per-role allocation history
- * @param lessons ordered shared lessons, each owning its roster
- * @param attendance ordered dated records, including former enrolments
- * @param lastAllocatedLessonSequence last allocated lesson ID, or zero before the first allocation
+ * @param people Ordered people and complete per-role allocation history.
+ * @param lessons Ordered shared lessons, each owning its roster.
+ * @param attendance Ordered dated records, including former enrolments.
+ * @param lastAllocatedLessonSequence Last allocated lesson ID, or zero before the first allocation.
  */
 public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, List<Attendance> attendance,
         long lastAllocatedLessonSequence) {
