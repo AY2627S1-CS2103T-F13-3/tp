@@ -13,6 +13,7 @@ title: Developer Guide
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, the ordered people registry and its import/export state, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with contact validation, linear ASCII-space normalization, parser/loader integration, related automated tests, and the corresponding guide updates for [#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61).
 * Zhu Zhi Yu used OpenAI Codex for the detached role-filtered people-list projection and argument parser, their regression tests, and the integration notes below.
+* Zhu Zhi Yu used OpenAI Codex for the dormant aggregate-backed people view, production card-list panel, refresh/filter/selector and layout regressions, and their developer preview and integration notes.
 * Zhu Zhi Yu used OpenAI Codex for the dormant current-people index resolver, its role and filtered-view regression tests, and the related integration documentation.
 * Zhu Zhi Yu used OpenAI Codex to prepare representative canonical people samples, their sample-integrity and view-selection tests, and the related developer usage notes.
 * Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search, inline-help, and atomic-save increments.
@@ -1097,6 +1098,12 @@ Run these checks when the canonical people view and corresponding commands are a
 5. After a successful person-list change, verify current-view positions are refreshed while surviving stable IDs and stored relationships remain intact. On a failed validation or save, verify the records and prior people view are preserved. Restart with supported data and confirm persisted references use stable IDs rather than previously displayed indices.
 
 ### Dormant person-card developer preview
+
+`PeopleView` now derives the current role-filtered people list from one supplied `PonHubData` root. It retains a single unmodifiable observable list, preserving global relative order and giving `PersonIndexResolver` and `PersonRecordListPanel` the same current records. The panel renders positions separately from stable IDs, shows the current count and an empty placeholder, and wraps cards inside a vertically scrolling list. It never owns a writable registry.
+
+The root does not publish mutation events. Its owner must call `refresh()` after committed state replacement or rollback, on the JavaFX application thread while controls are attached. Refresh preserves the selected role; a committed addition's reset to all roles belongs to the coordinated add workflow. Parse people-list arguments before applying `setRoleFilter`; invalid arguments leave both view and root unchanged. Command feedback can use `PersonRecordListData` with this current list and filter.
+
+This adapter and panel remain dormant: `ModelManager`, `MainWindow`, command dispatch and storage still use the inherited runtime. At #85's cutover, create the view over the single loaded canonical root, pass its list to both cards and person-index consumers, connect list/add and compatible loading together, and refresh it after commit/rollback. Do not place a parallel canonical store beside the active legacy store. #77 remains open for coordinated activation and its outstanding actual display checks; #79, #82 and #84 remain safety gates.
 
 These checks exercise prepared components, not a supported application command. Run `seedu.address.ui.PersonRecordCardPreview.main` from the IDE's test source set with Java 25 and the test runtime classpath. It opens an isolated fixture list and never reads or writes application records or preferences.
 
