@@ -22,7 +22,7 @@
       <Label fx:id="name" styleClass="cell_big_label" wrapText="true" minWidth="0"
              maxWidth="Infinity" HBox.hgrow="ALWAYS" />
     </HBox>
-    <VBox fx:id="tags" minWidth="0" fillWidth="false" spacing="3" />
+    <VBox fx:id="tags" minWidth="0" spacing="3" />
     <Label fx:id="phone" styleClass="cell_small_label" wrapText="true" minWidth="0" maxWidth="Infinity" />
     <Label fx:id="address" styleClass="cell_small_label" wrapText="true" minWidth="0" maxWidth="Infinity" />
     <Label fx:id="email" styleClass="cell_small_label" wrapText="true" minWidth="0" maxWidth="Infinity" />

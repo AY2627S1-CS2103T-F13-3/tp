@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
@@ -33,6 +34,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import seedu.address.logic.CommandCatalog;
 import seedu.address.logic.LogicManager;
@@ -161,6 +163,37 @@ public class MainWindowTest {
                         "Scrolling must expose the final field of the last contact: " + lastEmail);
             });
         }
+    }
+
+    @Test
+    public void list_longContactTags_wrapAfterCardsRefresh() throws Exception {
+        MainWindow window = callOnFxThread(this::createWindow);
+        Region root = callOnFxThread(() -> (Region) window.getPrimaryStage().getScene().getRoot());
+        runOnFxThread(() -> layoutScene(root, 450, 330));
+        runOnFxThread(() -> {
+            TextField command = (TextField) root.lookup("#commandTextField");
+            command.setText("list");
+            Event.fireEvent(command, new ActionEvent());
+            command.setText("help add");
+            Event.fireEvent(command, new ActionEvent());
+            root.applyCss();
+            root.layout();
+        });
+        runOnFxThread(() -> {
+            root.layout();
+            ListView<?> people = (ListView<?>) root.lookup("#personListView");
+            Region card = findCard(people, LONG_PERSON.getName().fullName);
+            for (Node node : card.lookup("#tags").lookupAll(".label")) {
+                Label label = (Label) node;
+                assertTrue(label.getHeight() + 1 >= label.prefHeight(label.getWidth()),
+                        "Refreshed tags must retain the complete wrapped text height: " + label.getText()
+                                + "; actual=" + label.getHeight()
+                                + "; preferred=" + label.prefHeight(label.getWidth()));
+                Text renderedText = (Text) label.lookup(".text");
+                assertEquals(label.getText(), renderedText.getText(), "Refreshed tags must not use an ellipsis.");
+            }
+            assertLongFieldEndsReachable(people);
+        });
     }
 
     @Test

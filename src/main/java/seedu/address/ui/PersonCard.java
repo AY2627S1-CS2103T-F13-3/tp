@@ -57,7 +57,6 @@ public class PersonCard extends UiPart<Region> {
                     Label label = new Label(tag.tagName);
                     label.setWrapText(true);
                     label.setMinWidth(0);
-                    label.maxWidthProperty().bind(tags.widthProperty());
                     tags.getChildren().add(label);
                 });
     }
