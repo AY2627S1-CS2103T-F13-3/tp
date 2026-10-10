@@ -13,7 +13,9 @@ import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.util.FileUtil;
 import seedu.address.model.PonHubDataState;
 
-/** Standalone canonical storage. Startup activation and rejected-file write protection belong to #84. */
+/**
+ * Standalone canonical storage. Startup activation and rejected-file write protection belong to #84.
+ */
 public final class JsonPonHubDataStorage {
     private final Path filePath;
 
@@ -25,7 +27,9 @@ public final class JsonPonHubDataStorage {
         return filePath;
     }
 
-    /** Returns a fully validated candidate; only confirmed absence returns empty. Never writes during loading. */
+    /**
+     * Returns a fully validated candidate; only confirmed absence returns empty. Never writes during loading.
+     */
     public Optional<PonHubDataState> readData() throws DataLoadingException {
         try {
             return Optional.of(JsonPonHubDataCodec.decode(Files.readString(filePath)));
@@ -39,7 +43,9 @@ public final class JsonPonHubDataStorage {
         }
     }
 
-    /** Encodes before writing; shares the existing safe UTF-8 file writer. */
+    /**
+     * Encodes before writing; shares the existing safe UTF-8 file writer.
+     */
     public void saveData(PonHubDataState state) throws IOException {
         String json = JsonPonHubDataCodec.encode(state);
         FileUtil.writeToFile(filePath, json);

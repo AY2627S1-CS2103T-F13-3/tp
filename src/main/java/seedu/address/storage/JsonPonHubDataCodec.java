@@ -29,7 +29,9 @@ import seedu.address.model.person.Student;
 import seedu.address.model.person.Tutor;
 import seedu.address.model.person.exceptions.DuplicatePersonException;
 
-/** Version-1 people codec. Non-empty lessons/attendance are rejected until their codecs are implemented. */
+/**
+ * Version-1 people codec. Non-empty lessons/attendance are rejected until their codecs are implemented.
+ */
 public final class JsonPonHubDataCodec {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final Set<String> ROOT_FIELDS = Set.of("schemaVersion", "people", "personCounters",
@@ -41,7 +43,9 @@ public final class JsonPonHubDataCodec {
     private JsonPonHubDataCodec() {
     }
 
-    /** Serializes a complete people-only snapshot; optional fields are omitted rather than written as null. */
+    /**
+     * Serializes a complete people-only snapshot; optional fields are omitted rather than written as null.
+     */
     public static String encode(PonHubDataState state) throws IOException {
         requireNonNull(state);
         if (!state.lessons().isEmpty() || !state.attendance().isEmpty()) {
@@ -74,7 +78,9 @@ public final class JsonPonHubDataCodec {
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
     }
 
-    /** Builds and validates a complete candidate without modifying live state or writing any file. */
+    /**
+     * Builds and validates a complete candidate without modifying live state or writing any file.
+     */
     public static PonHubDataState decode(String json) throws IOException {
         requireNonNull(json);
         JsonDataVersionDetector.Format format = JsonDataVersionDetector.detect(json);
