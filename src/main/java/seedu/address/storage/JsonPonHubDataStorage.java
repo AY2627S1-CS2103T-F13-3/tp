@@ -14,7 +14,8 @@ import seedu.address.commons.util.FileUtil;
 import seedu.address.model.PonHubDataState;
 
 /**
- * Standalone canonical storage. Startup activation and rejected-file write protection belong to #84.
+ * Standalone canonical codec/file access. Runtime callers use {@link ProtectedPonHubDataStorage}
+ * for startup validation and session write protection; coordinated routing activation remains separate.
  */
 public final class JsonPonHubDataStorage {
     private final Path filePath;
