@@ -27,7 +27,7 @@ import seedu.address.model.util.PeopleSampleDataUtil;
 
 public class ProtectedPonHubDataStorageTest {
     @TempDir
-    public Path directory;
+    Path directory;
 
     @Test
     public void load_missingFile_startsFreshWithoutWritingAndAllowsSave() throws Exception {
@@ -169,6 +169,60 @@ public class ProtectedPonHubDataStorageTest {
         Files.delete(path);
         assertThrows(IOException.class, () -> rejected.saveData(new PonHubData().exportState()));
         assertFalse(Files.exists(path));
+    }
+
+    @Test
+    public void load_alternatePath_keepsLegacyAndOtherStoresUntouched() throws Exception {
+        Path legacyPath = directory.resolve("data/addressbook.json");
+        Files.createDirectories(legacyPath.getParent());
+        String legacy = "{\"persons\":[]}\n";
+        Files.writeString(legacyPath, legacy);
+        Path selectedPath = directory.resolve("separate store with spaces/canonical.json");
+        ProtectedPonHubDataStorage selected = new ProtectedPonHubDataStorage(selectedPath);
+        PonHubDataState fresh = selected.load();
+        assertEquals(selectedPath, selected.getDataFilePath());
+        assertFalse(Files.exists(selectedPath));
+        PonHubDataState changed = new PonHubDataState(fresh.people(), List.of(), List.of(), 7);
+        selected.saveData(changed);
+        assertEquals(changed, new ProtectedPonHubDataStorage(selectedPath.toAbsolutePath()).load());
+        assertEquals(legacy, Files.readString(legacyPath));
+        assertFalse(Files.exists(directory.resolve("data/ponhub.json")));
+        ProtectedPonHubDataStorage rejectedLegacy = new ProtectedPonHubDataStorage(legacyPath);
+        assertThrows(DataLoadingException.class, rejectedLegacy::load);
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.LEGACY, rejectedLegacy.getLoadStatus());
+        assertEquals(legacy, Files.readString(legacyPath));
+    }
+
+    @Test
+    public void savePreferences_rejectedOperationalFile_keepsIndependentLifecycle() throws Exception {
+        Path dataPath = directory.resolve("rejected data.json");
+        Files.writeString(dataPath, "broken original");
+        byte[] original = Files.readAllBytes(dataPath);
+        ProtectedPonHubDataStorage storage = new ProtectedPonHubDataStorage(dataPath);
+        assertThrows(DataLoadingException.class, storage::load);
+        JsonUserPrefsStorage preferences = new JsonUserPrefsStorage(directory.resolve("preferences.json"));
+        seedu.address.model.UserPrefs expected = new seedu.address.model.UserPrefs();
+        expected.setGuiSettings(new seedu.address.commons.core.GuiSettings(900, 700, 20, 30));
+        preferences.saveUserPrefs(expected);
+        assertEquals(expected, preferences.readUserPrefs().orElseThrow());
+        assertThrows(IOException.class, () -> storage.saveData(new PonHubData().exportState()));
+        assertArrayEquals(original, Files.readAllBytes(dataPath));
+        assertThrows(DataLoadingException.class, () -> new ProtectedPonHubDataStorage(dataPath).load());
+        assertEquals(expected, preferences.readUserPrefs().orElseThrow());
+    }
+
+    @Test
+    public void load_directoryPath_rejectsWithoutReplacingDirectoryOrContents() throws Exception {
+        Path dataPath = directory.resolve("directory instead of file");
+        Files.createDirectory(dataPath);
+        Path child = dataPath.resolve("keep.txt");
+        Files.writeString(child, "preserve");
+        ProtectedPonHubDataStorage storage = new ProtectedPonHubDataStorage(dataPath);
+        assertThrows(DataLoadingException.class, storage::load);
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.UNREADABLE, storage.getLoadStatus());
+        assertThrows(IOException.class, () -> storage.saveData(new PonHubData().exportState()));
+        assertTrue(Files.isDirectory(dataPath));
+        assertEquals("preserve", Files.readString(child));
     }
 
     @Test
