@@ -210,7 +210,9 @@ public final class LessonQueries implements LessonQuerySource {
     }
 
     private static <K, T> void refreshSubscriptions(Map<K, ResultList<T>> subscriptions, Map<K, List<T>> index) {
-        subscriptions.forEach((key, result) -> result.replace(index.getOrDefault(key, List.of())));
+        // List callbacks may subscribe to more query results, so do not traverse the live subscription map.
+        List.copyOf(subscriptions.entrySet()).forEach(entry ->
+                entry.getValue().replace(index.getOrDefault(entry.getKey(), List.of())));
     }
 
     /** Keeps the observable object held by callers stable while its immutable entries are replaced. */

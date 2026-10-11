@@ -375,6 +375,10 @@ the record repopulates the same held list. Previously returned projection object
 remain immutable historical snapshots. All operations run on the single model/JavaFX application thread; UI selection
 must follow stable IDs when immutable entries are replaced. The runtime adapter owns one query component for its lifetime.
 
+Each subscription refresh snapshots its existing entries before firing list-change callbacks. A read-only callback
+may request another Student, Tutor or roster list; that new list starts from the complete current indexes and stays
+subscribed for later publications. It cannot interrupt the current refresh by changing the traversed map.
+
 For `P` people, `L` lessons and `R` roster links, query-index construction is `O(P + L + R + L log L)` in the worst case
 (the final term sorts tutor schedules). Derived storage is `O(P + L + R + C)`, where `C` counts subscribed IDs,
 including removed records whose held lists must survive restore. Stable-ID lookup and returning an already
@@ -384,11 +388,14 @@ links when `sn/` is supplied: `O(B + R_B + K)` for bounded field lengths and `K`
 filter, `B = L`; text-only substring searches still scan the catalogue. Reading/rendering `K` results costs `O(K)`.
 These bounds describe queries, excluding the existing whole-snapshot validation and persistence work on mutations.
 A prefix trie would change substring behaviour; there is no constant-time guarantee for arbitrary text searches.
+Refreshing subscription snapshots also takes `O(C)` time and temporary space, in addition to copying result entries.
 
 Regression tests compare indexed results with an independent raw-record scan for 7,500 seeded filter combinations,
 including membership changes and restore. They cover missing/wrong-role/null IDs, duplicate names, shared/empty
 lessons, optional contacts and leading zeros, case/Unicode/text fragments, invalid/repeated prefixes, time boundaries,
 same-lesson counterexamples, immutable results, held-list refresh, retained attendance and failed-save isolation.
+Listener regressions cover adding populated and empty Student/Tutor/roster subscriptions during refresh, absence
+of JavaFX callback errors, consistent held roster/filter results and continued updates after subsequent publication.
 
 ### Storage component
 
