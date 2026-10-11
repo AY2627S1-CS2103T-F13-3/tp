@@ -168,18 +168,13 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/se-
 
 ![Structure of the UI Component](images/UiClassDiagram.png)
 
-The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
+The JavaFX `MainWindow` composes `UiPart` controls such as `CommandBox`, `ResultDisplay` and `PersonListPanel`; their
+layouts live in `src/main/resources/view`. UI sends commands through `Logic` and observes model-backed results so
+committed changes refresh the display. The diagram describes the inherited `Person` UI, which remains active.
 
-The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
-
-The `UI` component,
-
-* executes user commands using the `Logic` component.
-* listens for changes to `Model` data so that the UI can be updated with the modified data.
-* keeps a reference to the `Logic` component, because the `UI` relies on the `Logic` to execute commands.
-* depends on some classes in the `Model` component because it displays `Person` objects from the model.
-
-At the planned canonical people-view integration, cards show the current filtered people-list index separately from the stable person ID. A separate lesson, roster or history result must not replace or renumber that people view. These requirements describe the integration target; the inherited `Person` UI remains active in this increment.
+The prepared canonical person card has a separate current-view position and stable ID. At integration, lesson,
+roster and history results use separate views; see the [shared selector and view contract](#shared-lesson-target-contract)
+for how those results preserve the people list. This behavior is not yet active.
 
 ### Logic component
 
@@ -217,48 +212,31 @@ For planned canonical person commands, parse a positive index and resolve it aga
 
 #### Read-only retrieval API contract (#113)
 
-`Logic` declares the UI-facing retrieval methods below. #80 implements the six lesson/roster methods through
-`Model.getLessonQueries()` and the read-only `LessonQuerySource` interface. A canonical runtime adapter must supply
-one `LessonQueries` connected to its own `PonHubData`; the inherited `ModelManager` still reports
-`UnsupportedOperationException` with `Shared-lesson retrieval is not implemented yet`. Attendance-history methods
-remain explicit stubs pending #100. This prepared backend does not activate commands, views or another live store.
+[`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/Logic.java)
+declares the UI-facing retrieval methods; [`LessonQuerySource`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonQuerySource.java)
+and [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonQueries.java)
+define the prepared lesson backend.
+The canonical Model owns projections from its one data root; Logic delegates to that source. Catalogue and filtered
+results contain each lesson once in creation order, including empty lessons. Student lessons derive from current
+Lesson-owned membership; rosters use people creation order, and tutor schedules use weekday, start time and numeric
+lesson ID. Lookup by lesson ID reads the full catalogue regardless of its active filter.
 
-| `Logic` method | Result and ordering |
-| --- | --- |
-| `getLessonList()` | All shared lessons in creation order, once each, including empty rosters. |
-| `getFilteredLessonList()` | Active lesson-filter results in catalogue order, once per lesson; an empty match is valid. |
-| `findLessonById(LessonId)` | Lookup in the full catalogue regardless of filter; a valid unknown ID gives `Optional.empty()`. |
-| `getStudentLessons(PersonId)` | The student's current lessons, derived from Lesson-owned enrolled student IDs, in creation order. |
-| `getLessonRoster(LessonId)` | Current students resolved through the people registry, in people creation order; an empty roster is valid. |
-| `getTutorSchedule(PersonId)` | Assigned lessons, including empty ones, by weekday (Monday first), start time, then numeric lesson ID. |
-| `getAttendanceHistory(PersonId)` | All recorded dates for a student, newest first, then numeric lesson ID. |
-| `getAttendanceHistory(PersonId, LessonId)` | The same retained history restricted to one lesson, regardless of current enrolment. |
+[`LessonView`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonView.java)
+and [`StudentView`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/StudentView.java)
+expose current display fields without becoming stored records. Planned
+[`AttendanceHistoryEntry`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/AttendanceHistoryEntry.java)
+also distinguishes recorded present/absent status from current enrolment; history comes from dated attendance and
+survives unenrolment. A missing entry means unrecorded. See the [shared contract](#shared-lesson-target-contract) for
+command indices versus stable IDs and for preservation of the people view.
 
-Java callers pass `PersonId` or `LessonId`, never a displayed row position. `LessonQueries` rejects null IDs with
-`NullPointerException`, and unknown or wrong-role IDs for list queries with `IllegalArgumentException`. An existing
-record with no matching results yields an empty list. `findLessonById` alone uses an empty optional for an unknown
-lesson. Legacy-model and history stubs report unavailability before validating arguments. At the command boundary,
-`lessons si/STUDENT_INDEX` and `history STUDENT_INDEX` resolve
-the one-based position in the current people list once, check the Student role, and then pass that record's stable
-`PersonId`. Existing lessons are selected by prefixed `lid/LESSON_ID`. These result views preserve the people list,
-its filter and its command indices.
+Queries never save data or allocate IDs. Lists are unmodifiable observable views: a UI-held list remains the same
+object while committed changes and rollback refresh its entries. Existing records with no matches yield valid empty
+lists, while an unknown lesson lookup yields an empty `Optional`. Lesson queries reject null IDs and unknown or
+wrong-role IDs for list retrieval; exact signatures and exceptions are in the linked source/Javadoc.
 
-The `model.query` interfaces describe projections rather than persisted records. `LessonView` exposes a `LessonId`,
-assigned tutor `PersonId` and current name, `LessonTimeSlot`, `Subject`, `Room` and current roster size.
-`StudentView` exposes a student `PersonId`, current name and level, required parent phone and optional own contact
-fields. `AttendanceHistoryEntry` exposes the student ID, lesson ID, date, recorded present/absent status and a separate
-current-enrolment flag. An absent attendance entry is unrecorded. History survives unenrolment because its source is
-the attendance store, not the current roster. Each projection describes one model state; changed records replace
-entries in the observable lists.
-
-Lesson list results are unmodifiable observable views; history will follow the same contract. The canonical Model
-owns query derivation, filtering and refresh, while `LogicManager` exposes the results. A list object already held by
-the UI remains subscribed after
-lesson/person changes, enrolment, attendance changes and successful rollback; refresh entries only after a committed
-change, or restore the pre-command results on failed save. Retrieval does not save data, alter identity allocation, or
-replace the people view. Search still enters through `Logic.execute(String)` and must follow the complete
-[`SearchField` matrix](#supported-criteria), including same-student/same-lesson matching when those slices land.
-Lesson creation resolves a normalized full tutor name; search `tu/` matches a partial tutor name.
+**Integration status:** #80 supplies the lesson/roster backend, but the inherited runtime still reports retrieval
+unavailable. Attendance-history methods await #100. Commands and separate result views remain pending; search
+enters through `Logic.execute(String)` and follows the [planned search matrix](#supported-criteria).
 
 ### Model component
 **API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
@@ -810,20 +788,16 @@ fixture recipes and tracks full-product samples and acceptance after runtime int
 
 ### Search criteria parsing foundation
 
-Issue #64 adds an independently testable search specification. `SearchCriteriaParser.parse(String)` consumes the
-arguments after a future `search` command word and returns immutable `SearchCriteria`. It is a criteria parser rather
-than an implementation of `Parser<T extends Command>`, because this increment produces a value object instead of a
-command. Runtime routing and help topics will be connected with the later search commands.
-
-`SearchCategory`, `SearchField` and `SearchCriteria` are in `seedu.address.model.search`. The specification has no model,
-UI, storage or lesson-record dependency. `SearchField` owns the prefix/category matrix and validation rules;
-`SearchCriteria` defensively copies its filters, exposes an unmodifiable map and supplies field-level matching.
+[`SearchCriteriaParser`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/parser/SearchCriteriaParser.java)
+parses the arguments
+after `search` into immutable `SearchCriteria`. It produces a value object, not a `Command`; routing and help are
+connected only when each search slice activates. `SearchField` owns category compatibility and field matching, while
+the canonical query layer combines fields against records and relationships. Parsing never writes operational data.
 
 #### Supported criteria
 
-The required category is `c/student`, `c/parent`, `c/tutor` or `c/lesson`, ignoring category-value case.
-Category-only input is valid and imposes no field restrictions. Prefixes are lowercase, may occur in any order and
-may appear only once, including `c/`. This matrix implements the earlier search specification tracked in [issue #64](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/64):
+The required category is `c/student`, `c/parent`, `c/tutor` or `c/lesson`, ignoring category-value case. Category-only
+input is valid. Prefixes are lowercase, order-independent and unique within a command. The full planned matrix is:
 
 | Prefix | Field | Student | Parent | Tutor | Lesson | Matching |
 |--------|-------|---------|--------|-------|--------|----------|
@@ -841,40 +815,30 @@ may appear only once, including `c/`. This matrix implements the earlier search 
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes | Partial text |
 | `rm/` | Lesson room | Yes | Yes | Yes | Yes | Partial text |
 
-Text queries are stripped of surrounding whitespace and stored in lowercase using `Locale.ROOT`. Matching uses
-case-insensitive substring containment, so `n/al` can match `Sally Tan`, `s/Math` can match `Add Math`, and
-`e/@example` can match `mei@example.com`. Text fragments are accepted without requiring a complete valid name,
-email address or lesson field. `tu/` remains a partial tutor-name query; tutor-category name searches use `n/`.
+Text filters use case-insensitive substring matching after trimming and `Locale.ROOT` case normalization; fragments
+need not form a complete valid field value. Thus `n/al` matches `Sally Tan` and `s/Math` matches `Add Math`.
+Lesson creation selects a tutor by normalized **full** name and optional exact phone; search `tu/` matches a tutor
+name **fragment**, while tutor-category own-name search uses `n/`.
 
 Phone filters require 3–15 ASCII digits, retain leading zeros and match the complete number. Levels accept only
 `P1`–`P6`, `S1`–`S5`, `JC1` and `JC2`, normalized to uppercase. Weekdays accept only `Mon`, `Tue`, `Wed`, `Thu`, `Fri`,
 `Sat` and `Sun`, normalized to lowercase. Times require four digits from `0000` to `2359`, with valid minutes.
 Start or end may be supplied independently; when both are present, end must be later than start on the same day.
 
-`SearchCriteria.matches(SearchField, String)` checks one supplied condition. An omitted filter imposes no restriction;
-an absent optional field fails a supplied filter. Exact-field comparisons use the same validation/normalization as
-the queries. Query integration must combine all supplied filters and preserve the existing same-student/same-lesson
-rules. This foundation validates relational criteria without traversing records or building a relationship graph.
+An omitted filter imposes no restriction; a supplied filter never matches an absent optional field. A person with no
+relationships still qualifies for own-field-only search. All supplied relational filters must refer to the same
+linked student or lesson: a parent cannot take `sn/` from one child and `s/` from another, and a student cannot take
+`d/` from one enrolled lesson and `s/` from another. Tutor `sn/` and lesson fields must match one assigned lesson.
+Lesson `sn/` checks its current roster, so former members do not match; without `sn/`, empty lessons remain eligible.
+Every result is distinct by stable ID and retains canonical order, including a valid zero-result list.
 
 #### Errors and integration boundary
 
-The parser throws `ParseException` for missing/unknown categories, unexpected preamble, blank values, repeated
-prefixes, unknown prefixes, category-incompatible filters, invalid exact values and non-increasing time ranges.
-Slashes in values and line breaks in arguments are rejected. All prefix-shaped tokens at whitespace boundaries are
-recognized, including unknown ones: `c/student n/Alex xyz/no` reports unsupported `xyz/` instead of absorbing it into
-the name query. Horizontal whitespace can separate prefixes. Programmer-supplied null arguments raise
-`NullPointerException`; direct construction of invalid criteria raises `IllegalArgumentException`.
-
-The parser and criteria operate only on their inputs and perform no writes, ID allocation or filtering of live
-lists. Tests cover every documented prefix/category combination, normalization, partial/exact matching, retained
-phone zeros, day/level/time boundaries, unknown/blank/repeated fields, time ranges and criteria immutability.
-The active router still rejects `search`. The full matrix above is the retained planned search contract, including
-partial tutor-name queries and relationship filters. Own-field search can be activated as an earlier slice; later
-relational slices must retain same-student/same-lesson conjunctions and distinct-ID results. For example, a parent
-search combining `sn/Alex` and `s/Math` must find a matching lesson for that same linked Alex, rather than use one
-child for the name and another for the subject. A student's combined day/subject filters must match one enrolled
-lesson. Lesson results must count each shared lesson once and include empty lessons when the supplied filters allow
-them. Feature owners update routing, help and guides for each activated slice without reducing the outstanding target.
+Invalid category, prefix, value, duplicate filter or incompatible time range fails parsing with clear feedback; an
+unsupported prefix cannot be absorbed into the preceding text value. The criteria parser validates the entire matrix
+but does not traverse relationships or filter a live list. The active router still rejects `search`. Own-contact,
+lesson and relational slices are staged in #87, #90 and their follow-ups; each activated route must reject filters it
+cannot yet execute, rather than silently ignoring them. The full matrix and conjunction rules remain the target.
 
 ### Dated attendance records
 
