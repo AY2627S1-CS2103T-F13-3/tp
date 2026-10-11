@@ -246,6 +246,23 @@ public class ProtectedStartupTest {
     }
 
     @Test
+    public void startup_dataAndPreferencesHardLinkAlias_preservesOriginalBytes() throws Exception {
+        Path data = testFolder.resolve("canonical.json");
+        Files.writeString(data, "preserve operational bytes");
+        byte[] original = Files.readAllBytes(data);
+        Path prefs = testFolder.resolve("preferences.json");
+        try {
+            Files.createLink(prefs, data);
+        } catch (IOException | UnsupportedOperationException | SecurityException exception) {
+            assumeTrue(false, "Hard links unavailable: " + exception);
+        }
+
+        assertThrows(IllegalArgumentException.class, () -> new MainApp().initialize(data, prefs));
+        assertArrayEquals(original, Files.readAllBytes(data));
+        assertArrayEquals(original, Files.readAllBytes(prefs));
+    }
+
+    @Test
     public void startup_danglingAlias_rejectsBeforeCreatingDataOrPreferences() throws Exception {
         Path data = testFolder.resolve("data.json");
         Path prefs = testFolder.resolve("prefs.json");
