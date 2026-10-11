@@ -1370,3 +1370,36 @@ failed-save retry without consuming an ID, retained attendance, roster changes, 
 unsupported collection rejection, and JavaFX card selection at filtered index 1 with stable ID S7.
 These prepared components do not activate the application router. Teammate agreement on this handoff,
 review/merge and final integrated-runtime verification remain release coordination work.
+
+
+### Prepared protected canonical loading (#84)
+
+`ProtectedPonHubDataStorage` wraps the canonical codec and file writer for one application session.
+Construct it with the configured operational `Path` and call `load()` once before building the canonical
+model. Only confirmed absence returns a fresh unwritten root. Supported input must pass the version
+classifier and full validation in the canonical codec before any snapshot is returned. Rejection status
+separates unreadable, corrupt, unsupported-version and legacy data. Unrelated programming failures are
+not reclassified as corrupt user files. Uninitialized sessions cannot write either.
+
+A rejected load throws `DataLoadingException`, records actionable path-specific guidance and blocks
+`saveData()` for the entire session. Neither external repair nor deletion unlocks that instance; restart
+with a new storage instance to validate recovery. No rejected snapshot is installed and no fallback
+empty state is returned. If the UI shows an empty protected view, label it as unavailable saved data.
+Preferences keep their existing separate storage/shutdown lifecycle.
+
+Handoff to #85: use the returned snapshot for the single canonical model root, pass `storage::saveData`
+and `storage::getDataLoadError` to `CanonicalCommandExecutor`, and enforce help/list/exit-only routing
+when startup is rejected. Activate this wrapper together with canonical commands, cards and routing.
+Do not point the legacy runtime at canonical data or bypass protection via `JsonPonHubDataStorage`.
+The current codec still rejects nonempty lessons/attendance; the wrapper delegates domain validation
+to that codec, so later compatible codecs participate without another writable store. Current rejection
+of malformed lesson/attendance content is not evidence of field-level validation by future codecs.
+
+Verification includes missing paths, injected access denial, malformed/null/legacy/unsupported input,
+duplicate identities and invalid allocation history, no overwrite through direct saves or the canonical
+command boundary, and restart-only recovery after deliberate supported edits. Canonical command tests
+use staged help/list/exit equivalents because actual routing remains dormant. Final application startup,
+configured-path/platform and routing verification belongs to coordinated activation; the existing legacy
+startup regressions remain in force. For manual verification, use disposable files, record their original
+bytes, attempt reads and mutations in the protected session, repair a copy, restart and verify successful
+loading. Never delete the original as a recovery shortcut.

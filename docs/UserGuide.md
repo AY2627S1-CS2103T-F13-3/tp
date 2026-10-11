@@ -397,3 +397,19 @@ people and view, and display no success message. Run `list`: a rejected addition
 rejected deletion must still be present. Restore write access and perform a valid change; restart and
 check that only the successful change was saved. Automated tests inject storage failures without
 changing filesystem permissions, including a deletion from a filtered people view.
+
+
+### Canonical loading preparation (not yet activated)
+
+The prepared canonical loader distinguishes a missing store from an existing file that cannot be loaded.
+A missing store starts empty without creating a file until a successful save. Rejected existing data stays
+protected from operational writes for the entire session; repairing or removing the file while the app
+is open does not unlock saving. Close the app, retain a backup, correct a supported file or restore a
+known-good compatible copy, then restart and validate it. An empty protected view does not mean your
+saved records were deleted.
+
+Unversioned AB3 files are preserved and rejected by the canonical loader. It does not assign roles or
+convert them automatically. The planned cutover uses a backed-up original and a separate supported
+store with manual re-entry; no importer or user-facing initialization command is introduced here.
+The current application still uses its legacy loading route and data location. Canonical path/setup
+instructions will be published with the coordinated runtime activation, not before it.
