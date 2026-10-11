@@ -773,7 +773,8 @@ may appear only once, including `c/`. This matrix implements the earlier search 
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes | Partial text |
 | `rm/` | Lesson room | Yes | Yes | Yes | Yes | Partial text |
 
-Text queries are stripped of surrounding whitespace and stored in lowercase using `Locale.ROOT`. Matching uses
+Text queries are stripped of surrounding whitespace, collapse repeated spaces, and are stored in lowercase using
+`Locale.ROOT`. This matches the canonical name and address normalization. Matching uses
 case-insensitive substring containment, so `n/al` can match `Sally Tan`, `s/Math` can match `Add Math`, and
 `e/@example` can match `mei@example.com`. Text fragments are accepted without requiring a complete valid name,
 email address or lesson field. `tu/` remains a partial tutor-name query; tutor-category name searches use `n/`.
@@ -796,6 +797,12 @@ Slashes in values and line breaks in arguments are rejected. All prefix-shaped t
 recognized, including unknown ones: `c/student n/Alex xyz/no` reports unsupported `xyz/` instead of absorbing it into
 the name query. Horizontal whitespace can separate prefixes. Programmer-supplied null arguments raise
 `NullPointerException`; direct construction of invalid criteria raises `IllegalArgumentException`.
+
+`PersonContactSearch` now matches the `n/l/p/pp/e/a` own-field slice against immutable canonical records in their
+existing order. Category-only searches include unlinked people; absent optional fields fail supplied filters, and
+relationship filters are explicitly rejected until their traversal is integrated. This matcher returns an immutable
+snapshot but does not activate the `search` command or replace the current people view. The command/view cutover must
+connect it to the canonical runtime and test filtered indices and persistence boundaries.
 
 The parser and criteria operate only on their inputs and perform no writes, ID allocation or filtering of live
 lists. Tests cover every documented prefix/category combination, normalization, partial/exact matching, retained
