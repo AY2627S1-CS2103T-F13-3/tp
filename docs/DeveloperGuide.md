@@ -21,6 +21,7 @@ title: Developer Guide
 * Zhu Zhi Yu used OpenAI Codex to document the confirmed person command-index boundary and reconcile shared-lesson command formats, staged search scope, legacy recovery policy, use cases, and manual checks. This acknowledgement covers those documentation changes; feature implementations remain with their owners.
 * Zhu Zhi Yu used OpenAI Codex to assist with the file-logging startup fallback, its isolated regression tests, and logging documentation.
 * Zhu Zhi Yu used OpenAI Codex for the UI startup error-handling fix and its regression tests.
+* Zhu Zhi Yu used OpenAI Codex for screen-aware window restoration, active contact-card wrapping, their regression tests, and the related layout documentation.
 * Zhu Zhi Yu used OpenAI Codex for dormant role-aware add argument parsing, its immutable ID-free input, regression tests, and integration documentation.
 * Zhu Zhi Yu used OpenAI Codex for the dormant complete-state person-addition candidate, its transaction-preparation regression tests, and the related integration notes.
 * Zhu Zhi Yu used OpenAI Codex for constant-stack email validation that preserves the inherited contact rules, its parser/file-loading regressions, and the related implementation and manual-testing notes.
@@ -55,6 +56,12 @@ This increment implements inline help and command-specific guidance. The runtime
 Feature owners supply their parser, usage and runnable example. Register a mutation only when its aggregate, validation, and save/reload behavior work together. Replace the legacy people entries at the canonical runtime cutover; legacy `delete` must be disabled until guarded canonical deletion resolves the current people-list index to a stable person ID. `edit`, `clear`, and `find` are already withdrawn from dispatch and help in this increment. Their inherited implementation classes remain for incremental cleanup and direct regression tests.
 
 When registering or withdrawing a command, update catalogue/router tests, its UG entry and manual tests in the same PR. A summary topic must never advertise an unavailable command. `list` and `exit` now reject unexpected arguments instead of silently ignoring them.
+
+### Window placement and active contact-card layout
+
+At startup, `WindowPlacement` fits saved window dimensions and coordinates to the current screen work areas. It chooses the screen with the largest overlap with the saved window, preserves valid coordinates on secondary screens, and centers a new or wholly offscreen window on the primary screen. Invalid saved dimensions fall back to the defaults. JavaFX's visual bounds already use logical coordinates and exclude desktop bars; they are not divided by the display scale again. The startup fit does not impose a permanent maximum size, so the administrator can move and resize the window on a larger monitor.
+
+The main window has a 450-by-360 logical minimum where the work area allows it. The result area can shrink while retaining its own scrollable text, and the people list retains a visible scrollable viewport. Active inherited contact cards fit their list cells and wrap names, phones, addresses, emails and tags. These changes apply to the current runtime and do not activate the dormant role-aware people view or shared-lesson commands.
 
 ### Shared-lesson target contract
 
@@ -1184,6 +1191,15 @@ Use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-projec
 
 Repeat the topic/example checks whenever a feature owner registers another command. Broader shared-lesson workflow and published-site checks remain pending the owners' integration; passing help checks alone does not establish completion of the broader team target. That complete target is separate from the Week 8 first-increment requirement.
 
+### Compact windows and active contact cards
+
+1. In an isolated working folder, launch the application on a 1280×720 display at 150% scaling and on a 1920×1080 display at 100% and 125%. Record the OS, scaling, Java version and usable desktop work area. The complete window must fit inside that work area; menu actions, command entry, results and the people list must remain reachable. Logical-size previews are useful checks, but do not replace actual platform/scaling results.
+2. Resize to the minimum window size. Run `help add` and scroll to the final example. Scroll the people list to its last card. Expect separate usable result and people scrollbars, with the command box and menus still visible.
+3. Add contacts with a long name, postal address, unbroken email and tag using the active syntax. Run `list` followed by `help add` to refresh the cards, then narrow, widen and narrow the window again. Expect full values to wrap within the card, without horizontal overflow or tag ellipsis; scroll vertically to reach the bottom of a tall card and the final person.
+4. Close the application and restart with the retained preferences. Valid sizes and coordinates remain unchanged. In the isolated folder, test an oversized saved window, coordinates from a removed monitor and a still-connected monitor to the left or above the primary display. Expect an oversized/offscreen window to fit a current work area, while valid secondary-monitor coordinates remain usable.
+
+Automated bounds regressions cover scaled work areas, desktop bars, removed and secondary monitors, partial overlap and invalid saved dimensions. Actual-FXML layout checks use isolated fixture data; they do not establish Windows or Linux font/scaling behavior. Keep real display results in issue #128.
+
 ### Planned person-index integration checks
 
 Run these checks when the canonical people view and corresponding commands are activated. They are acceptance checks for the confirmed selector boundary, not claims that the current inherited runtime supports shared lessons or stable person IDs. Existing lesson references use `lid/LESSON_ID` throughout these target routes.
@@ -1233,14 +1249,14 @@ testers are expected to do more *exploratory* testing.
    1. Download the JAR file and copy it into an empty folder.
 
    1. Double-click the JAR file.<br>
-      Expected: The GUI opens with a set of sample contacts. The window size may not be optimal.
+      Expected: The GUI opens with a set of sample contacts, with its initial window inside the current desktop work area.
 
 1. Saving window preferences
 
    1. Resize the window to an optimal size. Move the window to a different location. Close the window.
 
    1. Relaunch the app by double-clicking the JAR file.<br>
-       Expected: The most recent window size and location are retained.
+       Expected: The most recent window size and location are retained when they fit a current screen; oversized or offscreen preferences are adjusted into an available desktop work area.
 
 ### Contact validation in the current increment
 
