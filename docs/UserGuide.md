@@ -413,3 +413,21 @@ convert them automatically. The planned cutover uses a backed-up original and a 
 store with manual re-entry; no importer or user-facing initialization command is introduced here.
 The current application still uses its legacy loading route and data location. Canonical path/setup
 instructions will be published with the coordinated runtime activation, not before it.
+
+
+### Editing saved shared lessons (prepared canonical format)
+
+The canonical format now supports shared lessons and their student rosters. Each lesson contains its
+stable ID, tutor ID, weekday, start/end time, subject, room and enrolled student IDs. Times are strings
+such as `"0900"`; an empty student roster is valid. Several students share one lesson record.
+
+Before editing, close the app and retain a backup. Keep referenced tutors/students in the same file,
+use each lesson ID once and each student ID once per roster, and preserve allocation counters even
+after deleting records. Do not create overlapping bookings for a tutor, room or enrolled student;
+back-to-back lessons are allowed. Invalid files are rejected as a whole rather than partially loaded.
+Attendance persistence and canonical runtime activation remain separate work.
+
+For a disposable-file recovery check after activation, change a saved lesson's tutor ID to an absent
+ID and restart. Expect a recovery warning and unchanged file bytes after help/list/exit or an attempted
+mutation. Restore the valid backup and restart to verify loading. Codec and protected-storage tests
+cover these guarantees before the runtime is activated.
