@@ -21,8 +21,9 @@ import seedu.address.model.person.PersonRole;
 /**
  * Immutable complete operational snapshot. Collection order and allocation history participate in equality.
  * A counter of Long.MAX_VALUE represents exhaustion; counters must never be inferred from retained records.
- * Global tutor and room schedule rules are validated here so restored state cannot bypass operational invariants.
- * Attendance-date and student-enrolment rules belong to their feature layers.
+ * Global tutor, room and student schedule rules are validated here so restored state cannot bypass
+ * operational invariants.
+ * Attendance-date rules belong to their feature layer.
  *
  * @param people Ordered people and complete per-role allocation history.
  * @param lessons Ordered shared lessons, each owning its roster.
@@ -70,7 +71,7 @@ public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, 
     }
 
     /**
-     * Rejects overlapping bookings for the same tutor or normalized room.
+     * Rejects overlapping bookings for the same tutor, normalized room or enrolled student.
      */
     private static void validateLessonSchedules(List<Lesson> lessons) {
         for (int i = 0; i < lessons.size(); i++) {
@@ -84,6 +85,11 @@ public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, 
                         "Tutor schedule overlap between " + earlierLesson.getId() + " and " + lesson.getId() + ".");
                 checkArgument(!lesson.getRoom().equals(earlierLesson.getRoom()),
                         "Room schedule overlap between " + earlierLesson.getId() + " and " + lesson.getId() + ".");
+                for (PersonId student : lesson.getEnrolledStudentIds()) {
+                    checkArgument(!earlierLesson.hasEnrolledStudent(student),
+                            "Student " + student + " schedule overlap between " + earlierLesson.getId()
+                                    + " and " + lesson.getId() + ".");
+                }
             }
         }
     }

@@ -523,9 +523,33 @@ leading zeros. Unknown fields and role-inappropriate fields are rejected rather 
 
 All three person counters and the lesson counter are required nonnegative integers up to `Long.MAX_VALUE`
 (exhaustion). They include deleted identities and must not be recomputed from retained records. Person
-counters must cover every retained ID. Both lesson/attendance arrays must currently be empty: non-empty
-collections are rejected on both read and write until #81/#83 supply their codecs. They must never be
-dropped while rewriting a file. Serialization finishes before any filesystem write.
+and lesson counters must cover every retained ID. Lessons and rosters are supported; attendance must
+remain an empty array until #83 supplies its codec. Unsupported attendance is rejected on both read
+and write, never dropped while rewriting a file. Serialization finishes before any filesystem write.
+
+Each `lessons` entry stores a shared lesson once; student records do not duplicate its membership:
+
+```json
+{
+  "id": "L2",
+  "tutorId": "T1",
+  "day": "Mon",
+  "startTime": "0900",
+  "endTime": "1000",
+  "subject": "Mathematics",
+  "room": "R1",
+  "enrolledStudentIds": ["S1", "S2"]
+}
+```
+
+All lesson fields are required. Times are four-digit strings, days use Mon–Sun, and an empty roster
+is valid. The codec rejects unknown fields, wrong types and duplicate roster IDs before constructing
+the roster set. After decoding all people and lessons, the immutable aggregate validates unique lesson
+IDs, the lesson counter, tutor/student references and overlapping tutor, normalized room or student
+bookings. Adjacent half-open time slots are allowed. JSON object-field order and reference position in
+arrays do not affect validation; lesson array order is retained. Referenced records must exist in the
+complete candidate. Failure returns no partial snapshot and the protected loader retains the original
+bytes and blocks writes. Deleted lesson IDs remain reserved through `lastAllocatedLessonSequence`.
 
 Close the app and preserve a backup before manual editing. For example, adding `"email": "alex@example.com"`
 to the student above is valid; making a phone numeric, removing a required field, or lowering its student
@@ -1312,8 +1336,8 @@ For #85, invoke this boundary from the single canonical runtime adapter; do not 
 writable store or activate it beside the legacy model. For #84, supply its protected-session guidance
 and protected writer, and enforce the help/list/exit-only catalogue before dispatch. The guard here
 also rejects any staged operational change while loading is protected. Wire `JsonPonHubDataStorage`
-through that protected adapter. Its current codec rejects nonempty lessons/attendance: keep those
-commands gated until #81/#83 provide compatible codecs. Never strip unsupported collections to save.
+through that protected adapter. The codec supports lessons and rosters but still rejects nonempty
+attendance until #83 supplies its codec. Never strip unsupported collections to save.
 
 Regression tests exercise the real aggregate, addition candidate, filtered view, people codec/reload,
 failed-save retry without consuming an ID, retained attendance, roster changes, protected writes,
@@ -1341,9 +1365,8 @@ Handoff to #85: use the returned snapshot for the single canonical model root, p
 and `storage::getDataLoadError` to `CanonicalCommandExecutor`, and enforce help/list/exit-only routing
 when startup is rejected. Activate this wrapper together with canonical commands, cards and routing.
 Do not point the legacy runtime at canonical data or bypass protection via `JsonPonHubDataStorage`.
-The current codec still rejects nonempty lessons/attendance; the wrapper delegates domain validation
-to that codec, so later compatible codecs participate without another writable store. Current rejection
-of malformed lesson/attendance content is not evidence of field-level validation by future codecs.
+The current codec still rejects nonempty attendance; the wrapper delegates domain validation
+to that codec, so later compatible codecs participate without another writable store. Rejection of attendance payloads is not evidence of field-level validation by the future attendance codec.
 
 Verification includes missing paths, injected access denial, malformed/null/legacy/unsupported input,
 duplicate identities and invalid allocation history, no overwrite through direct saves or the canonical
