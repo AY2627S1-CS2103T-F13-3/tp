@@ -255,6 +255,9 @@ Deletion is blocked while the roster is non-empty or attendance refers to the le
 
 Enter `lessons` to view each shared lesson once, including lessons with empty rosters. To view a student's currently enrolled lessons, first run `list r/student` and check their current position. If the intended student appears at position 1, enter `lessons si/1`. Catalogue results preserve the current people list and its indices.
 
+The catalogue and student lesson results use lesson creation order. Student lessons show current enrolments;
+past attendance alone does not add a lesson to that list. Use `history` to inspect attendance retained after unenrolment.
+
 **Details:** `showlesson lid/LESSON_ID [d/YYYY-MM-DD]`.
 
 For example, `showlesson lid/L1` displays the lesson's schedule, subject, tutor, room and current roster, with stable IDs identifying the records. `showlesson lid/L1 d/2026-10-05` also shows each current roster student's `present`, `absent` or unrecorded status for that real, matching-weekday date. Attendance retained for former members is labelled separately from the current roster. An empty roster is valid. These results preserve the current people list and its command positions.
@@ -309,6 +312,11 @@ All supplied filters must match together:
 * **Lesson:** All filters apply to one shared lesson. `sn/`, if supplied, matches a student in its current roster. Empty lessons remain discoverable when no `sn/` filter is supplied.
 
 People with no matching relationship still qualify for own-field-only searches. Each matching person or lesson appears once, distinguished by stable ID. An absent optional contact field does not match a supplied filter. Unsupported, category-incompatible, blank and repeated filters are rejected, as are slashes or line breaks in values. A valid search with no matches reports an empty result.
+
+Lesson results retain catalogue creation order. For example, `search c/lesson d/Mon s/Math sn/al` requires one Monday
+Math lesson with a currently enrolled student whose name contains `al`. A former member's attendance does not satisfy
+`sn/`, and several matching students in one lesson still produce one result. After a successful change or rollback,
+displayed lesson and roster results must reflect the resulting current data.
 
 Examples:
 

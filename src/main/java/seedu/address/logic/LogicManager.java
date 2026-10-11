@@ -96,32 +96,32 @@ public class LogicManager implements Logic {
 
     @Override
     public ObservableList<LessonView> getLessonList() {
-        throw new UnsupportedOperationException(RETRIEVAL_UNAVAILABLE);
+        return model.getLessonQueries().getLessonList();
     }
 
     @Override
     public ObservableList<LessonView> getFilteredLessonList() {
-        throw new UnsupportedOperationException(RETRIEVAL_UNAVAILABLE);
+        return model.getLessonQueries().getFilteredLessonList();
     }
 
     @Override
     public Optional<LessonView> findLessonById(LessonId lessonId) {
-        throw new UnsupportedOperationException(RETRIEVAL_UNAVAILABLE);
+        return model.getLessonQueries().findLessonById(lessonId);
     }
 
     @Override
     public ObservableList<LessonView> getStudentLessons(PersonId studentId) {
-        throw new UnsupportedOperationException(RETRIEVAL_UNAVAILABLE);
+        return model.getLessonQueries().getStudentLessons(studentId);
     }
 
     @Override
     public ObservableList<StudentView> getLessonRoster(LessonId lessonId) {
-        throw new UnsupportedOperationException(RETRIEVAL_UNAVAILABLE);
+        return model.getLessonQueries().getLessonRoster(lessonId);
     }
 
     @Override
     public ObservableList<LessonView> getTutorSchedule(PersonId tutorId) {
-        throw new UnsupportedOperationException(RETRIEVAL_UNAVAILABLE);
+        return model.getLessonQueries().getTutorSchedule(tutorId);
     }
 
     @Override
