@@ -27,7 +27,8 @@ import seedu.address.model.query.StudentView;
 import seedu.address.storage.Storage;
 
 /**
- * The main LogicManager of the app.
+ * Logic for the retained inherited implementation and its isolated regression tests.
+ * The running application uses {@link CanonicalLogicManager} instead.
  */
 public class LogicManager implements Logic {
     public static final String FILE_OPS_ERROR_FORMAT = "Could not save data due to the following error: %s";

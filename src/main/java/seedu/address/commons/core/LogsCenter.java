@@ -3,6 +3,9 @@ package seedu.address.commons.core;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
@@ -10,22 +13,27 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import seedu.address.commons.util.ApplicationPaths;
+
 /**
  * Configures and manages loggers and handlers, including their logging level.
  * Named {@link Logger}s can be obtained from this class.<br>
- * These loggers have been configured to output messages to the console and a {@code .log} file by default,
- *   at the {@code INFO} level. A new {@code .log} file with a new numbering will be created after the log
+ * Loggers initially output messages to the console at the {@code INFO} level. File logging starts explicitly
+ *   after the application validates its data paths. A new {@code .log} file is created after the log
  *   file reaches 5MB in size, up to a maximum of 5 files.<br>
  * If the log file cannot be opened, logging continues through the console.
+ * Packaged logs stay in the JAR's folder even when launched from another working directory.
  */
 public class LogsCenter {
+    public static final String LOG_FILE_PREFIX = "addressbook.log";
+
     // Change this to a lower level (e.g., Level.FINE) to enable more detailed log messages
     private static final Level LOG_LEVEL = Level.INFO;
 
     private static final int MAX_FILE_COUNT = 5;
     private static final int MAX_FILE_SIZE_IN_BYTES = (int) (Math.pow(2, 20) * 5); // 5MB
-    private static final String LOG_FILE = "addressbook.log";
     private static Logger baseLogger; // to be used as the parent of all other loggers created by this class.
+    private static boolean isFileLoggingInitialized;
 
     // This static block ensures essential loggers are created early
     static {
@@ -57,6 +65,43 @@ public class LogsCenter {
     }
 
     /**
+     * Attempts file logging once after the application has validated its operational and preference paths.
+     * Existing symbolic log paths disable file logging so their targets remain untouched.
+     * Failures retain the existing console handler and recovery warning.
+     */
+    public static synchronized void initializeFileLogging() {
+        if (isFileLoggingInitialized) {
+            return;
+        }
+        isFileLoggingInitialized = true;
+        try {
+            Path home = ApplicationPaths.getHomeDirectory();
+            rejectSymbolicLogs(home);
+            // FileHandler interprets percent tokens, so retain literal characters in the application folder.
+            String filePattern = home.resolve(LOG_FILE_PREFIX).toString().replace("%", "%%");
+            FileHandler fileHandler = new FileHandler(filePattern, MAX_FILE_SIZE_IN_BYTES, MAX_FILE_COUNT, true);
+            fileHandler.setFormatter(new SimpleFormatter());
+            fileHandler.setLevel(Level.ALL);
+            baseLogger.addHandler(fileHandler);
+        } catch (IOException e) {
+            baseLogger.log(Level.WARNING, "Unable to initialize file logging; continuing with console logging.", e);
+        }
+    }
+
+    /**
+     * Rejects symbolic links in the reserved log namespace before FileHandler can open or rotate those files.
+     */
+    private static void rejectSymbolicLogs(Path home) throws IOException {
+        try (DirectoryStream<Path> logPaths = Files.newDirectoryStream(home, LOG_FILE_PREFIX + "*")) {
+            for (Path logPath : logPaths) {
+                if (Files.isSymbolicLink(logPath)) {
+                    throw new IOException("Refusing a symbolic log path: " + logPath);
+                }
+            }
+        }
+    }
+
+    /**
      * Removes all handlers from the {@code logger}.
      */
     private static void removeHandlers(Logger logger) {
@@ -65,7 +110,7 @@ public class LogsCenter {
     }
 
     /**
-     * Creates a logger named 'ab3', containing a {@code ConsoleHandler} and a {@code FileHandler}.
+     * Creates a logger named 'ab3' with console output, leaving file output until explicit initialization.
      * Sets it as the {@code baseLogger}, to be used as the parent logger of all other loggers.
      */
     private static void setBaseLogger() {
@@ -83,15 +128,6 @@ public class LogsCenter {
         consoleHandler.setLevel(Level.ALL);
         baseLogger.addHandler(consoleHandler);
 
-        // add a FileHandler to log to a file
-        try {
-            FileHandler fileHandler = new FileHandler(LOG_FILE, MAX_FILE_SIZE_IN_BYTES, MAX_FILE_COUNT, true);
-            fileHandler.setFormatter(new SimpleFormatter());
-            fileHandler.setLevel(Level.ALL);
-            baseLogger.addHandler(fileHandler);
-        } catch (IOException e) {
-            baseLogger.log(Level.WARNING, "Unable to initialize file logging; continuing with console logging.", e);
-        }
     }
 
 

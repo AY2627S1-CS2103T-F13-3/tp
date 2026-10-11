@@ -1,8 +1,10 @@
 package seedu.address;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -10,20 +12,13 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.DataLoadingException;
+import seedu.address.commons.util.ApplicationPaths;
 import seedu.address.commons.util.StringUtil;
+import seedu.address.logic.CanonicalLogicManager;
+import seedu.address.logic.CanonicalPeopleSession;
 import seedu.address.logic.Logic;
-import seedu.address.logic.LogicManager;
-import seedu.address.model.AddressBook;
-import seedu.address.model.Model;
-import seedu.address.model.ModelManager;
-import seedu.address.model.ReadOnlyAddressBook;
-import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
-import seedu.address.model.util.SampleDataUtil;
-import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
-import seedu.address.storage.Storage;
-import seedu.address.storage.StorageManager;
 import seedu.address.ui.Ui;
 import seedu.address.ui.UiManager;
 
@@ -36,54 +31,122 @@ public class MainApp extends Application {
 
     private static final Logger logger = LogsCenter.getLogger(MainApp.class);
     private static final Path USER_PREFS_FILE_PATH = Paths.get("preferences.json");
-    private static final Path ADDRESS_BOOK_FILE_PATH = Paths.get("data", "addressbook.json");
+    private static final Path CANONICAL_DATA_FILE_PATH = Paths.get("data", "ponhub.json");
 
     protected Ui ui;
     protected Logic logic;
-    protected Storage storage;
-    protected Model model;
+    protected CanonicalPeopleSession canonicalSession;
+
+    private JsonUserPrefsStorage userPrefsStorage;
+    private UserPrefs userPrefs;
 
     @Override
     public void init() throws Exception {
         logger.info("=============================[ Initializing PonHub ]===========================");
         super.init();
 
-        JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(USER_PREFS_FILE_PATH);
-        UserPrefs userPrefs = initPrefs(userPrefsStorage);
-        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(ADDRESS_BOOK_FILE_PATH);
-        storage = new StorageManager(addressBookStorage, userPrefsStorage);
-
-        model = initModelManager(storage, userPrefs);
-
-        logic = new LogicManager(model, storage);
-
-        ui = new UiManager(logic, storage.getAddressBookFilePath(), storage.getDataLoadError());
+        Path applicationDirectory = ApplicationPaths.getHomeDirectory();
+        initialize(selectDataPath(getParameters().getNamed(), applicationDirectory),
+                requireWithinApplicationDirectory(USER_PREFS_FILE_PATH, applicationDirectory));
+        LogsCenter.initializeFileLogging();
+        ui = new UiManager(logic, canonicalSession.getDataFilePath(), canonicalSession.getDataLoadError());
     }
 
     /**
-     * Returns a {@code ModelManager} with the data from {@code storage}'s address book and {@code userPrefs}. <br>
-     * The data from the sample address book will be used instead if {@code storage}'s address book is not found,
-     * or an empty protected view will be used if loading fails. Storage retains the write lock and diagnostic.
+     * Initializes the application session and independent preferences before constructing native UI controls.
+     * Missing canonical data starts empty and stays unwritten until a successful mutation.
+     * Rejected data exposes a protected session without replacing its original bytes.
+     *
+     * @throws IOException if existing data and preference paths cannot be checked for aliasing.
+     * @throws IllegalArgumentException if both paths identify the same file.
      */
-    Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
-        logger.info("Using data file : " + storage.getAddressBookFilePath());
-
-        Optional<ReadOnlyAddressBook> addressBookOptional;
-        ReadOnlyAddressBook initialData;
-        try {
-            addressBookOptional = storage.readAddressBook();
-            if (addressBookOptional.isEmpty()) {
-                logger.info("Creating a new data file " + storage.getAddressBookFilePath()
-                        + " populated with a sample AddressBook.");
-            }
-            initialData = addressBookOptional.orElseGet(SampleDataUtil::getSampleAddressBook);
-        } catch (DataLoadingException e) {
-            logger.warning("Data file at " + storage.getAddressBookFilePath() + " could not be loaded."
-                    + " Starting a protected session with an empty view. " + e.getMessage());
-            initialData = new AddressBook();
+    protected void initialize(Path dataPath, Path prefsPath) throws IOException {
+        if (resolveStoragePath(dataPath.toAbsolutePath(), 0).equals(resolveStoragePath(prefsPath.toAbsolutePath(), 0))
+                || (Files.exists(dataPath) && Files.exists(prefsPath) && Files.isSameFile(dataPath, prefsPath))) {
+            throw new IllegalArgumentException("Canonical data and preferences must use separate files.");
         }
+        Path applicationDirectory = resolveStoragePath(prefsPath.toAbsolutePath().getParent(), 0);
+        rejectLogAlias(dataPath.toAbsolutePath(), applicationDirectory);
+        rejectLogAlias(prefsPath.toAbsolutePath(), applicationDirectory);
 
-        return new ModelManager(initialData, userPrefs);
+        logger.info("Using canonical data file : " + dataPath);
+        canonicalSession = new CanonicalPeopleSession(dataPath);
+        canonicalSession.getDataLoadError().ifPresent(logger::warning);
+        userPrefsStorage = new JsonUserPrefsStorage(prefsPath);
+        userPrefs = initPrefs(userPrefsStorage);
+        logic = new CanonicalLogicManager(canonicalSession, userPrefs);
+    }
+
+    /**
+     * Selects a canonical path within the application's directory from the named {@code --data=PATH} argument.
+     * Relative paths resolve beside the JAR; symbolic links cannot escape that directory.
+     */
+    static Path selectDataPath(Map<String, String> namedParameters, Path applicationDirectory) throws IOException {
+        if (namedParameters.containsKey("data") && namedParameters.get("data").isBlank()) {
+            throw new IllegalArgumentException("The --data=PATH argument must specify a nonblank file path.");
+        }
+        Path selected = namedParameters.containsKey("data") ? Paths.get(namedParameters.get("data"))
+                : CANONICAL_DATA_FILE_PATH;
+        Path dataPath = requireWithinApplicationDirectory(selected, applicationDirectory);
+        rejectLogAlias(dataPath, applicationDirectory.toRealPath());
+        return dataPath;
+    }
+
+    /**
+     * Rejects log rotation names and their aliases before storage initialization or logging changes file bytes.
+     */
+    private static void rejectLogAlias(Path storagePath, Path applicationDirectory) throws IOException {
+        Path resolvedPath = resolveStoragePath(storagePath, 0);
+        if (applicationDirectory.equals(resolvedPath.getParent())
+                && resolvedPath.getFileName().toString().startsWith(LogsCenter.LOG_FILE_PREFIX)) {
+            throw new IllegalArgumentException("Data and preferences must use separate files from application logs.");
+        }
+        if (Files.notExists(applicationDirectory)) {
+            return;
+        }
+        try (var logFiles = Files.newDirectoryStream(applicationDirectory, LogsCenter.LOG_FILE_PREFIX + "*")) {
+            for (Path logFile : logFiles) {
+                boolean isSameExistingFile = Files.exists(storagePath) && Files.exists(logFile)
+                        && Files.isSameFile(storagePath, logFile);
+                if (resolvedPath.equals(resolveStoragePath(logFile, 0)) || isSameExistingFile) {
+                    throw new IllegalArgumentException("Data and preferences must use separate files from"
+                            + " application logs.");
+                }
+            }
+        }
+    }
+
+    /**
+     * Rejects storage paths escaping the application's directory before loading operational data or preferences.
+     */
+    private static Path requireWithinApplicationDirectory(Path selected, Path applicationDirectory) throws IOException {
+        Path home = applicationDirectory.toRealPath();
+        Path storagePath = (selected.isAbsolute() ? selected : home.resolve(selected)).normalize();
+        if (!resolveStoragePath(storagePath, 0).startsWith(home)) {
+            throw new IllegalArgumentException("Data and preferences must stay within the application's directory: "
+                    + home);
+        }
+        return storagePath;
+    }
+
+    /**
+     * Resolves existing ancestors and dangling links before missing storage files can be created.
+     */
+    private static Path resolveStoragePath(Path path, int followedLinks) throws IOException {
+        if (Files.isSymbolicLink(path)) {
+            if (followedLinks >= 40) {
+                throw new IOException("Too many symbolic links while checking storage path " + path);
+            }
+            Path target = Files.readSymbolicLink(path);
+            return resolveStoragePath(target.isAbsolute() ? target : path.getParent().resolve(target),
+                    followedLinks + 1);
+        }
+        if (Files.exists(path)) {
+            return path.toRealPath();
+        }
+        Path parent = path.getParent();
+        return parent == null ? path.normalize()
+                : resolveStoragePath(parent, followedLinks).resolve(path.getFileName()).normalize();
     }
 
     /**
@@ -128,7 +191,7 @@ public class MainApp extends Application {
     public void stop() {
         logger.info("============================ [ Stopping PonHub ] =============================");
         try {
-            storage.saveUserPrefs(model.getUserPrefs());
+            userPrefsStorage.saveUserPrefs(userPrefs);
         } catch (IOException e) {
             logger.severe("Failed to save preferences " + StringUtil.getDetails(e));
         }
