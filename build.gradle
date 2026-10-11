@@ -28,6 +28,9 @@ checkstyle {
 
 test {
     useJUnitPlatform()
+    doFirst {
+        systemProperty 'ponhub.test.runtimeClasspath', sourceSets.test.runtimeClasspath.asPath
+    }
     finalizedBy jacocoTestReport
 }
 

@@ -1271,6 +1271,14 @@ testers are expected to do more *exploratory* testing.
 
 Use inherited contact commands in a disposable data folder; role-aware add remains dormant.
 
+For current-runtime startup acceptance, launch from a separate folder whose name contains spaces.
+Check its `data/addressbook.json` and `preferences.json` through launch, help/list/exit and reopening;
+no other launch folder's files should change. Repeat with missing, valid manually edited, corrupt and
+unsupported operational data. Rejected originals remain byte-identical, mutations stay blocked, and
+saved preferences still reload. `ApplicationStartupTest` checks complete `MainApp.init()`/`stop()` in
+isolated JVM folders without replacing its factories. It does not show a window or establish native
+display acceptance. Canonical alternate-path tests remain separate from active application wiring.
+
 1. Enter `add n/  Anne-Marie   O'Neil  p/00123456 e/anne%school@example.com a/  Blk 10,   #01-02  `.
    Expect normalized name `Anne-Marie O'Neil` and address `Blk 10, #01-02`, retaining punctuation,
    email and phone zeros. Restart: the saved values remain intact.
