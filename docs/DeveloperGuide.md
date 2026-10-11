@@ -347,6 +347,13 @@ retrieval methods without saving data or changing the people filter. The current
 no canonical query source. Activate the prepared backend only with #85's single-root runtime integration and the
 compatible persistence/command/UI slices.
 
+`LessonsArgumentsParser` now prepares `lessons [si/STUDENT_INDEX]` as an optional current people-list `Index`.
+`LessonRetrieval` resolves that index once through the shared `PeopleView`, checks the Student role, and passes its
+stable ID to `LessonQueries`. It also applies `c/lesson` criteria to the separate filtered lesson result list. Both
+methods return the query layer's read-only observable results without changing the people view or operational data.
+These classes do not register either command or render cards; #90 activation still follows lesson creation,
+enrolment and the coordinated runtime cutover.
+
 | Query API | Implementation |
 | --- | --- |
 | `findLessonById(id)` | Hash lookup in the complete catalogue, independent of the active filter. |
