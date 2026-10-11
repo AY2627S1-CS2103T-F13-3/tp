@@ -5,6 +5,7 @@ import java.util.function.Predicate;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.person.Person;
+import seedu.address.model.query.LessonQuerySource;
 
 /**
  * The API of the Model component.
@@ -12,6 +13,14 @@ import seedu.address.model.person.Person;
 public interface Model {
     /** {@code Predicate} that always evaluates to true */
     Predicate<Person> PREDICATE_SHOW_ALL_PERSONS = unused -> true;
+
+    /**
+     * Returns retrieval over this model's canonical root when its runtime adapter is integrated.
+     * Legacy implementations retain the explicit unavailable boundary and must not create another live store.
+     */
+    default LessonQuerySource getLessonQueries() {
+        throw new UnsupportedOperationException(LessonQuerySource.MESSAGE_UNAVAILABLE);
+    }
 
     /**
      * Starts an isolated command transaction, including operational data and visible view state.

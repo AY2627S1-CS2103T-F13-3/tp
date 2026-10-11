@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.model.PonHubData;
 import seedu.address.model.PonHubDataState;
+import seedu.address.model.attendance.Attendance;
+import seedu.address.model.attendance.AttendanceStatus;
 import seedu.address.model.lesson.Lesson;
 import seedu.address.model.lesson.LessonDay;
 import seedu.address.model.lesson.LessonId;
@@ -153,7 +156,9 @@ public class JsonPonHubDataStorageTest {
         byte[] before = Files.readAllBytes(storage.getDataFilePath());
         Lesson lesson = new Lesson(new LessonId("L1"), new PersonId("T1"), new LessonTimeSlot(LessonDay.MONDAY,
                 new LessonTime("0900"), new LessonTime("1000")), new Subject("Math"), new Room("R1"), Set.of());
-        PonHubDataState unsupported = new PonHubDataState(original.people(), List.of(lesson), List.of(), 7);
+        PonHubDataState unsupported = new PonHubDataState(original.people(), List.of(lesson),
+                List.of(new Attendance(new PersonId("S1"), lesson.getId(), LocalDate.of(2026, 10, 5),
+                        AttendanceStatus.PRESENT)), 7);
         assertThrows(IOException.class, () -> storage.saveData(unsupported));
         assertArrayEquals(before, Files.readAllBytes(storage.getDataFilePath()));
     }

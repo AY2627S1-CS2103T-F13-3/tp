@@ -1,6 +1,7 @@
 package seedu.address.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -114,6 +115,10 @@ public class PonHubDataTest {
 
     @Test
     public void equality_includesRecordsRostersOrderAndCounters() {
+        PonHubData data = new PonHubData(original);
+        assertTrue(data.equals(data));
+        assertFalse(data.equals(null));
+        assertFalse(data.equals("not a canonical root"));
         assertNotEquals(original, new PonHubDataState(people, List.of(lesson), List.of(attendance), 6));
         assertNotEquals(original, new PonHubDataState(people, List.of(lesson.withEnrolledStudentIds(Set.of())),
                 List.of(attendance), 5));

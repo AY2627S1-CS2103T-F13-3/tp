@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import seedu.address.model.attendance.Attendance;
 import seedu.address.model.attendance.AttendanceKey;
 import seedu.address.model.lesson.Lesson;
@@ -32,7 +34,7 @@ public final class PonHubData {
     private static final String MESSAGE_MISSING_STUDENT = "The student does not exist: ";
     private static final String MESSAGE_MISSING_TUTOR = "The tutor does not exist: ";
 
-    private PonHubDataState state;
+    private final ReadOnlyObjectWrapper<PonHubDataState> state = new ReadOnlyObjectWrapper<>();
 
     public PonHubData() {
         this(new PonHubDataState(new PeopleRegistry().exportState(), List.of(), List.of(), 0));
@@ -50,7 +52,15 @@ public final class PonHubData {
      * Returns a complete immutable snapshot that cannot change with subsequent edits.
      */
     public PonHubDataState exportState() {
-        return state;
+        return state.get();
+    }
+
+    /**
+     * Observes complete, validated state publication without exposing a writable property.
+     * Query projections refresh here after a committed change or restore; staged changes use another container.
+     */
+    public ReadOnlyObjectProperty<PonHubDataState> stateProperty() {
+        return state.getReadOnlyProperty();
     }
 
     /**
@@ -58,7 +68,7 @@ public final class PonHubData {
      * Immutable state can be shared safely; neither this container nor its caller can change its collections.
      */
     public void resetData(PonHubDataState replacement) {
-        state = requireNonNull(replacement);
+        state.set(requireNonNull(replacement));
     }
 
     /**
@@ -69,15 +79,15 @@ public final class PonHubData {
     }
 
     public List<PersonRecord> getPeople() {
-        return state.people().getPeople();
+        return state.get().people().getPeople();
     }
 
     public List<Lesson> getLessons() {
-        return state.lessons();
+        return state.get().lessons();
     }
 
     public List<Attendance> getAttendance() {
-        return state.attendance();
+        return state.get().attendance();
     }
 
     /**
@@ -128,9 +138,9 @@ public final class PonHubData {
         List<Lesson> lessons = new ArrayList<>(getLessons());
         lessons.add(lesson);
 
-        PonHubDataState replacement = new PonHubDataState(state.people(), lessons, state.attendance(),
+        PonHubDataState replacement = new PonHubDataState(state.get().people(), lessons, state.get().attendance(),
                 lessonId.getSequenceNumber());
-        state = replacement;
+        state.set(replacement);
         return lesson;
     }
 
@@ -227,7 +237,7 @@ public final class PonHubData {
      * Returns the next uncommitted lesson ID without changing allocation state.
      */
     private LessonId getNextLessonId() {
-        long lastAllocatedSequence = state.lastAllocatedLessonSequence();
+        long lastAllocatedSequence = state.get().lastAllocatedLessonSequence();
         if (lastAllocatedSequence == Long.MAX_VALUE) {
             throw new IllegalStateException(LessonId.MESSAGE_SEQUENCE_EXHAUSTED);
         }
@@ -256,11 +266,11 @@ public final class PonHubData {
 
     @Override
     public boolean equals(Object other) {
-        return other == this || other instanceof PonHubData data && state.equals(data.state);
+        return other == this || other instanceof PonHubData data && state.get().equals(data.state.get());
     }
 
     @Override
     public int hashCode() {
-        return state.hashCode();
+        return state.get().hashCode();
     }
 }

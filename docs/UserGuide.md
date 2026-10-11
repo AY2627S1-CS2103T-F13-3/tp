@@ -255,6 +255,9 @@ Deletion is blocked while the roster is non-empty or attendance refers to the le
 
 Enter `lessons` to view each shared lesson once, including lessons with empty rosters. To view a student's currently enrolled lessons, first run `list r/student` and check their current position. If the intended student appears at position 1, enter `lessons si/1`. Catalogue results preserve the current people list and its indices.
 
+The catalogue and student lesson results use lesson creation order. Student lessons show current enrolments;
+past attendance alone does not add a lesson to that list. Use `history` to inspect attendance retained after unenrolment.
+
 **Details:** `showlesson lid/LESSON_ID [d/YYYY-MM-DD]`.
 
 For example, `showlesson lid/L1` displays the lesson's schedule, subject, tutor, room and current roster, with stable IDs identifying the records. `showlesson lid/L1 d/2026-10-05` also shows each current roster student's `present`, `absent` or unrecorded status for that real, matching-weekday date. Attendance retained for former members is labelled separately from the current roster. An empty roster is valid. These results preserve the current people list and its command positions.
@@ -309,6 +312,11 @@ All supplied filters must match together:
 * **Lesson:** All filters apply to one shared lesson. `sn/`, if supplied, matches a student in its current roster. Empty lessons remain discoverable when no `sn/` filter is supplied.
 
 People with no matching relationship still qualify for own-field-only searches. Each matching person or lesson appears once, distinguished by stable ID. An absent optional contact field does not match a supplied filter. Unsupported, category-incompatible, blank and repeated filters are rejected, as are slashes or line breaks in values. A valid search with no matches reports an empty result.
+
+Lesson results retain catalogue creation order. For example, `search c/lesson d/Mon s/Math sn/al` requires one Monday
+Math lesson with a currently enrolled student whose name contains `al`. A former member's attendance does not satisfy
+`sn/`, and several matching students in one lesson still produce one result. After a successful change or rollback,
+displayed lesson and roster results must reflect the resulting current data.
 
 Examples:
 
@@ -397,3 +405,37 @@ people and view, and display no success message. Run `list`: a rejected addition
 rejected deletion must still be present. Restore write access and perform a valid change; restart and
 check that only the successful change was saved. Automated tests inject storage failures without
 changing filesystem permissions, including a deletion from a filtered people view.
+
+
+### Canonical loading preparation (not yet activated)
+
+The prepared canonical loader distinguishes a missing store from an existing file that cannot be loaded.
+A missing store starts empty without creating a file until a successful save. Rejected existing data stays
+protected from operational writes for the entire session; repairing or removing the file while the app
+is open does not unlock saving. Close the app, retain a backup, correct a supported file or restore a
+known-good compatible copy, then restart and validate it. An empty protected view does not mean your
+saved records were deleted.
+
+Unversioned AB3 files are preserved and rejected by the canonical loader. It does not assign roles or
+convert them automatically. The planned cutover uses a backed-up original and a separate supported
+store with manual re-entry; no importer or user-facing initialization command is introduced here.
+The current application still uses its legacy loading route and data location. Canonical path/setup
+instructions will be published with the coordinated runtime activation, not before it.
+
+
+### Editing saved shared lessons (prepared canonical format)
+
+The canonical format now supports shared lessons and their student rosters. Each lesson contains its
+stable ID, tutor ID, weekday, start/end time, subject, room and enrolled student IDs. Times are strings
+such as `"0900"`; an empty student roster is valid. Several students share one lesson record.
+
+Before editing, close the app and retain a backup. Keep referenced tutors/students in the same file,
+use each lesson ID once and each student ID once per roster, and preserve allocation counters even
+after deleting records. Do not create overlapping bookings for a tutor, room or enrolled student;
+back-to-back lessons are allowed. Invalid files are rejected as a whole rather than partially loaded.
+Attendance persistence and canonical runtime activation remain separate work.
+
+For a disposable-file recovery check after activation, change a saved lesson's tutor ID to an absent
+ID and restart. Expect a recovery warning and unchanged file bytes after help/list/exit or an attempted
+mutation. Restore the valid backup and restart to verify loading. Codec and protected-storage tests
+cover these guarantees before the runtime is activated.

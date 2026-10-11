@@ -60,7 +60,7 @@ public final class PeopleView {
 
     /**
      * Rebuilds the current role-filtered projection from the same root after a committed change or rollback.
-     * The source does not publish change events; its owner calls this method explicitly.
+     * This view's owner calls this method explicitly; lesson queries subscribe to the source's state property.
      * When attached to JavaFX controls, refreshes run on the JavaFX application thread.
      */
     public void refresh() {
