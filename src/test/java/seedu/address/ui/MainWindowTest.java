@@ -1,16 +1,18 @@
 package seedu.address.ui;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.FxTestUtil.callOnFxThread;
 import static seedu.address.testutil.FxTestUtil.runOnFxThread;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -37,28 +39,34 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import seedu.address.logic.CommandCatalog;
-import seedu.address.logic.LogicManager;
-import seedu.address.model.AddressBook;
-import seedu.address.model.ModelManager;
+import seedu.address.logic.CanonicalCommandCatalog;
+import seedu.address.logic.CanonicalLogicManager;
+import seedu.address.logic.CanonicalPeopleSession;
+import seedu.address.model.PonHubDataState;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.Address;
+import seedu.address.model.person.ContactDetails;
+import seedu.address.model.person.EducationLevel;
+import seedu.address.model.person.Email;
+import seedu.address.model.person.Name;
+import seedu.address.model.person.PeopleRegistry;
 import seedu.address.model.person.Person;
-import seedu.address.storage.JsonAddressBookStorage;
-import seedu.address.storage.JsonUserPrefsStorage;
-import seedu.address.storage.StorageManager;
+import seedu.address.model.person.PersonId;
+import seedu.address.model.person.Phone;
+import seedu.address.model.person.Student;
+import seedu.address.storage.JsonPonHubDataStorage;
 import seedu.address.testutil.FxTestUtil;
-import seedu.address.testutil.PersonBuilder;
 import seedu.address.testutil.TypicalPersons;
 
 public class MainWindowTest {
 
-    private static final Person LONG_PERSON = new PersonBuilder()
-            .withName("Alexandria ".repeat(9).strip())
-            .withPhone("000123456789012")
-            .withEmail("longcontact".repeat(20) + "@example.com")
-            .withAddress("12 " + "A long residential road ".repeat(8).strip())
-            .withTags("LongTag".repeat(50), "shortTag")
-            .build();
+    private static final Student LONG_PERSON = new Student(new PersonId("S1"),
+            new ContactDetails(new Name("Alexandria ".repeat(9).strip()),
+                    Optional.of(new Phone("000123456789012")),
+                    Optional.of(new Email("longcontact".repeat(20) + "@example.com")),
+                    Optional.of(new Address("12 " + "A long residential road ".repeat(8).strip()))),
+            new EducationLevel("P1"), new Phone("009876543210123"));
+    private static final String LONG_PERSON_IDENTITY = "Student · S1";
 
     @TempDir
     public Path tempDirectory;
@@ -129,7 +137,7 @@ public class MainWindowTest {
     }
 
     @Test
-    public void layout_longContactAndTags_wrapAndRemainReachableAfterResizing() throws Exception {
+    public void layout_longCanonicalContact_wrapAndRemainReachableAfterResizing() throws Exception {
         Region root = callOnFxThread(() -> (Region) createWindow().getPrimaryStage().getScene().getRoot());
         double[] narrowCardHeights = {0};
         for (int width : new int[] {450, 1536, 450}) {
@@ -146,13 +154,10 @@ public class MainWindowTest {
                     root.layout();
                 }
                 ListView<?> people = (ListView<?>) root.lookup("#personListView");
-                Region card = findCard(people, LONG_PERSON.getName().fullName);
+                Region card = findCard(people, LONG_PERSON_IDENTITY);
 
                 for (Node node : card.lookupAll(".label")) {
                     Label label = (Label) node;
-                    if ("id".equals(label.getId())) {
-                        continue;
-                    }
                     assertTrue(label.isWrapText(), label.getText());
                     assertTrue(label.getWidth() > 0 && label.getWidth() <= card.getWidth(),
                             label.getText() + "; label width=" + label.getWidth()
@@ -161,6 +166,8 @@ public class MainWindowTest {
                             label.getText() + "; actual=" + label.getHeight()
                                     + "; preferred=" + label.prefHeight(label.getWidth())
                                     + "; width=" + label.getWidth());
+                    assertEquals(label.getText(), ((Text) label.lookup(".text")).getText(),
+                            "Complete canonical values must not use an ellipsis.");
                     if (width == 450 && label.getText().length() > 100) {
                         assertTrue(label.getHeight() > label.getFont().getSize() * 1.5,
                                 "Long values must wrap onto multiple lines: " + label.getText());
@@ -183,27 +190,35 @@ public class MainWindowTest {
                     root.layout();
                 }
 
-                Region lastCard = findCard(people, TypicalPersons.GEORGE.getName().fullName);
-                Bounds lastEmail = lastCard.lookup("#email").localToScene(
-                        lastCard.lookup("#email").getBoundsInLocal());
+                Region lastCard = findCard(people, "Tutor · T7");
+                Node lastField = lastCard.lookupAll(".label").stream()
+                        .filter(node -> ((Label) node).getText().equals("Address: "
+                                + TypicalPersons.GEORGE.getAddress().value))
+                        .findFirst().orElseThrow();
+                Bounds lastFieldBounds = lastField.localToScene(lastField.getBoundsInLocal());
                 Bounds viewport = people.localToScene(people.getBoundsInLocal());
-                assertTrue(lastEmail.getWidth() > 0 && lastEmail.getHeight() > 0
-                                && lastEmail.getMinY() >= viewport.getMinY()
-                                && lastEmail.getMaxY() <= viewport.getMaxY() + 1,
-                        "Scrolling must expose the final field of the last contact: " + lastEmail);
+                assertTrue(lastFieldBounds.getWidth() > 0 && lastFieldBounds.getHeight() > 0
+                                && lastFieldBounds.getMinY() >= viewport.getMinY()
+                                && lastFieldBounds.getMaxY() <= viewport.getMaxY() + 1,
+                        "Scrolling must expose the final field of the last contact: " + lastFieldBounds);
             });
         }
     }
 
     @Test
-    public void list_longContactTags_wrapAfterCardsRefresh() throws Exception {
+    public void list_longCanonicalContact_wrapAfterRoleFilterAndCardsRefresh() throws Exception {
         MainWindow window = callOnFxThread(this::createWindow);
         Region root = callOnFxThread(() -> (Region) window.getPrimaryStage().getScene().getRoot());
         runOnFxThread(() -> layoutScene(root, 450, 330));
         runOnFxThread(() -> {
             TextField command = (TextField) root.lookup("#commandTextField");
+            command.setText("list r/tutor");
+            Event.fireEvent(command, new ActionEvent());
+            ListView<?> people = (ListView<?>) root.lookup("#personListView");
+            assertEquals(7, people.getItems().size());
             command.setText("list");
             Event.fireEvent(command, new ActionEvent());
+            assertEquals(8, people.getItems().size());
             command.setText("help add");
             Event.fireEvent(command, new ActionEvent());
             root.applyCss();
@@ -212,15 +227,16 @@ public class MainWindowTest {
         runOnFxThread(() -> {
             root.layout();
             ListView<?> people = (ListView<?>) root.lookup("#personListView");
-            Region card = findCard(people, LONG_PERSON.getName().fullName);
-            for (Node node : card.lookup("#tags").lookupAll(".label")) {
+            Region card = findCard(people, LONG_PERSON_IDENTITY);
+            for (Node node : card.lookupAll(".label")) {
                 Label label = (Label) node;
+                assertTrue(label.isWrapText(), label.getText());
                 assertTrue(label.getHeight() + 1 >= label.prefHeight(label.getWidth()),
-                        "Refreshed tags must retain the complete wrapped text height: " + label.getText()
+                        "Refreshed fields must retain the complete wrapped text height: " + label.getText()
                                 + "; actual=" + label.getHeight()
                                 + "; preferred=" + label.prefHeight(label.getWidth()));
                 Text renderedText = (Text) label.lookup(".text");
-                assertEquals(label.getText(), renderedText.getText(), "Refreshed tags must not use an ellipsis.");
+                assertEquals(label.getText(), renderedText.getText(), "Refreshed fields must not use an ellipsis.");
             }
             assertLongFieldEndsReachable(people);
         });
@@ -228,14 +244,15 @@ public class MainWindowTest {
 
     @Test
     public void help_compactScene_menuAndF1PreserveCommandDraftAndSelection() throws Exception {
-        runOnFxThread(() -> {
+        callOnFxThread(() -> {
             MainWindow window = createWindow();
+            byte[] originalData = Files.readAllBytes(tempDirectory.resolve("contacts.json"));
             Region root = layoutWindow(window, 450, 330);
             TextField command = (TextField) root.lookup("#commandTextField");
             TextArea result = (TextArea) root.lookup("#resultDisplay");
             ListView<?> people = (ListView<?>) root.lookup("#personListView");
             MenuBar menuBar = (MenuBar) root.lookup("#menuBar");
-            command.setText("add n/Unfinished");
+            command.setText("add r/student n/Unfinished");
             people.getSelectionModel().select(1);
 
             MenuItem exit = menuBar.getMenus().get(0).getItems().get(0);
@@ -243,32 +260,36 @@ public class MainWindowTest {
             assertNotNull(exit.getOnAction());
             MenuItem help = menuBar.getMenus().get(1).getItems().get(0);
             help.fire();
-            assertEquals(CommandCatalog.getOverview(), result.getText());
-            assertEquals("add n/Unfinished", command.getText());
+            assertEquals(CanonicalCommandCatalog.getOverview(Optional.empty()), result.getText());
+            assertEquals("add r/student n/Unfinished", command.getText());
             assertEquals(1, people.getSelectionModel().getSelectedIndex());
 
             result.setText("Previous result");
             Event.fireEvent(command, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F1,
                     false, false, false, false));
-            assertEquals(CommandCatalog.getOverview(), result.getText());
-            assertEquals("add n/Unfinished", command.getText());
+            assertEquals(CanonicalCommandCatalog.getOverview(Optional.empty()), result.getText());
+            assertEquals("add r/student n/Unfinished", command.getText());
             assertEquals(1, people.getSelectionModel().getSelectedIndex());
-            assertFalse(Files.exists(tempDirectory.resolve("contacts.json")));
+            assertArrayEquals(originalData, Files.readAllBytes(tempDirectory.resolve("contacts.json")));
+            return null;
         });
     }
 
     /**
-     * Builds the active window with real logic and fixture records, without loading or saving user files.
+     * Builds the active window with canonical logic and immutable records stored only in the test directory.
      */
-    private MainWindow createWindow() {
-        AddressBook addressBook = new AddressBook();
-        addressBook.addPerson(LONG_PERSON);
-        TypicalPersons.getTypicalPersons().forEach(addressBook::addPerson);
-        ModelManager model = new ModelManager(addressBook, new UserPrefs());
+    private MainWindow createWindow() throws IOException {
+        PeopleRegistry people = new PeopleRegistry();
+        people.addStudent(LONG_PERSON.getContactDetails(), LONG_PERSON.getLevel(), LONG_PERSON.getParentPhone());
+        for (Person person : TypicalPersons.getTypicalPersons()) {
+            people.addTutor(new ContactDetails(person.getName(), Optional.of(person.getPhone()),
+                    Optional.of(person.getEmail()), Optional.of(person.getAddress())));
+        }
         Path dataPath = tempDirectory.resolve("contacts.json");
-        StorageManager storage = new StorageManager(new JsonAddressBookStorage(dataPath),
-                new JsonUserPrefsStorage(tempDirectory.resolve("preferences.json")));
-        MainWindow window = new MainWindow(new Stage(), new LogicManager(model, storage), dataPath);
+        new JsonPonHubDataStorage(dataPath).saveData(
+                new PonHubDataState(people.exportState(), List.of(), List.of(), 0));
+        CanonicalLogicManager logic = new CanonicalLogicManager(new CanonicalPeopleSession(dataPath), new UserPrefs());
+        MainWindow window = new MainWindow(new Stage(), logic, dataPath);
         window.fillInnerParts();
         return window;
     }
@@ -322,13 +343,13 @@ public class MainWindowTest {
                 .orElseThrow(() -> new AssertionError("Missing vertical scrollbar: " + control.getId()));
     }
 
-    private static Region findCard(ListView<?> people, String name) {
+    private static Region findCard(ListView<?> people, String identity) {
         return people.lookupAll("#cardPane").stream()
                 .filter(MainWindowTest::isVisibleInHierarchy)
-                .filter(node -> name.equals(((Label) node.lookup("#name")).getText()))
+                .filter(node -> identity.equals(((Label) node.lookup("#identity")).getText()))
                 .map(Region.class::cast)
                 .findFirst()
-                .orElseThrow(() -> new AssertionError("Contact is not reachable: " + name));
+                .orElseThrow(() -> new AssertionError("Contact is not reachable: " + identity));
     }
 
     private static boolean isVisibleInHierarchy(Node node) {
@@ -341,12 +362,16 @@ public class MainWindowTest {
     }
 
     /**
-     * Checks that scrolling can expose the end of every long value, including an individual long tag.
+     * Checks that scrolling can expose the complete heading, stable identity and every canonical contact field.
      */
     private static void assertLongFieldEndsReachable(ListView<?> people) {
-        Set<String> unseenValues = new HashSet<>(List.of(LONG_PERSON.getName().fullName, LONG_PERSON.getPhone().value,
-                LONG_PERSON.getAddress().value, LONG_PERSON.getEmail().value));
-        LONG_PERSON.getTags().forEach(tag -> unseenValues.add(tag.tagName));
+        ContactDetails contacts = LONG_PERSON.getContactDetails();
+        Set<String> unseenValues = new HashSet<>(List.of("1. " + LONG_PERSON.getName().fullName,
+                LONG_PERSON_IDENTITY, "Level: " + LONG_PERSON.getLevel(),
+                "Parent phone: " + LONG_PERSON.getParentPhone().value,
+                "Own phone: " + contacts.getPhone().orElseThrow().value,
+                "Email: " + contacts.getEmail().orElseThrow().value,
+                "Address: " + contacts.getAddress().orElseThrow().value));
         ScrollBar bar = verticalScrollBar(people);
         Bounds viewport = people.localToScene(people.getBoundsInLocal());
         for (int step = 0; step <= 100 && !unseenValues.isEmpty(); step++) {
@@ -355,7 +380,7 @@ public class MainWindowTest {
             people.layout();
             for (Node card : people.lookupAll("#cardPane")) {
                 if (!isVisibleInHierarchy(card)
-                        || !LONG_PERSON.getName().fullName.equals(((Label) card.lookup("#name")).getText())) {
+                        || !LONG_PERSON_IDENTITY.equals(((Label) card.lookup("#identity")).getText())) {
                     continue;
                 }
                 for (Node node : card.lookupAll(".label")) {

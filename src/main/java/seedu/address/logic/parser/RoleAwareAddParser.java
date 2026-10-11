@@ -19,7 +19,7 @@ import seedu.address.model.person.PersonRole;
 import seedu.address.model.person.Phone;
 
 /**
- * A detached parser for planned role-aware add arguments. It does not route commands or allocate person IDs.
+ * Parses role-aware add arguments without routing commands or allocating person IDs.
  * All prefix-shaped tokens are recognized so unsupported prefixes cannot be absorbed into another field's text.
  */
 public final class RoleAwareAddParser {

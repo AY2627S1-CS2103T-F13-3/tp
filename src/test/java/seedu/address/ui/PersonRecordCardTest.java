@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.FxTestUtil.runOnFxThread;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,7 +25,10 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import seedu.address.MainApp;
 import seedu.address.commons.core.index.Index;
+import seedu.address.logic.CanonicalCommandExecutor;
 import seedu.address.logic.PersonIndexResolver;
+import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.PeopleListParser;
 import seedu.address.model.PeopleView;
 import seedu.address.model.PonHubData;
@@ -198,6 +202,37 @@ public class PersonRecordCardTest {
             assertEquals("Showing 6 person(s).", ((Label) panel.lookup("#summary")).getText());
             assertTrue(list.getItems() == peopleView.getPeople());
             assertEquals(originalState, data.exportState());
+        });
+    }
+
+    @Test
+    public void panel_failedCanonicalSave_preservesActualSelectionAndFilteredIndex() throws Exception {
+        Student student = new Student(new PersonId("S7"), new ContactDetails(new Name("Selected Student")),
+                new EducationLevel("P1"), new Phone("91234567"));
+        PonHubData data = peopleData(new PeopleRegistryState(List.of(student),
+                Map.of(PersonRole.STUDENT, 7L, PersonRole.TUTOR, 0L, PersonRole.PARENT, 0L)));
+        PeopleView view = new PeopleView(data);
+        view.setRoleFilter(Optional.of(PersonRole.STUDENT));
+        runOnFxThread(() -> {
+            Region panel = new PersonRecordListPanel(view).getRoot();
+            layoutScene(panel, 853, 480);
+            ListView<PersonRecord> list = getRecordList(panel);
+            list.getSelectionModel().select(0);
+            CanonicalCommandExecutor executor = new CanonicalCommandExecutor(view, state -> {
+                throw new IOException("Injected save failure");
+            }, Optional::empty);
+            assertThrows(CommandException.class, () -> executor.execute((staged, stagedView) -> {
+                assertEquals(student.getId(), PersonIndexResolver.resolve(Index.fromOneBased(1),
+                        stagedView.getPeople()).getId());
+                staged.resetData(new PonHubData());
+                stagedView.setRoleFilter(Optional.empty());
+                return new CommandResult("Rejected deletion");
+            }));
+            assertEquals(student, list.getSelectionModel().getSelectedItem());
+            assertEquals(0, list.getSelectionModel().getSelectedIndex());
+            assertEquals(Optional.of(PersonRole.STUDENT), view.getRoleFilter());
+            assertEquals(List.of(student), list.getItems());
+            assertNotNull(findCard(list, "Student · S7"));
         });
     }
 

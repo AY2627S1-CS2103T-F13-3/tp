@@ -10,15 +10,16 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.lesson.LessonId;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
+import seedu.address.model.person.PersonRecord;
 import seedu.address.model.query.AttendanceHistoryEntry;
 import seedu.address.model.query.LessonView;
 import seedu.address.model.query.StudentView;
 
 /**
  * API of the Logic component.
- * The shared-lesson retrieval declarations are reserved for the canonical model integration.
- * Until then, {@link LogicManager} reports that they are unavailable.
- * Once integrated, all retrieval lists are unmodifiable observable views that retain their identity across refreshes.
+ * Active lesson retrieval delegates to the canonical session's query source; legacy adapters report it as unavailable.
+ * Attendance-history declarations remain reserved for their canonical integration.
+ * Supplied retrieval lists are unmodifiable observable views that retain their identity across refreshes.
  * Queries preserve the people view and stored data; committed changes and rollback refresh subscribed lists.
  * Weekdays sort Monday first and lesson IDs sort by their numeric sequence, not by their display strings.
  */
@@ -32,20 +33,34 @@ public interface Logic {
      */
     CommandResult execute(String commandText) throws CommandException, ParseException;
 
-    /** Returns an unmodifiable view of the filtered list of persons */
+    /**
+     * Returns the inherited implementation's unmodifiable filtered people view.
+     *
+     * @throws UnsupportedOperationException if this adapter owns canonical records instead.
+     */
     ObservableList<Person> getFilteredPersonList();
+
+    /**
+     * Returns the current canonical people view used by cards and displayed-index resolution.
+     * The same unmodifiable observable list survives filtering and committed data changes.
+     *
+     * @throws UnsupportedOperationException if this adapter still uses inherited person records.
+     */
+    default ObservableList<PersonRecord> getPersonRecords() {
+        throw new UnsupportedOperationException("Canonical people records are unavailable in this legacy adapter");
+    }
 
     /**
      * Returns every shared lesson once in creation order, including lessons with empty rosters.
      * The returned list is unmodifiable, observable and remains subscribed to committed model changes.
-     * @throws UnsupportedOperationException until canonical retrieval is integrated
+     * @throws UnsupportedOperationException if this adapter does not provide canonical retrieval
      */
     ObservableList<LessonView> getLessonList();
 
     /**
      * Returns lessons matching the active lesson filter, without changing the people view.
      * Results are distinct and retain catalogue order. A valid filter with no matches returns an empty list.
-     * @throws UnsupportedOperationException until canonical retrieval is integrated
+     * @throws UnsupportedOperationException if this adapter does not provide canonical retrieval
      */
     ObservableList<LessonView> getFilteredLessonList();
 
@@ -55,7 +70,7 @@ public interface Logic {
      * @param lessonId stable lesson identity
      * @return the lesson, or empty if the ID is valid but no lesson exists
      * @throws NullPointerException if {@code lessonId} is null, once integrated
-     * @throws UnsupportedOperationException until canonical retrieval is integrated
+     * @throws UnsupportedOperationException if this adapter does not provide canonical retrieval
      */
     Optional<LessonView> findLessonById(LessonId lessonId);
 
@@ -65,7 +80,7 @@ public interface Logic {
      * @param studentId stable identity of an existing student
      * @throws NullPointerException if {@code studentId} is null, once integrated
      * @throws IllegalArgumentException if the ID has the wrong role or is unknown, once integrated
-     * @throws UnsupportedOperationException until canonical retrieval is integrated
+     * @throws UnsupportedOperationException if this adapter does not provide canonical retrieval
      */
     ObservableList<LessonView> getStudentLessons(PersonId studentId);
 
@@ -75,7 +90,7 @@ public interface Logic {
      * @param lessonId stable identity of an existing lesson
      * @throws NullPointerException if {@code lessonId} is null, once integrated
      * @throws IllegalArgumentException if the ID is unknown, once integrated
-     * @throws UnsupportedOperationException until canonical retrieval is integrated
+     * @throws UnsupportedOperationException if this adapter does not provide canonical retrieval
      */
     ObservableList<StudentView> getLessonRoster(LessonId lessonId);
 
@@ -84,7 +99,7 @@ public interface Logic {
      * @param tutorId stable identity of an existing tutor
      * @throws NullPointerException if {@code tutorId} is null, once integrated
      * @throws IllegalArgumentException if the ID has the wrong role or is unknown, once integrated
-     * @throws UnsupportedOperationException until canonical retrieval is integrated
+     * @throws UnsupportedOperationException if this adapter does not provide canonical retrieval
      */
     ObservableList<LessonView> getTutorSchedule(PersonId tutorId);
 

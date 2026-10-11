@@ -23,12 +23,16 @@ title: Developer Guide
 * Zhu Zhi Yu used OpenAI Codex for the UI startup error-handling fix and its regression tests.
 * Zhu Zhi Yu used OpenAI Codex for screen-aware window restoration, active contact-card wrapping, their regression tests, and the related layout documentation.
 * Zhu Zhi Yu used OpenAI Codex for dormant role-aware add argument parsing, its immutable ID-free input, regression tests, and integration documentation.
-* Zhu Zhi Yu used OpenAI Codex for the dormant complete-state person-addition candidate, its transaction-preparation regression tests, and the related integration notes.
+* Zhu Zhi Yu used OpenAI Codex for the dormant complete-state person-addition candidate and canonical add/list commands, their transaction/storage regression tests, and the related integration notes.
+* Zhu Zhi Yu used OpenAI Codex for the canonical people session, its protected routing and shared-root integration tests, and the corresponding developer integration notes.
+* Zhu Zhi Yu used OpenAI Codex for the #85 application cutover: canonical startup/path selection, the active command catalogue and Logic adapter, person-card/view wiring, integration regression tests, and UG/DG reconciliation. Teammates retain ownership of their underlying feature foundations.
 * Zhu Zhi Yu used OpenAI Codex for constant-stack email validation that preserves the inherited contact rules, its parser/file-loading regressions, and the related implementation and manual-testing notes.
 * Zhu Zhi Yu used OpenAI Codex to clarify the course-prescribed Java 25 and macOS runtime setup, release verification, and manual-testing documentation.
 * Zhu Zhi Yu used OpenAI Codex for PR review and Javadoc formatting corrections in the canonical aggregate foundation (#76).
 * Yang Shuo (`ys000009`) used OpenAI Codex to assist with the canonical lesson scheduling APIs, aggregate
   invariants, read-only relationship queries and guards, automated tests, and design documentation for #78.
+* Ben (`ben58882`) used OpenAI Codex for #80's indexed lesson/roster projections, committed-state refresh,
+  Logic retrieval delegation, search and transaction regression tests, and the corresponding guide updates.
 
 * PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
@@ -49,19 +53,40 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 
 ### Current increment and command integration
 
-This increment implements inline help and command-specific guidance. The runtime still uses inherited AB3 people and storage. Its active commands are `add`, `delete`, `list`, `help`, and `exit`. Role-aware people, stable IDs, shared lessons, enrolment, attendance, history, and search remain integration targets until their owners' code and complete persistence support are merged. Existing domain use cases and model/storage diagrams describe the inherited implementation or proposed product, not a completed shared-lesson runtime.
+The active application uses one `CanonicalPeopleSession` for role-aware people, stable IDs, the shared people view, protected loading and staged saves. Its commands are `add r/ROLE ...`, `list [r/ROLE]`, `help [COMMAND]` and `exit`. Guarded deletion, shared-lesson commands, enrolment, attendance, history and search remain unavailable. Inherited AB3 classes and diagrams retained below describe historical structure and regression seams, rather than a second active people store.
 
-`CommandCatalog` is the single registration point for active parsers, short descriptions, and usage messages. `AddressBookParser` extracts the command word and delegates to it. `HelpCommandParser` accepts zero or one topic, normalizes topics with `Locale.ROOT`, and rejects unknown topics and excess arguments with actionable guidance. Help reads command-owned usage constants; it does not maintain a second copy of command syntax.
+`CanonicalCommandCatalog` is the authoritative active command/guidance catalogue. `CanonicalPeopleSession` routes its commands and resolves zero or one help topic with `Locale.ROOT` normalization. `CanonicalLogicManager` exposes that same session to `MainWindow`, including its observable `PersonRecord` list, retrieval APIs and separate preferences. The legacy `CommandCatalog`, `AddressBookParser` and `LogicManager` remain isolated regression implementations; application startup does not construct a legacy model alongside the canonical root.
 
-Feature owners supply their parser, usage and runnable example. Register a mutation only when its aggregate, validation, and save/reload behavior work together. Replace the legacy people entries at the canonical runtime cutover; legacy `delete` must be disabled until guarded canonical deletion resolves the current people-list index to a stable person ID. `edit`, `clear`, and `find` are already withdrawn from dispatch and help in this increment. Their inherited implementation classes remain for incremental cleanup and direct regression tests.
+Feature owners supply their parser, usage and runnable example. Register a mutation only when its aggregate, validation and save/reload behavior work together. `delete`, `edit`, `clear` and `find` are absent from active routing and help. Guarded canonical deletion remains a later increment using the current people-list index and stable identity internally; inherited implementation classes remain only for regression tests.
 
-When registering or withdrawing a command, update catalogue/router tests, its UG entry and manual tests in the same PR. A summary topic must never advertise an unavailable command. `list` and `exit` now reject unexpected arguments instead of silently ignoring them.
+When registering or withdrawing a command, update catalogue/router tests, its UG entry and manual tests in the same PR. A summary topic must never advertise an unavailable command. `list` accepts only an optional single role filter; `exit` rejects all arguments. Protected sessions restrict both routing and advertised guidance to help/list/exit.
+
+### Canonical application startup (#85)
+
+`MainApp` selects `data/ponhub.json` by default or the launch argument `--data=PATH`, then constructs one
+`CanonicalPeopleSession` and its `CanonicalLogicManager`. Packaged application home is the folder containing the JAR, independently of the terminal working
+directory; development launches fall back to the working directory. Relative `--data` paths resolve from
+that home; absolute paths are allowed only inside it. Blank paths, `..` escapes and symbolic-link escapes
+are rejected before operational/preferences access. Data, preferences and the root reserved
+`addressbook.log*` files must remain separate, including symbolic/hard-link aliases. File logging starts
+only after this preflight; symbolic log files retain console-only logging. Quote a path containing spaces, for example
+`java -jar ponhub.jar --data="separate store/ponhub.json"`. The status footer shows the selected operational
+path. Preferences use `home/preferences.json` and logs stay in that same application home; an old
+preference's legacy address-book path does not select canonical operational data.
+
+The selected file is classified and validated once. Confirmed absence supplies an unwritten empty root,
+without sample records; only a successful addition creates operational data. Valid supported input installs
+one complete snapshot. Rejection preserves the file and opens a visibly protected empty view with actionable
+path-specific recovery guidance. Only help/list/exit remain available, and external repair or removal does not
+unlock that session before restart. Default startup leaves `data/addressbook.json` untouched; legacy AB3 data
+selected explicitly is preserved and rejected, with backup and manual re-entry into a separate missing store.
+No migration, setup or recovery command is introduced.
 
 ### Window placement and active contact-card layout
 
 At startup, `WindowPlacement` fits saved window dimensions and coordinates to the current screen work areas. It chooses the screen with the largest overlap with the saved window, preserves valid coordinates on secondary screens, and centers a new or wholly offscreen window on the primary screen. Invalid saved dimensions fall back to the defaults. JavaFX's visual bounds already use logical coordinates and exclude desktop bars; they are not divided by the display scale again. The startup fit does not impose a permanent maximum size, so the administrator can move and resize the window on a larger monitor.
 
-The main window has a 450-by-360 logical minimum where the work area allows it. The result area can shrink while retaining its own scrollable text, and the people list retains a visible scrollable viewport. Active inherited contact cards fit their list cells and wrap names, phones, addresses, emails and tags. These changes apply to the current runtime and do not activate the dormant role-aware people view or shared-lesson commands.
+The main window has a 450-by-360 logical minimum where the work area allows it. The result area can shrink while retaining its own scrollable text, and the people list retains a visible scrollable viewport. Active canonical person cards fit their list cells and wrap names, role details and contact values. The inherited contact-card wrapping and tag regressions remain isolated compatibility checks; canonical records have no tag field. Shared-lesson commands remain unavailable.
 
 ### Shared-lesson target contract
 
@@ -115,7 +140,7 @@ The complete [search matrix](#supported-criteria) remains the planned target. Ow
 | Lesson | Block while its roster is non-empty or Attendance references its Lesson ID. |
 | Parent | Preserve every Student's parent-phone value; derived links disappear when the Parent record is removed. |
 
-All mutations go through Model APIs using stable identities after command-boundary resolution. Complete aggregate copy/reset/equality and independent snapshots cover people, lessons, memberships, attendance and monotonic allocation state; deleted committed IDs are not reused. Vincent coordinates validated versioned JSON and transactional saves; failed saves must restore data and active views before those commands are enabled. The canonical runtime cutover must connect a compatible people view, index resolution, guarded commands and persistence together. Do not persist displayed indices or introduce a second people store; verify that separate lesson/roster/history results preserve the people view used by the next command. Preferences remain separate. Capacity, waiting lists, make-ups, export, saved searches, archiving, richer attendance statuses or notes, attendance percentages, fees, lesson editing, occurrence cancellation, undo/redo and guided advanced search are future extensions.
+All mutations go through Model APIs using stable identities after command-boundary resolution. Complete aggregate copy/reset/equality and independent snapshots cover people, lessons, memberships, attendance and monotonic allocation state; deleted committed IDs are not reused. Vincent coordinates validated versioned JSON and transactional saves; failed saves must restore data and active views before those commands are enabled. The active canonical people runtime connects the people view, add/list commands and protected persistence; later guarded commands must use that same root and selector boundary. Do not persist displayed indices or introduce a second people store; verify that separate lesson/roster/history results preserve the people view used by the next command. Preferences remain separate. Capacity, waiting lists, make-ups, export, saved searches, archiving, richer attendance statuses or notes, attendance percentages, fees, lesson editing, occurrence cancellation, undo/redo and guided advanced search are future extensions.
 
 **Iteration boundary:** The [Week 8 course instructions](https://nus-cs2103-ay2627-s1.github.io/website/schedule/week8/project.html) call for small first increments towards the simplest MVP. Each member should aim for a meaningful reviewed and merged code PR. An individual feature need not be complete end-to-end, but intermediate versions must remain working; this iteration requires no product release. The broader team target remains visible in [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59). Carry unfinished work into v1.3 honestly. Compatible loading and rollback remain safety requirements when a mutation is activated, rather than a requirement to finish every planned feature in Week 8.
 
@@ -151,7 +176,7 @@ The bulk of the app's work is done by the following four components:
 
 **How the architecture components interact with each other**
 
-The *Sequence Diagram* below shows how the components interact with each other for the scenario where the user issues the command `delete 1`.
+The inherited *Sequence Diagram* below records the historical `delete 1` flow. Active canonical deletion is unavailable; the active add/save/publication boundary is described in [Command transactions](#command-transactions).
 
 <img src="images/ArchitectureSequenceDiagram.png" width="574" />
 
@@ -160,7 +185,7 @@ Each of the four main components (also shown in the diagram above),
 * defines its *API* in an `interface` with the same name as the Component.
 * provides its functionality through a concrete `{Component Name}Manager` class that implements the corresponding API interface.
 
-For example, the `Logic` component defines its API in `Logic.java` and implements it in `LogicManager.java`. Other components interact with a component through its interface rather than its concrete class, preventing them from coupling to that component's implementation, as illustrated in the following partial class diagram.
+For the active application, `CanonicalLogicManager` implements `Logic`; the inherited `LogicManager` remains for regression tests. Other components interact with a component through its interface rather than its concrete class, preventing them from coupling to that component's implementation, as illustrated in the following partial class diagram.
 
 <img src="images/ComponentManagers.png" width="300" />
 
@@ -168,97 +193,75 @@ The sections below give more details of each component.
 
 ### UI component
 
-The **API** of this component is specified in [`Ui.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/Ui.java)
+The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/ui/Ui.java)
 
 ![Structure of the UI Component](images/UiClassDiagram.png)
 
-The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
+The JavaFX `MainWindow` composes `UiPart` controls such as `CommandBox`, `ResultDisplay` and `PersonRecordListPanel`; their
+layouts live in `src/main/resources/view`. UI sends commands through `Logic` and observes model-backed results so
+committed changes refresh the display. The diagram describes the inherited `Person` UI rather than the active card type.
 
-The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
-
-The `UI` component,
-
-* executes user commands using the `Logic` component.
-* listens for changes to `Model` data so that the UI can be updated with the modified data.
-* keeps a reference to the `Logic` component, because the `UI` relies on the `Logic` to execute commands.
-* depends on some classes in the `Model` component because it displays `Person` objects from the model.
-
-At the planned canonical people-view integration, cards show the current filtered people-list index separately from the stable person ID. A separate lesson, roster or history result must not replace or renumber that people view. These requirements describe the integration target; the inherited `Person` UI remains active in this increment.
+The active canonical cards display immutable `PersonRecord` projections from the session's same observable people
+list, with separate current-view positions and stable IDs and wrapping labels for required and optional fields.
+Lesson, roster and history result views remain planned; see the [shared selector and view contract](#shared-lesson-target-contract)
+for how those results must preserve the people list.
 
 ### Logic component
 
-**API** : [`Logic.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/logic/Logic.java)
+**API** : [`Logic.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/Logic.java)
 
 Here's a (partial) class diagram of the `Logic` component:
 
 <img src="images/LogicClassDiagram.png" width="550"/>
 
-The sequence diagram below illustrates the interactions within the `Logic` component, taking `execute("delete 1")` API call as an example.
+The inherited sequence diagram below records `execute("delete 1")`; active routing instead delegates add/list/help/exit to `CanonicalPeopleSession`.
 
 ![Interactions Inside the Logic Component for the `delete 1` Command](images/DeleteSequenceDiagram.png)
 
 <div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `DeleteCommandParser` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
 </div>
 
-How the `Logic` component works:
+How active `Logic` works:
 
-1. When `Logic` is called upon to execute a command, the command is passed to an `AddressBookParser` object, which in turn creates a parser that matches the command (e.g., `DeleteCommandParser`) and uses it to parse the command.
-1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which is executed by the `LogicManager`.
-1. The command can communicate with the `Model` when it is executed (e.g. to delete a person).<br>
-   Note that although this is shown as a single step in the diagram above for simplicity, the code can require several interactions between the command object and the `Model` to complete the operation.
-1. The result of the command execution is encapsulated as a `CommandResult` object which is returned from `Logic`.
+1. `CanonicalLogicManager.execute` delegates to the single session. Its catalogue permits add/list/help/exit in a normal session, and help/list/exit after rejected loading.
+1. `RoleAwareAddParser` and `PeopleListParser` create validated role-aware input. Add/list execute through `CanonicalCommandExecutor` on a transaction with an independent working root and view.
+1. An addition validates a complete candidate, saves it through the protected writer, then publishes data and view and returns stable-ID success. Parse, domain or save failure leaves the live snapshot, counters, filter and selection unchanged.
+1. Read-only list/help/exit skip operational saving. Listing publishes only the selected role filter; help preserves the current view and returns inline guidance. Preferences retain their separate shutdown lifecycle.
 
-Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
+The inherited parser diagram remains useful for the retained regression seams:
 
 <img src="images/ParserClasses.png" width="600"/>
 
-How the parsing works:
-* `AddressBookParser` delegates to the registered parser in `CommandCatalog`. An `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`) uses the other classes shown above to parse the arguments and create an `XYZCommand` object. The router returns that object as a `Command`.
-* All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
-
-For planned canonical person commands, parse a positive index and resolve it against the current filtered people list at execution, checking the selected role. Capture the stable person ID once before calling ID-based Model/query APIs. The inherited `delete 1` example selects the first person in the current people view; the planned guarded route retains that input convention while using stable identity internally.
+Planned person-index commands use `PersonIndexResolver` on the current filtered people list, validate range and required role, then retain the resolved stable ID. Active add/list do not introduce a deletion route or reinterpret stable IDs as command indices. See the [shared selector contract](#shared-lesson-target-contract).
 
 #### Read-only retrieval API contract (#113)
 
-`Logic` now declares the UI-facing retrieval methods below. This increment defines their signatures and read-only
-result shapes only. Until the canonical Lesson, Attendance and aggregate stores are integrated, every new method in
-`LogicManager` throws `UnsupportedOperationException` with `Shared-lesson retrieval is not implemented yet`. No new
-command or view is active, and the inherited people list continues to work.
+[`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/Logic.java)
+declares the UI-facing retrieval methods; [`LessonQuerySource`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonQuerySource.java)
+and [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonQueries.java)
+define the lesson backend supplied by the active `CanonicalPeopleSession`. Its canonical Model owns projections
+from one `PonHubData` root; `CanonicalLogicManager` delegates to that same source. Catalogue and filtered
+results contain each lesson once in creation order, including empty lessons. Student lessons derive from current
+Lesson-owned membership; rosters use people creation order, and tutor schedules use weekday, start time and numeric
+lesson ID. Lookup by lesson ID reads the full catalogue regardless of its active filter.
 
-| `Logic` method | Planned result and ordering |
-| --- | --- |
-| `getLessonList()` | All shared lessons in creation order, once each, including empty rosters. |
-| `getFilteredLessonList()` | Active lesson-filter results in catalogue order, once per lesson; an empty match is valid. |
-| `findLessonById(LessonId)` | Lookup in the full catalogue regardless of filter; a valid unknown ID gives `Optional.empty()`. |
-| `getStudentLessons(PersonId)` | The student's current lessons, derived from Lesson-owned enrolled student IDs, in creation order. |
-| `getLessonRoster(LessonId)` | Current students resolved through the people registry, in people creation order; an empty roster is valid. |
-| `getTutorSchedule(PersonId)` | Assigned lessons, including empty ones, by weekday (Monday first), start time, then numeric lesson ID. |
-| `getAttendanceHistory(PersonId)` | All recorded dates for a student, newest first, then numeric lesson ID. |
-| `getAttendanceHistory(PersonId, LessonId)` | The same retained history restricted to one lesson, regardless of current enrolment. |
+[`LessonView`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonView.java)
+and [`StudentView`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/StudentView.java)
+expose current display fields without becoming stored records. Planned
+[`AttendanceHistoryEntry`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/AttendanceHistoryEntry.java)
+also distinguishes recorded present/absent status from current enrolment; history comes from dated attendance and
+survives unenrolment. A missing entry means unrecorded. See the [shared contract](#shared-lesson-target-contract) for
+command indices versus stable IDs and for preservation of the people view.
 
-Java callers pass `PersonId` or `LessonId`, never a displayed row position. After integration, null IDs are rejected,
-an unknown or wrong-role ID for a list query is rejected, and an existing record with no matching results yields an
-empty list. `findLessonById` alone uses an empty optional for an unknown lesson. The current declaration stubs throw
-before validating arguments. At the command boundary, `lessons si/STUDENT_INDEX` and `history STUDENT_INDEX` resolve
-the one-based position in the current people list once, check the Student role, and then pass that record's stable
-`PersonId`. Existing lessons are selected by prefixed `lid/LESSON_ID`. These result views preserve the people list,
-its filter and its command indices.
+Queries never save data or allocate IDs. Lists are unmodifiable observable views: a UI-held list remains the same
+object while committed changes and rollback refresh its entries. Existing records with no matches yield valid empty
+lists, while an unknown lesson lookup yields an empty `Optional`. Lesson queries reject null IDs and unknown or
+wrong-role IDs for list retrieval; exact signatures and exceptions are in the linked source/Javadoc.
 
-The `model.query` interfaces describe projections rather than persisted records. `LessonView` exposes a `LessonId`,
-assigned tutor `PersonId` and current name, `LessonTimeSlot`, `Subject`, `Room` and current roster size.
-`StudentView` exposes a student `PersonId`, current name and level, required parent phone and optional own contact
-fields. `AttendanceHistoryEntry` exposes the student ID, lesson ID, date, recorded present/absent status and a separate
-current-enrolment flag. An absent attendance entry is unrecorded. History survives unenrolment because its source is
-the attendance store, not the current roster. Each projection describes one model state; changed records replace
-entries in the observable lists.
-
-All list results will be unmodifiable observable views. The canonical Model will own query derivation, filtering and
-refresh, while `LogicManager` exposes the results. A list object already held by the UI must remain subscribed after
-lesson/person changes, enrolment, attendance changes and successful rollback; refresh entries only after a committed
-change, or restore the pre-command results on failed save. Retrieval does not save data, alter identity allocation, or
-replace the people view. Search still enters through `Logic.execute(String)` and must follow the complete
-[`SearchField` matrix](#supported-criteria), including same-student/same-lesson matching when those slices land.
-Lesson creation resolves a normalized full tutor name; search `tu/` matches a partial tutor name.
+**Integration status:** #80's lesson/roster backend is connected to the active canonical session and exposed by
+`CanonicalLogicManager`; the retained legacy `ModelManager` still reports retrieval unavailable. Attendance-history
+methods await #100. Lesson commands and separate result views remain pending; search enters through
+`Logic.execute(String)` and follows the [planned search matrix](#supported-criteria) when its routes activate.
 
 ### Model component
 **API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
@@ -266,7 +269,11 @@ Lesson creation resolves a normalized full tutor name; search `tu/` matches a pa
 <img src="images/ModelClassDiagram.png" width="450" />
 
 
-The `Model` component,
+The active model is the session-owned `PonHubData` root and its `PeopleView`/`LessonQueries` projections,
+with immutable records and snapshots. The following inherited Model diagram and API description remain
+for the isolated AB3 regression implementation. They do not construct a second active model.
+
+The inherited `Model` component,
 
 * stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
@@ -302,6 +309,8 @@ the #78 API below. Enrolment, deletion and attendance-editing policies remain se
 This aggregate leaves `ModelManager`, commands and JSON storage unchanged. Vincent owns snapshot/storage
 contracts; Zhu/Yang will prepare validated changes through one future Model adapter, and Ben can consume
 the read-only queries. UI filters, selection and preferences remain outside the operational snapshot.
+`stateProperty()` exposes a read-only notification boundary for a complete validated snapshot. Staged transaction
+containers publish independently; a failed command/save does not change the live root or its subscribed results.
 
 #### Shared lesson scheduling model APIs (#78)
 
@@ -336,20 +345,83 @@ membership. Ben may build projections only from the read APIs; they never mutate
 serialization must preserve the supplied catalogue order and lesson allocation counter, construct the entire
 candidate snapshot before replacement, and use its validation rather than installing partial arrays.
 
+#### Indexed lesson query projections (#80)
+
+`model.query.LessonQueries` implements `LessonQuerySource` over one supplied canonical root. Its immutable
+`LessonViewData` and `StudentViewData` entries resolve current Tutor/Student information by stable ID. Lessons alone
+own membership; attendance never supplies a roster or enrolment. Shared lessons appear once, including empty ones.
+The active session owns this component for its lifetime; `CanonicalLogicManager` delegates its six lesson
+retrieval methods without saving data or changing the people filter. The retained legacy adapter has no
+canonical query source. Lesson commands and separate result views still require their compatible slices.
+
+| Query API | Implementation |
+| --- | --- |
+| `findLessonById(id)` | Hash lookup in the complete catalogue, independent of the active filter. |
+| `getLessonList()` | Stable, unmodifiable observable catalogue in source creation order. |
+| `getStudentLessons(id)` | Reverse index derived from Lesson-owned roster IDs, in catalogue order. |
+| `getLessonRoster(id)` | Current Student projections in global people creation order. |
+| `getTutorSchedule(id)` | Assigned lessons by Monday-first weekday, start time, then numeric Lesson ID. |
+| `getFilteredLessonList()` | Separate observable lesson results; leaves person positions unchanged. |
+| `searchLessons(criteria)` | Immutable result snapshot; does not change the active filter or stored data. |
+| `getLessonFilter()` / `setLessonFilter(criteria)` | Model view state only; a category-only lesson filter restores all results. Invalid criteria preserve the previous filter/results. |
+
+Construction builds people/lesson ID maps, Student-to-Lesson and Tutor-to-Lesson indexes, ordered roster projections,
+and exact weekday/start/end buckets. A search selects the smallest supplied exact-value bucket, then applies every
+criterion to each candidate Lesson. `s/`, `tu/`, `rm/` and `sn/` retain case-insensitive substring matching, including
+short fragments; `tu/` searches tutor names. `sn/` examines the same lesson's current roster and excludes empty
+rosters. Matching two students still emits one Lesson. There is no cross-lesson combination of day, subject, room,
+tutor or student conditions. All seven lesson prefixes follow the existing [criteria matrix](#supported-criteria).
+The parser rejects unsupported, incompatible, blank, repeated and malformed values before query execution.
+An empty search result is valid. People/parent/tutor relationship traversal remains in its separate integration slices.
+
+All derived indexes rebuild on `PonHubData.stateProperty()` publication, after successful save/commit or restore,
+never per query. Already returned observable lists retain object identity while their entries refresh. This covers
+lesson addition/deletion, current membership edits, person detail edits, attendance changes and rollback. If a
+subscribed record is removed, its held list becomes empty; a new list query for that missing ID is rejected. Restoring
+the record repopulates the same held list. Previously returned projection objects and `searchLessons` snapshots
+remain immutable historical snapshots. All operations run on the single model/JavaFX application thread; UI selection
+must follow stable IDs when immutable entries are replaced. The runtime adapter owns one query component for its lifetime.
+
+Each subscription refresh snapshots its existing entries before firing list-change callbacks. A read-only callback
+may request another Student, Tutor or roster list; that new list starts from the complete current indexes and stays
+subscribed for later publications. It cannot interrupt the current refresh by changing the traversed map.
+
+For `P` people, `L` lessons and `R` roster links, query-index construction is `O(P + L + R + L log L)` in the worst case
+(the final term sorts tutor schedules). Derived storage is `O(P + L + R + C)`, where `C` counts subscribed IDs,
+including removed records whose held lists must survive restore. Stable-ID lookup and returning an already
+subscribed list take expected `O(1)`; first subscription
+copies its `K` entries in `O(K)`. A search checks `B` candidates from the smallest exact bucket, plus their roster
+links when `sn/` is supplied: `O(B + R_B + K)` for bounded field lengths and `K` returned results. Without an exact
+filter, `B = L`; text-only substring searches still scan the catalogue. Reading/rendering `K` results costs `O(K)`.
+These bounds describe queries, excluding the existing whole-snapshot validation and persistence work on mutations.
+A prefix trie would change substring behaviour; there is no constant-time guarantee for arbitrary text searches.
+Refreshing subscription snapshots also takes `O(C)` time and temporary space, in addition to copying result entries.
+
+Regression tests compare indexed results with an independent raw-record scan for 7,500 seeded filter combinations,
+including membership changes and restore. They cover missing/wrong-role/null IDs, duplicate names, shared/empty
+lessons, optional contacts and leading zeros, case/Unicode/text fragments, invalid/repeated prefixes, time boundaries,
+same-lesson counterexamples, immutable results, held-list refresh, retained attendance and failed-save isolation.
+Listener regressions cover adding populated and empty Student/Tutor/roster subscriptions during refresh, absence
+of JavaFX callback errors, consistent held roster/filter results and continued updates after subsequent publication.
+
 ### Storage component
 
 **API** : [`Storage.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/storage/Storage.java)
 
 <img src="images/StorageClassDiagram.png" width="550" />
 
-The `Storage` component,
+Active operational storage uses `ProtectedPonHubDataStorage` around `JsonPonHubDataStorage`; preferences
+use `JsonUserPrefsStorage` separately. The inherited class diagram and bullets below describe the retained
+legacy storage regression implementation, which is not the application's operational store.
+
+The inherited `Storage` component,
 * can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
 
 #### Safe JSON saves
 
-Address-book data and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
+Canonical operational data, retained legacy storage and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
 Existing destinations are resolved to their real paths, so saving through a symbolic link updates its
 target and preserves the link. Dangling/cyclic links and inaccessible destinations fail before writing.
 New files use a resolved parent directory, creating missing directories as needed. Concurrent external
@@ -370,16 +442,33 @@ recovery/temporary files can remain after failures or abrupt termination.
 The fallback permits saving on filesystems without atomic moves, but is not atomic: concurrent readers
 can observe an incomplete destination during replacement/recovery. Its guarantee is a recoverable old
 copy, not uninterrupted access at the original path. Neither path promises power-loss durability or
-preserves all previous file attributes. Save failures still do not roll back in-memory command changes;
-that is separate transaction work. Help, list and exit skip operational saving. Preferences retain
-their separate shutdown lifecycle. Future read-only commands must also bypass operational saving when activated.
+preserves all previous file attributes.
+
+#### Command transactions
+
+The active session invokes `CanonicalCommandExecutor` with its `PeopleView`, protected snapshot writer
+and session error supplier. `PeopleView.beginTransaction()` creates an independent working root and view
+from the complete live `PonHubDataState` and current role filter. Add validates the full candidate before
+saving. The executor compares operational snapshots, saves changed data before publication, then installs
+the candidate and returns success. Parse, execution or save failure never refreshes the live list, so records,
+allocation history, order, filter and selected card survive failure.
+
+Observable list identity survives successful publication. Read-only commands and unchanged operational
+state skip saving; role-filter changes still update the same people view. Help and unchanged views avoid
+unnecessary refresh, preserving selection. Protected loading retains its help/list/exit-only restriction.
+Preferences retain their separate shutdown lifecycle. Publication performs no new validation or I/O.
+
+Legacy `LogicManager`/`ModelTransaction` remain isolated regression seams; active startup does not use them
+as a parallel writable store. Complete-state transactions preserve lesson rosters and retained attendance,
+while the current persistence codec still rejects nonempty attendance until #83. Never strip unsupported
+collections to make a candidate saveable; activate later mutations only with compatible persistence.
 
 #### JSON version detection foundation
 
 `JsonDataVersionDetector.detect(String)` classifies file contents using the existing Jackson dependency,
-without constructing Model objects or writing files. The current loader uses this gate before decoding. The planned
-PonHub envelope reserves `schemaVersion` as a positive JSON integer, initially `1`; this is a data-schema
-version, independent of the application version. Issue #79 will define and validate the remaining envelope.
+without constructing Model objects or writing files. The current loader uses this gate before decoding. The supported
+PonHub envelope uses `schemaVersion` as a positive JSON integer, initially `1`; this is a data-schema
+version, independent of the application version. The canonical codec validates the complete envelope defined in #79 and its lesson extension.
 
 | Result | Meaning and later loader action |
 | ------ | ------------------------------- |
@@ -393,39 +482,38 @@ version, independent of the application version. Issue #79 will define and valid
 Missing versions identify legacy data only for the strict legacy root shape. A versioned candidate can
 still contain missing or invalid records: the detector is a format gate, not a schema/domain validator.
 Callers must handle file absence and read errors separately; neither is equivalent to empty JSON.
-The current `JsonAddressBookStorage` classifies and decodes the same string. It accepts only legacy AB3
-roots in this runtime and rejects every other classification, including version-1 candidates until their
-codecs are integrated. Missing files retain the existing fresh/sample-data behavior. Only a confirmed
-missing path is treated as absent; denied access and dangling final symbolic links are loading failures.
+The active `ProtectedPonHubDataStorage` classifies the selected file before canonical decoding. Legacy AB3
+roots are rejected and preserved; version-1 candidates require complete codec validation. Only a confirmed
+missing path returns an unwritten empty root. Denied access and dangling final symbolic links are loading
+failures. `JsonAddressBookStorage` retains its legacy-only decoder for isolated regression tests.
 
 #### Current protected startup
 
-On a controlled loading failure, `StorageManager` records recovery guidance and locks operational saves
-for the rest of the session. `MainApp` creates an empty display model, not a replacement writable store.
-The UI displays a recovery warning; `LogicManager` allows only help/list/exit and bypasses saving for
-those commands in the protected session. Other commands are rejected before execution. Storage also
-rejects direct operational saves, while preferences retain their separate lifecycle. Deleting or fixing
-the file while the session is running does not unlock it: recovery requires a restart.
+`ProtectedPonHubDataStorage` records actionable path-specific recovery guidance and locks operational
+saves after a controlled selected-file loading failure. `CanonicalPeopleSession` exposes an explicitly
+protected empty view; it never treats rejected data as a new writable dataset. The UI shows the warning,
+and active routing/help allow only help/list/exit. Listing includes the load diagnostic, so an empty result
+cannot be mistaken for saved data. Preferences retain their separate lifecycle. External file repair or
+removal does not unlock the session: restart is required.
 
-JSON syntax, root/version errors, invalid contact records and I/O failures become controlled loading
-errors. Explicit checks reject null person/tag entries; unrelated programming errors are not swallowed.
-Valid legacy contacts still load and save normally. This safety increment does not implement the new
-aggregate codec, automatic migration, general command rollback or no-save behavior in normal sessions.
+Malformed JSON, invalid roots/versions/records/counters/references, legacy AB3 and read failures become
+controlled rejections. Unrelated programming failures are not swallowed. Supported versioned data loads
+after complete codec validation; nonempty attendance remains unsupported until #83. Missing selected files
+start empty and unwritten until successful add, without inherited sample data or automatic legacy migration.
 
-Manual check: in a disposable working folder, place malformed JSON, `null`, or a versioned document in
-`data/addressbook.json` and record its bytes. Start the app and verify the recovery warning. Run help,
-list, exit and attempt add/delete; restart as necessary. The original bytes must remain unchanged and
-mutations must be blocked. Close the app, preserve the original, then restore a known-good compatible
-backup or correct JSON/access permissions and restart. Confirm valid human-edited legacy data loads.
-`ProtectedStartupTest` exercises the startup/command/storage boundary and original-byte preservation;
-`UiManagerTest` verifies the warning without requiring a real window.
+For manual checks, use a disposable selected `data/ponhub.json` or `--data=PATH`, record original bytes,
+then test help/list/exit and attempted add in the protected session. Bytes must remain unchanged. Preserve
+a backup, close the app, deliberately correct a supported working copy and restart. A legacy original is
+kept separately while explicit-role records are re-entered into a previously unused selected path.
+Session/storage and application-startup tests cover these boundaries; actual packaged/platform outcomes
+must be recorded separately using the procedures below.
 
 #### People-only canonical JSON storage (#79)
 
 `JsonPonHubDataCodec` converts between a complete `PonHubDataState` and the version-1 envelope below.
 `JsonPonHubDataStorage` reads one UTF-8 document into a validated candidate and uses the existing safe
-file writer for saves. These classes are not wired into startup, commands or the legacy storage path;
-protected runtime integration remains #84. Preferences remain in their existing separate file.
+file writer for saves. The active session connects them through `ProtectedPonHubDataStorage`; the legacy
+address-book path is not used by default. Preferences remain in their existing separate file.
 
 ```json
 {
@@ -448,9 +536,33 @@ leading zeros. Unknown fields and role-inappropriate fields are rejected rather 
 
 All three person counters and the lesson counter are required nonnegative integers up to `Long.MAX_VALUE`
 (exhaustion). They include deleted identities and must not be recomputed from retained records. Person
-counters must cover every retained ID. Both lesson/attendance arrays must currently be empty: non-empty
-collections are rejected on both read and write until #81/#83 supply their codecs. They must never be
-dropped while rewriting a file. Serialization finishes before any filesystem write.
+and lesson counters must cover every retained ID. Lessons and rosters are supported; attendance must
+remain an empty array until #83 supplies its codec. Unsupported attendance is rejected on both read
+and write, never dropped while rewriting a file. Serialization finishes before any filesystem write.
+
+Each `lessons` entry stores a shared lesson once; student records do not duplicate its membership:
+
+```json
+{
+  "id": "L2",
+  "tutorId": "T1",
+  "day": "Mon",
+  "startTime": "0900",
+  "endTime": "1000",
+  "subject": "Mathematics",
+  "room": "R1",
+  "enrolledStudentIds": ["S1", "S2"]
+}
+```
+
+All lesson fields are required. Times are four-digit strings, days use Mon–Sun, and an empty roster
+is valid. The codec rejects unknown fields, wrong types and duplicate roster IDs before constructing
+the roster set. After decoding all people and lessons, the immutable aggregate validates unique lesson
+IDs, the lesson counter, tutor/student references and overlapping tutor, normalized room or student
+bookings. Adjacent half-open time slots are allowed. JSON object-field order and reference position in
+arrays do not affect validation; lesson array order is retained. Referenced records must exist in the
+complete candidate. Failure returns no partial snapshot and the protected loader retains the original
+bytes and blocks writes. Deleted lesson IDs remain reserved through `lastAllocatedLessonSequence`.
 
 Close the app and preserve a backup before manual editing. For example, adding `"email": "alex@example.com"`
 to the student above is valid; making a phone numeric, removing a required field, or lowering its student
@@ -458,15 +570,17 @@ counter below 1 is rejected. Object field order and whitespace do not matter. Ro
 complete snapshot, including optional-field absence, people order, deleted-ID history and exhausted counters.
 Loading classifies the version first and validates all records/counters before returning; callers install
 the candidate only on success. Loading itself never writes or changes live state. This codec supplies no
-legacy migration or rejected-file session lock; the existing protected startup remains independently active.
+legacy migration or rejected-file session lock; active startup supplies that lock through the protected wrapper.
 
-#### Planned protected loading and legacy upgrade
+<a id="planned-protected-loading-and-legacy-upgrade"></a>
 
-These are requirements for the first canonical cutover, not behavior delivered by the inherited loader. Keep the inherited runtime until the compatible canonical Model, codecs, people commands and protected loader are activated together. The new runtime must classify the configured file before decoding: missing data may start a fresh supported root; valid supported versioned data loads only after complete domain, identity and reference validation. Unreadable, corrupt, unsupported-version and unversioned AB3 files produce controlled errors, actionable recovery guidance and no operational writes to the rejected file. Preserve its original bytes through help, list, exit and attempted mutations; saving preferences remains separate.
+#### Protected loading and legacy upgrade
 
-The initial upgrade policy is deliberate backup and manual re-entry into a separate new supported store. An unversioned AB3 contact does not contain enough information to infer a Student, Tutor or Parent role, and a Student additionally needs its level and parent phone. Do not invent those values, discard invalid records, or convert the original in place. Once the canonical build is available, tell the administrator to close the app, preserve a backup of the original data folder, deliberately start that compatible build in a separate empty folder, and re-enter records with explicitly chosen roles and required fields using the delivered commands. The preserved original and backup are not operational write targets; only the explicitly chosen new supported root is writable. Check the new records before retiring the old working folder. A migration importer and application-level export are future extensions; this policy does not introduce an `import`, `export` or `recover` command.
+Canonical startup, people commands, cards and the protected loader are now active together. The active runtime classifies the configured file before decoding: missing data may start a fresh supported root; valid supported versioned data loads only after complete domain, identity and reference validation. Unreadable, corrupt, unsupported-version and unversioned AB3 files produce controlled errors, actionable recovery guidance and no operational writes to the rejected file. Preserve its original bytes through help, list, exit and attempted mutations; saving preferences remains separate.
 
-The contact changes in #61 can reject formerly accepted numeric-only names, long phones or slash-containing addresses, or reveal duplicates after normalization. Diagnose the affected values without overwriting the rejected data. Inspect the local JSON read-only; if the older build is needed to inspect contacts, use an additional working copy, never the preserved original or backup. The administrator supplies any corrections and missing role information. Correctly human-edited supported JSON must load: document the delivered schema, preserve valid stable IDs and allocation state, and validate all relationships without requiring users to avoid editing the file. An invalid edit is rejected as a whole with its bytes preserved. The [planned manual checks](#planned-canonical-loading-and-recovery) cover this boundary.
+The initial upgrade policy is deliberate backup and manual re-entry into a separate new supported store. An unversioned AB3 contact does not contain enough information to infer a Student, Tutor or Parent role, and a Student additionally needs its level and parent phone. Do not invent those values, discard invalid records, or convert the original in place. Tell the administrator to close the app, preserve a backup of the original data folder, then select a separate previously unused operational path inside the JAR folder with `--data=PATH`, or copy the JAR into a separate empty folder. Re-enter records with explicitly chosen roles and required fields using the active add command. The preserved original and backup are not operational write targets; only the explicitly chosen new supported root is writable. Check the new records before retiring the old working folder. A migration importer and application-level export are future extensions; this policy does not introduce an `import`, `export` or `recover` command.
+
+The contact changes in #61 can reject formerly accepted numeric-only names, long phones or slash-containing addresses, or reveal duplicates after normalization. Diagnose the affected values without overwriting the rejected data. Inspect the local JSON read-only; if the older build is needed to inspect contacts, use an additional working copy, never the preserved original or backup. The administrator supplies any corrections and missing role information. Correctly human-edited supported JSON must load: document the delivered schema, preserve valid stable IDs and allocation state, and validate all relationships without requiring users to avoid editing the file. An invalid edit is rejected as a whole with its bytes preserved. The [manual checks](#planned-canonical-loading-and-recovery) cover this boundary.
 
 ### Common classes
 
@@ -496,7 +610,7 @@ normalize scheduling input before later lesson commands or persistence code use 
   of letter case.
 
 These value types do not activate or advertise a lesson command. The canonical aggregate now supplies lesson creation,
-global tutor/room clash checks and ID allocation; command and persistence integration remain separate increments.
+global tutor/room clash checks and ID allocation; lesson persistence is supported, while command integration remains a separate increment.
 
 ### Immutable shared lesson records
 
@@ -510,177 +624,220 @@ Tutor ID. `getEnrolledStudentIds()` exposes an unmodifiable snapshot. `withEnrol
 `withEnrolledStudent`, and `withoutEnrolledStudent` return replacement `Lesson` values, leaving the original lesson
 and its stable identity unchanged. Equality, hashing, copying and string representation include every stored field,
 including roster membership. The canonical aggregate owns lesson ordering, ID allocation and clash checks,
-while persistence and duplicate-enrolment command feedback remain separate work. This dormant record does not change
-the active runtime.
+while duplicate-enrolment command feedback remains separate work. Lessons can load through the supported codec,
+but lesson command routes remain unavailable.
 
 ### Inline help
 
-`HelpCommand` returns guidance in an ordinary `CommandResult`, with no separate-window or exit flag. It never mutates Model data, filters or preferences. `LogicManager` returns help, list and exit results before the operational save path, so these commands work even when operational storage is unwritable and do not create or rewrite the data file. List still resets the visible people filter and exit still returns its exit flag. Add/delete continue to save; general change detection and rollback remain separate integration work.
+The session returns catalogue guidance in an ordinary `CommandResult`, without a separate window or exit
+flag. `CanonicalCommandCatalog` supplies only the session's available routes and their syntax/examples;
+protected sessions omit add. Topic matching ignores case, while command words remain lowercase.
+Help does not mutate operational data, filters or preferences and does not save. List changes only the
+role-filtered view, and exit returns its exit flag; add alone performs operational saving in this increment.
 
 The Help menu and F1 invoke `MainWindow.executeCommand("help")`. Both display exactly the same guidance as typed help while retaining the command-box draft and person selection. `ResultDisplay` uses a read-only wrapped TextArea with scrolling and resets to the beginning of each new result. Existing F1 handling for focused text controls remains in place. The unused inherited HelpWindow is not constructed or reachable through supported help entry points.
 
 Tests exercise each registered help topic and its example through the actual router, malformed topics, locale-independent matching, filter/data/preference preservation, and help with failing storage. GUI selection, menu/F1 and scroll behavior have a separate manual procedure below.
 
-### Role-filtered people listing foundation
+<a id="person-record-foundation"></a>
+<a id="ordered-people-registry-foundation"></a>
 
-`PersonRecordListData` prepares a read-only snapshot for the future canonical people view.
-It takes people in global creation order and an optional `PersonRole` filter, preserves the
-relative order and stable IDs of matching records, and numbers the displayed entries from one.
-For example, filtering `[T7, S4, P2, S9]` to students yields `(1, S4)` and `(2, S9)`.
-These positions are view metadata; this component implements no command selection or ID allocation.
+### People records and identity
 
-The input collection is copied, entries are immutable, and only the immutable `Student`, `Tutor`,
-and `Parent` record types are accepted. Nulls and duplicate IDs are rejected across the entire
-source snapshot, including records outside the selected role. A successful empty result has a
-count of zero and an explicit `No persons to display.` message. The projection owns no writable
-operational store and does not observe subsequent source-list changes. Integration must rebuild
-the snapshot from the canonical people collection when data or the selected filter changes,
-including after rollback. Each entry supplies the person and positive displayed position needed
-by the separately prepared person card component.
+Immutable `Student`, `Tutor` and `Parent` records implement `PersonRecord` and compose `ContactDetails` rather
+than extending legacy `Person`. Constructors enforce the record's role and required fields; absent optional
+contacts remain absent. Students do not contain copied lessons or attendance. Relationship ownership and
+optional parent-record linking follow the [shared contract](#shared-lesson-target-contract).
 
-`PeopleListParser` parses arguments excluding the command word. Empty arguments select all roles;
-otherwise it accepts one lowercase `r/` prefix and a case-insensitive `student`, `tutor`, or
-`parent` value. It rejects blank values, unsupported roles, repeated or unknown prefixes, preambles,
-extra arguments, and line breaks with `ParseException`. It returns only an optional role and does
-not create a command or change a filter.
+| Role | Required data | Optional data |
+| --- | --- | --- |
+| Student | Student ID, name, education level, parent phone | Own phone, email, address |
+| Tutor or parent | Matching role ID, name, own phone | Email, address |
 
-**Integration boundary:** These components are dormant. The active catalogue still routes bare
-`list` to the inherited list command and rejects `list r/student`. Full listing integration in
-[#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77) still requires the ordered registry and
-canonical aggregate; [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85) coordinates enabling
-the compatible people commands, protected loader, persistence and cards together. This increment
-does not complete those issues or activate the proposed User Guide listing syntax.
+`EducationLevel` accepts `P1`–`P6`, `S1`–`S5`, `JC1` and `JC2`, normalizing to uppercase. `PersonId` is a
+role-prefixed positive `long` identity, such as `S1`, with no leading zeros; trimmed constructor input is
+case-normalized. It survives contact and view changes. Value equality includes the ID and all stored fields.
+Business duplicate matching instead compares **role + normalized name + identifying phone**: parent phone
+for a student, own phone for a tutor or parent. Name case and repeated spaces do not distinguish duplicates;
+different IDs, optional contacts or student levels cannot bypass this rule. Different-role records are distinct.
 
-Automated tests cover mixed-role order, filtered renumbering, stable identity, empty results,
-defensive copies, invalid snapshots, parser errors, and the unchanged active command route.
-At activation, manually run `list`, `list r/student`, `list r/TUTOR`, and `list r/parent` on a
-mixed-role dataset. Confirm displayed positions, stable IDs, creation order, counts and an empty
-role result. Run `list r/`, `list r/all`, and `list r/student r/parent`; expect actionable errors
-without changing data or the visible list. Repeat after adding a person and after a failed save
-rolls back. Those end-to-end checks remain pending runtime integration.
+<a id="registry-apis"></a>
+<a id="allocation-and-state-validation"></a>
 
-### Current people-index resolution foundation
+[`PeopleRegistry`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/person/PeopleRegistry.java)
+keeps all roles in one global creation order and returns immutable snapshots. Successful additions append a
+record and advance only its role's allocation counter; rejected additions change neither. If the last Student
+allocation was `S2`, deleting it keeps the counter at `2`, so the next Student receives `S3`. Counters are never reconstructed
+from surviving records, even when a role becomes empty. `Long.MAX_VALUE` means exhausted: allocation rejects
+before overflow.
 
-[Issue #137](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/137) prepares the shared
-selection boundary for the canonical people commands.
+`PeopleRegistryState` defensively copies that ordered list and the complete three-role allocation map. It
+rejects unsupported record types, duplicate IDs/business keys, missing or negative counters, and counters
+below retained ID sequences. Copy/import/export preserve order and deleted/exhausted allocation history;
+independent registries share only immutable records. The canonical root uses this state for persistence and
+restoration; its actual format is described in [Storage](#people-only-canonical-json-storage-79).
 
-`PersonIndexResolver.resolve(Index, List<? extends PersonRecord>)` resolves a parsed index against
-the supplied current filtered people list and returns the selected immutable record. For a view
-containing `[T7, S9, P2]`, index `2` selects `S9`. In a student-filtered view `[S9, S3]`, index `2`
-selects `S3`. The resolver does not interpret a position as an ID suffix or select from another
-collection. An empty view or out-of-range index produces a checked `CommandException` using the
-existing invalid-person-index message. Argument parsing remains the existing `ParserUtil.parseIndex`
-responsibility; this helper receives an `Index`, not a command string.
+<a id="deletion-and-activation-boundaries"></a>
 
-`resolveStudent` resolves the same current people index once, then rejects a selected Tutor or
-Parent with specific checked feedback. It never searches a separate student-only list. Callers
-must supply the authoritative people view at execution, keep it unchanged during resolution,
-and capture the returned record's stable `PersonId` before any Model or query calls. Later view
-refreshes must not reinterpret that command's index. The resolver neither owns nor modifies the
-view, its filter, records, registry, identity counters, or storage.
+Registry removal consults the caller's relationship predicate before changing data. Unknown IDs, references
+or a failing predicate leave order and counters unchanged. The predicate must query the canonical relationships
+without mutating the registry; complete deletion guards follow the shared contract above. This seam does not
+activate the guarded deletion command.
 
-**Integration boundary:** This working helper remains dormant alongside the prepared listing and
-cards. Canonical commands must share one people-view source at the coordinated #77/#85 cutover.
-Guarded deletion under #91 still needs canonical lesson/enrolment/retained-attendance queries,
-compatible persistence and save-failure rollback; selecting a record does not establish that it
-can be deleted. Existing command routing and the User Guide's active-command status are unchanged.
+### Contact validation and normalization
 
-Tests cover mixed roles, filtered positions that differ from stable-ID suffixes, checked range
-and role errors, and retaining the resolved identity after a view refresh. The existing manual
-person-index procedure below remains pending actual canonical command integration.
+Shared contact value types validate construction at parser and JSON-loader boundaries, preventing commands
+and saved files from admitting different formats.
 
-### Role-aware addition parsing foundation
+| Value | Contract |
+| --- | --- |
+| Name | 1–100 characters after trimming/collapsing ASCII spaces; English letters, spaces, apostrophes, hyphens and periods, with at least one letter. Display case is preserved. |
+| Phone | 3–15 ASCII digits, stored as text to retain leading zeros. |
+| Email | At most 254 characters; local part allows letters, digits, `.`, `_`, `%`, `+`, `-`, without leading/trailing/consecutive periods. Domain has at least two letter/digit/internal-hyphen labels, ending in 2–63 English letters. Spelling/case are preserved. |
+| Address | 1–200 printable ASCII characters after trimming/collapsing spaces; `/`, tabs, line breaks and controls are rejected. |
 
-[Issue #135](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/135) prepares argument parsing for [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). `RoleAwareAddParser.parse(String)` accepts arguments after the future `add` command word and returns immutable `PersonAdditionInput`. The input contains a role, composed contact details, and optional student education level and parent phone. It contains no ID, person record, registry, command execution or writable operational state.
+Name/address normalization occurs once in the value type, before equality and hashing; case remains significant
+for value equality. Name/address parser boundaries preserve controls for rejection; role-aware add rejects
+controls before extraction.
+Space normalization scans linearly; email rejects excessive length before a linear, constant-stack format scan,
+avoiding stack overflow on hostile repeated input. Phone/email parsing retains surrounding-whitespace trimming.
+
+The active `RoleAwareAddParser` and canonical loader use this policy. Previously accepted files outside it, including
+normalization-created duplicates, enter [protected startup](#current-protected-startup); Storage describes
+rejected-file preservation and recovery. This contact policy performs no legacy migration. Role-aware
+add/list are active as described below.
+
+<a id="role-aware-addition-parsing-foundation"></a>
+<a id="staged-person-addition-candidate"></a>
+<a id="current-people-index-resolution-foundation"></a>
+
+<a id="prepared-people-commands"></a>
+
+### Canonical people commands
+
+`RoleAwareAddParser` returns immutable, ID-free `PersonAdditionInput`, using the shared contact policy above.
+It accepts lowercase prefixes once each in any order; role and education-level values ignore case.
 
 | Role | Required prefixes | Optional prefixes |
 | --- | --- | --- |
 | Student | `r/`, `n/`, `l/`, `pp/` | `p/`, `e/`, `a/` |
 | Tutor or parent | `r/`, `n/`, `p/` | `e/`, `a/` |
 
-Prefixes are lowercase and may appear once in any order. Role and education-level values are case-insensitive. Omitted optional contacts remain absent; supplied values must be nonblank. Prefix boundaries and surrounding value spaces recognize Unicode whitespace; extraction preserves interior field text for the shared validators. Their normalization and character rules govern the resulting contact values, so Unicode field separators do not expand the permitted characters inside a value. Every prefix-shaped token is recognized, so an unknown prefix after an address cannot silently become address text. Repeated prefixes, student-only fields on other roles, preambles, line breaks and control characters produce specific `ParseException` feedback. Controls are rejected before trimming, and phone values retain leading zeros. Both own and parent phones use the existing 3–15-digit role-record bound.
+Supplied optional values must be nonblank. Unknown/repeated prefixes, student-only fields on other roles,
+preambles, line breaks and controls are rejected. Unicode whitespace is accepted at prefix/value boundaries,
+while interior contact characters still follow the shared validators.
 
-**Shared contact policy:** Name, email and address validation delegates to the shared value types supplied by merged [#61 / PR #110](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/110). This parser reuses their validation and normalization rules without duplicating validators. The contact-policy dependency is satisfied; role-aware command activation remains separate #85 work.
+[`PersonAdditionCandidate`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/PersonAdditionCandidate.java)
+prepares a complete proposed `PonHubDataState` using a temporary registry. It applies duplicate/allocation rules
+and appends the new person while preserving lessons, rosters, attendance and lesson allocation history.
+Preparation changes no live state or counter; an abandoned candidate reserves no identity. The transaction
+must **prepare from a fresh snapshot → save the complete compatible candidate → install**, then report success
+and reset the people view to all roles. This helper supplies no save, rollback or UI action.
 
-**Activation boundary:** The existing `AddCommandParser`, router and supported-command catalogue still handle legacy person records using the shared contact policy. The prepared parser does not check duplicate people, allocate even a provisional ID, reset the view, save data or perform rollback. Those behaviors remain #85 work after the canonical aggregate, compatible persistence, protected loading and transaction foundations are ready. At cutover, construct and commit the record through that single canonical root; never use a placeholder ID or a second writable person store.
+`CanonicalAddCommand` and `CanonicalListCommand` implement the staged transaction interface merged through
+[PR #170](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/170). Addition stages a complete candidate and all-role
+view with checked duplicate/exhaustion feedback; the executor saves before publishing and returning stable-ID
+success. Listing selects a role and reports its count without operational saves.
+`CanonicalPeopleCommandIntegrationTest` exercises the real prepared parser/executor/storage seam, covering
+all roles and optional contacts, siblings, canonical duplicates, ID allocation/exhaustion, save/reload and failed-save
+restoration. The #85 cutover connects these commands to application startup and cards; manual application/platform checks remain evidence to record, rather than inferred from component tests.
 
-Automated checks exercise all three roles, absent/present optional contacts, argument order/case, role restrictions, missing/blank/repeated/unknown fields, controls, phone bounds, immutable input invariants and unchanged active routing. Canonical duplicate detection, siblings sharing parent phones, committed ID allocation, save/reload and failed-save restoration remain integration tests under #85.
+`PersonIndexResolver` applies the [shared selector contract](#shared-lesson-target-contract) to the authoritative
+current people list. With students `[S4, S9]`, positions `1` and `2` select those IDs; position `2` never means
+`S2`. Resolve once and retain the returned ID throughout the operation. Student-only resolution rejects a
+Tutor/Parent at that position without searching another list; range/role failures leave data and view unchanged.
 
-### Staged person-addition candidate
+The [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85) cutover activates these commands through
+one session and people panel. Inherited delete is retired until guarded canonical deletion is ready.
+Canonical storage supports lessons/rosters but rejects nonempty attendance until #83; lesson routes remain gated.
 
-`PersonAdditionCandidate.prepare(PonHubDataState, PersonAdditionInput)` prepares a complete immutable
-addition candidate for [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). It copies the source people
-snapshot into a temporary `PeopleRegistry`, reuses its role-specific addition and duplicate rules, and appends
-the resulting person while preserving lessons, rosters, retained attendance and lesson allocation history.
-`getCandidateState()` supplies the complete proposed state; `getAddedPerson()` supplies the proposed record
-and its ID. Preparation leaves the source and live data unchanged, including every allocation counter.
+<a id="prepared-canonical-people-session"></a>
 
-This seam remains dormant. The proposed ID is not reserved in operational state, and abandoned candidates
-consume no identity. The later single-threaded transaction must prepare from its current snapshot, save the
-complete candidate successfully, and then install it before returning success or resetting the people view.
-This helper performs no persistence, rollback, command dispatch, view refresh or runtime activation. Compatible
-storage, protected loading and transaction integration still gate coordinated add/list/card activation.
+### Canonical people session
 
-Regression tests cover all roles and optional contacts, siblings without a stored parent record, near-duplicate
-identities, normalized duplicate rejection, deleted-ID history, allocation exhaustion, retained relationships
-and immutable independent snapshots. Save/reload, failed-save restoration and visible success remain pending
-actual command/transaction integration.
+`CanonicalPeopleSession` loads the configured path once through `ProtectedPonHubDataStorage` and owns one
+private `PonHubData` root. Its `PeopleView`, `CanonicalCommandExecutor` and lifetime `LessonQueries` component
+share that root. Callers receive immutable data snapshots and the same unmodifiable observable people list;
+the session does not expose writable operational data. Execute on the single model thread, or the JavaFX
+application thread once controls are attached.
 
-### Prepared person record cards
+The session routes active `add`, `list`, `help` and `exit` through `CanonicalCommandCatalog`, independent of the
+retained legacy `CommandCatalog`. It parses role-aware additions and listings before staged execution. Changed data
+is saved through the protected writer before publication, ID success feedback or reset to all roles. Parse,
+domain and save failures leave the original data, allocation counters and visible filter/list unchanged.
+Read-only commands perform no operational saves.
 
-[Issue #119](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/119) implements the independent card portion of [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77). `PersonRecordCard` renders the already merged immutable `Student`, `Tutor`, and `Parent` records. It remains dormant: `MainWindow`, the active list route, and the inherited `PersonCard` still use the existing runtime. Role-filtered listing, counts, aggregate wiring, and the coordinated cutover remain later work under #77 and #85.
+A confirmed missing file starts an unwritten empty store. A rejected file produces a protected empty view,
+with its original bytes preserved and recovery guidance retained. Only `help`, `list` and `exit` are available
+in that session; mutation and unknown routes reject before argument parsing. Help advertises the permitted
+routes, and list feedback includes the load error so the empty view cannot be mistaken for saved records.
+External repair or removal does not unlock that session; recovery requires a new session after deliberate
+repair or selection of a separate supported path.
 
-`PersonRecordCardData(PersonRecord, int)` creates immutable display text with a positive current-view position. The heading shows that position and the supplied name; a separate identity line shows the role and stable ID. Student details include education level and required parent phone, followed by optional own phone, email, and address. Tutor and parent details include required own phone plus optional email and address. Missing optional fields display `Not provided`. The projection preserves display case, spacing, and phone zeros, accepts only the known record types, and mutates neither the record nor a registry.
+`CanonicalPeopleSessionTest` exercises the real protected loader, router, staged commands and snapshot writer.
+Component tests alone do not establish native UI/card or platform acceptance. `MainApp` now constructs
+this session and its Logic adapter, and `MainWindow` observes the session's people view. Record actual
+packaged save/restart/failure and platform evidence using the procedures below.
 
-`PersonRecordCard(PersonRecord, int)` loads `PersonRecordCard.fxml` and renders the projection. The heading, identity, and detail labels wrap with no fixed card height. The future list-cell host must size the card to the available cell width and provide vertical scrolling; `PersonRecordCardPreview` demonstrates that host with the current theme. Stable IDs never become displayed indices, and no second writable person store is introduced.
+<a id="role-filtered-people-listing-foundation"></a>
+<a id="prepared-person-record-cards"></a>
 
-Automated projection tests cover all roles, absent/present contacts, required fields, exact display values, long text, index/ID separation, immutable detail lines, and invalid inputs. Renderer regression tests load the actual FXML on the JavaFX application thread and check the displayed values and wrapping. Linux CI runs the Gradle checks under a virtual display; developers on Linux without a display can likewise run `xvfb-run --auto-servernum ./gradlew check coverage` with Xvfb installed. The developer preview exercises the actual FXML separately from the application and uses fixture records without loading or saving operational files. Its layout procedure appears below.
+<a id="prepared-people-view-and-cards"></a>
+
+### Canonical people view and cards
+
+[`PeopleView`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/PeopleView.java)
+derives the people projection from one supplied `PonHubData` root and owns the selected role filter. It retains
+one unmodifiable observable
+list for both command selection and `PersonRecordListPanel`, preserving global relative order. The people projection's owner explicitly refreshes after committed replacement or rollback, on the JavaFX
+application thread when controls are attached. Refresh retains the selected role; parse list arguments before
+changing it. A successful addition's reset to all roles belongs to the transaction above.
+
+For detached feedback, `PersonRecordListData` copies an immutable snapshot and supplies numbered entries,
+count and an empty message; it does not observe later changes. `PeopleListParser` accepts empty arguments
+or one `r/student|tutor|parent` value, with case-insensitive role names, and rejects malformed arguments without
+changing any view.
+
+`PersonRecordCardData` separates the numbered name heading from the role/stable-ID line and renders the
+required/optional fields in the role table above; absent contacts show `Not provided`. Display case and phone
+zeros are retained. `PersonRecordCard` loads wrapping labels from FXML with no fixed card height.
+`PersonRecordListPanel` fits cards to cell width, updates positions when cells are reused, and supplies count,
+empty placeholder and vertical scrolling for tall cards. Neither projection nor panel owns writable records.
+
+`MainWindow` constructs these canonical cards over the session's current list. Developer preview recipes
+and earlier viewport results are preserved in [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77);
+actual application/platform display evidence belongs to [manual testing](#planned-people-card-display-checks).
+
+<a id="prepared-canonical-people-sample-checks"></a>
 
 ### Representative canonical people samples
 
-[Issue #143](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/143) prepares the people portion of
-the acceptance dataset for [#101](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101).
-`PeopleSampleDataUtil.getSamplePeopleRegistry()` returns a fresh `PeopleRegistry` on each call.
-The factory uses the registry's addition APIs, enforcing role-specific duplicate rules and
-retaining global creation order and complete allocation state. Callers can mutate one sample registry independently of
-every other invocation.
+[`PeopleSampleDataUtil`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/util/PeopleSampleDataUtil.java)
+creates a fresh independent registry in deterministic order `T1, S1, P1, S2, T2, S3`, using normal addition rules.
+It supports representative acceptance work without duplicating validation or allocation logic.
 
-The six records have deterministic creation order `T1, S1, P1, S2, T2, S3`:
-
-| IDs | Representative scenario |
+| Records | Purpose |
 | --- | --- |
-| `S1`, `S2`, `P1` | Alex Tan and Jamie Tan share parent phone `00987654`, matching Pat Tan's own phone. Alex omits all optional contacts; Jamie supplies them. |
-| `T1`, `T2` | Both tutors are named Mei Lim, with distinct phones `00112233` and `00999888` for future name/phone disambiguation checks. `T2` omits email and address. |
-| `S1`, `S3` | Two students named Alex Tan have different parent phones, making both valid distinct records. `S3` uses `00888888`. |
+| `S1`, `S2`, `P1` | Siblings share parent phone `00987654`, matching Pat Tan's own phone; optional Student contacts are absent/present. |
+| `T1`, `T2` | Both tutors are Mei Lim with distinct phones; one omits email/address, exercising future name/phone disambiguation. |
+| `S1`, `S3` | Same-name Alex Tan students with different parent phones remain distinct. |
 
-Phone zeros and email display case are retained. The interleaved order exercises current-view
-positions separately from stable IDs: all-role position `5` selects `T2`, while tutor-filtered
-position `2` selects that same record. The factory is dormant and leaves active AB3 sample
-loading unchanged. It supplies no lessons, enrolments, attendance or persistence format;
-those parts of #101 remain pending their feature owners' integration.
-
-Sample tests validate independent registries, required and optional contacts, the name/phone
-cases, registry export/import and continued allocation after removal. They also compose
-`PeopleListParser`, `PersonRecordListData`, `PersonIndexResolver` and `PersonRecordCardData`
-using the samples, including filtered renumbering after removal. These checks exercise the
-prepared APIs; actual canonical command, save/reload and GUI acceptance remain pending.
+Phone zeros and email case are preserved. These samples are dormant and contain no lessons, enrolments,
+attendance or file format. [#101](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101) preserves the developer
+fixture recipes and tracks full-product samples and acceptance after runtime integration.
 
 ### Search criteria parsing foundation
 
-Issue #64 adds an independently testable search specification. `SearchCriteriaParser.parse(String)` consumes the
-arguments after a future `search` command word and returns immutable `SearchCriteria`. It is a criteria parser rather
-than an implementation of `Parser<T extends Command>`, because this increment produces a value object instead of a
-command. Runtime routing and help topics will be connected with the later search commands.
-
-`SearchCategory`, `SearchField` and `SearchCriteria` are in `seedu.address.model.search`. The specification has no model,
-UI, storage or lesson-record dependency. `SearchField` owns the prefix/category matrix and validation rules;
-`SearchCriteria` defensively copies its filters, exposes an unmodifiable map and supplies field-level matching.
+[`SearchCriteriaParser`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/parser/SearchCriteriaParser.java)
+parses the arguments
+after `search` into immutable `SearchCriteria`. It produces a value object, not a `Command`; routing and help are
+connected only when each search slice activates. `SearchField` owns category compatibility and field matching, while
+the canonical query layer combines fields against records and relationships. Parsing never writes operational data.
 
 #### Supported criteria
 
-The required category is `c/student`, `c/parent`, `c/tutor` or `c/lesson`, ignoring category-value case.
-Category-only input is valid and imposes no field restrictions. Prefixes are lowercase, may occur in any order and
-may appear only once, including `c/`. This matrix implements the earlier search specification tracked in [issue #64](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/64):
+The required category is `c/student`, `c/parent`, `c/tutor` or `c/lesson`, ignoring category-value case. Category-only
+input is valid. Prefixes are lowercase, order-independent and unique within a command. The full planned matrix is:
 
 | Prefix | Field | Student | Parent | Tutor | Lesson | Matching |
 |--------|-------|---------|--------|-------|--------|----------|
@@ -698,136 +855,30 @@ may appear only once, including `c/`. This matrix implements the earlier search 
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes | Partial text |
 | `rm/` | Lesson room | Yes | Yes | Yes | Yes | Partial text |
 
-Text queries are stripped of surrounding whitespace and stored in lowercase using `Locale.ROOT`. Matching uses
-case-insensitive substring containment, so `n/al` can match `Sally Tan`, `s/Math` can match `Add Math`, and
-`e/@example` can match `mei@example.com`. Text fragments are accepted without requiring a complete valid name,
-email address or lesson field. `tu/` remains a partial tutor-name query; tutor-category name searches use `n/`.
+Text filters use case-insensitive substring matching after trimming and `Locale.ROOT` case normalization; fragments
+need not form a complete valid field value. Thus `n/al` matches `Sally Tan` and `s/Math` matches `Add Math`.
+Lesson creation selects a tutor by normalized **full** name and optional exact phone; search `tu/` matches a tutor
+name **fragment**, while tutor-category own-name search uses `n/`.
 
 Phone filters require 3–15 ASCII digits, retain leading zeros and match the complete number. Levels accept only
 `P1`–`P6`, `S1`–`S5`, `JC1` and `JC2`, normalized to uppercase. Weekdays accept only `Mon`, `Tue`, `Wed`, `Thu`, `Fri`,
 `Sat` and `Sun`, normalized to lowercase. Times require four digits from `0000` to `2359`, with valid minutes.
 Start or end may be supplied independently; when both are present, end must be later than start on the same day.
 
-`SearchCriteria.matches(SearchField, String)` checks one supplied condition. An omitted filter imposes no restriction;
-an absent optional field fails a supplied filter. Exact-field comparisons use the same validation/normalization as
-the queries. Query integration must combine all supplied filters and preserve the existing same-student/same-lesson
-rules. This foundation validates relational criteria without traversing records or building a relationship graph.
+An omitted filter imposes no restriction; a supplied filter never matches an absent optional field. A person with no
+relationships still qualifies for own-field-only search. All supplied relational filters must refer to the same
+linked student or lesson: a parent cannot take `sn/` from one child and `s/` from another, and a student cannot take
+`d/` from one enrolled lesson and `s/` from another. Tutor `sn/` and lesson fields must match one assigned lesson.
+Lesson `sn/` checks its current roster, so former members do not match; without `sn/`, empty lessons remain eligible.
+Every result is distinct by stable ID and retains canonical order, including a valid zero-result list.
 
 #### Errors and integration boundary
 
-The parser throws `ParseException` for missing/unknown categories, unexpected preamble, blank values, repeated
-prefixes, unknown prefixes, category-incompatible filters, invalid exact values and non-increasing time ranges.
-Slashes in values and line breaks in arguments are rejected. All prefix-shaped tokens at whitespace boundaries are
-recognized, including unknown ones: `c/student n/Alex xyz/no` reports unsupported `xyz/` instead of absorbing it into
-the name query. Horizontal whitespace can separate prefixes. Programmer-supplied null arguments raise
-`NullPointerException`; direct construction of invalid criteria raises `IllegalArgumentException`.
-
-The parser and criteria operate only on their inputs and perform no writes, ID allocation or filtering of live
-lists. Tests cover every documented prefix/category combination, normalization, partial/exact matching, retained
-phone zeros, day/level/time boundaries, unknown/blank/repeated fields, time ranges and criteria immutability.
-The active router still rejects `search`. The full matrix above is the retained planned search contract, including
-partial tutor-name queries and relationship filters. Own-field search can be activated as an earlier slice; later
-relational slices must retain same-student/same-lesson conjunctions and distinct-ID results. For example, a parent
-search combining `sn/Alex` and `s/Math` must find a matching lesson for that same linked Alex, rather than use one
-child for the name and another for the subject. A student's combined day/subject filters must match one enrolled
-lesson. Lesson results must count each shared lesson once and include empty lessons when the supplied filters allow
-them. Feature owners update routing, help and guides for each activated slice without reducing the outstanding target.
-
-### Person record foundation
-
-The person record foundation provides immutable student, tutor, and parent records for subsequent person commands and shared-lesson integration.
-The current command, UI, and JSON aggregate still use the inherited AB3 `Person` model; integrating the new types with these components is follow-up work.
-
-| Type | Implemented contract |
-| --- | --- |
-| `PersonRole` | Represents `STUDENT`, `TUTOR`, or `PARENT`. |
-| `PersonId` | Represents a stable role-prefixed identifier, such as `S1`, `T1`, or `P1`, with a positive `long` sequence number and no leading zeros. Constructor input is trimmed and case-normalized; this is an internal identity value, not a displayed command index. |
-| `EducationLevel` | Accepts `P1`–`P6`, `S1`–`S5`, `JC1`, or `JC2`, normalizing trimmed input to uppercase. |
-| `ContactDetails` | Composes a required `Name` with optional `Phone`, `Email`, and `Address` values. It reuses the existing contact value types and requires any supplied phone number to contain 3–15 digits. |
-| `PersonRecord` | Provides common access to a record's stable ID, contact details, name, and role, and declares `isDuplicateOf(PersonRecord)` for role-specific duplicate matching. |
-| `Student` | Composes a student-role `PersonId`, `ContactDetails`, `EducationLevel`, and required parent `Phone`. The parent phone must contain 3–15 digits; the student's own phone, email, and address remain optional. |
-| `Tutor` | Composes a tutor-role `PersonId` and `ContactDetails`. Its own phone is required; email and address remain optional. |
-| `Parent` | Composes a parent-role `PersonId` and `ContactDetails`. Its own phone is required; email and address remain optional. |
-
-`Student`, `Tutor`, and `Parent` implement `PersonRecord` and compose immutable `ContactDetails`; none extends the inherited `Person` class. Each constructor rejects IDs for another role. `Tutor#getPhone()` and `Parent#getPhone()` expose their required own phone, which follows the same 3–15 digit limit as other supplied phone values.
-
-**Validation boundary:** `Name`, `Phone`, `Email`, and `Address` enforce the contracts in [Contact validation and normalization](#contact-validation-and-normalization). Names and addresses are stored after space normalization, while names preserve display case. `ContactDetails#getNormalizedName()` additionally ignores name case for duplicate matching.
-
-**Current email validation:** The active contact parser and JSON loader share `Email.isValidEmail`, which
-rejects values longer than 254 characters before scanning ASCII characters in linear time with constant stack
-space. Local-part periods cannot be leading, trailing or consecutive; intermediate domain labels allow internal
-hyphens; the final label contains 2–63 English letters. Long repeated local-part separators, domain hyphens or
-domain labels produce the existing checked boundary error instead of a regex stack overflow. The public
-`VALIDATION_REGEX` remains the format reference; bounded exhaustive regressions compare it with the scan.
-
-**Identity, equality, and duplicates:** The stable `PersonId` identifies a record independently of its contact details or position in a displayed list. Value equality compares the ID and all stored fields, including optional contact details and the student's education level and parent phone. `isDuplicateOf(PersonRecord)` instead requires the same role and compares the name, ignoring case and repeated spaces, together with the required identifying phone: the parent phone for students or the record's own phone for tutors and parents. Different IDs, optional contact details, or student education levels do not distinguish otherwise duplicate records. A null or different-role argument is not a duplicate. `PeopleRegistry` now uses this operation to reject duplicate records; connecting that rejection to active commands remains follow-up work.
-
-**Command boundary:** A user-entered person index is resolved once through the current filtered people view to a `PersonId`; it is not passed into the `PersonId` constructor or persisted as a relationship. Internal lookup, student-lesson queries, rosters, attendance keys and storage continue to use stable IDs. Resolving an index and validating its role belongs to the planned command integration, not these immutable record constructors.
-
-**Planned relationships:** The person records do not contain lesson or attendance collections. The planned shared-lesson model will keep canonical lessons and student–lesson membership outside the student record, referring to stable IDs so several students can share one lesson. Separate parent records remain optional; future parent links will use exact equality between a parent's own phone and a student's stored parent phone, without requiring a stored `Parent` object in `Student`. Relationship lookup, dated attendance, and the storage of these relationships are separate follow-up work.
-
-### Contact validation and normalization
-
-The shared `Name`, `Phone`, `Email`, and `Address` value types enforce the contact formats in the User Guide. Their constructors and `isValid...` methods apply the same rules, including when the inherited JSON adapter loads a contact.
-
-| Type | Implemented contract |
-| --- | --- |
-| `Name` | 1–100 characters after trimming surrounding ASCII spaces and collapsing repeated spaces. Accepts English letters, spaces, apostrophes, hyphens and periods, with at least one letter. Preserves display case. |
-| `Phone` | 3–15 ASCII digits, stored as a string so leading zeros are retained. |
-| `Email` | At most 254 characters. The local part allows English letters, digits, `.`, `_`, `%`, `+` and `-`, with no leading, trailing or consecutive periods. The domain has at least two labels of letters, digits or internal hyphens; its final label contains 2–63 English letters. Preserves spelling and case. |
-| `Address` | 1–200 printable ASCII characters after trimming surrounding spaces and collapsing repeated spaces. Rejects `/`, tabs, line breaks and other control characters. |
-
-`ParserUtil#parseName` and `parseAddress` delegate normalization to their value types. The argument tokenizer removes only ordinary spaces from prefixed values, preserving control characters for validation. The command parser likewise preserves trailing control characters. This prevents invalid pasted names or addresses from becoming valid merely because a parser discarded their tabs or line breaks. Phone and email parsing retain their inherited surrounding-whitespace trimming.
-
-Space trimming and collapse scan input linearly. Name and address construction normalize once; parser and JSON-adapter boundaries use that construction directly and translate invalid values to their existing checked exceptions. The email length check runs before its constant-stack format scan. Automated regressions exercise the active command parser and actual JSON-file loader with 100,000-space runs, controls following those runs, and an oversized dotted email; they assert values or controlled failures without machine-specific timing limits. The inherited protected startup also blocks operational writes after a loading rejection, including successful `help`, `list` and `exit` commands and attempted mutations.
-
-Normalization is applied before equality and hashing of names and addresses. Case remains significant for value equality; role-specific duplicate-name matching is a separate contract. Role-aware commands, optional-field command handling and relationships are follow-up work. The active inherited `add` route uses these validators. The dormant `EditCommandParser` also uses them in direct tests, but `edit`, `clear` and `find` remain withdrawn from the command catalogue.
-
-The JSON schema is unchanged. Previously accepted records outside the new rules fail the inherited loading checks, as do identities made duplicate by space normalization. The [current protected startup](#current-protected-startup) preserves the rejected file and presents an empty protected view with recovery guidance. It allows help, list and exit without operational saves and blocks mutations and direct storage saves. `ContactValidationStartupTest` exercises those boundaries, shutdown and restart with numeric names, long phones, slash addresses, single-label and oversized emails, and normalization-created duplicates. Deliberately corrected compatible data loads and saves after restarting. Back up the original before deliberate corrections or inspecting a working copy with an older compatible build. Broader canonical loading and legacy-cutover work remain Vincent's [#84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84); this increment does not implement migration.
-
-### Ordered people registry foundation
-
-[Issue #70](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/70) adds `PeopleRegistry` and immutable `PeopleRegistryState` for subsequent canonical-model, command, and storage integration. The registry contains the existing immutable `Student`, `Tutor`, and `Parent` records in one global addition order. A stable `PersonId` identifies a record independently of its position in that order. The registry is dormant: active commands, cards, and saved AB3 data continue to use the inherited `Person` runtime.
-
-#### Registry APIs
-
-| API | Contract |
-| --- | --- |
-| `new PeopleRegistry()` | Creates an empty registry with zero allocated sequence numbers for every role. |
-| `new PeopleRegistry(PeopleRegistry)` | Copies records, their order, and all allocation state without sharing mutable collection state. |
-| `new PeopleRegistry(PeopleRegistryState)` | Imports a validated snapshot, retaining its record order and allocation state. |
-| `addStudent(ContactDetails, EducationLevel, Phone)` | Validates and adds a student using the required parent phone, returning the allocated `Student`. |
-| `addTutor(ContactDetails)` | Validates and adds a tutor with a required own phone, returning the allocated `Tutor`. |
-| `addParent(ContactDetails)` | Validates and adds a parent with a required own phone, returning the allocated `Parent`. |
-| `getPeople()` | Returns an immutable `List<PersonRecord>` snapshot in global addition order. Later registry changes do not alter an earlier snapshot. |
-| `getPerson(PersonId)` | Returns an `Optional<PersonRecord>` for the exact stable ID. |
-| `remove(PersonId, Predicate<PersonRecord> isReferenced)` | Consults the supplied relationship view before deleting the selected record. |
-| `exportState()` | Returns immutable `PeopleRegistryState` containing the ordered records and complete allocation map. |
-
-Each successful addition appends to the same list, regardless of role. Duplicate IDs and same-role business duplicates are rejected with `DuplicatePersonException`; the record types supply their established `isDuplicateOf` rules. A failed addition leaves records and allocation state unchanged.
-
-#### Allocation and state validation
-
-The complete `Map<PersonRole, Long> lastAllocatedSequences` stores the last successfully allocated sequence for `STUDENT`, `TUTOR`, and `PARENT`. Zero means that no ID has been allocated for that role. New IDs use positive sequences independently per role: adding `S1`, then `T1`, then `S2` leaves the global order `[S1, T1, S2]` and allocation values `STUDENT=2`, `TUTOR=1`, `PARENT=0`.
-
-Deletion never reduces an allocation value. For example, removing `S2` from that registry keeps `STUDENT=2`, so the next successful student addition receives `S3`. A value of `Long.MAX_VALUE` marks an exhausted role; another addition for that role is rejected before incrementing, with no overflow or change to registry state. Allocation values must be preserved even when every record of a role has been deleted.
-
-`PeopleRegistryState` defensively copies its ordered records and complete allocation map. It accepts only the known immutable `Student`, `Tutor`, and `Parent` implementations of `PersonRecord`, rejects duplicate IDs or business identities, and requires every allocation value to be nonnegative and at least as large as each retained ID sequence for that role. Missing role entries and invalid state are rejected. Import does not reconstruct counters from the remaining records. Copying, exporting, importing, and equality preserve both people order and allocation values, including exhausted or previously deleted sequences.
-
-The logical persistence fields are:
-
-| Field | Value to preserve |
-| --- | --- |
-| `people` | All role-specific records in global addition order, including their stable IDs. |
-| `lastAllocatedSequences` | A complete map for all three roles, including zero, deleted-record, and exhausted allocation values. |
-
-These are state contracts for [issue #79](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/79); this increment adds no JSON codec or schema change.
-
-#### Deletion and activation boundaries
-
-`remove` obtains the selected record and asks the caller's `isReferenced` predicate whether the canonical relationship view references it. A referenced record raises `ReferencedPersonException`; an unknown ID raises `PersonNotFoundException`. Neither rejection changes records, order, or allocation values. The predicate must not mutate the registry. The registry supplies this integration point without implementing lesson or attendance guards itself; later canonical-model work must pass the complete relationship check rather than maintaining a second writable store.
-
-The dormant registry can support subsequent aggregate and view foundations without replacing the active runtime. Contact validation in [issue #61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61) is merged. Broader canonical loading in [issue #84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84) and the remaining runtime prerequisites still gate coordinated person-command activation in [issue #85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). Existing command selectors and shared-lesson/search contracts are unchanged by this foundation.
+Invalid category, prefix, value, duplicate filter or incompatible time range fails parsing with clear feedback; an
+unsupported prefix cannot be absorbed into the preceding text value. The criteria parser validates the entire matrix
+but does not traverse relationships or filter a live list. The active router still rejects `search`. Own-contact,
+lesson and relational slices are staged in #87, #90 and their follow-ups; each activated route must reject filters it
+cannot yet execute, rather than silently ignoring them. The full matrix and conjunction rules remain the target.
 
 ### Dated attendance records
 
@@ -876,9 +927,9 @@ Compared with maintaining separate contact lists, timetables and attendance reco
 
 **Shared-lesson MVP target:** Lessons are created independently of student enrolment, including lessons with empty rosters. Each shared `Lesson` owns its currently enrolled student IDs; student lessons, rosters, and tutor schedules are retrieved from that canonical membership rather than copied into each student. Attendance is a separate dated record for one student and one lesson. Unenrolment removes current membership and retains attendance history; an existing historical entry can still be corrected or removed. A missing attendance entry means unrecorded, distinct from present and absent.
 
-**Delivered versus planned:** The [student foundation (#57)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/57), [tutor and parent foundations (#62)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/62), [ordered people registry (#70)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/70), [person-card components (#119)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/119), [role-filtered listing components (#122)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/122), [search criteria foundation (#64)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/64), and [lesson scheduling values (#63)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/63) provide independently tested APIs. The registry, new cards, and role-filtered listing remain dormant. [Inline help (#68)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/68) and [safe file replacement (#66)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/66) are connected to the active inherited contact runtime.
+**Delivered versus planned:** The [student foundation (#57)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/57), [tutor and parent foundations (#62)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/62), [ordered people registry (#70)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/70), [person-card components (#119)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/119), [role-filtered listing components (#122)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/122), [search criteria foundation (#64)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/64), and [lesson scheduling values (#63)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/63) provide independently tested APIs. The registry, canonical cards and role-filtered listing are now connected to the active people session. [Inline help (#68)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/68) and [safe file replacement (#66)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/66) are connected to the active canonical people runtime.
 
-Canonical people and shared-lesson runtime integration remain tracked in [#76](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/76), [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77), [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85), and their dependent command, storage, and retrieval issues. Compatible persistence, protected loading, and failed-save rollback remain activation gates. The requirements below describe the intended product; they do not claim that role-aware commands, shared lessons, enrolment, attendance, or history are currently available. Each feature owner updates implementation evidence and feature documentation as those increments are delivered.
+Canonical people activation and the remaining shared-lesson integration are tracked in [#76](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/76), [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77), [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85), and their dependent command, storage, and retrieval issues. Compatible persistence, protected loading, and failed-save rollback remain activation gates. The requirements below describe the intended product; role-aware add/list are active, while shared lessons, guarded deletion, enrolment, attendance and history remain planned. Each feature owner updates implementation evidence and feature documentation as those increments are delivered.
 
 ### User stories
 
@@ -994,6 +1045,11 @@ Person selectors in these target use cases are positive indices from the current
 * 2a. A condition is invalid, unavailable in this slice or incompatible with the category: PonHub explains the supported syntax without changing data. The administrator may resubmit at step 1.
 * 3a. No record matches: PonHub displays a successful empty result, and the use case ends. Unfiltered catalogue retrieval includes shared lessons with empty rosters.
 * 4a. The lesson does not exist or the date is invalid: PonHub reports the error without changing data or the people list.
+
+**Query design:** #80 supplies the read-only catalogue, stable-ID lookup, current roster/student lessons and indexed
+lesson filtering through the [prepared query backend](#indexed-lesson-query-projections-80). Current membership
+comes only from Lesson-owned IDs. People search routes, dated roster attendance and history remain separate slices;
+this use case's command/UI flow begins only once its runtime integration preconditions hold.
 
 **Postconditions:** The requested read-only view is displayed. Operational data is unchanged; lesson and roster results preserve the current people filter, order and indices.
 
@@ -1182,58 +1238,62 @@ Use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-projec
 
 ### Inline help and supported routes
 
-1. Launch the built JAR using Java 25 in a fresh folder. Run `help`, then `help add`, `help delete`, `help list`, `help help`, and `help exit`. Each topic must match its actual active parser and supply a runnable example. Requesting `help exit` must leave the application open.
+1. Launch the built JAR using Java 25 in a fresh folder. Run `help`, then `help add`, `help list`, `help help`, and `help exit`. Each topic must match its actual active parser and supply a runnable example. Requesting `help exit` must leave the application open.
 2. Select a person card, type an unfinished command, and choose Help from the menu. Repeat with F1 while focus is in the command box and in Result Display. Expect identical overview guidance, no separate window, unchanged card selection and unchanged unfinished input.
-3. Run `help ADD`; expect the same content as `help add`. Run `help remove`, `help clear`, and `help addlesson`; expect an unknown-topic message directing you to `help`. Run `help add delete`; expect the help usage after `Invalid command format!`.
+3. Run `help ADD`; expect the same content as `help add`. Run `help remove`, `help delete`, `help clear`, and `help addlesson`; expect an unknown-topic message directing you to `help`. Run `help add delete`; expect the help usage after `Invalid command format!`.
 4. Resize to the minimum width. Run `help add`, scroll to its last example and back to the top. Expect wrapped, readable text and a working vertical scrollbar. Request another topic while scrolled down; it starts at the beginning.
-5. Run `edit 1 n/Alex`, `clear`, and `find Alex`. Expect `Unknown command.` and unchanged people/data. Run `list extra` and `exit extra`; expect their usage messages and no list change or exit.
+5. Run `delete 1`, `edit 1 n/Alex`, `clear`, `find Alex`, `search c/student` and `lessons`. Expect `Unknown command.` and unchanged people/data. Run `list extra` and `exit extra`; expect their usage messages and no list change or exit.
 6. Compare the operational file before and after help; it must be byte-for-byte unchanged, and a missing operational file must remain missing. The automated failing-storage test covers help without operational write access. Preference saving at application shutdown remains separate.
 
-Repeat the topic/example checks whenever a feature owner registers another command. Broader shared-lesson workflow and published-site checks remain pending the owners' integration; passing help checks alone does not establish completion of the broader team target. That complete target is separate from the Week 8 first-increment requirement.
+Repeat the topic/example checks whenever a feature owner registers another command. Broader shared-lesson workflow and published-site checks remain pending the owners' integration; passing help checks alone does not establish completion of the broader team target. These checks do not claim delivery of unavailable feature routes.
 
 ### Compact windows and active contact cards
 
 1. In an isolated working folder, launch the application on a 1280×720 display at 150% scaling and on a 1920×1080 display at 100% and 125%. Record the OS, scaling, Java version and usable desktop work area. The complete window must fit inside that work area; menu actions, command entry, results and the people list must remain reachable. Logical-size previews are useful checks, but do not replace actual platform/scaling results.
 2. Resize to the minimum window size. Run `help add` and scroll to the final example. Scroll the people list to its last card. Expect separate usable result and people scrollbars, with the command box and menus still visible.
-3. Add contacts with a long name, postal address, unbroken email and tag using the active syntax. Run `list` followed by `help add` to refresh the cards, then narrow, widen and narrow the window again. Expect full values to wrap within the card, without horizontal overflow or tag ellipsis; scroll vertically to reach the bottom of a tall card and the final person.
+3. Add role-aware people with a long valid name, postal address and unbroken email using the active syntax, such as `add r/tutor n/Alexandra Catherine Elizabeth Montgomery Wellington p/001234567890123 e/alexandracatherineelizabethmontgomerywellington@example.com a/123 Long Residential Avenue Clementi District Block 456 Unit 12-345 Singapore 123456`. Run `list` followed by `help add` to refresh the cards, then narrow, widen and narrow the window again. Expect full values to wrap within the card without horizontal overflow; scroll vertically to reach the bottom of a tall card and the final person. Canonical add does not accept tags; inherited long-tag wrapping remains covered separately by compatibility regressions.
 4. Close the application and restart with the retained preferences. Valid sizes and coordinates remain unchanged. In the isolated folder, test an oversized saved window, coordinates from a removed monitor and a still-connected monitor to the left or above the primary display. Expect an oversized/offscreen window to fit a current work area, while valid secondary-monitor coordinates remain usable.
 
 Automated bounds regressions cover scaled work areas, desktop bars, removed and secondary monitors, partial overlap and invalid saved dimensions. Actual-FXML layout checks use isolated fixture data; they do not establish Windows or Linux font/scaling behavior. Keep real display results in issue #128.
 
 ### Planned person-index integration checks
 
-Run these checks when the canonical people view and corresponding commands are activated. They are acceptance checks for the confirmed selector boundary, not claims that the current inherited runtime supports shared lessons or stable person IDs. Existing lesson references use `lid/LESSON_ID` throughout these target routes.
+Role-filtered listing and add/failure checks in steps 1 and 4 are active. Steps 2 and 3 require later
+guarded deletion and lesson/result routes; follow the [shared selector contract](#shared-lesson-target-contract).
 
-1. Prepare records with different stable IDs and current-view positions. Filter the people list to two Students whose IDs are, for example, `S2` and `S5`; verify their cards show positions `1` and `2` separately from those IDs. `delete 1` must target the first current card, subject to its relationship guards, rather than person `S1` or the first unfiltered record. Verify `delete S2`, zero, a negative index and an index beyond the current people-list size are rejected without changing data.
-2. Exercise each activated enrolment, unenrolment, mark, unmark and history command using the student's current people-list index. Verify the command resolves that index once to the same stable Student ID used by its internal query or mutation. A stable ID such as `S2` supplied where the student index is required must be rejected. A Tutor or Parent at a valid position must fail a Student-only command without changing data; a valid roster row position is not a substitute for the people-list index.
-3. Run `lessons si/1` when that route is available. Verify its student filter resolves position `1` in the current filtered people list to the stable Student ID used by the internal lesson query. Reject an out-of-range index, a non-Student target and the superseded external `sid/S2` form. The internal Student-ID query remains valid and unchanged.
-4. Display lesson catalogue, roster and history results, including results whose own row positions differ from the people list. Verify the people filter, order and card indices stay unchanged; the next person command still targets the same current people card. Apply another people filter or ordering, recheck its displayed indices, and verify a command uses that new people view.
-5. After a successful person-list change, verify current-view positions are refreshed while surviving stable IDs and stored relationships remain intact. On a failed validation or save, verify the records and prior people view are preserved. Restart with supported data and confirm persisted references use stable IDs rather than previously displayed indices.
+1. On a mixed-role dataset, run `list`, `list r/student`, `list r/TUTOR` and `list r/parent`.
+   Verify global relative order and counts; repeat with no matching records for a successful empty role.
+   Reject `list r/`, `list r/all`
+   and `list r/student r/parent` without changing the previous view or data.
+2. Filter to Students whose stable IDs differ from positions, such as `S2`/`S5` at `1`/`2`.
+   `delete 1` targets the first card subject to relationship guards. Reject `delete S2`, zero,
+   negative and out-of-range indices; Student-only commands reject a Tutor/Parent at a valid position.
+3. Display lesson/roster/history results, then use a people selector. Verify the same people card is
+   selected and its filter/order is preserved. Exercise `lessons si/1` against the current Student card;
+   reject wrong-role/range and superseded `sid/S2` input. Existing lesson references use `lid/`.
+4. Add a person successfully: expect new record last, all-role view and refreshed positions. Trigger
+   validation/save failure: expect unchanged records, allocation counters and previous people view,
+   including its role filter and selected card.
+   Restart with compatible data: surviving stable IDs and stored references remain intact.
 
-### Dormant person-card developer preview
+<a id="dormant-person-card-developer-preview"></a>
 
-`PeopleView` now derives the current role-filtered people list from one supplied `PonHubData` root. It retains a single unmodifiable observable list, preserving global relative order and giving `PersonIndexResolver` and `PersonRecordListPanel` the same current records. The panel renders positions separately from stable IDs, shows the current count and an empty placeholder, and wraps cards inside a vertically scrolling list. It never owns a writable registry.
+<a id="planned-people-card-display-checks"></a>
 
-The root does not publish mutation events. Its owner must call `refresh()` after committed state replacement or rollback, on the JavaFX application thread while controls are attached. Refresh preserves the selected role; a committed addition's reset to all roles belongs to the coordinated add workflow. Parse people-list arguments before applying `setRoleFilter`; invalid arguments leave both view and root unchanged. Command feedback can use `PersonRecordListData` with this current list and filter.
+### People-card display checks
 
-This adapter and panel remain dormant: `ModelManager`, `MainWindow`, command dispatch and storage still use the inherited runtime. At #85's cutover, create the view over the single loaded canonical root, pass its list to both cards and person-index consumers, connect list/add and compatible loading together, and refresh it after commit/rollback. Do not place a parallel canonical store beside the active legacy store. #77 remains open for coordinated activation and its outstanding actual display checks; #79, #82 and #84 remain safety gates.
+Perform these checks in the active application and record the platform, build and actual result. Isolated preview
+instructions are preserved in [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77).
 
-These checks exercise prepared components, not a supported application command. Run `seedu.address.ui.PersonRecordCardPreview.main` from the IDE's test source set with Java 25 and the test runtime classpath. It opens an isolated fixture list and never reads or writes application records or preferences.
-
-1. Launch with the width and height arguments below. The effective logical sizes approximate the listed display conditions; repeat with actual system scaling on an available corresponding display when checking platform-specific fonts.
-
-   | Display condition | Fixture arguments |
-   | --- | --- |
-   | 1280×720 at 150% | `853 480` |
-   | 1920×1080 at 100% | `1920 1080` |
-   | 1920×1080 at 125% | `1536 864` |
-
-2. Check the student: `1.` is its current-view position, while `S9223372036854775807` is its stable ID. The level and parent phone remain readable; own phone, email, and address show `Not provided`.
-3. Check the tutor's long name, unbroken email, and postal address. Expect every complete value to wrap within the available width, including leading phone zeros, with no overlap or ellipsis hiding content.
-4. Launch with `320 480` to stress a narrow people panel. Scroll through the whole tutor card to the parent card. Expect the required parent own phone, separate role/ID line, and missing optional fields to remain readable; no horizontal scrolling is needed.
-5. Close the preview. Active application routes and operational files remain unaffected. Repeat these checks in the actual people view when #77/#85 activate its canonical wiring.
-
-Local verification rendered the actual FXML at all four logical sizes and checked wrapped-label widths, complete preferred text height, and access to the last card by scrolling. This verifies effective viewport behavior rather than actual OS scaling on every supported platform.
+1. Use all roles, absent/present optional contacts, leading-zero phones and long names/email/addresses.
+   Verify index and stable ID are separate, role-required fields remain readable, and absent contacts
+   show `Not provided`.
+2. On 1280×720 at 150% and 1920×1080 at 100%/125%, resize and scroll through an entire tall card to the
+   last record. Complete values must wrap without overlap or hidden content; record the actual platform,
+   scaling and build. Logical preview sizes alone do not establish these results.
+3. Filter/refresh the list and repeat: current positions, count and empty placeholder update correctly;
+   recycled cells show the correct person. Coordinate whole-window checks with
+   [#128](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/128).
 
 Given below are instructions to test the app manually.
 
@@ -1244,81 +1304,64 @@ testers are expected to do more *exploratory* testing.
 
 ### Launch and shutdown
 
-1. Initial launch
+1. Build or obtain the matching `ponhub.jar`, copy it to a disposable empty JAR folder, and launch
+   from that folder's terminal with Java 25: `java -jar ponhub.jar`. Expect the canonical GUI and an empty
+   people view, with the initial window inside the current desktop work area. Run help/list/exit;
+   `data/ponhub.json` remains absent, and preferences may save separately.
+2. Relaunch, add all roles with the active examples in the UG, then exit. Expect supported JSON only after
+   a successful add. Restart the same JAR and verify people, stable IDs and global creation order.
+3. Resize and move the window, close it and relaunch the same JAR. Expect retained geometry from
+   `preferences.json` when it fits a current screen; oversized or offscreen preferences are adjusted
+   into an available desktop work area. Select a different missing path with `--data=data/another-ponhub.json`; expect an
+   empty dataset and the same preference location in the JAR folder, without touching the previous
+   operational file. Launch the JAR from another working directory and confirm data/preferences/logs
+   still remain in the JAR folder.
+4. Repeat with `java -jar ponhub.jar --data="separate store/ponhub.json"`. Confirm the status footer and
+   subsequent successful save/reload use that selected path. Keep a legacy `data/addressbook.json` in the
+   JAR folder and verify default startup/add/exit leaves its bytes unchanged. Reject blank `--data=`,
+   `../outside.json`, an absolute path outside the JAR folder and a symbolic-link escape before any
+   operational read/write outside application home.
 
-   1. Download the JAR file and copy it into an empty folder.
+### Canonical people commands and unsuccessful saves
 
-   1. Double-click the JAR file.<br>
-      Expected: The GUI opens with a set of sample contacts, with its initial window inside the current desktop work area.
-
-1. Saving window preferences
-
-   1. Resize the window to an optimal size. Move the window to a different location. Close the window.
-
-   1. Relaunch the app by double-clicking the JAR file.<br>
-       Expected: The most recent window size and location are retained when they fit a current screen; oversized or offscreen preferences are adjusted into an available desktop work area.
+1. Add a Tutor, Student and Parent, omitting optional Student contacts. Add a second student with the
+   same parent phone and a different name. Expect distinct stable IDs, readable role-specific cards and
+   the global creation order after restart. Run `list r/student`, `list r/TUTOR` and `list r/parent`;
+   positions renumber from one while stored IDs and relative order remain unchanged.
+2. Select a Student card after role filtering. Try a duplicate Student with the same normalized name
+   and parent phone, a missing required field, unknown/repeated prefixes, and a Tutor with `l/`. Expect
+   rejection and unchanged file bytes, records, counters, filter and selection. Reject `list r/all`,
+   `list r/` and two role prefixes without changing the previous view. A valid empty role result succeeds.
+3. Use a disposable save-failure setup: retain the pre-command file and make the operational location
+   unwritable for the app account, or use the automated failing-writer seam. Attempt a valid addition;
+   expect no success message, publication or ID consumption. Restore access and retry. The successful
+   record uses the next unconsumed ID and appears last in the all-role view; restart verifies persistence.
+4. With a selected card, request help from the menu/F1 and through the command box. Expect preserved
+   records/filter/selection; menu/F1 additionally retain unfinished text. Run unavailable delete, search
+   and lesson commands; normal sessions report an unknown command without touching data or selection.
 
 ### Contact validation in the current increment
 
-Use the inherited contact commands below; the planned role-aware commands are not required for these checks. Run them in a test copy of your data.
+Use role-aware commands in a disposable selected data file.
 
-1. Enter `add n/  Anne-Marie   O'Neil  p/00123456 e/anne%school@example.com a/  Blk 10,   #01-02  `<br>
-   Expected: One contact is added with name `Anne-Marie O'Neil`, phone `00123456`, and address `Blk 10, #01-02`. The punctuation, email and leading zeros are retained.
-1. Try `add n/Test User p/1234567890123456 e/test@example.com a/Blk 10` and `add n/Test User p/123 e/test@localhost a/Blk 10`.<br>
-   Expected: Each command reports the corresponding phone or email constraints and adds nothing.
-1. Try `add n/Test2 User p/123 e/test@example.com a/Blk 10` and `add n/Test User p/123 e/test@example.com a/Blk 10/Unit 2`.<br>
-   Expected: Each command reports the corresponding name or address constraints and adds nothing.
-1. Close and reopen the app.<br>
-   Expected: The successfully saved contact retains the normalized name/address, email and leading-zero phone.
-1. In a disposable folder, prepare separate copies of a previously valid contact file containing a numeric name,
-   a phone longer than 15 digits, an address with `/`, or a single-label email domain. Also prepare two records
-   named `Alex  Tan` and `Alex Tan`, which become duplicates after normalization. Record each file's bytes and
-   start the app with it.<br>
-   Expected: Recovery guidance and an empty protected view. `help`, `list` and `exit` preserve the original bytes;
-   attempted `add` and `delete` are blocked. Closing and restarting still preserves and rejects the same file.
-1. Form an email from 5,000 copies of `a.` followed by `a@example.com`, then paste it into the inherited add
-   format. Repeat with long domain-hyphen and domain-label runs.<br>
-   Expected: Email constraint feedback without a crash or a saved contact. A saved file containing any such
-   oversized email starts a protected session with its bytes preserved. Correct a separate compatible working
-   copy deliberately, then restart; valid contact values must load and remain writable.
+1. Enter `add r/tutor n/  Anne-Marie   O'Neil  p/00123456 e/anne%school@example.com a/  Blk 10,   #01-02  `.
+   Expect normalized name `Anne-Marie O'Neil` and address `Blk 10, #01-02`, retaining punctuation,
+   email and phone zeros. Restart: the saved values remain intact.
+2. Try `add r/tutor n/Test User p/1234567890123456 e/test@example.com a/Blk 10`, then
+   `add r/tutor n/Test User p/123 e/test@localhost a/Blk 10`. Expect the relevant phone/email constraints
+   and no addition. Likewise reject `n/Test2 User` and `a/Blk 10/Unit 2` in otherwise valid role-aware input.
+3. Paste an email consisting of 5,000 `a.` repetitions followed by `a@example.com` into otherwise valid
+   add input. Expect email constraints without a crash or saved contact.
+4. In separate copies of supported JSON, introduce an invalid contact or same-role records with the
+   same identifying phone and names `Alex  Tan`/`Alex Tan`, becoming duplicates after normalization.
+   Expect protected startup and original bytes preserved through help/list/exit and attempted mutations.
+   Use the [Storage recovery procedure](#current-protected-startup) on a deliberately corrected working copy.
 
-### Deleting a person
+### Planned guarded deletion
 
-The following small deletion checks apply to the current inherited contact runtime. Canonical guarded deletion must also pass the planned person-index and shared-lesson checks.
-
-1. Deleting a person while all persons are being shown
-
-   1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
-
-   1. Test case: `delete 1`<br>
-      Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.
-
-   1. Test case: `delete 0`<br>
-      Expected: No person is deleted. The status message shows error details.
-
-   1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
-      Expected: Similar to previous.
-
-### Prepared canonical people sample checks
-
-Use these checks in isolated developer code or a debugger with the prepared classes. The
-active app does not load this fixture. The helper can be obtained with
-`PeopleSampleDataUtil.getSamplePeopleRegistry()` and its `getPeople()` result supplied to
-`PersonRecordListData`; build the selected record list from the projection's entries before
-calling `PersonIndexResolver`.
-
-1. Create two sample registries. Expect equal snapshots in order `T1, S1, P1, S2, T2, S3`.
-   Remove `P1` from one registry using the registry's unreferenced-record test seam; both
-   students' stored parent phones must remain `00987654`, and the second registry must retain
-   all six records. This fixture has no lesson or attendance references to query.
-2. Project all roles and each individual role. Expect all-role index `5` and tutor-filtered
-   index `2` to select `T2`. Pass each entry's person and displayed index to
-   `PersonRecordCardData`; expect stable IDs, required phones and `Not provided` for omitted
-   contacts, with phone zeros and email case preserved.
-3. Remove `S1` from a fresh sample and rebuild the student projection. Expect visible indices
-   `1` and `2` to select `S2` and `S3`. Export/import that registry and add a distinct student;
-   expect `S4`, with the new record appended. Export/import checks here use validated Java
-   snapshots; JSON-file and application-restart checks follow canonical persistence activation.
+`delete` is unavailable in this build. Once the guarded route activates, test current people-list
+selection, index/range/role validation and all relationship guards from the shared contract. Until then,
+`delete`, `delete 1` and `help delete` must not expose the inherited unguarded deletion implementation.
 
 ### Planned shared-lesson workflow checks
 
@@ -1332,13 +1375,78 @@ Run these as the corresponding routes become available, using an isolated suppor
 6. Exercise each activated search filter from the full matrix, including a parent with two linked children and a student with two differently scheduled lessons. Combined filters must not take the name from one child and the lesson from another, or the day from one lesson and the subject from another. Verify distinct-ID counts, successful empty results and empty-lesson discovery when appropriate.
 7. Restart and verify IDs, global creation order, membership and retained attendance. Trigger a save failure in an isolated test seam and verify the aggregate, allocation state and active views are restored. Read-only list/query/history/help operations must not rewrite operational data in the integrated runtime. Record the actual build, platform and results; do not treat unperformed checks as passes.
 
-### Planned canonical loading and recovery
+<a id="planned-canonical-loading-and-recovery"></a>
 
-These checks apply when canonical-format loading is activated. The current inherited runtime already protects rejected files, while canonical loading and initialization remain planned. Use copies in disposable test folders and keep the preserved original and backup outside all configured operational paths.
+### Canonical loading and recovery
 
-1. In a deliberately separate empty folder, launch the canonical build with no operational file. Expect a valid fresh supported root. Add delivered records and restart; expect successful restoration. This does not authorize replacing a legacy or rejected file in an existing folder.
-2. Close the app and make a valid manual edit to supported versioned JSON using its delivered schema, such as correcting a contact value while preserving valid IDs, allocation state and references. Restart; expect the edited records to load. Repeat with valid memberships and dated history. Human editing must remain usable.
-3. In independent copies, test malformed JSON, a null root/record, wrong record shapes, duplicate IDs or normalized duplicate people, dangling references, impossible dates, invalid allocation state, unreadable files and unsupported versions. Even a future-version file resembling legacy `persons` must be rejected before domain decoding or any write. Expect a controlled diagnostic and recovery instructions rather than a crash.
-4. Capture each rejected file's bytes, then attempt help/list/exit and a data mutation wherever the failure state permits them. The rejected operational bytes must remain identical, and mutations must be blocked. If startup exits safely instead, verify it reports the reason and performs no operational write. Preferences are checked separately.
-5. Test an unversioned AB3 file and formerly accepted contacts rejected by #61. Expect no guessed roles, silent conversion, record dropping or empty writable fallback. Follow the backup/manual re-entry guidance in a separate empty folder with explicitly chosen roles. Verify only the new supported root is writable and that the old file and preserved backup remain unchanged.
-6. Correct an invalid supported file on a working copy while the app is closed, then restart and verify complete validation succeeds. If recovery uses an older build for inspection, use another working copy rather than the preserved original or backup. Record actual outcomes and the implemented error/recovery path in the UG/DG when this feature lands; no importer or recovery command is assumed.
+These checks apply to the active selected-file loading boundary. Use copies in disposable test folders and keep the preserved original and backup outside all configured operational paths.
+
+1. In a deliberately separate empty folder, launch the canonical build with no operational file. Expect a valid empty unwritten root and no file after help/list/exit. Add delivered records and restart; expect successful restoration. This does not authorize replacing a legacy or rejected file in an existing folder.
+2. Close the app and make a valid manual edit to supported versioned JSON using its delivered schema, such as correcting a contact value while preserving valid IDs, allocation state and references. Restart; expect the edited records to load. Repeat with valid supported lessons/memberships. Nonempty attendance remains rejected until #83; repeat dated-history editing after that codec activates. Human editing must remain usable.
+3. In independent copies, test malformed JSON, a null root/record, wrong record shapes, duplicate IDs or normalized duplicate people, dangling lesson/roster references, invalid allocation state, unreadable files and unsupported versions. Nonempty attendance is rejected as unsupported; field-level date validation belongs to #83. Even a future-version file resembling legacy `persons` must be rejected before domain decoding or any write. Expect a controlled diagnostic and recovery instructions rather than a crash.
+4. Capture each rejected file's bytes, then attempt help/list/exit and a data mutation wherever the failure state permits them. The rejected operational bytes must remain identical, and mutations must be blocked. The app must show a protected empty view with recovery guidance; help advertises only help/list/exit and list includes the diagnostic. Preferences are checked separately. Repair or remove a working copy while the app remains open; add must stay blocked until restart.
+5. Test an unversioned AB3 file and formerly accepted contacts rejected by #61. Expect no guessed roles, silent conversion, record dropping or empty writable fallback. Follow the backup/manual re-entry guidance using a separate missing `--data=PATH` inside application home or a JAR copied into a separate empty folder with explicitly chosen roles. Verify only the new supported root is writable and that the old file and preserved backup remain unchanged.
+6. Correct an invalid supported file on a working copy while the app is closed, then restart and verify complete validation succeeds. If recovery uses an older build for inspection, use another working copy rather than the preserved original or backup. Record actual outcomes for the implemented UG/DG recovery path; no importer or recovery command is assumed.
+
+
+<a id="prepared-canonical-transaction-handoff-82"></a>
+
+### Canonical transaction boundary (#82)
+
+`PeopleView.beginTransaction()` creates a `CanonicalTransaction` from the view's own canonical root,
+so staged person-index resolution and staged operational data share one source. It copies the current
+role filter and retains the complete immutable `PonHubDataState`, including deleted-ID allocation
+history, exhaustion, lesson rosters and retained attendance. Operational equality includes counters.
+
+`CanonicalCommandExecutor` accepts that live view, a complete snapshot writer, and the authoritative
+protected-session error supplier. A staged command receives only the working aggregate and working
+view. Resolve a displayed index once with `PersonIndexResolver`, prepare changes (for example with
+`PersonAdditionCandidate`), and set the staged filter as needed. The executor saves changed state
+before installing it or returning success. Failures never refresh the live list; successful publication
+refreshes its existing observable projection. Unchanged data skips storage, and unchanged views are
+not refreshed, preserving selection for help/history and identical-status no-ops.
+
+The active canonical session invokes this boundary over its one live root. It supplies the protected
+writer and session error supplier and enforces the help/list/exit-only catalogue before dispatch after
+a rejected load. The guard also rejects staged operational changes while loading is protected.
+`JsonPonHubDataStorage` remains behind that protected adapter. The codec supports lessons and rosters but still rejects nonempty
+attendance until #83 supplies its codec. Never strip unsupported collections to save.
+
+Regression tests exercise the real aggregate, addition candidate, filtered view, people codec/reload,
+failed-save retry without consuming an ID, retained attendance, roster changes, protected writes,
+unsupported collection rejection, and JavaFX card selection at filtered index 1 with stable ID S7.
+The active application router uses these components through its single session. Component regressions
+support application verification but do not establish unperformed native display/platform results.
+
+
+<a id="prepared-protected-canonical-loading-84"></a>
+
+### Protected canonical loading (#84)
+
+`ProtectedPonHubDataStorage` wraps the canonical codec and file writer for one application session.
+Construct it with the configured operational `Path` and call `load()` once before building the canonical
+model. Only confirmed absence returns a fresh unwritten root. Supported input must pass the version
+classifier and full validation in the canonical codec before any snapshot is returned. Rejection status
+separates unreadable, corrupt, unsupported-version and legacy data. Unrelated programming failures are
+not reclassified as corrupt user files. Uninitialized sessions cannot write either.
+
+A rejected load throws `DataLoadingException`, records actionable path-specific guidance and blocks
+`saveData()` for the entire session. Neither external repair nor deletion unlocks that instance; restart
+with a new storage instance to validate recovery. No rejected snapshot is installed and no fallback
+empty state is returned. If the UI shows an empty protected view, label it as unavailable saved data.
+Preferences keep their existing separate storage/shutdown lifecycle.
+
+The active session installs the returned snapshot in its single root, passes `storage::saveData` and
+`storage::getDataLoadError` to `CanonicalCommandExecutor`, and enforces help/list/exit-only routing after
+rejected startup. `MainApp` connects that session, canonical cards and routing together.
+Do not point the legacy runtime at canonical data or bypass protection via `JsonPonHubDataStorage`.
+The current codec still rejects nonempty attendance; the wrapper delegates domain validation
+to that codec, so later compatible codecs participate without another writable store. Rejection of attendance payloads is not evidence of field-level validation by the future attendance codec.
+
+Verification includes missing paths, injected access denial, malformed/null/legacy/unsupported input,
+duplicate identities and invalid allocation history, no overwrite through direct saves or the canonical
+command boundary, and restart-only recovery after deliberate supported edits. Canonical session tests exercise actual add/list/help/exit routing. Application startup, configured-path,
+UI/card and packaged platform checks additionally verify the cutover; retained legacy regressions remain
+isolated and do not establish canonical application acceptance. For manual verification, use disposable files, record their original
+bytes, attempt reads and mutations in the protected session, repair a copy, restart and verify successful
+loading. Never delete the original as a recovery shortcut.

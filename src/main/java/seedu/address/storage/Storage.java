@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 import seedu.address.commons.exceptions.DataLoadingException;
+import seedu.address.model.Model;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
@@ -13,6 +14,14 @@ import seedu.address.model.UserPrefs;
  * API of the Storage component
  */
 public interface Storage {
+
+    /**
+     * Persists the complete operational state of a staged model before publication.
+     * The canonical runtime adapter must override this together with its model transaction contract.
+     */
+    default void saveModel(Model stagedModel) throws IOException {
+        saveAddressBook(stagedModel.getAddressBook());
+    }
 
     /**
      * Returns recovery guidance when a rejected operational file has locked this session against writes.

@@ -10,7 +10,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.PersonRole;
 
 /**
- * A detached parser for the proposed people-list arguments, without command routing or view changes.
+ * Parses canonical people-list arguments without changing the current view.
  */
 public final class PeopleListParser {
 

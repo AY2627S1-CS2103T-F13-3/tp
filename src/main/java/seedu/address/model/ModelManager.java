@@ -39,6 +39,32 @@ public class ModelManager implements Model {
         this(new AddressBook(), new UserPrefs());
     }
 
+    @Override
+    public ModelTransaction<Model> beginTransaction() {
+        AddressBook before = new AddressBook(addressBook);
+        ModelManager staged = new ModelManager(before, userPrefs);
+        staged.filteredPersons.setPredicate(filteredPersons.getPredicate());
+        return new ModelTransaction<>() {
+            @Override
+            public Model getStagedModel() {
+                return staged;
+            }
+
+            @Override
+            public boolean hasOperationalChanges() {
+                return !before.equals(staged.addressBook);
+            }
+
+            @Override
+            public void commit() {
+                if (hasOperationalChanges()) {
+                    addressBook.resetData(staged.addressBook);
+                }
+                filteredPersons.setPredicate(staged.filteredPersons.getPredicate());
+            }
+        };
+    }
+
     //=========== UserPrefs ==================================================================================
 
     @Override

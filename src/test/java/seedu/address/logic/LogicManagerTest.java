@@ -128,6 +128,69 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_failedDelete_preservesFilteredViewAndObservableList() throws Exception {
+        Person other = new PersonBuilder(AMY).withName("Other Person").build();
+        model.addPerson(other);
+        model.addPerson(AMY);
+        model.updateFilteredPersonList(AMY::equals);
+        ReadOnlyAddressBook before = new seedu.address.model.AddressBook(model.getAddressBook());
+        var visible = model.getFilteredPersonList();
+        int[] notifications = {0};
+        visible.addListener((javafx.collections.ListChangeListener<Person>) change -> notifications[0]++);
+        int[] saves = {0};
+        JsonAddressBookStorage failing = new JsonAddressBookStorage(temporaryFolder.resolve("failed.json")) {
+            @Override
+            public void saveAddressBook(ReadOnlyAddressBook staged) throws IOException {
+                saves[0]++;
+                assertEquals(before, model.getAddressBook());
+                assertEquals(java.util.List.of(other), staged.getPersonList());
+                throw DUMMY_IO_EXCEPTION;
+            }
+        };
+        logic = new LogicManager(model, new StorageManager(failing,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json"))));
+
+        assertThrows(CommandException.class, () -> logic.execute("delete 1"));
+        assertEquals(before, model.getAddressBook());
+        assertSame(visible, model.getFilteredPersonList());
+        assertEquals(java.util.List.of(AMY), visible);
+        assertEquals(0, notifications[0]);
+        logic.execute("list");
+        assertEquals(before.getPersonList(), visible);
+        assertEquals(1, saves[0]);
+    }
+
+    @Test
+    public void execute_failedAddThenSuccessfulAdd_doesNotPersistRejectedPerson() throws Exception {
+        int[] saves = {0};
+        JsonAddressBookStorage flaky = new JsonAddressBookStorage(temporaryFolder.resolve("retry.json")) {
+            @Override
+            public void saveAddressBook(ReadOnlyAddressBook staged) throws IOException {
+                if (saves[0]++ == 0) {
+                    throw DUMMY_IO_EXCEPTION;
+                }
+                assertTrue(model.getAddressBook().getPersonList().isEmpty());
+                super.saveAddressBook(staged);
+            }
+        };
+        logic = new LogicManager(model, new StorageManager(flaky,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json"))));
+        String amy = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY + EMAIL_DESC_AMY + ADDRESS_DESC_AMY;
+        assertThrows(CommandException.class, () -> logic.execute(amy));
+        logic.execute("list");
+        assertTrue(model.getFilteredPersonList().isEmpty());
+        var visible = model.getFilteredPersonList();
+        int[] refreshes = {0};
+        visible.addListener((javafx.collections.ListChangeListener<Person>) change -> refreshes[0]++);
+        logic.execute(amy.replace(NAME_DESC_AMY, " n/Other Person"));
+        assertTrue(refreshes[0] > 0);
+        assertSame(visible, model.getFilteredPersonList());
+        assertEquals("Other Person", visible.get(0).getName().fullName);
+        assertEquals(model.getAddressBook(), flaky.readAddressBook().orElseThrow());
+        assertEquals(2, saves[0]);
+    }
+
+    @Test
     public void execute_help_doesNotCreateOperationalDataFile() throws Exception {
         logic.execute("help");
         logic.execute("help add");
@@ -287,9 +350,7 @@ public class LogicManagerTest {
         // Triggers the saveAddressBook method by executing an add command
         String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY
                 + EMAIL_DESC_AMY + ADDRESS_DESC_AMY;
-        Person expectedPerson = new PersonBuilder(AMY).withTags().build();
-        ModelManager expectedModel = new ModelManager();
-        expectedModel.addPerson(expectedPerson);
+        ModelManager expectedModel = new ModelManager(model.getAddressBook(), model.getUserPrefs());
         assertCommandFailure(addCommand, CommandException.class, expectedMessage, expectedModel);
     }
 }

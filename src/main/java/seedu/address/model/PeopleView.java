@@ -12,7 +12,7 @@ import seedu.address.model.person.PersonRole;
 /**
  * A read-only current people view derived from one supplied canonical data root.
  * Matching records retain global creation order; list positions are independent of stable IDs.
- * This prepared component does not activate canonical commands or own writable operational data.
+ * The application session owns this projection without exposing writable operational data.
  * Callers refresh it after committed changes and rollback on the application's model thread.
  */
 public final class PeopleView {
@@ -38,6 +38,13 @@ public final class PeopleView {
         return readOnlyPeople;
     }
 
+    /**
+     * Starts a transaction over this view and its single canonical root.
+     */
+    public CanonicalTransaction beginTransaction() {
+        return new CanonicalTransaction(source, this);
+    }
+
     public Optional<PersonRole> getRoleFilter() {
         return roleFilter;
     }
@@ -53,7 +60,7 @@ public final class PeopleView {
 
     /**
      * Rebuilds the current role-filtered projection from the same root after a committed change or rollback.
-     * The source does not publish change events; its owner calls this method explicitly.
+     * This view's owner calls this method explicitly; lesson queries subscribe to the source's state property.
      * When attached to JavaFX controls, refreshes run on the JavaFX application thread.
      */
     public void refresh() {
