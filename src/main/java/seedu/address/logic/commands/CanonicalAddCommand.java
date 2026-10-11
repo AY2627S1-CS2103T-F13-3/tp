@@ -17,8 +17,8 @@ import seedu.address.model.person.exceptions.DuplicatePersonException;
 import seedu.address.model.person.exceptions.PersonIdExhaustedException;
 
 /**
- * A prepared role-aware addition that operates only on the executor's staged canonical root and view.
- * Runtime routing remains dormant until protected loading, commands and cards activate together.
+ * A role-aware addition that operates only on the executor's staged canonical root and view.
+ * The application session persists the candidate before publishing the shared people view.
  */
 public final class CanonicalAddCommand implements CanonicalCommandExecutor.StagedCommand {
     public static final String MESSAGE_SUCCESS = "New %s added: %s (%s).";
