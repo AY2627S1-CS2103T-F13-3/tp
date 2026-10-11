@@ -23,6 +23,7 @@ title: Developer Guide
 * Zhu Zhi Yu used OpenAI Codex for the UI startup error-handling fix and its regression tests.
 * Zhu Zhi Yu used OpenAI Codex for dormant role-aware add argument parsing, its immutable ID-free input, regression tests, and integration documentation.
 * Zhu Zhi Yu used OpenAI Codex for the dormant complete-state person-addition candidate and canonical add/list commands, their transaction/storage regression tests, and the related integration notes.
+* Zhu Zhi Yu used OpenAI Codex for the dormant canonical people session, its protected routing and shared-root integration tests, and the corresponding developer integration notes.
 * Zhu Zhi Yu used OpenAI Codex for constant-stack email validation that preserves the inherited contact rules, its parser/file-loading regressions, and the related implementation and manual-testing notes.
 * Zhu Zhi Yu used OpenAI Codex to clarify the course-prescribed Java 25 and macOS runtime setup, release verification, and manual-testing documentation.
 * Zhu Zhi Yu used OpenAI Codex for PR review and Javadoc formatting corrections in the canonical aggregate foundation (#76).
@@ -728,11 +729,38 @@ Tutor/Parent at that position without searching another list; range/role failure
 
 These commands remain preparation for [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). Registry,
 aggregate, view, people/lesson storage, staged command transactions and `ProtectedPonHubDataStorage`
-foundations are merged. Application loading and the coordinated single-root runtime adapter remain pending;
-they still gate loader/add/list/card activation. The active catalogue
+foundations are merged. The prepared session below connects them without activating the application.
+Coordinated application loading and card integration still gate loader/add/list/card activation. The active catalogue
 continues to use inherited add/delete/list; `list r/student` is rejected. Canonical storage supports lessons and
 rosters but rejects nonempty attendance until its codec arrives; see Storage above. Legacy delete must retire at cutover
 until guarded canonical deletion is available.
+
+### Prepared canonical people session
+
+`CanonicalPeopleSession` loads the configured path once through `ProtectedPonHubDataStorage` and owns one
+private `PonHubData` root. Its `PeopleView`, `CanonicalCommandExecutor` and lifetime `LessonQueries` component
+share that root. Callers receive immutable data snapshots and the same unmodifiable observable people list;
+the session does not expose writable operational data. Execute on the single model thread, or the JavaFX
+application thread once controls are attached.
+
+The session has its own prepared `add`, `list`, `help` and `exit` routes and guidance, independent of the active
+legacy `CommandCatalog`. It parses role-aware additions and listings before staged execution. Changed data
+is saved through the protected writer before publication, ID success feedback or reset to all roles. Parse,
+domain and save failures leave the original data, allocation counters and visible filter/list unchanged.
+Read-only commands perform no operational saves.
+
+A confirmed missing file starts an unwritten empty store. A rejected file produces a protected empty view,
+with its original bytes preserved and recovery guidance retained. Only `help`, `list` and `exit` are available
+in that session; mutation and unknown routes reject before argument parsing. Help advertises the permitted
+routes, and list feedback includes the load error so the empty view cannot be mistaken for saved records.
+External repair or removal does not unlock that session; recovery requires a new session after deliberate
+repair or selection of a separate supported path.
+
+`CanonicalPeopleSessionTest` exercises the real protected loader, router, staged commands and snapshot writer.
+These prepared-component checks do not establish actual application startup, native UI/card behavior or
+platform acceptance. This increment leaves `MainApp`, the active catalogue and `MainWindow` on the inherited
+runtime. The coordinated #77/#85 cutover must connect this session to application startup and cards, retire
+legacy delete, align active help and verify actual save/restart/failure behavior with #84's owner.
 
 <a id="role-filtered-people-listing-foundation"></a>
 <a id="prepared-person-record-cards"></a>
