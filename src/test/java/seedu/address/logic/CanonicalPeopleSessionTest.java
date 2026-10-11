@@ -45,7 +45,7 @@ import seedu.address.storage.ProtectedPonHubDataStorage.LoadStatus;
 import seedu.address.testutil.LessonQueryTestData;
 
 /**
- * Exercises the dormant runtime adapter through real startup, command strings and canonical persistence.
+ * Exercises the application session through real startup, command strings and canonical persistence.
  */
 public class CanonicalPeopleSessionTest {
     @TempDir

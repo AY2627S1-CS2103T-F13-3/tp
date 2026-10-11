@@ -3,6 +3,7 @@ package seedu.address.ui;
 import static java.util.Objects.requireNonNull;
 
 import javafx.beans.binding.Bindings;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -12,7 +13,7 @@ import seedu.address.model.PeopleView;
 import seedu.address.model.person.PersonRecord;
 
 /**
- * A dormant scrolling host for the canonical people's read-only observable projection.
+ * A scrolling host for the canonical people's read-only observable projection.
  * The model view supplies both the cards and command-index source; this panel owns no operational records.
  */
 public class PersonRecordListPanel extends UiPart<Region> {
@@ -26,13 +27,21 @@ public class PersonRecordListPanel extends UiPart<Region> {
     private ListView<PersonRecord> personListView;
 
     /**
-     * Creates a panel bound to the supplied canonical view without activating it in MainWindow.
+     * Creates a panel bound to the supplied canonical view.
      * Later filter changes and explicit model refreshes update the same list and renumber visible cards.
      */
     public PersonRecordListPanel(PeopleView peopleView) {
+        this(requireNonNull(peopleView).getPeople());
+    }
+
+    /**
+     * Creates a panel over the exact read-only list supplied by application Logic.
+     * Committed changes and filtering update that shared list without creating another data source.
+     */
+    public PersonRecordListPanel(ObservableList<PersonRecord> people) {
         super(FXML);
-        personListView.setItems(requireNonNull(peopleView).getPeople());
-        summary.textProperty().bind(Bindings.size(peopleView.getPeople()).asString("Showing %d person(s)."));
+        personListView.setItems(requireNonNull(people));
+        summary.textProperty().bind(Bindings.size(people).asString("Showing %d person(s)."));
         personListView.setCellFactory(list -> new PersonRecordListCell());
         personListView.setPlaceholder(new Label("No persons to display."));
     }

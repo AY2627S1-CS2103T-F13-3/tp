@@ -32,24 +32,13 @@ import seedu.address.model.query.LessonQuerySource;
 import seedu.address.storage.ProtectedPonHubDataStorage;
 
 /**
- * A prepared canonical session sharing one root across protected commands, people and lesson projections.
- * This single-model-thread adapter does not activate MainApp, the legacy catalogue or the card panel.
+ * The canonical application session sharing one root across protected commands, people and lesson projections.
+ * Command execution and attached controls use the single model/JavaFX application thread.
  * Rejected startup exposes an explicitly protected empty view, never a writable replacement for rejected data.
  */
 public final class CanonicalPeopleSession {
-    public static final String MESSAGE_ADD_USAGE =
-            "Usage: add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]\n"
-            + "       add r/tutor|parent n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]\n"
-            + "Roles and education levels are case-insensitive. Supply each lowercase prefix at most once.\n"
-            + "Optional values must be nonblank; l/ and pp/ are only allowed for students.\n"
-            + "Examples:\n"
-            + "add r/student n/Alex Tan l/P1 pp/91234567\n"
-            + "add r/tutor n/Mei Lee p/81234567 e/mei@example.com\n"
-            + "add r/parent n/Sam Tan p/91234567 a/10 Main Road";
-    public static final String MESSAGE_HELP_USAGE = "Usage: help [COMMAND]\n"
-            + "Shows the commands available in this session, or syntax and an example for one command.\n"
-            + "COMMAND is optional and case-insensitive. Supply at most one command word.\n"
-            + "Examples: help, help list";
+    public static final String MESSAGE_ADD_USAGE = CanonicalCommandCatalog.MESSAGE_ADD_USAGE;
+    public static final String MESSAGE_HELP_USAGE = CanonicalCommandCatalog.MESSAGE_HELP_USAGE;
 
     private static final Pattern BASIC_COMMAND_FORMAT =
             Pattern.compile("(?<commandWord>\\S+)(?<arguments>.*)", Pattern.DOTALL);
@@ -123,12 +112,11 @@ public final class CanonicalPeopleSession {
      * Returns only the routes available in this session, in help overview order.
      */
     public List<String> getCommandWords() {
-        return getDataLoadError().isPresent() ? List.of("help", "list", "exit")
-                : List.of("add", "list", "help", "exit");
+        return CanonicalCommandCatalog.getCommandWords(getDataLoadError().isPresent());
     }
 
     /**
-     * Routes prepared canonical commands without consulting or activating the legacy command catalogue.
+     * Routes supported canonical commands using this session's authoritative command catalogue.
      * Protection is checked before mutation parsing; read commands never persist operational data.
      *
      * @throws ParseException if a supported command has invalid arguments or an unprotected command is unknown.
@@ -177,30 +165,12 @@ public final class CanonicalPeopleSession {
     private String getHelp(String arguments) throws ParseException {
         String topic = arguments.strip().toLowerCase(Locale.ROOT);
         if (topic.isEmpty()) {
-            StringBuilder overview = new StringBuilder("PonHub commands available in this canonical session:\n");
-            for (String word : getCommandWords()) {
-                overview.append(word).append(" - ").append(getUsage(word).orElseThrow()).append("\n\n");
-            }
-            getDataLoadError().ifPresent(error -> overview.append(error).append("\n\n"));
-            return overview.append("Scroll this Result Display to read long guidance.").toString();
+            return CanonicalCommandCatalog.getOverview(getDataLoadError());
         }
         if (topic.chars().anyMatch(Character::isWhitespace)) {
             throw new ParseException(String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, MESSAGE_HELP_USAGE));
         }
-        return getUsage(topic).orElseThrow(() ->
+        return CanonicalCommandCatalog.getUsage(topic, getDataLoadError().isPresent()).orElseThrow(() ->
                 new ParseException(String.format(HelpCommand.MESSAGE_UNKNOWN_TOPIC, topic)));
-    }
-
-    private Optional<String> getUsage(String word) {
-        if (!getCommandWords().contains(word)) {
-            return Optional.empty();
-        }
-        return Optional.of(switch (word) {
-            case "add" -> MESSAGE_ADD_USAGE;
-            case "list" -> PeopleListParser.MESSAGE_USAGE;
-            case "help" -> MESSAGE_HELP_USAGE;
-            case "exit" -> ExitCommand.MESSAGE_USAGE;
-            default -> throw new IllegalArgumentException("Unsupported canonical command word: " + word);
-        });
     }
 }

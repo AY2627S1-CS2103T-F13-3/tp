@@ -15,8 +15,8 @@ import seedu.address.model.PonHubData;
 import seedu.address.model.PonHubDataState;
 
 /**
- * Prepared canonical command boundary for the single model thread; does not activate routing.
- * The runtime adapter supplies protected-session guidance and a complete compatible snapshot writer.
+ * Canonical command boundary for the application's single model thread.
+ * The application session supplies protected guidance and a complete compatible snapshot writer.
  * It must still enforce the protected session's allowed-command catalogue before calling this boundary.
  */
 public final class CanonicalCommandExecutor {
