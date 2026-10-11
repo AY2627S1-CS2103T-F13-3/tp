@@ -22,7 +22,7 @@ title: Developer Guide
 * Zhu Zhi Yu used OpenAI Codex to assist with the file-logging startup fallback, its isolated regression tests, and logging documentation.
 * Zhu Zhi Yu used OpenAI Codex for the UI startup error-handling fix and its regression tests.
 * Zhu Zhi Yu used OpenAI Codex for dormant role-aware add argument parsing, its immutable ID-free input, regression tests, and integration documentation.
-* Zhu Zhi Yu used OpenAI Codex for the dormant complete-state person-addition candidate, its transaction-preparation regression tests, and the related integration notes.
+* Zhu Zhi Yu used OpenAI Codex for the dormant complete-state person-addition candidate and canonical add/list commands, their transaction/storage regression tests, and the related integration notes.
 * Zhu Zhi Yu used OpenAI Codex for constant-stack email validation that preserves the inherited contact rules, its parser/file-loading regressions, and the related implementation and manual-testing notes.
 * Zhu Zhi Yu used OpenAI Codex to clarify the course-prescribed Java 25 and macOS runtime setup, release verification, and manual-testing documentation.
 * Zhu Zhi Yu used OpenAI Codex for PR review and Javadoc formatting corrections in the canonical aggregate foundation (#76).
@@ -610,9 +610,9 @@ Prefixes are lowercase and may appear once in any order. Role and education-leve
 
 **Shared contact policy:** Name, email and address validation delegates to the shared value types supplied by merged [#61 / PR #110](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/110). This parser reuses their validation and normalization rules without duplicating validators. The contact-policy dependency is satisfied; role-aware command activation remains separate #85 work.
 
-**Activation boundary:** The existing `AddCommandParser`, router and supported-command catalogue still handle legacy person records using the shared contact policy. The prepared parser does not check duplicate people, allocate even a provisional ID, reset the view, save data or perform rollback. Those behaviors remain #85 work after the canonical aggregate, compatible persistence, protected loading and transaction foundations are ready. At cutover, construct and commit the record through that single canonical root; never use a placeholder ID or a second writable person store.
+**Activation boundary:** The existing `AddCommandParser`, router and supported-command catalogue still handle legacy person records using the shared contact policy. The prepared parser does not check duplicate people, allocate even a provisional ID, reset the view, save data or perform rollback. The staged commands below prepare these behaviors through the merged transaction boundary; protected canonical loading and coordinated runtime adapter integration remain #85 gates. At cutover, construct and commit the record through that single canonical root; never use a placeholder ID or a second writable person store.
 
-Automated checks exercise all three roles, absent/present optional contacts, argument order/case, role restrictions, missing/blank/repeated/unknown fields, controls, phone bounds, immutable input invariants and unchanged active routing. Canonical duplicate detection, siblings sharing parent phones, committed ID allocation, save/reload and failed-save restoration remain integration tests under #85.
+Automated parser checks exercise all three roles, absent/present optional contacts, argument order/case, role restrictions, missing/blank/repeated/unknown fields, controls, phone bounds, immutable input invariants and unchanged active routing. Candidate and staged-command tests cover canonical duplicates, siblings, ID allocation, save/reload and failed-save restoration; application routing and restart acceptance remain #85 work.
 
 ### Staged person-addition candidate
 
@@ -626,13 +626,20 @@ and its ID. Preparation leaves the source and live data unchanged, including eve
 This seam remains dormant. The proposed ID is not reserved in operational state, and abandoned candidates
 consume no identity. The later single-threaded transaction must prepare from its current snapshot, save the
 complete candidate successfully, and then install it before returning success or resetting the people view.
-This helper performs no persistence, rollback, command dispatch, view refresh or runtime activation. Compatible
-storage, protected loading and transaction integration still gate coordinated add/list/card activation.
+This helper performs no persistence, rollback, command dispatch, view refresh or runtime activation. Protected
+canonical loading and runtime adapter integration still gate coordinated add/list/card activation.
 
 Regression tests cover all roles and optional contacts, siblings without a stored parent record, near-duplicate
 identities, normalized duplicate rejection, deleted-ID history, allocation exhaustion, retained relationships
-and immutable independent snapshots. Save/reload, failed-save restoration and visible success remain pending
-actual command/transaction integration.
+and immutable independent snapshots. Application routing and visible runtime acceptance remain pending.
+
+`CanonicalAddCommand` and `CanonicalListCommand` are prepared implementations of the staged transaction
+interface merged through [PR #170](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/170). Addition stages a complete
+candidate and all-role view with checked duplicate/exhaustion feedback; the executor saves before publishing
+and returning stable-ID success. Listing selects a role and reports its count without operational saves.
+`CanonicalPeopleCommandIntegrationTest` exercises these commands through the real parser/executor/storage seam.
+The active runtime remains inherited: protected canonical loading (#84) and the coordinated single-root
+command/card adapter (#77/#85) are still pending.
 
 ### Prepared person record cards
 
