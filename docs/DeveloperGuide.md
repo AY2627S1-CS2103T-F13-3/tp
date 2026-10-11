@@ -613,8 +613,9 @@ current people list. With students `[S4, S9]`, positions `1` and `2` select thos
 Tutor/Parent at that position without searching another list; range/role failures leave data and view unchanged.
 
 These commands remain preparation for [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). Registry,
-aggregate, view and people-only storage foundations are merged; failed-command/save rollback and protected
-canonical loading still gate coordinated loader/add/list/card activation on one root. The active catalogue
+aggregate, view, people-only storage and staged command transaction foundations are merged; protected
+canonical loading and coordinated runtime adapter integration still gate loader/add/list/card activation
+on one root. The active catalogue
 continues to use inherited add/delete/list; `list r/student` is rejected. People-only storage cannot save nonempty
 lesson/attendance collections until their codecs arrive; see Storage above. Legacy delete must retire at cutover
 until guarded canonical deletion is available.
