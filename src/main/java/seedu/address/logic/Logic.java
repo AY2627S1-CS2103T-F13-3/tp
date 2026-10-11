@@ -16,9 +16,9 @@ import seedu.address.model.query.StudentView;
 
 /**
  * API of the Logic component.
- * The shared-lesson retrieval declarations are reserved for the canonical model integration.
- * Until then, {@link LogicManager} reports that they are unavailable.
- * Once integrated, all retrieval lists are unmodifiable observable views that retain their identity across refreshes.
+ * Lesson retrieval delegates to the Model's canonical query source; the legacy Model reports it as unavailable.
+ * Attendance-history declarations remain reserved for their canonical integration.
+ * Supplied retrieval lists are unmodifiable observable views that retain their identity across refreshes.
  * Queries preserve the people view and stored data; committed changes and rollback refresh subscribed lists.
  * Weekdays sort Monday first and lesson IDs sort by their numeric sequence, not by their display strings.
  */
