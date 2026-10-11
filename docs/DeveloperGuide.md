@@ -464,7 +464,12 @@ the file while the session is running does not unlock it: recovery requires a re
 JSON syntax, root/version errors, invalid contact records and I/O failures become controlled loading
 errors. Explicit checks reject null person/tag entries; unrelated programming errors are not swallowed.
 Valid legacy contacts still load and save normally. This safety increment does not implement the new
-aggregate codec, automatic migration, general command rollback or no-save behavior in normal sessions.
+canonical runtime or automatic migration. The active inherited runtime now also uses
+[command transactions](#command-transactions): failed commands/saves leave live state unchanged,
+and read-only commands or operational no-ops skip saving. The prepared canonical codec and loading
+wrapper are separate from application activation.
+
+<!-- Ernest used OpenAI Codex for #102's source-checked startup/transaction guide corrections. -->
 
 Manual check: in a disposable working folder, place malformed JSON, `null`, or a versioned document in
 `data/addressbook.json` and record its bytes. Start the app and verify the recovery warning. Run help,
@@ -1257,15 +1262,20 @@ testers are expected to do more *exploratory* testing.
 
    1. Download the JAR file and copy it into an empty folder.
 
-   1. Double-click the JAR file.<br>
-      Expected: The GUI opens with a set of sample contacts. The window size may not be optimal.
+   1. Open a terminal in that folder and run `java -version`; confirm the
+      [prescribed Java 25 runtime](SettingUp.html#setting-up-the-project-on-your-computer).
+      Run `java -jar ponhub.jar`, substituting the actual downloaded filename if different.<br>
+      Expected: The GUI opens with sample contacts in the current inherited runtime.
+      Record the source commit, JAR hash, OS and Java distribution/version with the result.
 
 1. Saving window preferences
 
    1. Resize the window to an optimal size. Move the window to a different location. Close the window.
 
-   1. Relaunch the app by double-clicking the JAR file.<br>
-       Expected: The most recent window size and location are retained.
+   1. Relaunch with `java -jar ponhub.jar` from the same terminal folder and runtime.<br>
+      Expected: The saved size and position are restored. Display-change recovery must be checked
+      against the tested build; follow the actual resolution/scaling checks in
+      [#128](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/128), recording unavailable settings.
 
 ### Contact validation in the current increment
 
