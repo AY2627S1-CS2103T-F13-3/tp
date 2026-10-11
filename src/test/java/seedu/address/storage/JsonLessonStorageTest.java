@@ -39,7 +39,7 @@ import seedu.address.model.person.Phone;
 
 public class JsonLessonStorageTest {
     @TempDir
-    public Path directory;
+    Path directory;
     private final ObjectMapper mapper = new ObjectMapper();
     private PonHubDataState original;
 
@@ -77,57 +77,57 @@ public class JsonLessonStorageTest {
     public void decode_invalidLessonFields_rejectsWithoutChangingFileOrLiveState() throws Exception {
         for (String field : List.of("id", "tutorId", "day", "startTime", "endTime", "subject", "room",
                 "enrolledStudentIds")) {
-            reject(root -> lesson(root, 0).remove(field));
-            reject(root -> lesson(root, 0).putNull(field));
-            reject(root -> lesson(root, 0).put(field, 123));
+            reject(root -> getLessonNode(root, 0).remove(field));
+            reject(root -> getLessonNode(root, 0).putNull(field));
+            reject(root -> getLessonNode(root, 0).put(field, 123));
         }
-        reject(root -> lesson(root, 0).put("extra", "unknown"));
+        reject(root -> getLessonNode(root, 0).put("extra", "unknown"));
         reject(root -> root.put("lessons", "wrong type"));
         reject(root -> root.withArray("lessons").addNull());
-        reject(root -> lesson(root, 0).put("id", "L0"));
-        reject(root -> lesson(root, 0).put("day", "Someday"));
-        reject(root -> lesson(root, 0).put("startTime", "2400"));
-        reject(root -> lesson(root, 0).put("endTime", "0900"));
-        reject(root -> lesson(root, 0).put("endTime", "0800"));
-        reject(root -> lesson(root, 0).put("subject", ""));
-        reject(root -> lesson(root, 0).put("room", "bad room"));
-        reject(root -> lesson(root, 0).withArray("enrolledStudentIds").add("S1"));
-        reject(root -> lesson(root, 0).withArray("enrolledStudentIds").addNull());
-        reject(root -> lesson(root, 0).withArray("enrolledStudentIds").add(1));
+        reject(root -> getLessonNode(root, 0).put("id", "L0"));
+        reject(root -> getLessonNode(root, 0).put("day", "Someday"));
+        reject(root -> getLessonNode(root, 0).put("startTime", "2400"));
+        reject(root -> getLessonNode(root, 0).put("endTime", "0900"));
+        reject(root -> getLessonNode(root, 0).put("endTime", "0800"));
+        reject(root -> getLessonNode(root, 0).put("subject", ""));
+        reject(root -> getLessonNode(root, 0).put("room", "bad room"));
+        reject(root -> getLessonNode(root, 0).withArray("enrolledStudentIds").add("S1"));
+        reject(root -> getLessonNode(root, 0).withArray("enrolledStudentIds").addNull());
+        reject(root -> getLessonNode(root, 0).withArray("enrolledStudentIds").add(1));
     }
 
     @Test
     public void decode_invalidReferencesCountersAndClashes_rejectsWholeCandidate() throws Exception {
-        reject(root -> root.withArray("lessons").add(lesson(root, 0).deepCopy()));
-        reject(root -> lesson(root, 0).put("tutorId", "T99"));
-        reject(root -> lesson(root, 0).put("tutorId", "S1"));
-        reject(root -> lesson(root, 0).withArray("enrolledStudentIds").add("S99"));
-        reject(root -> lesson(root, 0).withArray("enrolledStudentIds").add("T1"));
+        reject(root -> root.withArray("lessons").add(getLessonNode(root, 0).deepCopy()));
+        reject(root -> getLessonNode(root, 0).put("tutorId", "T99"));
+        reject(root -> getLessonNode(root, 0).put("tutorId", "S1"));
+        reject(root -> getLessonNode(root, 0).withArray("enrolledStudentIds").add("S99"));
+        reject(root -> getLessonNode(root, 0).withArray("enrolledStudentIds").add("T1"));
         reject(root -> root.put("lastAllocatedLessonSequence", 4));
         reject(root -> root.put("lastAllocatedLessonSequence", -1));
         reject(root -> root.put("lastAllocatedLessonSequence", 1.5));
         reject(root -> root.put("lastAllocatedLessonSequence", "9"));
         reject(root -> {
-            lesson(root, 1).put("startTime", "0930").put("tutorId", "T1");
+            getLessonNode(root, 1).put("startTime", "0930").put("tutorId", "T1");
         });
         reject(root -> {
-            lesson(root, 1).put("startTime", "0930").put("room", "r1");
+            getLessonNode(root, 1).put("startTime", "0930").put("room", "r1");
         });
         reject(root -> {
-            lesson(root, 1).put("startTime", "0930").withArray("enrolledStudentIds").add("S1");
+            getLessonNode(root, 1).put("startTime", "0930").withArray("enrolledStudentIds").add("S1");
         });
     }
 
     @Test
     public void decode_reorderedReferencesAndAdjacentLessons_acceptsValidCandidate() throws Exception {
-        ObjectNode root = json();
+        ObjectNode root = createJson();
         var people = root.withArray("people");
         var records = new java.util.ArrayList<com.fasterxml.jackson.databind.JsonNode>();
         people.forEach(records::add);
         people.removeAll();
         records.reversed().forEach(people::add);
-        lesson(root, 1).put("tutorId", "T1").put("room", "r1");
-        lesson(root, 1).withArray("enrolledStudentIds").add("S1");
+        getLessonNode(root, 1).put("tutorId", "T1").put("room", "r1");
+        getLessonNode(root, 1).withArray("enrolledStudentIds").add("S1");
         var lessons = root.withArray("lessons");
         var first = lessons.get(0);
         var second = lessons.get(1);
@@ -137,16 +137,16 @@ public class JsonLessonStorageTest {
         assertEquals(loaded, JsonPonHubDataCodec.decode(JsonPonHubDataCodec.encode(loaded)));
     }
 
-    private ObjectNode json() throws IOException {
+    private ObjectNode createJson() throws IOException {
         return (ObjectNode) mapper.readTree(JsonPonHubDataCodec.encode(original));
     }
 
-    private ObjectNode lesson(ObjectNode root, int index) {
+    private ObjectNode getLessonNode(ObjectNode root, int index) {
         return (ObjectNode) root.withArray("lessons").get(index);
     }
 
     private void reject(Consumer<ObjectNode> edit) throws Exception {
-        ObjectNode root = json();
+        ObjectNode root = createJson();
         edit.accept(root);
         Path path = directory.resolve("rejected.json");
         Files.writeString(path, root.toString());
