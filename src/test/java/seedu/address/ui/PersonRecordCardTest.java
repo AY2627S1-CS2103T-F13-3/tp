@@ -4,20 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.FxTestUtil.runOnFxThread;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
@@ -52,31 +48,13 @@ import seedu.address.model.person.Phone;
 import seedu.address.model.person.Student;
 import seedu.address.model.person.Tutor;
 import seedu.address.model.util.PeopleSampleDataUtil;
+import seedu.address.testutil.FxTestUtil;
 
 public class PersonRecordCardTest {
 
-    private static final int FX_TIMEOUT_SECONDS = 15;
-
-    private static boolean hasStartedToolkit;
-
     @BeforeAll
     public static void startToolkit() throws Exception {
-        FutureTask<Void> ready = new FutureTask<>(() -> Platform.setImplicitExit(false), null);
-        try {
-            Platform.startup(ready);
-            hasStartedToolkit = true;
-        } catch (IllegalStateException e) {
-            // Reuse a toolkit already initialized by another test without attempting to restart it.
-            Platform.runLater(ready);
-        }
-        ready.get(FX_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-    }
-
-    @AfterAll
-    public static void stopToolkit() {
-        if (hasStartedToolkit) {
-            Platform.exit();
-        }
+        FxTestUtil.initializeToolkit();
     }
 
     @Test
@@ -84,7 +62,7 @@ public class PersonRecordCardTest {
         Student student = new Student(new PersonId("S" + Long.MAX_VALUE), new ContactDetails(new Name("Casey Tan")),
                 new EducationLevel("JC2"), new Phone("00987654"));
 
-        onFxThread(() -> {
+        runOnFxThread(() -> {
             Region root = new PersonRecordCard(student, 2).getRoot();
             layoutScene(root, 600, 480);
 
@@ -100,7 +78,7 @@ public class PersonRecordCardTest {
         Student student = new Student(new PersonId("S12"), contacts, new EducationLevel("S2"),
                 new Phone("00987654"));
 
-        onFxThread(() -> {
+        runOnFxThread(() -> {
             Region root = new PersonRecordCard(student, 4).getRoot();
             layoutScene(root, 600, 480);
 
@@ -116,7 +94,7 @@ public class PersonRecordCardTest {
         ContactDetails contacts = populatedContacts();
         Tutor tutor = new Tutor(new PersonId("T41"), contacts);
 
-        onFxThread(() -> {
+        runOnFxThread(() -> {
             Region root = new PersonRecordCard(tutor, 7).getRoot();
             layoutScene(root, 600, 480);
 
@@ -131,7 +109,7 @@ public class PersonRecordCardTest {
         Parent parent = new Parent(new PersonId("P11"), new ContactDetails(new Name("Beatrice Tan"),
                 Optional.of(new Phone("00987654")), Optional.empty(), Optional.empty()));
 
-        onFxThread(() -> {
+        runOnFxThread(() -> {
             Region root = new PersonRecordCard(parent, 3).getRoot();
             layoutScene(root, 600, 480);
 
@@ -142,7 +120,7 @@ public class PersonRecordCardTest {
 
     @Test
     public void layout_narrowAndRegularPeopleViews_wrapCompleteValuesAndReachLastCard() throws Exception {
-        onFxThread(() -> {
+        runOnFxThread(() -> {
             for (int width : new int[] {320, 853}) {
                 Region panel = PersonRecordCardPreview.createPeopleView();
                 layoutScene(panel, width, 480);
@@ -205,7 +183,7 @@ public class PersonRecordCardTest {
         assertEquals(new PersonId("S1"), PersonIndexResolver.resolve(Index.fromOneBased(1),
                 peopleView.getPeople()).getId());
 
-        onFxThread(() -> {
+        runOnFxThread(() -> {
             Region panel = new PersonRecordListPanel(peopleView).getRoot();
             layoutScene(panel, 853, 480);
             ListView<PersonRecord> list = getRecordList(panel);
@@ -235,7 +213,7 @@ public class PersonRecordCardTest {
                 Map.of(PersonRole.STUDENT, 7L, PersonRole.TUTOR, 0L, PersonRole.PARENT, 0L)));
         PeopleView view = new PeopleView(data);
         view.setRoleFilter(Optional.of(PersonRole.STUDENT));
-        onFxThread(() -> {
+        runOnFxThread(() -> {
             Region panel = new PersonRecordListPanel(view).getRoot();
             layoutScene(panel, 853, 480);
             ListView<PersonRecord> list = getRecordList(panel);
@@ -265,7 +243,7 @@ public class PersonRecordCardTest {
         PeopleView peopleView = new PeopleView(data);
         peopleView.setRoleFilter(Optional.of(PersonRole.PARENT));
 
-        onFxThread(() -> {
+        runOnFxThread(() -> {
             Region panel = new PersonRecordListPanel(peopleView).getRoot();
             layoutScene(panel, 853, 480);
             ListView<PersonRecord> list = getRecordList(panel);
@@ -288,7 +266,7 @@ public class PersonRecordCardTest {
         PeopleRegistryState state = new PeopleRegistryState(PersonRecordCardPreview.createRecords(),
                 Map.of(PersonRole.STUDENT, Long.MAX_VALUE, PersonRole.TUTOR, 1L, PersonRole.PARENT, 1L));
 
-        onFxThread(() -> {
+        runOnFxThread(() -> {
             for (int width : new int[] {320, 853, 1536, 1920}) {
                 Region panel = new PersonRecordListPanel(new PeopleView(peopleData(state))).getRoot();
                 layoutScene(panel, width, 420);
@@ -327,20 +305,6 @@ public class PersonRecordCardTest {
     @SuppressWarnings("unchecked")
     private static ListView<PersonRecord> getRecordList(Region panel) {
         return (ListView<PersonRecord>) panel.lookup("#personListView");
-    }
-
-    /**
-     * Executes toolkit-dependent assertions on the JavaFX thread with a bounded wait.
-     */
-    private static void onFxThread(Runnable assertions) throws Exception {
-        FutureTask<Void> task = new FutureTask<>(assertions, null);
-        Platform.runLater(task);
-        try {
-            task.get(FX_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            task.cancel(false);
-            throw e;
-        }
     }
 
     /**

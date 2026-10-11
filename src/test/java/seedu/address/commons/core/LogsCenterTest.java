@@ -1,9 +1,12 @@
 package seedu.address.commons.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,10 +52,48 @@ public class LogsCenterTest {
         assertMessagesAppearOnce(consoleOutput);
     }
 
+    @Test
+    public void getLogger_beforeFileInitialization_doesNotCreateOrChangeLog() throws Exception {
+        Path logFile = temporaryDirectory.resolve(LOG_FILE_NAME);
+        assertMessagesAppearOnce(runLoggingProcess("console-only"));
+        assertFalse(Files.exists(logFile));
+        Files.writeString(logFile, "Preserve selected original data");
+
+        assertMessagesAppearOnce(runLoggingProcess("console-only"));
+        assertEquals("Preserve selected original data", Files.readString(logFile));
+    }
+
+    @Test
+    public void initializeFileLogging_symbolicLogPath_preservesOutsideTargetAndUsesConsole() throws Exception {
+        Path home = Files.createDirectory(temporaryDirectory.resolve("application-home"));
+        Path outside = temporaryDirectory.resolve("protected-original.json");
+        Files.writeString(outside, "Keep outside data unchanged");
+        Path logPath = home.resolve(LOG_FILE_NAME);
+        try {
+            Files.createSymbolicLink(logPath, outside);
+        } catch (IOException | UnsupportedOperationException exception) {
+            assumeTrue(false, "Symbolic links unavailable: " + exception);
+        }
+
+        String consoleOutput = runLoggingProcess(home);
+
+        assertEquals(1, countOccurrences(consoleOutput,
+                "Unable to initialize file logging; continuing with console logging."), consoleOutput);
+        assertTrue(consoleOutput.contains("Refusing a symbolic log path"), consoleOutput);
+        assertMessagesAppearOnce(consoleOutput);
+        assertTrue(Files.isSymbolicLink(logPath));
+        assertEquals("Keep outside data unchanged", Files.readString(outside));
+        assertFalse(Files.exists(home.resolve(LOG_FILE_NAME + ".lck")));
+    }
+
+    private String runLoggingProcess(String... options) throws Exception {
+        return runLoggingProcess(temporaryDirectory, options);
+    }
+
     /**
      * Starts a fresh JVM so the test exercises static initialization without changing this JVM's global loggers.
      */
-    private String runLoggingProcess() throws Exception {
+    private String runLoggingProcess(Path workingDirectory, String... options) throws Exception {
         String javaExecutableName = System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java";
         Path javaExecutable = Path.of(System.getProperty("java.home"), "bin", javaExecutableName);
         // Gradle's worker classpath does not contain the application/test classes; use their actual locations.
@@ -67,9 +108,10 @@ public class LogsCenterTest {
                 .map(this::resolveJacocoDestination)
                 .forEach(commandArguments::add);
         commandArguments.addAll(List.of("-cp", classPath, LoggingStartup.class.getName()));
+        commandArguments.addAll(List.of(options));
         Path outputFile = temporaryDirectory.resolve("console-output.txt");
         Process process = new ProcessBuilder(commandArguments)
-                .directory(temporaryDirectory.toFile())
+                .directory(workingDirectory.toFile())
                 .redirectErrorStream(true)
                 .redirectOutput(outputFile.toFile())
                 .start();
@@ -117,6 +159,11 @@ public class LogsCenterTest {
             Logger firstLogger = LogsCenter.getLogger(LoggingStartup.class);
             Logger repeatedLogger = LogsCenter.getLogger(LoggingStartup.class);
             Logger otherLogger = LogsCenter.getLogger("AnotherStartupLogger");
+
+            if (!List.of(args).contains("console-only")) {
+                LogsCenter.initializeFileLogging();
+                LogsCenter.initializeFileLogging();
+            }
 
             firstLogger.info(FIRST_MESSAGE);
             repeatedLogger.warning(REPEATED_MESSAGE);
