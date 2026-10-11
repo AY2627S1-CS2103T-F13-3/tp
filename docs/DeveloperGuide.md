@@ -22,7 +22,7 @@ title: Developer Guide
 * Zhu Zhi Yu used OpenAI Codex to assist with the file-logging startup fallback, its isolated regression tests, and logging documentation.
 * Zhu Zhi Yu used OpenAI Codex for the UI startup error-handling fix and its regression tests.
 * Zhu Zhi Yu used OpenAI Codex for dormant role-aware add argument parsing, its immutable ID-free input, regression tests, and integration documentation.
-* Zhu Zhi Yu used OpenAI Codex for the dormant complete-state person-addition candidate, its transaction-preparation regression tests, and the related integration notes.
+* Zhu Zhi Yu used OpenAI Codex for the dormant complete-state person-addition candidate and canonical add/list commands, their transaction/storage regression tests, and the related integration notes.
 * Zhu Zhi Yu used OpenAI Codex for constant-stack email validation that preserves the inherited contact rules, its parser/file-loading regressions, and the related implementation and manual-testing notes.
 * Zhu Zhi Yu used OpenAI Codex to clarify the course-prescribed Java 25 and macOS runtime setup, release verification, and manual-testing documentation.
 * Zhu Zhi Yu used OpenAI Codex for PR review and Javadoc formatting corrections in the canonical aggregate foundation (#76).
@@ -713,17 +713,25 @@ Preparation changes no live state or counter; an abandoned candidate reserves no
 must **prepare from a fresh snapshot → save the complete compatible candidate → install**, then report success
 and reset the people view to all roles. This helper supplies no save, rollback or UI action.
 
+`CanonicalAddCommand` and `CanonicalListCommand` implement the staged transaction interface merged through
+[PR #170](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/170). Addition stages a complete candidate and all-role
+view with checked duplicate/exhaustion feedback; the executor saves before publishing and returning stable-ID
+success. Listing selects a role and reports its count without operational saves.
+`CanonicalPeopleCommandIntegrationTest` exercises the real prepared parser/executor/storage seam, covering
+all roles and optional contacts, siblings, canonical duplicates, ID allocation/exhaustion, save/reload and failed-save
+restoration. Application routing, restart and visible runtime acceptance remain pending #85 integration.
+
 `PersonIndexResolver` applies the [shared selector contract](#shared-lesson-target-contract) to the authoritative
 current people list. With students `[S4, S9]`, positions `1` and `2` select those IDs; position `2` never means
 `S2`. Resolve once and retain the returned ID throughout the operation. Student-only resolution rejects a
 Tutor/Parent at that position without searching another list; range/role failures leave data and view unchanged.
 
 These commands remain preparation for [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). Registry,
-aggregate, view, people-only storage and staged command transaction foundations are merged; protected
-canonical loading and coordinated runtime adapter integration still gate loader/add/list/card activation
-on one root. The active catalogue
-continues to use inherited add/delete/list; `list r/student` is rejected. People-only storage cannot save nonempty
-lesson/attendance collections until their codecs arrive; see Storage above. Legacy delete must retire at cutover
+aggregate, view, people/lesson storage, staged command transactions and `ProtectedPonHubDataStorage`
+foundations are merged. Application loading and the coordinated single-root runtime adapter remain pending;
+they still gate loader/add/list/card activation. The active catalogue
+continues to use inherited add/delete/list; `list r/student` is rejected. Canonical storage supports lessons and
+rosters but rejects nonempty attendance until its codec arrives; see Storage above. Legacy delete must retire at cutover
 until guarded canonical deletion is available.
 
 <a id="role-filtered-people-listing-foundation"></a>
