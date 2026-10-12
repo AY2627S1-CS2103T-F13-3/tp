@@ -176,7 +176,9 @@ public class ApplicationStartupTest {
 
         @Override
         public void init() throws Exception {
-            data = Path.of(getParameters().getNamed().getOrDefault("data", "data/ponhub.json")).toAbsolutePath();
+            // The Windows runner's working directory can use an 8.3 alias such as RUNNER~1.
+            data = Path.of("").toRealPath().resolve(
+                    getParameters().getNamed().getOrDefault("data", "data/ponhub.json")).normalize();
             original = Files.exists(data) ? Files.readAllBytes(data) : null;
             super.init();
             try {
