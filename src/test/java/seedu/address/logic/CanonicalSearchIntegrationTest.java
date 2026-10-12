@@ -187,6 +187,24 @@ public class CanonicalSearchIntegrationTest {
     }
 
     @Test
+    public void refresh_replacedAndRestoredRoot_keepsCompleteSearchAndObservableList() throws Exception {
+        PonHubData data = new PonHubData(fixture());
+        PeopleView view = new PeopleView(data);
+        view.setSearchCriteria(new SearchCriteriaParser().parse("c/student n/Alex p/00012345"));
+        var people = view.getPeople();
+        var criteria = view.getSearchCriteria();
+        data.resetData(new PonHubData().exportState());
+        view.refresh();
+        assertTrue(people.isEmpty());
+        assertEquals(criteria, view.getSearchCriteria());
+        data.resetData(fixture());
+        view.refresh();
+        assertSame(people, view.getPeople());
+        assertEquals(List.of(new PersonId("S3")), people.stream().map(PersonRecord::getId).toList());
+        assertEquals(criteria, view.getSearchCriteria());
+    }
+
+    @Test
     public void transaction_operationalChange_preservesSearchAndRecomputesAgainstCommittedRoot() throws Exception {
         PonHubData data = new PonHubData(fixture());
         PeopleView view = new PeopleView(data);
