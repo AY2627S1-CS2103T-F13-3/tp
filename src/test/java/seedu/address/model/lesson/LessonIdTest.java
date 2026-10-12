@@ -60,6 +60,25 @@ public class LessonIdTest {
         assertThrows(IllegalStateException.class, maximumId::next);
     }
 
+    // OpenAI Codex assisted Zhu Zhi Yu with these boundary regressions (#198).
+    @Test
+    public void compareTo_digitLengthAndLongBoundaries_ordersByNumericSequence() {
+        LessonId two = new LessonId("L2");
+        LessonId ten = new LessonId("L10");
+        LessonId smallest = LessonId.fromSequenceNumber(1);
+        LessonId penultimate = LessonId.fromSequenceNumber(Long.MAX_VALUE - 1);
+        LessonId largest = LessonId.fromSequenceNumber(Long.MAX_VALUE);
+
+        assertTrue(two.compareTo(ten) < 0);
+        assertTrue(ten.compareTo(two) > 0);
+        assertTrue(penultimate.compareTo(largest) < 0);
+        assertTrue(largest.compareTo(penultimate) > 0);
+        assertTrue(smallest.compareTo(largest) < 0);
+        assertTrue(largest.compareTo(smallest) > 0);
+        assertEquals(0, largest.compareTo(new LessonId("l" + Long.MAX_VALUE)));
+        assertThrows(NullPointerException.class, () -> largest.compareTo(null));
+    }
+
     @Test
     public void equals() {
         LessonId lessonId = new LessonId("L5");
