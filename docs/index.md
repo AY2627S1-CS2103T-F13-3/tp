@@ -12,7 +12,11 @@ title: PonHub
 
 PonHub is being developed for tuition centre administrators to manage people, shared lessons, enrolment and dated attendance through a keyboard-focused desktop interface. The shared-lesson target lets two students join one lesson and retains attendance history after unenrolment.
 
-The current Week 8 help increment provides `help` and `help COMMAND` in Result Display, with the same guidance through the Help menu and F1. It still uses inherited contact commands; role-aware people, lesson and attendance features await integration. Read the User Guide's current command summary before using its planned workflow. The existing UI image is awaiting Ben's final integrated capture.
+The current build supports role-aware people addition/listing, own-contact people search and empty-roster
+shared-lesson creation and enrolment/unenrolment. Type `help` or `help COMMAND` for inline guidance, also available
+through the Help menu and F1. Attendance and lesson-result routes remain planned; consult the
+[current command summary](UserGuide.html#current-command-summary) before trying the wider workflow.
+The existing UI image is awaiting Ben's final integrated capture.
 
 * [User Guide](UserGuide.html#current-command-summary)
 * [Developer Guide](DeveloperGuide.html)

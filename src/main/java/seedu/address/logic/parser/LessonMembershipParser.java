@@ -9,7 +9,9 @@ import seedu.address.commons.core.index.Index;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.lesson.LessonId;
 
-/** Parses the shared {@code STUDENT_INDEX lid/LESSON_ID} membership command arguments. */
+/**
+ * Parses the shared {@code STUDENT_INDEX lid/LESSON_ID} membership command arguments.
+ */
 public final class LessonMembershipParser {
     public static final String MESSAGE_ARGUMENTS =
             "Supply STUDENT_INDEX lid/LESSON_ID, for example 1 lid/L1.";

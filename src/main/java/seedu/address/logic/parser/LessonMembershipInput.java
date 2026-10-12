@@ -14,7 +14,9 @@ import seedu.address.model.lesson.LessonId;
  */
 public record LessonMembershipInput(Index studentIndex, LessonId lessonId) {
 
-    /** Rejects null selectors before command execution. */
+    /**
+     * Rejects null selectors before command execution.
+     */
     public LessonMembershipInput {
         requireAllNonNull(studentIndex, lessonId);
     }

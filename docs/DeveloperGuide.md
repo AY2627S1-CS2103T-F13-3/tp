@@ -24,23 +24,22 @@ title: Developer Guide
   He also used Codex for product scope/user stories,
   confirmed selectors/command formats/search scope, recovery/use cases/manual checks, prescribed
   Java/macOS setup, and review/conflict reconciliation/Javadoc corrections in search, inline help,
-  atomic saves and the canonical aggregate (#76). These credits do not transfer feature ownership.
+  lesson membership, atomic saves and the canonical aggregate (#76). These credits do not transfer feature ownership.
 * Yang Shuo (`ys000009`) used OpenAI Codex for #78's scheduling APIs, aggregate invariants,
-  read-only relationship queries/guards, tests and design documentation.
-* Yang Shuo (`ys000009`) used OpenAI Codex for #86's active shared-lesson creation parser and command,
-  tutor resolution, transaction/persistence regressions, conflict reconciliation and guide updates.
-* Yang Shuo (`ys000009`) used OpenAI Codex for #88's active shared-lesson enrolment and unenrolment
-  commands, aggregate mutations, persistence/query regressions and guide updates.
+  read-only relationship queries/guards, tests and design documentation; and #86's active shared-lesson
+  creation parser and command, tutor resolution, transaction/persistence regressions, conflict
+  reconciliation and guide updates. He also used Codex for #88's active shared-lesson enrolment and
+  unenrolment commands, aggregate mutations, persistence/query regressions and guide updates.
 * Ben (`ben58882`) used OpenAI Codex for #80's indexed lesson/roster projections, committed-state
   refresh, Logic delegation, search/transaction regression tests and guide updates.
-* Ernest used OpenAI Codex for Round 4 #87 activation over Ben's matcher: session routing, complete people-view
-  filter transactions, integration/UI regressions, merged lesson-creation checks and guide reconciliation.
-  Ben remains the feature owner.
 * Ernest used OpenAI Codex for the Week 8 command catalogue, inline help, regression tests and shared
   documentation; #129's active UI encapsulation/Javadoc corrections and caller/repository checks;
-  #60's architecture/command conventions and AboutUs clarification; and #164's shared-guide
-  consolidation, canonical-runtime reconciliation, source verification and rendered checks. This credits
-  Ernest's contributions, without claiming teammates' implementations or unperformed human review.
+  #60's architecture/command conventions and AboutUs clarification; #164's shared-guide consolidation,
+  canonical-runtime reconciliation, source verification and rendered checks; and Round 4 #87 activation
+  over Ben's matcher (session routing, complete people-view filter transactions, integration/UI regressions
+  and merged lesson-creation checks). Ben remains the search feature owner. Ernest also used Codex for
+  #191's permission-denied save regression and the available UG/help workflow rehearsals. These credits
+  do not claim teammates' implementations or unperformed human review.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -54,14 +53,11 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 
 ### Current increment and command integration
 
-`MainApp` connects one `CanonicalPeopleSession` to `CanonicalLogicManager`, canonical cards and
-protected storage. Active commands are `add r/ROLE ...`, `addlesson d/DAY ...`,
-`enrol STUDENT_INDEX lid/LESSON_ID`, `unenrol STUDENT_INDEX lid/LESSON_ID`, `list [r/ROLE]`, own-contact
-`search c/student|parent|tutor ...`, `help [COMMAND]` and `exit`; protected sessions expose only help/list/exit.
-`delete`, `edit`, `clear`, `find`, lesson-result, attendance, history, lesson search and relationship search
-commands remain unavailable. The codec saves and loads validated
-attendance records, retaining history independently of current lesson enrolment; this persistence
-support does not activate mark, unmark or history command routes.
+`MainApp` connects one canonical session/root to Logic, cards and protected storage. Normal sessions
+support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `list`, own-contact people `search`,
+`help` and `exit`; protected sessions allow only help/list/exit. Guarded deletion, attendance, lesson-result/history
+routes and relationship/lesson search remain planned. Inherited edit/clear/find routes are unavailable.
+Stored attendance is supported without activating mark/unmark/history commands.
 
 `CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
 routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
@@ -210,10 +206,12 @@ for how those results must preserve the people list.
 
 `CanonicalLogicManager` delegates to the single `CanonicalPeopleSession`. The session's `execute()`
 dispatches commands through its switch, using `CanonicalCommandCatalog` for available command words
-and guidance. It parses add/list input and invokes `CanonicalCommandExecutor`, which saves a changed
-candidate before publishing its root and view and returning `CommandResult`. Parse, domain or save failure preserves
+and guidance. It parses add/addlesson/enrol/unenrol/list/search input and invokes `CanonicalCommandExecutor`, which
+saves a changed candidate before publishing its root and view and returning `CommandResult`.
+Parse, domain or save failure preserves
 live records, allocation counters, filter and selection. Read-only commands/no-ops skip operational
-saving; list can update only the role filter. See [Storage](#command-transactions).
+saving. List clears search criteria and optionally sets a role; search replaces the people filter,
+while lesson creation and membership changes preserve it. See [Storage](#command-transactions).
 
 The class/parser diagrams describe retained legacy regression seams, not active application wiring.
 
@@ -678,7 +676,7 @@ inherited `HelpWindow` is never constructed by supported entry points.
 
 See [manual help checks](#inline-help-and-supported-routes) for topic, menu/F1 and scrolling behavior.
 Guidance follows the [current runtime summary](#current-increment-and-command-integration);
-prepared lesson/search foundations do not add help topics.
+remaining attendance/query foundations do not add help topics.
 
 <a id="person-record-foundation"></a>
 <a id="ordered-people-registry-foundation"></a>

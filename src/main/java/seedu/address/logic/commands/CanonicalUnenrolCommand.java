@@ -12,13 +12,17 @@ import seedu.address.model.PonHubData;
 import seedu.address.model.lesson.Lesson;
 import seedu.address.model.person.Student;
 
-/** Unenrols the Student selected from the current people list while retaining dated attendance. */
+/**
+ * Unenrols the Student selected from the current people list while retaining dated attendance.
+ */
 public final class CanonicalUnenrolCommand implements CanonicalCommandExecutor.StagedCommand {
     public static final String MESSAGE_SUCCESS = "Student %s unenrolled from lesson %s.";
 
     private final LessonMembershipInput input;
 
-    /** Creates a staged unenrolment command from validated selectors. */
+    /**
+     * Creates a staged unenrolment command from validated selectors.
+     */
     public CanonicalUnenrolCommand(LessonMembershipInput input) {
         this.input = requireNonNull(input);
     }
