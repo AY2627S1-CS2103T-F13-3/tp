@@ -20,7 +20,7 @@ public final class CanonicalCommandCatalog {
             + "Optional values must be nonblank; l/ and pp/ are only allowed for students.\n"
             + "Examples:\n"
             + "add r/student n/Alex Tan l/P1 pp/91234567\n"
-            + "add r/tutor n/Mei Lee p/81234567 e/mei@example.com\n"
+            + "add r/tutor n/Mei Lim p/92345678 e/mei@example.com\n"
             + "add r/parent n/Sam Tan p/91234567 a/10 Main Road";
     public static final String MESSAGE_HELP_USAGE = "Usage: help [COMMAND]\n"
             + "Shows the commands available in this session, or syntax and an example for one command.\n"
@@ -36,14 +36,21 @@ public final class CanonicalCommandCatalog {
             + "Results replace the people view and renumber current positions without saving.\n"
             + "Relationship filters and c/lesson are not available yet. Use list to clear search filters.\n"
             + "Examples: search c/student, search c/student n/Alex l/P1 pp/91234567, search c/tutor n/Mei";
+    public static final String MESSAGE_ADD_LESSON_USAGE =
+            "Usage: addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM\n"
+            + "DAY is Mon-Sun; times use four-digit 24-hour HHMM and start before end.\n"
+            + "Tutor matching uses the normalized full name. Supply the exact phone to disambiguate.\n"
+            + "Example: addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1";
 
     private static final Entry ADD = new Entry("add", "Add a student, tutor or parent", MESSAGE_ADD_USAGE);
+    private static final Entry ADD_LESSON = new Entry("addlesson", "Create an empty-roster shared lesson",
+            MESSAGE_ADD_LESSON_USAGE);
     private static final Entry LIST = new Entry("list", "Show all people or one role", PeopleListParser.MESSAGE_USAGE);
     private static final Entry SEARCH = new Entry("search", "Find people by their own contact fields",
             MESSAGE_SEARCH_USAGE);
     private static final Entry HELP = new Entry("help", "Show help or one command's guidance", MESSAGE_HELP_USAGE);
     private static final Entry EXIT = new Entry("exit", "Close PonHub", ExitCommand.MESSAGE_USAGE);
-    private static final List<Entry> ENTRIES = List.of(ADD, LIST, SEARCH, HELP, EXIT);
+    private static final List<Entry> ENTRIES = List.of(ADD, ADD_LESSON, LIST, SEARCH, HELP, EXIT);
     private static final List<Entry> PROTECTED_ENTRIES = List.of(HELP, LIST, EXIT);
 
     private CanonicalCommandCatalog() {

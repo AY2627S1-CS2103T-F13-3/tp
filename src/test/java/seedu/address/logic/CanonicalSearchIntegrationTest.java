@@ -187,6 +187,72 @@ public class CanonicalSearchIntegrationTest {
     }
 
     @Test
+    public void execute_addLessonDuringSearch_preservesPeopleAndRefreshesPersistedLessonQueries() throws Exception {
+        Path path = saveFixture();
+        CanonicalPeopleSession session = new CanonicalPeopleSession(path);
+        session.execute("search c/student n/Alex l/S2 p/00012345 pp/00123456 e/@example a/main road");
+        var people = session.getPeople();
+        List<PersonRecord> matches = List.copyOf(people);
+        var queries = session.getLessonQueries();
+        var lessons = queries.getLessonList();
+
+        assertEquals("New lesson added: L1.", session.execute(
+                "addlesson d/Mon st/0900 et/1000 s/Math tu/Mei Lim tp/00111111 rm/R1").getFeedbackToUser());
+
+        assertSame(people, session.getPeople());
+        assertEquals(matches, session.getPeople());
+        assertEquals(List.of("S3"), ids(session));
+        assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
+        assertEquals(new PersonId("S3"), PersonIndexResolver.resolveStudent(Index.fromOneBased(1), people).getId());
+        assertSame(queries, session.getLessonQueries());
+        assertSame(lessons, queries.getLessonList());
+        assertEquals(1, lessons.size());
+        assertEquals(0, lessons.getFirst().getRosterSize());
+        assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
+        session.execute("help addlesson");
+        assertEquals(matches, session.getPeople());
+    }
+
+    @Test
+    public void execute_failedLessonSaveAndRetry_preservesSearchBytesQueriesAndNextLessonId() throws Exception {
+        Path path = saveFixture();
+        JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
+        byte[] bytes = Files.readAllBytes(path);
+        int[] writes = {0};
+        CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+            if (writes[0]++ == 0) {
+                throw new IOException("Injected lesson save failure during search");
+            }
+            storage.saveData(state);
+        });
+        session.execute("search c/student n/Alex l/S2 p/00012345 pp/00123456 e/@example a/main road");
+        var people = session.getPeople();
+        List<PersonRecord> matches = List.copyOf(people);
+        PonHubDataState before = session.getDataSnapshot();
+        var lessons = session.getLessonQueries().getLessonList();
+        String command = "addlesson d/Tue st/0900 et/1000 s/Math tu/Mei Lim tp/00111111 rm/R1";
+
+        CommandException failure = assertThrows(CommandException.class, () -> session.execute(command));
+        assertTrue(failure.getMessage().contains("Injected lesson save failure during search"));
+        assertSame(people, session.getPeople());
+        assertEquals(matches, session.getPeople());
+        assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
+        assertEquals(before, session.getDataSnapshot());
+        assertArrayEquals(bytes, Files.readAllBytes(path));
+        assertSame(lessons, session.getLessonQueries().getLessonList());
+        assertTrue(lessons.isEmpty());
+
+        assertEquals("New lesson added: L1.", session.execute(command).getFeedbackToUser());
+        assertEquals(matches, session.getPeople());
+        assertEquals(List.of("S3"), ids(session));
+        assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
+        assertSame(people, session.getPeople());
+        assertEquals(1, lessons.size());
+        assertEquals(2, writes[0]);
+        assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
+    }
+
+    @Test
     public void refresh_replacedAndRestoredRoot_keepsCompleteSearchAndObservableList() throws Exception {
         PonHubData data = new PonHubData(fixture());
         PeopleView view = new PeopleView(data);
