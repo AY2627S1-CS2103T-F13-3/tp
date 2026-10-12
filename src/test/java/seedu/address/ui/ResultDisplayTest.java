@@ -76,6 +76,7 @@ public class ResultDisplayTest {
             CanonicalPeopleSession session = new CanonicalPeopleSession(dataPath);
             session.execute("add r/student n/Alex Tan l/P1 pp/91234567");
             session.execute("add r/student n/Jamie Tan l/P2 pp/91234567");
+            session.execute("add r/tutor n/Mei Lim p/92345678");
             session.execute("list r/student");
             byte[] originalBytes = Files.readAllBytes(dataPath);
             CanonicalLogicManager logic = new CanonicalLogicManager(session, new UserPrefs());
