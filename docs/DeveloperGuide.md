@@ -25,7 +25,8 @@ title: Developer Guide
   He also used Codex for product scope/user stories,
   confirmed selectors/command formats/search scope, recovery/use cases/manual checks, prescribed
   Java/macOS setup, and review/conflict reconciliation/Javadoc corrections in search, inline help,
-  lesson membership, atomic saves and the canonical aggregate (#76). These credits do not transfer feature ownership.
+  lesson membership, atomic saves and the canonical aggregate (#76); and #197's lesson creation/membership
+  command-boundary regressions. These credits do not transfer feature ownership.
 * Yang Shuo (`ys000009`) used OpenAI Codex for #78's scheduling APIs, aggregate invariants,
   read-only relationship queries/guards, tests and design documentation; and #86's active shared-lesson
   creation parser and command, tutor resolution, transaction/persistence regressions, conflict
