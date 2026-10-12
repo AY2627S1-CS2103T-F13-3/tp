@@ -23,7 +23,7 @@ import seedu.address.model.person.PersonRole;
  * A counter of Long.MAX_VALUE represents exhaustion; counters must never be inferred from retained records.
  * Global tutor, room and student schedule rules are validated here so restored state cannot bypass
  * operational invariants.
- * Attendance-date rules belong to their feature layer.
+ * Attendance dates must match their lesson weekday and fit the persisted YYYY-MM-DD format.
  *
  * @param people Ordered people and complete per-role allocation history.
  * @param lessons Ordered shared lessons, each owning its roster.
@@ -61,6 +61,10 @@ public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, 
             requireRole(peopleById, record.getStudentId(), PersonRole.STUDENT);
             Lesson lesson = lessonsById.get(record.getLessonId());
             checkArgument(lesson != null, "Attendance refers to a missing lesson.");
+            checkArgument(record.getDate().getYear() >= 1 && record.getDate().getYear() <= 9999,
+                    "Attendance date must have a year between 0001 and 9999.");
+            checkArgument(record.getDate().getDayOfWeek().name().equals(lesson.getTimeSlot().getDay().name()),
+                    "Attendance date does not match lesson weekday.");
         }
         validateLessonSchedules(lessons);
     }

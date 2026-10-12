@@ -151,16 +151,15 @@ public class JsonPonHubDataStorageTest {
     }
 
     @Test
-    public void save_unsupportedCollections_leavesExistingFileUnchanged() throws Exception {
+    public void save_retainedAttendance_roundTrips() throws Exception {
         storage.saveData(original);
-        byte[] before = Files.readAllBytes(storage.getDataFilePath());
         Lesson lesson = new Lesson(new LessonId("L1"), new PersonId("T1"), new LessonTimeSlot(LessonDay.MONDAY,
                 new LessonTime("0900"), new LessonTime("1000")), new Subject("Math"), new Room("R1"), Set.of());
-        PonHubDataState unsupported = new PonHubDataState(original.people(), List.of(lesson),
+        PonHubDataState retained = new PonHubDataState(original.people(), List.of(lesson),
                 List.of(new Attendance(new PersonId("S1"), lesson.getId(), LocalDate.of(2026, 10, 5),
                         AttendanceStatus.PRESENT)), 7);
-        assertThrows(IOException.class, () -> storage.saveData(unsupported));
-        assertArrayEquals(before, Files.readAllBytes(storage.getDataFilePath()));
+        storage.saveData(retained);
+        assertEquals(retained, storage.readData().orElseThrow());
     }
 
     @Test
