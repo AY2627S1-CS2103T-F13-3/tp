@@ -467,6 +467,10 @@ controlled rejections. Unrelated programming failures are not swallowed. Support
 after complete codec validation; nonempty attendance remains unsupported until #83. Missing selected files
 start empty and unwritten until successful add, without inherited sample data or automatic legacy migration.
 
+The active canonical [transaction boundary](#command-transactions) also preserves live data and views
+after failed commands/saves; read-only commands and operational no-ops skip saving. Protected loading
+and preferences remain separate from those normal-session guarantees.
+
 For manual checks, use a disposable selected `data/ponhub.json` or `--data=PATH`, record original bytes,
 then test help/list/exit and attempted add in the protected session. Bytes must remain unchanged. Preserve
 a backup, close the app, deliberately correct a supported working copy and restart. A legacy original is
@@ -1285,6 +1289,12 @@ testers are expected to do more *exploratory* testing.
 
 ### Launch and shutdown
 
+Record the source commit, JAR SHA-256, OS/architecture and Java distribution/version for every trial.
+Run `java -version` in the launch terminal and confirm the [prescribed Java 25 runtime](SettingUp.html#setting-up-the-project-on-your-computer).
+Use that same terminal/runtime when reopening the JAR; substitute its actual filename if different.
+
+<!-- Ernest used OpenAI Codex for #102's canonical startup/transaction guide reconciliation and manual evidence fields. -->
+
 1. Build or obtain the matching `ponhub.jar`, copy it to a disposable empty JAR folder, and launch
    from that folder's terminal with Java 25: `java -jar ponhub.jar`. Expect the canonical GUI and an empty
    people view. Run help/list/exit; `data/ponhub.json` remains absent, and preferences may save separately.
@@ -1294,7 +1304,9 @@ testers are expected to do more *exploratory* testing.
    `preferences.json`. Select a different missing path with `--data=data/another-ponhub.json`; expect an
    empty dataset and the same preference location in the JAR folder, without touching the previous
    operational file. Launch the JAR from another working directory and confirm data/preferences/logs
-   still remain in the JAR folder.
+   still remain in the JAR folder. Repeat the actual resolution/scaling changes in
+   [#128](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/128), recording the tested build,
+   each setting and outcome, including settings unavailable on the test platform.
 4. Repeat with `java -jar ponhub.jar --data="separate store/ponhub.json"`. Confirm the status footer and
    subsequent successful save/reload use that selected path. Keep a legacy `data/addressbook.json` in the
    JAR folder and verify default startup/add/exit leaves its bytes unchanged. Reject blank `--data=`,
