@@ -20,7 +20,7 @@ public final class CanonicalCommandCatalog {
             + "Optional values must be nonblank; l/ and pp/ are only allowed for students.\n"
             + "Examples:\n"
             + "add r/student n/Alex Tan l/P1 pp/91234567\n"
-            + "add r/tutor n/Mei Lee p/81234567 e/mei@example.com\n"
+            + "add r/tutor n/Mei Lim p/92345678 e/mei@example.com\n"
             + "add r/parent n/Sam Tan p/91234567 a/10 Main Road";
     public static final String MESSAGE_HELP_USAGE = "Usage: help [COMMAND]\n"
             + "Shows the commands available in this session, or syntax and an example for one command.\n"
