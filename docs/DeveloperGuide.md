@@ -22,6 +22,8 @@ title: Developer Guide
   validation/ASCII-space normalization and constant-stack email validation ([#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61));
   logging fallback, UI startup error handling, and screen-aware window restoration/contact-card wrapping.
   He used Codex for command-input retry/recovery and result-feedback scrolling/F1 regressions (#196).
+  He also used Codex for [#199](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/199)
+  file-boundary regressions (atomic-save recovery, startup link limits and literal-percent logging).
   He also used Codex for #195 preference-corruption recovery and independent save-failure regressions;
   product scope/user stories;
   confirmed selectors/command formats/search scope, recovery/use cases/manual checks, prescribed

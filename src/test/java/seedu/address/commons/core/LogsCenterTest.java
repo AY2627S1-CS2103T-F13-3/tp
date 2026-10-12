@@ -40,6 +40,22 @@ public class LogsCenterTest {
     }
 
     @Test
+    public void initializeFileLogging_percentTokensInHome_writesInsideLiteralDirectory() throws Exception {
+        Path home = Files.createDirectory(temporaryDirectory.resolve("home-%t-%h-%g-%u-%%"));
+
+        String consoleOutput = runLoggingProcess(home);
+
+        assertFalse(consoleOutput.contains("Unable to initialize file logging"), consoleOutput);
+        assertMessagesAppearOnce(consoleOutput);
+        Path logFile = home.resolve(LOG_FILE_NAME);
+        assertTrue(Files.isRegularFile(logFile));
+        assertMessagesAppearOnce(Files.readString(logFile));
+        try (var files = Files.list(home)) {
+            assertEquals(List.of(logFile), files.toList());
+        }
+    }
+
+    @Test
     public void getLogger_logFileUnavailable_logsWarningAndContinuesConsoleLogging() throws Exception {
         // A directory blocks file creation even when the tests run with elevated filesystem permissions.
         Files.createDirectory(temporaryDirectory.resolve(LOG_FILE_NAME));
