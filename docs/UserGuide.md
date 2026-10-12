@@ -3,7 +3,9 @@ layout: page
 title: User Guide
 ---
 
-PonHub is a desktop app for tuition centre administrators to manage student, tutor and parent records. Its command box lets you work quickly from the keyboard while the graphical interface shows the records. Shared lessons and attendance remain planned features, as described below.
+PonHub is a desktop app for tuition centre administrators to manage student, tutor and parent records and create
+shared recurring lessons. Its command box lets you work quickly from the keyboard while the graphical interface
+shows the records. Enrolment, attendance and lesson-result commands remain planned features, as described below.
 
 * Table of Contents
 {:toc}
@@ -24,22 +26,27 @@ PonHub is a desktop app for tuition centre administrators to manage student, tut
 1. A missing `data/ponhub.json` starts an empty people list. Enter a command in the command box and press Enter. Start with `help`, then `help add`:
 
    * `add r/tutor n/Mei Lim p/92345678 e/mei@example.com` adds a tutor.
+   * `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1` creates an empty-roster shared lesson.
    * `add r/student n/Alex Tan l/S2 pp/91234567` adds a student.
    * `add r/parent n/Pat Tan p/91234567` adds a parent.
    * `list r/student` displays students; `list` displays all roles.
    * `help ADD` shows the same guidance as `help add`.
    * `exit` closes PonHub.
 
-The first successful addition creates the data file. Keep the same JAR folder to load the saved people and stable IDs after restart. For a separate store, launch with `java -jar FILENAME.jar --data=data/another-ponhub.json`. Quote an argument containing spaces, for example `java -jar FILENAME.jar --data="separate store/ponhub.json"`. Select a previously unused path when re-entering legacy records; see [Data protection](#data-protection-in-the-current-build).
+The first successful mutation creates the data file. Keep the same JAR folder to load the saved records and stable IDs after restart. For a separate store, launch with `java -jar FILENAME.jar --data=data/another-ponhub.json`. Quote an argument containing spaces, for example `java -jar FILENAME.jar --data="separate store/ponhub.json"`. Select a previously unused path when re-entering legacy records; see [Data protection](#data-protection-in-the-current-build).
 
 ## Current command summary
 
-The active routes use one saved people dataset with role-specific records and stable IDs. Shared lessons, guarded deletion, enrolment, attendance, history and search remain planned; their specifications follow under [Planned shared-lesson workflow](#planned-shared-lesson-workflow). Type `help` to inspect the commands available in your session. `delete`, `edit`, `clear` and `find` are unavailable.
+The active routes use one saved aggregate with role-specific people, stable IDs and empty-roster shared lessons.
+Guarded deletion, enrolment, attendance, lesson-result views, history and search remain planned; their specifications
+follow under [Planned shared-lesson workflow](#planned-shared-lesson-workflow). Type `help` to inspect the commands
+available in your session. `delete`, `edit`, `clear` and `find` are unavailable.
 
 | Action | Format | Example |
 | --- | --- | --- |
 | Add student | `add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]` | `add r/student n/Alex Tan l/S2 pp/91234567` |
 | Add tutor or parent | `add r/ROLE n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]` | `add r/tutor n/Mei Lim p/92345678` |
+| Create shared lesson | `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` | `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1` |
 | List people | `list [r/ROLE]` | `list r/student` |
 | Get help | `help [COMMAND]` | `help add` |
 | Exit | `exit` | `exit` |
@@ -56,10 +63,11 @@ Choose **Help > Help** or press **F1** for the same catalogue, including when fo
 
 Long guidance wraps within Result Display. Scroll vertically to read the rest; each new result starts at the top.
 
-* `help remove` returns `Unknown command: 'remove'. Type 'help' to see available commands.` Unavailable topics such as `help addlesson` receive the same kind of feedback until their commands are integrated.
+* `help addlesson` shows the active lesson-creation syntax and example. `help remove` returns
+  `Unknown command: 'remove'. Type 'help' to see available commands.`
 * `help add delete` returns `Invalid command format!` followed by `Usage: help [COMMAND]` and its explanation. Supply at most one topic.
 * `delete`, `edit`, `clear` and `find` return `Unknown command.` They are absent from the catalogue.
-* In a protected session, help lists only `help`, `list` and `exit`; `help add` is unavailable.
+* In a protected session, help lists only `help`, `list` and `exit`; `help add` and `help addlesson` are unavailable.
 
 ### 1. Adding a person: `add`
 
@@ -154,9 +162,13 @@ An empty result is valid. PonHub reports a count of zero and the people panel sh
 
 ## Data protection in the current build
 
-The current build stores people and their allocation state in `data/ponhub.json` inside the folder containing the JAR. `--data=PATH` selects a different file within that folder or its subfolders; relative paths start from the JAR folder. Absolute paths are accepted only within that folder. Blank paths and paths escaping it, including through symbolic links, are rejected at startup. Select a separate data file: `preferences.json` and the root `addressbook.log*` logging files are reserved, including aliases to them. Window preferences are saved separately in `preferences.json` in the JAR folder; selecting a different store does not change the preference file.
+The current build stores people, shared lessons, rosters and their allocation state in `data/ponhub.json` inside the folder containing the JAR. `--data=PATH` selects a different file within that folder or its subfolders; relative paths start from the JAR folder. Absolute paths are accepted only within that folder. Blank paths and paths escaping it, including through symbolic links, are rejected at startup. Select a separate data file: `preferences.json` and the root `addressbook.log*` logging files are reserved, including aliases to them. Window preferences are saved separately in `preferences.json` in the JAR folder; selecting a different store does not change the preference file.
 
-A missing selected file starts a normal empty session and remains missing until the first successful addition. `help`, `list` and `exit` do not create or rewrite operational data. An invalid, unreadable, corrupt, unsupported or legacy selected file produces a **Data file protected** warning. The empty list in that session is unavailable saved data: it does **not** mean the original records were deleted. Only `help`, `list` and `exit` are available, and operational writes are blocked.
+A missing selected file starts a normal empty session and remains missing until the first successful mutation.
+`help`, `list` and `exit` do not create or rewrite operational data. An invalid, unreadable, corrupt, unsupported or
+legacy selected file produces a **Data file protected** warning. The empty list in that session is unavailable saved
+data: it does **not** mean the original records were deleted. Only `help`, `list` and `exit` are available, and
+operational writes are blocked.
 
 To recover:
 
@@ -168,7 +180,10 @@ The default startup leaves an older `data/addressbook.json` untouched. Selecting
 
 ## Planned shared-lesson workflow
 
-The following sections record the remaining shared-lesson and guarded-deletion contracts. Role-aware add/list above are active; deletion, lessons, enrolment, attendance, history and search below are not yet available. Their availability depends on incremental integration; use the [current command summary](#current-command-summary) and your build's `help` for active routes. Feature owners update their own implementation details and examples as behavior is delivered.
+The following sections record the shared-lesson and guarded-deletion contracts. Role-aware add/list and
+`addlesson` are active; deletion, lesson-result views, enrolment, attendance, history and search below are not yet
+available. Their availability depends on incremental integration; use the
+[current command summary](#current-command-summary) and your build's `help` for active routes.
 
 ### Reading the planned command formats
 
@@ -183,7 +198,10 @@ The following sections record the remaining shared-lesson and guarded-deletion c
 
 ### Planned quick start
 
-After these commands and persistence are integrated, a fresh dataset can use this workflow. Read the actual lesson ID returned by `addlesson` and substitute it for `L1` if necessary. The `list r/student` result below places Alex at position 1 and Jamie at position 2. Recheck those positions when using an existing dataset.
+After the remaining commands are integrated, a fresh dataset can use this complete workflow. The active
+`addlesson` command already returns the allocated lesson ID; substitute it for `L1` in later commands if necessary.
+The `list r/student` result below places Alex at position 1 and Jamie at position 2. Recheck those positions when
+using an existing dataset.
 
 ```text
 add r/tutor n/Mei Lim p/92345678
@@ -239,9 +257,9 @@ If dependencies prevent deletion, PonHub displays:
 
 Check the updated people list before deleting another person.
 
-### 4. Creating and deleting shared lessons
+### 4. Creating shared lessons and planned lesson operations
 
-**Create:** `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
+**Create (active):** `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
 
 Example: `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1`.
 
@@ -249,18 +267,18 @@ The tutor must already exist. `tu/` matches the tutor's complete name, ignoring 
 
 Use `Mon` through `Sun` and four-digit 24-hour HHMM times. Start must be earlier than end on the same day. A successful addition returns a stable lesson ID, such as `L1`, with an empty roster. Creation does not select or enrol a student. Tutor and room bookings must not overlap another lesson on that weekday; adjacent intervals are allowed. Adding more students to this lesson does not book the tutor or room again.
 
-**Delete:** `deletelesson lid/LESSON_ID`, for example `deletelesson lid/L1`.
+**Delete (planned):** `deletelesson lid/LESSON_ID`, for example `deletelesson lid/L1`.
 
 Deletion is blocked while the roster is non-empty or attendance refers to the lesson. It never removes student records. Once an unreferenced lesson is deleted, its tutor and room times become available again. Cancelling one occurrence and editing a lesson are future scope.
 
-**Catalogue:** `lessons [si/STUDENT_INDEX]`.
+**Catalogue (planned):** `lessons [si/STUDENT_INDEX]`.
 
 Enter `lessons` to view each shared lesson once, including lessons with empty rosters. To view a student's currently enrolled lessons, first run `list r/student` and check their current position. If the intended student appears at position 1, enter `lessons si/1`. Catalogue results preserve the current people list and its indices.
 
 The catalogue and student lesson results use lesson creation order. Student lessons show current enrolments;
 past attendance alone does not add a lesson to that list. Use `history` to inspect attendance retained after unenrolment.
 
-**Details:** `showlesson lid/LESSON_ID [d/YYYY-MM-DD]`.
+**Details (planned):** `showlesson lid/LESSON_ID [d/YYYY-MM-DD]`.
 
 For example, `showlesson lid/L1` displays the lesson's schedule, subject, tutor, room and current roster, with stable IDs identifying the records. `showlesson lid/L1 d/2026-10-05` also shows each current roster student's `present`, `absent` or unrecorded status for that real, matching-weekday date. Attendance retained for former members is labelled separately from the current roster. An empty roster is valid. These results preserve the current people list and its command positions.
 
@@ -351,7 +369,10 @@ History lists dated attendance, including former enrolments. Current membership 
 
 ### Planned failure and data behavior
 
-The complete target saves people, shared lessons, memberships, attendance and IDs together. Current persistence saves people, validated shared lessons/rosters and retained attendance in the selected file; lesson and attendance commands remain unavailable. See [Data protection in the current build](#data-protection-in-the-current-build) for actual paths and recovery.
+The complete target saves people, shared lessons, memberships, attendance and IDs together. Current persistence saves
+people, validated shared lessons/rosters and retained attendance in the selected file, and `addlesson` uses that
+protected transaction. Roster and attendance command routes remain unavailable. See
+[Data protection in the current build](#data-protection-in-the-current-build) for actual paths and recovery.
 
 The supported JSON format remains human-editable. Close PonHub and keep a backup before editing. Preserve the supported schema and version, valid field values, stable IDs, relationships and ID allocation state. Correctly edited supported data loads after complete validation. Read-only commands do not save operational data; invalid commands and failed saves preserve the previous data and view. Future mutations must retain the same guarantees.
 
@@ -365,14 +386,19 @@ The supported JSON format remains human-editable. Close PonHub and keep a backup
 **Q**: Should I use a displayed position or an ID?<br>
 **A**: The planned `delete`, `enrol`, `unenrol`, `mark`, `unmark`, `history` and `lessons si/` selectors use the person's current position in the displayed people list. Run `list` or a people search and check that position first. Cards label stable person IDs separately; those IDs preserve stored identity and relationships. Select a lesson with `lid/L1`, for example. Create a lesson using the tutor's full name and optional exact phone; search tutor names using fragments. Check `help` for the commands available in your build.
 
-**Q**: Why is `help addlesson` unavailable?<br>
-**A**: Help lists only active commands. Shared lessons and attendance are being integrated by their owners. The planned commands below are available only after their implementations and persistence support are registered.
+**Q**: How do I choose the tutor for `addlesson`?<br>
+**A**: Supply the tutor's complete name with `tu/`. Matching ignores letter case and repeated spaces. If more than one
+tutor has that name, add their exact phone with `tp/`; leading zeros matter. A supplied phone must match even when the
+name is unique. Use `help addlesson` for the complete active syntax.
 
 --------------------------------------------------------------------------------------------------------------------
 
 ## Planned command summary
 
-This table preserves the complete target, including the active add/list/help/exit formats. Other routes remain planned. These formats use the [planned command conventions](#reading-the-planned-command-formats); listing a route here does not activate it. Person/student selectors come from the current people list, while every existing-lesson selector uses a stable `lid/` reference.
+This table preserves the complete target, including the active add/addlesson/list/help/exit formats. Other routes remain
+planned. These formats use the [planned command conventions](#reading-the-planned-command-formats); listing a route
+here does not activate it. Person/student selectors come from the current people list, while every existing-lesson
+selector uses a stable `lid/` reference.
 
 | Action | Format |
 | --- | --- |
@@ -405,7 +431,7 @@ Use disposable copies and record file bytes before each check. Launch with a mis
 
 Select an invalid or unversioned AB3 file: expect a protected empty view, recovery guidance, only help/list/exit and unchanged file bytes. Repair or remove a working copy while the app is open, then attempt add again; the same session stays protected. Close the app, restore a valid supported copy and restart to validate recovery. For legacy records, preserve the original and manually re-enter roles into a separate previously unused path as described in [Data protection](#data-protection-in-the-current-build).
 
-### Editing saved shared lessons (supported format; commands planned)
+### Editing saved shared lessons (supported format)
 
 The canonical format now supports shared lessons and their student rosters. Each lesson contains its
 stable ID, tutor ID, weekday, start/end time, subject, room and enrolled student IDs. Times are strings
@@ -415,7 +441,8 @@ Before editing, close the app and retain a backup. Keep referenced tutors/studen
 use each lesson ID once and each student ID once per roster, and preserve allocation counters even
 after deleting records. Do not create overlapping bookings for a tutor, room or enrolled student;
 back-to-back lessons are allowed. Invalid files are rejected as a whole rather than partially loaded.
-Attendance is supported in saved files as described below. Shared-lesson commands are still unavailable.
+Attendance is supported in saved files as described below. `addlesson` is active, while roster mutation,
+attendance, deletion and lesson-result command routes remain unavailable.
 
 For a disposable-file recovery check, change a saved lesson's tutor ID to an absent
 ID and restart. Expect a recovery warning and unchanged file bytes after help/list/exit or an attempted
