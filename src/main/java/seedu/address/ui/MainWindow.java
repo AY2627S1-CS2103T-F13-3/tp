@@ -5,11 +5,13 @@ import java.util.logging.Logger;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
@@ -33,7 +35,7 @@ public class MainWindow extends UiPart<Stage> {
     private Path dataFilePath;
 
     // Independent Ui parts residing in this Ui container
-    private PersonListPanel personListPanel;
+    private PersonRecordListPanel personListPanel;
     private ResultDisplay resultDisplay;
 
     @FXML
@@ -114,7 +116,7 @@ public class MainWindow extends UiPart<Stage> {
      * Fills up all the placeholders of this window.
      */
     void fillInnerParts() {
-        personListPanel = new PersonListPanel(logic.getFilteredPersonList());
+        personListPanel = new PersonRecordListPanel(logic.getPersonRecords());
         personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
 
         resultDisplay = new ResultDisplay();
@@ -128,15 +130,18 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Sets the default size based on {@code guiSettings}.
+     * Restores preferences within the available desktop work area.
      */
     private void setWindowDefaultSize(GuiSettings guiSettings) {
-        primaryStage.setHeight(guiSettings.getWindowHeight());
-        primaryStage.setWidth(guiSettings.getWindowWidth());
-        if (guiSettings.getWindowCoordinates() != null) {
-            primaryStage.setX(guiSettings.getWindowCoordinates().getX());
-            primaryStage.setY(guiSettings.getWindowCoordinates().getY());
-        }
+        Rectangle2D bounds = WindowPlacement.fit(guiSettings,
+                Screen.getScreens().stream().map(Screen::getVisualBounds).toList(),
+                Screen.getPrimary().getVisualBounds());
+        primaryStage.setMinWidth(Math.min(WindowPlacement.MINIMUM_WIDTH, bounds.getWidth()));
+        primaryStage.setMinHeight(Math.min(WindowPlacement.MINIMUM_HEIGHT, bounds.getHeight()));
+        primaryStage.setWidth(bounds.getWidth());
+        primaryStage.setHeight(bounds.getHeight());
+        primaryStage.setX(bounds.getMinX());
+        primaryStage.setY(bounds.getMinY());
     }
 
     /**
@@ -166,7 +171,7 @@ public class MainWindow extends UiPart<Stage> {
         primaryStage.hide();
     }
 
-    public PersonListPanel getPersonListPanel() {
+    public PersonRecordListPanel getPersonListPanel() {
         return personListPanel;
     }
 

@@ -14,7 +14,7 @@ import seedu.address.model.PonHubData;
 import seedu.address.model.PonHubDataState;
 
 /**
- * Session-scoped canonical startup and write protection, prepared for coordinated runtime activation.
+ * Session-scoped canonical startup and write protection for the application runtime.
  * Rejected files remain locked for this instance even if repaired or removed externally.
  * Preferences are outside this operational storage boundary.
  */

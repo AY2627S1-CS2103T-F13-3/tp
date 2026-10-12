@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -14,6 +15,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import seedu.address.model.PonHubDataState;
+import seedu.address.model.lesson.Lesson;
+import seedu.address.model.lesson.LessonDay;
+import seedu.address.model.lesson.LessonId;
+import seedu.address.model.lesson.LessonTime;
+import seedu.address.model.lesson.LessonTimeSlot;
+import seedu.address.model.lesson.Room;
+import seedu.address.model.lesson.Subject;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.ContactDetails;
 import seedu.address.model.person.EducationLevel;
@@ -30,12 +38,14 @@ import seedu.address.model.person.Tutor;
 import seedu.address.model.person.exceptions.DuplicatePersonException;
 
 /**
- * Version-1 people codec. Non-empty lessons/attendance are rejected until their codecs are implemented.
+ * Version-1 people and lesson codec. Non-empty attendance is rejected until its codec is implemented.
  */
 public final class JsonPonHubDataCodec {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final Set<String> ROOT_FIELDS = Set.of("schemaVersion", "people", "personCounters",
             "lastAllocatedLessonSequence", "lessons", "attendance");
+    private static final Set<String> LESSON_FIELDS = Set.of("id", "tutorId", "day", "startTime", "endTime",
+            "subject", "room", "enrolledStudentIds");
     private static final Set<String> PERSON_FIELDS = Set.of("id", "role", "name", "phone", "email", "address");
     private static final Set<String> STUDENT_FIELDS = Set.of("id", "role", "name", "phone", "email", "address",
             "level", "parentPhone");
@@ -44,12 +54,12 @@ public final class JsonPonHubDataCodec {
     }
 
     /**
-     * Serializes a complete people-only snapshot; optional fields are omitted rather than written as null.
+     * Serializes a complete people/lesson snapshot; optional fields are omitted rather than written as null.
      */
     public static String encode(PonHubDataState state) throws IOException {
         requireNonNull(state);
-        if (!state.lessons().isEmpty() || !state.attendance().isEmpty()) {
-            throw new IOException("Non-empty lessons/attendance cannot be saved by this people-only codec.");
+        if (!state.attendance().isEmpty()) {
+            throw new IOException("Non-empty attendance cannot be saved until its codec is available.");
         }
         ObjectNode root = mapper.createObjectNode();
         root.put("schemaVersion", JsonDataVersionDetector.CURRENT_VERSION);
@@ -73,7 +83,19 @@ public final class JsonPonHubDataCodec {
             counters.put(role.name(), state.people().getLastAllocatedSequences().get(role));
         }
         root.put("lastAllocatedLessonSequence", state.lastAllocatedLessonSequence());
-        root.putArray("lessons");
+        var lessons = root.putArray("lessons");
+        for (Lesson lesson : state.lessons()) {
+            ObjectNode node = lessons.addObject();
+            node.put("id", lesson.getId().toString());
+            node.put("tutorId", lesson.getTutorId().toString());
+            node.put("day", lesson.getTimeSlot().getDay().toString());
+            node.put("startTime", lesson.getTimeSlot().getStartTime().toString());
+            node.put("endTime", lesson.getTimeSlot().getEndTime().toString());
+            node.put("subject", lesson.getSubject().toString());
+            node.put("room", lesson.getRoom().toString());
+            var roster = node.putArray("enrolledStudentIds");
+            lesson.getEnrolledStudentIds().forEach(id -> roster.add(id.toString()));
+        }
         root.putArray("attendance");
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
     }
@@ -89,7 +111,7 @@ public final class JsonPonHubDataCodec {
         }
         JsonNode root = mapper.readTree(json);
         checkObject(root, ROOT_FIELDS, "root");
-        requireEmptyArray(root, "lessons");
+
         requireEmptyArray(root, "attendance");
         JsonNode counters = root.get("personCounters");
         checkObject(counters, Set.of("STUDENT", "TUTOR", "PARENT"), "personCounters");
@@ -110,12 +132,46 @@ public final class JsonPonHubDataCodec {
                 throw new IOException("people[" + i + "]: " + failure.getMessage(), failure);
             }
         }
+        JsonNode lessonArray = root.get("lessons");
+        if (lessonArray == null || !lessonArray.isArray()) {
+            throw new IOException("lessons must be an array.");
+        }
+        List<Lesson> lessons = new ArrayList<>();
+        for (int i = 0; i < lessonArray.size(); i++) {
+            try {
+                lessons.add(decodeLesson(lessonArray.get(i)));
+            } catch (IOException | IllegalArgumentException failure) {
+                throw new IOException("lessons[" + i + "]: " + failure.getMessage(), failure);
+            }
+        }
         try {
             return new PonHubDataState(new PeopleRegistryState(people, allocation),
-                    List.of(), List.of(), lessonCounter);
+                    lessons, List.of(), lessonCounter);
         } catch (IllegalArgumentException | DuplicatePersonException failure) {
-            throw new IOException("Invalid people/identity state: " + failure.getMessage(), failure);
+            throw new IOException("Invalid aggregate state: " + failure.getMessage(), failure);
         }
+    }
+
+    private static Lesson decodeLesson(JsonNode node) throws IOException {
+        checkObject(node, LESSON_FIELDS, "lesson");
+        JsonNode roster = node.get("enrolledStudentIds");
+        if (roster == null || !roster.isArray()) {
+            throw new IOException("enrolledStudentIds must be an array.");
+        }
+        Set<PersonId> students = new LinkedHashSet<>();
+        for (JsonNode entry : roster) {
+            if (!entry.isTextual()) {
+                throw new IOException("Roster IDs must be JSON strings.");
+            }
+            PersonId id = new PersonId(entry.textValue());
+            if (!students.add(id)) {
+                throw new IOException("Duplicate roster ID: " + id);
+            }
+        }
+        return new Lesson(new LessonId(text(node, "id")), new PersonId(text(node, "tutorId")),
+                new LessonTimeSlot(LessonDay.fromString(text(node, "day")),
+                        new LessonTime(text(node, "startTime")), new LessonTime(text(node, "endTime"))),
+                new Subject(text(node, "subject")), new Room(text(node, "room")), students);
     }
 
     private static PersonRecord decodePerson(JsonNode node) throws IOException {
@@ -157,7 +213,7 @@ public final class JsonPonHubDataCodec {
     private static void requireEmptyArray(JsonNode root, String field) throws IOException {
         JsonNode value = root.get(field);
         if (value == null || !value.isArray() || value.size() != 0) {
-            throw new IOException(field + " must be an empty array for this people-only codec.");
+            throw new IOException(field + " must be an empty array until its codec is available.");
         }
     }
 

@@ -7,7 +7,7 @@ import javafx.scene.layout.VBox;
 import seedu.address.model.person.PersonRecord;
 
 /**
- * A read-only card for the immutable PonHub person records, prepared for later people-view integration.
+ * A read-only card for the immutable PonHub person records in the current people view.
  * Every text line wraps to the card's available width; the enclosing people view supplies vertical scrolling.
  */
 public class PersonRecordCard extends UiPart<Region> {
@@ -23,7 +23,7 @@ public class PersonRecordCard extends UiPart<Region> {
 
     /**
      * Creates a card showing a record and its positive current-view position separately from its stable ID.
-     * This component does not read or mutate a registry and is not yet wired into the active application.
+     * This component renders the supplied record without reading or mutating a registry.
      */
     public PersonRecordCard(PersonRecord person, int displayedIndex) {
         this(new PersonRecordCardData(person, displayedIndex));
