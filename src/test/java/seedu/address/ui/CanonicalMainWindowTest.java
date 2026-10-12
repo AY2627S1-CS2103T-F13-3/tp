@@ -22,8 +22,10 @@ import org.junit.jupiter.api.io.TempDir;
 
 import javafx.event.ActionEvent;
 import javafx.event.Event;
+import javafx.geometry.Orientation;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
@@ -172,6 +174,15 @@ public class CanonicalMainWindowTest {
                 assertEquals(4, fixture.people().getItems().size());
                 fixture.people().scrollTo(3);
                 fixture.layout();
+                // Variable-height cells can leave the last card below the viewport after scrollTo on Linux.
+                // Drive the actual scrollbar to the bottom, as in the dedicated card-scrolling regressions.
+                for (var node : fixture.people().lookupAll(".scroll-bar")) {
+                    if (node instanceof ScrollBar bar && bar.isVisible()
+                            && bar.getOrientation() == Orientation.VERTICAL) {
+                        bar.setValue(bar.getMax());
+                    }
+                }
+                fixture.people().layout();
                 assertCard(fixture, "Parent · P1", "4. Sam Tan");
                 assertSame(fixture.app.getLogic().getPersonRecords(), fixture.people().getItems());
                 PonHubDataState saved = new JsonPonHubDataStorage(fixture.dataPath).readData().orElseThrow();
@@ -366,7 +377,9 @@ public class CanonicalMainWindowTest {
         fixture.layout();
         Region card = fixture.root().lookupAll("#cardPane").stream()
                 .filter(node -> identity.equals(((Label) node.lookup("#identity")).getText()))
-                .map(Region.class::cast).findFirst().orElseThrow();
+                .map(Region.class::cast).findFirst().orElseThrow(() -> new AssertionError(
+                        "Missing visible card " + identity + "; rendered=" + fixture.root().lookupAll("#identity")
+                                .stream().map(node -> ((Label) node).getText()).toList()));
         assertEquals(heading, ((Label) card.lookup("#heading")).getText());
         assertNotNull(card.lookup("#details"));
     }
