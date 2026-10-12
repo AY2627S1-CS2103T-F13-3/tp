@@ -9,36 +9,30 @@ title: Developer Guide
 
 ## **Acknowledgements**
 
-* PonHub is based on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3), created by the [SE-EDU initiative](https://se-education.org).
-* Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with the student, tutor, and parent record models, their common interface, the ordered people registry and its import/export state, automated tests, and design documentation. This acknowledgement covers those bounded contributions.
-* Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex to assist with contact validation, linear ASCII-space normalization, parser/loader integration, related automated tests, and the corresponding guide updates for [#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61).
-* Zhu Zhi Yu used OpenAI Codex for the detached role-filtered people-list projection and argument parser, their regression tests, and the integration notes below.
-* Zhu Zhi Yu used OpenAI Codex for the dormant aggregate-backed people view, production card-list panel, refresh/filter/selector and layout regressions, and their developer preview and integration notes.
-* Zhu Zhi Yu used OpenAI Codex for the dormant current-people index resolver, its role and filtered-view regression tests, and the related integration documentation.
-* Zhu Zhi Yu used OpenAI Codex to prepare representative canonical people samples, their sample-integrity and view-selection tests, and the related developer usage notes.
-* Zhu Zhi Yu also used OpenAI Codex for PR review, merge-conflict reconciliation, and the integration documentation and Javadoc formatting corrections in the search, inline-help, and atomic-save increments.
-* Zhu Zhi Yu used OpenAI Codex to align the assigned product scope and prioritized user stories with the shared-lesson target, preserving the distinction between delivered foundations, planned runtime features, and future extensions. This attribution covers that documentation update.
-* Zhu Zhi Yu used OpenAI Codex to document the confirmed person command-index boundary and reconcile shared-lesson command formats, staged search scope, legacy recovery policy, use cases, and manual checks. This acknowledgement covers those documentation changes; feature implementations remain with their owners.
-* Zhu Zhi Yu used OpenAI Codex to assist with the file-logging startup fallback, its isolated regression tests, and logging documentation.
-* Zhu Zhi Yu used OpenAI Codex for the UI startup error-handling fix and its regression tests.
-* Zhu Zhi Yu used OpenAI Codex for dormant role-aware add argument parsing, its immutable ID-free input, regression tests, and integration documentation.
-* Zhu Zhi Yu used OpenAI Codex for the dormant complete-state person-addition candidate and canonical add/list commands, their transaction/storage regression tests, and the related integration notes.
-* Zhu Zhi Yu used OpenAI Codex for the canonical people session, its protected routing and shared-root integration tests, and the corresponding developer integration notes.
-* Zhu Zhi Yu used OpenAI Codex for the #85 application cutover: canonical startup/path selection, the active command catalogue and Logic adapter, person-card/view wiring, integration regression tests, and UG/DG reconciliation. Teammates retain ownership of their underlying feature foundations.
-* Zhu Zhi Yu used OpenAI Codex for constant-stack email validation that preserves the inherited contact rules, its parser/file-loading regressions, and the related implementation and manual-testing notes.
-* Zhu Zhi Yu used OpenAI Codex to clarify the course-prescribed Java 25 and macOS runtime setup, release verification, and manual-testing documentation.
-* Zhu Zhi Yu used OpenAI Codex for PR review and Javadoc formatting corrections in the canonical aggregate foundation (#76).
-* Yang Shuo (`ys000009`) used OpenAI Codex to assist with the canonical lesson scheduling APIs, aggregate
-  invariants, read-only relationship queries and guards, automated tests, and design documentation for #78.
-* Ben (`ben58882`) used OpenAI Codex for #80's indexed lesson/roster projections, committed-state refresh,
-  Logic retrieval delegation, search and transaction regression tests, and the corresponding guide updates.
-
-* PonHub builds on [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the SE-EDU initiative. Existing acknowledgements and licences are retained.
-* Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), and [JUnit 5](https://junit.org/junit5/).
-* Ernest's Week 8 help increment used OpenAI Codex to inspect the repository, generate and revise the command catalogue, inline-help implementation, regression tests, and Ernest's documentation coordination changes. This attribution covers that increment; it does not claim authorship of teammates' feature implementations or imply teammate review has occurred.
-* Ernest used OpenAI Codex for the #129 active UI field-encapsulation and Javadoc standards corrections, caller verification, and repository checks.
-* Ernest used OpenAI Codex for #60's shared architecture/command conventions and AboutUs ownership clarification. This attribution covers documentation coordination; each feature owner retains their own implementation, tests and feature documentation.
-* Zhu Zhi Yu used OpenAI Codex to prepare the dormant person-card display projection, FXML renderer, projection and renderer tests, isolated developer preview, Linux CI virtual-display setup, and the related integration and manual-testing documentation. This attribution covers that card increment.
+* PonHub evolves [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) by the
+  [SE-EDU initiative](https://se-education.org); existing licences and reuse credits are retained.
+* Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson),
+  and [JUnit 5](https://junit.org/junit5/).
+* Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex for these bounded contributions, including their tests
+  and documentation: role records/common interface; ordered registry and import/export state;
+  detached and aggregate-backed role-filtered views; current-index resolution; card projections,
+  FXML/list rendering, previews and Linux CI virtual-display setup; representative people samples;
+  role-aware addition parsing/candidates/commands and canonical session; #85 application cutover
+  (startup/path selection, active catalogue/Logic adapter, cards, integration tests and guides); contact
+  validation/ASCII-space normalization and constant-stack email validation ([#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61));
+  logging fallback and UI startup error handling. He also used Codex for product scope/user stories,
+  confirmed selectors/command formats/search scope, recovery/use cases/manual checks, prescribed
+  Java/macOS setup, and review/conflict reconciliation/Javadoc corrections in search, inline help,
+  atomic saves and the canonical aggregate (#76). These credits do not transfer feature ownership.
+* Yang Shuo (`ys000009`) used OpenAI Codex for #78's scheduling APIs, aggregate invariants,
+  read-only relationship queries/guards, tests and design documentation.
+* Ben (`ben58882`) used OpenAI Codex for #80's indexed lesson/roster projections, committed-state
+  refresh, Logic delegation, search/transaction regression tests and guide updates.
+* Ernest used OpenAI Codex for the Week 8 command catalogue, inline help, regression tests and shared
+  documentation; #129's active UI encapsulation/Javadoc corrections and caller/repository checks;
+  #60's architecture/command conventions and AboutUs clarification; and #164's shared-guide
+  consolidation, canonical-runtime reconciliation, source verification and rendered checks. This credits
+  Ernest's contributions, without claiming teammates' implementations or unperformed human review.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -52,13 +46,17 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 
 ### Current increment and command integration
 
-The active application uses one `CanonicalPeopleSession` for role-aware people, stable IDs, the shared people view, protected loading and staged saves. Its commands are `add r/ROLE ...`, `list [r/ROLE]`, `help [COMMAND]` and `exit`. Guarded deletion, shared-lesson commands, enrolment, attendance, history and search remain unavailable. Inherited AB3 classes and diagrams retained below describe historical structure and regression seams, rather than a second active people store.
+`MainApp` connects one `CanonicalPeopleSession` to `CanonicalLogicManager`, canonical cards and
+protected storage. Active commands are `add r/ROLE ...`, `list [r/ROLE]`, `help [COMMAND]` and `exit`;
+protected sessions expose only help/list/exit. `delete`, `edit`, `clear`, `find`, shared-lesson commands,
+enrolment, attendance, history and search remain unavailable. The codec rejects nonempty attendance.
 
-`CanonicalCommandCatalog` is the authoritative active command/guidance catalogue. `CanonicalPeopleSession` routes its commands and resolves zero or one help topic with `Locale.ROOT` normalization. `CanonicalLogicManager` exposes that same session to `MainWindow`, including its observable `PersonRecord` list, retrieval APIs and separate preferences. The legacy `CommandCatalog`, `AddressBookParser` and `LogicManager` remain isolated regression implementations; application startup does not construct a legacy model alongside the canonical root.
-
-Feature owners supply their parser, usage and runnable example. Register a mutation only when its aggregate, validation and save/reload behavior work together. `delete`, `edit`, `clear` and `find` are absent from active routing and help. Guarded canonical deletion remains a later increment using the current people-list index and stable identity internally; inherited implementation classes remain only for regression tests.
-
-When registering or withdrawing a command, update catalogue/router tests, its UG entry and manual tests in the same PR. A summary topic must never advertise an unavailable command. `list` accepts only an optional single role filter; `exit` rejects all arguments. Protected sessions restrict both routing and advertised guidance to help/list/exit.
+`CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
+routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
+catalogue and routing tests, and UG/manual checks, using this same root/view and compatible persistence.
+Inherited AB3 classes remain regression seams; they do not form a second active people store.
+See [startup](#canonical-application-startup-85), [Storage](#storage-component) and the
+[UG](UserGuide.html#current-command-summary) for loading, transactions and supported syntax.
 
 ### Canonical application startup (#85)
 
@@ -83,61 +81,61 @@ No migration, setup or recovery command is introduced.
 
 ### Shared-lesson target contract
 
-This records the accepted design in [#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60) and [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59). It is a shared contract for incremental integration, not a claim that the complete runtime is delivered. The planned canonical data root holds one ordered people collection, one independent Lesson catalogue and separate dated Attendance records.
+The agreed design ([#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60)) uses one canonical
+root for ordered people, independent shared lessons and dated attendance. This contract describes
+the target; the [runtime summary](#current-increment-and-command-integration) identifies active routes.
 
 | Record or relationship | Authoritative representation |
 | --- | --- |
-| People | Immutable `Student`, `Tutor` and `Parent` records implement `PersonRecord`. `Student` composes `ContactDetails`, education level and parent phone; it does not extend legacy `Person` or own Lesson objects. |
-| Shared lessons | A Lesson stores its stable Lesson ID, Tutor ID, weekday/time, subject and room. Its `enrolledStudentIds` owns current membership. A student can join several lessons; several students can join the same lesson. |
-| Derived views | Student lessons, lesson rosters and tutor schedules resolve those IDs from the root. They do not create another writable membership graph. Empty lessons remain in the catalogue and shared lessons appear once. |
-| Attendance | One key is Student ID + Lesson ID + date. The recorded status is `present` or `absent`; no entry means unrecorded. History is independent of current membership. |
-| Parent links | Separate Parent records are optional. Derive links only when a Parent's own phone exactly equals the Student's parent phone, including leading zeros. A Student's parent phone does not require a matching Parent record. |
+| People | Immutable `Student`, `Tutor` and `Parent` implement `PersonRecord`. Student composes contact details, level and parent phone; it neither extends legacy `Person` nor owns lessons. |
+| Shared lessons | Each Lesson has a stable Lesson ID, Tutor ID, weekday/time, subject, room and `enrolledStudentIds`. Its roster owns membership; empty lessons remain valid. |
+| Derived views | Student lessons, rosters and tutor schedules resolve IDs from that root. They never form another writable membership graph or duplicate a shared lesson. |
+| Attendance | Student ID + Lesson ID + date identifies one `present` or `absent` record. No entry means unrecorded; history survives unenrolment. |
+| Parent links | Optional Parent records link by exact equality of their phone and a Student's parent phone, preserving leading zeros. A matching Parent record is not required. |
 
-**Confirmed person-selector boundary:** `INDEX` and `STUDENT_INDEX` arguments use a positive one-based position in the current filtered **people list**, following AB3's command-input convention. This applies to deletion and to the student selector for enrolment, unenrolment, attendance, history, and student-specific lesson retrieval when those routes are integrated. An index selects the card at that position in the current people view, not that position in the unfiltered collection, a lesson roster, or a lesson/history result. Validate the range and required role, then resolve the index once to the selected record's stable `PersonId` before invoking Model or query APIs. Reuse that resolved ID throughout the operation; later view refreshes must not select another record by reinterpreting the index. Lesson creation has the separate named-tutor lookup described below, which also resolves once to a stable ID.
+**Selectors and identity.** `INDEX`/`STUDENT_INDEX` is a positive one-based position in the current
+filtered **people list**. Check range and required role, then resolve once to stable `PersonId` for
+the whole operation. Filtering renumbers positions without changing stored IDs (`S1`, `T1`, `P1`);
+cards distinguish both. Lesson, roster and history results preserve the people filter/order/indices;
+their row positions are never person selectors. Existing lessons use stable `lid/LESSON_ID` (`lid/L1`).
+`lessons [si/STUDENT_INDEX]` resolves its optional Student selector by the same rule. Stored
+relationships and internal query APIs use stable IDs, never displayed positions.
 
-Stable person IDs such as `S1`, `T1` and `P1` remain displayed, stored, and used by internal lookup, queries, relationships and persistence. Cards distinguish the current-view index from the stable ID. Filtering or reordering renumbers the people view from one without changing stored identities. Stable lesson IDs such as `L1` remain displayed and persisted; all command references to an existing lesson use `lid/LESSON_ID`, for example `lid/L1`. Lesson catalogue, roster and history results use separate views and preserve the current people filter, order and indices. Their row positions never replace people-list command selectors.
+**Tutor lookup.** `addlesson` matches `tu/TUTOR_NAME` by normalized full name, ignoring case and
+repeated spaces. If supplied, `tp/TUTOR_PHONE` must also match exactly; never ignore it. Reject zero
+matches or ambiguity without mutation, requesting a phone to disambiguate. Search `tu/` instead
+matches a case-insensitive name fragment; Tutor-category name search uses `n/`.
 
-The planned lesson-catalogue filter is `lessons [si/STUDENT_INDEX]`. Its optional student selector follows the same current people-list index and Student-role validation, then passes the resolved stable ID to the internal student-lesson query. Internal Student-ID query APIs remain ID-based. This planned route is not yet active.
+The [UG command formats](UserGuide.html#planned-command-summary) and [search matrix](#supported-criteria)
+define the complete planned syntax and filters. A delivered search slice advertises only available
+filters while retaining the remaining target. Documentation alone does not activate a route.
 
-**Tutor selection:** `addlesson` resolves `tu/TUTOR_NAME` as a normalized full name, ignoring letter case and repeated spaces. Optional `tp/TUTOR_PHONE` must match the tutor's exact phone number; never ignore a supplied phone to fall back to the name. Reject zero matches or ambiguity without changing data, and request a disambiguating phone when needed. Search `tu/` instead matches a case-insensitive name fragment. Tutor-category name search uses `n/`. Stable person IDs are not external lookup selectors for these commands.
+**Scheduling and history.** Create each lesson once with an empty roster. Reject tutor/room clashes
+between distinct same-weekday lessons, and a student's clashes with other enrolled lessons. Joining
+the same lesson does not book its tutor/room again. Times are half-open `[start, end)`: adjacent
+`1600–1700`/`1700–1800` slots and equal times on different weekdays are allowed.
 
-The planned routes follow the [UG command conventions](UserGuide.html#reading-the-planned-command-formats) and [summary](UserGuide.html#planned-command-summary):
+Unenrolment removes membership only. New attendance needs current membership and a real date on the
+lesson's weekday; an existing historical key can be corrected or unmarked after unenrolment.
+Repeating a status is a no-op. Unmark removes that dated key, never membership.
 
-| Action | Format |
+**Deletion guards.** Reject blocked deletion without changes or cascading:
+
+| Record | Guard or retained data |
 | --- | --- |
-| People | `add r/ROLE ...`, `list [r/ROLE]`, `delete INDEX` (role-specific required fields are in the UG) |
-| Create lesson | `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` |
-| Enrol / unenrol | `enrol STUDENT_INDEX lid/LESSON_ID` / `unenrol STUDENT_INDEX lid/LESSON_ID` |
-| Delete lesson | `deletelesson lid/LESSON_ID` |
-| Catalogue | `lessons [si/STUDENT_INDEX]` |
-| Lesson detail | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` |
-| Mark / correct | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent</code> |
-| Unmark | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` |
-| History | `history STUDENT_INDEX [lid/LESSON_ID]` |
-| Search | `search c/CATEGORY [FILTER_PREFIX/VALUE]...` |
+| Student | Block while any roster or attendance record references its ID. |
+| Tutor | Block while any Lesson references its ID. |
+| Lesson | Block while its roster is nonempty or attendance references its ID. |
+| Parent | Preserve Students' parent-phone values; only derived links disappear. |
 
-The complete [search matrix](#supported-criteria) remains the planned target. Own-contact searches can be integrated first, followed by the relational families. Each delivered route advertises only its available filters; staging does not silently remove the remaining filters from the target. Documenting a route does not activate it.
+Complete independent snapshots include relationships and monotonic allocation state; deleted
+committed IDs are never reused. [Storage](#storage-component) is authoritative for versioned schema,
+validation, protected loading, recovery and save-before-publication transactions. Preferences have
+a separate lifecycle. Extended features are listed in [Requirements](#user-stories); undo/archiving
+constraints are described [below](#future-undoredo-and-archiving).
 
-**Scheduling and attendance rules:**
-
-* Create a lesson independently with an empty roster. Reject tutor or room clashes between distinct lessons on the same weekday. Check a student's clashes against their other enrolled lessons when enrolling; another student joining the same lesson does not book the tutor or room again.
-* Treat times as half-open intervals `[start, end)`: `1600–1700` and `1700–1800` are adjacent and allowed. Overlap requires `first.start < second.end` and `second.start < first.end` on the same weekday; equal times on different weekdays do not clash.
-* Unenrolment removes only current membership and retains dated attendance. New attendance requires current membership and a real date matching the lesson's weekday. An existing historical key can be corrected or unmarked after unenrolment; repeating its status does not create a second entry. Unmark removes the dated record, not membership. Unrecorded is the absence of a record, never a third stored status.
-
-**Deletion guards:** Reject a blocked deletion without changing data; never cascade to linked records.
-
-| Record to delete | Guard or retained data |
-| --- | --- |
-| Student | Block while any Lesson roster or Attendance record references the Student ID. |
-| Tutor | Block while any Lesson references the Tutor ID. |
-| Lesson | Block while its roster is non-empty or Attendance references its Lesson ID. |
-| Parent | Preserve every Student's parent-phone value; derived links disappear when the Parent record is removed. |
-
-All mutations go through Model APIs using stable identities after command-boundary resolution. Complete aggregate copy/reset/equality and independent snapshots cover people, lessons, memberships, attendance and monotonic allocation state; deleted committed IDs are not reused. Vincent coordinates validated versioned JSON and transactional saves; failed saves must restore data and active views before those commands are enabled. The active canonical people runtime connects the people view, add/list commands and protected persistence; later guarded commands must use that same root and selector boundary. Do not persist displayed indices or introduce a second people store; verify that separate lesson/roster/history results preserve the people view used by the next command. Preferences remain separate. Capacity, waiting lists, make-ups, export, saved searches, archiving, richer attendance statuses or notes, attendance percentages, fees, lesson editing, occurrence cancellation, undo/redo and guided advanced search are future extensions.
-
-**Iteration boundary:** The [Week 8 course instructions](https://nus-cs2103-ay2627-s1.github.io/website/schedule/week8/project.html) call for small first increments towards the simplest MVP. Each member should aim for a meaningful reviewed and merged code PR. An individual feature need not be complete end-to-end, but intermediate versions must remain working; this iteration requires no product release. The broader team target remains visible in [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59). Carry unfinished work into v1.3 honestly. Compatible loading and rollback remain safety requirements when a mutation is activated, rather than a requirement to finish every planned feature in Week 8.
-
-The [AboutUs ownership record](AboutUs.html#project-team) assigns people/testing to Zhu, lessons/enrolment/attendance to Yang, queries/views to Ben, storage/history/delivery to Vincent, and help/documentation coordination to Ernest. Each owner authors their own feature documentation in the existing UG/DG as behavior is delivered. Ernest reconciles shared conventions and examples without taking ownership of those implementations.
+Ownership and implementation coordination remain in [AboutUs](AboutUs.html#project-team) and
+[tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59).
 
 <div markdown="span" class="alert alert-primary">
 
@@ -148,41 +146,28 @@ The [AboutUs ownership record](AboutUs.html#project-team) assigns people/testing
 
 <img src="images/ArchitectureDiagram.png" width="280" />
 
-The ***Architecture Diagram*** given above explains the high-level design of the App.
+`Main` launches JavaFX; [`MainApp`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/MainApp.java)
+checks application paths, constructs the canonical session and separate preferences, then connects
+`CanonicalLogicManager` and UI. It saves preferences separately at shutdown.
 
-The following provides a quick overview of the main components and their interactions.
+| Component | Responsibility |
+| --- | --- |
+| [UI](#ui-component) | Render observable views, accept commands and show feedback. |
+| [Logic](#logic-component) | Parse/dispatch commands and coordinate execution, persistence and publication. |
+| [Model](#model-component) | Own canonical records, invariants and derived views; keep preferences separate. |
+| [Storage](#storage-component) | Validate/load local files and persist complete operational snapshots safely. |
+| [Commons](#common-classes) | Supply shared value helpers, exceptions, logging and settings. |
 
-**Main components of the architecture**
-
-**`Main`** (consisting of classes [`Main`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/Main.java) and [`MainApp`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/MainApp.java)) is in charge of the app launch and shut down.
-* At app launch, it initializes the other components in the correct sequence, and connects them up with each other.
-* At shut down, it shuts down the other components and invokes cleanup methods where necessary.
-
-The bulk of the app's work is done by the following four components:
-
-* [**`UI`**](#ui-component): The UI of the App.
-* [**`Logic`**](#logic-component): The command executor.
-* [**`Model`**](#model-component): Holds the data of the App in memory.
-* [**`Storage`**](#storage-component): Reads data from, and writes data to, the hard disk.
-
-[**`Commons`**](#common-classes) represents a collection of classes used by multiple other components.
-
-**How the architecture components interact with each other**
-
-The inherited *Sequence Diagram* below records the historical `delete 1` flow. Active canonical deletion is unavailable; the active add/save/publication boundary is described in [Command transactions](#command-transactions).
-
-<img src="images/ArchitectureSequenceDiagram.png" width="574" />
-
-Each of the four main components (also shown in the diagram above),
-
-* defines its *API* in an `interface` with the same name as the Component.
-* provides its functionality through a concrete `{Component Name}Manager` class that implements the corresponding API interface.
-
-For the active application, `CanonicalLogicManager` implements `Logic`; the inherited `LogicManager` remains for regression tests. Other components interact with a component through its interface rather than its concrete class, preventing them from coupling to that component's implementation, as illustrated in the following partial class diagram.
+Components depend on interfaces rather than manager implementations, keeping UI, command and file
+handling independently testable:
 
 <img src="images/ComponentManagers.png" width="300" />
 
-The sections below give more details of each component.
+The inherited diagrams record historical manager types and the broad `delete 1` flow; active deletion
+is unavailable. Canonical additions save staged state before publication; failure leaves the live
+state unchanged. See [Command transactions](#command-transactions) for that boundary.
+
+<img src="images/ArchitectureSequenceDiagram.png" width="574" />
 
 ### UI component
 
@@ -201,31 +186,29 @@ for how those results must preserve the people list.
 
 ### Logic component
 
-**API** : [`Logic.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/Logic.java)
-
-Here's a (partial) class diagram of the `Logic` component:
+**API:** [`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/Logic.java).
 
 <img src="images/LogicClassDiagram.png" width="550"/>
 
-The inherited sequence diagram below records `execute("delete 1")`; active routing instead delegates add/list/help/exit to `CanonicalPeopleSession`.
+`CanonicalLogicManager` delegates to the single `CanonicalPeopleSession`. The session's `execute()`
+dispatches commands through its switch, using `CanonicalCommandCatalog` for available command words
+and guidance. It parses add/list input and invokes `CanonicalCommandExecutor`, which saves a changed
+candidate before publishing its root and view and returning `CommandResult`. Parse, domain or save failure preserves
+live records, allocation counters, filter and selection. Read-only commands/no-ops skip operational
+saving; list can update only the role filter. See [Storage](#command-transactions).
 
-![Interactions Inside the Logic Component for the `delete 1` Command](images/DeleteSequenceDiagram.png)
+The class/parser diagrams describe retained legacy regression seams, not active application wiring.
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `DeleteCommandParser` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
-</div>
+![Interactions inside Logic for inherited deletion](images/DeleteSequenceDiagram.png)
 
-How active `Logic` works:
-
-1. `CanonicalLogicManager.execute` delegates to the single session. Its catalogue permits add/list/help/exit in a normal session, and help/list/exit after rejected loading.
-1. `RoleAwareAddParser` and `PeopleListParser` create validated role-aware input. Add/list execute through `CanonicalCommandExecutor` on a transaction with an independent working root and view.
-1. An addition validates a complete candidate, saves it through the protected writer, then publishes data and view and returns stable-ID success. Parse, domain or save failure leaves the live snapshot, counters, filter and selection unchanged.
-1. Read-only list/help/exit skip operational saving. Listing publishes only the selected role filter; help preserves the current view and returns inline guidance. Preferences retain their separate shutdown lifecycle.
-
-The inherited parser diagram remains useful for the retained regression seams:
+The inherited deletion diagram focuses on parsing and command execution. Its per-call parser
+construction predates the registered catalogue, and it omits the current transaction boundary;
+the active boundary is described above. Legacy parser subclasses share the `Parser` interface:
 
 <img src="images/ParserClasses.png" width="600"/>
 
-Planned person-index commands use `PersonIndexResolver` on the current filtered people list, validate range and required role, then retain the resolved stable ID. Active add/list do not introduce a deletion route or reinterpret stable IDs as command indices. See the [shared selector contract](#shared-lesson-target-contract).
+Canonical commands follow the [shared selector contract](#shared-lesson-target-contract) and execute
+through the same session/executor when integrated; documented foundations do not activate routes.
 
 #### Read-only retrieval API contract (#113)
 
@@ -257,28 +240,18 @@ methods await #100. Lesson commands and separate result views remain pending; se
 `Logic.execute(String)` and follows the [planned search matrix](#supported-criteria) when its routes activate.
 
 ### Model component
-**API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
+
+**Legacy API:** [`Model`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/Model.java).
 
 <img src="images/ModelClassDiagram.png" width="450" />
 
+The inherited diagram records `AddressBook`, `UniquePersonList` and `ModelManager`, retained for
+regression tests. Active `PonHubData` instead owns immutable canonical records and relationships;
+`PeopleView` derives one observable role-filtered projection from that root. UI observes committed
+projections rather than maintaining writable copies. Preferences remain outside operational snapshots.
 
-The active model is the session-owned `PonHubData` root and its `PeopleView`/`LessonQueries` projections,
-with immutable records and snapshots. The following inherited Model diagram and API description remain
-for the isolated AB3 regression implementation. They do not construct a second active model.
-
-The inherited `Model` component,
-
-* stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
-* stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
-* stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
-* does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The alternative, arguably more object-oriented, design below keeps a unique list of tags in `AddressBook`, and each `Person` references tags from that list. This lets `AddressBook` maintain one `Tag` object per unique tag instead of each `Person` holding its own `Tag` objects.<br>
-
-<img src="images/BetterModelClassDiagram.png" width="450" />
-
-</div>
-
+The aggregate below implements the [shared ownership and identity contract](#shared-lesson-target-contract).
+Complete independent transaction snapshots preserve records, relationships and allocation state.
 
 #### Canonical data aggregate (#76)
 
@@ -577,7 +550,9 @@ The contact changes in #61 can reject formerly accepted numeric-only names, long
 
 ### Common classes
 
-Classes used by multiple components are in the `seedu.address.commons` package.
+`seedu.address.commons` contains shared settings/value helpers, exceptions, JSON/file/string utilities
+and `LogsCenter`. Keep reusable infrastructure here; domain invariants belong to Model and command
+syntax to Logic. Logging setup and its console fallback are documented in [Logging](Logging.html).
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -622,15 +597,20 @@ but lesson command routes remain unavailable.
 
 ### Inline help
 
-The session returns catalogue guidance in an ordinary `CommandResult`, without a separate window or exit
-flag. `CanonicalCommandCatalog` supplies only the session's available routes and their syntax/examples;
-protected sessions omit add. Topic matching ignores case, while command words remain lowercase.
-Help does not mutate operational data, filters or preferences and does not save. List changes only the
-role-filtered view, and exit returns its exit flag; add alone performs operational saving in this increment.
+`CanonicalCommandCatalog` owns the active command descriptions, usage and runnable examples.
+`CanonicalPeopleSession` accepts zero or one help topic, normalizes with `Locale.ROOT`, rejects unknown
+topics/excess arguments and restricts guidance to the protected-session routes after rejected loading.
+Help preserves records and the people view without operational saves; preferences have a separate
+lifecycle. Legacy `CommandCatalog`/`HelpCommandParser` remain regression seams.
 
-The Help menu and F1 invoke `MainWindow.executeCommand("help")`. Both display exactly the same guidance as typed help while retaining the command-box draft and person selection. `ResultDisplay` uses a read-only wrapped TextArea with scrolling and resets to the beginning of each new result. Existing F1 handling for focused text controls remains in place. The unused inherited HelpWindow is not constructed or reachable through supported help entry points.
+The Help menu and F1 both invoke `MainWindow.executeCommand("help")`, retaining the command-box
+draft and card selection. `ResultDisplay` is a read-only wrapped TextArea with vertical scrolling;
+each new result starts at the top. Focused text-control F1 handling uses that same route. The unused
+inherited `HelpWindow` is never constructed by supported entry points.
 
-Tests exercise each registered help topic and its example through the actual router, malformed topics, locale-independent matching, filter/data/preference preservation, and help with failing storage. GUI selection, menu/F1 and scroll behavior have a separate manual procedure below.
+See [manual help checks](#inline-help-and-supported-routes) for topic, menu/F1 and scrolling behavior.
+Guidance follows the [current runtime summary](#current-increment-and-command-integration);
+prepared lesson/search foundations do not add help topics.
 
 <a id="person-record-foundation"></a>
 <a id="ordered-people-registry-foundation"></a>
@@ -754,8 +734,9 @@ share that root. Callers receive immutable data snapshots and the same unmodifia
 the session does not expose writable operational data. Execute on the single model thread, or the JavaFX
 application thread once controls are attached.
 
-The session routes active `add`, `list`, `help` and `exit` through `CanonicalCommandCatalog`, independent of the
-retained legacy `CommandCatalog`. It parses role-aware additions and listings before staged execution. Changed data
+The session's `execute()` dispatches active `add`, `list`, `help` and `exit` commands through its switch.
+`CanonicalCommandCatalog` defines the permitted command words and guidance, independently of the
+retained legacy `CommandCatalog`. The session parses role-aware additions and listings before staged execution. Changed data
 is saved through the protected writer before publication, ID success feedback or reset to all roles. Parse,
 domain and save failures leave the original data, allocation counters and visible filter/list unchanged.
 Read-only commands perform no operational saves.
@@ -889,9 +870,11 @@ replace its value when correcting attendance. This foundation adds no active com
 
 ### Future undo/redo and archiving
 
-Undo/redo and student archiving are future extensions. The inherited AB3 undo diagrams and `VersionedAddressBook` example do not describe an implemented PonHub mechanism. No undo, redo, archive or restore route is registered in the current command catalogue.
-
-Failed-command rollback is part of safe canonical integration and is separate from user-requested undo. A future undo or archive design must preserve shared-lesson and attendance references, stable identity and the rule against reusing committed IDs. Feature owners will document its actual commands and persistence behavior if that extension is implemented.
+No undo, redo, archive or restore route is registered. Failed-command rollback is already delivered
+through [transactions](#command-transactions); it is separate from user-requested undo. A future
+undo/archive design must preserve the [shared reference and identity rules](#shared-lesson-target-contract),
+including attendance history and non-reuse of committed IDs. Inherited `VersionedAddressBook`/undo
+examples do not describe an implemented PonHub feature.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -1231,14 +1214,28 @@ Use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-projec
 
 ### Inline help and supported routes
 
-1. Launch the built JAR using Java 25 in a fresh folder. Run `help`, then `help add`, `help list`, `help help`, and `help exit`. Each topic must match its actual active parser and supply a runnable example. Requesting `help exit` must leave the application open.
-2. Select a person card, type an unfinished command, and choose Help from the menu. Repeat with F1 while focus is in the command box and in Result Display. Expect identical overview guidance, no separate window, unchanged card selection and unchanged unfinished input.
-3. Run `help ADD`; expect the same content as `help add`. Run `help remove`, `help delete`, `help clear`, and `help addlesson`; expect an unknown-topic message directing you to `help`. Run `help add delete`; expect the help usage after `Invalid command format!`.
-4. Resize to the minimum width. Run `help add`, scroll to its last example and back to the top. Expect wrapped, readable text and a working vertical scrollbar. Request another topic while scrolled down; it starts at the beginning.
-5. Run `delete 1`, `edit 1 n/Alex`, `clear`, `find Alex`, `search c/student` and `lessons`. Expect `Unknown command.` and unchanged people/data. Run `list extra` and `exit extra`; expect their usage messages and no list change or exit.
-6. Compare the operational file before and after help; it must be byte-for-byte unchanged, and a missing operational file must remain missing. The automated failing-storage test covers help without operational write access. Preference saving at application shutdown remains separate.
+Use the active catalogue in the tested build; these examples apply to canonical startup.
 
-Repeat the topic/example checks whenever a feature owner registers another command. Broader shared-lesson workflow and published-site checks remain pending the owners' integration; passing help checks alone does not establish completion of the broader team target. These checks do not claim delivery of unavailable feature routes.
+1. In a fresh JAR folder, run `help`, then `help add`, `help list`, `help help` and
+   `help exit`. Each topic matches its parser and supplies a runnable example; `help exit` keeps
+   the app open. Repeat topic/example checks when another route is registered.
+2. Add a person using a runnable `help add` example, then select its card, type an unfinished command
+   and choose Help from the menu. Repeat F1 from command
+   and result focus. Expect identical inline guidance, retained draft/selection and no separate window.
+3. `help ADD` matches `help add`. `help remove`, `help delete`, `help clear` and `help addlesson`
+   explain the unknown topic and direct users to `help`. `help add delete` reports invalid format
+   and help usage.
+4. At minimum width, run `help add` and scroll to the final example/back to the top. Text wraps
+   readably; a new topic resets scrolling. Record actual display conditions using the
+   [people-card/whole-window checks](#planned-people-card-display-checks).
+5. `delete 1`, `edit 1 n/Alex`, `clear`, `find Alex`, `search c/student` and `lessons` report
+   `Unknown command.` without changing data.
+   `list extra`/`exit extra` show usage without changing the list or exiting.
+6. Compare operational bytes before/after help: unchanged, or still missing in a fresh folder.
+   Repeat with unwritable operational storage; preference saving at shutdown remains separate.
+
+Help checks do not establish the [planned shared-lesson workflow](#planned-shared-lesson-workflow-checks)
+or final guide/site acceptance ([#102](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/102)).
 
 ### Planned person-index integration checks
 
