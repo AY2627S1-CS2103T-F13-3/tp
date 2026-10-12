@@ -91,6 +91,35 @@ public class CanonicalMainWindowTest {
     }
 
     @Test
+    public void commandBox_personSearch_updatesCardsIndicesAndRetainsSelectionOnFailure() throws Exception {
+        seedMixedPeople();
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                byte[] original = Files.readAllBytes(fixture.dataPath);
+                fixture.enter("search c/student n/Selected");
+                assertEquals("Found 1 student(s).", fixture.feedback());
+                assertCard(fixture, "Student · S3", "1. Selected Student");
+                assertSame(fixture.app.getLogic().getPersonRecords(), fixture.people().getItems());
+                fixture.people().getSelectionModel().select(0);
+                fixture.enter("help SEARCH");
+                assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
+                fixture.enter("search c/student d/Mon");
+                assertTrue(fixture.feedback().contains("not available"));
+                assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
+                assertCard(fixture, "Student · S3", "1. Selected Student");
+                fixture.enter("search c/student n/No Match");
+                assertEquals("Found 0 student(s).", fixture.feedback());
+                assertTrue(fixture.people().getItems().isEmpty());
+                fixture.enter("list r/student");
+                assertEquals(List.of(new PersonId("S9"), new PersonId("S3")),
+                        fixture.people().getItems().stream().map(PersonRecord::getId).toList());
+                assertArrayEquals(original, Files.readAllBytes(fixture.dataPath));
+            }
+            return null;
+        });
+    }
+
+    @Test
     public void commandBox_filteredIndicesAndRejectedCommands_keepOneViewAndFile() throws Exception {
         seedMixedPeople();
         callOnFxThread(() -> {

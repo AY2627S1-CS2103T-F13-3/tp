@@ -34,13 +34,14 @@ The first successful addition creates the data file. Keep the same JAR folder to
 
 ## Current command summary
 
-The active routes use one saved people dataset with role-specific records and stable IDs. Shared lessons, guarded deletion, enrolment, attendance, history and search remain planned; their specifications follow under [Planned shared-lesson workflow](#planned-shared-lesson-workflow). Type `help` to inspect the commands available in your session. `delete`, `edit`, `clear` and `find` are unavailable.
+The active routes use one saved people dataset with role-specific records and stable IDs. Own-contact people search is active. Shared lessons, guarded deletion, enrolment, attendance, history, lesson search and relationship filters remain planned; their specifications follow under [Planned shared-lesson workflow](#planned-shared-lesson-workflow). Type `help` to inspect the commands available in your session. `delete`, `edit`, `clear` and `find` are unavailable.
 
 | Action | Format | Example |
 | --- | --- | --- |
 | Add student | `add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]` | `add r/student n/Alex Tan l/S2 pp/91234567` |
 | Add tutor or parent | `add r/ROLE n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]` | `add r/tutor n/Mei Lim p/92345678` |
 | List people | `list [r/ROLE]` | `list r/student` |
+| Search people | `search c/CATEGORY [OWN_FIELD/VALUE]...` | `search c/student n/Alex l/S2` |
 | Get help | `help [COMMAND]` | `help add` |
 | Exit | `exit` | `exit` |
 
@@ -50,7 +51,7 @@ Cards display a current position separately from the stable ID, such as `S1`. Ad
 
 **Format:** `help [COMMAND]`
 
-`help` shows the current supported-command catalogue in Result Display. In a normal session, `help add`, `help list`, `help help` and `help exit` show usage guidance. Topic names are case-insensitive, so `help ADD` is accepted; the command word `help` remains lowercase. Asking for exit guidance does not exit the application.
+`help` shows the current supported-command catalogue in Result Display. In a normal session, `help add`, `help list`, `help search`, `help help` and `help exit` show usage guidance. Topic names are case-insensitive, so `help ADD` is accepted; the command word `help` remains lowercase. Asking for exit guidance does not exit the application.
 
 Choose **Help > Help** or press **F1** for the same catalogue, including when focus is in the command box or Result Display. Menu/F1 preserve unfinished command text. Help preserves records, the active person filter, order, selection and preferences. Typed help clears the submitted command in the usual way. Help needs no internet connection and does not save operational data.
 
@@ -59,7 +60,7 @@ Long guidance wraps within Result Display. Scroll vertically to read the rest; e
 * `help remove` returns `Unknown command: 'remove'. Type 'help' to see available commands.` Unavailable topics such as `help addlesson` receive the same kind of feedback until their commands are integrated.
 * `help add delete` returns `Invalid command format!` followed by `Usage: help [COMMAND]` and its explanation. Supply at most one topic.
 * `delete`, `edit`, `clear` and `find` return `Unknown command.` They are absent from the catalogue.
-* In a protected session, help lists only `help`, `list` and `exit`; `help add` is unavailable.
+* In a protected session, help lists only `help`, `list` and `exit`; `help add` and `help search` are unavailable.
 
 ### 1. Adding a person: `add`
 
@@ -152,11 +153,36 @@ An empty result is valid. PonHub reports a count of zero and the people panel sh
 
 --------------------------------------------------------------------------------------------------------------------
 
+### Searching people by their own fields: `search`
+
+**Formats:**
+
+* `search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS]`
+* `search c/tutor|parent [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]`
+
+Category values ignore case. Supply each lowercase prefix once with a nonblank value. All supplied filters must
+match the same person. Name, email and address use case-insensitive text fragments; name/address queries trim and
+collapse repeated spaces. Levels and complete 3–15 digit phones match exactly, including leading zeros.
+Missing optional contacts do not match a supplied filter. Category-only searches include unlinked people.
+
+After adding the Quick start records, `search c/student n/alex l/s2 pp/91234567` reports `Found 1 student(s).`
+and displays Alex at position 1. `search c/tutor n/mei e/@example` displays Mei; `search c/parent p/91234567`
+displays Pat. Results retain creation order, show each stable ID once, and renumber current positions from 1.
+`search c/student n/No Match` is a successful empty view with feedback `Found 0 student(s).`
+
+Search reads the complete people catalogue, replacing the previous role/search filter. `list` or `list r/ROLE`
+clears search criteria. Use the new displayed positions for subsequent person commands. Search/help do not save
+operational data; failed commands preserve the previous view. A successful person addition resets to all roles.
+
+Relationship filters (`sn/d/st/et/s/tu/rm`) and `c/lesson` are unavailable in this increment and receive explicit
+feedback. Category-incompatible fields, unknown/repeated/blank prefixes and invalid values fail validation.
+The complete [planned search matrix](#6-searching-people-and-shared-lessons) remains the integration target.
+
 ## Data protection in the current build
 
 The current build stores people and their allocation state in `data/ponhub.json` inside the folder containing the JAR. `--data=PATH` selects a different file within that folder or its subfolders; relative paths start from the JAR folder. Absolute paths are accepted only within that folder. Blank paths and paths escaping it, including through symbolic links, are rejected at startup. Select a separate data file: `preferences.json` and the root `addressbook.log*` logging files are reserved, including aliases to them. Window preferences are saved separately in `preferences.json` in the JAR folder; selecting a different store does not change the preference file.
 
-A missing selected file starts a normal empty session and remains missing until the first successful addition. `help`, `list` and `exit` do not create or rewrite operational data. An invalid, unreadable, corrupt, unsupported or legacy selected file produces a **Data file protected** warning. The empty list in that session is unavailable saved data: it does **not** mean the original records were deleted. Only `help`, `list` and `exit` are available, and operational writes are blocked.
+A missing selected file starts a normal empty session and remains missing until the first successful addition. `help`, `list`, `search` and `exit` do not create or rewrite operational data. An invalid, unreadable, corrupt, unsupported or legacy selected file produces a **Data file protected** warning. The empty list in that session is unavailable saved data: it does **not** mean the original records were deleted. Only `help`, `list` and `exit` are available, and operational writes are blocked.
 
 To recover:
 
@@ -168,7 +194,7 @@ The default startup leaves an older `data/addressbook.json` untouched. Selecting
 
 ## Planned shared-lesson workflow
 
-The following sections record the remaining shared-lesson and guarded-deletion contracts. Role-aware add/list above are active; deletion, lessons, enrolment, attendance, history and search below are not yet available. Their availability depends on incremental integration; use the [current command summary](#current-command-summary) and your build's `help` for active routes. Feature owners update their own implementation details and examples as behavior is delivered.
+The following sections record the remaining shared-lesson and guarded-deletion contracts. Role-aware add/list and own-contact people search above are active; deletion, lessons, enrolment, attendance, history, lesson search and relationship filters below are not yet available. Their availability depends on incremental integration; use the [current command summary](#current-command-summary) and your build's `help` for active routes. Feature owners update their own implementation details and examples as behavior is delivered.
 
 ### Reading the planned command formats
 
@@ -284,7 +310,7 @@ This removes current membership and retains dated attendance. It does not delete
 
 Use `student`, `parent`, `tutor` or `lesson`; category values are case-insensitive. A category-only search imposes no filters. For example, `search c/lesson` shows each shared lesson once, including empty rosters.
 
-The complete planned filter matrix is below. Search will be integrated in stages; a build must clearly reject a filter whose search functionality is not yet enabled. Check that build's help before using it. Relationship searches in this matrix are part of the integration target.
+The complete planned filter matrix is below. Own-contact people search is active as described above; lesson and relationship search will be integrated in later stages; a build must clearly reject a filter whose search functionality is not yet enabled. Check that build's help before using it. Relationship searches in this matrix are part of the integration target.
 
 | Prefix | Field | Student | Parent | Tutor | Lesson |
 | --- | --- | --- | --- | --- | --- |
@@ -372,7 +398,7 @@ The supported JSON format remains human-editable. Close PonHub and keep a backup
 
 ## Planned command summary
 
-This table preserves the complete target, including the active add/list/help/exit formats. Other routes remain planned. These formats use the [planned command conventions](#reading-the-planned-command-formats); listing a route here does not activate it. Person/student selectors come from the current people list, while every existing-lesson selector uses a stable `lid/` reference.
+This table preserves the complete target, including the active add/list/own-contact search/help/exit formats. Other routes remain planned. These formats use the [planned command conventions](#reading-the-planned-command-formats); listing a route here does not activate it. Person/student selectors come from the current people list, while every existing-lesson selector uses a stable `lid/` reference.
 
 | Action | Format |
 | --- | --- |

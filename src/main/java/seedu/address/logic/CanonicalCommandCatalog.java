@@ -26,12 +26,24 @@ public final class CanonicalCommandCatalog {
             + "Shows the commands available in this session, or syntax and an example for one command.\n"
             + "COMMAND is optional and case-insensitive. Supply at most one command word.\n"
             + "Examples: help, help list";
+    public static final String MESSAGE_SEARCH_USAGE =
+            "Usage: search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS]\n"
+            + "       search c/tutor|parent [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]\n"
+            + "Category values ignore case. Supply each lowercase prefix at most once, with a nonblank value.\n"
+            + "All filters must match the same person. Name, email and address match text fragments ignoring case;\n"
+            + "name/address spaces are normalized. Level and phones match exactly; phone leading zeros matter.\n"
+            + "Category-only searches include unlinked people. Missing optional contacts do not match filters.\n"
+            + "Results replace the people view and renumber current positions without saving.\n"
+            + "Relationship filters and c/lesson are not available yet. Use list to clear search filters.\n"
+            + "Examples: search c/student, search c/student n/Alex l/P1 pp/91234567, search c/tutor n/Mei";
 
     private static final Entry ADD = new Entry("add", "Add a student, tutor or parent", MESSAGE_ADD_USAGE);
     private static final Entry LIST = new Entry("list", "Show all people or one role", PeopleListParser.MESSAGE_USAGE);
+    private static final Entry SEARCH = new Entry("search", "Find people by their own contact fields",
+            MESSAGE_SEARCH_USAGE);
     private static final Entry HELP = new Entry("help", "Show help or one command's guidance", MESSAGE_HELP_USAGE);
     private static final Entry EXIT = new Entry("exit", "Close PonHub", ExitCommand.MESSAGE_USAGE);
-    private static final List<Entry> ENTRIES = List.of(ADD, LIST, HELP, EXIT);
+    private static final List<Entry> ENTRIES = List.of(ADD, LIST, SEARCH, HELP, EXIT);
     private static final List<Entry> PROTECTED_ENTRIES = List.of(HELP, LIST, EXIT);
 
     private CanonicalCommandCatalog() {
