@@ -16,8 +16,11 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.scene.Scene;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -28,8 +31,9 @@ import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.ProtectedPonHubDataStorage.LoadStatus;
 
 /**
- * Exercises complete nonvisual MainApp initialization and shutdown in isolated process folders.
+ * Exercises MainApp initialization and shutdown with a minimal stage in isolated process folders.
  * Ernest used OpenAI Codex for these bootstrap/path/preferences regression tests and guide notes.
+ * Zhu Zhi Yu used OpenAI Codex for the stage/pulse lifecycle checks and shutdown diagnostics.
  */
 public class ApplicationStartupTest {
     private static final String VALID_DATA = """
@@ -136,9 +140,17 @@ public class ApplicationStartupTest {
         Process process = new ProcessBuilder(command)
                 .directory(folder.toFile()).redirectErrorStream(true).redirectOutput(log.toFile()).start();
         try {
-            assertTrue(process.waitFor(30, TimeUnit.SECONDS), "Bootstrap timed out; see " + log);
-            assertEquals(0, process.exitValue(), Files.readString(log));
-            assertTrue(Files.readString(log).contains(COMPLETION_MARKER), Files.readString(log));
+            boolean hasExited = process.waitFor(30, TimeUnit.SECONDS);
+            String output = Files.readString(log);
+            assertTrue(hasExited, "Bootstrap timed out; see " + log + "\n" + output);
+            assertEquals(0, process.exitValue(), output);
+            int previousPhase = -1;
+            for (String phase : List.of("init verified", "stage shown", "pulse observed", "stop entered",
+                    "stop verified", COMPLETION_MARKER)) {
+                int position = output.indexOf(phase);
+                assertTrue(position > previousPhase, "Missing or out-of-order phase: " + phase + "\n" + output);
+                previousPhase = position;
+            }
         } finally {
             if (process.isAlive()) {
                 process.destroyForcibly();
@@ -153,10 +165,10 @@ public class ApplicationStartupTest {
     }
 
     /**
-     * Supplies real JavaFX named parameters without showing a window or substituting production factories.
+     * Supplies real JavaFX named parameters without substituting production initialization or storage factories.
      */
     public static final class StartupProbe {
-        private static Throwable failure;
+        private static volatile Throwable failure;
 
         public static void main(String[] args) {
             Application.launch(BootstrapApplication.class, args);
@@ -165,14 +177,24 @@ public class ApplicationStartupTest {
             }
             System.out.println(COMPLETION_MARKER);
         }
+
+        private static void recordFailure(Throwable cause) {
+            if (failure == null) {
+                failure = cause;
+            } else {
+                failure.addSuppressed(cause);
+            }
+        }
     }
 
     /**
-     * Retains production init/stop; the start callback exits the toolkit without displaying native controls.
+     * Retains production init/stop; a minimal stage observes a pulse before requesting toolkit exit.
+     * This avoids terminating the fixture before it has exercised the native stage lifecycle.
      */
     public static class BootstrapApplication extends MainApp {
         private Path data;
         private byte[] original;
+        private boolean hasObservedPulse;
 
         @Override
         public void init() throws Exception {
@@ -182,9 +204,11 @@ public class ApplicationStartupTest {
             original = Files.exists(data) ? Files.readAllBytes(data) : null;
             super.init();
             try {
+                assertFalse(Platform.isFxApplicationThread());
                 verifySession();
+                System.out.println("Bootstrap phase: init verified");
             } catch (Throwable failure) {
-                StartupProbe.failure = failure;
+                StartupProbe.recordFailure(failure);
             }
         }
 
@@ -230,24 +254,49 @@ public class ApplicationStartupTest {
 
         @Override
         public void start(Stage primaryStage) {
-            Platform.runLater(Platform::exit);
+            assertTrue(Platform.isFxApplicationThread());
+            System.out.println("Bootstrap runtime: " + System.getProperty("os.name") + " / "
+                    + System.getProperty("os.arch") + " / " + System.getProperty("java.vendor") + " / "
+                    + System.getProperty("java.runtime.version") + " / JavaFX "
+                    + System.getProperty("javafx.runtime.version"));
+            primaryStage.setScene(new Scene(new StackPane(), 160, 100));
+            primaryStage.show();
+            assertTrue(primaryStage.isShowing());
+            System.out.println("Bootstrap phase: stage shown");
+            new AnimationTimer() {
+                @Override
+                public void handle(long now) {
+                    stop();
+                    try {
+                        assertTrue(Platform.isFxApplicationThread());
+                        assertTrue(primaryStage.isShowing());
+                        hasObservedPulse = true;
+                        System.out.println("Bootstrap phase: pulse observed");
+                    } catch (Throwable failure) {
+                        StartupProbe.recordFailure(failure);
+                    } finally {
+                        // Let this pulse finish before the launcher invokes production shutdown.
+                        Platform.runLater(Platform::exit);
+                    }
+                }
+            }.start();
         }
 
         @Override
         public void stop() {
             try {
+                System.out.println("Bootstrap phase: stop entered");
+                assertTrue(Platform.isFxApplicationThread());
+                assertTrue(hasObservedPulse);
                 super.stop();
                 if (original == null) {
                     assertFalse(Files.exists(data));
                 } else {
                     assertArrayEquals(original, Files.readAllBytes(data));
                 }
+                System.out.println("Bootstrap phase: stop verified");
             } catch (Throwable failure) {
-                if (StartupProbe.failure == null) {
-                    StartupProbe.failure = failure;
-                } else {
-                    StartupProbe.failure.addSuppressed(failure);
-                }
+                StartupProbe.recordFailure(failure);
             }
         }
     }
