@@ -28,6 +28,7 @@ public class JsonUtil {
     private static ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules()
             .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, true)
             .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
             .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
 
@@ -46,7 +47,7 @@ public class JsonUtil {
      *
      * @param filePath cannot be null.
      * @param classOfObjectToDeserialize JSON file has to correspond to the structure in the class given here.
-     * @throws DataLoadingException if loading of the JSON file failed.
+     * @throws DataLoadingException if loading failed or the file contains a null root value.
      */
     public static <T> Optional<T> readJsonFile(
             Path filePath, Class<T> classOfObjectToDeserialize) throws DataLoadingException {
@@ -61,6 +62,9 @@ public class JsonUtil {
 
         try {
             jsonFile = deserializeObjectFromJsonFile(filePath, classOfObjectToDeserialize);
+            if (jsonFile == null) {
+                throw new IOException("JSON file must contain a non-null object.");
+            }
         } catch (IOException e) {
             logger.warning("Error reading from jsonFile file " + filePath + ": " + e);
             throw new DataLoadingException(e);
