@@ -51,8 +51,9 @@ protected storage. Active commands are `add r/ROLE ...`, `list [r/ROLE]`, `help 
 protected sessions expose only help/list/exit. `delete`, `edit`, `clear`, `find`, shared-lesson commands,
 enrolment, attendance, history and search remain unavailable. The codec rejects nonempty attendance.
 
-`CanonicalCommandCatalog` owns active dispatch and guidance. Register or withdraw a route with matching
-parser/usage, catalogue tests and UG/manual checks, using this same root/view and compatible persistence.
+`CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
+routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
+catalogue and routing tests, and UG/manual checks, using this same root/view and compatible persistence.
 Inherited AB3 classes remain regression seams; they do not form a second active people store.
 See [startup](#canonical-application-startup-85), [Storage](#storage-component) and the
 [UG](UserGuide.html#current-command-summary) for loading, transactions and supported syntax.
@@ -189,9 +190,10 @@ for how those results must preserve the people list.
 
 <img src="images/LogicClassDiagram.png" width="550"/>
 
-`CanonicalLogicManager` delegates to the single `CanonicalPeopleSession`. Its catalogue routes
-validated add/list input through `CanonicalCommandExecutor`, which saves a changed candidate before
-publishing its root and view and returning `CommandResult`. Parse, domain or save failure preserves
+`CanonicalLogicManager` delegates to the single `CanonicalPeopleSession`. The session's `execute()`
+dispatches commands through its switch, using `CanonicalCommandCatalog` for available command words
+and guidance. It parses add/list input and invokes `CanonicalCommandExecutor`, which saves a changed
+candidate before publishing its root and view and returning `CommandResult`. Parse, domain or save failure preserves
 live records, allocation counters, filter and selection. Read-only commands/no-ops skip operational
 saving; list can update only the role filter. See [Storage](#command-transactions).
 
@@ -732,8 +734,9 @@ share that root. Callers receive immutable data snapshots and the same unmodifia
 the session does not expose writable operational data. Execute on the single model thread, or the JavaFX
 application thread once controls are attached.
 
-The session routes active `add`, `list`, `help` and `exit` through `CanonicalCommandCatalog`, independent of the
-retained legacy `CommandCatalog`. It parses role-aware additions and listings before staged execution. Changed data
+The session's `execute()` dispatches active `add`, `list`, `help` and `exit` commands through its switch.
+`CanonicalCommandCatalog` defines the permitted command words and guidance, independently of the
+retained legacy `CommandCatalog`. The session parses role-aware additions and listings before staged execution. Changed data
 is saved through the protected writer before publication, ID success feedback or reset to all roles. Parse,
 domain and save failures leave the original data, allocation counters and visible filter/list unchanged.
 Read-only commands perform no operational saves.
