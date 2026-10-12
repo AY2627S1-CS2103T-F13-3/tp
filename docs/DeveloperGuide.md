@@ -847,8 +847,9 @@ input is valid. Prefixes are lowercase, order-independent and unique within a co
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes | Partial text |
 | `rm/` | Lesson room | Yes | Yes | Yes | Yes | Partial text |
 
-Text filters use case-insensitive substring matching after trimming and `Locale.ROOT` case normalization; fragments
-need not form a complete valid field value. Thus `n/al` matches `Sally Tan` and `s/Math` matches `Add Math`.
+Text query values are trimmed, have repeated spaces collapsed, and are case-normalized with `Locale.ROOT`. Filters
+use case-insensitive substring matching; fragments need not form a complete valid field value. Thus `n/al` matches
+`Sally Tan` and `s/Math` matches `Add Math`. This agrees with canonical name and address normalization.
 Lesson creation selects a tutor by normalized **full** name and optional exact phone; search `tu/` matches a tutor
 name **fragment**, while tutor-category own-name search uses `n/`.
 
@@ -871,6 +872,12 @@ unsupported prefix cannot be absorbed into the preceding text value. The criteri
 but does not traverse relationships or filter a live list. The active router still rejects `search`. Own-contact,
 lesson and relational slices are staged in #87, #90 and their follow-ups; each activated route must reject filters it
 cannot yet execute, rather than silently ignoring them. The full matrix and conjunction rules remain the target.
+
+`PersonContactSearch` implements the `n/l/p/pp/e/a` own-field slice over immutable canonical person records in their
+existing order. Category-only searches include unlinked people; absent optional fields fail supplied filters, and
+relationship filters are rejected until their traversal is integrated. The matcher returns an immutable snapshot; it
+does not activate `search` or update the current people view. Activation must connect it to canonical routing and the
+people view, then verify current indices, zero-result feedback, read-only behavior and persistence boundaries.
 
 ### Dated attendance records
 
