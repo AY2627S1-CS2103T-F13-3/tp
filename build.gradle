@@ -28,6 +28,7 @@ checkstyle {
 
 test {
     useJUnitPlatform()
+    testLogging.exceptionFormat = 'full'
     doFirst {
         systemProperty 'ponhub.test.runtimeClasspath', sourceSets.test.runtimeClasspath.asPath
     }
