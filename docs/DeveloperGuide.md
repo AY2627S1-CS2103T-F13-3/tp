@@ -1313,6 +1313,16 @@ Use that same terminal/runtime when reopening the JAR; substitute its actual fil
    `../outside.json`, an absolute path outside the JAR folder and a symbolic-link escape before any
    operational read/write outside application home.
 
+`ApplicationStartupTest` exercises production `MainApp.init()` and `stop()` in isolated JVM folders
+whose paths contain spaces, with real JavaFX named parameters. It verifies empty missing-store startup,
+legacy/corrupt/unsupported rejection, supported human edits and allocation validation, original-byte
+preservation through help/list/exit and rejected mutations, repaired restart, alternate paths and shared
+GUI preference reload. The JavaFX toolkit starts, but its test-only start callback displays no window;
+these checks do not establish native interaction or physical display/scaling acceptance. Development
+classes resolve application home from each child working directory; repeat the packaged JAR procedure
+above to verify the JAR-folder boundary independently. Ernest used OpenAI Codex for these regression
+tests and their current-runtime guide reconciliation.
+
 ### Canonical people commands and unsuccessful saves
 
 1. Add a Tutor, Student and Parent, omitting optional Student contacts. Add a second student with the
