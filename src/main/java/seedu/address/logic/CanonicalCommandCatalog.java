@@ -26,12 +26,19 @@ public final class CanonicalCommandCatalog {
             + "Shows the commands available in this session, or syntax and an example for one command.\n"
             + "COMMAND is optional and case-insensitive. Supply at most one command word.\n"
             + "Examples: help, help list";
+    public static final String MESSAGE_ADD_LESSON_USAGE =
+            "Usage: addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM\n"
+            + "DAY is Mon-Sun; times use four-digit 24-hour HHMM and start before end.\n"
+            + "Tutor matching uses the normalized full name. Supply the exact phone to disambiguate.\n"
+            + "Example: addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1";
 
     private static final Entry ADD = new Entry("add", "Add a student, tutor or parent", MESSAGE_ADD_USAGE);
+    private static final Entry ADD_LESSON = new Entry("addlesson", "Create an empty-roster shared lesson",
+            MESSAGE_ADD_LESSON_USAGE);
     private static final Entry LIST = new Entry("list", "Show all people or one role", PeopleListParser.MESSAGE_USAGE);
     private static final Entry HELP = new Entry("help", "Show help or one command's guidance", MESSAGE_HELP_USAGE);
     private static final Entry EXIT = new Entry("exit", "Close PonHub", ExitCommand.MESSAGE_USAGE);
-    private static final List<Entry> ENTRIES = List.of(ADD, LIST, HELP, EXIT);
+    private static final List<Entry> ENTRIES = List.of(ADD, ADD_LESSON, LIST, HELP, EXIT);
     private static final List<Entry> PROTECTED_ENTRIES = List.of(HELP, LIST, EXIT);
 
     private CanonicalCommandCatalog() {
