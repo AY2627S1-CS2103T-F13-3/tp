@@ -50,7 +50,9 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 `MainApp` connects one `CanonicalPeopleSession` to `CanonicalLogicManager`, canonical cards and
 protected storage. Active commands are `add r/ROLE ...`, `list [r/ROLE]`, `help [COMMAND]` and `exit`;
 protected sessions expose only help/list/exit. `delete`, `edit`, `clear`, `find`, shared-lesson commands,
-enrolment, attendance, history and search remain unavailable. The codec rejects nonempty attendance.
+enrolment, attendance, history and search remain unavailable. The codec saves and loads validated
+attendance records, retaining history independently of current lesson enrolment; this persistence
+support does not activate mark, unmark or history command routes.
 
 `CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
 routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
