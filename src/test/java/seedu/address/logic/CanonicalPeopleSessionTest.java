@@ -59,7 +59,8 @@ public class CanonicalPeopleSessionTest {
         assertEquals(LoadStatus.MISSING, session.getLoadStatus());
         assertEquals(path, session.getDataFilePath());
         assertTrue(session.getDataLoadError().isEmpty());
-        assertEquals(List.of("add", "addlesson", "list", "search", "help", "exit"), session.getCommandWords());
+        assertEquals(List.of("add", "addlesson", "enrol", "unenrol", "list", "search", "help", "exit"),
+                session.getCommandWords());
         assertEquals(new PonHubData().exportState(), session.getDataSnapshot());
         assertTrue(session.getPeople().isEmpty());
         assertTrue(session.getLessonQueries().getLessonList().isEmpty());
@@ -96,8 +97,8 @@ public class CanonicalPeopleSessionTest {
         assertEquals("Showing 1 parent(s).", session.execute("list r/parent").getFeedbackToUser());
         assertEquals("Showing 4 person(s).", session.execute("list").getFeedbackToUser());
         assertEquals(Optional.empty(), session.getRoleFilter());
-        for (String command : List.of("help", "help ADD", "help ADDLESSON", "help list", "help help",
-                "help exit", "exit")) {
+        for (String command : List.of("help", "help ADD", "help ADDLESSON", "help ENROL", "help UNENROL",
+                "help list", "help help", "help exit", "exit")) {
             session.execute(command);
         }
 
@@ -135,12 +136,16 @@ public class CanonicalPeopleSessionTest {
             assertFalse(overview.contains("delete -"));
             assertFalse(overview.contains("add -"));
             assertFalse(overview.contains("addlesson -"));
+            assertFalse(overview.contains("enrol -"));
+            assertFalse(overview.contains("unenrol -"));
             assertThrows(ParseException.class, () -> session.execute("help add"));
             assertThrows(ParseException.class, () -> session.execute("help addlesson"));
+            assertThrows(ParseException.class, () -> session.execute("help enrol"));
+            assertThrows(ParseException.class, () -> session.execute("help unenrol"));
             assertThrows(ParseException.class, () -> session.execute("help delete"));
             for (String command : List.of("add", "add\n", addCommand(PersonRole.STUDENT), "delete 1", "edit 1",
                     "addlesson d/Mon st/0900 et/1000 s/Math tu/Tutor Tan rm/R1",
-                    "find Name", "unknown", "ADD")) {
+                    "enrol 1 lid/L1", "unenrol 1 lid/L1", "find Name", "unknown", "ADD")) {
                 CommandException failure = assertThrows(CommandException.class, () -> session.execute(command));
                 assertEquals(guidance, failure.getMessage());
                 assertArrayEquals(original, Files.readAllBytes(path));
@@ -347,6 +352,8 @@ public class CanonicalPeopleSessionTest {
 
         assertTrue(overview.contains("add"));
         assertTrue(overview.contains("addlesson"));
+        assertTrue(overview.contains("enrol"));
+        assertTrue(overview.contains("unenrol"));
         assertTrue(overview.contains("list"));
         assertTrue(overview.contains("help"));
         assertTrue(overview.contains("exit"));
@@ -357,6 +364,8 @@ public class CanonicalPeopleSessionTest {
         String addLessonUsage = session.execute("help ADDLESSON").getFeedbackToUser();
         assertTrue(addLessonUsage.contains("d/DAY"));
         assertTrue(addLessonUsage.contains("tp/TUTOR_PHONE"));
+        assertTrue(session.execute("help ENROL").getFeedbackToUser().contains("STUDENT_INDEX lid/LESSON_ID"));
+        assertTrue(session.execute("help UNENROL").getFeedbackToUser().contains("dated attendance"));
         assertTrue(session.execute("help list").getFeedbackToUser().contains("r/"));
         assertFalse(session.execute("help").isExit());
         assertFalse(session.execute("help").isShowHelp());

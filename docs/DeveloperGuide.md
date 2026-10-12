@@ -24,11 +24,12 @@ title: Developer Guide
   He also used Codex for product scope/user stories,
   confirmed selectors/command formats/search scope, recovery/use cases/manual checks, prescribed
   Java/macOS setup, and review/conflict reconciliation/Javadoc corrections in search, inline help,
-  atomic saves and the canonical aggregate (#76). These credits do not transfer feature ownership.
+  lesson membership, atomic saves and the canonical aggregate (#76). These credits do not transfer feature ownership.
 * Yang Shuo (`ys000009`) used OpenAI Codex for #78's scheduling APIs, aggregate invariants,
   read-only relationship queries/guards, tests and design documentation; and #86's active shared-lesson
   creation parser and command, tutor resolution, transaction/persistence regressions, conflict
-  reconciliation and guide updates.
+  reconciliation and guide updates. He also used Codex for #88's active shared-lesson enrolment and
+  unenrolment commands, aggregate mutations, persistence/query regressions and guide updates.
 * Ben (`ben58882`) used OpenAI Codex for #80's indexed lesson/roster projections, committed-state
   refresh, Logic delegation, search/transaction regression tests and guide updates.
 * Ernest used OpenAI Codex for the Week 8 command catalogue, inline help, regression tests and shared
@@ -53,8 +54,8 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 ### Current increment and command integration
 
 `MainApp` connects one canonical session/root to Logic, cards and protected storage. Normal sessions
-support role-aware `add`, empty-roster `addlesson`, `list`, own-contact people `search`, `help` and `exit`;
-protected sessions allow only help/list/exit. Guarded deletion, enrolment, attendance, lesson-result/history
+support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `list`, own-contact people `search`,
+`help` and `exit`; protected sessions allow only help/list/exit. Guarded deletion, attendance, lesson-result/history
 routes and relationship/lesson search remain planned. Inherited edit/clear/find routes are unavailable.
 Stored attendance is supported without activating mark/unmark/history commands.
 
@@ -90,7 +91,7 @@ No migration, setup or recovery command is introduced.
 
 At startup, `WindowPlacement` fits saved window dimensions and coordinates to the current screen work areas. It chooses the screen with the largest overlap with the saved window, preserves valid coordinates on secondary screens, and centers a new or wholly offscreen window on the primary screen. Invalid saved dimensions fall back to the defaults. JavaFX's visual bounds already use logical coordinates and exclude desktop bars; they are not divided by the display scale again. The startup fit does not impose a permanent maximum size, so the administrator can move and resize the window on a larger monitor.
 
-The main window has a 450-by-360 logical minimum where the work area allows it. The result area can shrink while retaining its own scrollable text, and the people list retains a visible scrollable viewport. Active canonical person cards fit their list cells and wrap names, role details and contact values. The inherited contact-card wrapping and tag regressions remain isolated compatibility checks; canonical records have no tag field. `addlesson` is active through the command box; roster and lesson-result routes remain unavailable.
+The main window has a 450-by-360 logical minimum where the work area allows it. The result area can shrink while retaining its own scrollable text, and the people list retains a visible scrollable viewport. Active canonical person cards fit their list cells and wrap names, role details and contact values. The inherited contact-card wrapping and tag regressions remain isolated compatibility checks; canonical records have no tag field. `addlesson`, `enrol` and `unenrol` are active through the command box; lesson-result routes remain unavailable.
 
 ### Shared-lesson target contract
 
@@ -205,12 +206,12 @@ for how those results must preserve the people list.
 
 `CanonicalLogicManager` delegates to the single `CanonicalPeopleSession`. The session's `execute()`
 dispatches commands through its switch, using `CanonicalCommandCatalog` for available command words
-and guidance. It parses add/addlesson/list/search input and invokes `CanonicalCommandExecutor`, which
+and guidance. It parses add/addlesson/enrol/unenrol/list/search input and invokes `CanonicalCommandExecutor`, which
 saves a changed candidate before publishing its root and view and returning `CommandResult`.
 Parse, domain or save failure preserves
 live records, allocation counters, filter and selection. Read-only commands/no-ops skip operational
 saving. List clears search criteria and optionally sets a role; search replaces the people filter,
-while lesson creation preserves it. See [Storage](#command-transactions).
+while lesson creation and membership changes preserve it. See [Storage](#command-transactions).
 
 The class/parser diagrams describe retained legacy regression seams, not active application wiring.
 
@@ -284,8 +285,8 @@ registry convention. Counters are preserved as supplied, never reconstructed fro
 Read methods expose immutable collections and stable-ID/key lookups. The controlled replacement boundary
 accepts only a validated state; invalid construction or null replacement leaves the current state intact.
 Feature owners must preserve committed allocation history when preparing normal changes. Restore may
-reinstate earlier counters for rollback. Lesson allocation and global tutor/room scheduling are supplied by
-the #78 API below. Enrolment, deletion and attendance-editing policies remain separate feature work.
+reinstate earlier counters for rollback. Lesson allocation and global tutor/room/student scheduling are supplied by
+the #78 API below. Enrolment is activated by #88; deletion and attendance-editing policies remain separate work.
 
 This aggregate leaves `ModelManager`, commands and JSON storage unchanged. Vincent owns snapshot/storage
 contracts; Zhu/Yang will prepare validated changes through one future Model adapter, and Ben can consume
@@ -625,6 +626,24 @@ normalize scheduling input before later lesson commands or persistence code use 
 These value types are used by the active `addlesson` parser. The canonical aggregate supplies lesson creation,
 global tutor/room clash checks and ID allocation, and the protected transaction persists the complete change.
 
+#### Shared lesson membership commands (#88)
+
+`LessonMembershipParser` accepts exactly `STUDENT_INDEX lid/LESSON_ID`, producing an immutable
+`LessonMembershipInput` without consulting operational state. `CanonicalEnrolCommand` and
+`CanonicalUnenrolCommand` resolve that index once through the current `PeopleView`; wrong-role and out-of-range
+selections therefore cannot be reinterpreted through a separate Student list or as a stable-ID suffix.
+
+`PonHubData.enrolStudent` and `unenrolStudent` replace the one canonical `Lesson` at its existing catalogue
+position. Enrolment rejects duplicate membership and constructs a complete `PonHubDataState`, which applies the
+same Student overlap invariant as loading. Unenrolment requires current membership and changes only the roster;
+dated attendance remains in the aggregate. Both operations preserve Lesson/Student identities, lesson allocation
+history, and the single tutor/room booking owned by that Lesson.
+
+Commands run through `CanonicalCommandExecutor`: a complete candidate is validated and saved before live state
+publication. Successful publication refreshes the existing `LessonQueries` observable list objects and keeps the
+people filter/search and ordering. Parse, domain and save failures publish nothing and leave the saved file, root,
+people view and subscribed lesson/roster results unchanged.
+
 ### Immutable shared lesson records
 
 `Lesson` represents one canonical recurring teaching slot. It stores a stable `LessonId`, one tutor-role `PersonId`,
@@ -636,9 +655,9 @@ The constructor defensively copies the roster and rejects Tutor or Parent IDs in
 Tutor ID. `getEnrolledStudentIds()` exposes an unmodifiable snapshot. `withEnrolledStudentIds`,
 `withEnrolledStudent`, and `withoutEnrolledStudent` return replacement `Lesson` values, leaving the original lesson
 and its stable identity unchanged. Equality, hashing, copying and string representation include every stored field,
-including roster membership. The canonical aggregate owns lesson ordering, ID allocation and clash checks,
-while duplicate-enrolment command feedback remains separate work. Lessons load through the supported codec, and
-the active `addlesson` route creates an independent empty-roster record.
+including roster membership. The canonical aggregate owns lesson ordering, ID allocation and clash checks; active
+membership commands provide duplicate/non-member feedback. Lessons load through the supported codec, the active
+`addlesson` route creates an independent empty-roster record, and `enrol`/`unenrol` install replacement values.
 
 ### Inline help
 
@@ -646,7 +665,8 @@ the active `addlesson` route creates an independent empty-roster record.
 `CanonicalPeopleSession` accepts zero or one help topic, normalizes with `Locale.ROOT`, rejects unknown
 topics/excess arguments and restricts guidance to the protected-session routes after rejected loading.
 Help preserves records and the people view without operational saves; preferences have a separate
-lifecycle. Protected sessions omit `add`, `addlesson` and `search`; normal sessions expose help for all three.
+lifecycle. Protected sessions omit `add`, `addlesson`, `enrol`, `unenrol` and `search`; normal sessions expose help
+for every active route.
 Legacy `CommandCatalog`/`HelpCommandParser` remain regression seams.
 
 The Help menu and F1 both invoke `MainWindow.executeCommand("help")`, retaining the command-box
@@ -656,7 +676,7 @@ inherited `HelpWindow` is never constructed by supported entry points.
 
 See [manual help checks](#inline-help-and-supported-routes) for topic, menu/F1 and scrolling behavior.
 Guidance follows the [current runtime summary](#current-increment-and-command-integration);
-remaining enrolment/attendance/query foundations do not add help topics.
+remaining attendance/query foundations do not add help topics.
 
 <a id="person-record-foundation"></a>
 <a id="ordered-people-registry-foundation"></a>
@@ -768,7 +788,7 @@ Tutor/Parent at that position without searching another list; range/role failure
 
 The [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85) cutover activates these commands through
 one session and people panel. Inherited delete is retired until guarded canonical deletion is ready.
-Canonical storage supports lessons, rosters and retained attendance. `addlesson` is active; roster mutation,
+Canonical storage supports lessons, rosters and retained attendance. `addlesson`, `enrol` and `unenrol` are active;
 deletion, lesson-result, mark, unmark and history routes remain gated.
 
 <a id="prepared-canonical-people-session"></a>
@@ -781,11 +801,13 @@ share that root. Callers receive immutable data snapshots and the same unmodifia
 the session does not expose writable operational data. Execute on the single model thread, or the JavaFX
 application thread once controls are attached.
 
-The session's `execute()` dispatches active `add`, `addlesson`, `list`, `search`, `help` and `exit` commands
-through its switch. `CanonicalCommandCatalog` defines the permitted command words and guidance, independently
-of the retained legacy `CommandCatalog`. The session parses role-aware additions, shared-lesson creation,
-listings and own-contact searches before staged execution. Changed data is saved through the protected writer
-before publication, stable-ID success feedback or person-view changes. Parse, domain and save failures leave
+The session's `execute()` dispatches active `add`, `addlesson`, `enrol`, `unenrol`, `list`, `search`, `help` and
+`exit` commands through its switch. `CanonicalCommandCatalog` defines the permitted command words and guidance,
+independently
+of the retained legacy `CommandCatalog`. The session parses role-aware additions, shared-lesson creation and
+membership changes, listings and own-contact searches before staged execution. Changed data is saved through the
+protected writer before publication, stable-ID success feedback or person-view changes. Parse, domain and save
+failures leave
 the original data, allocation counters and complete visible filter/list unchanged.
 Read-only commands perform no operational saves.
 
@@ -969,8 +991,8 @@ Canonical people activation and the remaining shared-lesson integration are trac
 [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77),
 [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85), and their dependent command, storage and retrieval
 issues. The requirements below describe the intended product; role-aware add/list, empty-roster shared-lesson
-creation and own-contact people search are active. Guarded deletion, enrolment, attendance, lesson-result
-commands, lesson search, relationship search and history remain planned.
+creation, enrolment/unenrolment and own-contact people search are active. Guarded deletion, attendance,
+lesson-result commands, lesson search, relationship search and history remain planned.
 
 ### User stories
 
@@ -1281,13 +1303,15 @@ Use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-projec
 
 Use the active catalogue in the tested build; these examples apply to canonical startup.
 
-1. In a fresh JAR folder, run `help`, then `help add`, `help addlesson`, `help list`, `help search`, `help help` and
-   `help exit`. Each topic matches its parser and supplies a runnable example; `help exit` keeps
+1. In a fresh JAR folder, run `help`, then `help add`, `help addlesson`, `help enrol`, `help unenrol`, `help list`,
+   `help search`, `help help` and `help exit`. Each topic matches its parser and supplies a runnable example;
+   `help exit` keeps
    the app open. Repeat topic/example checks when another route is registered.
 2. Add a person using a runnable `help add` example, then select its card, type an unfinished command
    and choose Help from the menu. Repeat F1 from command
    and result focus. Expect identical inline guidance, retained draft/selection and no separate window.
-3. `help ADD` and `help ADDLESSON` match their lowercase topics. `help remove`, `help delete` and
+3. `help ADD`, `help ADDLESSON`, `help ENROL` and `help UNENROL` match their lowercase topics.
+   `help remove`, `help delete` and
    `help clear` explain the unknown topic and direct users to `help`. `help add delete` reports
    invalid format and help usage.
 4. At minimum width, run `help add` and scroll to the final example/back to the top. Text wraps
@@ -1313,19 +1337,20 @@ Automated bounds regressions cover scaled work areas, desktop bars, removed and 
 
 ### Planned person-index integration checks
 
-Role-filtered listing and add/failure checks in steps 1 and 4 are active. Steps 2 and 3 require later
-guarded deletion and lesson/result routes; follow the [shared selector contract](#shared-lesson-target-contract).
+Role-filtered listing, membership selectors and add/failure checks are active. Guarded deletion and lesson-result
+parts remain planned; follow the [shared selector contract](#shared-lesson-target-contract).
 
 1. On a mixed-role dataset, run `list`, `list r/student`, `list r/TUTOR` and `list r/parent`.
    Verify global relative order and counts; repeat with no matching records for a successful empty role.
    Reject `list r/`, `list r/all`
    and `list r/student r/parent` without changing the previous view or data.
-2. Filter to Students whose stable IDs differ from positions, such as `S2`/`S5` at `1`/`2`.
-   `delete 1` targets the first card subject to relationship guards. Reject `delete S2`, zero,
-   negative and out-of-range indices; Student-only commands reject a Tutor/Parent at a valid position.
-3. Display lesson/roster/history results, then use a people selector. Verify the same people card is
-   selected and its filter/order is preserved. Exercise `lessons si/1` against the current Student card;
-   reject wrong-role/range and superseded `sid/S2` input. Existing lesson references use `lid/`.
+2. Filter to Students whose stable IDs differ from positions, such as `S2`/`S5` at `1`/`2`. Exercise active
+   `enrol`/`unenrol` against those current positions; position `2` must not become stable ID `S2`. Student-only
+   commands reject a Tutor/Parent at a valid position and zero, negative or out-of-range indices. Once guarded
+   deletion activates, apply the same selector checks to `delete`.
+3. Subscribe to lesson/roster results, then use an active membership command. Verify the same people list object,
+   filter/order/indices and subscribed query objects remain, with their contents refreshed. Planned `lessons si/1`
+   follows the same current Student card and rejects superseded `sid/S2` input. Lesson references use `lid/`.
 4. Add a person successfully: expect new record last, all-role view and refreshed positions. Trigger
    validation/save failure: expect unchanged records, allocation counters and previous people view,
    including its role filter and selected card.
@@ -1410,7 +1435,8 @@ tests and their current-runtime guide reconciliation.
    expect no success message, publication or ID consumption. Restore access and retry. The successful
    record uses the next unconsumed ID and appears last in the all-role view; restart verifies persistence.
 4. With a selected card, request help from the menu/F1 and through the command box. Expect preserved
-   records/filter/selection; menu/F1 additionally retain unfinished text. Run unavailable delete, enrolment and lesson-result commands; expect unknown-command feedback. Lesson/relationship searches
+   records/filter/selection; menu/F1 additionally retain unfinished text. Run unavailable delete and lesson-result
+   commands; expect unknown-command feedback. Lesson/relationship searches
    give explicit interim feedback. These failures preserve data, filter and selection.
 
 ### Active own-contact search checks
@@ -1431,6 +1457,27 @@ tests and their current-runtime guide reconciliation.
    optional exact phone. Success saves an empty-roster lesson and refreshes lesson queries while preserving the
    complete people search and its indices. Repeat with a failing writer: records, counters, bytes, people search
    and lesson projections stay unchanged. Restore writing and retry; the same next Lesson ID is allocated.
+
+### Active shared-lesson membership checks
+
+1. In an isolated supported dataset, add two Tutors and two Students, then create overlapping lessons using
+   different Tutors and rooms, an adjacent lesson, and an equal-time lesson on another weekday. Keep the returned
+   Lesson IDs. Arrange for one Student's stable ID to differ from their current filtered-list position.
+2. Run `search c/student`, note the intended Student's current position, and enter
+   `enrol STUDENT_INDEX lid/LESSON_ID`. Expect feedback naming the resolved Student ID and Lesson ID. Verify one
+   roster membership, no new Lesson/tutor/room booking, unchanged people filter/order/positions, refreshed existing
+   roster/student-lesson query lists, persisted membership after restart, and no attendance changes.
+3. Against clean copies, reject a Tutor/Parent position, an out-of-range position, a missing Lesson ID, duplicate
+   enrolment and a Student timetable overlap. Reject malformed, repeated, unknown and misordered arguments. Each
+   rejection must preserve aggregate state, file bytes, current people view and subscribed lesson results.
+4. Enrol the Student in the adjacent and different-weekday lessons; both must succeed. Enrol a second Student in
+   the same shared lesson; its Lesson ID, tutor, room and schedule remain single canonical values.
+5. With dated attendance already stored, enter `unenrol STUDENT_INDEX lid/LESSON_ID`. Verify only current roster
+   membership is removed, attendance and both records remain, query lists refresh, and restart matches. Repeating
+   `unenrol` reports that the Student is not enrolled and makes no change.
+6. Inject a save failure for a valid membership change. Expect no success feedback, publication or file change;
+   data, attendance, filters, positions and observable query objects/contents remain unchanged. Restore writing and
+   retry the same command; it commits once and reloads identically.
 
 ### Contact validation in the current increment
 
