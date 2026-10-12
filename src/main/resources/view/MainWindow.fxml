@@ -6,13 +6,12 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <fx:root type="javafx.stage.Stage" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-         title="PonHub" minWidth="450" minHeight="600" onCloseRequest="#handleExit">
+         title="PonHub" onCloseRequest="#handleExit">
   <icons>
     <Image url="@/images/address_book_32.png" />
   </icons>
@@ -39,18 +38,19 @@
           </padding>
         </StackPane>
 
-        <StackPane VBox.vgrow="NEVER" fx:id="resultDisplayPlaceholder" styleClass="pane-with-border"
-                   minHeight="100" prefHeight="200" maxHeight="250">
+        <StackPane VBox.vgrow="SOMETIMES" fx:id="resultDisplayPlaceholder" styleClass="pane-with-border"
+                   minHeight="80" prefHeight="160" maxHeight="250">
           <padding>
             <Insets top="5" right="10" bottom="5" left="10" />
           </padding>
         </StackPane>
 
-        <VBox fx:id="personList" styleClass="pane-with-border" minWidth="340" prefWidth="340" VBox.vgrow="ALWAYS">
+        <VBox fx:id="personList" styleClass="pane-with-border" minWidth="340" minHeight="90"
+              prefWidth="340" VBox.vgrow="ALWAYS">
           <padding>
             <Insets top="10" right="10" bottom="10" left="10" />
           </padding>
-          <StackPane fx:id="personListPanelPlaceholder" VBox.vgrow="ALWAYS"/>
+          <StackPane fx:id="personListPanelPlaceholder" minHeight="0" VBox.vgrow="ALWAYS"/>
         </VBox>
 
         <StackPane fx:id="statusbarPlaceholder" VBox.vgrow="NEVER" />

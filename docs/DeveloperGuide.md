@@ -20,7 +20,8 @@ title: Developer Guide
   role-aware addition parsing/candidates/commands and canonical session; #85 application cutover
   (startup/path selection, active catalogue/Logic adapter, cards, integration tests and guides); contact
   validation/ASCII-space normalization and constant-stack email validation ([#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61));
-  logging fallback and UI startup error handling. He also used Codex for product scope/user stories,
+  logging fallback, UI startup error handling, and screen-aware window restoration/contact-card wrapping.
+  He also used Codex for product scope/user stories,
   confirmed selectors/command formats/search scope, recovery/use cases/manual checks, prescribed
   Java/macOS setup, and review/conflict reconciliation/Javadoc corrections in search, inline help,
   atomic saves and the canonical aggregate (#76). These credits do not transfer feature ownership.
@@ -78,6 +79,12 @@ path-specific recovery guidance. Only help/list/exit remain available, and exter
 unlock that session before restart. Default startup leaves `data/addressbook.json` untouched; legacy AB3 data
 selected explicitly is preserved and rejected, with backup and manual re-entry into a separate missing store.
 No migration, setup or recovery command is introduced.
+
+### Window placement and active contact-card layout
+
+At startup, `WindowPlacement` fits saved window dimensions and coordinates to the current screen work areas. It chooses the screen with the largest overlap with the saved window, preserves valid coordinates on secondary screens, and centers a new or wholly offscreen window on the primary screen. Invalid saved dimensions fall back to the defaults. JavaFX's visual bounds already use logical coordinates and exclude desktop bars; they are not divided by the display scale again. The startup fit does not impose a permanent maximum size, so the administrator can move and resize the window on a larger monitor.
+
+The main window has a 450-by-360 logical minimum where the work area allows it. The result area can shrink while retaining its own scrollable text, and the people list retains a visible scrollable viewport. Active canonical person cards fit their list cells and wrap names, role details and contact values. The inherited contact-card wrapping and tag regressions remain isolated compatibility checks; canonical records have no tag field. Shared-lesson commands remain unavailable.
 
 ### Shared-lesson target contract
 
@@ -1248,6 +1255,15 @@ Use the active catalogue in the tested build; these examples apply to canonical 
 Help checks do not establish the [planned shared-lesson workflow](#planned-shared-lesson-workflow-checks)
 or final guide/site acceptance ([#102](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/102)).
 
+### Compact windows and active contact cards
+
+1. In an isolated working folder, launch the application on a 1280×720 display at 150% scaling and on a 1920×1080 display at 100% and 125%. Record the OS, scaling, Java version and usable desktop work area. The complete window must fit inside that work area; menu actions, command entry, results and the people list must remain reachable. Logical-size previews are useful checks, but do not replace actual platform/scaling results.
+2. Resize to the minimum window size. Run `help add` and scroll to the final example. Scroll the people list to its last card. Expect separate usable result and people scrollbars, with the command box and menus still visible.
+3. Add role-aware people with a long valid name, postal address and unbroken email using the active syntax, such as `add r/tutor n/Alexandra Catherine Elizabeth Montgomery Wellington p/001234567890123 e/alexandracatherineelizabethmontgomerywellington@example.com a/123 Long Residential Avenue Clementi District Block 456 Unit 12-345 Singapore 123456`. Run `list` followed by `help add` to refresh the cards, then narrow, widen and narrow the window again. Expect full values to wrap within the card without horizontal overflow; scroll vertically to reach the bottom of a tall card and the final person. Canonical add does not accept tags; inherited long-tag wrapping remains covered separately by compatibility regressions.
+4. Close the application and restart with the retained preferences. Valid sizes and coordinates remain unchanged. In the isolated folder, test an oversized saved window, coordinates from a removed monitor and a still-connected monitor to the left or above the primary display. Expect an oversized/offscreen window to fit a current work area, while valid secondary-monitor coordinates remain usable.
+
+Automated bounds regressions cover scaled work areas, desktop bars, removed and secondary monitors, partial overlap and invalid saved dimensions. Actual-FXML layout checks use isolated fixture data; they do not establish Windows or Linux font/scaling behavior. Keep real display results in issue #128.
+
 ### Planned person-index integration checks
 
 Role-filtered listing and add/failure checks in steps 1 and 4 are active. Steps 2 and 3 require later
@@ -1304,11 +1320,13 @@ Use that same terminal/runtime when reopening the JAR; substitute its actual fil
 
 1. Build or obtain the matching `ponhub.jar`, copy it to a disposable empty JAR folder, and launch
    from that folder's terminal with Java 25: `java -jar ponhub.jar`. Expect the canonical GUI and an empty
-   people view. Run help/list/exit; `data/ponhub.json` remains absent, and preferences may save separately.
+   people view, with the initial window inside the current desktop work area. Run help/list/exit;
+   `data/ponhub.json` remains absent, and preferences may save separately.
 2. Relaunch, add all roles with the active examples in the UG, then exit. Expect supported JSON only after
    a successful add. Restart the same JAR and verify people, stable IDs and global creation order.
 3. Resize and move the window, close it and relaunch the same JAR. Expect retained geometry from
-   `preferences.json`. Select a different missing path with `--data=data/another-ponhub.json`; expect an
+   `preferences.json` when it fits a current screen; oversized or offscreen preferences are adjusted
+   into an available desktop work area. Select a different missing path with `--data=data/another-ponhub.json`; expect an
    empty dataset and the same preference location in the JAR folder, without touching the previous
    operational file. Launch the JAR from another working directory and confirm data/preferences/logs
    still remain in the JAR folder. Repeat the actual resolution/scaling changes in
