@@ -20,7 +20,8 @@ import seedu.address.logic.parser.Parser;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
- * Registers active command parsers together with their user guidance.
+ * Registers retained inherited command parsers and guidance for the isolated legacy implementation.
+ * The application uses {@link CanonicalCommandCatalog} through its canonical session instead.
  */
 public final class CommandCatalog {
     private static final Map<String, Entry> ENTRIES = createEntries();

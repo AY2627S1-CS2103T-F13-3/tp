@@ -6,116 +6,118 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.io.IOException;
-import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import seedu.address.commons.exceptions.DataLoadingException;
-import seedu.address.logic.LogicManager;
+import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.commands.exceptions.CommandException;
-import seedu.address.model.AddressBook;
-import seedu.address.model.Model;
-import seedu.address.model.ReadOnlyAddressBook;
-import seedu.address.model.UserPrefs;
-import seedu.address.storage.JsonAddressBookStorage;
+import seedu.address.model.PonHubData;
+import seedu.address.model.person.PersonRole;
+import seedu.address.storage.JsonPonHubDataCodec;
 import seedu.address.storage.JsonUserPrefsStorage;
-import seedu.address.storage.StorageManager;
+import seedu.address.storage.ProtectedPonHubDataStorage;
 
-/** Exercises the actual startup model initialization and command/storage boundaries together. */
+/** Exercises the active application's canonical startup, command and shutdown boundaries together. */
 public class ProtectedStartupTest {
-    private static final String ADD_COMMAND = "add n/Alex p/91234567 e/alex@example.com a/Somewhere";
+    private static final String ADD_COMMAND = "add r/parent n/Alex p/91234567 e/alex@example.com a/Somewhere";
 
     @TempDir
-    public Path testFolder;
+    Path testFolder;
 
     @Test
-    public void startup_rejectedData_preservesBytesAcrossCommandsAndDirectSaves() throws Exception {
-        String personWithNullTag = "{\"name\":\"Alex\",\"phone\":\"91234567\","
-                + "\"email\":\"alex@example.com\",\"address\":\"Somewhere\",\"tags\":[null]}";
+    public void startup_rejectedData_preservesBytesAcrossCommandsShutdownAndRestart() throws Exception {
+        String valid = JsonPonHubDataCodec.encode(new PonHubData().exportState());
         String[] documents = {
             "{broken", "", "null", "[]", "{}", "{\"persons\":null}", "{\"persons\":{}}",
             "{\"persons\":[null]}", "{\"persons\":[42]}", "{\"persons\":[{}]}",
-            "{\"persons\":[" + personWithNullTag + "]}",
-            "{\"persons\":[],\"lessons\":[]}",
-            "{\"schemaVersion\":99,\"persons\":[],\"lessons\":[]}",
+            "{\"persons\":[]}", "{\"persons\":[],\"lessons\":[]}",
+            "{\"schemaVersion\":99,\"people\":[],\"lessons\":[]}",
             "{\"schemaVersion\":1,\"persons\":[]}", "{\"schemaVersion\":null,\"persons\":[]}",
-            "{\"persons\":[]} {}", "{\"persons\":[],\"persons\":[]}"
+            valid.replace("\"people\" : [ ]", "\"people\" : [null]"),
+            valid.replace("\"people\" : [ ]", "\"people\" : [42]"),
+            valid.replace("\"STUDENT\" : 0", "\"STUDENT\" : -1"),
+            valid.replace("\"attendance\" : [ ]", "\"attendance\" : [{\"date\":\"2026-02-30\"}]"),
+            valid + " {}", "{\"schemaVersion\":1,\"schemaVersion\":1}"
         };
         for (String document : documents) {
             Path data = testFolder.resolve("data.json");
             Files.writeString(data, document);
             byte[] original = Files.readAllBytes(data);
-            CountingStorage storage = new CountingStorage(data, testFolder.resolve("prefs.json"));
-            Model model = new MainApp().initModelManager(storage, new UserPrefs());
-            LogicManager logic = new LogicManager(model, storage);
+            MainApp app = startSession(data);
 
-            assertEquals(new AddressBook(), model.getAddressBook());
-            assertTrue(storage.getDataLoadError().orElseThrow().contains(data.toAbsolutePath().toString()));
-            logic.execute("help");
-            logic.execute("list");
-            assertTrue(logic.execute("exit").isExit());
-            for (String command : new String[]{ADD_COMMAND, "delete 1"}) {
-                CommandException error = assertThrows(CommandException.class, () -> logic.execute(command));
-                assertEquals(storage.getDataLoadError().orElseThrow(), error.getMessage());
-            }
-            assertEquals(new AddressBook(), model.getAddressBook());
-            assertEquals(0, storage.saveCalls);
-            assertThrows(IOException.class, () -> storage.saveAddressBook(model.getAddressBook()));
-            storage.saveUserPrefs(new UserPrefs());
-            assertTrue(storage.readUserPrefs().isPresent());
+            assertProtectedCommands(app);
+            app.stop();
+            assertTrue(new JsonUserPrefsStorage(testFolder.resolve("prefs.json")).readUserPrefs().isPresent());
+            assertArrayEquals(original, Files.readAllBytes(data), document);
+            MainApp restarted = startSession(data);
+            assertProtectedCommands(restarted);
+            restarted.stop();
             assertArrayEquals(original, Files.readAllBytes(data), document);
         }
     }
 
     @Test
-    public void startup_unreadableFile_protectsOriginalAndAllowsExit() throws Exception {
-        Path data = testFolder.resolve("denied.json");
-        Files.writeString(data, "{\"persons\":[]}");
-        byte[] original = Files.readAllBytes(data);
-        JsonAddressBookStorage denied = new JsonAddressBookStorage(data) {
-            @Override
-            public java.util.Optional<ReadOnlyAddressBook> readAddressBook() throws DataLoadingException {
-                throw new DataLoadingException(new AccessDeniedException(data.toString()));
-            }
-        };
-        StorageManager storage = new StorageManager(denied,
-                new JsonUserPrefsStorage(testFolder.resolve("prefs.json")));
-        Model model = new MainApp().initModelManager(storage, new UserPrefs());
-        LogicManager logic = new LogicManager(model, storage);
-        assertTrue(logic.execute("exit").isExit());
-        assertThrows(CommandException.class, () -> logic.execute(ADD_COMMAND));
-        assertThrows(IOException.class, () -> storage.saveAddressBook(new AddressBook()));
-        assertArrayEquals(original, Files.readAllBytes(data));
+    public void startup_directoryPath_preservesContentsAndAllowsExit() throws Exception {
+        Path data = testFolder.resolve("directory instead of file");
+        Files.createDirectory(data);
+        Path child = data.resolve("keep.txt");
+        Files.writeString(child, "preserve");
+        MainApp app = startSession(data);
+
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.UNREADABLE, app.canonicalSession.getLoadStatus());
+        assertProtectedCommands(app);
+        app.stop();
+        assertTrue(Files.isDirectory(data));
+        assertEquals("preserve", Files.readString(child));
     }
 
     @Test
-    public void startup_missingFile_remainsWritableAndRoundTrips() throws Exception {
-        Path data = testFolder.resolve("new.json");
-        CountingStorage storage = new CountingStorage(data, testFolder.resolve("prefs.json"));
-        Model model = new MainApp().initModelManager(storage, new UserPrefs());
-        assertTrue(storage.getDataLoadError().isEmpty());
+    public void startup_missingFile_startsEmptyAndWritesOnlyOnMutation() throws Exception {
+        Path data = testFolder.resolve("new folder/new.json");
+        MainApp app = startSession(data);
+
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.MISSING, app.canonicalSession.getLoadStatus());
+        assertTrue(app.logic.getPersonRecords().isEmpty());
+        app.logic.execute("help");
+        app.logic.execute("list");
+        assertTrue(app.logic.execute("exit").isExit());
+        app.stop();
         assertFalse(Files.exists(data));
-        new LogicManager(model, storage).execute(ADD_COMMAND);
-        assertEquals(model.getAddressBook(), storage.readAddressBook().orElseThrow());
+
+        MainApp writable = startSession(data);
+        writable.logic.execute(ADD_COMMAND);
+        assertEquals(1, writable.logic.getPersonRecords().size());
+        writable.stop();
+        MainApp restarted = startSession(data);
+        assertEquals(writable.canonicalSession.getDataSnapshot(), restarted.canonicalSession.getDataSnapshot());
+        assertEquals("P1", restarted.logic.getPersonRecords().getFirst().getId().toString());
     }
 
     @Test
-    public void startup_validHumanEditedLegacyFile_loadsAndRemainsWritable() throws Exception {
-        Path data = testFolder.resolve("data.json");
-        Files.writeString(data, "{\"_comment\":\"Manually checked contacts\",\"persons\":[]}");
-        CountingStorage storage = new CountingStorage(data, testFolder.resolve("prefs.json"));
-        Model model = new MainApp().initModelManager(storage, new UserPrefs());
-        assertTrue(storage.getDataLoadError().isEmpty());
-        new LogicManager(model, storage).execute(ADD_COMMAND);
-        assertEquals(1, model.getAddressBook().getPersonList().size());
-        assertEquals(model.getAddressBook(), storage.readAddressBook().orElseThrow());
+    public void startup_validHumanEditedVersionedFile_loadsAndRemainsWritable() throws Exception {
+        Path data = testFolder.resolve("edited.json");
+        String edited = JsonPonHubDataCodec.encode(new PonHubData().exportState())
+                .replace("\"PARENT\" : 0", "\"PARENT\" : 7");
+        Files.writeString(data, edited);
+        MainApp app = startSession(data);
+
+        assertTrue(app.canonicalSession.getDataLoadError().isEmpty());
+        assertEquals(7L, app.canonicalSession.getDataSnapshot().people().getLastAllocatedSequences()
+                .get(PersonRole.PARENT));
+        app.logic.execute("list r/parent");
+        assertEquals(edited, Files.readString(data));
+        app.logic.execute(ADD_COMMAND);
+        app.stop();
+        assertEquals("P8", app.logic.getPersonRecords().getFirst().getId().toString());
+        assertEquals(app.canonicalSession.getDataSnapshot(), startSession(data).canonicalSession.getDataSnapshot());
     }
 
     @Test
@@ -127,87 +129,341 @@ public class ProtectedStartupTest {
         } catch (IOException | UnsupportedOperationException | SecurityException exception) {
             assumeTrue(false, "Symbolic links unavailable: " + exception);
         }
-        assertThrows(DataLoadingException.class, () -> new JsonAddressBookStorage(data).readAddressBook());
-        CountingStorage storage = new CountingStorage(data, testFolder.resolve("prefs.json"));
-        Model model = new MainApp().initModelManager(storage, new UserPrefs());
-        LogicManager logic = new LogicManager(model, storage);
-        assertTrue(storage.getDataLoadError().isPresent());
-        assertEquals(new AddressBook(), model.getAddressBook());
-        logic.execute("help");
-        logic.execute("list");
-        assertTrue(logic.execute("exit").isExit());
-        for (String command : new String[]{ADD_COMMAND, "delete 1"}) {
-            CommandException error = assertThrows(CommandException.class, () -> logic.execute(command));
-            assertEquals(storage.getDataLoadError().orElseThrow(), error.getMessage());
-        }
-        assertEquals(0, storage.saveCalls);
-        assertThrows(IOException.class, () -> storage.saveAddressBook(model.getAddressBook()));
-        assertEquals(new AddressBook(), model.getAddressBook());
+        MainApp app = startSession(data);
+
+        assertProtectedCommands(app);
+        app.stop();
         assertTrue(Files.isSymbolicLink(data));
         assertEquals(target.getFileName(), Files.readSymbolicLink(data));
         assertTrue(Files.notExists(target, LinkOption.NOFOLLOW_LINKS));
     }
 
     @Test
-    public void startup_repairedFileAndSuccessfulReread_staysLockedUntilRestart() throws Exception {
+    public void startup_repairedFile_staysLockedUntilNewApplicationSession() throws Exception {
         Path data = testFolder.resolve("data.json");
         Files.writeString(data, "{broken");
-        CountingStorage storage = new CountingStorage(data, testFolder.resolve("prefs.json"));
-        Model model = new MainApp().initModelManager(storage, new UserPrefs());
-        LogicManager logic = new LogicManager(model, storage);
-        String originalError = storage.getDataLoadError().orElseThrow();
+        MainApp app = startSession(data);
+        String originalError = app.canonicalSession.getDataLoadError().orElseThrow();
+        String repaired = JsonPonHubDataCodec.encode(new PonHubData().exportState());
+        Files.writeString(data, repaired);
 
-        Path fixture = Path.of("src", "test", "data", "JsonSerializableAddressBookTest",
-                "typicalPersonsAddressBook.json");
-        byte[] repaired = Files.readAllBytes(fixture);
-        Files.write(data, repaired);
-        assertEquals(getTypicalAddressBook(), storage.readAddressBook().orElseThrow());
-        assertEquals(originalError, storage.getDataLoadError().orElseThrow());
-        for (String command : new String[]{ADD_COMMAND, "delete 1"}) {
-            CommandException error = assertThrows(CommandException.class, () -> logic.execute(command));
-            assertEquals(originalError, error.getMessage());
-        }
-        logic.execute("help");
-        logic.execute("list");
-        assertTrue(logic.execute("exit").isExit());
-        assertEquals(0, storage.saveCalls);
-        assertThrows(IOException.class, () -> storage.saveAddressBook(model.getAddressBook()));
-        assertEquals(new AddressBook(), model.getAddressBook());
-        assertArrayEquals(repaired, Files.readAllBytes(data));
-
-        CountingStorage restarted = new CountingStorage(data, testFolder.resolve("prefs.json"));
-        Model restartedModel = new MainApp().initModelManager(restarted, new UserPrefs());
-        assertTrue(restarted.getDataLoadError().isEmpty());
-        assertEquals(getTypicalAddressBook(), restartedModel.getAddressBook());
-        assertArrayEquals(repaired, Files.readAllBytes(data));
-        new LogicManager(restartedModel, restarted).execute(ADD_COMMAND);
-        assertEquals(1, restarted.saveCalls);
-        assertEquals(restartedModel.getAddressBook(), restarted.readAddressBook().orElseThrow());
+        assertProtectedCommands(app);
+        assertEquals(originalError, app.canonicalSession.getDataLoadError().orElseThrow());
+        app.stop();
+        assertEquals(repaired, Files.readString(data));
+        MainApp restarted = startSession(data);
+        assertTrue(restarted.canonicalSession.getDataLoadError().isEmpty());
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.LOADED, restarted.canonicalSession.getLoadStatus());
+        restarted.logic.execute(ADD_COMMAND);
+        assertEquals(1, startSession(data).logic.getPersonRecords().size());
     }
 
     @Test
     public void startup_rejectedThenExternallyRemovedFile_doesNotUnlockSession() throws Exception {
         Path data = testFolder.resolve("data.json");
         Files.writeString(data, "null");
-        CountingStorage storage = new CountingStorage(data, testFolder.resolve("prefs.json"));
-        new MainApp().initModelManager(storage, new UserPrefs());
+        MainApp app = startSession(data);
         Files.delete(data);
-        assertTrue(storage.readAddressBook().isEmpty());
-        assertThrows(IOException.class, () -> storage.saveAddressBook(new AddressBook()));
+
+        assertProtectedCommands(app);
+        app.stop();
         assertFalse(Files.exists(data));
     }
 
-    private static class CountingStorage extends StorageManager {
-        private int saveCalls;
+    @Test
+    public void startup_defaultAndAlternateCanonicalPaths_keepLegacyStoreUntouched() throws Exception {
+        Path legacy = testFolder.resolve("data/addressbook.json");
+        Files.createDirectories(legacy.getParent());
+        Files.writeString(legacy, "{\"persons\":[]}\n");
+        byte[] original = Files.readAllBytes(legacy);
+        Path defaultData = MainApp.selectDataPath(Map.of(), testFolder);
+        assertEquals(testFolder.toRealPath().resolve("data/ponhub.json"), defaultData);
+        MainApp defaultApp = startSession(defaultData);
+        defaultApp.logic.execute(ADD_COMMAND);
+        defaultApp.stop();
+        byte[] canonical = Files.readAllBytes(defaultData);
+        Path alternate = testFolder.resolve("store with spaces/selected.json");
+        assertEquals(alternate, MainApp.selectDataPath(Map.of("data", alternate.toString()), testFolder));
+        MainApp alternateApp = startSession(MainApp.selectDataPath(
+                Map.of("data", "store with spaces/selected.json"), testFolder));
 
-        CountingStorage(Path data, Path prefs) {
-            super(new JsonAddressBookStorage(data), new JsonUserPrefsStorage(prefs));
+        assertTrue(alternateApp.logic.getPersonRecords().isEmpty());
+        alternateApp.logic.execute("add r/student n/Anne l/P1 pp/81234567");
+        alternateApp.stop();
+        assertArrayEquals(original, Files.readAllBytes(legacy));
+        assertArrayEquals(canonical, Files.readAllBytes(defaultData));
+        assertEquals("S1", startSession(alternate).logic.getPersonRecords().getFirst().getId().toString());
+        MainApp rejectedLegacy = startSession(MainApp.selectDataPath(Map.of("data", legacy.toString()), testFolder));
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.LEGACY, rejectedLegacy.canonicalSession.getLoadStatus());
+        assertTrue(rejectedLegacy.canonicalSession.getDataLoadError().orElseThrow().contains("manually re-enter"));
+        assertProtectedCommands(rejectedLegacy);
+        rejectedLegacy.stop();
+        assertArrayEquals(original, Files.readAllBytes(legacy));
+    }
+
+    @Test
+    public void startup_rejectedData_preferencesSaveAndReloadIndependently() throws Exception {
+        Path data = testFolder.resolve("rejected.json");
+        Files.writeString(data, "broken original");
+        byte[] original = Files.readAllBytes(data);
+        MainApp app = startSession(data);
+        GuiSettings settings = new GuiSettings(900, 700, 20, 30);
+        app.logic.setGuiSettings(settings);
+        app.stop();
+
+        MainApp restarted = startSession(data);
+        assertEquals(settings, restarted.logic.getGuiSettings());
+        assertProtectedCommands(restarted);
+        restarted.stop();
+        assertArrayEquals(original, Files.readAllBytes(data));
+    }
+
+    @Test
+    public void startup_dataAndPreferencesAlias_rejectsBeforeEitherFileIsWritten() throws Exception {
+        Path data = testFolder.resolve("data.json");
+        Files.writeString(data, "preserve operational bytes");
+        byte[] original = Files.readAllBytes(data);
+        MainApp app = new MainApp();
+
+        assertThrows(IllegalArgumentException.class, () -> app.initialize(data,
+                testFolder.resolve("child/../data.json")));
+        assertArrayEquals(original, Files.readAllBytes(data));
+    }
+
+    @Test
+    public void startup_existingSymbolicLinkAlias_preservesOriginals() throws Exception {
+        Path data = testFolder.resolve("data.json");
+        Files.writeString(data, "preserve operational bytes");
+        byte[] original = Files.readAllBytes(data);
+        Path alias = testFolder.resolve("prefs-link.json");
+        try {
+            Files.createSymbolicLink(alias, data.getFileName());
+        } catch (IOException | UnsupportedOperationException | SecurityException exception) {
+            assumeTrue(false, "Symbolic links unavailable: " + exception);
+        }
+        assertThrows(IllegalArgumentException.class, () -> new MainApp().initialize(data, alias));
+        assertArrayEquals(original, Files.readAllBytes(data));
+    }
+
+    @Test
+    public void startup_dataAndPreferencesHardLinkAlias_preservesOriginalBytes() throws Exception {
+        Path data = testFolder.resolve("canonical.json");
+        Files.writeString(data, "preserve operational bytes");
+        byte[] original = Files.readAllBytes(data);
+        Path prefs = testFolder.resolve("preferences.json");
+        try {
+            Files.createLink(prefs, data);
+        } catch (IOException | UnsupportedOperationException | SecurityException exception) {
+            assumeTrue(false, "Hard links unavailable: " + exception);
         }
 
-        @Override
-        public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
-            saveCalls++;
-            super.saveAddressBook(addressBook);
+        assertThrows(IllegalArgumentException.class, () -> new MainApp().initialize(data, prefs));
+        assertArrayEquals(original, Files.readAllBytes(data));
+        assertArrayEquals(original, Files.readAllBytes(prefs));
+    }
+
+    @Test
+    public void startup_danglingAlias_rejectsBeforeCreatingDataOrPreferences() throws Exception {
+        Path data = testFolder.resolve("data.json");
+        Path prefs = testFolder.resolve("prefs.json");
+        try {
+            Files.createSymbolicLink(data, prefs.getFileName());
+        } catch (IOException | UnsupportedOperationException | SecurityException exception) {
+            assumeTrue(false, "Symbolic links unavailable: " + exception);
         }
+        assertThrows(IllegalArgumentException.class, () -> new MainApp().initialize(data, prefs));
+        assertTrue(Files.isSymbolicLink(data));
+        assertFalse(Files.exists(prefs));
+
+        Files.delete(data);
+        Files.createSymbolicLink(prefs, data.getFileName());
+        assertThrows(IllegalArgumentException.class, () -> new MainApp().initialize(data, prefs));
+        assertTrue(Files.isSymbolicLink(prefs));
+        assertFalse(Files.exists(data));
+    }
+
+    @Test
+    public void startup_missingFilesUnderAliasedParents_rejectsBeforeCreatingFiles() throws Exception {
+        Path realDirectory = testFolder.resolve("real");
+        Files.createDirectory(realDirectory);
+        Path aliasDirectory = testFolder.resolve("alias");
+        try {
+            Files.createSymbolicLink(aliasDirectory, realDirectory.getFileName());
+        } catch (IOException | UnsupportedOperationException | SecurityException exception) {
+            assumeTrue(false, "Symbolic links unavailable: " + exception);
+        }
+        Path data = realDirectory.resolve("new.json");
+        Path prefs = aliasDirectory.resolve("new.json");
+
+        assertThrows(IllegalArgumentException.class, () -> new MainApp().initialize(data, prefs));
+        assertFalse(Files.exists(data));
+        assertFalse(Files.exists(prefs));
+    }
+
+    @Test
+    public void selectDataPath_blankArgument_rejectsBeforeStartup() {
+        assertThrows(IllegalArgumentException.class, () -> MainApp.selectDataPath(Map.of("data", ""), testFolder));
+        assertThrows(IllegalArgumentException.class, () -> MainApp.selectDataPath(Map.of("data", "   "), testFolder));
+    }
+
+    @Test
+    public void selectDataPath_outsideApplicationDirectory_rejectsWithoutWriting() throws Exception {
+        Path home = testFolder.resolve("app");
+        Files.createDirectory(home);
+        Path outside = testFolder.resolve("outside.json");
+        Files.writeString(outside, "preserve");
+
+        assertThrows(IllegalArgumentException.class, () -> MainApp.selectDataPath(
+                Map.of("data", "../outside.json"), home));
+        assertThrows(IllegalArgumentException.class, () -> MainApp.selectDataPath(
+                Map.of("data", outside.toString()), home));
+        assertEquals("preserve", Files.readString(outside));
+    }
+
+    @Test
+    public void selectDataPath_symbolicLinkEscape_rejectsExistingAndMissingTargets() throws Exception {
+        Path home = testFolder.resolve("app");
+        Files.createDirectory(home);
+        Path outside = testFolder.resolve("outside");
+        Files.createDirectory(outside);
+        Files.writeString(outside.resolve("existing.json"), "preserve");
+        try {
+            Files.createSymbolicLink(home.resolve("escape"), outside);
+        } catch (IOException | UnsupportedOperationException | SecurityException exception) {
+            assumeTrue(false, "Symbolic links unavailable: " + exception);
+        }
+
+        assertThrows(IllegalArgumentException.class, () -> MainApp.selectDataPath(
+                Map.of("data", "escape/existing.json"), home));
+        assertThrows(IllegalArgumentException.class, () -> MainApp.selectDataPath(
+                Map.of("data", "escape/new.json"), home));
+        assertEquals("preserve", Files.readString(outside.resolve("existing.json")));
+        assertFalse(Files.exists(outside.resolve("new.json")));
+    }
+
+    @Test
+    public void selectDataPath_reservedLogNames_rejectsBeforeOriginalBytesAreChanged() throws Exception {
+        for (String filename : List.of("addressbook.log", "addressbook.log.0", "addressbook.log.4",
+                "addressbook.log.0.lck", "addressbook.log.0.1", "addressbook.log.future")) {
+            Path data = testFolder.resolve(filename);
+            Files.writeString(data, "rejected original " + filename);
+            byte[] original = Files.readAllBytes(data);
+
+            assertThrows(IllegalArgumentException.class, () ->
+                    MainApp.selectDataPath(Map.of("data", filename), testFolder));
+            assertArrayEquals(original, Files.readAllBytes(data));
+        }
+        assertThrows(IllegalArgumentException.class, () ->
+                MainApp.selectDataPath(Map.of("data", "addressbook.log.2"), testFolder));
+        assertFalse(Files.exists(testFolder.resolve("addressbook.log.2")));
+        assertFalse(Files.exists(testFolder.resolve("preferences.json")));
+    }
+
+    @Test
+    public void selectDataPath_reservedLogSymbolicAlias_preservesOriginalAndLink() throws Exception {
+        Path log = testFolder.resolve("addressbook.log.0");
+        Files.writeString(log, "rejected original");
+        byte[] original = Files.readAllBytes(log);
+        Path alias = testFolder.resolve("selected.json");
+        try {
+            Files.createSymbolicLink(alias, log.getFileName());
+        } catch (IOException | UnsupportedOperationException | SecurityException exception) {
+            assumeTrue(false, "Symbolic links unavailable: " + exception);
+        }
+
+        assertThrows(IllegalArgumentException.class, () ->
+                MainApp.selectDataPath(Map.of("data", alias.toString()), testFolder));
+        assertTrue(Files.isSymbolicLink(alias));
+        assertArrayEquals(original, Files.readAllBytes(log));
+        Files.delete(log);
+        assertThrows(IllegalArgumentException.class, () ->
+                MainApp.selectDataPath(Map.of("data", alias.toString()), testFolder));
+        assertTrue(Files.isSymbolicLink(alias));
+        assertFalse(Files.exists(log));
+    }
+
+    @Test
+    public void selectDataPath_reservedLogHardLinkAlias_preservesOperationalBytes() throws Exception {
+        Path data = testFolder.resolve("selected.json");
+        Files.writeString(data, "rejected original");
+        byte[] original = Files.readAllBytes(data);
+        Path log = testFolder.resolve("addressbook.log.0");
+        try {
+            Files.createLink(log, data);
+        } catch (IOException | UnsupportedOperationException | SecurityException exception) {
+            assumeTrue(false, "Hard links unavailable: " + exception);
+        }
+
+        assertThrows(IllegalArgumentException.class, () ->
+                MainApp.selectDataPath(Map.of("data", data.toString()), testFolder));
+        assertArrayEquals(original, Files.readAllBytes(data));
+        assertArrayEquals(original, Files.readAllBytes(log));
+    }
+
+    @Test
+    public void startup_preferencesSymbolicAliasToLog_preservesBothOriginalFiles() throws Exception {
+        Path data = testFolder.resolve("canonical.json");
+        Files.writeString(data, "rejected operational bytes");
+        byte[] originalData = Files.readAllBytes(data);
+        Path log = testFolder.resolve("addressbook.log.0");
+        Files.writeString(log, "preserve log bytes");
+        byte[] originalLog = Files.readAllBytes(log);
+        Path prefs = testFolder.resolve("preferences.json");
+        try {
+            Files.createSymbolicLink(prefs, log.getFileName());
+        } catch (IOException | UnsupportedOperationException | SecurityException exception) {
+            assumeTrue(false, "Symbolic links unavailable: " + exception);
+        }
+
+        assertThrows(IllegalArgumentException.class, () -> new MainApp().initialize(data, prefs));
+        assertArrayEquals(originalData, Files.readAllBytes(data));
+        assertArrayEquals(originalLog, Files.readAllBytes(log));
+        assertTrue(Files.isSymbolicLink(prefs));
+        Files.delete(log);
+        assertThrows(IllegalArgumentException.class, () -> new MainApp().initialize(data, prefs));
+        assertArrayEquals(originalData, Files.readAllBytes(data));
+        assertTrue(Files.isSymbolicLink(prefs));
+        assertFalse(Files.exists(log));
+    }
+
+    @Test
+    public void startup_preferencesHardLinkAliasToLog_preservesBothOriginalFiles() throws Exception {
+        Path data = testFolder.resolve("canonical.json");
+        Files.writeString(data, "rejected operational bytes");
+        byte[] originalData = Files.readAllBytes(data);
+        Path log = testFolder.resolve("addressbook.log.0");
+        Files.writeString(log, "preserve log bytes");
+        byte[] originalLog = Files.readAllBytes(log);
+        Path prefs = testFolder.resolve("preferences.json");
+        try {
+            Files.createLink(prefs, log);
+        } catch (IOException | UnsupportedOperationException | SecurityException exception) {
+            assumeTrue(false, "Hard links unavailable: " + exception);
+        }
+
+        assertThrows(IllegalArgumentException.class, () -> new MainApp().initialize(data, prefs));
+        assertArrayEquals(originalData, Files.readAllBytes(data));
+        assertArrayEquals(originalLog, Files.readAllBytes(log));
+        assertArrayEquals(originalLog, Files.readAllBytes(prefs));
+    }
+
+    private MainApp startSession(Path data) throws IOException {
+        MainApp app = new MainApp();
+        app.initialize(data, testFolder.resolve("prefs.json"));
+        return app;
+    }
+
+    private void assertProtectedCommands(MainApp app) throws Exception {
+        String recoveryMessage = app.canonicalSession.getDataLoadError().orElseThrow();
+        assertTrue(recoveryMessage.contains(app.canonicalSession.getDataFilePath().toAbsolutePath().toString()));
+        assertTrue(app.logic.getPersonRecords().isEmpty());
+        assertTrue(app.logic.execute("help").getFeedbackToUser().contains(recoveryMessage));
+        assertTrue(app.logic.execute("list").getFeedbackToUser().contains(recoveryMessage));
+        assertTrue(app.logic.execute("exit").isExit());
+        for (String command : new String[]{ADD_COMMAND, "delete 1", "clear", "undo"}) {
+            CommandException failure = assertThrows(CommandException.class, () -> app.logic.execute(command));
+            assertEquals(recoveryMessage, failure.getMessage());
+        }
+        assertEquals(new PonHubData().exportState(), app.canonicalSession.getDataSnapshot());
     }
 }

@@ -12,7 +12,7 @@ import seedu.address.model.person.PersonRole;
 /**
  * A read-only current people view derived from one supplied canonical data root.
  * Matching records retain global creation order; list positions are independent of stable IDs.
- * This prepared component does not activate canonical commands or own writable operational data.
+ * The application session owns this projection without exposing writable operational data.
  * Callers refresh it after committed changes and rollback on the application's model thread.
  */
 public final class PeopleView {

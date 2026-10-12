@@ -23,7 +23,8 @@ title: Developer Guide
 * Zhu Zhi Yu used OpenAI Codex for the UI startup error-handling fix and its regression tests.
 * Zhu Zhi Yu used OpenAI Codex for dormant role-aware add argument parsing, its immutable ID-free input, regression tests, and integration documentation.
 * Zhu Zhi Yu used OpenAI Codex for the dormant complete-state person-addition candidate and canonical add/list commands, their transaction/storage regression tests, and the related integration notes.
-* Zhu Zhi Yu used OpenAI Codex for the dormant canonical people session, its protected routing and shared-root integration tests, and the corresponding developer integration notes.
+* Zhu Zhi Yu used OpenAI Codex for the canonical people session, its protected routing and shared-root integration tests, and the corresponding developer integration notes.
+* Zhu Zhi Yu used OpenAI Codex for the #85 application cutover: canonical startup/path selection, the active command catalogue and Logic adapter, person-card/view wiring, integration regression tests, and UG/DG reconciliation. Teammates retain ownership of their underlying feature foundations.
 * Zhu Zhi Yu used OpenAI Codex for constant-stack email validation that preserves the inherited contact rules, its parser/file-loading regressions, and the related implementation and manual-testing notes.
 * Zhu Zhi Yu used OpenAI Codex to clarify the course-prescribed Java 25 and macOS runtime setup, release verification, and manual-testing documentation.
 * Zhu Zhi Yu used OpenAI Codex for PR review and Javadoc formatting corrections in the canonical aggregate foundation (#76).
@@ -51,13 +52,34 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 
 ### Current increment and command integration
 
-This increment implements inline help and command-specific guidance. The runtime still uses inherited AB3 people and storage. Its active commands are `add`, `delete`, `list`, `help`, and `exit`. Role-aware people, stable IDs, shared lessons, enrolment, attendance, history, and search remain integration targets until their owners' code and complete persistence support are merged. Existing domain use cases and model/storage diagrams describe the inherited implementation or proposed product, not a completed shared-lesson runtime.
+The active application uses one `CanonicalPeopleSession` for role-aware people, stable IDs, the shared people view, protected loading and staged saves. Its commands are `add r/ROLE ...`, `list [r/ROLE]`, `help [COMMAND]` and `exit`. Guarded deletion, shared-lesson commands, enrolment, attendance, history and search remain unavailable. Inherited AB3 classes and diagrams retained below describe historical structure and regression seams, rather than a second active people store.
 
-`CommandCatalog` is the single registration point for active parsers, short descriptions, and usage messages. `AddressBookParser` extracts the command word and delegates to it. `HelpCommandParser` accepts zero or one topic, normalizes topics with `Locale.ROOT`, and rejects unknown topics and excess arguments with actionable guidance. Help reads command-owned usage constants; it does not maintain a second copy of command syntax.
+`CanonicalCommandCatalog` is the authoritative active command/guidance catalogue. `CanonicalPeopleSession` routes its commands and resolves zero or one help topic with `Locale.ROOT` normalization. `CanonicalLogicManager` exposes that same session to `MainWindow`, including its observable `PersonRecord` list, retrieval APIs and separate preferences. The legacy `CommandCatalog`, `AddressBookParser` and `LogicManager` remain isolated regression implementations; application startup does not construct a legacy model alongside the canonical root.
 
-Feature owners supply their parser, usage and runnable example. Register a mutation only when its aggregate, validation, and save/reload behavior work together. Replace the legacy people entries at the canonical runtime cutover; legacy `delete` must be disabled until guarded canonical deletion resolves the current people-list index to a stable person ID. `edit`, `clear`, and `find` are already withdrawn from dispatch and help in this increment. Their inherited implementation classes remain for incremental cleanup and direct regression tests.
+Feature owners supply their parser, usage and runnable example. Register a mutation only when its aggregate, validation and save/reload behavior work together. `delete`, `edit`, `clear` and `find` are absent from active routing and help. Guarded canonical deletion remains a later increment using the current people-list index and stable identity internally; inherited implementation classes remain only for regression tests.
 
-When registering or withdrawing a command, update catalogue/router tests, its UG entry and manual tests in the same PR. A summary topic must never advertise an unavailable command. `list` and `exit` now reject unexpected arguments instead of silently ignoring them.
+When registering or withdrawing a command, update catalogue/router tests, its UG entry and manual tests in the same PR. A summary topic must never advertise an unavailable command. `list` accepts only an optional single role filter; `exit` rejects all arguments. Protected sessions restrict both routing and advertised guidance to help/list/exit.
+
+### Canonical application startup (#85)
+
+`MainApp` selects `data/ponhub.json` by default or the launch argument `--data=PATH`, then constructs one
+`CanonicalPeopleSession` and its `CanonicalLogicManager`. Packaged application home is the folder containing the JAR, independently of the terminal working
+directory; development launches fall back to the working directory. Relative `--data` paths resolve from
+that home; absolute paths are allowed only inside it. Blank paths, `..` escapes and symbolic-link escapes
+are rejected before operational/preferences access. Data, preferences and the root reserved
+`addressbook.log*` files must remain separate, including symbolic/hard-link aliases. File logging starts
+only after this preflight; symbolic log files retain console-only logging. Quote a path containing spaces, for example
+`java -jar ponhub.jar --data="separate store/ponhub.json"`. The status footer shows the selected operational
+path. Preferences use `home/preferences.json` and logs stay in that same application home; an old
+preference's legacy address-book path does not select canonical operational data.
+
+The selected file is classified and validated once. Confirmed absence supplies an unwritten empty root,
+without sample records; only a successful addition creates operational data. Valid supported input installs
+one complete snapshot. Rejection preserves the file and opens a visibly protected empty view with actionable
+path-specific recovery guidance. Only help/list/exit remain available, and external repair or removal does not
+unlock that session before restart. Default startup leaves `data/addressbook.json` untouched; legacy AB3 data
+selected explicitly is preserved and rejected, with backup and manual re-entry into a separate missing store.
+No migration, setup or recovery command is introduced.
 
 ### Shared-lesson target contract
 
@@ -111,7 +133,7 @@ The complete [search matrix](#supported-criteria) remains the planned target. Ow
 | Lesson | Block while its roster is non-empty or Attendance references its Lesson ID. |
 | Parent | Preserve every Student's parent-phone value; derived links disappear when the Parent record is removed. |
 
-All mutations go through Model APIs using stable identities after command-boundary resolution. Complete aggregate copy/reset/equality and independent snapshots cover people, lessons, memberships, attendance and monotonic allocation state; deleted committed IDs are not reused. Vincent coordinates validated versioned JSON and transactional saves; failed saves must restore data and active views before those commands are enabled. The canonical runtime cutover must connect a compatible people view, index resolution, guarded commands and persistence together. Do not persist displayed indices or introduce a second people store; verify that separate lesson/roster/history results preserve the people view used by the next command. Preferences remain separate. Capacity, waiting lists, make-ups, export, saved searches, archiving, richer attendance statuses or notes, attendance percentages, fees, lesson editing, occurrence cancellation, undo/redo and guided advanced search are future extensions.
+All mutations go through Model APIs using stable identities after command-boundary resolution. Complete aggregate copy/reset/equality and independent snapshots cover people, lessons, memberships, attendance and monotonic allocation state; deleted committed IDs are not reused. Vincent coordinates validated versioned JSON and transactional saves; failed saves must restore data and active views before those commands are enabled. The active canonical people runtime connects the people view, add/list commands and protected persistence; later guarded commands must use that same root and selector boundary. Do not persist displayed indices or introduce a second people store; verify that separate lesson/roster/history results preserve the people view used by the next command. Preferences remain separate. Capacity, waiting lists, make-ups, export, saved searches, archiving, richer attendance statuses or notes, attendance percentages, fees, lesson editing, occurrence cancellation, undo/redo and guided advanced search are future extensions.
 
 **Iteration boundary:** The [Week 8 course instructions](https://nus-cs2103-ay2627-s1.github.io/website/schedule/week8/project.html) call for small first increments towards the simplest MVP. Each member should aim for a meaningful reviewed and merged code PR. An individual feature need not be complete end-to-end, but intermediate versions must remain working; this iteration requires no product release. The broader team target remains visible in [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59). Carry unfinished work into v1.3 honestly. Compatible loading and rollback remain safety requirements when a mutation is activated, rather than a requirement to finish every planned feature in Week 8.
 
@@ -147,7 +169,7 @@ The bulk of the app's work is done by the following four components:
 
 **How the architecture components interact with each other**
 
-The *Sequence Diagram* below shows how the components interact with each other for the scenario where the user issues the command `delete 1`.
+The inherited *Sequence Diagram* below records the historical `delete 1` flow. Active canonical deletion is unavailable; the active add/save/publication boundary is described in [Command transactions](#command-transactions).
 
 <img src="images/ArchitectureSequenceDiagram.png" width="574" />
 
@@ -156,7 +178,7 @@ Each of the four main components (also shown in the diagram above),
 * defines its *API* in an `interface` with the same name as the Component.
 * provides its functionality through a concrete `{Component Name}Manager` class that implements the corresponding API interface.
 
-For example, the `Logic` component defines its API in `Logic.java` and implements it in `LogicManager.java`. Other components interact with a component through its interface rather than its concrete class, preventing them from coupling to that component's implementation, as illustrated in the following partial class diagram.
+For the active application, `CanonicalLogicManager` implements `Logic`; the inherited `LogicManager` remains for regression tests. Other components interact with a component through its interface rather than its concrete class, preventing them from coupling to that component's implementation, as illustrated in the following partial class diagram.
 
 <img src="images/ComponentManagers.png" width="300" />
 
@@ -164,59 +186,54 @@ The sections below give more details of each component.
 
 ### UI component
 
-The **API** of this component is specified in [`Ui.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/Ui.java)
+The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/ui/Ui.java)
 
 ![Structure of the UI Component](images/UiClassDiagram.png)
 
-The JavaFX `MainWindow` composes `UiPart` controls such as `CommandBox`, `ResultDisplay` and `PersonListPanel`; their
+The JavaFX `MainWindow` composes `UiPart` controls such as `CommandBox`, `ResultDisplay` and `PersonRecordListPanel`; their
 layouts live in `src/main/resources/view`. UI sends commands through `Logic` and observes model-backed results so
-committed changes refresh the display. The diagram describes the inherited `Person` UI, which remains active.
+committed changes refresh the display. The diagram describes the inherited `Person` UI rather than the active card type.
 
-The prepared canonical person card has a separate current-view position and stable ID. At integration, lesson,
-roster and history results use separate views; see the [shared selector and view contract](#shared-lesson-target-contract)
-for how those results preserve the people list. This behavior is not yet active.
+The active canonical cards display immutable `PersonRecord` projections from the session's same observable people
+list, with separate current-view positions and stable IDs and wrapping labels for required and optional fields.
+Lesson, roster and history result views remain planned; see the [shared selector and view contract](#shared-lesson-target-contract)
+for how those results must preserve the people list.
 
 ### Logic component
 
-**API** : [`Logic.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/logic/Logic.java)
+**API** : [`Logic.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/Logic.java)
 
 Here's a (partial) class diagram of the `Logic` component:
 
 <img src="images/LogicClassDiagram.png" width="550"/>
 
-The sequence diagram below illustrates the interactions within the `Logic` component, taking `execute("delete 1")` API call as an example.
+The inherited sequence diagram below records `execute("delete 1")`; active routing instead delegates add/list/help/exit to `CanonicalPeopleSession`.
 
 ![Interactions Inside the Logic Component for the `delete 1` Command](images/DeleteSequenceDiagram.png)
 
 <div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `DeleteCommandParser` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
 </div>
 
-How the `Logic` component works:
+How active `Logic` works:
 
-1. When `Logic` is called upon to execute a command, the command is passed to an `AddressBookParser` object, which in turn creates a parser that matches the command (e.g., `DeleteCommandParser`) and uses it to parse the command.
-1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which is executed by the `LogicManager`.
-1. The command can communicate with the `Model` when it is executed (e.g. to delete a person).<br>
-   Note that although this is shown as a single step in the diagram above for simplicity, the code can require several interactions between the command object and the `Model` to complete the operation.
-1. Commands execute against a staged model. Changed operational data is saved before the staged state is published; execution or save failures discard the staged state. See [Command transactions](#command-transactions).
-1. The result of the command execution is encapsulated as a `CommandResult` object which is returned from `Logic` only after successful publication.
+1. `CanonicalLogicManager.execute` delegates to the single session. Its catalogue permits add/list/help/exit in a normal session, and help/list/exit after rejected loading.
+1. `RoleAwareAddParser` and `PeopleListParser` create validated role-aware input. Add/list execute through `CanonicalCommandExecutor` on a transaction with an independent working root and view.
+1. An addition validates a complete candidate, saves it through the protected writer, then publishes data and view and returns stable-ID success. Parse, domain or save failure leaves the live snapshot, counters, filter and selection unchanged.
+1. Read-only list/help/exit skip operational saving. Listing publishes only the selected role filter; help preserves the current view and returns inline guidance. Preferences retain their separate shutdown lifecycle.
 
-Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
+The inherited parser diagram remains useful for the retained regression seams:
 
 <img src="images/ParserClasses.png" width="600"/>
 
-How the parsing works:
-* `AddressBookParser` delegates to the registered parser in `CommandCatalog`. An `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`) uses the other classes shown above to parse the arguments and create an `XYZCommand` object. The router returns that object as a `Command`.
-* All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
-
-For planned canonical person commands, parse a positive index and resolve it against the current filtered people list at execution, checking the selected role. Capture the stable person ID once before calling ID-based Model/query APIs. The inherited `delete 1` example selects the first person in the current people view; the planned guarded route retains that input convention while using stable identity internally.
+Planned person-index commands use `PersonIndexResolver` on the current filtered people list, validate range and required role, then retain the resolved stable ID. Active add/list do not introduce a deletion route or reinterpret stable IDs as command indices. See the [shared selector contract](#shared-lesson-target-contract).
 
 #### Read-only retrieval API contract (#113)
 
 [`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/Logic.java)
 declares the UI-facing retrieval methods; [`LessonQuerySource`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonQuerySource.java)
 and [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonQueries.java)
-define the prepared lesson backend.
-The canonical Model owns projections from its one data root; Logic delegates to that source. Catalogue and filtered
+define the lesson backend supplied by the active `CanonicalPeopleSession`. Its canonical Model owns projections
+from one `PonHubData` root; `CanonicalLogicManager` delegates to that same source. Catalogue and filtered
 results contain each lesson once in creation order, including empty lessons. Student lessons derive from current
 Lesson-owned membership; rosters use people creation order, and tutor schedules use weekday, start time and numeric
 lesson ID. Lookup by lesson ID reads the full catalogue regardless of its active filter.
@@ -234,9 +251,10 @@ object while committed changes and rollback refresh its entries. Existing record
 lists, while an unknown lesson lookup yields an empty `Optional`. Lesson queries reject null IDs and unknown or
 wrong-role IDs for list retrieval; exact signatures and exceptions are in the linked source/Javadoc.
 
-**Integration status:** #80 supplies the lesson/roster backend, but the inherited runtime still reports retrieval
-unavailable. Attendance-history methods await #100. Commands and separate result views remain pending; search
-enters through `Logic.execute(String)` and follows the [planned search matrix](#supported-criteria).
+**Integration status:** #80's lesson/roster backend is connected to the active canonical session and exposed by
+`CanonicalLogicManager`; the retained legacy `ModelManager` still reports retrieval unavailable. Attendance-history
+methods await #100. Lesson commands and separate result views remain pending; search enters through
+`Logic.execute(String)` and follows the [planned search matrix](#supported-criteria) when its routes activate.
 
 ### Model component
 **API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
@@ -244,7 +262,11 @@ enters through `Logic.execute(String)` and follows the [planned search matrix](#
 <img src="images/ModelClassDiagram.png" width="450" />
 
 
-The `Model` component,
+The active model is the session-owned `PonHubData` root and its `PeopleView`/`LessonQueries` projections,
+with immutable records and snapshots. The following inherited Model diagram and API description remain
+for the isolated AB3 regression implementation. They do not construct a second active model.
+
+The inherited `Model` component,
 
 * stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
@@ -321,10 +343,9 @@ candidate snapshot before replacement, and use its validation rather than instal
 `model.query.LessonQueries` implements `LessonQuerySource` over one supplied canonical root. Its immutable
 `LessonViewData` and `StudentViewData` entries resolve current Tutor/Student information by stable ID. Lessons alone
 own membership; attendance never supplies a roster or enrolment. Shared lessons appear once, including empty ones.
-The Model adapter returns this component through `getLessonQueries()`; `LogicManager` delegates its six lesson
-retrieval methods without saving data or changing the people filter. The current legacy adapter deliberately has
-no canonical query source. Activate the prepared backend only with #85's single-root runtime integration and the
-compatible persistence/command/UI slices.
+The active session owns this component for its lifetime; `CanonicalLogicManager` delegates its six lesson
+retrieval methods without saving data or changing the people filter. The retained legacy adapter has no
+canonical query source. Lesson commands and separate result views still require their compatible slices.
 
 | Query API | Implementation |
 | --- | --- |
@@ -382,14 +403,18 @@ of JavaFX callback errors, consistent held roster/filter results and continued u
 
 <img src="images/StorageClassDiagram.png" width="550" />
 
-The `Storage` component,
+Active operational storage uses `ProtectedPonHubDataStorage` around `JsonPonHubDataStorage`; preferences
+use `JsonUserPrefsStorage` separately. The inherited class diagram and bullets below describe the retained
+legacy storage regression implementation, which is not the application's operational store.
+
+The inherited `Storage` component,
 * can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
 
 #### Safe JSON saves
 
-Address-book data and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
+Canonical operational data, retained legacy storage and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
 Existing destinations are resolved to their real paths, so saving through a symbolic link updates its
 target and preserves the link. Dangling/cyclic links and inaccessible destinations fail before writing.
 New files use a resolved parent directory, creating missing directories as needed. Concurrent external
@@ -414,26 +439,29 @@ preserves all previous file attributes.
 
 #### Command transactions
 
-`LogicManager` obtains a `ModelTransaction` before executing a command. The command operates on an
-independent working model with the current people filter. It compares operational state against the
-pre-command snapshot and calls `Storage.saveModel` only when that state changed. Only after the save
-succeeds does it publish the staged data and view, then return the command result. Execution or save
-failure discards the staged model, leaving live records, order, filter and UI selection untouched.
-Publication updates existing observable lists so UI bindings continue to receive successful changes.
-Read-only commands and operational no-ops skip saving; view changes such as list still take effect.
-Protected startup retains its help/list/exit restriction. Preferences retain their shutdown lifecycle.
+The active session invokes `CanonicalCommandExecutor` with its `PeopleView`, protected snapshot writer
+and session error supplier. `PeopleView.beginTransaction()` creates an independent working root and view
+from the complete live `PonHubDataState` and current role filter. Add validates the full candidate before
+saving. The executor compares operational snapshots, saves changed data before publication, then installs
+the candidate and returns success. Parse, execution or save failure never refreshes the live list, so records,
+allocation history, order, filter and selected card survive failure.
 
-The active implementation stages legacy people data. The canonical runtime adapter must implement
-`Model.beginTransaction` and `Storage.saveModel` together, including complete `PonHubDataState`, allocation
-counters/exhaustion, rosters, retained attendance and all active views. This seam does not itself activate
-the canonical runtime or its commands. Publication must not perform new validation or I/O.
+Observable list identity survives successful publication. Read-only commands and unchanged operational
+state skip saving; role-filter changes still update the same people view. Help and unchanged views avoid
+unnecessary refresh, preserving selection. Protected loading retains its help/list/exit-only restriction.
+Preferences retain their separate shutdown lifecycle. Publication performs no new validation or I/O.
+
+Legacy `LogicManager`/`ModelTransaction` remain isolated regression seams; active startup does not use them
+as a parallel writable store. Complete-state transactions preserve lesson rosters and retained attendance,
+while the current persistence codec still rejects nonempty attendance until #83. Never strip unsupported
+collections to make a candidate saveable; activate later mutations only with compatible persistence.
 
 #### JSON version detection foundation
 
 `JsonDataVersionDetector.detect(String)` classifies file contents using the existing Jackson dependency,
-without constructing Model objects or writing files. The current loader uses this gate before decoding. The planned
-PonHub envelope reserves `schemaVersion` as a positive JSON integer, initially `1`; this is a data-schema
-version, independent of the application version. Issue #79 will define and validate the remaining envelope.
+without constructing Model objects or writing files. The current loader uses this gate before decoding. The supported
+PonHub envelope uses `schemaVersion` as a positive JSON integer, initially `1`; this is a data-schema
+version, independent of the application version. The canonical codec validates the complete envelope defined in #79 and its lesson extension.
 
 | Result | Meaning and later loader action |
 | ------ | ------------------------------- |
@@ -447,39 +475,38 @@ version, independent of the application version. Issue #79 will define and valid
 Missing versions identify legacy data only for the strict legacy root shape. A versioned candidate can
 still contain missing or invalid records: the detector is a format gate, not a schema/domain validator.
 Callers must handle file absence and read errors separately; neither is equivalent to empty JSON.
-The current `JsonAddressBookStorage` classifies and decodes the same string. It accepts only legacy AB3
-roots in this runtime and rejects every other classification, including version-1 candidates until their
-codecs are integrated. Missing files retain the existing fresh/sample-data behavior. Only a confirmed
-missing path is treated as absent; denied access and dangling final symbolic links are loading failures.
+The active `ProtectedPonHubDataStorage` classifies the selected file before canonical decoding. Legacy AB3
+roots are rejected and preserved; version-1 candidates require complete codec validation. Only a confirmed
+missing path returns an unwritten empty root. Denied access and dangling final symbolic links are loading
+failures. `JsonAddressBookStorage` retains its legacy-only decoder for isolated regression tests.
 
 #### Current protected startup
 
-On a controlled loading failure, `StorageManager` records recovery guidance and locks operational saves
-for the rest of the session. `MainApp` creates an empty display model, not a replacement writable store.
-The UI displays a recovery warning; `LogicManager` allows only help/list/exit and bypasses saving for
-those commands in the protected session. Other commands are rejected before execution. Storage also
-rejects direct operational saves, while preferences retain their separate lifecycle. Deleting or fixing
-the file while the session is running does not unlock it: recovery requires a restart.
+`ProtectedPonHubDataStorage` records actionable path-specific recovery guidance and locks operational
+saves after a controlled selected-file loading failure. `CanonicalPeopleSession` exposes an explicitly
+protected empty view; it never treats rejected data as a new writable dataset. The UI shows the warning,
+and active routing/help allow only help/list/exit. Listing includes the load diagnostic, so an empty result
+cannot be mistaken for saved data. Preferences retain their separate lifecycle. External file repair or
+removal does not unlock the session: restart is required.
 
-JSON syntax, root/version errors, invalid contact records and I/O failures become controlled loading
-errors. Explicit checks reject null person/tag entries; unrelated programming errors are not swallowed.
-Valid legacy contacts still load and save normally. This safety increment does not implement the new
-aggregate codec, automatic migration, general command rollback or no-save behavior in normal sessions.
+Malformed JSON, invalid roots/versions/records/counters/references, legacy AB3 and read failures become
+controlled rejections. Unrelated programming failures are not swallowed. Supported versioned data loads
+after complete codec validation; nonempty attendance remains unsupported until #83. Missing selected files
+start empty and unwritten until successful add, without inherited sample data or automatic legacy migration.
 
-Manual check: in a disposable working folder, place malformed JSON, `null`, or a versioned document in
-`data/addressbook.json` and record its bytes. Start the app and verify the recovery warning. Run help,
-list, exit and attempt add/delete; restart as necessary. The original bytes must remain unchanged and
-mutations must be blocked. Close the app, preserve the original, then restore a known-good compatible
-backup or correct JSON/access permissions and restart. Confirm valid human-edited legacy data loads.
-`ProtectedStartupTest` exercises the startup/command/storage boundary and original-byte preservation;
-`UiManagerTest` verifies the warning without requiring a real window.
+For manual checks, use a disposable selected `data/ponhub.json` or `--data=PATH`, record original bytes,
+then test help/list/exit and attempted add in the protected session. Bytes must remain unchanged. Preserve
+a backup, close the app, deliberately correct a supported working copy and restart. A legacy original is
+kept separately while explicit-role records are re-entered into a previously unused selected path.
+Session/storage and application-startup tests cover these boundaries; actual packaged/platform outcomes
+must be recorded separately using the procedures below.
 
 #### People-only canonical JSON storage (#79)
 
 `JsonPonHubDataCodec` converts between a complete `PonHubDataState` and the version-1 envelope below.
 `JsonPonHubDataStorage` reads one UTF-8 document into a validated candidate and uses the existing safe
-file writer for saves. These classes are not wired into startup, commands or the legacy storage path;
-protected runtime integration remains #84. Preferences remain in their existing separate file.
+file writer for saves. The active session connects them through `ProtectedPonHubDataStorage`; the legacy
+address-book path is not used by default. Preferences remain in their existing separate file.
 
 ```json
 {
@@ -536,15 +563,17 @@ counter below 1 is rejected. Object field order and whitespace do not matter. Ro
 complete snapshot, including optional-field absence, people order, deleted-ID history and exhausted counters.
 Loading classifies the version first and validates all records/counters before returning; callers install
 the candidate only on success. Loading itself never writes or changes live state. This codec supplies no
-legacy migration or rejected-file session lock; the existing protected startup remains independently active.
+legacy migration or rejected-file session lock; active startup supplies that lock through the protected wrapper.
 
-#### Planned protected loading and legacy upgrade
+<a id="planned-protected-loading-and-legacy-upgrade"></a>
 
-These are requirements for the first canonical cutover, not behavior delivered by the inherited loader. Keep the inherited runtime until the compatible canonical Model, codecs, people commands and protected loader are activated together. The new runtime must classify the configured file before decoding: missing data may start a fresh supported root; valid supported versioned data loads only after complete domain, identity and reference validation. Unreadable, corrupt, unsupported-version and unversioned AB3 files produce controlled errors, actionable recovery guidance and no operational writes to the rejected file. Preserve its original bytes through help, list, exit and attempted mutations; saving preferences remains separate.
+#### Protected loading and legacy upgrade
 
-The initial upgrade policy is deliberate backup and manual re-entry into a separate new supported store. An unversioned AB3 contact does not contain enough information to infer a Student, Tutor or Parent role, and a Student additionally needs its level and parent phone. Do not invent those values, discard invalid records, or convert the original in place. Once the canonical build is available, tell the administrator to close the app, preserve a backup of the original data folder, deliberately start that compatible build in a separate empty folder, and re-enter records with explicitly chosen roles and required fields using the delivered commands. The preserved original and backup are not operational write targets; only the explicitly chosen new supported root is writable. Check the new records before retiring the old working folder. A migration importer and application-level export are future extensions; this policy does not introduce an `import`, `export` or `recover` command.
+Canonical startup, people commands, cards and the protected loader are now active together. The active runtime classifies the configured file before decoding: missing data may start a fresh supported root; valid supported versioned data loads only after complete domain, identity and reference validation. Unreadable, corrupt, unsupported-version and unversioned AB3 files produce controlled errors, actionable recovery guidance and no operational writes to the rejected file. Preserve its original bytes through help, list, exit and attempted mutations; saving preferences remains separate.
 
-The contact changes in #61 can reject formerly accepted numeric-only names, long phones or slash-containing addresses, or reveal duplicates after normalization. Diagnose the affected values without overwriting the rejected data. Inspect the local JSON read-only; if the older build is needed to inspect contacts, use an additional working copy, never the preserved original or backup. The administrator supplies any corrections and missing role information. Correctly human-edited supported JSON must load: document the delivered schema, preserve valid stable IDs and allocation state, and validate all relationships without requiring users to avoid editing the file. An invalid edit is rejected as a whole with its bytes preserved. The [planned manual checks](#planned-canonical-loading-and-recovery) cover this boundary.
+The initial upgrade policy is deliberate backup and manual re-entry into a separate new supported store. An unversioned AB3 contact does not contain enough information to infer a Student, Tutor or Parent role, and a Student additionally needs its level and parent phone. Do not invent those values, discard invalid records, or convert the original in place. Tell the administrator to close the app, preserve a backup of the original data folder, then select a separate previously unused operational path inside the JAR folder with `--data=PATH`, or copy the JAR into a separate empty folder. Re-enter records with explicitly chosen roles and required fields using the active add command. The preserved original and backup are not operational write targets; only the explicitly chosen new supported root is writable. Check the new records before retiring the old working folder. A migration importer and application-level export are future extensions; this policy does not introduce an `import`, `export` or `recover` command.
+
+The contact changes in #61 can reject formerly accepted numeric-only names, long phones or slash-containing addresses, or reveal duplicates after normalization. Diagnose the affected values without overwriting the rejected data. Inspect the local JSON read-only; if the older build is needed to inspect contacts, use an additional working copy, never the preserved original or backup. The administrator supplies any corrections and missing role information. Correctly human-edited supported JSON must load: document the delivered schema, preserve valid stable IDs and allocation state, and validate all relationships without requiring users to avoid editing the file. An invalid edit is rejected as a whole with its bytes preserved. The [manual checks](#planned-canonical-loading-and-recovery) cover this boundary.
 
 ### Common classes
 
@@ -574,7 +603,7 @@ normalize scheduling input before later lesson commands or persistence code use 
   of letter case.
 
 These value types do not activate or advertise a lesson command. The canonical aggregate now supplies lesson creation,
-global tutor/room clash checks and ID allocation; command and persistence integration remain separate increments.
+global tutor/room clash checks and ID allocation; lesson persistence is supported, while command integration remains a separate increment.
 
 ### Immutable shared lesson records
 
@@ -588,12 +617,16 @@ Tutor ID. `getEnrolledStudentIds()` exposes an unmodifiable snapshot. `withEnrol
 `withEnrolledStudent`, and `withoutEnrolledStudent` return replacement `Lesson` values, leaving the original lesson
 and its stable identity unchanged. Equality, hashing, copying and string representation include every stored field,
 including roster membership. The canonical aggregate owns lesson ordering, ID allocation and clash checks,
-while persistence and duplicate-enrolment command feedback remain separate work. This dormant record does not change
-the active runtime.
+while duplicate-enrolment command feedback remains separate work. Lessons can load through the supported codec,
+but lesson command routes remain unavailable.
 
 ### Inline help
 
-`HelpCommand` returns guidance in an ordinary `CommandResult`, with no separate-window or exit flag. It never mutates Model data, filters or preferences. `LogicManager` returns help, list and exit results before the operational save path, so these commands work even when operational storage is unwritable and do not create or rewrite the data file. List still resets the visible people filter and exit still returns its exit flag. Add/delete continue to save; general change detection and rollback remain separate integration work.
+The session returns catalogue guidance in an ordinary `CommandResult`, without a separate window or exit
+flag. `CanonicalCommandCatalog` supplies only the session's available routes and their syntax/examples;
+protected sessions omit add. Topic matching ignores case, while command words remain lowercase.
+Help does not mutate operational data, filters or preferences and does not save. List changes only the
+role-filtered view, and exit returns its exit flag; add alone performs operational saving in this increment.
 
 The Help menu and F1 invoke `MainWindow.executeCommand("help")`. Both display exactly the same guidance as typed help while retaining the command-box draft and person selection. `ResultDisplay` uses a read-only wrapped TextArea with scrolling and resets to the beginning of each new result. Existing F1 handling for focused text controls remains in place. The unused inherited HelpWindow is not constructed or reachable through supported help entry points.
 
@@ -662,16 +695,18 @@ controls before extraction.
 Space normalization scans linearly; email rejects excessive length before a linear, constant-stack format scan,
 avoiding stack overflow on hostile repeated input. Phone/email parsing retains surrounding-whitespace trimming.
 
-The active inherited `add` parser and loader use this policy. Previously accepted files outside it, including
+The active `RoleAwareAddParser` and canonical loader use this policy. Previously accepted files outside it, including
 normalization-created duplicates, enter [protected startup](#current-protected-startup); Storage describes
-rejected-file preservation and recovery. This contact-policy change performs no legacy migration. Role-aware
-commands remain dormant as described below.
+rejected-file preservation and recovery. This contact policy performs no legacy migration. Role-aware
+add/list are active as described below.
 
 <a id="role-aware-addition-parsing-foundation"></a>
 <a id="staged-person-addition-candidate"></a>
 <a id="current-people-index-resolution-foundation"></a>
 
-### Prepared people commands
+<a id="prepared-people-commands"></a>
+
+### Canonical people commands
 
 `RoleAwareAddParser` returns immutable, ID-free `PersonAdditionInput`, using the shared contact policy above.
 It accepts lowercase prefixes once each in any order; role and education-level values ignore case.
@@ -698,22 +733,20 @@ view with checked duplicate/exhaustion feedback; the executor saves before publi
 success. Listing selects a role and reports its count without operational saves.
 `CanonicalPeopleCommandIntegrationTest` exercises the real prepared parser/executor/storage seam, covering
 all roles and optional contacts, siblings, canonical duplicates, ID allocation/exhaustion, save/reload and failed-save
-restoration. Application routing, restart and visible runtime acceptance remain pending #85 integration.
+restoration. The #85 cutover connects these commands to application startup and cards; manual application/platform checks remain evidence to record, rather than inferred from component tests.
 
 `PersonIndexResolver` applies the [shared selector contract](#shared-lesson-target-contract) to the authoritative
 current people list. With students `[S4, S9]`, positions `1` and `2` select those IDs; position `2` never means
 `S2`. Resolve once and retain the returned ID throughout the operation. Student-only resolution rejects a
 Tutor/Parent at that position without searching another list; range/role failures leave data and view unchanged.
 
-These commands remain preparation for [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85). Registry,
-aggregate, view, people/lesson storage, staged command transactions and `ProtectedPonHubDataStorage`
-foundations are merged. The prepared session below connects them without activating the application.
-Coordinated application loading and card integration still gate loader/add/list/card activation. The active catalogue
-continues to use inherited add/delete/list; `list r/student` is rejected. Canonical storage supports lessons and
-rosters but rejects nonempty attendance until its codec arrives; see Storage above. Legacy delete must retire at cutover
-until guarded canonical deletion is available.
+The [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85) cutover activates these commands through
+one session and people panel. Inherited delete is retired until guarded canonical deletion is ready.
+Canonical storage supports lessons/rosters but rejects nonempty attendance until #83; lesson routes remain gated.
 
-### Prepared canonical people session
+<a id="prepared-canonical-people-session"></a>
+
+### Canonical people session
 
 `CanonicalPeopleSession` loads the configured path once through `ProtectedPonHubDataStorage` and owns one
 private `PonHubData` root. Its `PeopleView`, `CanonicalCommandExecutor` and lifetime `LessonQueries` component
@@ -721,8 +754,8 @@ share that root. Callers receive immutable data snapshots and the same unmodifia
 the session does not expose writable operational data. Execute on the single model thread, or the JavaFX
 application thread once controls are attached.
 
-The session has its own prepared `add`, `list`, `help` and `exit` routes and guidance, independent of the active
-legacy `CommandCatalog`. It parses role-aware additions and listings before staged execution. Changed data
+The session routes active `add`, `list`, `help` and `exit` through `CanonicalCommandCatalog`, independent of the
+retained legacy `CommandCatalog`. It parses role-aware additions and listings before staged execution. Changed data
 is saved through the protected writer before publication, ID success feedback or reset to all roles. Parse,
 domain and save failures leave the original data, allocation counters and visible filter/list unchanged.
 Read-only commands perform no operational saves.
@@ -735,21 +768,21 @@ External repair or removal does not unlock that session; recovery requires a new
 repair or selection of a separate supported path.
 
 `CanonicalPeopleSessionTest` exercises the real protected loader, router, staged commands and snapshot writer.
-These prepared-component checks do not establish actual application startup, native UI/card behavior or
-platform acceptance. This increment leaves `MainApp`, the active catalogue and `MainWindow` on the inherited
-runtime. The coordinated #77/#85 cutover must connect this session to application startup and cards, retire
-legacy delete, align active help and verify actual save/restart/failure behavior with #84's owner.
+Component tests alone do not establish native UI/card or platform acceptance. `MainApp` now constructs
+this session and its Logic adapter, and `MainWindow` observes the session's people view. Record actual
+packaged save/restart/failure and platform evidence using the procedures below.
 
 <a id="role-filtered-people-listing-foundation"></a>
 <a id="prepared-person-record-cards"></a>
 
-### Prepared people view and cards
+<a id="prepared-people-view-and-cards"></a>
+
+### Canonical people view and cards
 
 [`PeopleView`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/PeopleView.java)
 derives the people projection from one supplied `PonHubData` root and owns the selected role filter. It retains
 one unmodifiable observable
-list for both command selection and `PersonRecordListPanel`, preserving global relative order. The root emits
-no change events: its owner explicitly refreshes after committed replacement or rollback, on the JavaFX
+list for both command selection and `PersonRecordListPanel`, preserving global relative order. The people projection's owner explicitly refreshes after committed replacement or rollback, on the JavaFX
 application thread when controls are attached. Refresh retains the selected role; parse list arguments before
 changing it. A successful addition's reset to all roles belongs to the transaction above.
 
@@ -764,9 +797,9 @@ zeros are retained. `PersonRecordCard` loads wrapping labels from FXML with no f
 `PersonRecordListPanel` fits cards to cell width, updates positions when cells are reused, and supplies count,
 empty placeholder and vertical scrolling for tall cards. Neither projection nor panel owns writable records.
 
-The view/panel/cards are dormant; `MainWindow` still constructs inherited cards. Display acceptance and
-coordinated wiring remain [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77). Developer preview recipes
-and earlier viewport results are preserved there; application checks appear in [manual testing](#planned-people-card-display-checks).
+`MainWindow` constructs these canonical cards over the session's current list. Developer preview recipes
+and earlier viewport results are preserved in [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77);
+actual application/platform display evidence belongs to [manual testing](#planned-people-card-display-checks).
 
 <a id="prepared-canonical-people-sample-checks"></a>
 
@@ -887,9 +920,9 @@ Compared with maintaining separate contact lists, timetables and attendance reco
 
 **Shared-lesson MVP target:** Lessons are created independently of student enrolment, including lessons with empty rosters. Each shared `Lesson` owns its currently enrolled student IDs; student lessons, rosters, and tutor schedules are retrieved from that canonical membership rather than copied into each student. Attendance is a separate dated record for one student and one lesson. Unenrolment removes current membership and retains attendance history; an existing historical entry can still be corrected or removed. A missing attendance entry means unrecorded, distinct from present and absent.
 
-**Delivered versus planned:** The [student foundation (#57)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/57), [tutor and parent foundations (#62)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/62), [ordered people registry (#70)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/70), [person-card components (#119)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/119), [role-filtered listing components (#122)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/122), [search criteria foundation (#64)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/64), and [lesson scheduling values (#63)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/63) provide independently tested APIs. The registry, new cards, and role-filtered listing remain dormant. [Inline help (#68)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/68) and [safe file replacement (#66)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/66) are connected to the active inherited contact runtime.
+**Delivered versus planned:** The [student foundation (#57)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/57), [tutor and parent foundations (#62)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/62), [ordered people registry (#70)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/70), [person-card components (#119)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/119), [role-filtered listing components (#122)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/122), [search criteria foundation (#64)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/64), and [lesson scheduling values (#63)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/63) provide independently tested APIs. The registry, canonical cards and role-filtered listing are now connected to the active people session. [Inline help (#68)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/68) and [safe file replacement (#66)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/66) are connected to the active canonical people runtime.
 
-Canonical people and shared-lesson runtime integration remain tracked in [#76](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/76), [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77), [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85), and their dependent command, storage, and retrieval issues. Compatible persistence, protected loading, and failed-save rollback remain activation gates. The requirements below describe the intended product; they do not claim that role-aware commands, shared lessons, enrolment, attendance, or history are currently available. Each feature owner updates implementation evidence and feature documentation as those increments are delivered.
+Canonical people activation and the remaining shared-lesson integration are tracked in [#76](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/76), [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77), [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85), and their dependent command, storage, and retrieval issues. Compatible persistence, protected loading, and failed-save rollback remain activation gates. The requirements below describe the intended product; role-aware add/list are active, while shared lessons, guarded deletion, enrolment, attendance and history remain planned. Each feature owner updates implementation evidence and feature documentation as those increments are delivered.
 
 ### User stories
 
@@ -1198,19 +1231,19 @@ Use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-projec
 
 ### Inline help and supported routes
 
-1. Launch the built JAR using Java 25 in a fresh folder. Run `help`, then `help add`, `help delete`, `help list`, `help help`, and `help exit`. Each topic must match its actual active parser and supply a runnable example. Requesting `help exit` must leave the application open.
+1. Launch the built JAR using Java 25 in a fresh folder. Run `help`, then `help add`, `help list`, `help help`, and `help exit`. Each topic must match its actual active parser and supply a runnable example. Requesting `help exit` must leave the application open.
 2. Select a person card, type an unfinished command, and choose Help from the menu. Repeat with F1 while focus is in the command box and in Result Display. Expect identical overview guidance, no separate window, unchanged card selection and unchanged unfinished input.
-3. Run `help ADD`; expect the same content as `help add`. Run `help remove`, `help clear`, and `help addlesson`; expect an unknown-topic message directing you to `help`. Run `help add delete`; expect the help usage after `Invalid command format!`.
+3. Run `help ADD`; expect the same content as `help add`. Run `help remove`, `help delete`, `help clear`, and `help addlesson`; expect an unknown-topic message directing you to `help`. Run `help add delete`; expect the help usage after `Invalid command format!`.
 4. Resize to the minimum width. Run `help add`, scroll to its last example and back to the top. Expect wrapped, readable text and a working vertical scrollbar. Request another topic while scrolled down; it starts at the beginning.
-5. Run `edit 1 n/Alex`, `clear`, and `find Alex`. Expect `Unknown command.` and unchanged people/data. Run `list extra` and `exit extra`; expect their usage messages and no list change or exit.
+5. Run `delete 1`, `edit 1 n/Alex`, `clear`, `find Alex`, `search c/student` and `lessons`. Expect `Unknown command.` and unchanged people/data. Run `list extra` and `exit extra`; expect their usage messages and no list change or exit.
 6. Compare the operational file before and after help; it must be byte-for-byte unchanged, and a missing operational file must remain missing. The automated failing-storage test covers help without operational write access. Preference saving at application shutdown remains separate.
 
-Repeat the topic/example checks whenever a feature owner registers another command. Broader shared-lesson workflow and published-site checks remain pending the owners' integration; passing help checks alone does not establish completion of the broader team target. That complete target is separate from the Week 8 first-increment requirement.
+Repeat the topic/example checks whenever a feature owner registers another command. Broader shared-lesson workflow and published-site checks remain pending the owners' integration; passing help checks alone does not establish completion of the broader team target. These checks do not claim delivery of unavailable feature routes.
 
 ### Planned person-index integration checks
 
-Run these application checks only after the corresponding canonical routes activate; follow the
-[shared selector contract](#shared-lesson-target-contract).
+Role-filtered listing and add/failure checks in steps 1 and 4 are active. Steps 2 and 3 require later
+guarded deletion and lesson/result routes; follow the [shared selector contract](#shared-lesson-target-contract).
 
 1. On a mixed-role dataset, run `list`, `list r/student`, `list r/TUTOR` and `list r/parent`.
    Verify global relative order and counts; repeat with no matching records for a successful empty role.
@@ -1229,9 +1262,11 @@ Run these application checks only after the corresponding canonical routes activ
 
 <a id="dormant-person-card-developer-preview"></a>
 
-### Planned people-card display checks
+<a id="planned-people-card-display-checks"></a>
 
-The prepared cards are dormant. Repeat these checks in the activated application; isolated preview
+### People-card display checks
+
+Perform these checks in the active application and record the platform, build and actual result. Isolated preview
 instructions are preserved in [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77).
 
 1. Use all roles, absent/present optional contacts, leading-zero phones and long names/email/addresses.
@@ -1253,53 +1288,72 @@ testers are expected to do more *exploratory* testing.
 
 ### Launch and shutdown
 
-1. Initial launch
+1. Build or obtain the matching `ponhub.jar`, copy it to a disposable empty JAR folder, and launch
+   from that folder's terminal with Java 25: `java -jar ponhub.jar`. Expect the canonical GUI and an empty
+   people view. Run help/list/exit; `data/ponhub.json` remains absent, and preferences may save separately.
+2. Relaunch, add all roles with the active examples in the UG, then exit. Expect supported JSON only after
+   a successful add. Restart the same JAR and verify people, stable IDs and global creation order.
+3. Resize and move the window, close it and relaunch the same JAR. Expect retained geometry from
+   `preferences.json`. Select a different missing path with `--data=data/another-ponhub.json`; expect an
+   empty dataset and the same preference location in the JAR folder, without touching the previous
+   operational file. Launch the JAR from another working directory and confirm data/preferences/logs
+   still remain in the JAR folder.
+4. Repeat with `java -jar ponhub.jar --data="separate store/ponhub.json"`. Confirm the status footer and
+   subsequent successful save/reload use that selected path. Keep a legacy `data/addressbook.json` in the
+   JAR folder and verify default startup/add/exit leaves its bytes unchanged. Reject blank `--data=`,
+   `../outside.json`, an absolute path outside the JAR folder and a symbolic-link escape before any
+   operational read/write outside application home.
 
-   1. Download the JAR file and copy it into an empty folder.
+`ApplicationStartupTest` exercises production `MainApp.init()` and `stop()` in isolated JVM folders
+whose paths contain spaces, with real JavaFX named parameters. It verifies empty missing-store startup,
+legacy/corrupt/unsupported rejection, supported human edits and allocation validation, original-byte
+preservation through help/list/exit and rejected mutations, repaired restart, alternate paths and shared
+GUI preference reload. The JavaFX toolkit starts, but its test-only start callback displays no window;
+these checks do not establish native interaction or physical display/scaling acceptance. Development
+classes resolve application home from each child working directory; repeat the packaged JAR procedure
+above to verify the JAR-folder boundary independently. Ernest used OpenAI Codex for these regression
+tests and their current-runtime guide reconciliation.
 
-   1. Double-click the JAR file.<br>
-      Expected: The GUI opens with a set of sample contacts. The window size may not be optimal.
+### Canonical people commands and unsuccessful saves
 
-1. Saving window preferences
-
-   1. Resize the window to an optimal size. Move the window to a different location. Close the window.
-
-   1. Relaunch the app by double-clicking the JAR file.<br>
-       Expected: The most recent window size and location are retained.
+1. Add a Tutor, Student and Parent, omitting optional Student contacts. Add a second student with the
+   same parent phone and a different name. Expect distinct stable IDs, readable role-specific cards and
+   the global creation order after restart. Run `list r/student`, `list r/TUTOR` and `list r/parent`;
+   positions renumber from one while stored IDs and relative order remain unchanged.
+2. Select a Student card after role filtering. Try a duplicate Student with the same normalized name
+   and parent phone, a missing required field, unknown/repeated prefixes, and a Tutor with `l/`. Expect
+   rejection and unchanged file bytes, records, counters, filter and selection. Reject `list r/all`,
+   `list r/` and two role prefixes without changing the previous view. A valid empty role result succeeds.
+3. Use a disposable save-failure setup: retain the pre-command file and make the operational location
+   unwritable for the app account, or use the automated failing-writer seam. Attempt a valid addition;
+   expect no success message, publication or ID consumption. Restore access and retry. The successful
+   record uses the next unconsumed ID and appears last in the all-role view; restart verifies persistence.
+4. With a selected card, request help from the menu/F1 and through the command box. Expect preserved
+   records/filter/selection; menu/F1 additionally retain unfinished text. Run unavailable delete, search
+   and lesson commands; normal sessions report an unknown command without touching data or selection.
 
 ### Contact validation in the current increment
 
-Use inherited contact commands in a disposable data folder; role-aware add remains dormant.
+Use role-aware commands in a disposable selected data file.
 
-For current-runtime startup acceptance, launch from a separate folder whose name contains spaces.
-Check its `data/addressbook.json` and `preferences.json` through launch, help/list/exit and reopening;
-no other launch folder's files should change. Repeat with missing, valid manually edited, corrupt and
-unsupported operational data. Rejected originals remain byte-identical, mutations stay blocked, and
-saved preferences still reload. `ApplicationStartupTest` checks complete `MainApp.init()`/`stop()` in
-isolated JVM folders without replacing its factories. It does not show a window or establish native
-display acceptance. Canonical alternate-path tests remain separate from active application wiring.
-
-1. Enter `add n/  Anne-Marie   O'Neil  p/00123456 e/anne%school@example.com a/  Blk 10,   #01-02  `.
+1. Enter `add r/tutor n/  Anne-Marie   O'Neil  p/00123456 e/anne%school@example.com a/  Blk 10,   #01-02  `.
    Expect normalized name `Anne-Marie O'Neil` and address `Blk 10, #01-02`, retaining punctuation,
    email and phone zeros. Restart: the saved values remain intact.
-2. Try `add n/Test User p/1234567890123456 e/test@example.com a/Blk 10`, then
-   `add n/Test User p/123 e/test@localhost a/Blk 10`. Expect the relevant phone/email constraints
-   and no addition. Likewise reject `n/Test2 User` and `a/Blk 10/Unit 2` in otherwise valid input.
+2. Try `add r/tutor n/Test User p/1234567890123456 e/test@example.com a/Blk 10`, then
+   `add r/tutor n/Test User p/123 e/test@localhost a/Blk 10`. Expect the relevant phone/email constraints
+   and no addition. Likewise reject `n/Test2 User` and `a/Blk 10/Unit 2` in otherwise valid role-aware input.
 3. Paste an email consisting of 5,000 `a.` repetitions followed by `a@example.com` into otherwise valid
    add input. Expect email constraints without a crash or saved contact.
-4. In separate copies of a valid file, introduce an invalid contact above or names `Alex  Tan`/`Alex Tan`
-   that become duplicate after normalization. Expect protected startup and original bytes preserved
-   through help/list/exit, attempted mutations and restart. Use the [Storage recovery procedure](#current-protected-startup)
-   for a deliberately corrected compatible working copy; broader canonical loading remains planned.
+4. In separate copies of supported JSON, introduce an invalid contact or same-role records with the
+   same identifying phone and names `Alex  Tan`/`Alex Tan`, becoming duplicates after normalization.
+   Expect protected startup and original bytes preserved through help/list/exit and attempted mutations.
+   Use the [Storage recovery procedure](#current-protected-startup) on a deliberately corrected working copy.
 
-### Deleting a person
+### Planned guarded deletion
 
-These checks apply to inherited contacts; canonical deletion also needs the planned selector and relationship checks.
-
-1. Run `list` with several contacts, then `delete 1`. Expect the first visible contact to disappear and
-   feedback to identify it.
-2. Try `delete`, `delete 0`, `delete -1`, `delete x` and an index beyond the list size. Expect useful
-   format/range feedback with no deletion or list change.
+`delete` is unavailable in this build. Once the guarded route activates, test current people-list
+selection, index/range/role validation and all relationship guards from the shared contract. Until then,
+`delete`, `delete 1` and `help delete` must not expose the inherited unguarded deletion implementation.
 
 ### Planned shared-lesson workflow checks
 
@@ -1313,19 +1367,23 @@ Run these as the corresponding routes become available, using an isolated suppor
 6. Exercise each activated search filter from the full matrix, including a parent with two linked children and a student with two differently scheduled lessons. Combined filters must not take the name from one child and the lesson from another, or the day from one lesson and the subject from another. Verify distinct-ID counts, successful empty results and empty-lesson discovery when appropriate.
 7. Restart and verify IDs, global creation order, membership and retained attendance. Trigger a save failure in an isolated test seam and verify the aggregate, allocation state and active views are restored. Read-only list/query/history/help operations must not rewrite operational data in the integrated runtime. Record the actual build, platform and results; do not treat unperformed checks as passes.
 
-### Planned canonical loading and recovery
+<a id="planned-canonical-loading-and-recovery"></a>
 
-These checks apply when canonical-format loading is activated. The current inherited runtime already protects rejected files, while canonical loading and initialization remain planned. Use copies in disposable test folders and keep the preserved original and backup outside all configured operational paths.
+### Canonical loading and recovery
 
-1. In a deliberately separate empty folder, launch the canonical build with no operational file. Expect a valid fresh supported root. Add delivered records and restart; expect successful restoration. This does not authorize replacing a legacy or rejected file in an existing folder.
-2. Close the app and make a valid manual edit to supported versioned JSON using its delivered schema, such as correcting a contact value while preserving valid IDs, allocation state and references. Restart; expect the edited records to load. Repeat with valid memberships and dated history. Human editing must remain usable.
-3. In independent copies, test malformed JSON, a null root/record, wrong record shapes, duplicate IDs or normalized duplicate people, dangling references, impossible dates, invalid allocation state, unreadable files and unsupported versions. Even a future-version file resembling legacy `persons` must be rejected before domain decoding or any write. Expect a controlled diagnostic and recovery instructions rather than a crash.
-4. Capture each rejected file's bytes, then attempt help/list/exit and a data mutation wherever the failure state permits them. The rejected operational bytes must remain identical, and mutations must be blocked. If startup exits safely instead, verify it reports the reason and performs no operational write. Preferences are checked separately.
-5. Test an unversioned AB3 file and formerly accepted contacts rejected by #61. Expect no guessed roles, silent conversion, record dropping or empty writable fallback. Follow the backup/manual re-entry guidance in a separate empty folder with explicitly chosen roles. Verify only the new supported root is writable and that the old file and preserved backup remain unchanged.
-6. Correct an invalid supported file on a working copy while the app is closed, then restart and verify complete validation succeeds. If recovery uses an older build for inspection, use another working copy rather than the preserved original or backup. Record actual outcomes and the implemented error/recovery path in the UG/DG when this feature lands; no importer or recovery command is assumed.
+These checks apply to the active selected-file loading boundary. Use copies in disposable test folders and keep the preserved original and backup outside all configured operational paths.
+
+1. In a deliberately separate empty folder, launch the canonical build with no operational file. Expect a valid empty unwritten root and no file after help/list/exit. Add delivered records and restart; expect successful restoration. This does not authorize replacing a legacy or rejected file in an existing folder.
+2. Close the app and make a valid manual edit to supported versioned JSON using its delivered schema, such as correcting a contact value while preserving valid IDs, allocation state and references. Restart; expect the edited records to load. Repeat with valid supported lessons/memberships. Nonempty attendance remains rejected until #83; repeat dated-history editing after that codec activates. Human editing must remain usable.
+3. In independent copies, test malformed JSON, a null root/record, wrong record shapes, duplicate IDs or normalized duplicate people, dangling lesson/roster references, invalid allocation state, unreadable files and unsupported versions. Nonempty attendance is rejected as unsupported; field-level date validation belongs to #83. Even a future-version file resembling legacy `persons` must be rejected before domain decoding or any write. Expect a controlled diagnostic and recovery instructions rather than a crash.
+4. Capture each rejected file's bytes, then attempt help/list/exit and a data mutation wherever the failure state permits them. The rejected operational bytes must remain identical, and mutations must be blocked. The app must show a protected empty view with recovery guidance; help advertises only help/list/exit and list includes the diagnostic. Preferences are checked separately. Repair or remove a working copy while the app remains open; add must stay blocked until restart.
+5. Test an unversioned AB3 file and formerly accepted contacts rejected by #61. Expect no guessed roles, silent conversion, record dropping or empty writable fallback. Follow the backup/manual re-entry guidance using a separate missing `--data=PATH` inside application home or a JAR copied into a separate empty folder with explicitly chosen roles. Verify only the new supported root is writable and that the old file and preserved backup remain unchanged.
+6. Correct an invalid supported file on a working copy while the app is closed, then restart and verify complete validation succeeds. If recovery uses an older build for inspection, use another working copy rather than the preserved original or backup. Record actual outcomes for the implemented UG/DG recovery path; no importer or recovery command is assumed.
 
 
-### Prepared canonical transaction handoff (#82)
+<a id="prepared-canonical-transaction-handoff-82"></a>
+
+### Canonical transaction boundary (#82)
 
 `PeopleView.beginTransaction()` creates a `CanonicalTransaction` from the view's own canonical root,
 so staged person-index resolution and staged operational data share one source. It copies the current
@@ -1340,21 +1398,22 @@ before installing it or returning success. Failures never refresh the live list;
 refreshes its existing observable projection. Unchanged data skips storage, and unchanged views are
 not refreshed, preserving selection for help/history and identical-status no-ops.
 
-For #85, invoke this boundary from the single canonical runtime adapter; do not construct another live
-writable store or activate it beside the legacy model. For #84, supply its protected-session guidance
-and protected writer, and enforce the help/list/exit-only catalogue before dispatch. The guard here
-also rejects any staged operational change while loading is protected. Wire `JsonPonHubDataStorage`
-through that protected adapter. The codec supports lessons and rosters but still rejects nonempty
+The active canonical session invokes this boundary over its one live root. It supplies the protected
+writer and session error supplier and enforces the help/list/exit-only catalogue before dispatch after
+a rejected load. The guard also rejects staged operational changes while loading is protected.
+`JsonPonHubDataStorage` remains behind that protected adapter. The codec supports lessons and rosters but still rejects nonempty
 attendance until #83 supplies its codec. Never strip unsupported collections to save.
 
 Regression tests exercise the real aggregate, addition candidate, filtered view, people codec/reload,
 failed-save retry without consuming an ID, retained attendance, roster changes, protected writes,
 unsupported collection rejection, and JavaFX card selection at filtered index 1 with stable ID S7.
-These prepared components do not activate the application router. Teammate agreement on this handoff,
-review/merge and final integrated-runtime verification remain release coordination work.
+The active application router uses these components through its single session. Component regressions
+support application verification but do not establish unperformed native display/platform results.
 
 
-### Prepared protected canonical loading (#84)
+<a id="prepared-protected-canonical-loading-84"></a>
+
+### Protected canonical loading (#84)
 
 `ProtectedPonHubDataStorage` wraps the canonical codec and file writer for one application session.
 Construct it with the configured operational `Path` and call `load()` once before building the canonical
@@ -1369,18 +1428,17 @@ with a new storage instance to validate recovery. No rejected snapshot is instal
 empty state is returned. If the UI shows an empty protected view, label it as unavailable saved data.
 Preferences keep their existing separate storage/shutdown lifecycle.
 
-Handoff to #85: use the returned snapshot for the single canonical model root, pass `storage::saveData`
-and `storage::getDataLoadError` to `CanonicalCommandExecutor`, and enforce help/list/exit-only routing
-when startup is rejected. Activate this wrapper together with canonical commands, cards and routing.
+The active session installs the returned snapshot in its single root, passes `storage::saveData` and
+`storage::getDataLoadError` to `CanonicalCommandExecutor`, and enforces help/list/exit-only routing after
+rejected startup. `MainApp` connects that session, canonical cards and routing together.
 Do not point the legacy runtime at canonical data or bypass protection via `JsonPonHubDataStorage`.
 The current codec still rejects nonempty attendance; the wrapper delegates domain validation
 to that codec, so later compatible codecs participate without another writable store. Rejection of attendance payloads is not evidence of field-level validation by the future attendance codec.
 
 Verification includes missing paths, injected access denial, malformed/null/legacy/unsupported input,
 duplicate identities and invalid allocation history, no overwrite through direct saves or the canonical
-command boundary, and restart-only recovery after deliberate supported edits. Canonical command tests
-use staged help/list/exit equivalents because actual routing remains dormant. Final application startup,
-configured-path/platform and routing verification belongs to coordinated activation; the existing legacy
-startup regressions remain in force. For manual verification, use disposable files, record their original
+command boundary, and restart-only recovery after deliberate supported edits. Canonical session tests exercise actual add/list/help/exit routing. Application startup, configured-path,
+UI/card and packaged platform checks additionally verify the cutover; retained legacy regressions remain
+isolated and do not establish canonical application acceptance. For manual verification, use disposable files, record their original
 bytes, attempt reads and mutations in the protected session, repair a copy, restart and verify successful
 loading. Never delete the original as a recovery shortcut.

@@ -11,8 +11,8 @@ import seedu.address.model.PonHubData;
 import seedu.address.model.person.PersonRole;
 
 /**
- * A prepared read-only people-list command using the executor's authoritative staged people view.
- * It does not register a command route or change operational records and counters.
+ * A read-only people-list command using the executor's authoritative staged people view.
+ * The application session routes this command without changing operational records and counters.
  */
 public final class CanonicalListCommand implements CanonicalCommandExecutor.StagedCommand {
     public static final String MESSAGE_ALL_SUCCESS = "Showing %d person(s).";
