@@ -21,7 +21,8 @@ title: Developer Guide
   (startup/path selection, active catalogue/Logic adapter, cards, integration tests and guides); contact
   validation/ASCII-space normalization and constant-stack email validation ([#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61));
   logging fallback, UI startup error handling, and screen-aware window restoration/contact-card wrapping.
-  He also used Codex for product scope/user stories,
+  He also used Codex for #195 preference-corruption recovery and independent save-failure regressions;
+  product scope/user stories;
   confirmed selectors/command formats/search scope, recovery/use cases/manual checks, prescribed
   Java/macOS setup, and review/conflict reconciliation/Javadoc corrections in search, inline help,
   lesson membership, atomic saves and the canonical aggregate (#76). These credits do not transfer feature ownership.
@@ -426,6 +427,23 @@ The inherited `Storage` component,
 * can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
+
+#### Preference recovery
+
+Missing preference fields retain their defaults, unknown fields are ignored, and
+`windowCoordinates: null` means no saved position. A JSON null root, null `guiSettings`, or explicit
+null dimensions/coordinate components are invalid. Startup logs the loading failure, uses default
+preferences and attempts to save them to `preferences.json`; unlike rejected operational data,
+invalid preferences may be replaced. Valid human-edited sizes and positions survive save/reload;
+window placement still fits them to the current screens. Preference read/write failures do not
+change canonical data. Initial-save failure leaves loaded/default preferences usable, and
+shutdown-save failure is logged without preventing shutdown.
+
+`JsonUserPrefsRecoveryTest` and `MainAppPreferencesTest` cover malformed shapes, required nulls,
+missing-field defaults, supported edits, and initial/shutdown save failures. The application tests
+exercise `MainApp.initialize`, `initPrefs` and `stop` with real storage and an injected initial-save
+failure; they verify that loaded/rejected canonical bytes stay unchanged and missing data stays
+absent. Native-window startup is covered separately by the existing lifecycle tests.
 
 #### Safe JSON saves
 
@@ -1334,6 +1352,24 @@ or final guide/site acceptance ([#102](https://github.com/AY2627S1-CS2103T-F13-3
 4. Close the application and restart with the retained preferences. Valid sizes and coordinates remain unchanged. In the isolated folder, test an oversized saved window, coordinates from a removed monitor and a still-connected monitor to the left or above the primary display. Expect an oversized/offscreen window to fit a current work area, while valid secondary-monitor coordinates remain usable.
 
 Automated bounds regressions cover scaled work areas, desktop bars, removed and secondary monitors, partial overlap and invalid saved dimensions. Actual-FXML layout checks use isolated fixture data; they do not establish Windows or Linux font/scaling behavior. Keep real display results in issue #128.
+
+### Preference recovery checks
+
+Use a disposable application folder containing the packaged JAR and a copied supported
+`data/ponhub.json`; retain a copy of the operational file for byte comparison after each check.
+
+1. Close the app, replace `preferences.json` with `null`, and restart. Expect a usable default window
+   and a saved default preference object. Repeat with `{"guiSettings":null}` and
+   `{"guiSettings":{"windowWidth":null}}`. Operational bytes remain unchanged.
+2. Set `preferences.json` to `{}` or
+   `{"guiSettings":{"windowWidth":910,"windowHeight":710,"windowCoordinates":null}}`.
+   Restart and expect defaults for missing fields or the edited dimensions when the screen fits them.
+3. While the app is closed, replace `preferences.json` with a nonempty directory of that name.
+   Startup uses defaults despite read/initial-save errors. Help/list/exit remain available, the directory's
+   contents remain intact, and closing the app logs the preference-save error without blocking shutdown.
+4. Start with a regular preference file. While the app is running, replace that file with a nonempty
+   directory. Close the app and compare operational bytes and directory contents with the retained copies.
+   Expect no changes. Repeat in a fresh folder with missing operational data; it stays absent.
 
 ### Planned person-index integration checks
 
