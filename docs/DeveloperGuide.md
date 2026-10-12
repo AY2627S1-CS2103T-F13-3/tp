@@ -1414,11 +1414,13 @@ Use that same terminal/runtime when reopening the JAR; substitute its actual fil
 whose paths contain spaces, with real JavaFX named parameters. It verifies empty missing-store startup,
 legacy/corrupt/unsupported rejection, supported human edits and allocation validation, original-byte
 preservation through help/list/exit and rejected mutations, repaired restart, alternate paths and shared
-GUI preference reload. The JavaFX toolkit starts, but its test-only start callback displays no window;
-these checks do not establish native interaction or physical display/scaling acceptance. Development
-classes resolve application home from each child working directory; repeat the packaged JAR procedure
-above to verify the JAR-folder boundary independently. Ernest used OpenAI Codex for these regression
-tests and their current-runtime guide reconciliation.
+GUI preference reload. Its test-only start callback shows a minimal stage and observes a JavaFX pulse
+before requesting exit; phase diagnostics require verified shutdown and launch return in order.
+These checks do not exercise the full production window, native interaction or physical display/scaling
+acceptance. Development classes resolve application home from each child working directory; repeat the
+packaged JAR procedure above to verify the JAR-folder boundary independently. Ernest used OpenAI Codex for these regression
+tests and their current-runtime guide reconciliation. Zhu Zhi Yu used OpenAI Codex for the minimal-stage
+lifecycle checks and shutdown diagnostics.
 
 ### Canonical people commands and unsuccessful saves
 
