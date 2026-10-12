@@ -320,6 +320,13 @@ The active session owns this component for its lifetime; `CanonicalLogicManager`
 retrieval methods without saving data or changing the people filter. The retained legacy adapter has no
 canonical query source. Lesson commands and separate result views still require their compatible slices.
 
+`LessonsArgumentsParser` now prepares `lessons [si/STUDENT_INDEX]` as an optional current people-list `Index`.
+`LessonRetrieval` resolves that index once through the shared `PeopleView`, checks the Student role, and passes its
+stable ID to `LessonQueries`. It also applies `c/lesson` criteria to the separate filtered lesson result list. Both
+methods return the query layer's read-only observable results without changing the people view or operational data.
+These classes do not register either command or render cards; #90 activation still follows lesson creation,
+enrolment and the coordinated runtime cutover.
+
 | Query API | Implementation |
 | --- | --- |
 | `findLessonById(id)` | Hash lookup in the complete catalogue, independent of the active filter. |
