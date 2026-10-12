@@ -50,7 +50,9 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 `MainApp` connects one `CanonicalPeopleSession` to `CanonicalLogicManager`, canonical cards and
 protected storage. Active commands are `add r/ROLE ...`, `list [r/ROLE]`, `help [COMMAND]` and `exit`;
 protected sessions expose only help/list/exit. `delete`, `edit`, `clear`, `find`, shared-lesson commands,
-enrolment, attendance, history and search remain unavailable. The codec rejects nonempty attendance.
+enrolment, attendance, history and search remain unavailable. The codec saves and loads validated
+attendance records, retaining history independently of current lesson enrolment; this persistence
+support does not activate mark, unmark or history command routes.
 
 `CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
 routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
@@ -440,15 +442,15 @@ Preferences retain their separate shutdown lifecycle. Publication performs no ne
 
 Legacy `LogicManager`/`ModelTransaction` remain isolated regression seams; active startup does not use them
 as a parallel writable store. Complete-state transactions preserve lesson rosters and retained attendance,
-while the current persistence codec still rejects nonempty attendance until #83. Never strip unsupported
-collections to make a candidate saveable; activate later mutations only with compatible persistence.
+and the persistence codec round-trips those complete snapshots. Attendance records remain independent
+of the current roster; never strip history to make a candidate saveable.
 
 #### JSON version detection foundation
 
 `JsonDataVersionDetector.detect(String)` classifies file contents using the existing Jackson dependency,
 without constructing Model objects or writing files. The current loader uses this gate before decoding. The supported
 PonHub envelope uses `schemaVersion` as a positive JSON integer, initially `1`; this is a data-schema
-version, independent of the application version. The canonical codec validates the complete envelope defined in #79 and its lesson extension.
+version, independent of the application version. The canonical codec validates the complete envelope defined in #79 and its lesson and attendance extensions.
 
 | Result | Meaning and later loader action |
 | ------ | ------------------------------- |
@@ -478,7 +480,7 @@ removal does not unlock the session: restart is required.
 
 Malformed JSON, invalid roots/versions/records/counters/references, legacy AB3 and read failures become
 controlled rejections. Unrelated programming failures are not swallowed. Supported versioned data loads
-after complete codec validation; nonempty attendance remains unsupported until #83. Missing selected files
+after complete codec validation, including attendance dates and references. Missing selected files
 start empty and unwritten until successful add, without inherited sample data or automatic legacy migration.
 
 The active canonical [transaction boundary](#command-transactions) also preserves live data and views
@@ -520,9 +522,9 @@ leading zeros. Unknown fields and role-inappropriate fields are rejected rather 
 
 All three person counters and the lesson counter are required nonnegative integers up to `Long.MAX_VALUE`
 (exhaustion). They include deleted identities and must not be recomputed from retained records. Person
-and lesson counters must cover every retained ID. Lessons and rosters are supported; attendance must
-remain an empty array until #83 supplies its codec. Unsupported attendance is rejected on both read
-and write, never dropped while rewriting a file. Serialization finishes before any filesystem write.
+and lesson counters must cover every retained ID. Lessons, rosters and independent attendance records
+are supported. See [Retained attendance persistence](#retained-attendance-persistence-83) for attendance
+fields and validation. Serialization finishes before any filesystem write.
 
 Each `lessons` entry stores a shared lesson once; student records do not duplicate its membership:
 
@@ -740,7 +742,7 @@ Tutor/Parent at that position without searching another list; range/role failure
 
 The [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85) cutover activates these commands through
 one session and people panel. Inherited delete is retired until guarded canonical deletion is ready.
-Canonical storage supports lessons/rosters but rejects nonempty attendance until #83; lesson routes remain gated.
+Canonical storage supports lessons, rosters and retained attendance; lesson routes remain gated.
 
 <a id="prepared-canonical-people-session"></a>
 
@@ -1415,8 +1417,8 @@ Run these as the corresponding routes become available, using an isolated suppor
 These checks apply to the active selected-file loading boundary. Use copies in disposable test folders and keep the preserved original and backup outside all configured operational paths.
 
 1. In a deliberately separate empty folder, launch the canonical build with no operational file. Expect a valid empty unwritten root and no file after help/list/exit. Add delivered records and restart; expect successful restoration. This does not authorize replacing a legacy or rejected file in an existing folder.
-2. Close the app and make a valid manual edit to supported versioned JSON using its delivered schema, such as correcting a contact value while preserving valid IDs, allocation state and references. Restart; expect the edited records to load. Repeat with valid supported lessons/memberships. Nonempty attendance remains rejected until #83; repeat dated-history editing after that codec activates. Human editing must remain usable.
-3. In independent copies, test malformed JSON, a null root/record, wrong record shapes, duplicate IDs or normalized duplicate people, dangling lesson/roster references, invalid allocation state, unreadable files and unsupported versions. Nonempty attendance is rejected as unsupported; field-level date validation belongs to #83. Even a future-version file resembling legacy `persons` must be rejected before domain decoding or any write. Expect a controlled diagnostic and recovery instructions rather than a crash.
+2. Close the app and make a valid manual edit to supported versioned JSON using its delivered schema, such as correcting a contact value while preserving valid IDs, allocation state and references. Restart; expect the edited records to load. Repeat with valid supported lessons/memberships. Repeat with valid dated history, including a student no longer in the lesson roster. Human editing must remain usable.
+3. In independent copies, test malformed JSON, a null root/record, wrong record shapes, duplicate IDs or normalized duplicate people, dangling lesson/roster references, invalid allocation state, unreadable files and unsupported versions. Test duplicate attendance keys, missing references, invalid dates/statuses and lesson weekday mismatch. Even a future-version file resembling legacy `persons` must be rejected before domain decoding or any write. Expect a controlled diagnostic and recovery instructions rather than a crash.
 4. Capture each rejected file's bytes, then attempt help/list/exit and a data mutation wherever the failure state permits them. The rejected operational bytes must remain identical, and mutations must be blocked. The app must show a protected empty view with recovery guidance; help advertises only help/list/exit and list includes the diagnostic. Preferences are checked separately. Repair or remove a working copy while the app remains open; add must stay blocked until restart.
 5. Test an unversioned AB3 file and formerly accepted contacts rejected by #61. Expect no guessed roles, silent conversion, record dropping or empty writable fallback. Follow the backup/manual re-entry guidance using a separate missing `--data=PATH` inside application home or a JAR copied into a separate empty folder with explicitly chosen roles. Verify only the new supported root is writable and that the old file and preserved backup remain unchanged.
 6. Correct an invalid supported file on a working copy while the app is closed, then restart and verify complete validation succeeds. If recovery uses an older build for inspection, use another working copy rather than the preserved original or backup. Record actual outcomes for the implemented UG/DG recovery path; no importer or recovery command is assumed.
@@ -1442,12 +1444,12 @@ not refreshed, preserving selection for help/history and identical-status no-ops
 The active canonical session invokes this boundary over its one live root. It supplies the protected
 writer and session error supplier and enforces the help/list/exit-only catalogue before dispatch after
 a rejected load. The guard also rejects staged operational changes while loading is protected.
-`JsonPonHubDataStorage` remains behind that protected adapter. The codec supports lessons and rosters but still rejects nonempty
-attendance until #83 supplies its codec. Never strip unsupported collections to save.
+`JsonPonHubDataStorage` remains behind that protected adapter. The codec supports lessons, rosters and retained
+attendance. Never strip historical attendance to save.
 
 Regression tests exercise the real aggregate, addition candidate, filtered view, people codec/reload,
 failed-save retry without consuming an ID, retained attendance, roster changes, protected writes,
-unsupported collection rejection, and JavaFX card selection at filtered index 1 with stable ID S7.
+invalid attendance rejection, and JavaFX card selection at filtered index 1 with stable ID S7.
 The active application router uses these components through its single session. Component regressions
 support application verification but do not establish unperformed native display/platform results.
 
@@ -1473,8 +1475,8 @@ The active session installs the returned snapshot in its single root, passes `st
 `storage::getDataLoadError` to `CanonicalCommandExecutor`, and enforces help/list/exit-only routing after
 rejected startup. `MainApp` connects that session, canonical cards and routing together.
 Do not point the legacy runtime at canonical data or bypass protection via `JsonPonHubDataStorage`.
-The current codec still rejects nonempty attendance; the wrapper delegates domain validation
-to that codec, so later compatible codecs participate without another writable store. Rejection of attendance payloads is not evidence of field-level validation by the future attendance codec.
+The wrapper delegates domain validation to the codec, including attendance field parsing and aggregate
+reference, duplicate-key and weekday checks, without introducing another writable store.
 
 Verification includes missing paths, injected access denial, malformed/null/legacy/unsupported input,
 duplicate identities and invalid allocation history, no overwrite through direct saves or the canonical
@@ -1483,3 +1485,28 @@ UI/card and packaged platform checks additionally verify the cutover; retained l
 isolated and do not establish canonical application acceptance. For manual verification, use disposable files, record their original
 bytes, attempt reads and mutations in the protected session, repair a copy, restart and verify successful
 loading. Never delete the original as a recovery shortcut.
+
+
+### Retained attendance persistence (#83)
+
+The version-1 root stores `attendance` as an ordered array independent of lesson rosters:
+
+```json
+"attendance": [
+  {"studentId": "S1", "lessonId": "L2", "date": "2026-10-12", "status": "present"}
+]
+```
+
+All four fields are required strings; unknown fields are rejected. Dates must be real calendar dates
+in `YYYY-MM-DD` form (years 0001–9999) and match the referenced lesson's weekday. Status accepts
+`present` or `absent`, ignoring case and surrounding whitespace, and is saved in lowercase.
+The Student and Lesson must exist, but the Student need not remain enrolled. Duplicate
+`(studentId, lessonId, date)` keys are rejected, including duplicates with different statuses.
+A correction replaces the status at one key; removal omits only that key. Neither changes membership.
+
+`PonHubDataState` validates references, uniqueness, date range and weekday before publication;
+`JsonPonHubDataCodec` validates JSON shapes and parses fields before constructing that snapshot.
+The existing protected loader and staged save boundary persist the entire aggregate without a second store.
+`JsonAttendanceStorageTest` covers shared lessons, retained history after roster removal, corrections,
+single-key removal, complete snapshot equality and rejected input preserving disk and live state.
+These persistence tests do not activate the planned mark/unmark commands.
