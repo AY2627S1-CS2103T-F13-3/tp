@@ -203,17 +203,17 @@ public class CanonicalCommandExecutorTest {
     }
 
     @Test
-    public void execute_unsupportedCollections_doesNotTruncateExistingFile() throws Exception {
+    public void execute_attendanceChange_savesAndPublishesCompleteSnapshot() throws Exception {
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(directory.resolve("canonical.json"));
         PonHubData live = new PonHubData(fixture(false));
         storage.saveData(live.exportState());
         CanonicalCommandExecutor executor = new CanonicalCommandExecutor(new PeopleView(live),
                 storage::saveData, Optional::empty);
-        assertThrows(CommandException.class, () -> executor.execute((staged, view) -> {
+        executor.execute((staged, view) -> {
             staged.resetData(fixture(true));
-            return new CommandResult("Not supported yet");
-        }));
-        assertEquals(fixture(false), live.exportState());
-        assertEquals(fixture(false), storage.readData().orElseThrow());
+            return new CommandResult("Attendance saved");
+        });
+        assertEquals(fixture(true), live.exportState());
+        assertEquals(fixture(true), storage.readData().orElseThrow());
     }
 }

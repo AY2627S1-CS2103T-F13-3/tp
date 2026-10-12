@@ -256,7 +256,7 @@ public class CanonicalPeopleCommandIntegrationTest {
     }
 
     @Test
-    public void execute_addWithUnsupportedCollections_preservesRelationshipsAndExistingFile() throws Exception {
+    public void execute_addWithAttendance_preservesRelationshipsInSavedSnapshot() throws Exception {
         PonHubDataState peopleOnly = peopleState();
         Lesson lesson = new Lesson(new LessonId("L12"), new PersonId("T7"), new LessonTimeSlot(LessonDay.MONDAY,
                 new LessonTime("0900"), new LessonTime("1000")), new Subject("Math"), new Room("R1"),
@@ -267,9 +267,8 @@ public class CanonicalPeopleCommandIntegrationTest {
         PonHubData live = new PonHubData(before);
         PeopleView view = new PeopleView(live);
         view.setRoleFilter(Optional.of(PersonRole.STUDENT));
-        JsonPonHubDataStorage storage = new JsonPonHubDataStorage(directory.resolve("unsupported.json"));
-        storage.saveData(peopleOnly);
-        byte[] original = Files.readAllBytes(storage.getDataFilePath());
+        JsonPonHubDataStorage storage = new JsonPonHubDataStorage(directory.resolve("attendance.json"));
+        storage.saveData(before);
         CanonicalCommandExecutor executor = new CanonicalCommandExecutor(view, state -> {
             assertEquals(before.lessons(), state.lessons());
             assertEquals(before.attendance(), state.attendance());
@@ -277,11 +276,11 @@ public class CanonicalPeopleCommandIntegrationTest {
             storage.saveData(state);
         }, Optional::empty);
         CanonicalAddCommand command = new CanonicalAddCommand(addParser.parse(addArguments(PersonRole.STUDENT, false)));
-        assertThrows(CommandException.class, () -> executor.execute(command));
-        assertEquals(before, live.exportState());
-        assertEquals(Optional.of(PersonRole.STUDENT), view.getRoleFilter());
-        assertArrayEquals(original, Files.readAllBytes(storage.getDataFilePath()));
-        assertEquals(peopleOnly, storage.readData().orElseThrow());
+        executor.execute(command);
+        assertEquals(before.lessons(), live.exportState().lessons());
+        assertEquals(before.attendance(), live.exportState().attendance());
+        assertEquals(before.people().getPeople().size() + 1, live.exportState().people().getPeople().size());
+        assertEquals(live.exportState(), storage.readData().orElseThrow());
     }
 
     private static CanonicalCommandExecutor noWriteExecutor(PeopleView view) {

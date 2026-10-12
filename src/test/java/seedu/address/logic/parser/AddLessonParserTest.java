@@ -112,8 +112,8 @@ public class AddLessonParserTest {
             assertThrows(ParseException.class, "Unknown addlesson prefix '" + prefix + "'.", () ->
                     parser.parse(REQUIRED_ARGUMENTS + " " + prefix + "value"));
         }
-        for (String input : new String[]{"lesson " + REQUIRED_ARGUMENTS, "addlesson " + REQUIRED_ARGUMENTS,
-            "d /Mon st/0900 et/1030 s/Math tu/Mei Lim rm/R1"}) {
+        for (String input : new String[]{"not-a-prefix", "lesson " + REQUIRED_ARGUMENTS,
+            "addlesson " + REQUIRED_ARGUMENTS, "d /Mon st/0900 et/1030 s/Math tu/Mei Lim rm/R1"}) {
             assertThrows(ParseException.class, AddLessonParser.MESSAGE_PREAMBLE, () -> parser.parse(input));
         }
     }

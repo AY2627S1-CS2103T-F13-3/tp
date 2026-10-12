@@ -370,8 +370,8 @@ History lists dated attendance, including former enrolments. Current membership 
 ### Planned failure and data behavior
 
 The complete target saves people, shared lessons, memberships, attendance and IDs together. Current persistence saves
-people and validated shared lessons/rosters in the selected file, and `addlesson` uses that protected transaction.
-Nonempty attendance remains rejected until its persistence increment arrives. See
+people, validated shared lessons/rosters and retained attendance in the selected file, and `addlesson` uses that
+protected transaction. Roster and attendance command routes remain unavailable. See
 [Data protection in the current build](#data-protection-in-the-current-build) for actual paths and recovery.
 
 The supported JSON format remains human-editable. Close PonHub and keep a backup before editing. Preserve the supported schema and version, valid field values, stable IDs, relationships and ID allocation state. Correctly edited supported data loads after complete validation. Read-only commands do not save operational data; invalid commands and failed saves preserve the previous data and view. Future mutations must retain the same guarantees.
@@ -441,10 +441,30 @@ Before editing, close the app and retain a backup. Keep referenced tutors/studen
 use each lesson ID once and each student ID once per roster, and preserve allocation counters even
 after deleting records. Do not create overlapping bookings for a tutor, room or enrolled student;
 back-to-back lessons are allowed. Invalid files are rejected as a whole rather than partially loaded.
-Attendance persistence remains separate work; this build rejects nonempty attendance. `addlesson` is active, while
-roster, attendance, deletion and lesson-result commands remain unavailable.
+Attendance is supported in saved files as described below. `addlesson` is active, while roster mutation,
+attendance, deletion and lesson-result command routes remain unavailable.
 
 For a disposable-file recovery check, change a saved lesson's tutor ID to an absent
 ID and restart. Expect a recovery warning and unchanged file bytes after help/list/exit or an attempted
 mutation. Restore the valid backup and restart to verify loading. Codec and protected-storage tests
 cover these guarantees; record actual application outcomes when performing this check.
+
+
+### Editing saved attendance (supported format; commands planned)
+
+Close the app and back up the file before editing. The root `attendance` array contains records such as
+`{"studentId":"S1","lessonId":"L2","date":"2026-10-12","status":"present"}`.
+Each record requires these four string fields, with no extra fields. The student and lesson must exist.
+Use a real `YYYY-MM-DD` date (years 0001–9999) matching the lesson's weekday and status `present` or
+`absent` (case and surrounding whitespace are ignored for status).
+
+Keep each student/lesson/date combination unique. Correct a record by changing its status;
+remove just that record to make the occurrence unrecorded. Removing a student from a lesson's roster
+does not remove attendance: retain those records in the array to preserve their history. A student
+can have history for a lesson without being currently enrolled. Do not delete referenced people or
+lessons while retaining their attendance records. Keep all allocation counters intact.
+
+Restart to load the edited file. Invalid dates, weekday mismatches, duplicate keys, unknown fields
+or missing references protect the entire file from writes. Restore or repair the backup and restart;
+repairing the file does not unlock an already protected session. These file-format rules do not enable
+the planned mark, unmark or history commands.

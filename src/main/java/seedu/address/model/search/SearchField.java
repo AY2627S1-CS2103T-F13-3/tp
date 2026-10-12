@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Set;
 
+import seedu.address.commons.util.StringUtil;
+
 /**
  * Search prefixes, their category compatibility and their field-level matching rules.
  * Query text accepts fragments rather than requiring a complete valid person or lesson field.
@@ -106,7 +108,7 @@ public enum SearchField {
                 }
                 yield trimmed;
             }
-            default -> trimmed.toLowerCase(Locale.ROOT);
+            default -> StringUtil.normalizeSpaces(trimmed).toLowerCase(Locale.ROOT);
         };
     }
 
