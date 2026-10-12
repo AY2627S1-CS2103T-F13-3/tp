@@ -21,6 +21,7 @@ title: Developer Guide
   (startup/path selection, active catalogue/Logic adapter, cards, integration tests and guides); contact
   validation/ASCII-space normalization and constant-stack email validation ([#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61));
   logging fallback, UI startup error handling, and screen-aware window restoration/contact-card wrapping.
+  He used Codex for command-input retry/recovery and result-feedback scrolling/F1 regressions (#196).
   He also used Codex for product scope/user stories,
   confirmed selectors/command formats/search scope, recovery/use cases/manual checks, prescribed
   Java/macOS setup, and review/conflict reconciliation/Javadoc corrections in search, inline help,
