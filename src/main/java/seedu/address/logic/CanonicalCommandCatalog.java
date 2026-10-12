@@ -29,13 +29,26 @@ public final class CanonicalCommandCatalog {
     public static final String MESSAGE_SEARCH_USAGE =
             "Usage: search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS]\n"
             + "       search c/tutor|parent [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]\n"
+            + "       search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT]"
+            + " [tu/TUTOR_NAME] [rm/ROOM]\n"
             + "Category values ignore case. Supply each lowercase prefix at most once, with a nonblank value.\n"
             + "All filters must match the same person. Name, email and address match text fragments ignoring case;\n"
             + "name/address spaces are normalized. Level and phones match exactly; phone leading zeros matter.\n"
             + "Category-only searches include unlinked people. Missing optional contacts do not match filters.\n"
-            + "Results replace the people view and renumber current positions without saving.\n"
-            + "Relationship filters and c/lesson are not available yet. Use list to clear search filters.\n"
-            + "Examples: search c/student, search c/student n/Alex l/P1 pp/91234567, search c/tutor n/Mei";
+            + "People results replace the people view and renumber current positions without saving.\n"
+            + "Lesson results use a separate panel and preserve people filters and positions.\n"
+            + "All lesson filters must match one lesson; sn/ matches its current roster. Text ignores case;\n"
+            + "tu/ matches tutor names. Day and HHMM times match exactly. When both times are given, end > start.\n"
+            + "Empty lessons are included unless sn/ is supplied. Zero matches display an empty lesson panel.\n"
+            + "Relationship filters on people are not available yet. Use list or lessons to restore each view.\n"
+            + "Examples: search c/student n/Alex l/P1 pp/91234567, search c/lesson tu/mei d/Mon s/Math";
+    public static final String MESSAGE_LESSONS_USAGE = "Usage: lessons [si/STUDENT_INDEX]\n"
+            + "Shows each shared lesson once, in creation order, including empty rosters.\n"
+            + "si/ is an optional positive position in the current people list and must select a student.\n"
+            + "It shows only that student's current enrolments; past attendance does not imply membership.\n"
+            + "Lesson cards show stable IDs, schedule, tutor, room and roster size. Scroll to see more results.\n"
+            + "People filters and command positions are preserved. This command does not save data.\n"
+            + "Examples: lessons; after list r/student, lessons si/1 (if position 1 is the intended student)";
     public static final String MESSAGE_ADD_LESSON_USAGE =
             "Usage: addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM\n"
             + "DAY is Mon-Sun; times use four-digit 24-hour HHMM and start before end.\n"
@@ -46,11 +59,13 @@ public final class CanonicalCommandCatalog {
     private static final Entry ADD_LESSON = new Entry("addlesson", "Create an empty-roster shared lesson",
             MESSAGE_ADD_LESSON_USAGE);
     private static final Entry LIST = new Entry("list", "Show all people or one role", PeopleListParser.MESSAGE_USAGE);
-    private static final Entry SEARCH = new Entry("search", "Find people by their own contact fields",
+    private static final Entry LESSONS = new Entry("lessons", "Show shared lessons or one student's enrolments",
+            MESSAGE_LESSONS_USAGE);
+    private static final Entry SEARCH = new Entry("search", "Find people or shared lessons",
             MESSAGE_SEARCH_USAGE);
     private static final Entry HELP = new Entry("help", "Show help or one command's guidance", MESSAGE_HELP_USAGE);
     private static final Entry EXIT = new Entry("exit", "Close PonHub", ExitCommand.MESSAGE_USAGE);
-    private static final List<Entry> ENTRIES = List.of(ADD, ADD_LESSON, LIST, SEARCH, HELP, EXIT);
+    private static final List<Entry> ENTRIES = List.of(ADD, ADD_LESSON, LIST, LESSONS, SEARCH, HELP, EXIT);
     private static final List<Entry> PROTECTED_ENTRIES = List.of(HELP, LIST, EXIT);
 
     private CanonicalCommandCatalog() {

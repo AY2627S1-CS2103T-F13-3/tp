@@ -106,6 +106,11 @@ public class LogicManager implements Logic {
     }
 
     @Override
+    public ObservableList<LessonView> getDisplayedLessons() {
+        return getFilteredLessonList();
+    }
+
+    @Override
     public Optional<LessonView> findLessonById(LessonId lessonId) {
         return model.getLessonQueries().findLessonById(lessonId);
     }

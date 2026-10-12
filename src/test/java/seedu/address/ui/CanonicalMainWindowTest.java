@@ -8,12 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.FxTestUtil.callOnFxThread;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -24,6 +26,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
@@ -42,8 +45,10 @@ import seedu.address.model.person.PersonRole;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Student;
 import seedu.address.model.person.Tutor;
+import seedu.address.model.query.LessonView;
 import seedu.address.storage.JsonPonHubDataStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
+import seedu.address.testutil.LessonQueryTestData;
 
 /**
  * Exercises real application startup, command-box routing and canonical cards in the production window.
@@ -53,6 +58,99 @@ public class CanonicalMainWindowTest {
 
     @TempDir
     Path directory;
+
+    @Test
+    public void lessonCommands_renderSeparateCardsAndPreservePeopleSelectionAndIndices() throws Exception {
+        Path path = directory.resolve("canonical.json");
+        new JsonPonHubDataStorage(path).saveData(LessonQueryTestData.createData().exportState());
+        byte[] bytes = Files.readAllBytes(path);
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                var results = fixture.lessons().getItems();
+                assertEquals(5, results.size());
+                fixture.enter("search c/student n/Jamie");
+                fixture.people().getSelectionModel().select(0);
+                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.enter("lessons si/1");
+                assertEquals(List.of("L10", "L11"), lessonIds(fixture));
+                fixture.enter("search c/lesson d/Mon s/Math sn/Alex");
+                assertEquals("Found 1 lesson(s).", fixture.feedback());
+                assertEquals(List.of("L10"), lessonIds(fixture));
+                assertEquals("Students enrolled: 2", ((Label) fixture.root()
+                        .lookup("#lessonRosterSize")).getText());
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertCard(fixture, "Student · S2", "1. Jamie Tan");
+                fixture.enter("lessons si/2");
+                assertEquals(List.of("L10"), lessonIds(fixture));
+                fixture.enter("search c/lesson s/Math s/Science");
+                assertEquals(List.of("L10"), lessonIds(fixture));
+                fixture.enter("search c/lesson sn/Nobody");
+                assertEquals("Found 0 lesson(s).", fixture.feedback());
+                assertTrue(fixture.lessons().getItems().isEmpty());
+                assertEquals("No lessons to display.", ((Label) fixture.lessons().getPlaceholder()).getText());
+                fixture.enter("lessons");
+                assertSame(results, fixture.lessons().getItems());
+                assertEquals(5, results.size());
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertArrayEquals(bytes, Files.readAllBytes(path));
+                captureLessonWindow(fixture);
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void lessonCards_addRefreshesSelectedSearchAndBothPanelsFitMinimumWindow() throws Exception {
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("add r/tutor n/Mei Lim p/92345678");
+                fixture.enter("search c/lesson s/Math");
+                fixture.enter("addlesson d/Mon st/0900 et/1000 s/Math tu/Mei Lim rm/R1");
+                assertEquals(List.of("L1"), lessonIds(fixture));
+                assertEquals("Students enrolled: 0", ((Label) fixture.root()
+                        .lookup("#lessonRosterSize")).getText());
+                fixture.enter("addlesson d/Tue st/0900 et/1000 s/Science tu/Mei Lim rm/R1");
+                assertEquals(List.of("L1"), lessonIds(fixture));
+                fixture.enter("lessons");
+                assertEquals(List.of("L1", "L2"), lessonIds(fixture));
+                fixture.root().resize(450, 360);
+                fixture.root().layout();
+                assertTrue(fixture.people().getWidth() > 100);
+                assertTrue(fixture.lessons().getWidth() > 100);
+                assertTrue(fixture.people().getHeight() > 50);
+                assertTrue(fixture.lessons().getHeight() > 50);
+            }
+            return null;
+        });
+    }
+
+    private static List<String> lessonIds(WindowFixture fixture) {
+        return fixture.lessons().getItems().stream().map(LessonView::getLessonId).map(Object::toString).toList();
+    }
+
+    /**
+     * Optionally captures the real FXML window for guide updates, using only the test's temporary saved fixture.
+     */
+    private static void captureLessonWindow(WindowFixture fixture) throws IOException {
+        String destination = System.getenv("PONHUB_CAPTURE_UI");
+        if (destination == null) {
+            return;
+        }
+        fixture.input().setText("lessons");
+        fixture.root().setPrefSize(1000, 720);
+        fixture.root().resize(1000, 720);
+        fixture.root().layout();
+        WritableImage snapshot = fixture.root().snapshot(null, null);
+        int width = (int) snapshot.getWidth();
+        int height = (int) snapshot.getHeight();
+        BufferedImage png = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                png.setRGB(x, y, snapshot.getPixelReader().getArgb(x, y));
+            }
+        }
+        ImageIO.write(png, "png", Path.of(destination).toFile());
+    }
 
     @Test
     public void commandBox_roleAdditions_publishCardsAndPersistOptionalContacts() throws Exception {
@@ -135,7 +233,7 @@ public class CanonicalMainWindowTest {
                 fixture.people().getSelectionModel().select(1);
                 PonHubDataState originalState = fixture.app.snapshot();
                 for (String command : List.of("list r/all", "list r/student r/tutor", "delete 2", "edit 2",
-                        "find Selected", "clear", "search n/Selected", "lessons", "help delete")) {
+                        "find Selected", "clear", "search n/Selected", "lessons sid/S3", "help delete")) {
                     fixture.enter(command);
                     assertEquals(command, fixture.input().getText());
                     assertTrue(fixture.input().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
@@ -296,6 +394,11 @@ public class CanonicalMainWindowTest {
         @SuppressWarnings("unchecked")
         private ListView<PersonRecord> people() {
             return (ListView<PersonRecord>) root().lookup("#personListView");
+        }
+
+        @SuppressWarnings("unchecked")
+        private ListView<LessonView> lessons() {
+            return (ListView<LessonView>) root().lookup("#lessonListView");
         }
 
         private void enter(String command) {

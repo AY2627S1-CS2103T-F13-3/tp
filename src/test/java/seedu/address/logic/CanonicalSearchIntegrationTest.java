@@ -128,8 +128,7 @@ public class CanonicalSearchIntegrationTest {
             assertTrue(failure.getMessage().contains("not available"));
             assertEquals(List.of("S3"), ids(session));
         }
-        CommandException failure = assertThrows(CommandException.class, () -> session.execute("search c/lesson"));
-        assertEquals("Lesson search is not available yet.", failure.getMessage());
+        assertEquals("Found 0 lesson(s).", session.execute("search c/lesson").getFeedbackToUser());
         assertArrayEquals(bytes, Files.readAllBytes(path));
         assertEquals(List.of("S3"), ids(session));
     }

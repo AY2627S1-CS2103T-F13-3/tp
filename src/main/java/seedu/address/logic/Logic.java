@@ -65,6 +65,14 @@ public interface Logic {
     ObservableList<LessonView> getFilteredLessonList();
 
     /**
+     * Returns the live results selected by the latest lessons or lesson-search command, initially the catalogue.
+     * This read-only observable list retains its identity even when the selected query changes.
+     * People filters and positions are independent of this view.
+     * @throws UnsupportedOperationException if this adapter does not provide canonical retrieval
+     */
+    ObservableList<LessonView> getDisplayedLessons();
+
+    /**
      * Looks up a lesson in the complete catalogue, independently of the active lesson filter.
      * The returned projection is a snapshot of the lesson at lookup time.
      * @param lessonId stable lesson identity

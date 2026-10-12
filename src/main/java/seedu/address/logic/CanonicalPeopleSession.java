@@ -22,6 +22,7 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddLessonParser;
+import seedu.address.logic.parser.LessonsArgumentsParser;
 import seedu.address.logic.parser.PeopleListParser;
 import seedu.address.logic.parser.RoleAwareAddParser;
 import seedu.address.logic.parser.SearchCriteriaParser;
@@ -33,6 +34,9 @@ import seedu.address.model.person.PersonRecord;
 import seedu.address.model.person.PersonRole;
 import seedu.address.model.query.LessonQueries;
 import seedu.address.model.query.LessonQuerySource;
+import seedu.address.model.query.LessonView;
+import seedu.address.model.search.SearchCategory;
+import seedu.address.model.search.SearchCriteria;
 import seedu.address.storage.ProtectedPonHubDataStorage;
 
 /**
@@ -53,6 +57,7 @@ public final class CanonicalPeopleSession {
     private final PonHubData data;
     private final PeopleView view;
     private final LessonQuerySource lessonQueries;
+    private final LessonRetrieval lessonRetrieval;
     private final CanonicalCommandExecutor executor;
 
     /**
@@ -81,7 +86,9 @@ public final class CanonicalPeopleSession {
             // Storage retains the authoritative rejection guidance and a session-long write lock.
         }
         view = new PeopleView(data);
-        lessonQueries = new LessonQueries(data);
+        LessonQueries queries = new LessonQueries(data);
+        lessonQueries = queries;
+        lessonRetrieval = new LessonRetrieval(queries, view);
         executor = new CanonicalCommandExecutor(view, writer, storage::getDataLoadError);
     }
 
@@ -99,6 +106,10 @@ public final class CanonicalPeopleSession {
 
     public LessonQuerySource getLessonQueries() {
         return lessonQueries;
+    }
+
+    public ObservableList<LessonView> getDisplayedLessons() {
+        return lessonRetrieval.getDisplayedLessons();
     }
 
     public ProtectedPonHubDataStorage.LoadStatus getLoadStatus() {
@@ -154,7 +165,15 @@ public final class CanonicalPeopleSession {
                 return loadError.map(error -> new CommandResult(result.getFeedbackToUser() + "\n\n" + error))
                         .orElse(result);
             case "search":
-                return executor.execute(new CanonicalSearchCommand(new SearchCriteriaParser().parse(arguments)));
+                SearchCriteria criteria = new SearchCriteriaParser().parse(arguments);
+                if (criteria.getCategory() == SearchCategory.LESSON) {
+                    return new CommandResult(String.format("Found %d lesson(s).",
+                            lessonRetrieval.search(criteria).size()));
+                }
+                return executor.execute(new CanonicalSearchCommand(criteria));
+            case "lessons":
+                return new CommandResult(String.format("Showing %d lesson(s).",
+                        lessonRetrieval.list(new LessonsArgumentsParser().parse(arguments)).size()));
             case "help":
                 return new CommandResult(getHelp(arguments));
             case "exit":

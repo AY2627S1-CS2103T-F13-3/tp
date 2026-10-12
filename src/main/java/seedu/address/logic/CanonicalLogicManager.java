@@ -71,6 +71,11 @@ public final class CanonicalLogicManager implements Logic {
     }
 
     @Override
+    public ObservableList<LessonView> getDisplayedLessons() {
+        return session.getDisplayedLessons();
+    }
+
+    @Override
     public Optional<LessonView> findLessonById(LessonId lessonId) {
         return session.getLessonQueries().findLessonById(lessonId);
     }
