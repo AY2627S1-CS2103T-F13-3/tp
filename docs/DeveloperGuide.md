@@ -21,11 +21,13 @@ title: Developer Guide
   (startup/path selection, active catalogue/Logic adapter, cards, integration tests and guides); contact
   validation/ASCII-space normalization and constant-stack email validation ([#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61));
   logging fallback, UI startup error handling, and screen-aware window restoration/contact-card wrapping.
+  He used Codex for command-input retry/recovery and result-feedback scrolling/F1 regressions (#196).
   He also used Codex for #195 preference-corruption recovery and independent save-failure regressions;
   product scope/user stories;
   confirmed selectors/command formats/search scope, recovery/use cases/manual checks, prescribed
   Java/macOS setup, and review/conflict reconciliation/Javadoc corrections in search, inline help,
-  lesson membership, atomic saves and the canonical aggregate (#76). These credits do not transfer feature ownership.
+  lesson membership, atomic saves and the canonical aggregate (#76); and #197's lesson creation/membership
+  command-boundary regressions. These credits do not transfer feature ownership.
 * Yang Shuo (`ys000009`) used OpenAI Codex for #78's scheduling APIs, aggregate invariants,
   read-only relationship queries/guards, tests and design documentation; and #86's active shared-lesson
   creation parser and command, tutor resolution, transaction/persistence regressions, conflict
@@ -1450,11 +1452,13 @@ Use that same terminal/runtime when reopening the JAR; substitute its actual fil
 whose paths contain spaces, with real JavaFX named parameters. It verifies empty missing-store startup,
 legacy/corrupt/unsupported rejection, supported human edits and allocation validation, original-byte
 preservation through help/list/exit and rejected mutations, repaired restart, alternate paths and shared
-GUI preference reload. The JavaFX toolkit starts, but its test-only start callback displays no window;
-these checks do not establish native interaction or physical display/scaling acceptance. Development
-classes resolve application home from each child working directory; repeat the packaged JAR procedure
-above to verify the JAR-folder boundary independently. Ernest used OpenAI Codex for these regression
-tests and their current-runtime guide reconciliation.
+GUI preference reload. Its test-only start callback shows a minimal stage and observes a JavaFX pulse
+before requesting exit; phase diagnostics require verified shutdown and launch return in order.
+These checks do not exercise the full production window, native interaction or physical display/scaling
+acceptance. Development classes resolve application home from each child working directory; repeat the
+packaged JAR procedure above to verify the JAR-folder boundary independently. Ernest used OpenAI Codex for these regression
+tests and their current-runtime guide reconciliation. Zhu Zhi Yu used OpenAI Codex for the minimal-stage
+lifecycle checks and shutdown diagnostics.
 
 ### Canonical people commands and unsuccessful saves
 
