@@ -381,6 +381,9 @@ public class CanonicalMainWindowTest {
             root().applyCss();
             root().resize(853, 600);
             root().layout();
+            // Offscreen tests have no native pulse to finish a virtualized list's pending scroll/layout.
+            people().layout();
+            lessons().layout();
         }
 
         private TextField input() {
