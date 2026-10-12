@@ -17,7 +17,7 @@ public final class CanonicalTransaction implements ModelTransaction<PonHubData> 
         before = live.exportState();
         staged = new PonHubData(before);
         stagedView = new PeopleView(staged);
-        stagedView.setRoleFilter(liveView.getRoleFilter());
+        stagedView.copyFilterFrom(liveView);
     }
 
     @Override
@@ -41,12 +41,13 @@ public final class CanonicalTransaction implements ModelTransaction<PonHubData> 
     @Override
     public void commit() {
         boolean dataChanged = hasOperationalChanges();
-        boolean filterChanged = !liveView.getRoleFilter().equals(stagedView.getRoleFilter());
+        boolean filterChanged = !liveView.getRoleFilter().equals(stagedView.getRoleFilter())
+                || !liveView.getSearchCriteria().equals(stagedView.getSearchCriteria());
         if (dataChanged) {
             live.resetData(staged.exportState());
         }
         if (dataChanged || filterChanged) {
-            liveView.setRoleFilter(stagedView.getRoleFilter());
+            liveView.copyFilterFrom(stagedView);
         }
     }
 }

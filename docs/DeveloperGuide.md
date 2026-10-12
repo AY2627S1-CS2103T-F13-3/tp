@@ -31,6 +31,9 @@ title: Developer Guide
   tutor resolution, transaction/persistence regressions, conflict reconciliation and guide updates.
 * Ben (`ben58882`) used OpenAI Codex for #80's indexed lesson/roster projections, committed-state
   refresh, Logic delegation, search/transaction regression tests and guide updates.
+* Ernest used OpenAI Codex for Round 4 #87 activation over Ben's matcher: session routing, complete people-view
+  filter transactions, integration/UI regressions, merged lesson-creation checks and guide reconciliation.
+  Ben remains the feature owner.
 * Ernest used OpenAI Codex for the Week 8 command catalogue, inline help, regression tests and shared
   documentation; #129's active UI encapsulation/Javadoc corrections and caller/repository checks;
   #60's architecture/command conventions and AboutUs clarification; and #164's shared-guide
@@ -51,8 +54,9 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 
 `MainApp` connects one `CanonicalPeopleSession` to `CanonicalLogicManager`, canonical cards and
 protected storage. Active commands are `add r/ROLE ...`, `addlesson d/DAY ...`, `list [r/ROLE]`,
-`help [COMMAND]` and `exit`; protected sessions expose only help/list/exit. `delete`, `edit`, `clear`, `find`,
-lesson-result, enrolment, attendance, history and search commands remain unavailable. The codec saves and loads validated
+own-contact `search c/student|parent|tutor ...`, `help [COMMAND]` and `exit`; protected sessions expose only
+help/list/exit. `delete`, `edit`, `clear`, `find`, lesson-result, enrolment, attendance, history, lesson search
+and relationship search commands remain unavailable. The codec saves and loads validated
 attendance records, retaining history independently of current lesson enrolment; this persistence
 support does not activate mark, unmark or history command routes.
 
@@ -642,7 +646,7 @@ the active `addlesson` route creates an independent empty-roster record.
 `CanonicalPeopleSession` accepts zero or one help topic, normalizes with `Locale.ROOT`, rejects unknown
 topics/excess arguments and restricts guidance to the protected-session routes after rejected loading.
 Help preserves records and the people view without operational saves; preferences have a separate
-lifecycle. Protected sessions omit both `add` and `addlesson`; normal sessions expose help for both.
+lifecycle. Protected sessions omit `add`, `addlesson` and `search`; normal sessions expose help for all three.
 Legacy `CommandCatalog`/`HelpCommandParser` remain regression seams.
 
 The Help menu and F1 both invoke `MainWindow.executeCommand("help")`, retaining the command-box
@@ -777,12 +781,12 @@ share that root. Callers receive immutable data snapshots and the same unmodifia
 the session does not expose writable operational data. Execute on the single model thread, or the JavaFX
 application thread once controls are attached.
 
-The session's `execute()` dispatches active `add`, `addlesson`, `list`, `help` and `exit` commands through its switch.
-`CanonicalCommandCatalog` defines the permitted command words and guidance, independently of the
-retained legacy `CommandCatalog`. The session parses role-aware additions, shared-lesson creation and listings before
-staged execution. Changed data is saved through the protected writer before publication, stable-ID success feedback
-or person-view changes. Parse, domain and save failures leave the original data, allocation counters and visible
-filter/list unchanged.
+The session's `execute()` dispatches active `add`, `addlesson`, `list`, `search`, `help` and `exit` commands
+through its switch. `CanonicalCommandCatalog` defines the permitted command words and guidance, independently
+of the retained legacy `CommandCatalog`. The session parses role-aware additions, shared-lesson creation,
+listings and own-contact searches before staged execution. Changed data is saved through the protected writer
+before publication, stable-ID success feedback or person-view changes. Parse, domain and save failures leave
+the original data, allocation counters and complete visible filter/list unchanged.
 Read-only commands perform no operational saves.
 
 A confirmed missing file starts an unwritten empty store. A rejected file produces a protected empty view,
@@ -895,15 +899,19 @@ Every result is distinct by stable ID and retains canonical order, including a v
 
 Invalid category, prefix, value, duplicate filter or incompatible time range fails parsing with clear feedback; an
 unsupported prefix cannot be absorbed into the preceding text value. The criteria parser validates the entire matrix
-but does not traverse relationships or filter a live list. The active router still rejects `search`. Own-contact,
-lesson and relational slices are staged in #87, #90 and their follow-ups; each activated route must reject filters it
-cannot yet execute, rather than silently ignoring them. The full matrix and conjunction rules remain the target.
+but does not traverse relationships. `CanonicalPeopleSession` now routes person search through
+`CanonicalSearchCommand`; lesson and relational slices remain staged in #90 and follow-ups.
+The command explicitly rejects `c/lesson` and relationship filters rather than ignoring them. The full matrix and conjunction rules remain the target.
 
 `PersonContactSearch` implements the `n/l/p/pp/e/a` own-field slice over immutable canonical person records in their
 existing order. Category-only searches include unlinked people; absent optional fields fail supplied filters, and
 relationship filters are rejected until their traversal is integrated. The matcher returns an immutable snapshot; it
-does not activate `search` or update the current people view. Activation must connect it to canonical routing and the
-people view, then verify current indices, zero-result feedback, read-only behavior and persistence boundaries.
+has no writable state. `PeopleView.setSearchCriteria` validates before replacing the shared observable list and
+retains the immutable criteria alongside its role. Refresh uses the complete catalogue and all supplied filters.
+`CanonicalTransaction` copies and compares both role and search criteria, so same-role searches publish new results
+and later committed mutations preserve the complete filter. `list` and successful `add` clear search criteria;
+help and failed commands preserve it. Searches leave snapshot bytes and allocation counters untouched, and report
+valid zero-result counts. Protected sessions continue to permit only help/list/exit.
 
 ### Dated attendance records
 
@@ -960,8 +968,9 @@ Canonical people activation and the remaining shared-lesson integration are trac
 [#76](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/76),
 [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77),
 [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85), and their dependent command, storage and retrieval
-issues. The requirements below describe the intended product; role-aware add/list and empty-roster shared-lesson
-creation are active, while guarded deletion, enrolment, attendance, lesson-result commands and history remain planned.
+issues. The requirements below describe the intended product; role-aware add/list, empty-roster shared-lesson
+creation and own-contact people search are active. Guarded deletion, enrolment, attendance, lesson-result
+commands, lesson search, relationship search and history remain planned.
 
 ### User stories
 
@@ -1080,7 +1089,7 @@ Person selectors in these target use cases are positive indices from the current
 
 **Query design:** #80 supplies the read-only catalogue, stable-ID lookup, current roster/student lessons and indexed
 lesson filtering through the [prepared query backend](#indexed-lesson-query-projections-80). Current membership
-comes only from Lesson-owned IDs. People search routes, dated roster attendance and history remain separate slices;
+comes only from Lesson-owned IDs. Own-contact people search is active; relationship search, dated roster attendance and history remain separate slices;
 this use case's command/UI flow begins only once its runtime integration preconditions hold.
 
 **Postconditions:** The requested read-only view is displayed. Operational data is unchanged; lesson and roster results preserve the current people filter, order and indices.
@@ -1272,7 +1281,7 @@ Use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-projec
 
 Use the active catalogue in the tested build; these examples apply to canonical startup.
 
-1. In a fresh JAR folder, run `help`, then `help add`, `help addlesson`, `help list`, `help help` and
+1. In a fresh JAR folder, run `help`, then `help add`, `help addlesson`, `help list`, `help search`, `help help` and
    `help exit`. Each topic matches its parser and supplies a runnable example; `help exit` keeps
    the app open. Repeat topic/example checks when another route is registered.
 2. Add a person using a runnable `help add` example, then select its card, type an unfinished command
@@ -1284,9 +1293,9 @@ Use the active catalogue in the tested build; these examples apply to canonical 
 4. At minimum width, run `help add` and scroll to the final example/back to the top. Text wraps
    readably; a new topic resets scrolling. Record actual display conditions using the
    [people-card/whole-window checks](#planned-people-card-display-checks).
-5. `delete 1`, `edit 1 n/Alex`, `clear`, `find Alex`, `search c/student` and `lessons` report
-   `Unknown command.` without changing data. `list extra`, an invalid `addlesson` and `exit extra`
-   show their relevant validation or usage messages without committing data, changing the list or exiting.
+5. `delete 1`, `edit 1 n/Alex`, `clear`, `find Alex` and `lessons` report `Unknown command.` without changing data.
+   `list extra`, an invalid `addlesson` and `exit extra` show their relevant validation or usage messages without
+   committing data, changing the list or exiting.
 6. Compare operational bytes before/after help: unchanged, or still missing in a fresh folder.
    Repeat with unwritable operational storage; preference saving at shutdown remains separate.
 
@@ -1401,8 +1410,27 @@ tests and their current-runtime guide reconciliation.
    expect no success message, publication or ID consumption. Restore access and retry. The successful
    record uses the next unconsumed ID and appears last in the all-role view; restart verifies persistence.
 4. With a selected card, request help from the menu/F1 and through the command box. Expect preserved
-   records/filter/selection; menu/F1 additionally retain unfinished text. Run unavailable delete, search,
-   enrolment and lesson-result commands; normal sessions report an unknown command without touching data or selection.
+   records/filter/selection; menu/F1 additionally retain unfinished text. Run unavailable delete, enrolment and lesson-result commands; expect unknown-command feedback. Lesson/relationship searches
+   give explicit interim feedback. These failures preserve data, filter and selection.
+
+### Active own-contact search checks
+
+1. With mixed roles and unlinked records, run `search c/student`, `search c/tutor` and `search c/parent` after a
+   different role listing. Match the full catalogue in creation order, once per stable ID, with positions from 1.
+2. Combine all student own-fields: `search c/student n/Alex l/S2 p/00012345 pp/00123456 e/@example a/main road`.
+   Check case/repeated-space normalization, exact phones including zeros, absent optional values and zero results.
+   Resolve the next person selector against this visible view; its position must not become an ID suffix.
+3. Switch between two same-role searches, then `list r/student` and `list`. Each listing clears the search criteria.
+   `help search`, Help menu and F1 preserve the filtered view; compare operational bytes before/after read commands.
+4. Reject `search c/student d/Mon`, `search c/parent sn/Alex` and `search c/lesson` with explicit interim feedback.
+   Unknown/repeated/blank/category-incompatible fields fail without replacing the previous people view.
+5. Attempt an addition with a failed-save destination while a search is active. Retain data, counters, bytes,
+   filter and selected card. Restore access and retry; success saves before resetting to all roles. Reopen the file
+   to verify persistence. Search criteria are session view state, not stored operational data.
+6. With a compound own-contact search active, create a shared lesson using an existing tutor's full name and
+   optional exact phone. Success saves an empty-roster lesson and refreshes lesson queries while preserving the
+   complete people search and its indices. Repeat with a failing writer: records, counters, bytes, people search
+   and lesson projections stay unchanged. Restore writing and retry; the same next Lesson ID is allocated.
 
 ### Contact validation in the current increment
 
@@ -1513,7 +1541,7 @@ reference, duplicate-key and weekday checks, without introducing another writabl
 
 Verification includes missing paths, injected access denial, malformed/null/legacy/unsupported input,
 duplicate identities and invalid allocation history, no overwrite through direct saves or the canonical
-command boundary, and restart-only recovery after deliberate supported edits. Canonical session tests exercise actual add/list/help/exit routing. Application startup, configured-path,
+command boundary, and restart-only recovery after deliberate supported edits. Canonical session tests exercise actual add/list/search/help/exit routing. Application startup, configured-path,
 UI/card and packaged platform checks additionally verify the cutover; retained legacy regressions remain
 isolated and do not establish canonical application acceptance. For manual verification, use disposable files, record their original
 bytes, attempt reads and mutations in the protected session, repair a copy, restart and verify successful

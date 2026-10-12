@@ -8,6 +8,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import seedu.address.model.person.PersonRecord;
 import seedu.address.model.person.PersonRole;
+import seedu.address.model.search.PersonContactSearch;
+import seedu.address.model.search.SearchCriteria;
 
 /**
  * A read-only current people view derived from one supplied canonical data root.
@@ -21,6 +23,7 @@ public final class PeopleView {
     private final ObservableList<PersonRecord> people = FXCollections.observableArrayList();
     private final ObservableList<PersonRecord> readOnlyPeople = FXCollections.unmodifiableObservableList(people);
     private Optional<PersonRole> roleFilter = Optional.empty();
+    private Optional<SearchCriteria> searchCriteria = Optional.empty();
 
     /**
      * Creates an all-roles projection of the supplied canonical root without copying its writable state.
@@ -55,15 +58,47 @@ public final class PeopleView {
      */
     public void setRoleFilter(Optional<PersonRole> roleFilter) {
         this.roleFilter = requireNonNull(roleFilter);
+        searchCriteria = Optional.empty();
         refresh();
     }
 
+    public Optional<SearchCriteria> getSearchCriteria() {
+        return searchCriteria;
+    }
+
     /**
-     * Rebuilds the current role-filtered projection from the same root after a committed change or rollback.
+     * Selects matching people from the complete root, validating before changing the current view.
+     * Search criteria are immutable and retain the category and every supplied own-contact filter.
+     */
+    public void setSearchCriteria(SearchCriteria criteria) {
+        var matches = PersonContactSearch.search(source.getPeople(), requireNonNull(criteria));
+        roleFilter = Optional.of(PersonRole.valueOf(criteria.getCategory().name()));
+        searchCriteria = Optional.of(criteria);
+        people.setAll(matches);
+    }
+
+    /**
+     * Copies the complete filter into another projection over its own canonical root.
+     */
+    public void copyFilterFrom(PeopleView other) {
+        requireNonNull(other);
+        if (other.searchCriteria.isPresent()) {
+            setSearchCriteria(other.searchCriteria.orElseThrow());
+        } else {
+            setRoleFilter(other.roleFilter);
+        }
+    }
+
+    /**
+     * Rebuilds the current role/search-filtered projection from the same root after a committed change or rollback.
      * This view's owner calls this method explicitly; lesson queries subscribe to the source's state property.
      * When attached to JavaFX controls, refreshes run on the JavaFX application thread.
      */
     public void refresh() {
+        if (searchCriteria.isPresent()) {
+            people.setAll(PersonContactSearch.search(source.getPeople(), searchCriteria.orElseThrow()));
+            return;
+        }
         people.setAll(source.getPeople().stream()
                 .filter(person -> roleFilter.isEmpty() || person.getRole() == roleFilter.get())
                 .toList());

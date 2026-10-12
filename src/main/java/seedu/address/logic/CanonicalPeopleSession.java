@@ -16,6 +16,7 @@ import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.CanonicalAddCommand;
 import seedu.address.logic.commands.CanonicalAddLessonCommand;
 import seedu.address.logic.commands.CanonicalListCommand;
+import seedu.address.logic.commands.CanonicalSearchCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.HelpCommand;
@@ -23,6 +24,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddLessonParser;
 import seedu.address.logic.parser.PeopleListParser;
 import seedu.address.logic.parser.RoleAwareAddParser;
+import seedu.address.logic.parser.SearchCriteriaParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.PeopleView;
 import seedu.address.model.PonHubData;
@@ -151,6 +153,8 @@ public final class CanonicalPeopleSession {
                         new CanonicalListCommand(new PeopleListParser().parse(arguments)));
                 return loadError.map(error -> new CommandResult(result.getFeedbackToUser() + "\n\n" + error))
                         .orElse(result);
+            case "search":
+                return executor.execute(new CanonicalSearchCommand(new SearchCriteriaParser().parse(arguments)));
             case "help":
                 return new CommandResult(getHelp(arguments));
             case "exit":
