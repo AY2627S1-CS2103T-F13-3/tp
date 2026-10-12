@@ -15,13 +15,16 @@ import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.CanonicalAddCommand;
 import seedu.address.logic.commands.CanonicalAddLessonCommand;
+import seedu.address.logic.commands.CanonicalEnrolCommand;
 import seedu.address.logic.commands.CanonicalListCommand;
 import seedu.address.logic.commands.CanonicalSearchCommand;
+import seedu.address.logic.commands.CanonicalUnenrolCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddLessonParser;
+import seedu.address.logic.parser.LessonMembershipParser;
 import seedu.address.logic.parser.PeopleListParser;
 import seedu.address.logic.parser.RoleAwareAddParser;
 import seedu.address.logic.parser.SearchCriteriaParser;
@@ -43,6 +46,8 @@ import seedu.address.storage.ProtectedPonHubDataStorage;
 public final class CanonicalPeopleSession {
     public static final String MESSAGE_ADD_USAGE = CanonicalCommandCatalog.MESSAGE_ADD_USAGE;
     public static final String MESSAGE_ADD_LESSON_USAGE = CanonicalCommandCatalog.MESSAGE_ADD_LESSON_USAGE;
+    public static final String MESSAGE_ENROL_USAGE = CanonicalCommandCatalog.MESSAGE_ENROL_USAGE;
+    public static final String MESSAGE_UNENROL_USAGE = CanonicalCommandCatalog.MESSAGE_UNENROL_USAGE;
     public static final String MESSAGE_HELP_USAGE = CanonicalCommandCatalog.MESSAGE_HELP_USAGE;
 
     private static final Pattern BASIC_COMMAND_FORMAT =
@@ -148,6 +153,10 @@ public final class CanonicalPeopleSession {
                 return executor.execute(new CanonicalAddCommand(new RoleAwareAddParser().parse(arguments)));
             case "addlesson":
                 return executor.execute(new CanonicalAddLessonCommand(new AddLessonParser().parse(arguments)));
+            case "enrol":
+                return executor.execute(new CanonicalEnrolCommand(new LessonMembershipParser().parse(arguments)));
+            case "unenrol":
+                return executor.execute(new CanonicalUnenrolCommand(new LessonMembershipParser().parse(arguments)));
             case "list":
                 CommandResult result = executor.execute(
                         new CanonicalListCommand(new PeopleListParser().parse(arguments)));

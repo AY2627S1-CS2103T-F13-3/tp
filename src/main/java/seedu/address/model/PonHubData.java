@@ -25,7 +25,7 @@ import seedu.address.model.person.PersonRole;
 import seedu.address.model.person.Student;
 
 /**
- * Canonical operational data root, not yet wired into the active ModelManager or JSON storage.
+ * Canonical operational data root used by the active session and protected JSON storage.
  * Accepts only validated immutable state at the replacement boundary.
  * Intended for the application's single model thread, not concurrent writers.
  */
@@ -142,6 +142,39 @@ public final class PonHubData {
                 lessonId.getSequenceNumber());
         state.set(replacement);
         return lesson;
+    }
+
+    /**
+     * Adds an existing student to one existing lesson without changing either stable identity.
+     * The complete replacement state is validated before publication, including student schedule clashes.
+     *
+     * @throws NullPointerException if an argument is null.
+     * @throws IllegalArgumentException if either record is missing, the person is not a Student, the membership
+     *     already exists, or the resulting student schedule overlaps.
+     */
+    public Lesson enrolStudent(PersonId studentId, LessonId lessonId) {
+        requireAllNonNull(studentId, lessonId);
+        requirePerson(studentId, PersonRole.STUDENT, MESSAGE_MISSING_STUDENT);
+        Lesson lesson = requireLesson(lessonId);
+        checkArgument(!lesson.hasEnrolledStudent(studentId),
+                "Student " + studentId + " is already enrolled in lesson " + lessonId + ".");
+        return replaceLesson(lesson.withEnrolledStudent(studentId));
+    }
+
+    /**
+     * Removes an existing student's current membership while retaining the lesson and all dated attendance.
+     *
+     * @throws NullPointerException if an argument is null.
+     * @throws IllegalArgumentException if either record is missing, the person is not a Student, or the membership
+     *     does not exist.
+     */
+    public Lesson unenrolStudent(PersonId studentId, LessonId lessonId) {
+        requireAllNonNull(studentId, lessonId);
+        requirePerson(studentId, PersonRole.STUDENT, MESSAGE_MISSING_STUDENT);
+        Lesson lesson = requireLesson(lessonId);
+        checkArgument(lesson.hasEnrolledStudent(studentId),
+                "Student " + studentId + " is not enrolled in lesson " + lessonId + ".");
+        return replaceLesson(lesson.withoutEnrolledStudent(studentId));
     }
 
     /**
@@ -262,6 +295,20 @@ public final class PonHubData {
         Optional<Lesson> lesson = getLesson(lessonId);
         checkArgument(lesson.isPresent(), MESSAGE_MISSING_LESSON + lessonId);
         return lesson.get();
+    }
+
+    /**
+     * Installs one replacement lesson at its existing catalogue position after validating the complete snapshot.
+     */
+    private Lesson replaceLesson(Lesson replacement) {
+        requireNonNull(replacement);
+        List<Lesson> lessons = new ArrayList<>(getLessons());
+        int lessonIndex = lessons.indexOf(requireLesson(replacement.getId()));
+        lessons.set(lessonIndex, replacement);
+        PonHubDataState replacementState = new PonHubDataState(state.get().people(), lessons,
+                state.get().attendance(), state.get().lastAllocatedLessonSequence());
+        state.set(replacementState);
+        return replacement;
     }
 
     @Override
