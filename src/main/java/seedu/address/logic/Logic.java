@@ -2,6 +2,7 @@ package seedu.address.logic;
 
 import java.util.Optional;
 
+import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.commands.CommandResult;
@@ -63,6 +64,19 @@ public interface Logic {
      * @throws UnsupportedOperationException if this adapter does not provide canonical retrieval
      */
     ObservableList<LessonView> getFilteredLessonList();
+
+    /**
+     * Returns the live results selected by the latest lessons or lesson-search command, initially the catalogue.
+     * This read-only observable list retains its identity even when the selected query changes.
+     * People filters and positions are independent of this view.
+     * @throws UnsupportedOperationException if this adapter does not provide canonical retrieval
+     */
+    ObservableList<LessonView> getDisplayedLessons();
+
+    /**
+     * Returns a live read-only description of the selected lesson results for the UI.
+     */
+    ReadOnlyStringProperty lessonResultContextProperty();
 
     /**
      * Looks up a lesson in the complete catalogue, independently of the active lesson filter.

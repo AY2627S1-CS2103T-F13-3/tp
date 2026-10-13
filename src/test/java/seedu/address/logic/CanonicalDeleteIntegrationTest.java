@@ -79,6 +79,28 @@ public class CanonicalDeleteIntegrationTest {
     }
 
     @Test
+    public void execute_deletedStudentWithSelectedLessons_keepsStableEmptySubscription() throws Exception {
+        Path path = savedData(Set.of(FIRST_STUDENT));
+        CanonicalPeopleSession session = new CanonicalPeopleSession(path);
+        session.execute("lessons si/4");
+        var displayed = session.getDisplayedLessons();
+        assertTrue(displayed.isEmpty());
+        session.execute("delete 4");
+        session.execute("add r/student n/New Student l/P2 pp/60000003");
+        session.execute("list r/student");
+        assertSame(displayed, session.getDisplayedLessons());
+        assertTrue(displayed.isEmpty());
+        assertEquals("Student S3 · current lessons", session.lessonResultContextProperty().get());
+        assertEquals(List.of(FIRST_STUDENT, new PersonId("S10")), visibleIds(session));
+
+        session.execute("lessons si/1");
+        assertSame(displayed, session.getDisplayedLessons());
+        assertEquals(List.of(LESSON), displayed.stream().map(lesson -> lesson.getLessonId()).toList());
+        assertEquals("Student S9 · current lessons", session.lessonResultContextProperty().get());
+        assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
+    }
+
+    @Test
     public void execute_parentsAndUnassignedTutor_preservesStudentPhonesAndRenumbers() throws Exception {
         Path path = savedData(Set.of(FIRST_STUDENT));
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
@@ -105,11 +127,16 @@ public class CanonicalDeleteIntegrationTest {
     public void execute_enrolledStudentAndEmptyLessonTutor_rejectsUntilDependencyRemoved() throws Exception {
         Path path = savedData(Set.of(FIRST_STUDENT));
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
+        session.execute("lessons si/2");
+        var displayed = session.getDisplayedLessons();
         PonHubDataState before = session.getDataSnapshot();
         byte[] original = Files.readAllBytes(path);
         CommandException studentFailure = assertThrows(CommandException.class, () -> session.execute("delete 2"));
         assertTrue(studentFailure.getMessage().contains("enrolled in lesson L10"));
         assertSame(before, session.getDataSnapshot());
+        assertSame(displayed, session.getDisplayedLessons());
+        assertEquals(List.of(LESSON), displayed.stream().map(lesson -> lesson.getLessonId()).toList());
+        assertEquals("Student S9 · current lessons", session.lessonResultContextProperty().get());
         assertArrayEquals(original, Files.readAllBytes(path));
 
         session.execute("unenrol 2 lid/L10");
@@ -118,6 +145,8 @@ public class CanonicalDeleteIntegrationTest {
         CommandException tutorFailure = assertThrows(CommandException.class, () -> session.execute("delete 1"));
         assertTrue(tutorFailure.getMessage().contains("assigned to lesson L10"));
         assertSame(emptyLesson, session.getDataSnapshot());
+        assertTrue(displayed.isEmpty());
+        assertEquals("Student S9 · current lessons", session.lessonResultContextProperty().get());
         assertArrayEquals(emptyLessonBytes, Files.readAllBytes(path));
         assertEquals("Deleted student: Alice Student (S9).", session.execute("delete 2").getFeedbackToUser());
         assertTrue(session.getLessonQueries().getLessonRoster(LESSON).isEmpty());
@@ -185,6 +214,11 @@ public class CanonicalDeleteIntegrationTest {
         });
         CanonicalPeopleSession session = current[0];
         session.execute("search c/parent n/Pat");
+        session.execute("search c/lesson s/Math");
+        var displayed = session.getDisplayedLessons();
+        int[] displayedEvents = {0};
+        displayed.addListener((ListChangeListener<? super seedu.address.model.query.LessonView>) change ->
+                displayedEvents[0]++);
         PonHubDataState originalSnapshot = session.getDataSnapshot();
         var visible = session.getPeople();
         var queries = session.getLessonQueries();
@@ -201,6 +235,10 @@ public class CanonicalDeleteIntegrationTest {
         assertSame(queries, session.getLessonQueries());
         assertSame(lessons, queries.getLessonList());
         assertEquals(0, events[0]);
+        assertEquals(0, displayedEvents[0]);
+        assertSame(displayed, session.getDisplayedLessons());
+        assertEquals(List.of(LESSON), displayed.stream().map(lesson -> lesson.getLessonId()).toList());
+        assertEquals("Lesson search: s/math", session.lessonResultContextProperty().get());
         assertArrayEquals(original, Files.readAllBytes(path));
 
         session.execute("delete 1");
@@ -208,6 +246,9 @@ public class CanonicalDeleteIntegrationTest {
         assertTrue(visibleIds(session).isEmpty());
         assertEquals(Optional.of(PersonRole.PARENT), session.getRoleFilter());
         assertTrue(events[0] > 0);
+        assertSame(displayed, session.getDisplayedLessons());
+        assertEquals(List.of(LESSON), displayed.stream().map(lesson -> lesson.getLessonId()).toList());
+        assertEquals("Lesson search: s/math", session.lessonResultContextProperty().get());
         assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
     }
 
