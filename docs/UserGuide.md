@@ -29,15 +29,23 @@ person deletion are active; attendance removal/history remain planned features.
    * `add r/tutor n/Mei Lim p/92345678 e/mei@example.com` adds a tutor.
    * `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1` creates an empty-roster shared lesson.
    * `add r/student n/Alex Tan l/S2 pp/91234567` adds a student.
-   * `list r/student`, followed by `enrol 1 lid/L1`, enrols the Student currently at position 1 in lesson `L1`.
-   * `mark 1 lid/L1 d/2026-10-05 s/present` records that Student's attendance for a Monday occurrence.
-   * `unenrol 1 lid/L1` removes that current membership without deleting retained attendance.
+   * `add r/student n/Jamie Tan l/P1 pp/91234567` adds a second student.
+   * `list r/student` shows Alex at position 1 and Jamie at position 2 in this fresh dataset.
+   * `enrol 1 lid/L1`, then `enrol 2 lid/L1`, enrols both students in the same lesson.
+   * `lessons` shows lesson `L1` once with a roster size of 2; `lessons si/1` shows Alex's current lessons.
+   * `mark 1 lid/L1 d/2026-10-05 s/present`, then `mark 2 lid/L1 d/2026-10-05 s/absent`,
+     records independent attendance for the same Monday occurrence.
+   * `mark 1 lid/L1 d/2026-10-05 s/absent` corrects only Alex's record.
+   * `unenrol 1 lid/L1` removes Alex's membership while keeping both attendance records.
+     `lessons si/1` now shows no current lessons; `lessons` still shows `L1` with Jamie enrolled.
    * `add r/parent n/Pat Tan p/91234567` adds a parent.
    * `list r/student` displays students; `list` displays all roles.
    * `help ADD` shows the same guidance as `help add`.
    * `exit` closes PonHub.
 
-The first successful mutation creates the data file. Keep the same JAR folder to load the saved records and stable IDs after restart. For a separate store, launch with `java -jar FILENAME.jar --data=data/another-ponhub.json`. Quote an argument containing spaces, for example `java -jar FILENAME.jar --data="separate store/ponhub.json"`. Select a previously unused path when re-entering legacy records; see [Data protection](#data-protection-in-the-current-build).
+The first successful mutation creates the data file. Keep the same JAR folder to load the saved records and stable IDs after restart. Reopen it, run `list r/student`, then `lessons`: Alex and Jamie retain their IDs, and `L1` still has Jamie enrolled. Attendance is saved, but this build has no attendance-history display command yet. These example positions and `L1` assume a fresh dataset; with existing data, use the returned Lesson ID and recheck current people positions before each student command.
+
+For a separate store, launch with `java -jar FILENAME.jar --data=data/another-ponhub.json`. Quote an argument containing spaces, for example `java -jar FILENAME.jar --data="separate store/ponhub.json"`. Select a previously unused path when re-entering legacy records; see [Data protection](#data-protection-in-the-current-build).
 
 ## Current command summary
 

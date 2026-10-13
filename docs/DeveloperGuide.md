@@ -48,8 +48,9 @@ title: Developer Guide
   canonical-runtime reconciliation, source verification and rendered checks; and Round 4 #87 activation
   over Ben's matcher (session routing, complete people-view filter transactions, integration/UI regressions
   and merged lesson-creation checks). Ben remains the search feature owner. Ernest also used Codex for
-  #191's permission-denied save regression and the available UG/help workflow rehearsals. These credits
-  do not claim teammates' implementations or unperformed human review.
+  #191's permission-denied save regression and the available UG/help workflow rehearsals; and the 13 October
+  Round 1 shared quick-start/README correction, packaged-router rehearsal and rendered-guide checks (#164/#102).
+  These credits do not claim teammates' implementations or unperformed human review.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -192,8 +193,8 @@ handling independently testable:
 
 <img src="images/ComponentManagers.png" width="300" />
 
-The inherited diagrams record historical manager types and the broad `delete 1` flow; active deletion
-is unavailable. Canonical additions save staged state before publication; failure leaves the live
+The inherited diagrams record historical manager types and the broad `delete 1` flow. Active canonical
+mutations, including guarded person deletion, save staged state before publication; failure leaves the live
 state unchanged. See [Command transactions](#command-transactions) for that boundary.
 
 <img src="images/ArchitectureSequenceDiagram.png" width="574" />
@@ -222,11 +223,12 @@ the people list. Roster details and history remain planned; see the [shared sele
 
 `CanonicalLogicManager` delegates to the single `CanonicalPeopleSession`. The session's `execute()`
 dispatches commands through its switch, using `CanonicalCommandCatalog` for available command words
-and guidance. It parses add/addlesson/enrol/unenrol/list/search input and invokes `CanonicalCommandExecutor`, which
-saves a changed candidate before publishing its root and view and returning `CommandResult`.
+and guidance. Canonical mutations use `CanonicalCommandExecutor`, which saves a changed candidate before
+publishing its root and view and returning `CommandResult`. Read-only lesson routes select derived results
+through `LessonRetrieval` without changing the people view.
 Parse, domain or save failure preserves
 live records, allocation counters, filter and selection. Read-only commands/no-ops skip operational
-saving. List clears search criteria and optionally sets a role; search replaces the people filter,
+saving. List clears search criteria and optionally sets a role; own-contact search replaces the people filter,
 while lesson creation and membership changes preserve it. See [Storage](#command-transactions).
 
 The class/parser diagrams describe retained legacy regression seams, not active application wiring.
