@@ -59,7 +59,7 @@ public class CanonicalPeopleSessionTest {
         assertEquals(LoadStatus.MISSING, session.getLoadStatus());
         assertEquals(path, session.getDataFilePath());
         assertTrue(session.getDataLoadError().isEmpty());
-        assertEquals(List.of("add", "addlesson", "enrol", "unenrol", "mark", "list", "lessons",
+        assertEquals(List.of("add", "addlesson", "enrol", "unenrol", "mark", "delete", "list", "lessons",
                 "search", "help", "exit"),
                 session.getCommandWords());
         assertEquals(new PonHubData().exportState(), session.getDataSnapshot());
@@ -99,7 +99,7 @@ public class CanonicalPeopleSessionTest {
         assertEquals("Showing 4 person(s).", session.execute("list").getFeedbackToUser());
         assertEquals(Optional.empty(), session.getRoleFilter());
         for (String command : List.of("help", "help ADD", "help ADDLESSON", "help ENROL", "help UNENROL",
-                "help MARK", "help list", "help help", "help exit", "exit")) {
+                "help MARK", "help DELETE", "help list", "help help", "help exit", "exit")) {
             session.execute(command);
         }
 
@@ -333,8 +333,8 @@ public class CanonicalPeopleSessionTest {
         var visible = session.getPeople();
         byte[] original = Files.readAllBytes(path);
 
-        for (String command : List.of("", "ADD", "delete 1", "edit 1", "list r/teacher", "list r/student r/tutor",
-                "add n/New Person", "help delete", "help add list", "exit now", "list\n", "\nhelp", "help add\n")) {
+        for (String command : List.of("", "ADD", "delete P1", "edit 1", "list r/teacher", "list r/student r/tutor",
+                "add n/New Person", "help clear", "help add list", "exit now", "list\n", "\nhelp", "help add\n")) {
             assertThrows(ParseException.class, () -> session.execute(command));
             assertEquals(before, session.getDataSnapshot());
             assertEquals(Optional.of(PersonRole.PARENT), session.getRoleFilter());
@@ -362,7 +362,7 @@ public class CanonicalPeopleSessionTest {
         assertTrue(overview.contains("list"));
         assertTrue(overview.contains("help"));
         assertTrue(overview.contains("exit"));
-        assertFalse(overview.contains("delete"));
+        assertTrue(overview.contains("delete"));
         String addUsage = session.execute("help ADD").getFeedbackToUser();
         assertTrue(addUsage.contains("r/student"));
         assertTrue(addUsage.contains("pp/"));
@@ -372,6 +372,7 @@ public class CanonicalPeopleSessionTest {
         assertTrue(session.execute("help ENROL").getFeedbackToUser().contains("STUDENT_INDEX lid/LESSON_ID"));
         assertTrue(session.execute("help UNENROL").getFeedbackToUser().contains("dated attendance"));
         assertTrue(session.execute("help MARK").getFeedbackToUser().contains("d/YYYY-MM-DD"));
+        assertTrue(session.execute("help DELETE").getFeedbackToUser().contains("Usage: delete INDEX"));
         assertTrue(session.execute("help list").getFeedbackToUser().contains("r/"));
         assertFalse(session.execute("help").isExit());
         assertFalse(session.execute("help").isShowHelp());

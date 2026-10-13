@@ -276,8 +276,8 @@ public class CanonicalMainWindowTest {
                 assertCard(fixture, "Student · S3", "2. Selected Student");
                 fixture.people().getSelectionModel().select(1);
                 PonHubDataState originalState = fixture.app.snapshot();
-                for (String command : List.of("list r/all", "list r/student r/tutor", "delete 2", "edit 2",
-                        "find Selected", "clear", "search n/Selected", "lessons sid/S3", "help delete")) {
+                for (String command : List.of("list r/all", "list r/student r/tutor", "delete S3", "edit 2",
+                        "find Selected", "clear", "search n/Selected", "lessons sid/S3", "help clear")) {
                     fixture.enter(command);
                     assertEquals(command, fixture.input().getText());
                     assertTrue(fixture.input().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
@@ -285,6 +285,85 @@ public class CanonicalMainWindowTest {
                     assertEquals(originalState, fixture.app.snapshot());
                     assertArrayEquals(original, Files.readAllBytes(fixture.dataPath));
                 }
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void commandBox_guardedDeletion_preservesFilteredCardsAndRenumbers() throws Exception {
+        seedMixedPeople();
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("list r/student");
+                var visible = fixture.people().getItems();
+                fixture.people().getSelectionModel().select(0);
+                fixture.enter("delete 1");
+                assertEquals("Deleted student: Older Student (S9).", fixture.feedback());
+                assertTrue(fixture.input().getText().isEmpty());
+                assertSame(visible, fixture.people().getItems());
+                assertEquals(List.of(new PersonId("S3")),
+                        visible.stream().map(PersonRecord::getId).toList());
+                assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.roleFilter());
+                fixture.layout();
+                assertCard(fixture, "Student · S3", "1. Selected Student");
+                assertEquals(fixture.app.snapshot(),
+                        new JsonPonHubDataStorage(fixture.dataPath).readData().orElseThrow());
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void commandBox_deletedLessonViewStudent_preservesBothPanelsOnFailedSaveAndRetry() throws Exception {
+        seedMixedPeople();
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("addlesson d/Mon st/0900 et/1000 s/Math tu/First Tutor rm/R1");
+                fixture.enter("list r/student");
+                fixture.enter("enrol 1 lid/L1");
+                fixture.enter("lessons si/1");
+                assertEquals(List.of("L1"), lessonIds(fixture));
+                fixture.people().getSelectionModel().select(0);
+                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                var displayed = fixture.lessons().getItems();
+                fixture.enter("delete 1");
+                assertTrue(fixture.feedback().contains("enrolled in lesson L1"));
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertEquals(List.of("L1"), lessonIds(fixture));
+
+                fixture.enter("unenrol 1 lid/L1");
+                PonHubDataState original = fixture.app.snapshot();
+                Path backup = directory.resolve("original.json");
+                Files.move(fixture.dataPath, backup);
+                Files.createDirectory(fixture.dataPath);
+                fixture.enter("delete 1");
+                assertEquals("delete 1", fixture.input().getText());
+                assertTrue(fixture.input().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
+                assertEquals(original, fixture.app.snapshot());
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(displayed, fixture.lessons().getItems());
+                assertTrue(displayed.isEmpty());
+                assertEquals("Student S9 · current lessons", ((Label) fixture.root()
+                        .lookup("#lessonContext")).getText());
+
+                Files.delete(fixture.dataPath);
+                Files.move(backup, fixture.dataPath);
+                fixture.enter("delete 1");
+                assertEquals("Deleted student: Older Student (S9).", fixture.feedback());
+                assertCard(fixture, "Student · S3", "1. Selected Student");
+                assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.roleFilter());
+                assertSame(displayed, fixture.lessons().getItems());
+                assertTrue(displayed.isEmpty());
+                assertEquals("Student S9 · current lessons", ((Label) fixture.root()
+                        .lookup("#lessonContext")).getText());
+                fixture.enter("lessons");
+                assertSame(displayed, fixture.lessons().getItems());
+                assertEquals(List.of("L1"), lessonIds(fixture));
+                assertEquals("Students enrolled: 0", ((Label) fixture.root()
+                        .lookup("#lessonRosterSize")).getText());
+                assertEquals(fixture.app.snapshot(),
+                        new JsonPonHubDataStorage(fixture.dataPath).readData().orElseThrow());
             }
             return null;
         });
@@ -337,7 +416,7 @@ public class CanonicalMainWindowTest {
                 fixture.input().setText("add r/student n/Unfinished");
                 fixture.window.handleHelp();
                 assertTrue(fixture.feedback().contains("add r/student"));
-                assertFalse(fixture.feedback().contains("delete -"));
+                assertTrue(fixture.feedback().contains("delete -"));
                 assertEquals("add r/student n/Unfinished", fixture.input().getText());
                 assertEquals(new PersonId("S9"), fixture.people().getSelectionModel().getSelectedItem().getId());
                 Event.fireEvent(fixture.input(), new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F1,

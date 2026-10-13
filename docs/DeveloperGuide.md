@@ -29,7 +29,9 @@ title: Developer Guide
   confirmed selectors/command formats/search scope, recovery/use cases/manual checks, prescribed
   Java/macOS setup, and review/conflict reconciliation/Javadoc corrections in search, inline help,
   lesson membership, atomic saves and the canonical aggregate (#76); and #197's lesson creation/membership
-  command-boundary regressions. These credits do not transfer feature ownership.
+  command-boundary regressions; and #91 guarded person deletion, transaction/restart and lesson-view integration
+  tests, conflict reconciliation and guide updates.
+  These credits do not transfer feature ownership.
 * Yang Shuo (`ys000009`) used OpenAI Codex for #78's scheduling APIs, aggregate invariants,
   read-only relationship queries/guards, tests and design documentation; and #86's active shared-lesson
   creation parser and command, tutor resolution, transaction/persistence regressions, conflict
@@ -62,9 +64,9 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 ### Current increment and command integration
 
 `MainApp` connects one canonical session/root to Logic, cards and protected storage. Normal sessions
-support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, `list`, `lessons`, own-contact
-people search, all seven lesson-search fields, `help` and `exit`; protected sessions allow only help/list/exit.
-Guarded deletion, attendance removal/history and relationship search on people remain planned.
+support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, guarded `delete`, `list`,
+`lessons`, own-contact people search, all seven lesson-search fields, `help` and `exit`; protected sessions allow
+only help/list/exit. Attendance removal/history and relationship search on people remain planned.
 Inherited edit/clear/find routes are unavailable. Stored attendance can be created and corrected with `mark`;
 `unmark` and `history` remain unavailable.
 
@@ -302,7 +304,7 @@ accepts only a validated state; invalid construction or null replacement leaves 
 Feature owners must preserve committed allocation history when preparing normal changes. Restore may
 reinstate earlier counters for rollback. Lesson allocation and global tutor/room/student scheduling are supplied by
 the #78 API below. Enrolment is activated by #88, and attendance creation/correction is activated by #89;
-deletion and attendance removal/history remain separate work.
+guarded person deletion is activated by #91; attendance removal/history remain separate work.
 
 This aggregate leaves `ModelManager`, commands and JSON storage unchanged. Vincent owns snapshot/storage
 contracts; Zhu/Yang will prepare validated changes through one future Model adapter, and Ben can consume
@@ -735,7 +737,8 @@ membership commands provide duplicate/non-member feedback. Lessons load through 
 `CanonicalPeopleSession` accepts zero or one help topic, normalizes with `Locale.ROOT`, rejects unknown
 topics/excess arguments and restricts guidance to the protected-session routes after rejected loading.
 Help preserves records and the people view without operational saves; preferences have a separate
-lifecycle. Protected sessions omit `add`, `addlesson`, `enrol`, `unenrol`, `mark` and `search`; normal sessions expose help
+lifecycle. Protected sessions omit `add`, `addlesson`, `enrol`, `unenrol`, `mark`, `delete`, `lessons` and `search`;
+normal sessions expose help
 for every active route.
 Legacy `CommandCatalog`/`HelpCommandParser` remain regression seams.
 
@@ -791,7 +794,7 @@ restoration; its actual format is described in [Storage](#people-only-canonical-
 Registry removal consults the caller's relationship predicate before changing data. Unknown IDs, references
 or a failing predicate leave order and counters unchanged. The predicate must query the canonical relationships
 without mutating the registry; complete deletion guards follow the shared contract above. This seam does not
-activate the guarded deletion command.
+bypass canonical relationship checks. The active guarded command uses `PonHubData.removePerson` before publication.
 
 ### Contact validation and normalization
 
@@ -857,9 +860,9 @@ current people list. With students `[S4, S9]`, positions `1` and `2` select thos
 Tutor/Parent at that position without searching another list; range/role failures leave data and view unchanged.
 
 The [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85) cutover activates these commands through
-one session and people panel. Inherited delete is retired until guarded canonical deletion is ready.
+one session and people panel. The inherited delete route remains retired; #91 activates guarded canonical deletion.
 Canonical storage supports lessons, rosters and retained attendance. `addlesson`, `enrol`, `unenrol`, `mark`,
-`lessons` and all lesson-search fields are active; deletion, `unmark` and `history` remain gated.
+guarded `delete`, `lessons` and all lesson-search fields are active; `unmark` and `history` remain gated.
 
 <a id="prepared-canonical-people-session"></a>
 
@@ -871,7 +874,8 @@ share that root. Callers receive immutable data snapshots and the same unmodifia
 the session does not expose writable operational data. Execute on the single model thread, or the JavaFX
 application thread once controls are attached.
 
-The session's `execute()` dispatches active `add`, `addlesson`, `enrol`, `unenrol`, `mark`, `list`, `lessons`, `search`, `help` and
+The session's `execute()` dispatches active `add`, `addlesson`, `enrol`, `unenrol`, `mark`, `delete`, `list`,
+`lessons`, `search`, `help` and
 `exit` commands through its switch. `CanonicalCommandCatalog` defines the permitted command words and guidance,
 independently
 of the retained legacy `CommandCatalog`. The session parses role-aware additions, shared-lesson creation and
@@ -1062,8 +1066,8 @@ Canonical people activation and the remaining shared-lesson integration are trac
 [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77),
 [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85), and their dependent command, storage and retrieval
 issues. The requirements below describe the intended product; role-aware add/list, empty-roster shared-lesson
-creation, enrolment/unenrolment, dated attendance marking, own-contact people search, lesson listing and
-lesson search are active. Guarded deletion, attendance removal/history and relationship search on people remain planned.
+creation, enrolment/unenrolment, dated attendance marking, guarded person deletion, own-contact people search,
+lesson listing and lesson search are active. Attendance removal/history and relationship search on people remain planned.
 
 ### User stories
 
@@ -1383,21 +1387,22 @@ Use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-projec
 Use the active catalogue in the tested build; these examples apply to canonical startup.
 
 1. In a fresh JAR folder, run `help`, then `help add`, `help addlesson`, `help enrol`, `help unenrol`, `help mark`,
-   `help list`, `help lessons`, `help search`, `help help` and `help exit`. Each topic matches its parser and supplies
-   a runnable example; `help exit` keeps
+   `help delete`, `help list`, `help lessons`, `help search`, `help help` and `help exit`. Each topic matches its
+   parser and supplies a runnable example; `help exit` keeps
    the app open. Repeat topic/example checks when another route is registered.
 2. Add a person using a runnable `help add` example, then select its card, type an unfinished command
    and choose Help from the menu. Repeat F1 from command
    and result focus. Expect identical inline guidance, retained draft/selection and no separate window.
-3. `help ADD`, `help ADDLESSON`, `help ENROL`, `help UNENROL` and `help MARK` match their lowercase topics.
-   `help remove`, `help delete` and
+3. `help ADD`, `help ADDLESSON`, `help ENROL`, `help UNENROL`, `help MARK` and `help DELETE` match their lowercase topics.
+   `help remove` and
    `help clear` explain the unknown topic and direct users to `help`. `help add delete` reports
    invalid format and help usage.
 4. At minimum width, run `help add` and scroll to the final example/back to the top. Text wraps
    readably; a new topic resets scrolling. Record actual display conditions using the
    [people-card/whole-window checks](#planned-people-card-display-checks).
-5. `delete 1`, `edit 1 n/Alex`, `clear` and `find Alex` report `Unknown command.` without changing data.
-   `list extra`, an invalid `addlesson`, an invalid `mark` and `exit extra` show validation or usage messages without
+5. `edit 1 n/Alex`, `clear` and `find Alex` report `Unknown command.` without changing data.
+   `list extra`, an invalid `addlesson`, an invalid `mark`, `delete S1`, `lessons sid/S1` and `exit extra` show
+   validation or usage messages without
    committing data, changing the list or exiting.
 6. Compare operational bytes before/after help: unchanged, or still missing in a fresh folder.
    Repeat with unwritable operational storage; preference saving at shutdown remains separate.
@@ -1434,8 +1439,8 @@ Use a disposable application folder containing the packaged JAR and a copied sup
 
 ### Planned person-index integration checks
 
-Role-filtered listing, membership selectors, lesson results and add/failure checks are active.
-Guarded deletion remains planned; follow the [shared selector contract](#shared-lesson-target-contract).
+Role-filtered listing, membership selectors, guarded person deletion, lesson results and add/failure checks
+are active; follow the [shared selector contract](#shared-lesson-target-contract).
 
 1. On a mixed-role dataset, run `list`, `list r/student`, `list r/TUTOR` and `list r/parent`.
    Verify global relative order and counts; repeat with no matching records for a successful empty role.
@@ -1443,10 +1448,10 @@ Guarded deletion remains planned; follow the [shared selector contract](#shared-
    and `list r/student r/parent` without changing the previous view or data.
 2. Filter to Students whose stable IDs differ from positions, such as `S2`/`S5` at `1`/`2`. Exercise active
    `enrol`/`unenrol` against those current positions; position `2` must not become stable ID `S2`. Student-only
-   commands reject a Tutor/Parent at a valid position and zero, negative or out-of-range indices. Once guarded
-   deletion activates, apply the same selector checks to `delete`.
+   commands reject a Tutor/Parent at a valid position and zero, negative or out-of-range indices. Apply the same current-view index/range checks to guarded
+   `delete`, which supports every person role.
 3. Subscribe to lesson/roster results, then use an active membership command. Verify the same people list object,
-   filter/order/indices and subscribed query objects remain, with their contents refreshed. Planned `lessons si/1`
+   filter/order/indices and subscribed query objects remain, with their contents refreshed. Active `lessons si/1`
    follows the same current Student card and rejects superseded `sid/S2` input. Lesson references use `lid/`.
 4. Add a person successfully: expect new record last, all-role view and refreshed positions. Trigger
    validation/save failure: expect unchanged records, allocation counters and previous people view,
@@ -1534,8 +1539,8 @@ lifecycle checks and shutdown diagnostics.
    expect no success message, publication or ID consumption. Restore access and retry. The successful
    record uses the next unconsumed ID and appears last in the all-role view; restart verifies persistence.
 4. With a selected card, request help from the menu/F1 and through the command box. Expect preserved
-   records/filter/selection; menu/F1 additionally retain unfinished text. Run unavailable delete commands;
-   expect unknown-command feedback. People relationship searches
+   records/filter/selection; menu/F1 additionally retain unfinished text. Run malformed `delete S1` and
+   `lessons sid/S1` commands; expect invalid-index or usage feedback respectively. People relationship searches
    give explicit interim feedback. These failures preserve data, filter and selection.
 
 ### Active own-contact search checks
@@ -1616,11 +1621,35 @@ Use role-aware commands in a disposable selected data file.
    Expect protected startup and original bytes preserved through help/list/exit and attempted mutations.
    Use the [Storage recovery procedure](#current-protected-startup) on a deliberately corrected working copy.
 
-### Planned guarded deletion
+### Active guarded person deletion (#91)
 
-`delete` is unavailable in this build. Once the guarded route activates, test current people-list
-selection, index/range/role validation and all relationship guards from the shared contract. Until then,
-`delete`, `delete 1` and `help delete` must not expose the inherited unguarded deletion implementation.
+The session parses a positive people-list index using `ParserUtil`. `CanonicalDeleteCommand` resolves it once through
+`PersonIndexResolver` and passes the stable ID to `PonHubData.removePerson`. The aggregate identifies a blocking
+current enrolment, retained attendance key or assigned lesson before creating a replacement people registry.
+Registry removal and the validated aggregate retain all allocation counters, surviving people order, lessons and
+attendance. Parents have no direct lesson/attendance references; their removal preserves Student parent-phone values.
+The existing executor saves the complete staged aggregate before publishing the people/query refresh. It preserves
+both the role filter and the full own-contact search criteria. Protected startup still disallows deletion and its help topic.
+
+`CanonicalDeleteIntegrationTest` exercises mixed/filtered selectors, all three roles, dependency feedback, actual
+enrol/mark/unenrol routes, ID counters after reload, query continuity and failed-save invisibility/retry.
+For manual checks, use an isolated supported dataset:
+
+1. Add two Parents and a Student sharing the first Parent's phone. Run `list r/parent`, then delete the first Parent
+   by its current position. Expect the remaining Parent at position 1 and the Student's parent phone unchanged.
+   Delete the remaining Parent, restart, add another Parent and verify that its stable ID exceeds both removed IDs.
+2. Search for one unreferenced Student by name, with a stable ID suffix different from position 1. Run `delete 1`:
+   only that Student disappears; the search stays active and becomes empty. Surviving IDs and ordering remain intact.
+3. Create a Lesson, enrol a Student, and attempt to delete the Student or its Tutor using current people positions.
+   Expect feedback naming the blocking Lesson and unchanged file/view. Unenrol the Student without marking attendance:
+   Student deletion now succeeds, while the Tutor remains blocked by the empty Lesson.
+4. In a separate dataset, enrol, mark and unenrol a Student. Deletion must remain blocked by retained attendance;
+   feedback names the Lesson and date. Restart and verify that the same guard remains. An unassigned Tutor is deletable.
+5. Reject `delete`, `delete S1`, `delete 0`, `delete -1`, extra arguments and out-of-range positions without changes.
+   Use an isolated unwritable storage seam, attempt deletion and verify unchanged file, people filter/positions and
+   query results. Restore writing and retry: commit only once, then restart and compare the complete saved state.
+
+Attendance removal and lesson deletion remain separate planned routes; these checks do not claim those commands work.
 
 ### Active lesson listing and search checks (#90)
 
@@ -1644,8 +1673,10 @@ shape for automated integration/UI tests. For manual runs, create lessons with `
    the selected results. Reload the file and repeat the search; IDs, order, membership and details must agree.
    Exercise a failed save: previous results and allocation state remain unchanged, with no staged card visible.
 6. Use the real `enrol`/`unenrol` routes to verify current student results and `sn/` results refresh on commit.
-   A former member's dated attendance must not satisfy either query. Exercise active `mark`; test deletion and unmark as their
-   commands integrate; complete state restore must refresh held results. Automated boundary tests already cover
+   A former member's dated attendance must not satisfy either query. Exercise active `mark` and guarded `delete`;
+   test `unmark` as it integrates. Deleting the selected unreferenced student leaves their stable-ID lesson view
+   empty until another retrieval command selects a new source. Blocked or save-failed deletion preserves both
+   panels, selection and lesson context; complete state restore must refresh held results. Automated boundary tests cover
    membership replacement, retained attendance, removal and restore alongside active-session membership command and failed-save/retry/reload tests.
 7. Compare operational bytes before/after all retrieval/help/error commands. A missing file stays missing.
    Protected startup rejects `lessons` and lesson search and advertises only help/list/exit.

@@ -113,6 +113,26 @@ public final class PonHubData {
     }
 
     /**
+     * Removes an unreferenced person while retaining every allocation counter and surviving relationship.
+     *
+     * @return the removed immutable record.
+     * @throws NullPointerException if the ID is null.
+     * @throws IllegalArgumentException if the person is missing or has lesson or attendance references.
+     */
+    public PersonRecord removePerson(PersonId id) {
+        PersonRecord person = getPerson(id).orElseThrow(() ->
+                new IllegalArgumentException("The person does not exist: " + id));
+        Optional<String> blocker = getPersonDeletionBlocker(person);
+        checkArgument(blocker.isEmpty(), blocker.orElse(""));
+        PeopleRegistry people = new PeopleRegistry(state.get().people());
+        people.remove(id, this::isPersonReferenced);
+        PonHubDataState replacement = new PonHubDataState(people.exportState(), getLessons(), getAttendance(),
+                state.get().lastAllocatedLessonSequence());
+        state.set(replacement);
+        return person;
+    }
+
+    /**
      * Returns the lesson with the supplied stable ID, or an empty optional if absent.
      *
      * @throws NullPointerException if the ID is null.
@@ -286,15 +306,38 @@ public final class PonHubData {
      * directly referenced by either collection.
      */
     public boolean isPersonReferenced(PersonRecord person) {
+        return getPersonDeletionBlocker(person).isPresent();
+    }
+
+    /**
+     * Identifies the first retained dependency that prevents deleting a person.
+     */
+    private Optional<String> getPersonDeletionBlocker(PersonRecord person) {
         requireNonNull(person);
         PersonId personId = person.getId();
-        return switch (person.getRole()) {
-            case STUDENT -> getLessons().stream()
-                    .anyMatch(lesson -> lesson.getEnrolledStudentIds().contains(personId))
-                    || getAttendance().stream().anyMatch(record -> record.getStudentId().equals(personId));
-            case TUTOR -> getLessons().stream().anyMatch(lesson -> lesson.getTutorId().equals(personId));
-            case PARENT -> false;
-        };
+        if (person.getRole() == PersonRole.STUDENT) {
+            Optional<Lesson> enrolment = getLessons().stream()
+                    .filter(lesson -> lesson.hasEnrolledStudent(personId)).findFirst();
+            if (enrolment.isPresent()) {
+                return Optional.of("Student " + personId + " cannot be deleted while enrolled in lesson "
+                        + enrolment.get().getId() + ". Unenrol the student first.");
+            }
+            Optional<Attendance> attendance = getAttendance().stream()
+                    .filter(record -> record.getStudentId().equals(personId)).findFirst();
+            if (attendance.isPresent()) {
+                Attendance record = attendance.get();
+                return Optional.of("Student " + personId + " cannot be deleted while retained attendance exists for "
+                        + "lesson " + record.getLessonId() + " on " + record.getDate() + ".");
+            }
+        } else if (person.getRole() == PersonRole.TUTOR) {
+            Optional<Lesson> assignedLesson = getLessons().stream()
+                    .filter(lesson -> lesson.getTutorId().equals(personId)).findFirst();
+            if (assignedLesson.isPresent()) {
+                return Optional.of("Tutor " + personId + " cannot be deleted while assigned to lesson "
+                        + assignedLesson.get().getId() + ". Empty lessons also block deletion.");
+            }
+        }
+        return Optional.empty();
     }
 
     /**
