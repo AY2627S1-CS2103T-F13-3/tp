@@ -40,6 +40,7 @@ PeopleView --> PonHubData : committed\npeople
 
 note bottom of LessonRetrieval
   One stable read-only displayed list.
+  Read-only context identifies student / filters.
   Switch catalogue / student / search source.
   No writes; people indices stay unchanged.
 end note

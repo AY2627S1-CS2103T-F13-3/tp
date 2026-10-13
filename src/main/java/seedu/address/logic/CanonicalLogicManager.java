@@ -5,6 +5,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
@@ -73,6 +74,11 @@ public final class CanonicalLogicManager implements Logic {
     @Override
     public ObservableList<LessonView> getDisplayedLessons() {
         return session.getDisplayedLessons();
+    }
+
+    @Override
+    public ReadOnlyStringProperty lessonResultContextProperty() {
+        return session.lessonResultContextProperty();
     }
 
     @Override

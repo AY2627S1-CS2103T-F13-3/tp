@@ -136,6 +136,85 @@ public class PonHubDataLessonTest {
     }
 
     @Test
+    public void enrolStudent_existingRecords_updatesOnlySharedRoster() {
+        Lesson lesson = lesson("L4", firstTutor, LessonDay.MONDAY, "0900", "1000", "R1", Set.of());
+        PonHubData data = new PonHubData(new PonHubDataState(registry.exportState(), List.of(lesson), List.of(), 7));
+
+        Lesson firstEnrolment = data.enrolStudent(firstStudent.getId(), lesson.getId());
+        Lesson secondEnrolment = data.enrolStudent(secondStudent.getId(), lesson.getId());
+
+        assertEquals(List.of(secondEnrolment), data.getLessons());
+        assertEquals(Set.of(firstStudent.getId(), secondStudent.getId()),
+                secondEnrolment.getEnrolledStudentIds());
+        assertEquals(Set.of(firstStudent.getId()), firstEnrolment.getEnrolledStudentIds());
+        assertEquals(7, data.exportState().lastAllocatedLessonSequence());
+        assertTrue(data.getAttendance().isEmpty());
+    }
+
+    @Test
+    public void enrolStudent_duplicateMissingOrWrongRole_rejectsWithoutChange() {
+        Lesson lesson = lesson("L1", firstTutor, LessonDay.MONDAY, "0900", "1000", "R1",
+                Set.of(firstStudent.getId()));
+        PonHubData data = new PonHubData(new PonHubDataState(registry.exportState(), List.of(lesson), List.of(), 1));
+        PonHubDataState before = data.exportState();
+
+        assertThrows(IllegalArgumentException.class, () -> data.enrolStudent(
+                firstStudent.getId(), lesson.getId()));
+        assertThrows(IllegalArgumentException.class, () -> data.enrolStudent(
+                new PersonId("S99"), lesson.getId()));
+        assertThrows(IllegalArgumentException.class, () -> data.enrolStudent(
+                firstTutor.getId(), lesson.getId()));
+        assertThrows(IllegalArgumentException.class, () -> data.enrolStudent(
+                secondStudent.getId(), new LessonId("L99")));
+
+        assertEquals(before, data.exportState());
+    }
+
+    @Test
+    public void enrolStudent_studentClash_rejectsButAllowsAdjacentAndDifferentWeekday() {
+        Lesson first = lesson("L1", firstTutor, LessonDay.MONDAY, "0900", "1000", "R1",
+                Set.of(firstStudent.getId()));
+        Lesson overlapping = lesson("L2", secondTutorWithSameName, LessonDay.MONDAY, "0930", "1030", "R2",
+                Set.of());
+        Lesson adjacent = lesson("L3", firstTutor, LessonDay.MONDAY, "1000", "1100", "R1", Set.of());
+        Lesson differentDay = lesson("L4", firstTutor, LessonDay.TUESDAY, "0900", "1000", "R1", Set.of());
+        PonHubData data = new PonHubData(new PonHubDataState(registry.exportState(),
+                List.of(first, overlapping, adjacent, differentDay), List.of(), 4));
+        PonHubDataState beforeClash = data.exportState();
+
+        assertThrows(IllegalArgumentException.class, () -> data.enrolStudent(
+                firstStudent.getId(), overlapping.getId()));
+        assertEquals(beforeClash, data.exportState());
+
+        Lesson updatedAdjacent = data.enrolStudent(firstStudent.getId(), adjacent.getId());
+        Lesson updatedDifferentDay = data.enrolStudent(firstStudent.getId(), differentDay.getId());
+        assertEquals(List.of(first, updatedAdjacent, updatedDifferentDay),
+                data.getStudentLessons(firstStudent.getId()));
+    }
+
+    @Test
+    public void unenrolStudent_existingMembership_retainsAttendanceAndRejectsMissingMembership() {
+        Lesson lesson = lesson("L1", firstTutor, LessonDay.MONDAY, "0900", "1000", "R1",
+                Set.of(firstStudent.getId(), secondStudent.getId()));
+        Attendance retained = attendance(firstStudent, lesson, LocalDate.of(2026, 10, 5));
+        PonHubData data = new PonHubData(new PonHubDataState(registry.exportState(), List.of(lesson),
+                List.of(retained), 1));
+
+        Lesson updated = data.unenrolStudent(firstStudent.getId(), lesson.getId());
+
+        assertEquals(Set.of(secondStudent.getId()), updated.getEnrolledStudentIds());
+        assertEquals(List.of(retained), data.getAttendance());
+        PonHubDataState beforeMissingMembership = data.exportState();
+        assertThrows(IllegalArgumentException.class, () -> data.unenrolStudent(
+                firstStudent.getId(), lesson.getId()));
+        assertThrows(IllegalArgumentException.class, () -> data.unenrolStudent(
+                firstTutor.getId(), lesson.getId()));
+        assertThrows(IllegalArgumentException.class, () -> data.unenrolStudent(
+                secondStudent.getId(), new LessonId("L99")));
+        assertEquals(beforeMissingMembership, data.exportState());
+    }
+
+    @Test
     public void state_overlappingTutorOrNormalizedRoom_rejectsRestoredCandidate() {
         Lesson original = lesson("L1", firstTutor, LessonDay.MONDAY, "0900", "1000", "R1", Set.of());
         Lesson tutorConflict = lesson("L2", firstTutor, LessonDay.MONDAY, "0930", "1030", "R2", Set.of());

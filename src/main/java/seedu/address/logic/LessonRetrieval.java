@@ -3,7 +3,10 @@ package seedu.address.logic;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -25,6 +28,7 @@ public final class LessonRetrieval {
     private final ObservableList<LessonView> readOnlyDisplayed = FXCollections.unmodifiableObservableList(displayed);
     private final ListChangeListener<LessonView> refresh = change -> displayed.setAll(change.getList());
     private ObservableList<LessonView> selected;
+    private final ReadOnlyStringWrapper context = new ReadOnlyStringWrapper("All lessons");
 
     /**
      * Uses the query and people views supplied by the same canonical runtime adapter.
@@ -46,6 +50,13 @@ public final class LessonRetrieval {
     }
 
     /**
+     * Identifies the selected catalogue, stable student or normalized search filters independently of people filtering.
+     */
+    public ReadOnlyStringProperty contextProperty() {
+        return context.getReadOnlyProperty();
+    }
+
+    /**
      * Returns the full catalogue or one current-view student's lessons.
      * A supplied index is resolved once against the current people list, then converted to a stable ID.
      * The returned observable result is read-only and remains current after canonical publication.
@@ -53,9 +64,11 @@ public final class LessonRetrieval {
     public ObservableList<LessonView> list(Optional<Index> studentIndex) throws CommandException {
         requireNonNull(studentIndex);
         if (studentIndex.isEmpty()) {
+            context.set("All lessons");
             return select(queries.getLessonList());
         }
         var student = PersonIndexResolver.resolveStudent(studentIndex.get(), peopleView.getPeople());
+        context.set("Student " + student.getId() + " · current lessons");
         return select(queries.getStudentLessons(student.getId()));
     }
 
@@ -65,6 +78,9 @@ public final class LessonRetrieval {
      */
     public ObservableList<LessonView> search(SearchCriteria criteria) {
         queries.setLessonFilter(requireNonNull(criteria));
+        String filters = criteria.getFilters().entrySet().stream()
+                .map(entry -> entry.getKey().getPrefix() + entry.getValue()).collect(Collectors.joining(", "));
+        context.set(filters.isEmpty() ? "Lesson search: all lessons" : "Lesson search: " + filters);
         return select(queries.getFilteredLessonList());
     }
 

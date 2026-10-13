@@ -38,6 +38,54 @@ public class LessonTimeSlotTest {
         assertTrue(first.overlaps(same));
     }
 
+    // OpenAI Codex assisted Zhu Zhi Yu with these boundary regressions (#198).
+    @Test
+    public void overlaps_strictContainment_returnsTrueInBothDirections() {
+        LessonTimeSlot containing = slot(LessonDay.MONDAY, "0900", "1200");
+        LessonTimeSlot contained = slot(LessonDay.MONDAY, "1000", "1100");
+
+        assertTrue(containing.overlaps(contained));
+        assertTrue(contained.overlaps(containing));
+    }
+
+    @Test
+    public void overlaps_separatedSlots_returnsFalseInBothDirections() {
+        LessonTimeSlot earlier = slot(LessonDay.MONDAY, "0900", "1000");
+        LessonTimeSlot later = slot(LessonDay.MONDAY, "1100", "1200");
+
+        assertFalse(earlier.overlaps(later));
+        assertFalse(later.overlaps(earlier));
+    }
+
+    @Test
+    public void overlaps_oneMinuteAtMidnight_distinguishesSharedTimeFromAdjacency() {
+        LessonTimeSlot firstMinute = slot(LessonDay.MONDAY, "0000", "0001");
+        LessonTimeSlot nextMinute = slot(LessonDay.MONDAY, "0001", "0002");
+        LessonTimeSlot firstTwoMinutes = slot(LessonDay.MONDAY, "0000", "0002");
+
+        assertFalse(firstMinute.overlaps(nextMinute));
+        assertFalse(nextMinute.overlaps(firstMinute));
+        assertTrue(firstMinute.overlaps(firstTwoMinutes));
+        assertTrue(firstTwoMinutes.overlaps(firstMinute));
+    }
+
+    @Test
+    public void overlaps_oneMinuteAtDayEnd_distinguishesSharedTimeFromAdjacency() {
+        LessonTimeSlot earlierMinute = slot(LessonDay.SUNDAY, "2357", "2358");
+        LessonTimeSlot lastMinute = slot(LessonDay.SUNDAY, "2358", "2359");
+        LessonTimeSlot lastTwoMinutes = slot(LessonDay.SUNDAY, "2357", "2359");
+
+        assertFalse(earlierMinute.overlaps(lastMinute));
+        assertFalse(lastMinute.overlaps(earlierMinute));
+        assertTrue(lastMinute.overlaps(lastTwoMinutes));
+        assertTrue(lastTwoMinutes.overlaps(lastMinute));
+    }
+
+    @Test
+    public void constructor_dayEndCannotWrapToMidnight_rejectsOvernightSlot() {
+        assertThrows(IllegalArgumentException.class, () -> slot(LessonDay.SUNDAY, "2359", "0000"));
+    }
+
     @Test
     public void overlaps_adjacentSlots_returnsFalse() {
         LessonTimeSlot first = new LessonTimeSlot(LessonDay.MONDAY, NINE_AM, TEN_AM);
@@ -53,6 +101,7 @@ public class LessonTimeSlotTest {
         LessonTimeSlot tuesday = new LessonTimeSlot(LessonDay.TUESDAY, NINE_AM, TEN_AM);
 
         assertFalse(monday.overlaps(tuesday));
+        assertFalse(tuesday.overlaps(monday));
     }
 
     @Test
@@ -68,6 +117,8 @@ public class LessonTimeSlotTest {
         assertEquals(slot, slot);
         assertEquals(slot, new LessonTimeSlot(LessonDay.MONDAY, NINE_AM, TEN_AM));
         assertNotEquals(slot, new LessonTimeSlot(LessonDay.TUESDAY, NINE_AM, TEN_AM));
+        assertNotEquals(slot, slot(LessonDay.MONDAY, "0901", "1000"));
+        assertNotEquals(slot, slot(LessonDay.MONDAY, "0900", "1001"));
         assertNotEquals(slot, null);
         assertNotEquals(slot, "Mon 0900-1000");
     }

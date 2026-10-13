@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -28,6 +29,102 @@ import seedu.address.storage.ProtectedPonHubDataStorage;
 public class CanonicalLessonRetrievalIntegrationTest {
     @TempDir
     Path directory;
+
+    @Test
+    public void realMembership_selectedStudentSurvivesPeopleFilterChangesAndKeepsAttendance() throws Exception {
+        Path path = saveFixture();
+        CanonicalPeopleSession session = new CanonicalPeopleSession(path);
+        var people = session.getPeople();
+        var displayed = session.getDisplayedLessons();
+        session.execute("lessons si/4"); // Mixed position 4 resolves S2 once.
+        assertIds(session, "L10", "L11");
+        assertEquals("Student S2 · current lessons", session.lessonResultContextProperty().get());
+        session.execute("list r/tutor");
+        assertThrows(CommandException.class, () -> session.execute("enrol 1 lid/L4"));
+        assertIds(session, "L10", "L11");
+        session.execute("search c/student n/Jamie");
+        var visiblePeople = List.copyOf(people);
+        assertEquals("Student S2 enrolled in lesson L4.", session.execute("enrol 1 lid/L4").getFeedbackToUser());
+        assertIds(session, "L10", "L4", "L11");
+        session.execute("mark 1 lid/L4 d/2026-10-12 s/present");
+        assertIds(session, "L10", "L4", "L11");
+        session.execute("unenrol 1 lid/L4");
+        assertIds(session, "L10", "L11");
+        assertEquals(1, session.getDataSnapshot().attendance().size());
+        session.execute("search c/lesson sn/Jamie s/Math");
+        assertIds(session, "L10"); // Retained L4 attendance does not satisfy sn/.
+        session.execute("enrol 1 lid/L4");
+        assertIds(session, "L10", "L4");
+        session.execute("unenrol 1 lid/L4");
+        assertIds(session, "L10");
+        assertSame(displayed, session.getDisplayedLessons());
+        assertSame(people, session.getPeople());
+        assertEquals(visiblePeople, people);
+        assertEquals(11, session.getDataSnapshot().lastAllocatedLessonSequence());
+        CanonicalPeopleSession reloaded = new CanonicalPeopleSession(path);
+        assertEquals(session.getDataSnapshot(), reloaded.getDataSnapshot());
+        reloaded.execute("search c/lesson sn/Jamie s/Math");
+        assertIds(reloaded, "L10");
+        reloaded.execute("search c/student n/Jamie");
+        reloaded.execute("lessons si/1");
+        assertIds(reloaded, "L10", "L11");
+    }
+
+    @Test
+    public void realMembership_failedEnrolAndUnenrolPreserveBothResultModesThenRetryAndReload() throws Exception {
+        for (String route : List.of("lessons si/1", "search c/lesson sn/Jamie s/Math")) {
+            Path path = saveFixture();
+            AtomicBoolean rejectWrites = new AtomicBoolean(true);
+            CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+                if (rejectWrites.get()) {
+                    throw new IOException("Injected membership save failure");
+                }
+                new JsonPonHubDataStorage(path).saveData(state);
+            });
+            session.execute("search c/student n/Jamie");
+            session.execute(route);
+            var displayed = session.getDisplayedLessons();
+            var beforeResults = List.copyOf(displayed);
+            var beforePeople = List.copyOf(session.getPeople());
+            var before = session.getDataSnapshot();
+            String context = session.lessonResultContextProperty().get();
+            byte[] bytes = Files.readAllBytes(path);
+            assertThrows(CommandException.class, () -> session.execute("enrol 1 lid/L4"));
+            assertEquals(before, session.getDataSnapshot());
+            assertEquals(beforeResults, displayed);
+            assertEquals(context, session.lessonResultContextProperty().get());
+            assertEquals(beforePeople, session.getPeople());
+            assertArrayEquals(bytes, Files.readAllBytes(path));
+            rejectWrites.set(false);
+            session.execute("enrol 1 lid/L4");
+            assertTrue(displayed.stream().anyMatch(lesson -> lesson.getLessonId().toString().equals("L4")));
+            var enrolledResults = List.copyOf(displayed);
+            var enrolled = session.getDataSnapshot();
+            bytes = Files.readAllBytes(path);
+            CanonicalPeopleSession reloaded = new CanonicalPeopleSession(path);
+            reloaded.execute("search c/student n/Jamie");
+            reloaded.execute(route);
+            assertEquals(displayed.stream().map(LessonView::getLessonId).toList(),
+                    reloaded.getDisplayedLessons().stream().map(LessonView::getLessonId).toList());
+            rejectWrites.set(true);
+            assertThrows(CommandException.class, () -> session.execute("unenrol 1 lid/L4"));
+            assertEquals(enrolled, session.getDataSnapshot());
+            assertEquals(enrolledResults, displayed);
+            assertEquals(beforePeople, session.getPeople());
+            assertArrayEquals(bytes, Files.readAllBytes(path));
+            rejectWrites.set(false);
+            session.execute("unenrol 1 lid/L4");
+            assertFalse(displayed.stream().anyMatch(lesson -> lesson.getLessonId().toString().equals("L4")));
+            assertSame(displayed, session.getDisplayedLessons());
+            assertEquals(beforePeople, session.getPeople());
+            reloaded = new CanonicalPeopleSession(path);
+            reloaded.execute("search c/student n/Jamie");
+            reloaded.execute(route);
+            assertEquals(session.getDataSnapshot(), reloaded.getDataSnapshot());
+            assertEquals(displayed.stream().map(LessonView::getLessonId).toList(),
+                    reloaded.getDisplayedLessons().stream().map(LessonView::getLessonId).toList());
+        }
+    }
 
     @Test
     public void catalogueAndStudentSelection_resolveCurrentPeoplePositionAndNeverSave() throws Exception {

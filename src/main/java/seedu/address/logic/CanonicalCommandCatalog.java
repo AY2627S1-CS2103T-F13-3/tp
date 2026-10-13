@@ -54,10 +54,26 @@ public final class CanonicalCommandCatalog {
             + "DAY is Mon-Sun; times use four-digit 24-hour HHMM and start before end.\n"
             + "Tutor matching uses the normalized full name. Supply the exact phone to disambiguate.\n"
             + "Example: addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1";
+    public static final String MESSAGE_ENROL_USAGE = "Usage: enrol STUDENT_INDEX lid/LESSON_ID\n"
+            + "STUDENT_INDEX is the current people-list position of a Student. LESSON_ID is stable.\n"
+            + "Example: enrol 1 lid/L1";
+    public static final String MESSAGE_UNENROL_USAGE = "Usage: unenrol STUDENT_INDEX lid/LESSON_ID\n"
+            + "Removes current membership only; retained dated attendance is unchanged.\n"
+            + "Example: unenrol 1 lid/L1";
+    public static final String MESSAGE_MARK_USAGE =
+            "Usage: mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent\n"
+                    + "The date must be real and match the lesson weekday. New records require current enrolment;\n"
+                    + "existing history can be corrected after unenrolment.\n"
+                    + "Example: mark 1 lid/L1 d/2026-10-05 s/present";
 
     private static final Entry ADD = new Entry("add", "Add a student, tutor or parent", MESSAGE_ADD_USAGE);
     private static final Entry ADD_LESSON = new Entry("addlesson", "Create an empty-roster shared lesson",
             MESSAGE_ADD_LESSON_USAGE);
+    private static final Entry ENROL = new Entry("enrol", "Enrol a Student in a shared lesson", MESSAGE_ENROL_USAGE);
+    private static final Entry UNENROL = new Entry("unenrol", "Unenrol a Student from a shared lesson",
+            MESSAGE_UNENROL_USAGE);
+    private static final Entry MARK = new Entry("mark", "Record or correct dated lesson attendance",
+            MESSAGE_MARK_USAGE);
     private static final Entry LIST = new Entry("list", "Show all people or one role", PeopleListParser.MESSAGE_USAGE);
     private static final Entry LESSONS = new Entry("lessons", "Show shared lessons or one student's enrolments",
             MESSAGE_LESSONS_USAGE);
@@ -65,7 +81,8 @@ public final class CanonicalCommandCatalog {
             MESSAGE_SEARCH_USAGE);
     private static final Entry HELP = new Entry("help", "Show help or one command's guidance", MESSAGE_HELP_USAGE);
     private static final Entry EXIT = new Entry("exit", "Close PonHub", ExitCommand.MESSAGE_USAGE);
-    private static final List<Entry> ENTRIES = List.of(ADD, ADD_LESSON, LIST, LESSONS, SEARCH, HELP, EXIT);
+    private static final List<Entry> ENTRIES =
+            List.of(ADD, ADD_LESSON, ENROL, UNENROL, MARK, LIST, LESSONS, SEARCH, HELP, EXIT);
     private static final List<Entry> PROTECTED_ENTRIES = List.of(HELP, LIST, EXIT);
 
     private CanonicalCommandCatalog() {

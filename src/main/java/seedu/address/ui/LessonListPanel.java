@@ -3,6 +3,8 @@ package seedu.address.ui;
 import static java.util.Objects.requireNonNull;
 
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -20,13 +22,23 @@ public class LessonListPanel extends UiPart<Region> {
     @FXML
     private Label lessonSummary;
     @FXML
+    private Label lessonContext;
+    @FXML
     private ListView<LessonView> lessonListView;
 
     /**
      * Keeps the same observable result list through commands and committed refreshes.
      */
     public LessonListPanel(ObservableList<LessonView> lessons) {
+        this(lessons, new ReadOnlyStringWrapper("All lessons").getReadOnlyProperty());
+    }
+
+    /**
+     * Displays the selected student or search filters even after another command replaces command feedback.
+     */
+    public LessonListPanel(ObservableList<LessonView> lessons, ObservableValue<String> context) {
         super(FXML);
+        lessonContext.textProperty().bind(requireNonNull(context));
         lessonListView.setItems(requireNonNull(lessons));
         lessonSummary.textProperty().bind(Bindings.size(lessons).asString("Showing %d lesson(s)."));
         lessonListView.setCellFactory(list -> new LessonListCell());

@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -103,6 +104,70 @@ public class AtomicFileWriterTest {
         assertSame(primary, assertThrows(IOException.class, () -> writer.write(target, "replacement")));
         assertArrayEquals(new Throwable[]{cleanup}, primary.getSuppressed());
         assertEquals("original", Files.readString(target));
+    }
+
+    @Test
+    public void write_existingDirectory_rejectsWithoutChangingContents() throws IOException {
+        Path target = Files.createDirectory(directory.resolve("book.json"));
+        Path child = target.resolve("keep.txt");
+        Files.writeString(child, "你好 original");
+        byte[] original = Files.readAllBytes(child);
+
+        IOException error = assertThrows(IOException.class, () -> new AtomicFileWriter().write(target, "new"));
+
+        assertTrue(error.getMessage().contains("not a regular file"));
+        assertTrue(error.getMessage().contains(target.toRealPath().toString()));
+        assertTrue(Files.isDirectory(target));
+        assertArrayEquals(original, Files.readAllBytes(child));
+        assertOnlyTargetRemains(target);
+        assertOnlyTargetRemains(child);
+    }
+
+    @Test
+    public void write_uncheckedStagingFailure_preservesBytesAndRemovesTemporary() throws IOException {
+        Path target = existingTarget();
+        byte[] original = Files.readAllBytes(target);
+        RuntimeException primary = new IllegalStateException("Staging failed");
+        AtomicFileWriter writer = new AtomicFileWriter() {
+            @Override
+            void writeTemporary(Path temporary, String content) throws IOException {
+                Files.writeString(temporary, "partial staged data");
+                throw primary;
+            }
+        };
+
+        assertSame(primary, assertThrows(IllegalStateException.class, () -> writer.write(target, "replacement")));
+        assertArrayEquals(original, Files.readAllBytes(target));
+        assertOnlyTargetRemains(target);
+    }
+
+    @Test
+    public void write_uncheckedCleanupFailure_keepsPrimaryAndSuppressesCleanup() throws IOException {
+        Path target = existingTarget();
+        byte[] original = Files.readAllBytes(target);
+        RuntimeException primary = new IllegalStateException("Staging failed");
+        RuntimeException cleanup = new SecurityException("Cleanup denied");
+        AtomicFileWriter writer = new AtomicFileWriter() {
+            @Override
+            void writeTemporary(Path temporary, String content) throws IOException {
+                Files.writeString(temporary, "partial staged data");
+                throw primary;
+            }
+
+            @Override
+            void deleteTemporary(Path temporary) {
+                throw cleanup;
+            }
+        };
+
+        assertSame(primary, assertThrows(IllegalStateException.class, () -> writer.write(target, "replacement")));
+        assertArrayEquals(new Throwable[]{cleanup}, primary.getSuppressed());
+        assertArrayEquals(original, Files.readAllBytes(target));
+        try (var files = Files.list(directory)) {
+            List<Path> retained = files.filter(path -> !path.equals(target)).toList();
+            assertEquals(1, retained.size());
+            assertEquals("partial staged data", Files.readString(retained.getFirst()));
+        }
     }
 
     @Test
@@ -279,6 +344,130 @@ public class AtomicFileWriterTest {
         };
         writer.write(target, "new data");
         assertEquals("new data", Files.readString(target));
+    }
+
+    @Test
+    public void write_firstFallbackCleanupFails_reportsPartialDestination() throws IOException {
+        Path target = directory.resolve("new.json");
+        IOException primary = new IOException("Move failed");
+        AtomicFileWriter writer = new FallbackWriter() {
+            @Override
+            void moveNormally(Path temporary, Path destination) throws IOException {
+                // A nonempty partial directory makes deletion fail without depending on OS permissions.
+                Files.createDirectory(destination);
+                Files.writeString(destination.resolve("partial.txt"), "partial new data");
+                throw primary;
+            }
+        };
+
+        IOException error = assertThrows(IOException.class, () -> writer.write(target, "new data"));
+
+        assertSame(primary, error.getCause());
+        assertTrue(error.getMessage().contains(target.toRealPath().toString()));
+        assertTrue(error.getMessage().contains("Check for a partial file before restarting"));
+        assertEquals(1, error.getSuppressed().length);
+        assertTrue(error.getSuppressed()[0] instanceof DirectoryNotEmptyException);
+        assertEquals("partial new data", Files.readString(target.resolve("partial.txt")));
+        assertOnlyTargetRemains(target);
+    }
+
+    @Test
+    public void write_uncheckedBackupFailure_preservesBytesWithoutMoving() throws IOException {
+        Path target = existingTarget();
+        byte[] original = Files.readAllBytes(target);
+        RuntimeException primary = new SecurityException("Backup denied");
+        AtomicFileWriter writer = new FallbackWriter() {
+            @Override
+            void copyFile(Path source, Path destination) throws IOException {
+                Files.writeString(destination, "partial backup");
+                throw primary;
+            }
+
+            @Override
+            void moveNormally(Path temporary, Path destination) {
+                throw new AssertionError("Must not replace data without a complete backup");
+            }
+        };
+
+        assertSame(primary, assertThrows(SecurityException.class, () -> writer.write(target, "new data")));
+        assertArrayEquals(original, Files.readAllBytes(target));
+        assertOnlyTargetRemains(target);
+    }
+
+    @Test
+    public void write_uncheckedFallbackFailure_restoresOldBytes() throws IOException {
+        Path target = existingTarget();
+        byte[] original = Files.readAllBytes(target);
+        RuntimeException primary = new IllegalStateException("Move failed");
+        AtomicFileWriter writer = new FallbackWriter() {
+            @Override
+            void moveNormally(Path temporary, Path destination) throws IOException {
+                Files.writeString(destination, "partial new data");
+                throw primary;
+            }
+        };
+
+        assertSame(primary, assertThrows(IllegalStateException.class, () -> writer.write(target, "new data")));
+        assertArrayEquals(original, Files.readAllBytes(target));
+        assertOnlyTargetRemains(target);
+    }
+
+    @Test
+    public void write_uncheckedRecoveryFailure_retainsBackupAndReportsBothFailures() throws IOException {
+        Path target = existingTarget();
+        byte[] original = Files.readAllBytes(target);
+        RuntimeException primary = new IllegalStateException("Move failed");
+        RuntimeException recovery = new SecurityException("Restore denied");
+        AtomicFileWriter writer = new FallbackWriter() {
+            @Override
+            void moveNormally(Path temporary, Path destination) throws IOException {
+                Files.writeString(destination, "partial new data");
+                throw primary;
+            }
+
+            @Override
+            void copyFile(Path source, Path destination) throws IOException {
+                if (destination.equals(target.toRealPath())) {
+                    throw recovery;
+                }
+                super.copyFile(source, destination);
+            }
+        };
+
+        IOException error = assertThrows(IOException.class, () -> writer.write(target, "new data"));
+
+        assertSame(primary, error.getCause());
+        assertArrayEquals(new Throwable[]{recovery}, error.getSuppressed());
+        assertEquals("partial new data", Files.readString(target));
+        try (var files = Files.list(directory)) {
+            List<Path> retained = files.filter(path -> !path.equals(target)).toList();
+            assertEquals(1, retained.size());
+            Path backup = retained.getFirst();
+            assertArrayEquals(original, Files.readAllBytes(backup));
+            assertTrue(error.getMessage().contains(backup.toRealPath().toString()));
+            assertTrue(error.getMessage().contains("restore it before continuing or restarting"));
+        }
+    }
+
+    @Test
+    public void write_uncheckedBackupCleanupFailure_reportsCommittedSave() throws IOException {
+        Path target = existingTarget();
+        byte[] original = Files.readAllBytes(target);
+        AtomicFileWriter writer = new FallbackWriter() {
+            @Override
+            void deleteTemporary(Path path) {
+                throw new SecurityException("Cleanup denied");
+            }
+        };
+
+        writer.write(target, "new data");
+
+        assertEquals("new data", Files.readString(target));
+        try (var files = Files.list(directory)) {
+            List<Path> retained = files.filter(path -> !path.equals(target)).toList();
+            assertEquals(1, retained.size());
+            assertArrayEquals(original, Files.readAllBytes(retained.getFirst()));
+        }
     }
 
     private void createLink(Path link, Path target) throws IOException {

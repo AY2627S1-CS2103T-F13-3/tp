@@ -17,6 +17,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -53,6 +54,12 @@ public class LessonListPanelTest {
             assertLabel(new LessonCard(lessons.get(2)).getRoot(), "lessonRosterSize", "Students enrolled: 0");
             assertThrows(NullPointerException.class, () -> new LessonCard(null));
             assertThrows(NullPointerException.class, () -> new LessonListPanel(null));
+            assertThrows(NullPointerException.class, () -> new LessonListPanel(lessons, null));
+            SimpleStringProperty context = new SimpleStringProperty("Student S2 · current lessons");
+            Region panel = new LessonListPanel(lessons, context).getRoot();
+            assertLabel(panel, "lessonContext", context.get());
+            context.set("Lesson search: s/math");
+            assertLabel(panel, "lessonContext", "Lesson search: s/math");
         });
     }
 

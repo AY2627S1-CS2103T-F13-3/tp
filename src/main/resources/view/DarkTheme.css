@@ -120,7 +120,7 @@
     -fx-text-fill: white;
 }
 
-#summary, #lessonSummary, .list-view .placeholder .label {
+#summary, #lessonSummary, #lessonContext, .list-view .placeholder .label {
     -fx-text-fill: white;
 }
 

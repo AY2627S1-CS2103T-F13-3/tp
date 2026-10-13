@@ -77,6 +77,7 @@ public class CanonicalLogicManagerTest {
         List<PersonId> visibleIds = people.stream().map(person -> person.getId()).toList();
 
         assertSame(session.getDisplayedLessons(), logic.getDisplayedLessons());
+        assertSame(session.lessonResultContextProperty(), logic.lessonResultContextProperty());
         assertEquals(queries.getLessonList(), logic.getDisplayedLessons());
         assertSame(queries.getLessonList(), logic.getLessonList());
         assertSame(queries.getFilteredLessonList(), logic.getFilteredLessonList());
@@ -134,6 +135,7 @@ public class CanonicalLogicManagerTest {
         assertTrue(legacy.getFilteredPersonList().isEmpty());
         assertThrows(UnsupportedOperationException.class, legacy::getPersonRecords);
         assertThrows(UnsupportedOperationException.class, legacy::getDisplayedLessons);
+        assertThrows(UnsupportedOperationException.class, legacy::lessonResultContextProperty);
         assertFalse(Files.exists(directory.resolve("legacy.json")));
     }
 

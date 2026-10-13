@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -96,6 +97,49 @@ public class CanonicalCommandExecutorTest {
         assertSame(visible, view.getPeople());
         assertEquals(Optional.of(PersonRole.STUDENT), view.getRoleFilter());
         assertEquals(new PersonId("S7"), PersonIndexResolver.resolve(Index.fromOneBased(1), visible).getId());
+        assertEquals(0, events[0]);
+    }
+
+    @Test
+    public void execute_permissionDeniedSave_preservesStateAndReportsOriginalCause() throws Exception {
+        PonHubDataState before = fixture(true);
+        PonHubData live = new PonHubData(before);
+        PeopleView view = new PeopleView(live);
+        view.setRoleFilter(Optional.of(PersonRole.STUDENT));
+        var visible = view.getPeople();
+        int[] events = {0};
+        visible.addListener((ListChangeListener<PersonRecord>) change -> events[0]++);
+        AccessDeniedException denied = new AccessDeniedException("canonical.json");
+        int[] writes = {0};
+        CanonicalCommandExecutor executor = new CanonicalCommandExecutor(view, state -> {
+            writes[0]++;
+            assertEquals(before, live.exportState());
+            assertTrue(state.lessons().get(0).getEnrolledStudentIds().isEmpty());
+            assertEquals(AttendanceStatus.ABSENT, state.attendance().get(0).getStatus());
+            throw denied;
+        }, Optional::empty);
+
+        // Ernest used OpenAI Codex for this permission-denied transaction regression (#191).
+        CommandException failure = assertThrows(CommandException.class, () -> executor.execute((staged, stagedView) -> {
+            assertEquals(new PersonId("S7"), PersonIndexResolver.resolve(Index.fromOneBased(1),
+                    stagedView.getPeople()).getId());
+            var counters = new HashMap<>(before.people().getLastAllocatedSequences());
+            counters.put(PersonRole.STUDENT, Long.MAX_VALUE);
+            staged.resetData(new PonHubDataState(new PeopleRegistryState(before.people().getPeople(), counters),
+                    List.of(before.lessons().get(0).withEnrolledStudentIds(Set.of())),
+                    List.of(before.attendance().get(0).withStatus(AttendanceStatus.ABSENT)), Long.MAX_VALUE));
+            stagedView.setRoleFilter(Optional.empty());
+            return new CommandResult("Unsaved");
+        }));
+
+        assertEquals("Could not save data to file canonical.json due to insufficient permissions to write "
+                + "to the file or the folder.", failure.getMessage());
+        assertSame(denied, failure.getCause());
+        assertEquals(1, writes[0]);
+        assertEquals(before, live.exportState());
+        assertSame(visible, view.getPeople());
+        assertEquals(Optional.of(PersonRole.STUDENT), view.getRoleFilter());
+        assertEquals(List.of(before.people().getPeople().get(1)), visible);
         assertEquals(0, events[0]);
     }
 

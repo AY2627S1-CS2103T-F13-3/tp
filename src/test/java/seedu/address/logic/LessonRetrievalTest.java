@@ -132,6 +132,27 @@ public class LessonRetrievalTest {
     }
 
     @Test
+    public void context_identifiesSelectedStudentOrFiltersAndInvalidRequestsPreserveIt() throws Exception {
+        var context = retrieval.contextProperty();
+        assertEquals("All lessons", context.get());
+        retrieval.list(Optional.of(Index.fromOneBased(4)));
+        assertEquals("Student S2 · current lessons", context.get());
+        peopleView.setRoleFilter(Optional.of(PersonRole.TUTOR));
+        assertThrows(CommandException.class, () -> retrieval.list(Optional.of(Index.fromOneBased(1))));
+        assertEquals("Student S2 · current lessons", context.get());
+        retrieval.search(new SearchCriteriaParser().parse("c/lesson tu/MEI d/mon s/Math"));
+        assertEquals("Lesson search: d/mon, s/math, tu/mei", context.get());
+        assertThrows(IllegalArgumentException.class, () -> retrieval.search(
+                new SearchCriteria(SearchCategory.STUDENT, Map.of())));
+        assertEquals("Lesson search: d/mon, s/math, tu/mei", context.get());
+        retrieval.search(new SearchCriteriaParser().parse("c/lesson"));
+        assertEquals("Lesson search: all lessons", context.get());
+        retrieval.list(Optional.empty());
+        assertEquals("All lessons", context.get());
+        assertSame(context, retrieval.contextProperty());
+    }
+
+    @Test
     public void selectedResults_keepIdentityAndFollowOnlySelectedSourceAcrossSwitches() throws Exception {
         var displayed = retrieval.getDisplayedLessons();
         assertIds(displayed, "L2", "L10", "L3", "L4", "L11");

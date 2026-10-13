@@ -62,6 +62,39 @@ public class CanonicalMainWindowTest {
     Path directory;
 
     @Test
+    public void realMembership_refreshesLessonCardsAndPreservesSelectedPeopleAndContext() throws Exception {
+        new JsonPonHubDataStorage(directory.resolve("canonical.json"))
+                .saveData(LessonQueryTestData.createData().exportState());
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("search c/student n/Jamie");
+                fixture.people().getSelectionModel().select(0);
+                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.enter("lessons si/1");
+                var displayed = fixture.lessons().getItems();
+                fixture.enter("list r/tutor");
+                assertEquals("Student S2 · current lessons", ((Label) fixture.root()
+                        .lookup("#lessonContext")).getText());
+                fixture.enter("search c/student n/Jamie");
+                fixture.people().getSelectionModel().select(0);
+                fixture.enter("enrol 1 lid/L4");
+                assertEquals(List.of("L10", "L4", "L11"), lessonIds(fixture));
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                fixture.enter("search c/lesson sn/Jamie s/Math");
+                assertEquals(List.of("L10", "L4"), lessonIds(fixture));
+                fixture.enter("unenrol 1 lid/L4");
+                assertEquals(List.of("L10"), lessonIds(fixture));
+                assertSame(displayed, fixture.lessons().getItems());
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertEquals("Lesson search: sn/jamie, s/math", ((Label) fixture.root()
+                        .lookup("#lessonContext")).getText());
+                assertCard(fixture, "Student · S2", "1. Jamie Tan");
+            }
+            return null;
+        });
+    }
+
+    @Test
     public void lessonCommands_renderSeparateCardsAndPreservePeopleSelectionAndIndices() throws Exception {
         Path path = directory.resolve("canonical.json");
         new JsonPonHubDataStorage(path).saveData(LessonQueryTestData.createData().exportState());

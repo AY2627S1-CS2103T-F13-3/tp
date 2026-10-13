@@ -5,6 +5,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <VBox minWidth="0" minHeight="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+  <Label fx:id="lessonContext" styleClass="cell_small_label" wrapText="true" minWidth="0" maxWidth="Infinity" />
   <Label fx:id="lessonSummary" styleClass="cell_small_label" wrapText="true" />
   <ListView fx:id="lessonListView" minWidth="0" minHeight="0" VBox.vgrow="ALWAYS" />
 </VBox>
