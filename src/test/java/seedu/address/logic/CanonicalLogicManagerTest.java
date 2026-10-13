@@ -47,6 +47,7 @@ public class CanonicalLogicManagerTest {
         var people = logic.getPersonRecords();
 
         assertSame(session.getPeople(), people);
+        assertSame(session.personSearchContextProperty(), logic.personSearchContextProperty());
         assertEquals(CanonicalCommandCatalog.getOverview(Optional.empty()), logic.execute("help").getFeedbackToUser());
         assertEquals("Showing 0 parent(s).", logic.execute("list r/parent").getFeedbackToUser());
         assertFalse(Files.exists(path));
@@ -134,6 +135,7 @@ public class CanonicalLogicManagerTest {
 
         assertTrue(legacy.getFilteredPersonList().isEmpty());
         assertThrows(UnsupportedOperationException.class, legacy::getPersonRecords);
+        assertThrows(UnsupportedOperationException.class, legacy::personSearchContextProperty);
         assertThrows(UnsupportedOperationException.class, legacy::getDisplayedLessons);
         assertThrows(UnsupportedOperationException.class, legacy::lessonResultContextProperty);
         assertFalse(Files.exists(directory.resolve("legacy.json")));

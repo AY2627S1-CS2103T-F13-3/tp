@@ -2,9 +2,12 @@ package seedu.address.logic;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
@@ -20,6 +23,7 @@ import seedu.address.model.person.PersonRecord;
 import seedu.address.model.query.AttendanceHistoryEntry;
 import seedu.address.model.query.LessonView;
 import seedu.address.model.query.StudentView;
+import seedu.address.model.search.PersonSearchMatch;
 
 /**
  * Application logic over one canonical session and separately persisted GUI preferences.
@@ -59,6 +63,11 @@ public final class CanonicalLogicManager implements Logic {
     @Override
     public ObservableList<Person> getFilteredPersonList() {
         throw new UnsupportedOperationException("Use the canonical people view through getPersonRecords()");
+    }
+
+    @Override
+    public ReadOnlyObjectProperty<Map<PersonId, List<PersonSearchMatch>>> personSearchContextProperty() {
+        return session.personSearchContextProperty();
     }
 
     @Override

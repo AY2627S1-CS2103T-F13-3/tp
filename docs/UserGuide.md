@@ -177,11 +177,11 @@ An empty result is valid. PonHub reports a count of zero and the people panel sh
 
 --------------------------------------------------------------------------------------------------------------------
 
-### Searching people by their own fields: `search`
+### Searching people: `search`
 
 **Formats:**
 
-* `search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS]`
+* `search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]`
 * `search c/tutor|parent [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]`
 
 Category values ignore case. Supply each lowercase prefix once with a nonblank value. All supplied filters must
@@ -198,10 +198,20 @@ Search reads the complete people catalogue, replacing the previous role/search f
 clears search criteria. Use the new displayed positions for subsequent person commands. Search/help do not save
 operational data; failed commands preserve the previous view. A successful person addition resets to all roles.
 
-Relationship filters (`sn/d/st/et/s/tu/rm`) on people remain unavailable and receive explicit feedback.
-These seven fields are available for `c/lesson`. Category-incompatible fields, unknown/repeated/blank prefixes
+Student lesson filters (`d/st/et/s/tu/rm`) are active. Parent and Tutor relationship filters remain unavailable
+and receive explicit feedback. All seven lesson fields remain available for `c/lesson`. Category-incompatible fields, unknown/repeated/blank prefixes
 and invalid values fail validation.
-The complete [planned search matrix](#6-searching-people-and-shared-lessons) remains the integration target.
+The [search matrix](#6-searching-people-and-shared-lessons) describes the complete target.
+
+For example, `search c/student n/Alex d/Mon s/Math tu/mei` requires Alex's own name and **one currently enrolled
+Monday Math lesson** taught by a matching tutor. Math on Tuesday and Science on Monday cannot combine into a match.
+`tu/` matches the tutor's name, and `st/`/`et/` each match exact HHMM times. All supplied lesson conditions must hold
+on that same lesson. A former member's attendance does not imply current enrolment.
+
+Each student appears once by stable ID, with matching lesson IDs, subjects, schedules, tutors and rooms beneath
+their own details. Several matching lessons add context lines, never duplicate student cards. Enrolment changes
+refresh both matches and context; failed saves preserve them. Own-field-only searches still include students with
+no lessons and show no relationship context. `list` clears both the criteria and its matching context.
 
 ### Listing and searching shared lessons
 
@@ -404,7 +414,7 @@ failure leave the aggregate, saved file and active views unchanged.
 
 Use `student`, `parent`, `tutor` or `lesson`; category values are case-insensitive. A category-only search imposes no filters. For example, `search c/lesson` shows each shared lesson once, including empty rosters.
 
-The full target filter matrix is below. Own-contact people search and **all seven Lesson-column fields are active**. Relationship filters on Student, Parent and Tutor results remain planned and receive explicit unavailable feedback. Check `help search` for the active formats.
+The full target filter matrix is below. Own-contact people search and **all seven Lesson-column fields are active**. Student lesson filters are active; relationship filters on Parent and Tutor results remain planned and receive explicit unavailable feedback. Check `help search` for the active formats.
 
 | Prefix | Field | Student | Parent | Tutor | Lesson |
 | --- | --- | --- | --- | --- | --- |
