@@ -47,6 +47,11 @@ public final class CanonicalCommandCatalog {
     public static final String MESSAGE_UNENROL_USAGE = "Usage: unenrol STUDENT_INDEX lid/LESSON_ID\n"
             + "Removes current membership only; retained dated attendance is unchanged.\n"
             + "Example: unenrol 1 lid/L1";
+    public static final String MESSAGE_MARK_USAGE =
+            "Usage: mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent\n"
+                    + "The date must be real and match the lesson weekday. New records require current enrolment;\n"
+                    + "existing history can be corrected after unenrolment.\n"
+                    + "Example: mark 1 lid/L1 d/2026-10-05 s/present";
 
     private static final Entry ADD = new Entry("add", "Add a student, tutor or parent", MESSAGE_ADD_USAGE);
     private static final Entry ADD_LESSON = new Entry("addlesson", "Create an empty-roster shared lesson",
@@ -54,12 +59,15 @@ public final class CanonicalCommandCatalog {
     private static final Entry ENROL = new Entry("enrol", "Enrol a Student in a shared lesson", MESSAGE_ENROL_USAGE);
     private static final Entry UNENROL = new Entry("unenrol", "Unenrol a Student from a shared lesson",
             MESSAGE_UNENROL_USAGE);
+    private static final Entry MARK = new Entry("mark", "Record or correct dated lesson attendance",
+            MESSAGE_MARK_USAGE);
     private static final Entry LIST = new Entry("list", "Show all people or one role", PeopleListParser.MESSAGE_USAGE);
     private static final Entry SEARCH = new Entry("search", "Find people by their own contact fields",
             MESSAGE_SEARCH_USAGE);
     private static final Entry HELP = new Entry("help", "Show help or one command's guidance", MESSAGE_HELP_USAGE);
     private static final Entry EXIT = new Entry("exit", "Close PonHub", ExitCommand.MESSAGE_USAGE);
-    private static final List<Entry> ENTRIES = List.of(ADD, ADD_LESSON, ENROL, UNENROL, LIST, SEARCH, HELP, EXIT);
+    private static final List<Entry> ENTRIES =
+            List.of(ADD, ADD_LESSON, ENROL, UNENROL, MARK, LIST, SEARCH, HELP, EXIT);
     private static final List<Entry> PROTECTED_ENTRIES = List.of(HELP, LIST, EXIT);
 
     private CanonicalCommandCatalog() {
