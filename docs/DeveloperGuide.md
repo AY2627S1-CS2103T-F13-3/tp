@@ -39,7 +39,8 @@ title: Developer Guide
   reconciliation and guide updates. He also used Codex for #88's active shared-lesson enrolment and
   unenrolment commands, aggregate mutations, persistence/query regressions and guide updates; and #89's
   active attendance-marking parser and command, correction rules, transaction regressions and guide updates;
-  and #92's active attendance-removal parser and command, no-op/rollback regressions and guide updates.
+  #92's active attendance-removal parser and command, no-op/rollback regressions and guide updates; and #98's
+  guarded shared-lesson deletion parser, aggregate mutation, transaction/view regressions and guide updates.
 * Ben (`ben58882`) used OpenAI Codex for #80's indexed lesson/roster projections, committed-state
   refresh, Logic delegation, search/transaction regression tests and guide updates. For #90, Ben used Codex
   to connect indexed queries to active lesson commands and cards, add validation/persistence/refresh/UI tests,
@@ -66,14 +67,15 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 ### Current increment and command integration
 
 `MainApp` connects one canonical session/root to Logic, cards and protected storage. Normal sessions
-support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, guarded `delete`, `list`,
-`lessons`, own-contact people search, all seven lesson-search fields, `help` and `exit`; protected sessions allow
+support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, guarded `delete` and
+`deletelesson`, `list`, `lessons`, own-contact people search, all seven lesson-search fields, `help` and `exit`;
+protected sessions allow
 only help/list/exit. Attendance history and relationship search on people remain planned.
 Inherited edit/clear/find routes are unavailable, and their command/parser implementations and edit-descriptor
 test helpers have been removed. Canonical boundary tests verify rejected commands preserve the saved aggregate,
 filtered people view and preferences; help and exit remain usable. Other isolated legacy regression seams remain
-pending the remaining cleanup under #97. Stored attendance can be created/corrected with `mark` and removed with `unmark`;
-`history` remains unavailable.
+pending the remaining cleanup under #97. Stored attendance can be created/corrected with `mark` and removed with
+`unmark`; `history` remains unavailable.
 
 `CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
 routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
@@ -110,7 +112,8 @@ At startup, `WindowPlacement` fits saved window dimensions and coordinates to th
 The main window has a 450-by-360 logical minimum where the work area allows it. The result area and both
 people and lesson lists retain visible scrolling viewports. Canonical cards fit their list cells and wrap
 required and optional values. A resizable split pane keeps people and lesson results independent.
-`addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `lessons` and lesson search are active through the command box.
+`addlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `lessons` and lesson search are active
+through the command box.
 Detailed rosters remain planned; inherited contact/tag cards are isolated compatibility checks.
 
 ### Shared-lesson target contract
@@ -227,7 +230,8 @@ the people list. Roster details and history remain planned; see the [shared sele
 
 `CanonicalLogicManager` delegates to the single `CanonicalPeopleSession`. The session's `execute()`
 dispatches commands through its switch, using `CanonicalCommandCatalog` for available command words
-and guidance. It parses add/addlesson/enrol/unenrol/list/search input and invokes `CanonicalCommandExecutor`, which
+and guidance. It parses add/addlesson/deletelesson/enrol/unenrol/list/search input and invokes
+`CanonicalCommandExecutor`, which
 saves a changed candidate before publishing its root and view and returning `CommandResult`.
 Parse, domain or save failure preserves
 live records, allocation counters, filter and selection. Read-only commands/no-ops skip operational
@@ -279,14 +283,30 @@ the Lesson fields of the [search matrix](#supported-criteria).
 
 ### Model component
 
-**Legacy API:** [`Model`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/Model.java).
+**Person records and composition:**
 
-<img src="images/ModelClassDiagram.png" width="450" />
+![Person record class diagram](images/PersonRecordClassDiagram.png)
 
-The inherited diagram records `AddressBook`, `UniquePersonList` and `ModelManager`, retained for
-regression tests. Active `PonHubData` instead owns immutable canonical records and relationships;
-`PeopleView` derives one observable role-filtered projection from that root. UI observes committed
-projections rather than maintaining writable copies. Preferences remain outside operational snapshots.
+**Shared Lesson ownership and membership:**
+
+![Lesson membership class diagram](images/LessonMembershipClassDiagram.png)
+
+**Dated Attendance, separate from current membership:**
+
+![Attendance class diagram](images/AttendanceClassDiagram.png)
+
+The canonical model has one `PonHubDataState` aggregate. It owns one people-registry snapshot, an independent
+catalogue of shared `Lesson` records, and separate dated `Attendance` records. Each `PersonRecord` is exactly one
+`Student`, `Tutor`, or `Parent` and composes one stable `PersonId` and one `ContactDetails` value. Each Lesson has
+exactly one Tutor and owns zero or more stable Student IDs; this produces the Student-Lesson many-to-many
+membership without copying lesson data into Student records. Each Attendance record refers to exactly one Student
+and one Lesson through its dated `AttendanceKey`. Attendance is retained history, not current membership.
+
+The inherited [`Model`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/Model.java)
+API and its historical diagram retain `AddressBook`, `UniquePersonList`, and `ModelManager` for regression tests.
+Active `PonHubData` instead owns the immutable canonical records and relationships shown above. `PeopleView`
+derives one observable role-filtered projection from that root. UI observes committed projections rather than
+maintaining writable copies. Preferences remain outside operational snapshots.
 
 The aggregate below implements the [shared ownership and identity contract](#shared-lesson-target-contract).
 Complete independent transaction snapshots preserve records, relationships and allocation state.
@@ -310,7 +330,7 @@ Feature owners must preserve committed allocation history when preparing normal 
 reinstate earlier counters for rollback. Lesson allocation and global tutor/room/student scheduling are supplied by
 the #78 API below. Enrolment is activated by #88, and attendance creation/correction is activated by #89;
 guarded person deletion is activated by #91, and attendance removal is activated by #92. Attendance history
-remains separate work.
+remains separate work; guarded shared-lesson deletion is activated by #98.
 
 This aggregate leaves `ModelManager`, commands and JSON storage unchanged. Vincent owns snapshot/storage
 contracts; Zhu/Yang will prepare validated changes through one future Model adapter, and Ben can consume
@@ -343,7 +363,8 @@ The aggregate exposes immutable relationship snapshots for retrieval and deletio
 | `getStudentLessons(PersonId)` | Current lessons derived from roster IDs in catalogue creation order. |
 | `getAttendanceForStudent(PersonId)` / `getAttendanceForLesson(LessonId)` | Retained attendance references in aggregate storage order; neither depends on current enrolment. |
 | `isPersonReferenced(PersonRecord)` | Predicate for Zhu's guarded people deletion: Student roster/attendance and Tutor lesson references block removal; Parent links remain derived. |
-| `isLessonReferenced(LessonId)` | Guard for Yang's lesson deletion: a non-empty roster or retained Attendance blocks removal. |
+| `isLessonReferenced(LessonId)` | Reports whether a non-empty roster or retained Attendance blocks Lesson removal. |
+| `removeLesson(LessonId)` | Removes only an unreferenced Lesson while retaining catalogue order, surviving relationships and the allocation counter. |
 
 `PonHubData` owns normal lesson allocation and atomic state installation. `PonHubDataState` owns whole-root
 identity, reference and scheduling validation. `Lesson` remains the immutable record and sole owner of roster
@@ -761,8 +782,8 @@ membership commands provide duplicate/non-member feedback. Lessons load through 
 `CanonicalPeopleSession` accepts zero or one help topic, normalizes with `Locale.ROOT`, rejects unknown
 topics/excess arguments and restricts guidance to the protected-session routes after rejected loading.
 Help preserves records and the people view without operational saves; preferences have a separate
-lifecycle. Protected sessions omit `add`, `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `lessons`
-and `search`;
+lifecycle. Protected sessions omit `add`, `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`,
+`deletelesson`, `lessons` and `search`;
 normal sessions expose help
 for every active route.
 Legacy `CommandCatalog`/`HelpCommandParser` remain regression seams.
@@ -887,7 +908,7 @@ Tutor/Parent at that position without searching another list; range/role failure
 The [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85) cutover activates these commands through
 one session and people panel. The inherited delete route remains retired; #91 activates guarded canonical deletion.
 Canonical storage supports lessons, rosters and retained attendance. `addlesson`, `enrol`, `unenrol`, `mark`,
-`unmark`, guarded `delete`, `lessons` and all lesson-search fields are active; `history` remains gated.
+`unmark`, guarded `delete`/`deletelesson`, `lessons` and all lesson-search fields are active; `history` remains gated.
 
 <a id="prepared-canonical-people-session"></a>
 
@@ -900,11 +921,12 @@ the session does not expose writable operational data. Execute on the single mod
 application thread once controls are attached.
 
 The session's `execute()` dispatches active `add`, `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`,
-`list`, `lessons`, `search`, `help` and
+`deletelesson`, `list`, `lessons`, `search`, `help` and
 `exit` commands through its switch. `CanonicalCommandCatalog` defines the permitted command words and guidance,
 independently
 of the retained legacy `CommandCatalog`. The session parses role-aware additions, shared-lesson creation and
-membership changes, attendance marks/removals, listings and own-contact searches before staged execution. Changed data is saved through the
+membership changes, guarded Lesson deletion, attendance marks/removals, listings and own-contact searches before
+staged execution. Changed data is saved through the
 protected writer before publication, stable-ID success feedback or person-view changes. Parse, domain and save
 failures leave
 the original data, allocation counters and complete visible filter/list unchanged.
@@ -1092,8 +1114,8 @@ Canonical people activation and the remaining shared-lesson integration are trac
 [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85), and their dependent command, storage and retrieval
 issues. The requirements below describe the intended product; role-aware add/list, empty-roster shared-lesson
 creation, enrolment/unenrolment, dated attendance marking, guarded person deletion, own-contact people search,
-lesson listing, lesson search and dated attendance removal are active. Attendance history and relationship search
-on people remain planned.
+guarded Lesson deletion, lesson listing, lesson search and dated attendance removal are active. Attendance history
+and relationship search on people remain planned.
 
 ### User stories
 
@@ -1351,37 +1373,39 @@ views; remaining attendance references still block student and lesson deletion.
 ### Non-Functional Requirements
 
 1.  Should work on Windows, Linux and macOS using Java `25`. On macOS, use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`), as described in [Setting up and getting started](SettingUp.html#setting-up-the-project-on-your-computer).
-2.  Should be able to hold up to 1,000 persons, 1,000 recurring lessons, and 10,000 attendance records without noticeable sluggishness during typical usage.
-3.  Team performance target: common operations should update the GUI within 2 seconds on a reference machine recorded with its hardware, OS, Java version and test dataset. The reference machine and measured results are still to be documented; this guide does not claim the target has been verified.
-3.  A user with above average typing speed for regular English text (i.e. not code or system administration commands) should be able to accomplish most recurring tasks faster using commands than using the mouse.
-4.  The product should be for a single user and use one local data store, without requiring user accounts, concurrent access, or live synchronisation.
-5.  The product should be packaged into a single executable `.jar` file and should not require an installer.
-6.  The product file size should remain below 100 MB to ensure efficient storage and distribution.
-7.  The GUI should display correctly and without layout issues on screen resolutions of 1920×1080 and higher at 100% and 125% scale.
-8.  The GUI should remain usable (i.e. all functions remain accessible even if the layout is suboptimal) at screen resolutions of 1280×720 and higher at 150% scale.
-9.  All operational data must be stored locally in a human-readable text file without using a database management system.
-10. All successful data changes must be saved automatically and reliably. Failed validation or saving must leave both the in-memory data and stored data file unchanged.
-11. All person, lesson, and attendance data must remain on the user's computer and must never be transmitted over the internet.
-12. The application should function offline without requiring an internet connection or a team-owned remote server.
-13. Invalid inputs must not crash the application or modify existing data. The application should display a specific error message explaining how the user can correct the input.
-14. The application should be implemented primarily using object-oriented programming, with clear separation between the UI, Logic, Model, and Storage components.
-15. Team testing target: the JUnit-based automated test suite should achieve at least 70% line coverage, and all automated tests should pass before a release. The percentage is the team's own goal, not a course-mandated minimum; coverage does not replace behavior-focused regression and integration checks.
+2.  Should be able to hold at least 1,000 persons, 1,000 recurring lessons, and 10,000 attendance records in one local data file.
+3.  Team performance target: with the data volume in NFR 2, common command-to-GUI-update operations should complete within 2 seconds on the reference machine. Verification must record the CPU, memory, OS, Java distribution and version, dataset generator, command mix, timing method, and observed results in [#101](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101). As #101 has not yet recorded these facts, this guide states a target rather than an achieved result.
+4.  A user with above average typing speed for regular English text (i.e. not code or system administration commands) should be able to accomplish most recurring tasks faster using commands than using the mouse.
+5.  The product should be for a single user and use one local data store, without requiring user accounts, concurrent access, or live synchronisation.
+6.  The product should be packaged into a single executable `.jar` file and should not require an installer.
+7.  The product file size should remain below 100 MB to ensure efficient storage and distribution.
+8.  The GUI should display correctly and without layout issues on screen resolutions of 1920×1080 and higher at 100% and 125% scale.
+9.  The GUI should remain usable (i.e. all functions remain accessible even if the layout is suboptimal) at screen resolutions of 1280×720 and higher at 150% scale.
+10. All operational data must be stored locally in a human-readable text file without using a database management system.
+11. All successful data changes must be saved automatically and reliably. Failed validation or saving must leave both the in-memory data and stored data file unchanged.
+12. All person, lesson, and attendance data must remain on the user's computer and must never be transmitted over the internet.
+13. The application should function offline without requiring an internet connection or a team-owned remote server.
+14. Invalid inputs must not crash the application or modify existing data. The application should display a specific error message explaining how the user can correct the input.
+15. The application should be implemented primarily using object-oriented programming, with clear separation between the UI, Logic, Model, and Storage components.
+16. Team testing target: the JUnit-based automated test suite should achieve at least 70% line coverage, and all automated tests should pass before a release. The percentage is the team's own goal, not a course-mandated minimum; coverage does not replace behavior-focused regression and integration checks.
 
 ### Glossary
 
 * **Mainstream OS**: Windows, Linux, Unix, or macOS
 * **AddressBook-Level3 (AB3)**: The upstream SE-EDU desktop application that is incrementally evolved into PonHub
-* **Person record**: A stored record representing one student, tutor, or parent and containing the fields required for that role
+* **Person record**: A stored Student, Tutor, or Parent record composed of one stable Person ID and one Contact Details value, plus fields required for that role
+* **Contact details**: One required name with optional phone, email, and address values composed into a Person record
 * **Role**: The `student`, `tutor`, or `parent` category assigned to a person record, which determines its required fields and applicable operations
-* **Shared recurring lesson**: An independent weekly teaching slot with a stable Lesson ID, day, start/end time, subject, tutor and room; its roster may contain zero or more Student IDs
+* **Lesson catalogue**: The ordered collection of independent shared Lesson records owned by the canonical data aggregate
+* **Shared recurring lesson**: An independent weekly teaching slot with a stable Lesson ID, day, start/end time, subject, one Tutor ID, and room; its roster may contain zero or more Student IDs, and each Student may belong to zero or more Lessons
 * **Lesson occurrence**: One dated instance of a recurring lesson
-* **Attendance record**: A stored record containing the attendance status of one student for one lesson occurrence
+* **Attendance record**: A dated history record containing the attendance status of one Student for one Lesson occurrence, stored separately from current enrolment
 * **Attendance status**: The recorded state of a student for a lesson occurrence, such as `present` or `absent`
-* **Attendance key**: The combination of student, lesson, and date that uniquely identifies one attendance record
+* **Attendance key**: The combination of one stable Student ID, one stable Lesson ID, and one date that uniquely identifies an Attendance record
 * **Exact duplicate person**: A person record with the same role, normalised name, and identifying contact number as an existing record
 * **Displayed person index**: The positive one-based position in the current filtered people list used to select a person in a command; it is distinct from a stable ID and may change when that people view is filtered or reordered. Lesson, roster and history row positions do not supply person command indices
 * **Stable person ID**: The role-prefixed identity stored for a person and used in internal lookup, queries, relationships and persistence; commands resolve a displayed person index once to this identity
-* **Stable lesson ID**: The `L`-prefixed identity of a shared Lesson, persisted and used in attendance references; existing lessons are selected in commands with `lid/LESSON_ID`, never a per-student lesson index
+* **Stable lesson ID**: The `L`-prefixed identity of a shared Lesson, persisted and used in attendance references; existing lessons are selected in commands with `lid/LESSON_ID` using that single canonical identity
 * **Tutor lookup**: Lesson creation resolves a normalized full tutor name and optional exact phone to one Tutor ID; search uses partial tutor-name text instead
 * **Prefix**: A short marker in a command that identifies the type of information represented by the following value
 * **Parser**: The Logic component that converts raw command text into validated parameters and a command object
@@ -1392,15 +1416,15 @@ views; remaining attendance references still block student and lesson deletion.
 * **Human-readable data file**: The local text file used to store PonHub data in a form that can be inspected and edited without a database management system
 * **Tutor clash**: An overlap between lessons assigned to the same tutor on the same day and during an overlapping time range
 * **Room clash**: An overlap between lessons assigned to the same room on the same day and during an overlapping time range
-* **Class**: A tuition-centre term for a shared recurring lesson; core membership uses the Lesson-owned roster, with capacity and one-off reservations deferred
+* **Class**: A tuition-centre term for a shared recurring lesson; core membership uses the Lesson-owned roster, while capacity and one-off reservations are deferred proposals rather than core model fields
 * **Enrolment**: A Student's current membership in a shared Lesson; removing membership retains dated attendance
 * **Roster**: The current enrolled Student IDs owned by one shared Lesson, from which displayed student records are derived
 * **History**: Retained dated attendance keyed by Student ID, Lesson ID and date, independent of current membership
-* **Capacity (future)**: A later limit on the number of students in a class
-* **Make-up booking (future)**: A one-off reservation in a suitable class for a student who missed a regular lesson, without changing regular membership
-* **Waiting list (future)**: An ordered queue of students requesting a place in a class that has reached a later capacity limit
-* **Class-swap request (future)**: A pending request to move a student when a transfer cannot be completed immediately
-* **Archived student (future)**: A withdrawn student retained for historical reference but hidden from the default active-student list
+* **Capacity (proposal)**: A proposed limit on the number of students in a class; it is not a field in the core model
+* **Make-up booking (proposal)**: A proposed one-off reservation in a suitable class for a student who missed a regular lesson, without changing regular membership
+* **Waiting list (proposal)**: A proposed ordered queue of students requesting a place in a class that has reached a capacity limit
+* **Class-swap request (proposal)**: A proposed pending request to move a student when a transfer cannot be completed immediately
+* **Archived student (proposal)**: A proposed withdrawn-student state retained for historical reference but hidden from the default active-student list
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -1413,14 +1437,15 @@ Use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-projec
 Use the active catalogue in the tested build; these examples apply to canonical startup.
 
 1. In a fresh JAR folder, run `help`, then `help add`, `help addlesson`, `help enrol`, `help unenrol`, `help mark`,
-   `help unmark`, `help delete`, `help list`, `help lessons`, `help search`, `help help` and `help exit`. Each topic matches its
+   `help unmark`, `help delete`, `help deletelesson`, `help list`, `help lessons`, `help search`, `help help` and
+   `help exit`. Each topic matches its
    parser and supplies a runnable example; `help exit` keeps
    the app open. Repeat topic/example checks when another route is registered.
 2. Add a person using a runnable `help add` example, then select its card, type an unfinished command
    and choose Help from the menu. Repeat F1 from command
    and result focus. Expect identical inline guidance, retained draft/selection and no separate window.
-3. `help ADD`, `help ADDLESSON`, `help ENROL`, `help UNENROL`, `help MARK`, `help UNMARK` and `help DELETE` match
-   their lowercase topics. `help remove` and
+3. `help ADD`, `help ADDLESSON`, `help ENROL`, `help UNENROL`, `help MARK`, `help UNMARK`, `help DELETE` and
+   `help DELETELESSON` match their lowercase topics. `help remove` and
    `help clear` explain the unknown topic and direct users to `help`. `help add delete` reports
    invalid format and help usage.
 4. At minimum width, run `help add` and scroll to the final example/back to the top. Text wraps
@@ -1428,8 +1453,8 @@ Use the active catalogue in the tested build; these examples apply to canonical 
    [people-card/whole-window checks](#planned-people-card-display-checks).
 5. `edit 1 n/Alex`, `clear` and `find Alex` identify the unknown command and suggest `help` without changing data.
    For example, the first input reports `Unknown command: 'edit'. Type 'help' to see available commands.`
-   `list extra`, an invalid `addlesson`, an invalid `mark`, an invalid `unmark`, `delete S1`, `lessons sid/S1` and
-   `exit extra` show
+   `list extra`, an invalid `addlesson`, an invalid `mark`, an invalid `unmark`, `delete S1`,
+   `deletelesson 1`, `lessons sid/S1` and `exit extra` show
    validation or usage messages without
    committing data, changing the list or exiting.
 6. Compare operational bytes before/after help: unchanged, or still missing in a fresh folder.
@@ -1697,7 +1722,33 @@ For manual checks, use an isolated supported dataset:
    query results. Restore writing and retry: commit only once, then restart and compare the complete saved state.
 
 Use the active `unmark` route to remove the retained Attendance dependency before retrying Student deletion.
-Lesson deletion remains a separate planned route.
+Use the active `deletelesson` route to remove the empty Lesson before retrying Tutor deletion.
+
+### Active guarded shared-lesson deletion (#98)
+
+`DeleteLessonParser` accepts exactly one stable `lid/LESSON_ID`; catalogue, search and per-Student lesson positions
+are never selectors. `CanonicalDeleteLessonCommand` stages `PonHubData.removeLesson`, which reports a non-empty
+roster before retained attendance and never cascades into either collection. Removing an eligible Lesson preserves
+`lastAllocatedLessonSequence`, so the next creation receives a higher ID. The normal snapshot transaction saves
+before publishing query refreshes; failed saving keeps the schedule, allocation counter, file and all held views
+unchanged.
+
+`CanonicalDeleteLessonIntegrationTest` covers roster and former-member attendance guards, explicit clearing through
+the active `unenrol`/`unmark` routes, stable-ID parsing, view refresh, released tutor/room slots, monotonic IDs,
+reload and failed-save retry. For manual checks, use an isolated supported dataset:
+
+1. Create a Lesson, keep its stable ID and enrol two Students. Run `deletelesson lid/LESSON_ID`; expect feedback
+   naming the roster Student IDs and no data/view/file change. Unenrol both Students and retry successfully only if
+   the Lesson has no attendance.
+2. In a separate copy, enrol and mark a Student, then unenrol them. Deletion remains blocked by retained attendance
+   and identifies its Student/date. Use `unmark`, delete the Lesson and verify that people records remain unchanged.
+3. Keep a catalogue, Student-lessons, tutor-schedule or lesson-search result observable. A successful deletion
+   refreshes the held list without replacing its object or the people list/filter. A blocked or save-failed attempt
+   sends no staged list event and preserves the selected lesson context.
+4. After successful deletion, create a Lesson in the same tutor/room/time slot. It succeeds with an ID higher than
+   the deleted ID. Restart and verify the deletion, new ID, catalogue order and allocation counter.
+5. Reject a missing `lid/`, numeric/search-result selectors, repeated/unknown prefixes, malformed IDs and missing
+   Lessons without saving. Protected startup rejects `deletelesson` and hides its help topic.
 
 ### Active lesson listing and search checks (#90)
 
@@ -1755,7 +1806,8 @@ Run these as the corresponding routes become available, using an isolated suppor
    `unmark STUDENT_INDEX lid/L1 d/2026-10-05` route must then remove only that historical key. Use the active
    guarded `delete` route before and after removal to verify the Attendance dependency. Once planned `history`
    activates, `history STUDENT_INDEX lid/L1` must expose retained records before removal. Check Student and Lesson
-   references before and after removing their remaining dependencies; Lesson deletion itself remains planned.
+   references before and after removing their remaining dependencies. Use active `deletelesson lid/L1` only after
+   every roster and attendance dependency is cleared; verify that its stable ID is not reused.
 6. Exercise each activated search filter from the full matrix, including a parent with two linked children and a student with two differently scheduled lessons. Combined filters must not take the name from one child and the lesson from another, or the day from one lesson and the subject from another. Verify distinct-ID counts, successful empty results and empty-lesson discovery when appropriate.
 7. Restart and verify IDs, global creation order, membership and retained attendance. Trigger a save failure in an isolated test seam and verify the aggregate, allocation state and active views are restored. Read-only list/query/history/help operations must not rewrite operational data in the integrated runtime. Record the actual build, platform and results; do not treat unperformed checks as passes.
 
