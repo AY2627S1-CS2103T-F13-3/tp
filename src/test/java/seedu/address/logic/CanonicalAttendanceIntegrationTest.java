@@ -45,7 +45,7 @@ import seedu.address.storage.JsonPonHubDataStorage;
 import seedu.address.storage.ProtectedPonHubDataStorage;
 
 /**
- * Exercises attendance marking through parsing, current-view selection, staging and persistence.
+ * Exercises attendance mutations through parsing, current-view selection, staging and persistence.
  */
 public class CanonicalAttendanceIntegrationTest {
     private static final PersonId STUDENT_ONE = new PersonId("S9");
@@ -218,6 +218,153 @@ public class CanonicalAttendanceIntegrationTest {
                 session.execute("mark 2 lid/L10 d/2026-10-05 s/present").getFeedbackToUser());
         assertEquals(2, writes[0]);
         assertTrue(lessonEvents[0] > 0);
+        assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
+    }
+
+    @Test
+    public void execute_unmarkRemovesOnlySelectedKeyAndMissingKeyIsNoOp() throws Exception {
+        Path path = directory.resolve("canonical.json");
+        Attendance selected = attendance(STUDENT_TWO, FIRST_MONDAY, AttendanceStatus.PRESENT);
+        Attendance otherDate = attendance(STUDENT_TWO, SECOND_MONDAY, AttendanceStatus.ABSENT);
+        Attendance otherStudent = attendance(STUDENT_ONE, FIRST_MONDAY, AttendanceStatus.ABSENT);
+        PonHubDataState before = attendanceState(Set.of(STUDENT_ONE, STUDENT_TWO),
+                List.of(selected, otherDate, otherStudent));
+        JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
+        storage.saveData(before);
+        int[] writes = {0};
+        CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+            writes[0]++;
+            storage.saveData(state);
+        });
+        session.execute("search c/student");
+        var visiblePeople = session.getPeople();
+        var queries = session.getLessonQueries();
+        var lessonList = queries.getLessonList();
+        var roster = queries.getLessonRoster(LESSON);
+        var studentLessons = queries.getStudentLessons(STUDENT_TWO);
+        int[] lessonEvents = {0};
+        lessonList.addListener((ListChangeListener<? super seedu.address.model.query.LessonView>) change ->
+                lessonEvents[0]++);
+
+        assertEquals("Attendance for Student S3 in lesson L10 on 2026-10-05 removed.",
+                session.execute("unmark 2 lid/L10 d/2026-10-05").getFeedbackToUser());
+        assertEquals(1, writes[0]);
+        assertTrue(lessonEvents[0] > 0);
+        assertEquals(List.of(otherDate, otherStudent), session.getDataSnapshot().attendance());
+        assertEquals(before.lessons(), session.getDataSnapshot().lessons());
+        assertSame(visiblePeople, session.getPeople());
+        assertSame(queries, session.getLessonQueries());
+        assertSame(lessonList, queries.getLessonList());
+        assertSame(roster, queries.getLessonRoster(LESSON));
+        assertSame(studentLessons, queries.getStudentLessons(STUDENT_TWO));
+        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), visibleIds(session));
+        assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
+        assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
+
+        int eventsAfterRemoval = lessonEvents[0];
+        PonHubDataState removed = session.getDataSnapshot();
+        byte[] removedBytes = Files.readAllBytes(path);
+        assertEquals("No attendance record exists for Student S3 in lesson L10 on 2026-10-05. "
+                        + "No changes made.",
+                session.execute("unmark 2 d/2026-10-05 lid/L10").getFeedbackToUser());
+        assertEquals(1, writes[0]);
+        assertEquals(eventsAfterRemoval, lessonEvents[0]);
+        assertSame(removed, session.getDataSnapshot());
+        assertArrayEquals(removedBytes, Files.readAllBytes(path));
+        assertSame(visiblePeople, session.getPeople());
+        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), visibleIds(session));
+    }
+
+    @Test
+    public void execute_unmarkHistoricalAttendanceAllowedAfterUnenrolment() throws Exception {
+        Path path = directory.resolve("canonical.json");
+        Attendance historical = attendance(STUDENT_ONE, FIRST_MONDAY, AttendanceStatus.PRESENT);
+        PonHubDataState before = attendanceState(Set.of(), List.of(historical));
+        JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
+        storage.saveData(before);
+        CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path),
+                storage::saveData);
+        session.execute("list r/student");
+
+        assertEquals("Attendance for Student S9 in lesson L10 on 2026-10-05 removed.",
+                session.execute("unmark 1 lid/L10 d/2026-10-05").getFeedbackToUser());
+        assertTrue(session.getDataSnapshot().attendance().isEmpty());
+        assertEquals(before.lessons(), session.getDataSnapshot().lessons());
+        assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
+    }
+
+    @Test
+    public void execute_unmarkInvalidSelectionLessonOrWeekday_rejectsWithoutSaving() throws Exception {
+        Path path = directory.resolve("canonical.json");
+        Attendance attendance = attendance(STUDENT_TWO, FIRST_MONDAY, AttendanceStatus.PRESENT);
+        PonHubDataState before = attendanceState(Set.of(STUDENT_TWO), List.of(attendance));
+        new JsonPonHubDataStorage(path).saveData(before);
+        CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+            throw new AssertionError("Rejected attendance commands must not save");
+        });
+        byte[] original = Files.readAllBytes(path);
+
+        CommandException wrongRole = assertThrows(CommandException.class, () -> session.execute(
+                "unmark 1 lid/L10 d/2026-10-05"));
+        assertEquals(PersonIndexResolver.MESSAGE_NOT_STUDENT, wrongRole.getMessage());
+        CommandException outsideView = assertThrows(CommandException.class, () -> session.execute(
+                "unmark 5 lid/L10 d/2026-10-05"));
+        assertEquals(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, outsideView.getMessage());
+        CommandException missingLesson = assertThrows(CommandException.class, () -> session.execute(
+                "unmark 4 lid/L99 d/2026-10-05"));
+        assertEquals("The lesson does not exist: L99", missingLesson.getMessage());
+        CommandException wrongWeekday = assertThrows(CommandException.class, () -> session.execute(
+                "unmark 4 lid/L10 d/2026-10-06"));
+        assertEquals("Attendance date 2026-10-06 does not match lesson L10's Mon schedule.",
+                wrongWeekday.getMessage());
+
+        assertEquals(before, session.getDataSnapshot());
+        assertArrayEquals(original, Files.readAllBytes(path));
+    }
+
+    @Test
+    public void execute_unmarkSaveFailureRestoresStateViewsAndRetryCommits() throws Exception {
+        Path path = directory.resolve("canonical.json");
+        Attendance selected = attendance(STUDENT_TWO, FIRST_MONDAY, AttendanceStatus.PRESENT);
+        PonHubDataState before = attendanceState(Set.of(STUDENT_TWO), List.of(selected));
+        JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
+        storage.saveData(before);
+        byte[] original = Files.readAllBytes(path);
+        CanonicalPeopleSession[] current = new CanonicalPeopleSession[1];
+        int[] writes = {0};
+        current[0] = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+            assertEquals(before, current[0].getDataSnapshot());
+            if (writes[0]++ == 0) {
+                throw new IOException("Injected attendance removal save failure");
+            }
+            storage.saveData(state);
+        });
+        CanonicalPeopleSession session = current[0];
+        session.execute("search c/student");
+        var visiblePeople = session.getPeople();
+        var lessonList = session.getLessonQueries().getLessonList();
+        var roster = session.getLessonQueries().getLessonRoster(LESSON);
+        int[] lessonEvents = {0};
+        lessonList.addListener((ListChangeListener<? super seedu.address.model.query.LessonView>) change ->
+                lessonEvents[0]++);
+
+        CommandException failedSave = assertThrows(CommandException.class, () -> session.execute(
+                "unmark 2 lid/L10 d/2026-10-05"));
+        assertTrue(failedSave.getMessage().contains("Injected attendance removal save failure"));
+        assertEquals(before, session.getDataSnapshot());
+        assertArrayEquals(original, Files.readAllBytes(path));
+        assertSame(visiblePeople, session.getPeople());
+        assertSame(lessonList, session.getLessonQueries().getLessonList());
+        assertSame(roster, session.getLessonQueries().getLessonRoster(LESSON));
+        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), visibleIds(session));
+        assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
+        assertEquals(0, lessonEvents[0]);
+
+        assertEquals("Attendance for Student S3 in lesson L10 on 2026-10-05 removed.",
+                session.execute("unmark 2 lid/L10 d/2026-10-05").getFeedbackToUser());
+        assertEquals(2, writes[0]);
+        assertTrue(lessonEvents[0] > 0);
+        assertTrue(session.getDataSnapshot().attendance().isEmpty());
         assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
     }
 

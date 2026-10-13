@@ -20,12 +20,14 @@ import seedu.address.logic.commands.CanonicalListCommand;
 import seedu.address.logic.commands.CanonicalMarkAttendanceCommand;
 import seedu.address.logic.commands.CanonicalSearchCommand;
 import seedu.address.logic.commands.CanonicalUnenrolCommand;
+import seedu.address.logic.commands.CanonicalUnmarkAttendanceCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddLessonParser;
 import seedu.address.logic.parser.AttendanceMarkParser;
+import seedu.address.logic.parser.AttendanceUnmarkParser;
 import seedu.address.logic.parser.LessonMembershipParser;
 import seedu.address.logic.parser.PeopleListParser;
 import seedu.address.logic.parser.RoleAwareAddParser;
@@ -51,6 +53,7 @@ public final class CanonicalPeopleSession {
     public static final String MESSAGE_ENROL_USAGE = CanonicalCommandCatalog.MESSAGE_ENROL_USAGE;
     public static final String MESSAGE_UNENROL_USAGE = CanonicalCommandCatalog.MESSAGE_UNENROL_USAGE;
     public static final String MESSAGE_MARK_USAGE = CanonicalCommandCatalog.MESSAGE_MARK_USAGE;
+    public static final String MESSAGE_UNMARK_USAGE = CanonicalCommandCatalog.MESSAGE_UNMARK_USAGE;
     public static final String MESSAGE_HELP_USAGE = CanonicalCommandCatalog.MESSAGE_HELP_USAGE;
 
     private static final Pattern BASIC_COMMAND_FORMAT =
@@ -162,6 +165,9 @@ public final class CanonicalPeopleSession {
                 return executor.execute(new CanonicalUnenrolCommand(new LessonMembershipParser().parse(arguments)));
             case "mark":
                 return executor.execute(new CanonicalMarkAttendanceCommand(new AttendanceMarkParser().parse(
+                        arguments)));
+            case "unmark":
+                return executor.execute(new CanonicalUnmarkAttendanceCommand(new AttendanceUnmarkParser().parse(
                         arguments)));
             case "list":
                 CommandResult result = executor.execute(
