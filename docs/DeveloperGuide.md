@@ -67,7 +67,7 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 `MainApp` connects one canonical session/root to Logic, cards and protected storage. Normal sessions
 support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, guarded `delete`, `list`,
 `lessons`, own-contact people search, all seven lesson-search fields, `help` and `exit`; protected sessions allow
-only help/list/exit. Attendance removal/history and Parent/Tutor relationship search remains planned.
+only help/list/exit. Attendance removal/history and Tutor relationship search remains planned.
 Inherited edit/clear/find routes are unavailable. Stored attendance can be created and corrected with `mark`;
 `unmark` and `history` remain unavailable.
 
@@ -999,7 +999,7 @@ unsupported prefix cannot be absorbed into the preceding text value. The criteri
 but does not traverse relationships. `CanonicalPeopleSession` routes lesson search to `LessonRetrieval` and
 people search to `CanonicalSearchCommand.execute(data, view)`, which publishes only validated read-only results.
 Read-only searches reuse the session's indexes without allocating a staged aggregate or invoking the writer.
-Parent/Tutor relationship fields remain explicitly unavailable until their separate increments.
+Tutor relationship fields remain explicitly unavailable until their separate increment.
 
 `PersonContactSearch` matches the `n/l/p/pp/e/a` own-field subset. `PersonRelationshipSearch` separates these from
 Student lesson fields and runs one indexed `LessonQueries.searchLessons` request over the complete catalogue.
@@ -1032,6 +1032,30 @@ active; results and context refresh only on successful publication. Verify valid
 operational bytes/counters for every search, and that lesson-result filters/selection stay independent.
 The backend tests compare 1,000 seeded conjunctions with an independent scan of raw records; command-box tests
 verify context additions/removals even when the matching person list is unchanged.
+
+#### Parent relationship search (#95)
+
+`LessonQueries` builds an exact parent-phone bucket of immutable Students alongside its other indexes on root
+publication. `getStudentsByParentPhone(Phone)` returns a read-only snapshot in people creation order; leading zeros
+remain significant. This derives links rather than storing Parent IDs or inferring relationships from names.
+
+`PersonRelationshipSearch` first applies Parent own fields, then reuses matching child/lesson context per distinct
+eligible phone. A linked child must satisfy `sn/`, and every lesson condition must match one current enrolment of
+that same child. The lesson predicate deliberately excludes `sn/` until the child is fixed, preventing another
+roster member or sibling from supplying the name. Name-only child queries do not scan lessons and can include
+unassigned children. Lesson predicates use the existing exact bucket and Student-to-Lesson index. Context shows
+one Parent result with matching child IDs/names and lesson details; a shared number can link multiple Parent records.
+
+For bounded fields the query cost is `O(P + B + C + E + K)`, where `C` and `E` count children and their enrolment
+links across distinct eligible phone buckets, and `K` counts emitted context. Own-only searches remain `O(P)`;
+`sn/`-only queries omit the lesson-candidate term. The phone index adds `O(P)` derived storage and refresh work.
+
+UC-02/manual checks: contrast phones `00987654` and `0987654`, identical Parent names with different numbers,
+Parents sharing a number, unlinked Parents and children with no lessons. Reject a query taking `sn/Alex` from
+one sibling and Monday Math from another, or day and subject from separate lessons. Compare 1,000 seeded queries
+with a raw nested Student/Lesson scan. Exercise failed publication and successful context refresh with the Parent
+projection active; for real enrol/unenrol, switch to Student listing first and repeat the Parent query afterwards.
+Verify read-only bytes, invalid-prefix preservation and matching results/context after reload.
 
 ### Dated attendance records
 
@@ -1091,7 +1115,7 @@ Canonical people activation and the remaining shared-lesson integration are trac
 [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85), and their dependent command, storage and retrieval
 issues. The requirements below describe the intended product; role-aware add/list, empty-roster shared-lesson
 creation, enrolment/unenrolment, dated attendance marking, guarded person deletion, own-contact people search,
-lesson listing and lesson search are active. Attendance removal/history and Parent/Tutor relationship search remains planned.
+lesson listing and lesson search are active. Attendance removal/history and Tutor relationship search remains planned.
 
 ### User stories
 

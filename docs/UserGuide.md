@@ -182,7 +182,8 @@ An empty result is valid. PonHub reports a count of zero and the people panel sh
 **Formats:**
 
 * `search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]`
-* `search c/tutor|parent [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]`
+* `search c/parent [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]`
+* `search c/tutor [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]`
 
 Category values ignore case. Supply each lowercase prefix once with a nonblank value. All supplied filters must
 match the same person. Name, email and address use case-insensitive text fragments; name/address queries trim and
@@ -198,7 +199,7 @@ Search reads the complete people catalogue, replacing the previous role/search f
 clears search criteria. Use the new displayed positions for subsequent person commands. Search/help do not save
 operational data; failed commands preserve the previous view. A successful person addition resets to all roles.
 
-Student lesson filters (`d/st/et/s/tu/rm`) are active. Parent and Tutor relationship filters remain unavailable
+Student lesson filters (`d/st/et/s/tu/rm`) are active. Parent relationship filters are active; Tutor relationship filters remain unavailable
 and receive explicit feedback. All seven lesson fields remain available for `c/lesson`. Category-incompatible fields, unknown/repeated/blank prefixes
 and invalid values fail validation.
 The [search matrix](#6-searching-people-and-shared-lessons) describes the complete target.
@@ -212,6 +213,20 @@ Each student appears once by stable ID, with matching lesson IDs, subjects, sche
 their own details. Several matching lessons add context lines, never duplicate student cards. Enrolment changes
 refresh both matches and context; failed saves preserve them. Own-field-only searches still include students with
 no lessons and show no relationship context. `list` clears both the criteria and its matching context.
+
+### Searching parents through their children
+
+A Parent is linked to every Student whose stored parent phone exactly equals that Parent's own phone, including
+leading zeros. Names, email and addresses never establish this link, and a separate Parent record is optional.
+`search c/parent sn/Alex d/Mon s/Math` requires **one linked child named Alex and one Monday Math lesson in which
+that same child is currently enrolled**. Alex in Science and Jamie in Math cannot combine into a match; nor can
+Math on Tuesday and Science on Monday. All own-contact conditions still apply to the Parent.
+
+With only `sn/`, a matching child need not have lessons. With only Parent own fields, unlinked Parents remain
+eligible. Each stable Parent ID appears once with matching Student IDs/names and, when lesson filters are supplied,
+matching lesson details beneath the card. Different Parent records sharing an exact number may legitimately link
+to the same children. Empty search results have `Found 0 parent(s).` feedback. Student operations still require a
+Student in the **current people list**: run `list r/student` before enrol/unenrol, then repeat the Parent search.
 
 ### Listing and searching shared lessons
 
@@ -414,7 +429,7 @@ failure leave the aggregate, saved file and active views unchanged.
 
 Use `student`, `parent`, `tutor` or `lesson`; category values are case-insensitive. A category-only search imposes no filters. For example, `search c/lesson` shows each shared lesson once, including empty rosters.
 
-The full target filter matrix is below. Own-contact people search and **all seven Lesson-column fields are active**. Student lesson filters are active; relationship filters on Parent and Tutor results remain planned and receive explicit unavailable feedback. Check `help search` for the active formats.
+The full target filter matrix is below. Own-contact people search and **all seven Lesson-column fields are active**. Student lesson filters are active; Parent relationship fields are active; relationship filters on Tutor results remain planned and receive explicit unavailable feedback. Check `help search` for the active formats.
 
 | Prefix | Field | Student | Parent | Tutor | Lesson |
 | --- | --- | --- | --- | --- | --- |
