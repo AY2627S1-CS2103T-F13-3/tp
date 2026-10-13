@@ -43,7 +43,7 @@ The first successful mutation creates the data file. Keep the same JAR folder to
 
 The active routes use one saved aggregate with role-specific people, stable IDs and shared lessons whose rosters
 can be changed with `enrol` and `unenrol`. Own-contact people search, attendance marking, guarded person
-deletion, lesson listing and lesson search are active. Attendance removal/history and relationship filters on
+deletion, lesson listing, lesson search and lesson details are active. Attendance removal/history and relationship filters on
 people remain planned. Their specifications follow under
 [Planned shared-lesson workflow](#planned-shared-lesson-workflow). Type `help` to inspect the commands available
 in your session. `edit`, `clear` and `find` are unavailable.
@@ -60,6 +60,7 @@ in your session. `edit`, `clear` and `find` are unavailable.
 | List people | `list [r/ROLE]` | `list r/student` |
 | Search people | `search c/CATEGORY [OWN_FIELD/VALUE]...` | `search c/student n/Alex l/S2` |
 | List shared lessons | `lessons [si/STUDENT_INDEX]` | `lessons` |
+| Show lesson details | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` | `showlesson lid/L1 d/2026-10-05` |
 | Search shared lessons | `search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]` | `search c/lesson tu/mei d/Mon` |
 | Get help | `help [COMMAND]` | `help add` |
 | Exit | `exit` | `exit` |
@@ -72,6 +73,7 @@ Cards display a current position separately from the stable ID, such as `S1`. Ad
 
 `help` shows the current supported-command catalogue in Result Display. In a normal session, `help add`,
 `help addlesson`, `help enrol`, `help unenrol`, `help mark`, `help delete`, `help list`, `help lessons`,
+`help showlesson`,
 `help search`, `help help` and `help exit` show usage guidance. Topic names are case-insensitive, so `help ADD` is
 accepted; the command word `help` remains lowercase. Asking for exit guidance does not exit the application.
 
@@ -371,9 +373,20 @@ Enter `lessons` to view each shared lesson once, including lessons with empty ro
 The catalogue and student lesson results use lesson creation order. Student lessons show current enrolments;
 past attendance alone does not add a lesson to that list. The planned `history` command will inspect attendance retained after unenrolment.
 
-**Details (planned):** `showlesson lid/LESSON_ID [d/YYYY-MM-DD]`.
+**Details (active):** `showlesson lid/LESSON_ID [d/YYYY-MM-DD]`.
 
-For example, `showlesson lid/L1` displays the lesson's schedule, subject, tutor, room and current roster, with stable IDs identifying the records. `showlesson lid/L1 d/2026-10-05` also shows each current roster student's `present`, `absent` or unrecorded status for that real, matching-weekday date. Attendance retained for former members is labelled separately from the current roster. An empty roster is valid. These results preserve the current people list and its command positions.
+For example, `showlesson lid/L1` displays the lesson's stable ID, subject, schedule, tutor name and ID, room and
+current roster, with each Student's stable ID and name. The lesson details use a separate scrolling panel; no
+roster row number is a person-command selector. `showlesson lid/L1 d/2026-10-05` also shows each current roster
+student's `present`, `absent` or `unrecorded` status for that real, matching-weekday date. `Unrecorded` means no
+attendance entry exists; it is never treated as absent. Retained records for former members appear in a separate
+section, limited to the supplied date when one is given. Without a date, that section shows all retained
+former-member records, newest first. An empty roster is valid.
+
+An unknown lesson ID, invalid date or date on another weekday leaves the previous lesson result visible. Lesson
+details refresh after saved membership and attendance changes, including corrections and removal once `unmark`
+is available. A failed save leaves the displayed detail unchanged. `lessons` or lesson search restores the catalogue
+view. `showlesson` preserves the current people filter, selection and command positions and does not save data.
 
 ### 5. Enrolling and unenrolling students
 

@@ -65,7 +65,7 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 
 `MainApp` connects one canonical session/root to Logic, cards and protected storage. Normal sessions
 support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, guarded `delete`, `list`,
-`lessons`, own-contact people search, all seven lesson-search fields, `help` and `exit`; protected sessions allow
+`lessons`, `showlesson`, own-contact people search, all seven lesson-search fields, `help` and `exit`; protected sessions allow
 only help/list/exit. Attendance removal/history and relationship search on people remain planned.
 Inherited edit/clear/find routes are unavailable. Stored attendance can be created and corrected with `mark`;
 `unmark` and `history` remain unavailable.
@@ -875,7 +875,7 @@ the session does not expose writable operational data. Execute on the single mod
 application thread once controls are attached.
 
 The session's `execute()` dispatches active `add`, `addlesson`, `enrol`, `unenrol`, `mark`, `delete`, `list`,
-`lessons`, `search`, `help` and
+`lessons`, `showlesson`, `search`, `help` and
 `exit` commands through its switch. `CanonicalCommandCatalog` defines the permitted command words and guidance,
 independently
 of the retained legacy `CommandCatalog`. The session parses role-aware additions, shared-lesson creation and
@@ -1067,7 +1067,7 @@ Canonical people activation and the remaining shared-lesson integration are trac
 [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85), and their dependent command, storage and retrieval
 issues. The requirements below describe the intended product; role-aware add/list, empty-roster shared-lesson
 creation, enrolment/unenrolment, dated attendance marking, guarded person deletion, own-contact people search,
-lesson listing and lesson search are active. Attendance removal/history and relationship search on people remain planned.
+lesson listing, lesson search and lesson details are active. Attendance removal/history and relationship search on people remain planned.
 
 ### User stories
 
@@ -1174,7 +1174,7 @@ Person selectors in these target use cases are positive indices from the current
 1. The administrator enters `list`, `lessons`, or one `search c/CATEGORY` command with any available filters needed.
 2. PonHub validates the request and retrieves the relevant records, combining relational filters according to the same-student/same-lesson rules.
 3. PonHub displays each distinct match once in creation order with its count. Lesson cards show stable ID, subject, schedule, tutor name/ID, room and current roster size, including zero. People results replace the current people filter and are numbered from one; lesson results preserve its filter, order, selection and indices in a separate scrolling panel.
-4. **Planned detail extension:** To review a shared lesson, the administrator reads its stable ID from the results and enters `showlesson lid/LESSON_ID`, optionally with `d/YYYY-MM-DD` for dated attendance.
+4. To review a shared lesson, the administrator reads its stable ID from the results and enters `showlesson lid/LESSON_ID`, optionally with `d/YYYY-MM-DD` for dated attendance.
 5. PonHub displays the current roster and requested dated attendance without changing operational data or the people list. For a date, missing attendance is shown as unrecorded, separately from present or absent.
 
 **Extensions**
@@ -1186,8 +1186,9 @@ Person selectors in these target use cases are positive indices from the current
 
 **Query design:** #80 supplies the read-only catalogue, stable-ID lookup, current roster/student lessons and indexed
 lesson filtering through the [prepared query backend](#indexed-lesson-query-projections-80). Current membership
-comes only from Lesson-owned IDs. Own-contact people search, catalogue/student lesson listing and all seven lesson search fields are active.
-Relationship search on people, detailed rosters, dated attendance and history remain separate slices. A student
+comes only from Lesson-owned IDs. Own-contact people search, catalogue/student lesson listing, all seven lesson
+search fields and detailed lesson roster/attendance views are active. Relationship search on people and student
+attendance history remain separate slices. A student
 selector is resolved once against the current people view, never an ID suffix or a hidden role list. Empty rosters
 are included unless `sn/` requires a current member; all lesson filters match the same shared lesson.
 
@@ -1686,6 +1687,34 @@ shape for automated integration/UI tests. For manual runs, create lessons with `
 is captured from the real FXML window by setting `PONHUB_CAPTURE_UI` to an absolute destination when running
 `CanonicalMainWindowTest`; the test uses a temporary canonical file. Offscreen JavaFX checks do not substitute
 for recording native platform/scaling outcomes below.
+
+### Active shared-lesson details and dated attendance (#99)
+
+`ShowLessonParser` validates exactly `lid/LESSON_ID [d/YYYY-MM-DD]`, including a real calendar date.
+`LessonRetrieval.show` looks up the stable Lesson independently of the current lesson filter and rejects a date
+whose weekday differs from that Lesson's recurrence before replacing any result. It constructs one immutable
+`LessonDetailView` from the committed root: current roster Students remain in people creation order, and absent
+dated records have an empty status that the card labels `unrecorded`. Attendance for Students outside the current
+roster appears in a separate former-member section, newest date first. Without a date, that section shows all
+retained former-member records; with a date, it shows records for that occurrence only. No missing record becomes
+an `absent` entry.
+
+The selected detail is a separate result source in `LessonRetrieval`. A complete canonical publication rebuilds
+it after enrolment, unenrolment, marking, correction, removal or restoration. A staged failure publishes nothing,
+so the previous detail and people view remain unchanged. If a later lesson-deletion route removes the selected
+Lesson, its result becomes empty and the context identifies the unavailable stable ID. `lessons` and lesson
+search switch back to their own sources. The normal lesson ListView remains for catalogue results; the detail
+uses a dedicated width-fitting ScrollPane and wrapping labels for long rosters/history. No roster row number is
+used as a person-command selector.
+
+UC-02/manual checks: show a shared Monday Lesson with two current Students, one recorded present and one
+unrecorded, then mark the second absent. Unenrol that Student and verify the dated absence moves to the labelled
+former-member section while the current roster shrinks. Correct or remove the retained entry through active
+commands when available and verify immediate refresh; repeat after restart. Reject malformed IDs/dates, a Tuesday
+date for a Monday Lesson, and an unknown ID while preserving the prior detail and operational bytes. Inspect an
+empty roster and many retained records at narrow window widths and scroll to the last row. Keep a filtered people
+view selected throughout; the next person command must still resolve its original one-based position. Protected
+startup exposes no `showlesson` route.
 
 ### Planned shared-lesson workflow checks
 
