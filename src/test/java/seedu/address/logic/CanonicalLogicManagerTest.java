@@ -56,7 +56,7 @@ public class CanonicalLogicManagerTest {
         assertEquals(settings, prefs.getGuiSettings());
         assertThrows(UnsupportedOperationException.class, people::clear);
         assertThrows(UnsupportedOperationException.class, logic::getFilteredPersonList);
-        assertThrows(ParseException.class, () -> logic.execute("delete 1"));
+        assertThrows(ParseException.class, () -> logic.execute("delete S1"));
         assertThrows(ParseException.class, () -> logic.execute("find Alice"));
         assertSame(people, logic.getPersonRecords());
         assertEquals(1, people.size());

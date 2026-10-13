@@ -5,7 +5,7 @@ title: User Guide
 
 PonHub is a desktop app for tuition centre administrators to manage student, tutor and parent records and create
 shared recurring lessons. Its command box lets you work quickly from the keyboard while the graphical interface
-shows the records. Shared-lesson enrolment and dated attendance marking are active; attendance removal/history and
+shows the records. Shared-lesson enrolment, dated attendance marking and guarded person deletion are active; attendance removal/history and
 lesson-result commands remain planned features.
 
 * Table of Contents
@@ -42,11 +42,11 @@ The first successful mutation creates the data file. Keep the same JAR folder to
 ## Current command summary
 
 The active routes use one saved aggregate with role-specific people, stable IDs and shared lessons whose rosters
-can be changed with `enrol` and `unenrol`. Own-contact people search and attendance marking are active. Guarded
-deletion, attendance removal/history, lesson-result views, lesson search and relationship filters remain planned.
+can be changed with `enrol` and `unenrol`. Own-contact people search, attendance marking and guarded
+person deletion are active. Attendance removal/history, lesson-result views, lesson search and relationship filters remain planned.
 Their specifications follow under
 [Planned shared-lesson workflow](#planned-shared-lesson-workflow). Type `help` to inspect the commands available
-in your session. `delete`, `edit`, `clear` and `find` are unavailable.
+in your session. `edit`, `clear` and `find` are unavailable.
 
 | Action | Format | Example |
 | --- | --- | --- |
@@ -56,6 +56,7 @@ in your session. `delete`, `edit`, `clear` and `find` are unavailable.
 | Enrol student | `enrol STUDENT_INDEX lid/LESSON_ID` | `enrol 1 lid/L1` |
 | Unenrol student | `unenrol STUDENT_INDEX lid/LESSON_ID` | `unenrol 1 lid/L1` |
 | Mark attendance | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent</code> | `mark 1 lid/L1 d/2026-10-05 s/present` |
+| Delete person | `delete INDEX` | `delete 1` |
 | List people | `list [r/ROLE]` | `list r/student` |
 | Search people | `search c/CATEGORY [OWN_FIELD/VALUE]...` | `search c/student n/Alex l/S2` |
 | Get help | `help [COMMAND]` | `help add` |
@@ -68,7 +69,7 @@ Cards display a current position separately from the stable ID, such as `S1`. Ad
 **Format:** `help [COMMAND]`
 
 `help` shows the current supported-command catalogue in Result Display. In a normal session, `help add`,
-`help addlesson`, `help enrol`, `help unenrol`, `help mark`, `help list`, `help search`, `help help` and `help exit` show usage
+`help addlesson`, `help enrol`, `help unenrol`, `help mark`, `help delete`, `help list`, `help search`, `help help` and `help exit` show usage
 guidance. Topic names are case-insensitive, so `help ADD` is accepted; the command word `help` remains lowercase.
 Asking for exit guidance does not exit the application.
 
@@ -79,9 +80,9 @@ Long guidance wraps within Result Display. Scroll vertically to read the rest; e
 * `help addlesson`, `help enrol`, `help unenrol` and `help mark` show their active syntax and examples. `help remove` returns
   `Unknown command: 'remove'. Type 'help' to see available commands.`
 * `help add delete` returns `Invalid command format!` followed by `Usage: help [COMMAND]` and its explanation. Supply at most one topic.
-* `delete`, `edit`, `clear` and `find` return `Unknown command.` They are absent from the catalogue.
+* `edit`, `clear` and `find` return `Unknown command.` They are absent from the catalogue.
 * In a protected session, help lists only `help`, `list` and `exit`; `help add`, `help addlesson`, `help enrol`,
-  `help unenrol`, `help mark` and `help search` are unavailable.
+  `help unenrol`, `help mark`, `help delete` and `help search` are unavailable.
 
 ### 1. Adding a person: `add`
 
@@ -220,7 +221,7 @@ The default startup leaves an older `data/addressbook.json` untouched. Selecting
 ## Planned shared-lesson workflow
 
 The following sections record the shared-lesson and guarded-deletion contracts. Role-aware add/list,
-`addlesson`, `enrol`, `unenrol`, `mark` and own-contact people search are active; deletion, lesson-result views,
+`addlesson`, `enrol`, `unenrol`, `mark`, `delete` and own-contact people search are active; lesson-result views,
 attendance removal/history, lesson search and relationship filters below are not yet available. Their availability depends on
 incremental integration; use the [current command summary](#current-command-summary) and your build's `help`
 for active routes.
@@ -266,9 +267,7 @@ Expect one shared lesson with two students before unenrolment. Lesson search and
 
 ### 3. Deleting a person: `delete`
 
-**Planned:** this command is unavailable in the current build.
-
-Removes one person selected by their current displayed index in the people list.
+**Active.** Removes one unreferenced person selected by their current displayed index in the people list.
 
 #### Format
 
@@ -282,7 +281,7 @@ Removes one person selected by their current displayed index in the people list.
 #### Expected result
 
 PonHub displays a confirmation such as:
-`Deleted person: parent - Pat Tan.`
+`Deleted parent: Pat Tan (P1).`
 
 The current filter is preserved. Remaining people keep their IDs and their displayed positions are renumbered.
 
@@ -290,12 +289,19 @@ The current filter is preserved. Remaining people keep their IDs and their displ
 
 * `INDEX` must be a positive integer within the current people list. A stable person ID such as `P1` is not a delete selector.
 * Only one person can be deleted per command.
-* Student deletion is blocked while enrolled or referenced by attendance. Tutor deletion is blocked while a lesson references the tutor. Linked records are not deleted automatically; removing a student never removes a shared lesson.
+* Student deletion is blocked while enrolled or referenced by attendance. Tutor deletion is blocked while any lesson references the tutor, including a lesson with an empty roster. Linked records are not deleted automatically; removing a student never removes a shared lesson.
 * Deleting a separate parent record does not erase the parent phone number stored on a student's record.
 
-If dependencies prevent deletion, PonHub displays:
-`Cannot delete person: linked lesson or attendance records exist. Remove or reassign the links first.`
+If dependencies prevent deletion, feedback identifies the Student or Tutor and the blocking Lesson ID. Retained
+attendance also identifies its date, for example:
+`Student S1 cannot be deleted while retained attendance exists for lesson L1 on 2026-10-05.`
 
+Unenrolment removes current membership but keeps dated attendance, which continues to block Student deletion.
+Attendance removal and lesson deletion remain planned; this build cannot remove those remaining dependencies.
+
+Successful deletion preserves the role or own-contact search filter and renumbers remaining positions. Surviving
+stable IDs, lesson/attendance records and Student parent-phone values are unchanged. Deleted IDs are never reused,
+including after restart. Invalid selectors, blocked deletions and failed saves preserve the saved file and current view.
 Check the updated people list before deleting another person.
 
 ### 4. Creating shared lessons and other lesson operations
@@ -448,7 +454,7 @@ The supported JSON format remains human-editable. Close PonHub and keep a backup
 **A**: Close PonHub on both computers. Install the same version or one that supports your data format on the new computer, then copy your operational file into the new JAR folder, preserving its relative path, or select its new location inside that folder with `--data=PATH`. If you use the default location, copy the `data` folder. Keep a backup of the original folder until you have opened PonHub and checked your records on the new computer. Moving a legacy contact file to a canonical-format build does not migrate it; follow the [current recovery rules](#data-protection-in-the-current-build).
 
 **Q**: Should I use a displayed position or an ID?<br>
-**A**: The active `enrol`, `unenrol` and `mark` commands, and planned `delete`, `unmark`, `history` and
+**A**: The active `enrol`, `unenrol`, `mark` and `delete` commands, and planned `unmark`, `history` and
 `lessons si/` selectors, use the person's current position in the displayed people list. Run `list` or a people
 search and check that position first. Cards label stable person IDs separately; those IDs preserve stored identity
 and relationships. Select a lesson with `lid/L1`, for example. Create a lesson using the tutor's full name and
@@ -463,7 +469,7 @@ name is unique. Use `help addlesson` for the complete active syntax.
 
 ## Planned command summary
 
-This table preserves the complete target, including the active add/addlesson/enrol/unenrol/mark/list/own-contact
+This table preserves the complete target, including the active add/addlesson/enrol/unenrol/mark/delete/list/own-contact
 search/help/exit formats. Other routes remain planned. These formats use the
 [planned command conventions](#reading-the-planned-command-formats); listing a route here does not activate it.
 Person/student selectors come from the current people list, while every existing-lesson selector uses a stable
@@ -511,7 +517,7 @@ use each lesson ID once and each student ID once per roster, and preserve alloca
 after deleting records. Do not create overlapping bookings for a tutor, room or enrolled student;
 back-to-back lessons are allowed. Invalid files are rejected as a whole rather than partially loaded.
 Attendance is supported in saved files as described below. `addlesson`, `enrol`, `unenrol` and `mark` are active,
-while attendance removal/history, deletion and lesson-result command routes remain unavailable.
+and guarded `delete` removes eligible people. Attendance removal/history and lesson-result routes remain unavailable.
 
 For a disposable-file recovery check, change a saved lesson's tutor ID to an absent
 ID and restart. Expect a recovery warning and unchanged file bytes after help/list/exit or an attempted

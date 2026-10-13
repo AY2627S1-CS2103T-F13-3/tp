@@ -15,6 +15,7 @@ import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.CanonicalAddCommand;
 import seedu.address.logic.commands.CanonicalAddLessonCommand;
+import seedu.address.logic.commands.CanonicalDeleteCommand;
 import seedu.address.logic.commands.CanonicalEnrolCommand;
 import seedu.address.logic.commands.CanonicalListCommand;
 import seedu.address.logic.commands.CanonicalMarkAttendanceCommand;
@@ -27,6 +28,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddLessonParser;
 import seedu.address.logic.parser.AttendanceMarkParser;
 import seedu.address.logic.parser.LessonMembershipParser;
+import seedu.address.logic.parser.ParserUtil;
 import seedu.address.logic.parser.PeopleListParser;
 import seedu.address.logic.parser.RoleAwareAddParser;
 import seedu.address.logic.parser.SearchCriteriaParser;
@@ -51,6 +53,7 @@ public final class CanonicalPeopleSession {
     public static final String MESSAGE_ENROL_USAGE = CanonicalCommandCatalog.MESSAGE_ENROL_USAGE;
     public static final String MESSAGE_UNENROL_USAGE = CanonicalCommandCatalog.MESSAGE_UNENROL_USAGE;
     public static final String MESSAGE_MARK_USAGE = CanonicalCommandCatalog.MESSAGE_MARK_USAGE;
+    public static final String MESSAGE_DELETE_USAGE = CanonicalCommandCatalog.MESSAGE_DELETE_USAGE;
     public static final String MESSAGE_HELP_USAGE = CanonicalCommandCatalog.MESSAGE_HELP_USAGE;
 
     private static final Pattern BASIC_COMMAND_FORMAT =
@@ -163,6 +166,8 @@ public final class CanonicalPeopleSession {
             case "mark":
                 return executor.execute(new CanonicalMarkAttendanceCommand(new AttendanceMarkParser().parse(
                         arguments)));
+            case "delete":
+                return executor.execute(new CanonicalDeleteCommand(ParserUtil.parseIndex(arguments)));
             case "list":
                 CommandResult result = executor.execute(
                         new CanonicalListCommand(new PeopleListParser().parse(arguments)));
