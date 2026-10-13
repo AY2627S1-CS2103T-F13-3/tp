@@ -26,7 +26,8 @@ public class LessonsArgumentsParserTest {
     @Test
     public void parse_invalidSelectorsGiveFormatOrIndexFeedback() {
         for (String argument : List.of("si/", "si/S1", "si/L1", "si/-1", "si/ 1", "si/1 si/2",
-                "sid/S1", "r/student", "1", "si/1 extra", "SI/1", "si/1\n", "si/1\r")) {
+                "sid/S1", "r/student", "1", "si/1 extra", "SI/1", "si/1\n", "si/1\r", "si/1\u2028",
+                "si/1\u0000", "\u0000si/1", "\u0000")) {
             assertThrows(ParseException.class, () -> parser.parse(argument), argument);
         }
         for (String argument : List.of("si/0", "si/2147483648")) {

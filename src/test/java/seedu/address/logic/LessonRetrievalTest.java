@@ -20,6 +20,9 @@ import seedu.address.logic.parser.SearchCriteriaParser;
 import seedu.address.model.PeopleView;
 import seedu.address.model.PonHubData;
 import seedu.address.model.PonHubDataState;
+import seedu.address.model.attendance.Attendance;
+import seedu.address.model.lesson.LessonId;
+import seedu.address.model.person.PersonId;
 import seedu.address.model.person.PersonRole;
 import seedu.address.model.query.LessonQueries;
 import seedu.address.model.query.LessonView;
@@ -126,5 +129,72 @@ public class LessonRetrievalTest {
 
     private static void assertIds(List<LessonView> lessons, String... expected) {
         assertEquals(List.of(expected), lessons.stream().map(lesson -> lesson.getLessonId().toString()).toList());
+    }
+
+    @Test
+    public void context_identifiesSelectedStudentOrFiltersAndInvalidRequestsPreserveIt() throws Exception {
+        var context = retrieval.contextProperty();
+        assertEquals("All lessons", context.get());
+        retrieval.list(Optional.of(Index.fromOneBased(4)));
+        assertEquals("Student S2 · current lessons", context.get());
+        peopleView.setRoleFilter(Optional.of(PersonRole.TUTOR));
+        assertThrows(CommandException.class, () -> retrieval.list(Optional.of(Index.fromOneBased(1))));
+        assertEquals("Student S2 · current lessons", context.get());
+        retrieval.search(new SearchCriteriaParser().parse("c/lesson tu/MEI d/mon s/Math"));
+        assertEquals("Lesson search: d/mon, s/math, tu/mei", context.get());
+        assertThrows(IllegalArgumentException.class, () -> retrieval.search(
+                new SearchCriteria(SearchCategory.STUDENT, Map.of())));
+        assertEquals("Lesson search: d/mon, s/math, tu/mei", context.get());
+        retrieval.search(new SearchCriteriaParser().parse("c/lesson"));
+        assertEquals("Lesson search: all lessons", context.get());
+        retrieval.list(Optional.empty());
+        assertEquals("All lessons", context.get());
+        assertSame(context, retrieval.contextProperty());
+    }
+
+    @Test
+    public void selectedResults_keepIdentityAndFollowOnlySelectedSourceAcrossSwitches() throws Exception {
+        var displayed = retrieval.getDisplayedLessons();
+        assertIds(displayed, "L2", "L10", "L3", "L4", "L11");
+        assertThrows(UnsupportedOperationException.class, displayed::clear);
+        SearchCriteria math = new SearchCriteriaParser().parse("c/lesson s/Math");
+        retrieval.search(math);
+        assertIds(displayed, "L10", "L4");
+        retrieval.search(math); // Reusing the source must not duplicate its subscription.
+        retrieval.list(Optional.of(Index.fromOneBased(4)));
+        queries.setLessonFilter(new SearchCriteriaParser().parse("c/lesson s/Science"));
+        assertIds(displayed, "L10", "L11"); // The old search source is detached.
+        retrieval.list(Optional.empty());
+        queries.setLessonFilter(math);
+        assertIds(displayed, "L2", "L10", "L3", "L4", "L11");
+        assertSame(displayed, retrieval.getDisplayedLessons());
+    }
+
+    @Test
+    public void selectedStudentAndSearch_refreshMembershipAttendanceDeletionAndRestore() throws Exception {
+        PonHubDataState original = data.exportState();
+        var displayed = retrieval.getDisplayedLessons();
+        retrieval.list(Optional.of(Index.fromOneBased(2)));
+        peopleView.setRoleFilter(Optional.of(PersonRole.TUTOR));
+        PersonId student = new PersonId("S1");
+        var withoutStudent = original.lessons().stream().map(lesson -> lesson.withoutEnrolledStudent(student)).toList();
+        Attendance historical = Attendance.fromStrings(student, new LessonId("L10"), "2026-10-05", "present");
+        data.resetData(new PonHubDataState(original.people(), withoutStudent, List.of(historical), 11));
+        assertTrue(displayed.isEmpty()); // Former attendance must never become current membership.
+        retrieval.search(new SearchCriteriaParser().parse("c/lesson sn/Alex"));
+        assertTrue(displayed.isEmpty());
+        var enrolled = withoutStudent.stream().map(lesson -> lesson.getId().equals(new LessonId("L3"))
+                ? lesson.withEnrolledStudent(student) : lesson).toList();
+        data.resetData(new PonHubDataState(original.people(), enrolled, List.of(historical), 11));
+        assertIds(displayed, "L3");
+        assertEquals(1, displayed.getFirst().getRosterSize());
+        data.resetData(new PonHubDataState(original.people(), enrolled, List.of(), 11)); // Unmark.
+        assertIds(displayed, "L3");
+        retrieval.list(Optional.empty());
+        data.resetData(new PonHubDataState(original.people(), List.of(), List.of(), 11)); // Catalogue removal.
+        assertTrue(displayed.isEmpty());
+        data.resetData(original); // Restore the complete prior state.
+        assertIds(displayed, "L2", "L10", "L3", "L4", "L11");
+        assertSame(displayed, retrieval.getDisplayedLessons());
     }
 }

@@ -120,6 +120,10 @@
     -fx-text-fill: white;
 }
 
+#summary, #lessonSummary, #lessonContext, .list-view .placeholder .label {
+    -fx-text-fill: white;
+}
+
 .cell_big_label {
     -fx-font-family: "Segoe UI Semibold";
     -fx-font-size: 16px;

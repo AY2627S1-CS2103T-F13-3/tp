@@ -59,7 +59,8 @@ public class CanonicalPeopleSessionTest {
         assertEquals(LoadStatus.MISSING, session.getLoadStatus());
         assertEquals(path, session.getDataFilePath());
         assertTrue(session.getDataLoadError().isEmpty());
-        assertEquals(List.of("add", "addlesson", "enrol", "unenrol", "mark", "list", "search", "help", "exit"),
+        assertEquals(List.of("add", "addlesson", "enrol", "unenrol", "mark", "list", "lessons",
+                "search", "help", "exit"),
                 session.getCommandWords());
         assertEquals(new PonHubData().exportState(), session.getDataSnapshot());
         assertTrue(session.getPeople().isEmpty());

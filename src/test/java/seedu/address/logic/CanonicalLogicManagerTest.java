@@ -21,6 +21,8 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.PersonId;
+import seedu.address.model.query.LessonQueries;
+import seedu.address.model.query.LessonQuerySource;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonPonHubDataStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -74,6 +76,9 @@ public class CanonicalLogicManagerTest {
         logic.execute("list r/parent");
         List<PersonId> visibleIds = people.stream().map(person -> person.getId()).toList();
 
+        assertSame(session.getDisplayedLessons(), logic.getDisplayedLessons());
+        assertSame(session.lessonResultContextProperty(), logic.lessonResultContextProperty());
+        assertEquals(queries.getLessonList(), logic.getDisplayedLessons());
         assertSame(queries.getLessonList(), logic.getLessonList());
         assertSame(queries.getFilteredLessonList(), logic.getFilteredLessonList());
         assertSame(queries.findLessonById(LessonQueryTestData.SHARED_LESSON).orElseThrow(),
@@ -129,6 +134,24 @@ public class CanonicalLogicManagerTest {
 
         assertTrue(legacy.getFilteredPersonList().isEmpty());
         assertThrows(UnsupportedOperationException.class, legacy::getPersonRecords);
+        assertThrows(UnsupportedOperationException.class, legacy::getDisplayedLessons);
+        assertThrows(UnsupportedOperationException.class, legacy::lessonResultContextProperty);
+        assertFalse(Files.exists(directory.resolve("legacy.json")));
+    }
+
+    @Test
+    public void inheritedLogic_queryCapableTestAdapterReturnsItsFilteredView() {
+        LessonQueries queries = new LessonQueries(LessonQueryTestData.createData());
+        ModelManager model = new ModelManager() {
+            @Override
+            public LessonQuerySource getLessonQueries() {
+                return queries;
+            }
+        };
+        Logic legacy = new LogicManager(model, new StorageManager(
+                new JsonAddressBookStorage(directory.resolve("legacy.json")),
+                new JsonUserPrefsStorage(directory.resolve("preferences.json"))));
+        assertSame(queries.getFilteredLessonList(), legacy.getDisplayedLessons());
         assertFalse(Files.exists(directory.resolve("legacy.json")));
     }
 }
