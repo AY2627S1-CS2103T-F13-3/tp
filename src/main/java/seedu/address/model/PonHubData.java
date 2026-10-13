@@ -212,10 +212,7 @@ public final class PonHubData {
             AttendanceStatus status) {
         requireAllNonNull(studentId, lessonId, date, status);
         requirePerson(studentId, PersonRole.STUDENT, MESSAGE_MISSING_STUDENT);
-        Lesson lesson = requireLesson(lessonId);
-        checkArgument(date.getDayOfWeek().name().equals(lesson.getTimeSlot().getDay().name()),
-                "Attendance date " + date + " does not match lesson " + lessonId + "'s "
-                        + lesson.getTimeSlot().getDay() + " schedule.");
+        Lesson lesson = requireAttendanceLesson(lessonId, date);
 
         AttendanceKey key = new AttendanceKey(studentId, lessonId, date);
         Optional<Attendance> existing = getAttendance(key);
@@ -238,6 +235,33 @@ public final class PonHubData {
                 attendance, state.get().lastAllocatedLessonSequence());
         state.set(replacementState);
         return replacement;
+    }
+
+    /**
+     * Removes one dated attendance record without changing the Student, Lesson or current membership.
+     * An existing historical record can be removed after unenrolment. A missing record changes no state.
+     *
+     * @return the removed record, or an empty optional if the attendance key was not recorded.
+     * @throws NullPointerException if an argument is null.
+     * @throws IllegalArgumentException if a referenced record is missing or the date has the wrong weekday.
+     */
+    public Optional<Attendance> unmarkAttendance(PersonId studentId, LessonId lessonId, LocalDate date) {
+        requireAllNonNull(studentId, lessonId, date);
+        requirePerson(studentId, PersonRole.STUDENT, MESSAGE_MISSING_STUDENT);
+        requireAttendanceLesson(lessonId, date);
+
+        AttendanceKey key = new AttendanceKey(studentId, lessonId, date);
+        Optional<Attendance> existing = getAttendance(key);
+        if (existing.isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<Attendance> attendance = new ArrayList<>(getAttendance());
+        attendance.remove(existing.get());
+        PonHubDataState replacementState = new PonHubDataState(state.get().people(), state.get().lessons(),
+                attendance, state.get().lastAllocatedLessonSequence());
+        state.set(replacementState);
+        return existing;
     }
 
     /**
@@ -381,6 +405,18 @@ public final class PonHubData {
         Optional<Lesson> lesson = getLesson(lessonId);
         checkArgument(lesson.isPresent(), MESSAGE_MISSING_LESSON + lessonId);
         return lesson.get();
+    }
+
+    /**
+     * Returns an existing lesson after checking that the supplied attendance date matches its recurring weekday.
+     */
+    private Lesson requireAttendanceLesson(LessonId lessonId, LocalDate date) {
+        requireNonNull(date);
+        Lesson lesson = requireLesson(lessonId);
+        checkArgument(date.getDayOfWeek().name().equals(lesson.getTimeSlot().getDay().name()),
+                "Attendance date " + date + " does not match lesson " + lessonId + "'s "
+                        + lesson.getTimeSlot().getDay() + " schedule.");
+        return lesson;
     }
 
     /**
