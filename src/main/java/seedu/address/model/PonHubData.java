@@ -167,6 +167,27 @@ public final class PonHubData {
     }
 
     /**
+     * Removes one empty Lesson without attendance history while retaining its allocation counter.
+     * The complete replacement state is validated before publication. No membership or attendance is removed.
+     *
+     * @return the removed immutable Lesson.
+     * @throws NullPointerException if the Lesson ID is null.
+     * @throws IllegalArgumentException if the Lesson is missing or has roster or attendance dependencies.
+     */
+    public Lesson removeLesson(LessonId lessonId) {
+        Lesson lesson = requireLesson(lessonId);
+        Optional<String> blocker = getLessonDeletionBlocker(lesson);
+        checkArgument(blocker.isEmpty(), blocker.orElse(""));
+
+        List<Lesson> lessons = new ArrayList<>(getLessons());
+        lessons.remove(lesson);
+        PonHubDataState replacement = new PonHubDataState(state.get().people(), lessons, state.get().attendance(),
+                state.get().lastAllocatedLessonSequence());
+        state.set(replacement);
+        return lesson;
+    }
+
+    /**
      * Adds an existing student to one existing lesson without changing either stable identity.
      * The complete replacement state is validated before publication, including student schedule clashes.
      *
@@ -372,8 +393,30 @@ public final class PonHubData {
      */
     public boolean isLessonReferenced(LessonId lessonId) {
         Lesson lesson = requireLesson(lessonId);
-        return !lesson.getEnrolledStudentIds().isEmpty()
-                || getAttendance().stream().anyMatch(record -> record.getLessonId().equals(lessonId));
+        return getLessonDeletionBlocker(lesson).isPresent();
+    }
+
+    /**
+     * Identifies the first roster or retained-attendance dependency that prevents deleting a Lesson.
+     */
+    private Optional<String> getLessonDeletionBlocker(Lesson lesson) {
+        requireNonNull(lesson);
+        if (!lesson.getEnrolledStudentIds().isEmpty()) {
+            String studentIds = String.join(", ", lesson.getEnrolledStudentIds().stream()
+                    .map(PersonId::toString).toList());
+            return Optional.of("Lesson " + lesson.getId()
+                    + " cannot be deleted while its roster contains these Student IDs: " + studentIds
+                    + ". Unenrol all Students first.");
+        }
+        Optional<Attendance> attendance = getAttendance().stream()
+                .filter(record -> record.getLessonId().equals(lesson.getId())).findFirst();
+        if (attendance.isPresent()) {
+            Attendance record = attendance.get();
+            return Optional.of("Lesson " + lesson.getId() + " cannot be deleted while retained attendance exists "
+                    + "for Student " + record.getStudentId() + " on " + record.getDate()
+                    + ". Unmark all attendance for this Lesson first.");
+        }
+        return Optional.empty();
     }
 
     /**

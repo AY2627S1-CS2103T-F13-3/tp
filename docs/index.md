@@ -13,7 +13,8 @@ title: PonHub
 PonHub is being developed for tuition centre administrators to manage people, shared lessons, enrolment and dated attendance through a keyboard-focused desktop interface. The shared-lesson target lets two students join one lesson and retains attendance history after unenrolment.
 
 The current build supports role-aware people addition/listing, own-contact people search and empty-roster
-shared-lesson creation, enrolment/unenrolment, dated attendance marking/removal and guarded person deletion. Type `help`
+shared-lesson creation, enrolment/unenrolment, dated attendance marking/removal and guarded person/Lesson deletion.
+Type `help`
 or `help COMMAND` for inline guidance, also available through the Help menu and F1. `lessons` and all seven
 lesson-search filters show separate shared-lesson results. Attendance history remains planned; consult the
 [current command summary](UserGuide.html#current-command-summary) before trying the wider workflow.
