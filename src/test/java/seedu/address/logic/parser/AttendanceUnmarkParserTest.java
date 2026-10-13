@@ -21,6 +21,9 @@ public class AttendanceUnmarkParserTest {
                 LocalDate.of(2026, 10, 5)), parser.parse(" 2 lid/l12 d/2026-10-05 "));
         assertEquals(new AttendanceUnmarkInput(Index.fromOneBased(3), new LessonId("L7"),
                 LocalDate.of(2024, 2, 29)), parser.parse("3 d/2024-02-29 lid/L7"));
+        assertEquals(new AttendanceUnmarkInput(Index.fromOneBased(2), new LessonId("L12"),
+                LocalDate.of(2026, 10, 5)),
+                parser.parse("\u00A02\u00A0lid/\u00A0L12\u00A0d/\u00A02026-10-05\u00A0"));
     }
 
     @Test
@@ -35,6 +38,8 @@ public class AttendanceUnmarkParserTest {
     public void parse_statusRepeatedUnknownOrInvalidPreamble_throwsParseException() {
         assertThrows(ParseException.class, "Unknown unmark prefix 's/'.", () -> parser.parse(
                 "1 lid/L1 d/2026-10-05 s/present"));
+        assertThrows(ParseException.class, "Unmark prefix 'lid/' requires a non-blank value.", () -> parser.parse(
+                "1 lid/\u00A0 d/2026-10-05"));
         for (String arguments : new String[]{"S1 lid/L1 d/2026-10-05",
             "1 lid/L1 lid/L2 d/2026-10-05", "1 lid/L1 d/2026-10-05 d/2026-10-12",
             "1 lesson/L1 d/2026-10-05", "1 lid/L1 date/2026-10-05"}) {

@@ -85,6 +85,10 @@ public class ResultDisplayTest {
                 MainWindow window = new MainWindow(stage, logic, dataPath);
                 window.fillInnerParts();
                 Region root = (Region) stage.getScene().getRoot();
+                // SplitPane content enters the scene graph when its skin is initialized.
+                root.applyCss();
+                root.resize(853, 600);
+                root.layout();
                 TextField input = (TextField) root.lookup("#commandTextField");
                 TextArea area = (TextArea) root.lookup("#resultDisplay");
                 // Select a real people card while help is requested from the other text control.

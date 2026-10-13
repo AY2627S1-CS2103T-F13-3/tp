@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox id="lessonCardPane" spacing="5" minWidth="0" maxWidth="Infinity"
+      xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+  <padding>
+    <Insets top="10" right="15" bottom="10" left="15" />
+  </padding>
+  <Label fx:id="lessonHeading" styleClass="cell_big_label" wrapText="true" minWidth="0" maxWidth="Infinity" />
+  <Label fx:id="lessonSchedule" styleClass="cell_small_label" wrapText="true" minWidth="0" maxWidth="Infinity" />
+  <Label fx:id="lessonTutor" styleClass="cell_small_label" wrapText="true" minWidth="0" maxWidth="Infinity" />
+  <Label fx:id="lessonRoom" styleClass="cell_small_label" wrapText="true" minWidth="0" maxWidth="Infinity" />
+  <Label fx:id="lessonRosterSize" styleClass="cell_small_label" wrapText="true" minWidth="0" maxWidth="Infinity" />
+</VBox>

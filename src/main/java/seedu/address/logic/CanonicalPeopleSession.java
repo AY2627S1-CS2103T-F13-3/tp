@@ -10,11 +10,13 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.collections.ObservableList;
 import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.CanonicalAddCommand;
 import seedu.address.logic.commands.CanonicalAddLessonCommand;
+import seedu.address.logic.commands.CanonicalDeleteCommand;
 import seedu.address.logic.commands.CanonicalEnrolCommand;
 import seedu.address.logic.commands.CanonicalListCommand;
 import seedu.address.logic.commands.CanonicalMarkAttendanceCommand;
@@ -29,6 +31,8 @@ import seedu.address.logic.parser.AddLessonParser;
 import seedu.address.logic.parser.AttendanceMarkParser;
 import seedu.address.logic.parser.AttendanceUnmarkParser;
 import seedu.address.logic.parser.LessonMembershipParser;
+import seedu.address.logic.parser.LessonsArgumentsParser;
+import seedu.address.logic.parser.ParserUtil;
 import seedu.address.logic.parser.PeopleListParser;
 import seedu.address.logic.parser.RoleAwareAddParser;
 import seedu.address.logic.parser.SearchCriteriaParser;
@@ -40,6 +44,9 @@ import seedu.address.model.person.PersonRecord;
 import seedu.address.model.person.PersonRole;
 import seedu.address.model.query.LessonQueries;
 import seedu.address.model.query.LessonQuerySource;
+import seedu.address.model.query.LessonView;
+import seedu.address.model.search.SearchCategory;
+import seedu.address.model.search.SearchCriteria;
 import seedu.address.storage.ProtectedPonHubDataStorage;
 
 /**
@@ -54,6 +61,7 @@ public final class CanonicalPeopleSession {
     public static final String MESSAGE_UNENROL_USAGE = CanonicalCommandCatalog.MESSAGE_UNENROL_USAGE;
     public static final String MESSAGE_MARK_USAGE = CanonicalCommandCatalog.MESSAGE_MARK_USAGE;
     public static final String MESSAGE_UNMARK_USAGE = CanonicalCommandCatalog.MESSAGE_UNMARK_USAGE;
+    public static final String MESSAGE_DELETE_USAGE = CanonicalCommandCatalog.MESSAGE_DELETE_USAGE;
     public static final String MESSAGE_HELP_USAGE = CanonicalCommandCatalog.MESSAGE_HELP_USAGE;
 
     private static final Pattern BASIC_COMMAND_FORMAT =
@@ -64,6 +72,7 @@ public final class CanonicalPeopleSession {
     private final PonHubData data;
     private final PeopleView view;
     private final LessonQuerySource lessonQueries;
+    private final LessonRetrieval lessonRetrieval;
     private final CanonicalCommandExecutor executor;
 
     /**
@@ -92,7 +101,9 @@ public final class CanonicalPeopleSession {
             // Storage retains the authoritative rejection guidance and a session-long write lock.
         }
         view = new PeopleView(data);
-        lessonQueries = new LessonQueries(data);
+        LessonQueries queries = new LessonQueries(data);
+        lessonQueries = queries;
+        lessonRetrieval = new LessonRetrieval(queries, view);
         executor = new CanonicalCommandExecutor(view, writer, storage::getDataLoadError);
     }
 
@@ -110,6 +121,14 @@ public final class CanonicalPeopleSession {
 
     public LessonQuerySource getLessonQueries() {
         return lessonQueries;
+    }
+
+    public ObservableList<LessonView> getDisplayedLessons() {
+        return lessonRetrieval.getDisplayedLessons();
+    }
+
+    public ReadOnlyStringProperty lessonResultContextProperty() {
+        return lessonRetrieval.contextProperty();
     }
 
     public ProtectedPonHubDataStorage.LoadStatus getLoadStatus() {
@@ -169,13 +188,23 @@ public final class CanonicalPeopleSession {
             case "unmark":
                 return executor.execute(new CanonicalUnmarkAttendanceCommand(new AttendanceUnmarkParser().parse(
                         arguments)));
+            case "delete":
+                return executor.execute(new CanonicalDeleteCommand(ParserUtil.parseIndex(arguments)));
             case "list":
                 CommandResult result = executor.execute(
                         new CanonicalListCommand(new PeopleListParser().parse(arguments)));
                 return loadError.map(error -> new CommandResult(result.getFeedbackToUser() + "\n\n" + error))
                         .orElse(result);
             case "search":
-                return executor.execute(new CanonicalSearchCommand(new SearchCriteriaParser().parse(arguments)));
+                SearchCriteria criteria = new SearchCriteriaParser().parse(arguments);
+                if (criteria.getCategory() == SearchCategory.LESSON) {
+                    return new CommandResult(String.format("Found %d lesson(s).",
+                            lessonRetrieval.search(criteria).size()));
+                }
+                return executor.execute(new CanonicalSearchCommand(criteria));
+            case "lessons":
+                return new CommandResult(String.format("Showing %d lesson(s).",
+                        lessonRetrieval.list(new LessonsArgumentsParser().parse(arguments)).size()));
             case "help":
                 return new CommandResult(getHelp(arguments));
             case "exit":
