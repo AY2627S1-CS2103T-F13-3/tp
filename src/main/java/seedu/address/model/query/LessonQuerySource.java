@@ -50,4 +50,10 @@ public interface LessonQuerySource {
      * @throws IllegalArgumentException if the tutor is unknown or the ID has another role
      */
     ObservableList<LessonView> getTutorSchedule(PersonId tutorId);
+
+    /** Returns retained dated records, newest first, then by Lesson ID. A missing record is unrecorded. */
+    ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId);
+
+    /** Returns retained dated records for one existing lesson, including former membership. */
+    ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId, LessonId lessonId);
 }

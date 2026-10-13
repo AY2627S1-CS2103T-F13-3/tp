@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox minWidth="0" minHeight="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+  <Label fx:id="historyContext" styleClass="cell_small_label" wrapText="true" minWidth="0" maxWidth="Infinity" />
+  <Label fx:id="historySummary" styleClass="cell_small_label" wrapText="true" />
+  <ListView fx:id="historyListView" minWidth="0" minHeight="0" VBox.vgrow="ALWAYS" />
+</VBox>

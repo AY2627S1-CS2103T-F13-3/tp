@@ -12,6 +12,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,7 +36,9 @@ import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import seedu.address.MainApp;
 import seedu.address.logic.Logic;
+import seedu.address.model.PonHubData;
 import seedu.address.model.PonHubDataState;
+import seedu.address.model.attendance.AttendanceStatus;
 import seedu.address.model.person.ContactDetails;
 import seedu.address.model.person.EducationLevel;
 import seedu.address.model.person.Name;
@@ -47,6 +50,7 @@ import seedu.address.model.person.PersonRole;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Student;
 import seedu.address.model.person.Tutor;
+import seedu.address.model.query.AttendanceHistoryEntry;
 import seedu.address.model.query.LessonView;
 import seedu.address.storage.JsonPonHubDataStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -60,6 +64,42 @@ public class CanonicalMainWindowTest {
 
     @TempDir
     Path directory;
+
+    @Test
+    public void history_showsRetainedRowsWithoutChangingPeopleSelection() throws Exception {
+        Path path = directory.resolve("canonical.json");
+        PonHubData data = LessonQueryTestData.createData();
+        data.markAttendance(LessonQueryTestData.STUDENT_TWO, LessonQueryTestData.SHARED_LESSON,
+                LocalDate.of(2026, 10, 5), AttendanceStatus.PRESENT);
+        new JsonPonHubDataStorage(path).saveData(data.exportState());
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("search c/student n/Jamie");
+                fixture.people().getSelectionModel().select(0);
+                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                byte[] before = Files.readAllBytes(path);
+                fixture.enter("history 1 lid/L10");
+                assertTrue(fixture.history().getParent().isVisible());
+                assertFalse(fixture.lessons().getParent().isVisible());
+                Label context = (Label) fixture.root().lookup("#historyContext");
+                Label summary = (Label) fixture.root().lookup("#historySummary");
+                assertEquals("Student S2 · attendance history · L10", context.getText());
+                assertEquals("Showing 1 attendance record(s).", summary.getText());
+                assertEquals(AttendanceHistoryEntry.Status.PRESENT, fixture.history().getItems().get(0).getStatus());
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertArrayEquals(before, Files.readAllBytes(path));
+                fixture.enter("unenrol 1 lid/L10");
+                assertFalse(fixture.history().getItems().get(0).isCurrentlyEnrolled());
+                fixture.enter("mark 1 lid/L10 d/2026-10-05 s/absent");
+                assertEquals(AttendanceHistoryEntry.Status.ABSENT, fixture.history().getItems().get(0).getStatus());
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                fixture.enter("lessons");
+                assertFalse(fixture.history().getParent().isVisible());
+                assertTrue(fixture.lessons().getParent().isVisible());
+            }
+            return null;
+        });
+    }
 
     @Test
     public void realMembership_refreshesLessonCardsAndPreservesSelectedPeopleAndContext() throws Exception {
@@ -509,6 +549,7 @@ public class CanonicalMainWindowTest {
             // Offscreen tests have no native pulse to finish a virtualized list's pending scroll/layout.
             people().layout();
             lessons().layout();
+            history().layout();
         }
 
         private TextField input() {
@@ -527,6 +568,11 @@ public class CanonicalMainWindowTest {
         @SuppressWarnings("unchecked")
         private ListView<LessonView> lessons() {
             return (ListView<LessonView>) root().lookup("#lessonListView");
+        }
+
+        @SuppressWarnings("unchecked")
+        private ListView<AttendanceHistoryEntry> history() {
+            return (ListView<AttendanceHistoryEntry>) root().lookup("#historyListView");
         }
 
         private void enter(String command) {
