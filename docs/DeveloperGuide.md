@@ -275,14 +275,30 @@ the Lesson fields of the [search matrix](#supported-criteria).
 
 ### Model component
 
-**Legacy API:** [`Model`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/Model.java).
+**Person records and composition:**
 
-<img src="images/ModelClassDiagram.png" width="450" />
+![Person record class diagram](images/PersonRecordClassDiagram.png)
 
-The inherited diagram records `AddressBook`, `UniquePersonList` and `ModelManager`, retained for
-regression tests. Active `PonHubData` instead owns immutable canonical records and relationships;
-`PeopleView` derives one observable role-filtered projection from that root. UI observes committed
-projections rather than maintaining writable copies. Preferences remain outside operational snapshots.
+**Shared Lesson ownership and membership:**
+
+![Lesson membership class diagram](images/LessonMembershipClassDiagram.png)
+
+**Dated Attendance, separate from current membership:**
+
+![Attendance class diagram](images/AttendanceClassDiagram.png)
+
+The canonical model has one `PonHubDataState` aggregate. It owns one people-registry snapshot, an independent
+catalogue of shared `Lesson` records, and separate dated `Attendance` records. Each `PersonRecord` is exactly one
+`Student`, `Tutor`, or `Parent` and composes one stable `PersonId` and one `ContactDetails` value. Each Lesson has
+exactly one Tutor and owns zero or more stable Student IDs; this produces the Student-Lesson many-to-many
+membership without copying lesson data into Student records. Each Attendance record refers to exactly one Student
+and one Lesson through its dated `AttendanceKey`. Attendance is retained history, not current membership.
+
+The inherited [`Model`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/Model.java)
+API and its historical diagram retain `AddressBook`, `UniquePersonList`, and `ModelManager` for regression tests.
+Active `PonHubData` instead owns the immutable canonical records and relationships shown above. `PeopleView`
+derives one observable role-filtered projection from that root. UI observes committed projections rather than
+maintaining writable copies. Preferences remain outside operational snapshots.
 
 The aggregate below implements the [shared ownership and identity contract](#shared-lesson-target-contract).
 Complete independent transaction snapshots preserve records, relationships and allocation state.
@@ -1347,37 +1363,39 @@ views; remaining attendance references still block student and lesson deletion.
 ### Non-Functional Requirements
 
 1.  Should work on Windows, Linux and macOS using Java `25`. On macOS, use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`), as described in [Setting up and getting started](SettingUp.html#setting-up-the-project-on-your-computer).
-2.  Should be able to hold up to 1,000 persons, 1,000 recurring lessons, and 10,000 attendance records without noticeable sluggishness during typical usage.
-3.  Team performance target: common operations should update the GUI within 2 seconds on a reference machine recorded with its hardware, OS, Java version and test dataset. The reference machine and measured results are still to be documented; this guide does not claim the target has been verified.
-3.  A user with above average typing speed for regular English text (i.e. not code or system administration commands) should be able to accomplish most recurring tasks faster using commands than using the mouse.
-4.  The product should be for a single user and use one local data store, without requiring user accounts, concurrent access, or live synchronisation.
-5.  The product should be packaged into a single executable `.jar` file and should not require an installer.
-6.  The product file size should remain below 100 MB to ensure efficient storage and distribution.
-7.  The GUI should display correctly and without layout issues on screen resolutions of 1920×1080 and higher at 100% and 125% scale.
-8.  The GUI should remain usable (i.e. all functions remain accessible even if the layout is suboptimal) at screen resolutions of 1280×720 and higher at 150% scale.
-9.  All operational data must be stored locally in a human-readable text file without using a database management system.
-10. All successful data changes must be saved automatically and reliably. Failed validation or saving must leave both the in-memory data and stored data file unchanged.
-11. All person, lesson, and attendance data must remain on the user's computer and must never be transmitted over the internet.
-12. The application should function offline without requiring an internet connection or a team-owned remote server.
-13. Invalid inputs must not crash the application or modify existing data. The application should display a specific error message explaining how the user can correct the input.
-14. The application should be implemented primarily using object-oriented programming, with clear separation between the UI, Logic, Model, and Storage components.
-15. Team testing target: the JUnit-based automated test suite should achieve at least 70% line coverage, and all automated tests should pass before a release. The percentage is the team's own goal, not a course-mandated minimum; coverage does not replace behavior-focused regression and integration checks.
+2.  Should be able to hold at least 1,000 persons, 1,000 recurring lessons, and 10,000 attendance records in one local data file.
+3.  Team performance target: with the data volume in NFR 2, common command-to-GUI-update operations should complete within 2 seconds on the reference machine. Verification must record the CPU, memory, OS, Java distribution and version, dataset generator, command mix, timing method, and observed results in [#101](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101). As #101 has not yet recorded these facts, this guide states a target rather than an achieved result.
+4.  A user with above average typing speed for regular English text (i.e. not code or system administration commands) should be able to accomplish most recurring tasks faster using commands than using the mouse.
+5.  The product should be for a single user and use one local data store, without requiring user accounts, concurrent access, or live synchronisation.
+6.  The product should be packaged into a single executable `.jar` file and should not require an installer.
+7.  The product file size should remain below 100 MB to ensure efficient storage and distribution.
+8.  The GUI should display correctly and without layout issues on screen resolutions of 1920×1080 and higher at 100% and 125% scale.
+9.  The GUI should remain usable (i.e. all functions remain accessible even if the layout is suboptimal) at screen resolutions of 1280×720 and higher at 150% scale.
+10. All operational data must be stored locally in a human-readable text file without using a database management system.
+11. All successful data changes must be saved automatically and reliably. Failed validation or saving must leave both the in-memory data and stored data file unchanged.
+12. All person, lesson, and attendance data must remain on the user's computer and must never be transmitted over the internet.
+13. The application should function offline without requiring an internet connection or a team-owned remote server.
+14. Invalid inputs must not crash the application or modify existing data. The application should display a specific error message explaining how the user can correct the input.
+15. The application should be implemented primarily using object-oriented programming, with clear separation between the UI, Logic, Model, and Storage components.
+16. Team testing target: the JUnit-based automated test suite should achieve at least 70% line coverage, and all automated tests should pass before a release. The percentage is the team's own goal, not a course-mandated minimum; coverage does not replace behavior-focused regression and integration checks.
 
 ### Glossary
 
 * **Mainstream OS**: Windows, Linux, Unix, or macOS
 * **AddressBook-Level3 (AB3)**: The upstream SE-EDU desktop application that is incrementally evolved into PonHub
-* **Person record**: A stored record representing one student, tutor, or parent and containing the fields required for that role
+* **Person record**: A stored Student, Tutor, or Parent record composed of one stable Person ID and one Contact Details value, plus fields required for that role
+* **Contact details**: One required name with optional phone, email, and address values composed into a Person record
 * **Role**: The `student`, `tutor`, or `parent` category assigned to a person record, which determines its required fields and applicable operations
-* **Shared recurring lesson**: An independent weekly teaching slot with a stable Lesson ID, day, start/end time, subject, tutor and room; its roster may contain zero or more Student IDs
+* **Lesson catalogue**: The ordered collection of independent shared Lesson records owned by the canonical data aggregate
+* **Shared recurring lesson**: An independent weekly teaching slot with a stable Lesson ID, day, start/end time, subject, one Tutor ID, and room; its roster may contain zero or more Student IDs, and each Student may belong to zero or more Lessons
 * **Lesson occurrence**: One dated instance of a recurring lesson
-* **Attendance record**: A stored record containing the attendance status of one student for one lesson occurrence
+* **Attendance record**: A dated history record containing the attendance status of one Student for one Lesson occurrence, stored separately from current enrolment
 * **Attendance status**: The recorded state of a student for a lesson occurrence, such as `present` or `absent`
-* **Attendance key**: The combination of student, lesson, and date that uniquely identifies one attendance record
+* **Attendance key**: The combination of one stable Student ID, one stable Lesson ID, and one date that uniquely identifies an Attendance record
 * **Exact duplicate person**: A person record with the same role, normalised name, and identifying contact number as an existing record
 * **Displayed person index**: The positive one-based position in the current filtered people list used to select a person in a command; it is distinct from a stable ID and may change when that people view is filtered or reordered. Lesson, roster and history row positions do not supply person command indices
 * **Stable person ID**: The role-prefixed identity stored for a person and used in internal lookup, queries, relationships and persistence; commands resolve a displayed person index once to this identity
-* **Stable lesson ID**: The `L`-prefixed identity of a shared Lesson, persisted and used in attendance references; existing lessons are selected in commands with `lid/LESSON_ID`, never a per-student lesson index
+* **Stable lesson ID**: The `L`-prefixed identity of a shared Lesson, persisted and used in attendance references; existing lessons are selected in commands with `lid/LESSON_ID` using that single canonical identity
 * **Tutor lookup**: Lesson creation resolves a normalized full tutor name and optional exact phone to one Tutor ID; search uses partial tutor-name text instead
 * **Prefix**: A short marker in a command that identifies the type of information represented by the following value
 * **Parser**: The Logic component that converts raw command text into validated parameters and a command object
@@ -1388,15 +1406,15 @@ views; remaining attendance references still block student and lesson deletion.
 * **Human-readable data file**: The local text file used to store PonHub data in a form that can be inspected and edited without a database management system
 * **Tutor clash**: An overlap between lessons assigned to the same tutor on the same day and during an overlapping time range
 * **Room clash**: An overlap between lessons assigned to the same room on the same day and during an overlapping time range
-* **Class**: A tuition-centre term for a shared recurring lesson; core membership uses the Lesson-owned roster, with capacity and one-off reservations deferred
+* **Class**: A tuition-centre term for a shared recurring lesson; core membership uses the Lesson-owned roster, while capacity and one-off reservations are deferred proposals rather than core model fields
 * **Enrolment**: A Student's current membership in a shared Lesson; removing membership retains dated attendance
 * **Roster**: The current enrolled Student IDs owned by one shared Lesson, from which displayed student records are derived
 * **History**: Retained dated attendance keyed by Student ID, Lesson ID and date, independent of current membership
-* **Capacity (future)**: A later limit on the number of students in a class
-* **Make-up booking (future)**: A one-off reservation in a suitable class for a student who missed a regular lesson, without changing regular membership
-* **Waiting list (future)**: An ordered queue of students requesting a place in a class that has reached a later capacity limit
-* **Class-swap request (future)**: A pending request to move a student when a transfer cannot be completed immediately
-* **Archived student (future)**: A withdrawn student retained for historical reference but hidden from the default active-student list
+* **Capacity (proposal)**: A proposed limit on the number of students in a class; it is not a field in the core model
+* **Make-up booking (proposal)**: A proposed one-off reservation in a suitable class for a student who missed a regular lesson, without changing regular membership
+* **Waiting list (proposal)**: A proposed ordered queue of students requesting a place in a class that has reached a capacity limit
+* **Class-swap request (proposal)**: A proposed pending request to move a student when a transfer cannot be completed immediately
+* **Archived student (proposal)**: A proposed withdrawn-student state retained for historical reference but hidden from the default active-student list
 
 --------------------------------------------------------------------------------------------------------------------
 
