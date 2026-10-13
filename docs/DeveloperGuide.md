@@ -66,8 +66,8 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 
 `MainApp` connects one canonical session/root to Logic, cards and protected storage. Normal sessions
 support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, guarded `delete`, `list`,
-`lessons`, own-contact people search, all seven lesson-search fields, `help` and `exit`; protected sessions allow
-only help/list/exit. Attendance removal/history and Tutor relationship search remains planned.
+`lessons`, own-contact and relationship people search, all seven lesson-search fields, `help` and `exit`; protected sessions allow
+only help/list/exit. Attendance removal/history remain planned.
 Inherited edit/clear/find routes are unavailable. Stored attendance can be created and corrected with `mark`;
 `unmark` and `history` remain unavailable.
 
@@ -999,7 +999,7 @@ unsupported prefix cannot be absorbed into the preceding text value. The criteri
 but does not traverse relationships. `CanonicalPeopleSession` routes lesson search to `LessonRetrieval` and
 people search to `CanonicalSearchCommand.execute(data, view)`, which publishes only validated read-only results.
 Read-only searches reuse the session's indexes without allocating a staged aggregate or invoking the writer.
-Tutor relationship fields remain explicitly unavailable until their separate increment.
+All agreed Student, Parent and Tutor relationship fields are active according to the criteria matrix.
 
 `PersonContactSearch` matches the `n/l/p/pp/e/a` own-field subset. `PersonRelationshipSearch` separates these from
 Student lesson fields and runs one indexed `LessonQueries.searchLessons` request over the complete catalogue.
@@ -1056,6 +1056,22 @@ one sibling and Monday Math from another, or day and subject from separate lesso
 with a raw nested Student/Lesson scan. Exercise failed publication and successful context refresh with the Parent
 projection active; for real enrol/unenrol, switch to Student listing first and repeat the Parent query afterwards.
 Verify read-only bytes, invalid-prefix preservation and matching results/context after reload.
+
+#### Tutor relationship search (#96)
+
+Tutor own fields are filtered first. One indexed lesson query applies `sn/d/st/et/s/rm` to each candidate before
+matching the lesson's stable Tutor ID against eligible Tutors. `sn/` is tested in that lesson's current roster;
+matching student details resolve through the existing stable-ID index. Without `sn/`, empty assigned lessons
+remain eligible. Different assignments never combine predicates, and same-name Tutors remain distinct by ID.
+The result/context map emits one Tutor card with matching lesson/student context. The query cost is
+`O(P + B + R_B + K)` for bounded fields, with no additional writable associations.
+
+UC-02/manual checks: use same-name Tutors with different phones and assignments; contrast empty rosters,
+Tutors with no lessons, and an Alex roster in one lesson versus Monday Science in another. Combine exact
+times, subject and room fragments on a positive match; reject `tu/` for Tutor results and use `n/` instead.
+Compare 1,000 seeded queries against an independent raw assignment/roster scan. Exercise failed publication,
+enrol/unenrol and reload; only current membership supplies `sn/`. Verify immutable/read-only results and
+wrapping context labels for multiple matching roster Students without duplicate Tutor cards.
 
 ### Dated attendance records
 
@@ -1114,8 +1130,8 @@ Canonical people activation and the remaining shared-lesson integration are trac
 [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77),
 [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85), and their dependent command, storage and retrieval
 issues. The requirements below describe the intended product; role-aware add/list, empty-roster shared-lesson
-creation, enrolment/unenrolment, dated attendance marking, guarded person deletion, own-contact people search,
-lesson listing and lesson search are active. Attendance removal/history and Tutor relationship search remains planned.
+creation, enrolment/unenrolment, dated attendance marking, guarded person deletion, people relationship search,
+lesson listing and lesson search are active. Attendance removal/history remain planned.
 
 ### User stories
 
@@ -1234,8 +1250,8 @@ Person selectors in these target use cases are positive indices from the current
 
 **Query design:** #80 supplies the read-only catalogue, stable-ID lookup, current roster/student lessons and indexed
 lesson filtering through the [prepared query backend](#indexed-lesson-query-projections-80). Current membership
-comes only from Lesson-owned IDs. Own-contact people search, Student lesson predicates, catalogue/student lesson listing and all seven lesson search fields are active.
-Relationship search on people, detailed rosters, dated attendance and history remain separate slices. A student
+comes only from Lesson-owned IDs. Own-contact and relationship people search, catalogue/student lesson listing and all seven lesson search fields are active.
+Detailed rosters, dated attendance and history remain separate slices. A student
 selector is resolved once against the current people view, never an ID suffix or a hidden role list. Empty rosters
 are included unless `sn/` requires a current member; all lesson filters match the same shared lesson.
 
@@ -1588,8 +1604,8 @@ lifecycle checks and shutdown diagnostics.
    record uses the next unconsumed ID and appears last in the all-role view; restart verifies persistence.
 4. With a selected card, request help from the menu/F1 and through the command box. Expect preserved
    records/filter/selection; menu/F1 additionally retain unfinished text. Run malformed `delete S1` and
-   `lessons sid/S1` commands; expect invalid-index or usage feedback respectively. People relationship searches
-   give explicit interim feedback. These failures preserve data, filter and selection.
+   `lessons sid/S1` commands; expect invalid-index or usage feedback respectively. These failures preserve data,
+   filter and selection.
 
 ### Active own-contact search checks
 
@@ -1600,7 +1616,7 @@ lifecycle checks and shutdown diagnostics.
    Resolve the next person selector against this visible view; its position must not become an ID suffix.
 3. Switch between two same-role searches, then `list r/student` and `list`. Each listing clears the search criteria.
    `help search`, Help menu and F1 preserve the filtered view; compare operational bytes before/after read commands.
-4. Reject `search c/student d/Mon`, `search c/parent sn/Alex` and `search c/tutor rm/R1` with explicit interim feedback.
+4. Verify `search c/student d/Mon`, `search c/parent sn/Alex` and `search c/tutor rm/R1` against current relationships.
    Unknown/repeated/blank/category-incompatible fields fail without replacing the previous people view.
 5. Attempt an addition with a failed-save destination while a search is active. Retain data, counters, bytes,
    filter and selected card. Restore access and retry; success saves before resetting to all roles. Reopen the file

@@ -163,6 +163,14 @@ public final class LessonQueries implements LessonQuerySource {
         return studentsByParentPhone.getOrDefault(requireNonNull(phone).value, List.of());
     }
 
+    /**
+     * Resolves immutable Student details from the same stable-ID index used by roster projections.
+     */
+    public Student getStudentRecord(PersonId studentId) {
+        requirePerson(studentId, PersonRole.STUDENT);
+        return (Student) peopleById.get(studentId);
+    }
+
     private void refresh(PonHubDataState snapshot) {
         peopleById.clear();
         lessonsById.clear();

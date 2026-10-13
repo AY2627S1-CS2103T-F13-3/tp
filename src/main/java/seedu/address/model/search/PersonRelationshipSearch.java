@@ -22,7 +22,7 @@ import seedu.address.model.query.LessonView;
 
 /**
  * Combines own-field matches with the existing indexed lesson search and authoritative current rosters.
- * Parent links use exact phone equality; Tutor relationships activate in their separate increment.
+ * Parent links use exact phone equality; Tutor matches use stable assignment and that same lesson's current roster.
  */
 public final class PersonRelationshipSearch {
     private PersonRelationshipSearch() {
@@ -39,13 +39,16 @@ public final class PersonRelationshipSearch {
         if (criteria.getFilters().keySet().stream().allMatch(PersonContactSearch.OWN_FIELDS::contains)) {
             return new PersonSearchResult(PersonContactSearch.search(people, criteria), Map.of());
         }
-        checkArgument(Set.of(SearchCategory.STUDENT, SearchCategory.PARENT).contains(criteria.getCategory()),
+        checkArgument(criteria.getCategory() != SearchCategory.LESSON,
                 "Relationship search is not available for " + criteria.getCategory().name().toLowerCase(Locale.ROOT)
                         + " yet.");
         List<PersonRecord> ownMatches = PersonContactSearch.search(people, new SearchCriteria(criteria.getCategory(),
                 fields(criteria, true)));
         if (criteria.getCategory() == SearchCategory.PARENT) {
             return searchParents(ownMatches, queries, criteria);
+        }
+        if (criteria.getCategory() == SearchCategory.TUTOR) {
+            return searchTutors(ownMatches, queries, criteria);
         }
         Set<PersonId> eligible = ownMatches.stream().map(PersonRecord::getId).collect(Collectors.toSet());
         Map<PersonId, List<PersonSearchMatch>> contexts = new LinkedHashMap<>();
@@ -67,6 +70,31 @@ public final class PersonRelationshipSearch {
         return criteria.getFilters().entrySet().stream()
                 .filter(entry -> PersonContactSearch.OWN_FIELDS.contains(entry.getKey()) == own)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private static PersonSearchResult searchTutors(List<PersonRecord> tutors, LessonQueries queries,
+            SearchCriteria criteria) {
+        Set<PersonId> eligible = tutors.stream().map(PersonRecord::getId).collect(Collectors.toSet());
+        Map<PersonId, List<PersonSearchMatch>> contexts = new LinkedHashMap<>();
+        boolean hasStudentFilter = criteria.getValue(SearchField.STUDENT_NAME).isPresent();
+        for (var lesson : queries.searchLessons(new SearchCriteria(SearchCategory.LESSON, fields(criteria, false)))) {
+            if (!eligible.contains(lesson.getTutorId())) {
+                continue;
+            }
+            var matches = contexts.computeIfAbsent(lesson.getTutorId(), unused -> new ArrayList<>());
+            if (!hasStudentFilter) {
+                matches.add(new PersonSearchMatch(Optional.empty(), Optional.of(lesson)));
+                continue;
+            }
+            for (var student : queries.getLessonRoster(lesson.getLessonId())) {
+                if (criteria.matches(SearchField.STUDENT_NAME, student.getName())) {
+                    matches.add(new PersonSearchMatch(Optional.of(queries.getStudentRecord(student.getStudentId())),
+                            Optional.of(lesson)));
+                }
+            }
+        }
+        return new PersonSearchResult(tutors.stream().filter(tutor -> contexts.containsKey(tutor.getId())).toList(),
+                contexts);
     }
 
     /**

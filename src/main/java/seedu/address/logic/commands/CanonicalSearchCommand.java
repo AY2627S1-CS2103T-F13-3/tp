@@ -13,7 +13,7 @@ import seedu.address.model.search.SearchCategory;
 import seedu.address.model.search.SearchCriteria;
 
 /**
- * Searches own-contact fields in the canonical people catalogue without writing operational data.
+ * Searches validated own and relationship fields in the canonical people catalogue without writing operational data.
  */
 public final class CanonicalSearchCommand implements CanonicalCommandExecutor.StagedCommand {
     public static final String MESSAGE_SUCCESS = "Found %d %s(s).";
