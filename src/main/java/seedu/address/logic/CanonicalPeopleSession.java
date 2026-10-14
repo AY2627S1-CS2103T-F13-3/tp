@@ -19,17 +19,21 @@ import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.CanonicalAddCommand;
 import seedu.address.logic.commands.CanonicalAddLessonCommand;
 import seedu.address.logic.commands.CanonicalDeleteCommand;
+import seedu.address.logic.commands.CanonicalDeleteLessonCommand;
 import seedu.address.logic.commands.CanonicalEnrolCommand;
 import seedu.address.logic.commands.CanonicalListCommand;
 import seedu.address.logic.commands.CanonicalMarkAttendanceCommand;
 import seedu.address.logic.commands.CanonicalSearchCommand;
 import seedu.address.logic.commands.CanonicalUnenrolCommand;
+import seedu.address.logic.commands.CanonicalUnmarkAttendanceCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddLessonParser;
 import seedu.address.logic.parser.AttendanceMarkParser;
+import seedu.address.logic.parser.AttendanceUnmarkParser;
+import seedu.address.logic.parser.DeleteLessonParser;
 import seedu.address.logic.parser.LessonMembershipParser;
 import seedu.address.logic.parser.LessonsArgumentsParser;
 import seedu.address.logic.parser.ParserUtil;
@@ -62,8 +66,12 @@ public final class CanonicalPeopleSession {
     public static final String MESSAGE_ENROL_USAGE = CanonicalCommandCatalog.MESSAGE_ENROL_USAGE;
     public static final String MESSAGE_UNENROL_USAGE = CanonicalCommandCatalog.MESSAGE_UNENROL_USAGE;
     public static final String MESSAGE_MARK_USAGE = CanonicalCommandCatalog.MESSAGE_MARK_USAGE;
+    public static final String MESSAGE_UNMARK_USAGE = CanonicalCommandCatalog.MESSAGE_UNMARK_USAGE;
     public static final String MESSAGE_DELETE_USAGE = CanonicalCommandCatalog.MESSAGE_DELETE_USAGE;
+    public static final String MESSAGE_DELETE_LESSON_USAGE = CanonicalCommandCatalog.MESSAGE_DELETE_LESSON_USAGE;
     public static final String MESSAGE_HELP_USAGE = CanonicalCommandCatalog.MESSAGE_HELP_USAGE;
+    public static final String MESSAGE_UNKNOWN_COMMAND_FORMAT =
+            "Unknown command: '%s'. Type 'help' to see available commands.";
 
     private static final Pattern BASIC_COMMAND_FORMAT =
             Pattern.compile("(?<commandWord>\\S+)(?<arguments>.*)", Pattern.DOTALL);
@@ -190,8 +198,13 @@ public final class CanonicalPeopleSession {
             case "mark":
                 return executor.execute(new CanonicalMarkAttendanceCommand(new AttendanceMarkParser().parse(
                         arguments)));
+            case "unmark":
+                return executor.execute(new CanonicalUnmarkAttendanceCommand(new AttendanceUnmarkParser().parse(
+                        arguments)));
             case "delete":
                 return executor.execute(new CanonicalDeleteCommand(ParserUtil.parseIndex(arguments)));
+            case "deletelesson":
+                return executor.execute(new CanonicalDeleteLessonCommand(new DeleteLessonParser().parse(arguments)));
             case "list":
                 CommandResult result = executor.execute(
                         new CanonicalListCommand(new PeopleListParser().parse(arguments)));
@@ -216,7 +229,7 @@ public final class CanonicalPeopleSession {
                 }
                 return new CommandResult(ExitCommand.MESSAGE_EXIT_ACKNOWLEDGEMENT, false, true);
             default:
-                throw new ParseException(Messages.MESSAGE_UNKNOWN_COMMAND);
+                throw new ParseException(String.format(MESSAGE_UNKNOWN_COMMAND_FORMAT, word));
         }
     }
 
