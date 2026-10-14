@@ -31,7 +31,8 @@ title: Developer Guide
   lesson membership, atomic saves and the canonical aggregate (#76); and #197's lesson creation/membership
   command-boundary regressions; and #91 guarded person deletion, transaction/restart and lesson-view integration
   tests, conflict reconciliation and guide updates; and #97's retired edit/find/clear implementation and
-  test-helper removal, actionable unknown-command feedback, preservation regressions and guide updates.
+  test-helper removal, actionable unknown-command feedback, preservation regressions, retired legacy
+  Person replacement API removal and guide updates.
   He also used Codex for cross-branch conflict reconciliation and its focused validation; original
   feature authorship is preserved.
   These credits do not transfer feature ownership.
@@ -46,11 +47,14 @@ title: Developer Guide
 * Ben (`ben58882`) used OpenAI Codex for #80's indexed lesson/roster projections, committed-state
   refresh, Logic delegation, search/transaction regression tests and guide updates. For #90, Ben used Codex
   to connect indexed queries to active lesson commands and cards, add validation/persistence/refresh/UI tests,
-  and update guides, diagrams and the final window screenshot. For #94, Codex added indexed Student relationship
-  search, immutable matching context, card refresh and same-lesson/read-only/integration regressions. For #99,
-  Ben used Codex to add lesson details, dated roster/retained attendance rendering, command routing,
-  integration tests and guide updates. For #96, Ben used Codex to reconcile Tutor search with the delivered
-  lesson-detail implementation and current guides, retaining the existing relationship regressions.
+  and update guides, diagrams and the final window screenshot. For #99, Ben used Codex to add lesson details,
+  dated roster/retained attendance rendering, command routing, integration tests and guide updates.
+  For #94, Codex added indexed Student relationship search, immutable matching context, card refresh and
+  same-lesson/read-only/integration regressions, and corrected the active manual-test expectations after review.
+  For #95, Ben used Codex for exact-phone Parent search, same-child/same-lesson context and regression tests,
+  and the reviewed manual-test corrections.
+  For #96, Ben used Codex to reconcile Tutor search with the delivered lesson-detail implementation
+  and current guides, retaining the existing relationship regressions.
 * Ernest used OpenAI Codex for the Week 8 command catalogue, inline help, regression tests and shared
   documentation; #129's active UI encapsulation/Javadoc corrections and caller/repository checks;
   #60's architecture/command conventions and AboutUs clarification; #164's shared-guide consolidation,
@@ -77,12 +81,13 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 `MainApp` connects one canonical session/root to Logic, cards and protected storage. Normal sessions
 support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, guarded `delete` and
 `deletelesson`, `list`, `lessons`, `showlesson`, own-contact people search, all seven lesson-search fields,
-`help` and `exit`; protected sessions allow only help/list/exit. Student, Parent and Tutor relationship search
-is active; attendance history remains planned.
+`help` and `exit`; protected sessions allow only help/list/exit.
+Student, Parent and Tutor relationship search is active; attendance history remains planned.
 Inherited edit/clear/find routes are unavailable, and their command/parser implementations and edit-descriptor
 test helpers have been removed. Canonical boundary tests verify rejected commands preserve the saved aggregate,
-filtered people view and preferences; help and exit remain usable. Other isolated legacy regression seams remain
-pending the remaining cleanup under #97. `mark` creates or corrects attendance; `unmark` removes one dated key.
+filtered people view and preferences; help and exit remain usable. The retired `setPerson` replacement API is
+also removed from the legacy Model, ModelManager, AddressBook and UniquePersonList. Other isolated legacy
+mutation and regression seams remain under #97. `mark` creates or corrects attendance; `unmark` removes one dated key.
 
 `CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
 routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
@@ -1578,8 +1583,9 @@ and shutdown diagnostics. Historical verification details are preserved in [#84]
    record uses the next unconsumed ID and appears last in the all-role view; restart verifies persistence.
 4. With a selected card, request help from the menu/F1 and through the command box. Expect preserved
    records/filter/selection; menu/F1 additionally retain unfinished text. Run malformed `delete S1` and
-   `lessons sid/S1` commands; expect invalid-index or usage feedback respectively. These failures preserve data,
-   filter and selection.
+   `lessons sid/S1` commands; expect invalid-index or usage feedback respectively. These failures
+   preserve data, filter and selection. Valid Student, Parent and Tutor relationship searches replace
+   the people view with matching people and Student/Lesson context.
 
 ### Active own-contact search checks
 
@@ -1590,7 +1596,13 @@ and shutdown diagnostics. Historical verification details are preserved in [#84]
    Resolve the next person selector against this visible view; its position must not become an ID suffix.
 3. Switch between two same-role searches, then `list r/student` and `list`. Each listing clears the search criteria.
    `help search`, Help menu and F1 preserve the filtered view; compare operational bytes before/after read commands.
-4. Verify `search c/student d/Mon`, `search c/parent sn/Alex` and `search c/tutor rm/R1` against current relationships.
+4. Run `search c/student d/Mon`; expect `Found N student(s).` and one result per Student enrolled in a Monday
+   Lesson, with only matching Lesson context. No matches is a successful `Found 0 student(s).` result.
+   Run `search c/parent sn/Alex`; expect `Found N parent(s).` with each Parent linked by exact phone to a
+   matching Student, including matching children without Lessons. No matches is a successful
+   `Found 0 parent(s).` result. Run `search c/tutor rm/R1`; expect `Found N tutor(s).` and one result per stable Tutor assigned
+   to a matching Lesson, including empty rosters, with only matching Lesson context. No matches is a
+   successful `Found 0 tutor(s).` result.
    Unknown/repeated/blank/category-incompatible fields fail without replacing the previous people view.
 5. Attempt an addition with a failed-save destination while a search is active. Retain data, counters, bytes,
    filter and selected card. Restore access and retry; success saves before resetting to all roles. Reopen the file
