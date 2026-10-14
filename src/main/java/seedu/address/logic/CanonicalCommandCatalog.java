@@ -54,6 +54,12 @@ public final class CanonicalCommandCatalog {
             + "Lesson cards show stable IDs, schedule, tutor, room and roster size. Scroll to see more results.\n"
             + "People filters and command positions are preserved. This command does not save data.\n"
             + "Examples: lessons; after list r/student, lessons si/1 (if position 1 is the intended student)";
+    public static final String MESSAGE_SHOW_LESSON_USAGE = "Usage: showlesson lid/LESSON_ID [d/YYYY-MM-DD]\n"
+            + "Shows one stable shared lesson, its tutor, schedule, room and current Student roster.\n"
+            + "The two prefixes may appear in either order when a date is supplied.\n"
+            + "A real date must match the lesson weekday; current members show present, absent or unrecorded.\n"
+            + "Former members' retained attendance appears separately. People positions are preserved.\n"
+            + "This read-only view refreshes after saved changes. Example: showlesson lid/L1 d/2026-10-05";
     public static final String MESSAGE_ADD_LESSON_USAGE =
             "Usage: addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM\n"
             + "DAY is Mon-Sun; times use four-digit 24-hour HHMM and start before end.\n"
@@ -100,13 +106,15 @@ public final class CanonicalCommandCatalog {
     private static final Entry LIST = new Entry("list", "Show all people or one role", PeopleListParser.MESSAGE_USAGE);
     private static final Entry LESSONS = new Entry("lessons", "Show shared lessons or one student's enrolments",
             MESSAGE_LESSONS_USAGE);
+    private static final Entry SHOW_LESSON = new Entry("showlesson", "Show one lesson's roster and dated attendance",
+            MESSAGE_SHOW_LESSON_USAGE);
     private static final Entry SEARCH = new Entry("search", "Find people or shared lessons",
             MESSAGE_SEARCH_USAGE);
     private static final Entry HELP = new Entry("help", "Show help or one command's guidance", MESSAGE_HELP_USAGE);
     private static final Entry EXIT = new Entry("exit", "Close PonHub", ExitCommand.MESSAGE_USAGE);
     private static final List<Entry> ENTRIES =
-            List.of(ADD, ADD_LESSON, ENROL, UNENROL, MARK, UNMARK, DELETE, DELETE_LESSON, LIST, LESSONS, SEARCH,
-                    HELP, EXIT);
+            List.of(ADD, ADD_LESSON, ENROL, UNENROL, MARK, UNMARK, DELETE, DELETE_LESSON, LIST, LESSONS,
+                    SHOW_LESSON, SEARCH, HELP, EXIT);
     private static final List<Entry> PROTECTED_ENTRIES = List.of(HELP, LIST, EXIT);
 
     private CanonicalCommandCatalog() {
