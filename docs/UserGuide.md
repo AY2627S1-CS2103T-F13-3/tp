@@ -6,7 +6,7 @@ title: User Guide
 PonHub is a desktop app for tuition centre administrators to manage student, tutor and parent records and create
 shared recurring lessons. Its command box lets you work quickly from the keyboard while the graphical interface
 shows separate people and shared-lesson results. Shared-lesson enrolment, dated attendance marking and guarded
-person deletion are active, as is dated attendance removal; attendance history remains planned.
+person/lesson deletion and dated attendance removal are active; attendance history remains planned.
 
 * Table of Contents
 {:toc}
@@ -39,6 +39,10 @@ person deletion are active, as is dated attendance removal; attendance history r
    * `unenrol 1 lid/L1` removes Alex's membership while keeping both attendance records.
      `lessons si/1` now shows no current lessons; `lessons` still shows `L1` with Jamie enrolled.
    * `unmark 1 lid/L1 d/2026-10-05` removes Alex's retained record after unenrolment, keeping Jamie's record and membership.
+     Repeating it reports no change.
+   * `deletelesson lid/L1` is blocked because Jamie's membership and attendance still reference `L1`.
+   * `addlesson d/Tue st/1600 et/1730 s/Math tu/Mei Lim rm/R1` creates an unreferenced lesson `L2`.
+     `deletelesson lid/L2` removes it; `L1` and both people records remain.
    * `add r/parent n/Pat Tan p/91234567` adds a parent.
    * `list r/student` displays students; `list` displays all roles.
    * `help ADD` shows the same guidance as `help add`.

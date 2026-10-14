@@ -50,8 +50,9 @@ title: Developer Guide
   canonical-runtime reconciliation, source verification and rendered checks; and Round 4 #87 activation
   over Ben's matcher (session routing, complete people-view filter transactions, integration/UI regressions
   and merged lesson-creation checks). Ben remains the search feature owner. Ernest also used Codex for
-  #191's permission-denied save regression and the available UG/help workflow rehearsals; and the 13 October
-  Round 1 shared quick-start/README correction, packaged-router rehearsal and rendered-guide checks (#164/#102).
+  #191's permission-denied save regression and the available UG/help workflow rehearsals; and the 13 and 14 October
+  Round 1 shared quick-start/README corrections, master conflict reconciliation, packaged-router rehearsal
+  and rendered-guide checks (#164/#102).
   These credits do not claim teammates' implementations or unperformed human review.
 
 --------------------------------------------------------------------------------------------------------------------
@@ -71,8 +72,7 @@ support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, 
 `deletelesson`, `list`, `lessons`, own-contact people search, all seven lesson-search fields, `help` and `exit`;
 protected sessions allow
 only help/list/exit. Attendance history and relationship search on people remain planned. Inherited edit/clear/find
-routes are unavailable. Stored attendance can be created/corrected with `mark` and removed with `unmark`;
-`history` remains unavailable.
+routes are unavailable. `mark` creates or corrects attendance; `unmark` removes one dated key.
 
 `CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
 routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
@@ -198,7 +198,7 @@ handling independently testable:
 <img src="images/ComponentManagers.png" width="300" />
 
 The inherited diagrams record historical manager types and the broad `delete 1` flow. Active canonical
-mutations, including guarded person deletion, save staged state before publication; failure leaves the live
+mutations, including guarded person and lesson deletion, save staged state before publication; failure leaves the live
 state unchanged. See [Command transactions](#command-transactions) for that boundary.
 
 <img src="images/ArchitectureSequenceDiagram.png" width="574" />
@@ -779,10 +779,8 @@ membership commands provide duplicate/non-member feedback. Lessons load through 
 `CanonicalPeopleSession` accepts zero or one help topic, normalizes with `Locale.ROOT`, rejects unknown
 topics/excess arguments and restricts guidance to the protected-session routes after rejected loading.
 Help preserves records and the people view without operational saves; preferences have a separate
-lifecycle. Protected sessions omit `add`, `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`,
-`deletelesson`, `lessons` and `search`;
-normal sessions expose help
-for every active route.
+lifecycle. Normal sessions expose help for every [active route](#current-increment-and-command-integration);
+protected sessions expose only help/list/exit guidance.
 Legacy `CommandCatalog`/`HelpCommandParser` remain regression seams.
 
 The Help menu and F1 both invoke `MainWindow.executeCommand("help")`, retaining the command-box
