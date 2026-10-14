@@ -75,8 +75,8 @@ only help/list/exit. Attendance history and relationship search on people remain
 Inherited edit/clear/find routes are unavailable, and their command/parser implementations and edit-descriptor
 test helpers have been removed. Canonical boundary tests verify rejected commands preserve the saved aggregate,
 filtered people view and preferences; help and exit remain usable. The retired `setPerson` replacement API is
-also removed from the legacy Model, ModelManager, AddressBook and UniquePersonList. Isolated legacy add/delete,
-whole-book replacement and regression seams remain pending the remaining cleanup under #97.
+also removed from the legacy Model, ModelManager, AddressBook and UniquePersonList. Other isolated legacy
+mutation and regression seams remain pending the remaining cleanup under #97.
 Stored attendance can be created/corrected with `mark` and removed with
 `unmark`; `history` remains unavailable.
 
