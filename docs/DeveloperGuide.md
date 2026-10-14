@@ -92,8 +92,9 @@ test helpers have been removed. The retired `find` name matcher and its isolated
 canonical search uses the role-aware query matchers. Canonical boundary tests verify rejected commands preserve
 the saved aggregate, filtered people view and preferences; help and exit remain usable. The retired
 `setPerson` replacement API is
-also removed from the legacy Model, ModelManager, AddressBook and UniquePersonList. Other isolated legacy
-mutation and regression seams remain under #97. `mark` creates or corrects attendance; `unmark` removes one dated key.
+also removed from the legacy Model, ModelManager, AddressBook and UniquePersonList. Inherited add/delete
+commands, parsers and obsolete fixtures are also removed. Isolated legacy model and transaction fixtures
+remain for regression coverage. `mark` creates or corrects attendance; `unmark` removes one dated key.
 
 `CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
 routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
@@ -332,9 +333,9 @@ derives one observable role-filtered projection from that root. UI observes comm
 maintaining writable copies. Preferences remain outside operational snapshots.
 
 The retired `clear` command no longer needs whole-address-book replacement through `Model`.
-That public replacement API has been removed. The retained legacy model still supports its isolated
-add/delete and transaction regressions; #97 tracks their remaining cleanup. Canonical state changes
-continue through validated `PonHubData` snapshots and save-before-publication transactions.
+That public replacement API has been removed. The retained legacy model supports isolated model and
+injected transaction regressions; its add/delete commands and obsolete command fixtures are removed.
+Canonical state changes continue through validated `PonHubData` snapshots and save-before-publication transactions.
 
 The aggregate below implements the [shared ownership and identity contract](#shared-lesson-target-contract).
 Complete independent transaction snapshots preserve records, relationships and allocation state.
