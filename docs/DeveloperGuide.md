@@ -30,7 +30,8 @@ title: Developer Guide
   Java/macOS setup, and review/conflict reconciliation/Javadoc corrections in search, inline help,
   lesson membership, atomic saves and the canonical aggregate (#76); and #197's lesson creation/membership
   command-boundary regressions; and #91 guarded person deletion, transaction/restart and lesson-view integration
-  tests, conflict reconciliation and guide updates.
+  tests, conflict reconciliation and guide updates; and #97's retired edit/find/clear implementation and
+  test-helper removal, actionable unknown-command feedback, preservation regressions and guide updates.
   These credits do not transfer feature ownership.
 * Yang Shuo (`ys000009`) used OpenAI Codex for #78's scheduling APIs, aggregate invariants,
   read-only relationship queries/guards, tests and design documentation; and #86's active shared-lesson
@@ -69,9 +70,12 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, guarded `delete` and
 `deletelesson`, `list`, `lessons`, own-contact people search, all seven lesson-search fields, `help` and `exit`;
 protected sessions allow
-only help/list/exit. Attendance history and relationship search on people remain planned. Inherited edit/clear/find
-routes are unavailable. Stored attendance can be created/corrected with `mark` and removed with `unmark`;
-`history` remains unavailable.
+only help/list/exit. Attendance history and relationship search on people remain planned.
+Inherited edit/clear/find routes are unavailable, and their command/parser implementations and edit-descriptor
+test helpers have been removed. Canonical boundary tests verify rejected commands preserve the saved aggregate,
+filtered people view and preferences; help and exit remain usable. Other isolated legacy regression seams remain
+pending the remaining cleanup under #97. Stored attendance can be created/corrected with `mark` and removed with
+`unmark`; `history` remains unavailable.
 
 `CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
 routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
@@ -1447,7 +1451,8 @@ Use the active catalogue in the tested build; these examples apply to canonical 
 4. At minimum width, run `help add` and scroll to the final example/back to the top. Text wraps
    readably; a new topic resets scrolling. Record actual display conditions using the
    [people-card/whole-window checks](#planned-people-card-display-checks).
-5. `edit 1 n/Alex`, `clear` and `find Alex` report `Unknown command.` without changing data.
+5. `edit 1 n/Alex`, `clear` and `find Alex` identify the unknown command and suggest `help` without changing data.
+   For example, the first input reports `Unknown command: 'edit'. Type 'help' to see available commands.`
    `list extra`, an invalid `addlesson`, an invalid `mark`, an invalid `unmark`, `delete S1`,
    `deletelesson 1`, `lessons sid/S1` and `exit extra` show
    validation or usage messages without

@@ -65,6 +65,37 @@ public class CanonicalLogicManagerTest {
     }
 
     @Test
+    public void execute_retiredCommands_preservesCanonicalDataViewAndPreferences() throws Exception {
+        Path path = directory.resolve("canonical.json");
+        new JsonPonHubDataStorage(path).saveData(LessonQueryTestData.createData().exportState());
+        CanonicalPeopleSession session = new CanonicalPeopleSession(path);
+        UserPrefs prefs = new UserPrefs();
+        GuiSettings settings = new GuiSettings(900, 700, 30, 40);
+        prefs.setGuiSettings(settings);
+        Logic logic = new CanonicalLogicManager(session, prefs);
+        logic.execute("list r/student");
+        var people = logic.getPersonRecords();
+        List<PersonId> visibleIds = people.stream().map(person -> person.getId()).toList();
+        var before = session.getDataSnapshot();
+        byte[] original = Files.readAllBytes(path);
+
+        for (String command : List.of("edit 1 n/Changed", "find Alex", "clear", "clear 1", "unknown")) {
+            ParseException failure = assertThrows(ParseException.class, () -> logic.execute(command));
+            assertEquals(String.format(CanonicalPeopleSession.MESSAGE_UNKNOWN_COMMAND_FORMAT,
+                    command.split(" ")[0]), failure.getMessage());
+            assertSame(before, session.getDataSnapshot());
+            assertArrayEquals(original, Files.readAllBytes(path));
+            assertSame(people, logic.getPersonRecords());
+            assertEquals(visibleIds, people.stream().map(person -> person.getId()).toList());
+            assertEquals(settings, prefs.getGuiSettings());
+        }
+
+        assertTrue(logic.execute("help").getFeedbackToUser().contains("help COMMAND"));
+        assertTrue(logic.execute("exit").isExit());
+        assertArrayEquals(original, Files.readAllBytes(path));
+    }
+
+    @Test
     public void lessonRetrieval_delegatesToSharedSessionQueriesWithoutWritingOrChangingPeople() throws Exception {
         Path path = directory.resolve("canonical.json");
         new JsonPonHubDataStorage(path).saveData(LessonQueryTestData.createData().exportState());

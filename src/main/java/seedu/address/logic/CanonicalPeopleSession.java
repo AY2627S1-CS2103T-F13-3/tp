@@ -66,6 +66,8 @@ public final class CanonicalPeopleSession {
     public static final String MESSAGE_DELETE_USAGE = CanonicalCommandCatalog.MESSAGE_DELETE_USAGE;
     public static final String MESSAGE_DELETE_LESSON_USAGE = CanonicalCommandCatalog.MESSAGE_DELETE_LESSON_USAGE;
     public static final String MESSAGE_HELP_USAGE = CanonicalCommandCatalog.MESSAGE_HELP_USAGE;
+    public static final String MESSAGE_UNKNOWN_COMMAND_FORMAT =
+            "Unknown command: '%s'. Type 'help' to see available commands.";
 
     private static final Pattern BASIC_COMMAND_FORMAT =
             Pattern.compile("(?<commandWord>\\S+)(?<arguments>.*)", Pattern.DOTALL);
@@ -219,7 +221,7 @@ public final class CanonicalPeopleSession {
                 }
                 return new CommandResult(ExitCommand.MESSAGE_EXIT_ACKNOWLEDGEMENT, false, true);
             default:
-                throw new ParseException(Messages.MESSAGE_UNKNOWN_COMMAND);
+                throw new ParseException(String.format(MESSAGE_UNKNOWN_COMMAND_FORMAT, word));
         }
     }
 
