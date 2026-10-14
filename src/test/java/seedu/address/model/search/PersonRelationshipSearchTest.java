@@ -112,7 +112,7 @@ public class PersonRelationshipSearchTest {
                 PersonRelationshipSearch.search(data.getPeople(), null, criteria));
         assertThrows(NullPointerException.class, () ->
                 PersonRelationshipSearch.search(data.getPeople(), queries, null));
-        for (SearchCategory category : List.of(SearchCategory.PARENT, SearchCategory.TUTOR)) {
+        for (SearchCategory category : List.of(SearchCategory.TUTOR)) {
             assertThrows(IllegalArgumentException.class, () ->
                     PersonRelationshipSearch.search(data.getPeople(), queries,
                             new SearchCriteria(category, Map.of(SearchField.DAY, "Mon"))));

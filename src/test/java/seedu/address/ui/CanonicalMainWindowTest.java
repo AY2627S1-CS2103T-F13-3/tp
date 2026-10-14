@@ -65,6 +65,26 @@ public class CanonicalMainWindowTest {
     Path directory;
 
     @Test
+    public void parentRelationshipSearch_rendersAssociatedChildAndOnlyTheirMatchingLesson() throws Exception {
+        new JsonPonHubDataStorage(directory.resolve("canonical.json"))
+                .saveData(seedu.address.testutil.RelationshipSearchTestData.createData().exportState());
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("search c/parent n/Pat sn/Alex d/Mon s/Math");
+                assertCard(fixture, "Parent · P1", "1. Pat Tan");
+                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                        .anyMatch(label -> label.getText().contains("Student: Alex Tan (S1) · Lesson: L10")));
+                fixture.enter("search c/parent sn/Alex d/Wed s/中文");
+                assertEquals("Found 0 parent(s).", fixture.feedback());
+                fixture.enter("search c/parent n/Unassigned sn/Alex");
+                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                        .anyMatch(label -> label.getText().equals("Student: Alex Tan (S3)")));
+            }
+            return null;
+        });
+    }
+
+    @Test
     public void studentRelationshipSearch_rendersOnlyMatchingContextAndRefreshesItForTheSamePerson() throws Exception {
         new JsonPonHubDataStorage(directory.resolve("canonical.json"))
                 .saveData(LessonQueryTestData.createData().exportState());
@@ -311,7 +331,7 @@ public class CanonicalMainWindowTest {
                 fixture.people().getSelectionModel().select(0);
                 fixture.enter("help SEARCH");
                 assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
-                fixture.enter("search c/parent d/Mon");
+                fixture.enter("search c/tutor d/Mon");
                 assertTrue(fixture.feedback().contains("not available"));
                 assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
                 assertCard(fixture, "Student · S3", "1. Selected Student");

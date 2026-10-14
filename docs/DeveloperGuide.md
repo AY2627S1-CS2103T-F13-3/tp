@@ -52,6 +52,8 @@ title: Developer Guide
   dated roster/retained attendance rendering, command routing, integration tests and guide updates.
   For #94, Codex added indexed Student relationship search, immutable matching context, card refresh and
   same-lesson/read-only/integration regressions, and corrected the active manual-test expectations after review.
+  For #95, Ben used Codex for exact-phone Parent search, same-child/same-lesson context and regression tests,
+  and the reviewed manual-test corrections.
 * Ernest used OpenAI Codex for the Week 8 command catalogue, inline help, regression tests and shared
   documentation; #129's active UI encapsulation/Javadoc corrections and caller/repository checks;
   #60's architecture/command conventions and AboutUs clarification; #164's shared-guide consolidation,
@@ -79,7 +81,7 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, guarded `delete` and
 `deletelesson`, `list`, `lessons`, `showlesson`, own-contact people search, all seven lesson-search fields,
 `help` and `exit`; protected sessions allow only help/list/exit.
-Student lesson relationship search is active; Parent/Tutor relationship search and attendance history remain planned.
+Student and Parent relationship search is active; Tutor relationship search and attendance history remain planned.
 Inherited edit/clear/find routes are unavailable, and their command/parser implementations and edit-descriptor
 test helpers have been removed. Canonical boundary tests verify rejected commands preserve the saved aggregate,
 filtered people view and preferences; help and exit remain usable. The retired `setPerson` replacement API is
@@ -975,7 +977,7 @@ unsupported prefix cannot be absorbed into the preceding text value. The criteri
 but does not traverse relationships. `CanonicalPeopleSession` routes lesson search to `LessonRetrieval` and
 people search to `CanonicalSearchCommand.execute(data, view)`, which publishes only validated read-only results.
 Read-only searches reuse the session's indexes without allocating a staged aggregate or invoking the writer.
-Parent/Tutor relationship fields remain explicitly unavailable until their separate increments.
+Tutor relationship fields remain explicitly unavailable until their separate increment.
 
 `PersonContactSearch` matches the `n/l/p/pp/e/a` own-field subset. `PersonRelationshipSearch` separates these from
 Student lesson fields and runs one indexed `LessonQueries.searchLessons` request over the complete catalogue.
@@ -1008,6 +1010,30 @@ active; results and context refresh only on successful publication. Verify valid
 operational bytes/counters for every search, and that lesson-result filters/selection stay independent.
 The backend tests compare 1,000 seeded conjunctions with an independent scan of raw records; command-box tests
 verify context additions/removals even when the matching person list is unchanged.
+
+#### Parent relationship search (#95)
+
+`LessonQueries` builds an exact parent-phone bucket of immutable Students alongside its other indexes on root
+publication. `getStudentsByParentPhone(Phone)` returns a read-only snapshot in people creation order; leading zeros
+remain significant. This derives links rather than storing Parent IDs or inferring relationships from names.
+
+`PersonRelationshipSearch` first applies Parent own fields, then reuses matching child/lesson context per distinct
+eligible phone. A linked child must satisfy `sn/`, and every lesson condition must match one current enrolment of
+that same child. The lesson predicate deliberately excludes `sn/` until the child is fixed, preventing another
+roster member or sibling from supplying the name. Name-only child queries do not scan lessons and can include
+unassigned children. Lesson predicates use the existing exact bucket and Student-to-Lesson index. Context shows
+one Parent result with matching child IDs/names and lesson details; a shared number can link multiple Parent records.
+
+For bounded fields the query cost is `O(P + B + C + E + K)`, where `C` and `E` count children and their enrolment
+links across distinct eligible phone buckets, and `K` counts emitted context. Own-only searches remain `O(P)`;
+`sn/`-only queries omit the lesson-candidate term. The phone index adds `O(P)` derived storage and refresh work.
+
+UC-02/manual checks: contrast phones `00987654` and `0987654`, identical Parent names with different numbers,
+Parents sharing a number, unlinked Parents and children with no lessons. Reject a query taking `sn/Alex` from
+one sibling and Monday Math from another, or day and subject from separate lessons. Compare 1,000 seeded queries
+with a raw nested Student/Lesson scan. Exercise failed publication and successful context refresh with the Parent
+projection active; for real enrol/unenrol, switch to Student listing first and repeat the Parent query afterwards.
+Verify read-only bytes, invalid-prefix preservation and matching results/context after reload.
 
 ### Dated attendance records
 
@@ -1071,7 +1097,7 @@ Canonical people activation and the remaining shared-lesson integration are trac
 issues. The requirements below describe the intended product; role-aware add/list, empty-roster shared-lesson
 creation, enrolment/unenrolment, dated attendance marking, guarded person deletion, own-contact people search,
 guarded Lesson deletion, lesson listing, lesson search, lesson details and dated attendance removal are active.
-Student lesson relationship search is active; attendance history and Parent/Tutor relationship search remain planned.
+Student and Parent relationship search is active; attendance history and Tutor relationship search remain planned.
 
 ### User stories
 
@@ -1190,9 +1216,9 @@ Person selectors in these target use cases are positive indices from the current
 
 **Query design:** #80 supplies the read-only catalogue, stable-ID lookup, current roster/student lessons and indexed
 lesson filtering through the [prepared query backend](#indexed-lesson-query-projections-80). Current membership
-comes only from Lesson-owned IDs. Own-contact people search, Student lesson predicates, catalogue/student lesson
-listing, all seven lesson search fields and detailed lesson roster/attendance views are active. Parent/Tutor
-relationship search and student attendance history remain separate slices. A student
+comes only from Lesson-owned IDs. Own-contact people search, Student/Parent relationship predicates,
+catalogue/student lesson listing, all seven lesson search fields and detailed lesson roster/attendance views
+are active. Tutor relationship search and student attendance history remain separate slices. A student
 selector is resolved once against the current people view, never an ID suffix or a hidden role list. Empty rosters
 are included unless `sn/` requires a current member; all lesson filters match the same shared lesson.
 
@@ -1545,9 +1571,9 @@ and shutdown diagnostics. Historical verification details are preserved in [#84]
    record uses the next unconsumed ID and appears last in the all-role view; restart verifies persistence.
 4. With a selected card, request help from the menu/F1 and through the command box. Expect preserved
    records/filter/selection; menu/F1 additionally retain unfinished text. Run malformed `delete S1` and
-   `lessons sid/S1` commands; expect invalid-index or usage feedback respectively. Parent/Tutor relationship
-   searches give explicit interim feedback. These failures preserve data, filter and selection. Valid Student
-   relationship searches replace the people view with matching Students and Lesson context.
+   `lessons sid/S1` commands; expect invalid-index or usage feedback respectively. Tutor relationship searches
+   give explicit interim feedback. These failures preserve data, filter and selection. Valid Student and Parent
+   relationship searches replace the people view with matching people and Student/Lesson context.
 
 ### Active own-contact search checks
 
@@ -1560,7 +1586,9 @@ and shutdown diagnostics. Historical verification details are preserved in [#84]
    `help search`, Help menu and F1 preserve the filtered view; compare operational bytes before/after read commands.
 4. Run `search c/student d/Mon`; expect `Found N student(s).` and one result per Student enrolled in a Monday
    Lesson, with only matching Lesson context. No matches is a successful `Found 0 student(s).` result.
-   Reject `search c/parent sn/Alex` and `search c/tutor rm/R1` with explicit interim feedback.
+   Run `search c/parent sn/Alex`; expect `Found N parent(s).` with each Parent linked by exact phone to a
+   matching Student, including matching children without Lessons. No matches is a successful
+   `Found 0 parent(s).` result. Reject `search c/tutor rm/R1` with explicit interim feedback.
    Unknown/repeated/blank/category-incompatible fields fail without replacing the previous people view.
 5. Attempt an addition with a failed-save destination while a search is active. Retain data, counters, bytes,
    filter and selected card. Restore access and retry; success saves before resetting to all roles. Reopen the file
