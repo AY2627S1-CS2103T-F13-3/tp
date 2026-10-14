@@ -13,7 +13,6 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.GuiSettings;
-import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.testutil.AddressBookBuilder;
 
 public class ModelManagerTest {
@@ -24,7 +23,7 @@ public class ModelManagerTest {
     public void setAddressBook_ownAddressBook_preservesRecordsAndFilteredView() {
         modelManager.addPerson(ALICE);
         modelManager.addPerson(BENSON);
-        modelManager.updateFilteredPersonList(new NameContainsKeywordsPredicate(List.of("Alice")));
+        modelManager.updateFilteredPersonList(ALICE::equals);
         AddressBook expected = new AddressBook(modelManager.getAddressBook());
         modelManager.setAddressBook(modelManager.getAddressBook());
         assertEquals(expected, modelManager.getAddressBook());
@@ -108,8 +107,7 @@ public class ModelManagerTest {
         assertFalse(modelManager.equals(new ModelManager(differentAddressBook, userPrefs)));
 
         // different filteredList -> returns false
-        String[] keywords = ALICE.getName().fullName.split("\\s+");
-        modelManager.updateFilteredPersonList(new NameContainsKeywordsPredicate(List.of(keywords)));
+        modelManager.updateFilteredPersonList(ALICE::equals);
         assertFalse(modelManager.equals(new ModelManager(addressBook, userPrefs)));
 
         // resets modelManager to initial state for upcoming tests
