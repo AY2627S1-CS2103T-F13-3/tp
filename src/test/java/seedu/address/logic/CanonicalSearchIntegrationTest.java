@@ -122,12 +122,6 @@ public class CanonicalSearchIntegrationTest {
             assertThrows(ParseException.class, () -> session.execute(command));
             assertEquals(List.of("S3"), ids(session));
         }
-        for (String command : List.of("search c/tutor d/Mon", "search c/tutor sn/Alex",
-                "search c/tutor rm/R1")) {
-            CommandException failure = assertThrows(CommandException.class, () -> session.execute(command));
-            assertTrue(failure.getMessage().contains("not available"));
-            assertEquals(List.of("S3"), ids(session));
-        }
         assertEquals("Found 0 lesson(s).", session.execute("search c/lesson").getFeedbackToUser());
         assertArrayEquals(bytes, Files.readAllBytes(path));
         assertEquals(List.of("S3"), ids(session));
@@ -140,7 +134,7 @@ public class CanonicalSearchIntegrationTest {
         assertTrue(session.execute("help").getFeedbackToUser().contains("search -"));
         String help = session.execute("help SEARCH").getFeedbackToUser();
         assertTrue(help.contains("pp/PARENT_PHONE"));
-        assertTrue(help.contains("not available yet"));
+        assertTrue(help.contains("same person"));
         assertEquals(List.of("S3"), ids(session));
     }
 

@@ -32,6 +32,7 @@ public final class CanonicalCommandCatalog {
             + "       search c/parent [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]\n"
             + "       [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]\n"
             + "       search c/tutor [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]\n"
+            + "       [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [rm/ROOM]\n"
             + "       search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT]"
             + " [tu/TUTOR_NAME] [rm/ROOM]\n"
             + "Category values ignore case. Supply each lowercase prefix at most once, with a nonblank value.\n"
@@ -45,7 +46,8 @@ public final class CanonicalCommandCatalog {
             + "Empty lessons are included unless sn/ is supplied. Zero matches display an empty lesson panel.\n"
             + "Student lesson filters match one current enrolment and show its context below the student card.\n"
             + "Parent links use exact phone equality; sn/ and every lesson condition must match the same child.\n"
-            + "Tutor relationship filters are not available yet. Use list or lessons to restore each view.\n"
+            + "Tutor conditions must match one assigned lesson and its current roster. Use n/ for tutor names.\n"
+            + "Use list or lessons to restore each view.\n"
             + "Examples: search c/student n/Alex l/P1 pp/91234567, search c/lesson tu/mei d/Mon s/Math";
     public static final String MESSAGE_LESSONS_USAGE = "Usage: lessons [si/STUDENT_INDEX]\n"
             + "Shows each shared lesson once, in creation order, including empty rosters.\n"
