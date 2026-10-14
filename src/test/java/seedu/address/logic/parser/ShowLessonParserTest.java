@@ -20,6 +20,8 @@ public class ShowLessonParserTest {
         assertEquals(new ShowLessonInput(new LessonId("L10"), Optional.empty()), parser.parse(" lid/l10 "));
         assertEquals(new ShowLessonInput(new LessonId("L1"), Optional.of(LocalDate.of(2028, 2, 29))),
                 parser.parse("lid/L1   d/2028-02-29"));
+        assertEquals(new ShowLessonInput(new LessonId("L1"), Optional.of(LocalDate.of(2028, 2, 29))),
+                parser.parse("d/2028-02-29 lid/L1"));
     }
 
     @Test

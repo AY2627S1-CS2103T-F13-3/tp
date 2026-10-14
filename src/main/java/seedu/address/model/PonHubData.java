@@ -167,6 +167,27 @@ public final class PonHubData {
     }
 
     /**
+     * Removes one empty Lesson without attendance history while retaining its allocation counter.
+     * The complete replacement state is validated before publication. No membership or attendance is removed.
+     *
+     * @return the removed immutable Lesson.
+     * @throws NullPointerException if the Lesson ID is null.
+     * @throws IllegalArgumentException if the Lesson is missing or has roster or attendance dependencies.
+     */
+    public Lesson removeLesson(LessonId lessonId) {
+        Lesson lesson = requireLesson(lessonId);
+        Optional<String> blocker = getLessonDeletionBlocker(lesson);
+        checkArgument(blocker.isEmpty(), blocker.orElse(""));
+
+        List<Lesson> lessons = new ArrayList<>(getLessons());
+        lessons.remove(lesson);
+        PonHubDataState replacement = new PonHubDataState(state.get().people(), lessons, state.get().attendance(),
+                state.get().lastAllocatedLessonSequence());
+        state.set(replacement);
+        return lesson;
+    }
+
+    /**
      * Adds an existing student to one existing lesson without changing either stable identity.
      * The complete replacement state is validated before publication, including student schedule clashes.
      *
@@ -212,10 +233,7 @@ public final class PonHubData {
             AttendanceStatus status) {
         requireAllNonNull(studentId, lessonId, date, status);
         requirePerson(studentId, PersonRole.STUDENT, MESSAGE_MISSING_STUDENT);
-        Lesson lesson = requireLesson(lessonId);
-        checkArgument(date.getDayOfWeek().name().equals(lesson.getTimeSlot().getDay().name()),
-                "Attendance date " + date + " does not match lesson " + lessonId + "'s "
-                        + lesson.getTimeSlot().getDay() + " schedule.");
+        Lesson lesson = requireAttendanceLesson(lessonId, date);
 
         AttendanceKey key = new AttendanceKey(studentId, lessonId, date);
         Optional<Attendance> existing = getAttendance(key);
@@ -238,6 +256,33 @@ public final class PonHubData {
                 attendance, state.get().lastAllocatedLessonSequence());
         state.set(replacementState);
         return replacement;
+    }
+
+    /**
+     * Removes one dated attendance record without changing the Student, Lesson or current membership.
+     * An existing historical record can be removed after unenrolment. A missing record changes no state.
+     *
+     * @return the removed record, or an empty optional if the attendance key was not recorded.
+     * @throws NullPointerException if an argument is null.
+     * @throws IllegalArgumentException if a referenced record is missing or the date has the wrong weekday.
+     */
+    public Optional<Attendance> unmarkAttendance(PersonId studentId, LessonId lessonId, LocalDate date) {
+        requireAllNonNull(studentId, lessonId, date);
+        requirePerson(studentId, PersonRole.STUDENT, MESSAGE_MISSING_STUDENT);
+        requireAttendanceLesson(lessonId, date);
+
+        AttendanceKey key = new AttendanceKey(studentId, lessonId, date);
+        Optional<Attendance> existing = getAttendance(key);
+        if (existing.isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<Attendance> attendance = new ArrayList<>(getAttendance());
+        attendance.remove(existing.get());
+        PonHubDataState replacementState = new PonHubDataState(state.get().people(), state.get().lessons(),
+                attendance, state.get().lastAllocatedLessonSequence());
+        state.set(replacementState);
+        return existing;
     }
 
     /**
@@ -348,8 +393,30 @@ public final class PonHubData {
      */
     public boolean isLessonReferenced(LessonId lessonId) {
         Lesson lesson = requireLesson(lessonId);
-        return !lesson.getEnrolledStudentIds().isEmpty()
-                || getAttendance().stream().anyMatch(record -> record.getLessonId().equals(lessonId));
+        return getLessonDeletionBlocker(lesson).isPresent();
+    }
+
+    /**
+     * Identifies the first roster or retained-attendance dependency that prevents deleting a Lesson.
+     */
+    private Optional<String> getLessonDeletionBlocker(Lesson lesson) {
+        requireNonNull(lesson);
+        if (!lesson.getEnrolledStudentIds().isEmpty()) {
+            String studentIds = String.join(", ", lesson.getEnrolledStudentIds().stream()
+                    .map(PersonId::toString).toList());
+            return Optional.of("Lesson " + lesson.getId()
+                    + " cannot be deleted while its roster contains these Student IDs: " + studentIds
+                    + ". Unenrol all Students first.");
+        }
+        Optional<Attendance> attendance = getAttendance().stream()
+                .filter(record -> record.getLessonId().equals(lesson.getId())).findFirst();
+        if (attendance.isPresent()) {
+            Attendance record = attendance.get();
+            return Optional.of("Lesson " + lesson.getId() + " cannot be deleted while retained attendance exists "
+                    + "for Student " + record.getStudentId() + " on " + record.getDate()
+                    + ". Unmark all attendance for this Lesson first.");
+        }
+        return Optional.empty();
     }
 
     /**
@@ -381,6 +448,18 @@ public final class PonHubData {
         Optional<Lesson> lesson = getLesson(lessonId);
         checkArgument(lesson.isPresent(), MESSAGE_MISSING_LESSON + lessonId);
         return lesson.get();
+    }
+
+    /**
+     * Returns an existing lesson after checking that the supplied attendance date matches its recurring weekday.
+     */
+    private Lesson requireAttendanceLesson(LessonId lessonId, LocalDate date) {
+        requireNonNull(date);
+        Lesson lesson = requireLesson(lessonId);
+        checkArgument(date.getDayOfWeek().name().equals(lesson.getTimeSlot().getDay().name()),
+                "Attendance date " + date + " does not match lesson " + lessonId + "'s "
+                        + lesson.getTimeSlot().getDay() + " schedule.");
+        return lesson;
     }
 
     /**
