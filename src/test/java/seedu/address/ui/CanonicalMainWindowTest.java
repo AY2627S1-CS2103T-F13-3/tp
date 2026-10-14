@@ -27,6 +27,7 @@ import javafx.geometry.Orientation;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
@@ -38,7 +39,9 @@ import seedu.address.MainApp;
 import seedu.address.logic.Logic;
 import seedu.address.model.PonHubData;
 import seedu.address.model.PonHubDataState;
+import seedu.address.model.attendance.Attendance;
 import seedu.address.model.attendance.AttendanceStatus;
+import seedu.address.model.lesson.LessonId;
 import seedu.address.model.person.ContactDetails;
 import seedu.address.model.person.EducationLevel;
 import seedu.address.model.person.Name;
@@ -92,6 +95,22 @@ public class CanonicalMainWindowTest {
                 assertFalse(fixture.history().getItems().get(0).isCurrentlyEnrolled());
                 fixture.enter("mark 1 lid/L10 d/2026-10-05 s/absent");
                 assertEquals(AttendanceHistoryEntry.Status.ABSENT, fixture.history().getItems().get(0).getStatus());
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                fixture.enter("showlesson lid/L99");
+                assertTrue(fixture.history().getParent().isVisible());
+                fixture.enter("showlesson lid/L10 d/2026-10-05");
+                ScrollPane detail = (ScrollPane) fixture.root().lookup("#lessonDetailScroll");
+                assertFalse(fixture.history().getParent().isVisible());
+                assertTrue(fixture.lessons().getParent().isVisible());
+                assertTrue(detail.isVisible());
+                fixture.enter("history 0");
+                assertFalse(fixture.history().getParent().isVisible());
+                assertTrue(detail.isVisible());
+                fixture.enter("history 1 lid/L10");
+                assertTrue(fixture.history().getParent().isVisible());
+                fixture.enter("unmark 1 lid/L10 d/2026-10-05");
+                assertTrue(fixture.history().getItems().isEmpty());
+                assertEquals("Showing 0 attendance record(s).", summary.getText());
                 assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
                 fixture.enter("lessons");
                 assertFalse(fixture.history().getParent().isVisible());
@@ -169,6 +188,44 @@ public class CanonicalMainWindowTest {
                 assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
                 assertArrayEquals(bytes, Files.readAllBytes(path));
                 captureLessonWindow(fixture);
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void showLesson_rendersCurrentAndFormerAttendanceInScrollingDetailWithoutChangingPeople() throws Exception {
+        Path path = directory.resolve("canonical.json");
+        var source = LessonQueryTestData.createData().exportState();
+        LessonId lessonId = new LessonId("L10");
+        var lessons = source.lessons().stream().map(lesson -> lesson.getId().equals(lessonId)
+                ? lesson.withoutEnrolledStudent(new PersonId("S2")) : lesson).toList();
+        var attendance = List.of(
+                Attendance.fromStrings(new PersonId("S1"), lessonId, "2026-10-05", "present"),
+                Attendance.fromStrings(new PersonId("S2"), lessonId, "2026-10-05", "absent"));
+        new JsonPonHubDataStorage(path).saveData(new PonHubDataState(source.people(), lessons, attendance, 11));
+        byte[] bytes = Files.readAllBytes(path);
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("search c/student n/Jamie");
+                fixture.people().getSelectionModel().select(0);
+                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.enter("showlesson lid/L10 d/2026-10-05");
+                ScrollPane detail = (ScrollPane) fixture.root().lookup("#lessonDetailScroll");
+                assertTrue(detail.isVisible());
+                assertFalse(fixture.lessons().isVisible());
+                assertEquals("L10 · Math", ((Label) detail.lookup("#lessonHeading")).getText());
+                assertTrue(detail.lookupAll(".label").stream().map(Label.class::cast)
+                        .anyMatch(label -> label.getText().contains("S1 · Alex Tan — present")));
+                assertTrue(detail.lookupAll(".label").stream().map(Label.class::cast)
+                        .anyMatch(label -> label.getText().contains("S2 · Jamie Tan — absent")));
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertCard(fixture, "Student · S2", "1. Jamie Tan");
+                fixture.enter("lessons si/1");
+                assertTrue(fixture.lessons().isVisible());
+                assertFalse(detail.isVisible());
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertArrayEquals(bytes, Files.readAllBytes(path));
             }
             return null;
         });

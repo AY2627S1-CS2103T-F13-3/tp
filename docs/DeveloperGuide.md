@@ -30,26 +30,34 @@ title: Developer Guide
   Java/macOS setup, and review/conflict reconciliation/Javadoc corrections in search, inline help,
   lesson membership, atomic saves and the canonical aggregate (#76); and #197's lesson creation/membership
   command-boundary regressions; and #91 guarded person deletion, transaction/restart and lesson-view integration
-  tests, conflict reconciliation and guide updates.
+  tests, conflict reconciliation and guide updates; and #97's retired edit/find/clear implementation and
+  test-helper removal, actionable unknown-command feedback, preservation regressions and guide updates.
+  He also used Codex for cross-branch conflict reconciliation and its focused validation; original
+  feature authorship is preserved.
   These credits do not transfer feature ownership.
 * Yang Shuo (`ys000009`) used OpenAI Codex for #78's scheduling APIs, aggregate invariants,
   read-only relationship queries/guards, tests and design documentation; and #86's active shared-lesson
   creation parser and command, tutor resolution, transaction/persistence regressions, conflict
   reconciliation and guide updates. He also used Codex for #88's active shared-lesson enrolment and
   unenrolment commands, aggregate mutations, persistence/query regressions and guide updates; and #89's
-  active attendance-marking parser and command, correction rules, transaction regressions and guide updates.
+  active attendance-marking parser and command, correction rules, transaction regressions and guide updates;
+  #92's active attendance-removal parser and command, no-op/rollback regressions and guide updates; and #98's
+  guarded shared-lesson deletion parser, aggregate mutation, transaction/view regressions and guide updates.
 * Ben (`ben58882`) used OpenAI Codex for #80's indexed lesson/roster projections, committed-state
   refresh, Logic delegation, search/transaction regression tests and guide updates. For #90, Ben used Codex
   to connect indexed queries to active lesson commands and cards, add validation/persistence/refresh/UI tests,
-  and update guides, diagrams and the final window screenshot.
+  and update guides, diagrams and the final window screenshot. For #99, Ben used Codex to add lesson details,
+  dated roster/retained attendance rendering, command routing, integration tests and guide updates.
 * Ernest used OpenAI Codex for the Week 8 command catalogue, inline help, regression tests and shared
   documentation; #129's active UI encapsulation/Javadoc corrections and caller/repository checks;
   #60's architecture/command conventions and AboutUs clarification; #164's shared-guide consolidation,
   canonical-runtime reconciliation, source verification and rendered checks; and Round 4 #87 activation
   over Ben's matcher (session routing, complete people-view filter transactions, integration/UI regressions
   and merged lesson-creation checks). Ben remains the search feature owner. Ernest also used Codex for
-  #191's permission-denied save regression and the available UG/help workflow rehearsals. These credits
-  do not claim teammates' implementations or unperformed human review.
+  #191's permission-denied save regression and the available UG/help workflow rehearsals; and the 13 and 14 October
+  Round 1 shared quick-start/README corrections, master conflict reconciliation, packaged-router rehearsal
+  and rendered-guide checks (#164/#102).
+  These credits do not claim teammates' implementations or unperformed human review.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -64,11 +72,14 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 ### Current increment and command integration
 
 `MainApp` connects one canonical session/root to Logic, cards and protected storage. Normal sessions
-support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, `history`, guarded `delete`, `list`,
-`lessons`, own-contact people search, all seven lesson-search fields, `help` and `exit`; protected sessions allow
-only help/list/exit. Attendance removal and relationship search on people remain planned.
-Inherited edit/clear/find routes are unavailable. Stored attendance can be created and corrected with `mark`;
-`history` reads retained records; `unmark` remains unavailable.
+support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, guarded `delete` and
+`deletelesson`, `list`, `lessons`, `showlesson`, `history`, own-contact people search, all seven lesson-search fields,
+`help` and `exit`; protected sessions allow only help/list/exit.
+Relationship search on people remains planned.
+Inherited edit/clear/find routes are unavailable, and their command/parser implementations and edit-descriptor
+test helpers have been removed. Canonical boundary tests verify rejected commands preserve the saved aggregate,
+filtered people view and preferences; help and exit remain usable. Other isolated legacy regression seams remain
+pending the remaining cleanup under #97. `mark` creates or corrects attendance; `unmark` removes one dated key.
 
 `CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
 routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
@@ -105,8 +116,8 @@ At startup, `WindowPlacement` fits saved window dimensions and coordinates to th
 The main window has a 450-by-360 logical minimum where the work area allows it. The result area and both
 people and lesson lists retain visible scrolling viewports. Canonical cards fit their list cells and wrap
 required and optional values. A resizable split pane keeps people and lesson results independent.
-`addlesson`, `enrol`, `unenrol`, `mark`, `lessons` and lesson search are active through the command box.
-Detailed rosters remain planned; inherited contact/tag cards are isolated compatibility checks.
+`addlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `lessons`, lesson search and
+`showlesson` and `history` are active through the command box. Inherited contact/tag cards are isolated compatibility checks.
 
 ### Shared-lesson target contract
 
@@ -192,8 +203,8 @@ handling independently testable:
 
 <img src="images/ComponentManagers.png" width="300" />
 
-The inherited diagrams record historical manager types and the broad `delete 1` flow; active deletion
-is unavailable. Canonical additions save staged state before publication; failure leaves the live
+The inherited diagrams record historical manager types and the broad `delete 1` flow. Active canonical
+mutations, including guarded person and lesson deletion, save staged state before publication; failure leaves the live
 state unchanged. See [Command transactions](#command-transactions) for that boundary.
 
 <img src="images/ArchitectureSequenceDiagram.png" width="574" />
@@ -211,9 +222,10 @@ committed changes refresh the display. The diagram shows the active canonical ca
 The active canonical cards display immutable `PersonRecord` projections from the session's same observable people
 list, with separate current-view positions and stable IDs and wrapping labels for required and optional fields.
 `LessonListPanel` observes `Logic.getDisplayedLessons()` and renders wrapping `LessonCard`s with stable lesson/tutor
-IDs, schedule, subject, room and roster size. Each panel scrolls independently, and lesson commands never replace
-the people list. `HistoryListPanel` uses the same right pane for dated attendance with current/former membership;
-the active history result refreshes after committed changes. Roster details remain planned; see the
+IDs, schedule, subject, room and roster size. `showlesson` switches the right pane to a scrolling detail view with
+the current roster and retained former-member attendance. Each panel scrolls independently, and lesson commands
+never replace the people list. `HistoryListPanel` shares the right pane for dated records with current/former
+membership labels and refreshes after committed changes. See the
 [shared selector contract](#shared-lesson-target-contract).
 
 ### Logic component
@@ -224,11 +236,12 @@ the active history result refreshes after committed changes. Roster details rema
 
 `CanonicalLogicManager` delegates to the single `CanonicalPeopleSession`. The session's `execute()`
 dispatches commands through its switch, using `CanonicalCommandCatalog` for available command words
-and guidance. It parses add/addlesson/enrol/unenrol/list/search input and invokes `CanonicalCommandExecutor`, which
-saves a changed candidate before publishing its root and view and returning `CommandResult`.
+and guidance. Canonical mutations use `CanonicalCommandExecutor`, which saves a changed candidate before
+publishing its root and view and returning `CommandResult`. Read-only lesson routes select derived results
+through `LessonRetrieval` without changing the people view.
 Parse, domain or save failure preserves
 live records, allocation counters, filter and selection. Read-only commands/no-ops skip operational
-saving. List clears search criteria and optionally sets a role; search replaces the people filter,
+saving. List clears search criteria and optionally sets a role; own-contact search replaces the people filter,
 while lesson creation and membership changes preserve it. See [Storage](#command-transactions).
 
 The class/parser diagrams describe retained legacy regression seams, not active application wiring.
@@ -279,44 +292,52 @@ The right pane switches between lesson and history results without replacing the
 
 ### Model component
 
-**Legacy API:** [`Model`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/Model.java).
+**Person records and composition:**
 
-<img src="images/ModelClassDiagram.png" width="450" />
+![Person record class diagram](images/PersonRecordClassDiagram.png)
 
-The inherited diagram records `AddressBook`, `UniquePersonList` and `ModelManager`, retained for
-regression tests. Active `PonHubData` instead owns immutable canonical records and relationships;
-`PeopleView` derives one observable role-filtered projection from that root. UI observes committed
-projections rather than maintaining writable copies. Preferences remain outside operational snapshots.
+**Shared Lesson ownership and membership:**
+
+![Lesson membership class diagram](images/LessonMembershipClassDiagram.png)
+
+**Dated Attendance, separate from current membership:**
+
+![Attendance class diagram](images/AttendanceClassDiagram.png)
+
+The canonical model has one `PonHubDataState` aggregate. It owns one people-registry snapshot, an independent
+catalogue of shared `Lesson` records, and separate dated `Attendance` records. Each `PersonRecord` is exactly one
+`Student`, `Tutor`, or `Parent` and composes one stable `PersonId` and one `ContactDetails` value. Each Lesson has
+exactly one Tutor and owns zero or more stable Student IDs; this produces the Student-Lesson many-to-many
+membership without copying lesson data into Student records. Each Attendance record refers to exactly one Student
+and one Lesson through its dated `AttendanceKey`. Attendance is retained history, not current membership.
+
+The inherited [`Model`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/Model.java)
+API and its historical diagram retain `AddressBook`, `UniquePersonList`, and `ModelManager` for regression tests.
+Active `PonHubData` instead owns the immutable canonical records and relationships shown above. `PeopleView`
+derives one observable role-filtered projection from that root. UI observes committed projections rather than
+maintaining writable copies. Preferences remain outside operational snapshots.
 
 The aggregate below implements the [shared ownership and identity contract](#shared-lesson-target-contract).
 Complete independent transaction snapshots preserve records, relationships and allocation state.
 
 #### Canonical data aggregate (#76)
 
-`PonHubData` holds one immutable `PonHubDataState`: ordered people and their per-role allocation
-history, shared lessons and their rosters, dated attendance, and the last allocated lesson sequence.
-`exportState()` returns a stable snapshot; copy construction and `resetData(...)` safely share immutable
-state. Replacing one container's state cannot change any previous snapshot or another container.
+`PonHubData` owns one immutable `PonHubDataState`: ordered people and per-role allocation history,
+shared lessons/rosters, dated attendance and the last allocated lesson sequence. Snapshots copy incoming
+lists and validate the entire candidate against the [shared/domain contracts](#shared-lesson-target-contract)
+before replacement: identities, roles, references, scheduling and attendance must all be consistent.
+Invalid construction or null replacement leaves the current state intact; no partial candidate is installed.
 
-Snapshot construction copies incoming lists and rejects duplicate IDs/attendance keys, missing or
-wrong-role references, and lesson IDs beyond the supplied counter. Historical attendance does not
-require current enrolment. Equality includes records, collection order, rosters and allocation history,
-including deleted IDs. Zero means no allocation; `Long.MAX_VALUE` means exhaustion, matching the people
-registry convention. Counters are preserved as supplied, never reconstructed from retained records.
+Equality includes collection order, records, relationships and allocation history, including deleted IDs.
+Counters must cover retained IDs and are never inferred from them: zero means no allocation and
+`Long.MAX_VALUE` means exhaustion. Normal changes preserve committed allocation history; restoring an
+uncommitted snapshot may reinstate earlier counters during rollback.
 
-Read methods expose immutable collections and stable-ID/key lookups. The controlled replacement boundary
-accepts only a validated state; invalid construction or null replacement leaves the current state intact.
-Feature owners must preserve committed allocation history when preparing normal changes. Restore may
-reinstate earlier counters for rollback. Lesson allocation and global tutor/room/student scheduling are supplied by
-the #78 API below. Enrolment is activated by #88, and attendance creation/correction is activated by #89;
-guarded person deletion is activated by #91; history retrieval is activated by #100 and attendance removal
-remains separate work.
-
-This aggregate leaves `ModelManager`, commands and JSON storage unchanged. Vincent owns snapshot/storage
-contracts; Zhu/Yang will prepare validated changes through one future Model adapter, and Ben can consume
-the read-only queries. UI filters, selection and preferences remain outside the operational snapshot.
-`stateProperty()` exposes a read-only notification boundary for a complete validated snapshot. Staged transaction
-containers publish independently; a failed command/save does not change the live root or its subscribed results.
+Exported snapshots and copies safely share immutable state; replacing one container cannot change an
+older snapshot or another container. Read-only collections/lookups and `stateProperty()` expose complete
+validated state. UI filters, selection and preferences remain outside it. Commands work on independent
+staged containers and publish only after saving through the [transaction boundary](#command-transactions),
+so failed commands leave the live root and subscribed results unchanged.
 
 #### Shared lesson scheduling model APIs (#78)
 
@@ -343,7 +364,8 @@ The aggregate exposes immutable relationship snapshots for retrieval and deletio
 | `getStudentLessons(PersonId)` | Current lessons derived from roster IDs in catalogue creation order. |
 | `getAttendanceForStudent(PersonId)` / `getAttendanceForLesson(LessonId)` | Retained attendance references in aggregate storage order; neither depends on current enrolment. |
 | `isPersonReferenced(PersonRecord)` | Predicate for Zhu's guarded people deletion: Student roster/attendance and Tutor lesson references block removal; Parent links remain derived. |
-| `isLessonReferenced(LessonId)` | Guard for Yang's lesson deletion: a non-empty roster or retained Attendance blocks removal. |
+| `isLessonReferenced(LessonId)` | Reports whether a non-empty roster or retained Attendance blocks Lesson removal. |
+| `removeLesson(LessonId)` | Removes only an unreferenced Lesson while retaining catalogue order, surviving relationships and the allocation counter. |
 
 `PonHubData` owns normal lesson allocation and atomic state installation. `PonHubDataState` owns whole-root
 identity, reference and scheduling validation. `Lesson` remains the immutable record and sole owner of roster
@@ -455,18 +477,15 @@ of JavaFX callback errors, consistent held roster/filter results and continued u
 
 ### Storage component
 
-**API** : [`Storage.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/storage/Storage.java)
+`ProtectedPonHubDataStorage` guards the active operational store; `JsonPonHubDataCodec` converts complete
+snapshots and `JsonPonHubDataStorage` performs file access. Preferences use `JsonUserPrefsStorage`
+separately. [Application startup](#canonical-application-startup-85) selects and checks paths.
 
 <img src="images/StorageClassDiagram.png" width="550" />
 
-Active operational storage uses `ProtectedPonHubDataStorage` around `JsonPonHubDataStorage`; preferences
-use `JsonUserPrefsStorage` separately. The inherited class diagram and bullets below describe the retained
-legacy storage regression implementation, which is not the application's operational store.
-
-The inherited `Storage` component,
-* can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
-* is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
-* depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
+This inherited diagram describes the legacy `StorageManager`/`JsonAddressBookStorage` regression
+implementation, not a second active store. The authoritative operational contract is: validate the whole
+snapshot, save before publication, and protect rejected data until deliberate recovery and restart.
 
 #### Preference recovery
 
@@ -478,12 +497,6 @@ invalid preferences may be replaced. Valid human-edited sizes and positions surv
 window placement still fits them to the current screens. Preference read/write failures do not
 change canonical data. Initial-save failure leaves loaded/default preferences usable, and
 shutdown-save failure is logged without preventing shutdown.
-
-`JsonUserPrefsRecoveryTest` and `MainAppPreferencesTest` cover malformed shapes, required nulls,
-missing-field defaults, supported edits, and initial/shutdown save failures. The application tests
-exercise `MainApp.initialize`, `initPrefs` and `stop` with real storage and an injected initial-save
-failure; they verify that loaded/rejected canonical bytes stay unchanged and missing data stays
-absent. Native-window startup is covered separately by the existing lifecycle tests.
 
 #### Safe JSON saves
 
@@ -510,24 +523,22 @@ can observe an incomplete destination during replacement/recovery. Its guarantee
 copy, not uninterrupted access at the original path. Neither path promises power-loss durability or
 preserves all previous file attributes.
 
+<a id="prepared-canonical-transaction-handoff-82"></a>
+<a id="canonical-transaction-boundary-82"></a>
+
 #### Command transactions
 
-The active session invokes `CanonicalCommandExecutor` with its `PeopleView`, protected snapshot writer
-and session error supplier. `PeopleView.beginTransaction()` creates an independent working root and view
-from the complete live `PonHubDataState` and current role filter. Add validates the full candidate before
-saving. The executor compares operational snapshots, saves changed data before publication, then installs
-the candidate and returns success. Parse, execution or save failure never refreshes the live list, so records,
-allocation history, order, filter and selected card survive failure.
+`CanonicalCommandExecutor` stages each command through `PeopleView.beginTransaction()`, using an
+independent root, the complete snapshot and the current role filter. Commands resolve displayed indices
+against that staged view and prepare validated changes; they must not mutate live state or execute nested
+commands. Changed operational snapshots are saved through the protected writer before publication and
+success feedback. Parse, execution or save failure discards the staged change, retaining live records,
+allocation counters, filter, selection and subscribed query results.
 
-Observable list identity survives successful publication. Read-only commands and unchanged operational
-state skip saving; role-filter changes still update the same people view. Help and unchanged views avoid
-unnecessary refresh, preserving selection. Protected loading retains its help/list/exit-only restriction.
-Preferences retain their separate shutdown lifecycle. Publication performs no new validation or I/O.
-
-Legacy `LogicManager`/`ModelTransaction` remain isolated regression seams; active startup does not use them
-as a parallel writable store. Complete-state transactions preserve lesson rosters and retained attendance,
-and the persistence codec round-trips those complete snapshots. Attendance records remain independent
-of the current roster; never strip history to make a candidate saveable.
+Read-only commands and operational no-ops skip saving. Successful publication retains observable-list
+identity; unchanged views avoid refresh, while a changed role filter can publish without an operational
+write. Publication performs no new validation or I/O. Preferences follow their separate lifecycle.
+Legacy `LogicManager`/`ModelTransaction` remain isolated regression seams.
 
 #### JSON version detection foundation
 
@@ -545,45 +556,36 @@ version, independent of the application version. The canonical codec validates t
 | `UNRECOGNIZED_FORMAT` | A non-object root or an unversioned object that does not match the legacy root, including extra unknown fields. Reject rather than ignoring fields. |
 | `MALFORMED_JSON` | Empty/invalid JSON, duplicate object keys or trailing content after the document. Reject ambiguous input. |
 
-Missing versions identify legacy data only for the strict legacy root shape. A versioned candidate can
-still contain missing or invalid records: the detector is a format gate, not a schema/domain validator.
-Callers must handle file absence and read errors separately; neither is equivalent to empty JSON.
-The active `ProtectedPonHubDataStorage` classifies the selected file before canonical decoding. Legacy AB3
-roots are rejected and preserved; version-1 candidates require complete codec validation. Only a confirmed
-missing path returns an unwritten empty root. Denied access and dangling final symbolic links are loading
-failures. `JsonAddressBookStorage` retains its legacy-only decoder for isolated regression tests.
+Version detection neither validates domain records nor authorizes writes. File absence and read errors
+are handled separately by the protected loader; neither is equivalent to empty JSON.
+
+<a id="prepared-protected-canonical-loading-84"></a>
+<a id="protected-canonical-loading-84"></a>
 
 #### Current protected startup
 
-`ProtectedPonHubDataStorage` records actionable path-specific recovery guidance and locks operational
-saves after a controlled selected-file loading failure. `CanonicalPeopleSession` exposes an explicitly
-protected empty view; it never treats rejected data as a new writable dataset. The UI shows the warning,
-and active routing/help allow only help/list/exit. Listing includes the load diagnostic, so an empty result
-cannot be mistaken for saved data. Preferences retain their separate lifecycle. External file repair or
-removal does not unlock the session: restart is required.
+The selected-file loader and canonical session are active. Load once before using a storage instance;
+operational writes are blocked while uninitialized. Only confirmed absence creates an empty, unwritten
+root without sample data. A supported file returns a snapshot only after version and complete domain
+validation. Loading itself never writes or changes live state.
 
-Malformed JSON, invalid roots/versions/records/counters/references, legacy AB3 and read failures become
-controlled rejections. Unrelated programming failures are not swallowed. Supported versioned data loads
-after complete codec validation, including attendance dates and references. Missing selected files
-start empty and unwritten until successful add, without inherited sample data or automatic legacy migration.
+Unreadable files (including dangling final symbolic links), corrupt data, unsupported versions and legacy
+AB3 files produce controlled, path-specific recovery guidance. Unrelated programming exceptions propagate.
+Rejection preserves the original bytes and locks writes for the session, including direct saves and staged
+mutations. The session exposes a protected empty view labelled as unavailable saved data; routing and help
+permit only help/list/exit, and list includes the diagnostic. Neither external repair nor deletion unlocks
+the instance: restart to validate recovery. Do not bypass the wrapper through the raw codec/storage.
 
-The active canonical [transaction boundary](#command-transactions) also preserves live data and views
-after failed commands/saves; read-only commands and operational no-ops skip saving. Protected loading
-and preferences remain separate from those normal-session guarantees.
+For supported data, close the app, preserve a backup and repair a working copy or restore a known-good
+file; fix access permissions where needed. Use a compatible build only on a separate inspection copy.
+Follow [legacy re-entry](#planned-protected-loading-and-legacy-upgrade) for unversioned data and
+[manual recovery checks](#planned-canonical-loading-and-recovery) to verify the result.
 
-For manual checks, use a disposable selected `data/ponhub.json` or `--data=PATH`, record original bytes,
-then test help/list/exit and attempted add in the protected session. Bytes must remain unchanged. Preserve
-a backup, close the app, deliberately correct a supported working copy and restart. A legacy original is
-kept separately while explicit-role records are re-entered into a previously unused selected path.
-Session/storage and application-startup tests cover these boundaries; actual packaged/platform outcomes
-must be recorded separately using the procedures below.
+<a id="people-only-canonical-json-storage-79"></a>
 
-#### People-only canonical JSON storage (#79)
+#### Canonical JSON schema (#79, #81, #83)
 
-`JsonPonHubDataCodec` converts between a complete `PonHubDataState` and the version-1 envelope below.
-`JsonPonHubDataStorage` reads one UTF-8 document into a validated candidate and uses the existing safe
-file writer for saves. The active session connects them through `ProtectedPonHubDataStorage`; the legacy
-address-book path is not used by default. Preferences remain in their existing separate file.
+`JsonPonHubDataCodec` reads and writes one UTF-8 version-1 document for the complete snapshot:
 
 ```json
 {
@@ -625,32 +627,47 @@ Each `lessons` entry stores a shared lesson once; student records do not duplica
 }
 ```
 
-All lesson fields are required. Times are four-digit strings, days use Mon–Sun, and an empty roster
-is valid. The codec rejects unknown fields, wrong types and duplicate roster IDs before constructing
-the roster set. After decoding all people and lessons, the immutable aggregate validates unique lesson
-IDs, the lesson counter, tutor/student references and overlapping tutor, normalized room or student
-bookings. Adjacent half-open time slots are allowed. JSON object-field order and reference position in
-arrays do not affect validation; lesson array order is retained. Referenced records must exist in the
-complete candidate. Failure returns no partial snapshot and the protected loader retains the original
-bytes and blocks writes. Deleted lesson IDs remain reserved through `lastAllocatedLessonSequence`.
+All lesson fields are required. Times are four-digit strings and days use Mon–Sun. Unknown fields,
+wrong types and duplicate roster IDs are rejected before constructing the roster set. Referenced records
+must exist in the complete candidate, regardless of their array position. The aggregate enforces the
+[shared scheduling and membership rules](#shared-lesson-target-contract). Lesson array order is retained;
+deleted lesson IDs remain reserved by the counter.
 
-Close the app and preserve a backup before manual editing. For example, adding `"email": "alex@example.com"`
-to the student above is valid; making a phone numeric, removing a required field, or lowering its student
-counter below 1 is rejected. Object field order and whitespace do not matter. Round-trip tests compare the
-complete snapshot, including optional-field absence, people order, deleted-ID history and exhausted counters.
-Loading classifies the version first and validates all records/counters before returning; callers install
-the candidate only on success. Loading itself never writes or changes live state. This codec supplies no
-legacy migration or rejected-file session lock; active startup supplies that lock through the protected wrapper.
+<a id="retained-attendance-persistence-83"></a>
+
+The independent `attendance` array stores records such as:
+
+```json
+{"studentId": "S1", "lessonId": "L2", "date": "2026-10-12", "status": "present"}
+```
+
+All four fields are required strings; unknown fields are rejected. Dates must be real `YYYY-MM-DD`
+calendar dates (years 0001–9999). Status accepts `present`/`absent`, ignoring case and surrounding
+whitespace, and saves lowercase. The aggregate checks references, unique keys and lesson weekday;
+[retained-history rules](#shared-lesson-target-contract) allow former members' records. Correction replaces
+one key's status; removal omits that key. Attendance array order participates in snapshot equality.
+The active `mark` and `unmark` routes persist these changes through the transaction boundary;
+the `history` command reads retained entries without changing operational data.
+
+Before manual editing, close the app and back up the file. Object-field order and whitespace do not
+matter; array order and allocation history do. Adding `"email": "alex@example.com"` to the student above
+is valid; numeric phones, missing required fields or a student counter below 1 are rejected. No partial
+snapshot is returned: installation follows complete validation through the protected loader.
 
 <a id="planned-protected-loading-and-legacy-upgrade"></a>
 
 #### Protected loading and legacy upgrade
 
-Canonical startup, people commands, cards and the protected loader are now active together. The active runtime classifies the configured file before decoding: missing data may start a fresh supported root; valid supported versioned data loads only after complete domain, identity and reference validation. Unreadable, corrupt, unsupported-version and unversioned AB3 files produce controlled errors, actionable recovery guidance and no operational writes to the rejected file. Preserve its original bytes through help, list, exit and attempted mutations; saving preferences remains separate.
+Unversioned AB3 contacts lack explicit roles, and Students additionally need a level and parent phone.
+Preserve the original data folder and backup, then select a previously unused `--data=PATH` inside the JAR
+folder or copy the JAR into a separate empty folder. Re-enter records with explicitly chosen roles and
+required fields using `add`; verify the new store before retiring the old working folder. Never infer
+roles, drop invalid records or convert the original in place. There is no import, export or recover command.
 
-The initial upgrade policy is deliberate backup and manual re-entry into a separate new supported store. An unversioned AB3 contact does not contain enough information to infer a Student, Tutor or Parent role, and a Student additionally needs its level and parent phone. Do not invent those values, discard invalid records, or convert the original in place. Tell the administrator to close the app, preserve a backup of the original data folder, then select a separate previously unused operational path inside the JAR folder with `--data=PATH`, or copy the JAR into a separate empty folder. Re-enter records with explicitly chosen roles and required fields using the active add command. The preserved original and backup are not operational write targets; only the explicitly chosen new supported root is writable. Check the new records before retiring the old working folder. A migration importer and application-level export are future extensions; this policy does not introduce an `import`, `export` or `recover` command.
-
-The contact changes in #61 can reject formerly accepted numeric-only names, long phones or slash-containing addresses, or reveal duplicates after normalization. Diagnose the affected values without overwriting the rejected data. Inspect the local JSON read-only; if the older build is needed to inspect contacts, use an additional working copy, never the preserved original or backup. The administrator supplies any corrections and missing role information. Correctly human-edited supported JSON must load: document the delivered schema, preserve valid stable IDs and allocation state, and validate all relationships without requiring users to avoid editing the file. An invalid edit is rejected as a whole with its bytes preserved. The [manual checks](#planned-canonical-loading-and-recovery) cover this boundary.
+Contact validation can reject formerly accepted numeric-only names, long phones or slash-containing
+addresses, or reveal duplicates after normalization. Inspect JSON read-only, or use an older build on an
+additional working copy. The administrator supplies corrections and missing role information. Valid
+human edits to the supported schema must load; invalid edits follow [startup protection](#current-protected-startup).
 
 ### Common classes
 
@@ -722,6 +739,24 @@ remain intact. Invalid input, domain rejection, an identical-status no-op or a s
 aggregate nor the file. `CanonicalAttendanceIntegrationTest` covers creation, correction, historical correction,
 independent keys, persistence/reload, stable selectors and failed-save isolation.
 
+#### Attendance removal command (#92)
+
+`AttendanceUnmarkParser` accepts exactly one leading `STUDENT_INDEX` and one value for each of `lid/` and `d/`.
+The lowercase prefixes are order-independent and unique; status, repeated, unknown, blank and missing fields are
+rejected. The parser produces an immutable `AttendanceUnmarkInput` using the same strict index, `LessonId` and
+real-date validation as `mark`. `CanonicalUnmarkAttendanceCommand` resolves the current people-list position once,
+so wrong-role and out-of-range selections cannot be reinterpreted as another Student or an ID suffix.
+
+`PonHubData.unmarkAttendance` validates that the Student and Lesson still exist and that the date matches the
+Lesson's recurring weekday. It removes exactly one `(Student ID, Lesson ID, date)` record without changing the roster,
+recurring schedule or any other attendance key. Current membership is not required, so retained attendance can be
+removed after unenrolment. A missing key returns an empty result without publishing a replacement state.
+
+Changed removals use the staged save-before-publication transaction. Successful publication refreshes existing query
+objects while preserving the people filter/order/positions; a missing-key no-op performs no save or publication.
+Invalid input and save failures likewise leave the file, aggregate and active views unchanged. Aggregate, parser and
+canonical integration tests cover exact-key isolation, former-member removal, restart and failed-save retry.
+
 ### Immutable shared lesson records
 
 `Lesson` represents one canonical recurring teaching slot. It stores a stable `LessonId`, one tutor-role `PersonId`,
@@ -743,9 +778,8 @@ membership commands provide duplicate/non-member feedback. Lessons load through 
 `CanonicalPeopleSession` accepts zero or one help topic, normalizes with `Locale.ROOT`, rejects unknown
 topics/excess arguments and restricts guidance to the protected-session routes after rejected loading.
 Help preserves records and the people view without operational saves; preferences have a separate
-lifecycle. Protected sessions omit `add`, `addlesson`, `enrol`, `unenrol`, `mark`, `delete`, `lessons` and `search`;
-normal sessions expose help
-for every active route.
+lifecycle. Normal sessions expose help for every [active route](#current-increment-and-command-integration);
+protected sessions expose only help/list/exit guidance.
 Legacy `CommandCatalog`/`HelpCommandParser` remain regression seams.
 
 The Help menu and F1 both invoke `MainWindow.executeCommand("help")`, retaining the command-box
@@ -755,7 +789,7 @@ inherited `HelpWindow` is never constructed by supported entry points.
 
 See [manual help checks](#inline-help-and-supported-routes) for topic, menu/F1 and scrolling behavior.
 Guidance follows the [current runtime summary](#current-increment-and-command-integration);
-remaining attendance removal and query foundations do not add help topics.
+remaining relationship-search foundations do not add help topics.
 
 <a id="person-record-foundation"></a>
 <a id="ordered-people-registry-foundation"></a>
@@ -868,7 +902,7 @@ Tutor/Parent at that position without searching another list; range/role failure
 The [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85) cutover activates these commands through
 one session and people panel. The inherited delete route remains retired; #91 activates guarded canonical deletion.
 Canonical storage supports lessons, rosters and retained attendance. `addlesson`, `enrol`, `unenrol`, `mark`,
-guarded `delete`, `lessons` and all lesson-search fields are active; `unmark` and `history` remain gated.
+`unmark`, guarded `delete`/`deletelesson`, `lessons`, `showlesson`, `history` and all lesson-search fields are active.
 
 <a id="prepared-canonical-people-session"></a>
 
@@ -880,12 +914,13 @@ share that root. Callers receive immutable data snapshots and the same unmodifia
 the session does not expose writable operational data. Execute on the single model thread, or the JavaFX
 application thread once controls are attached.
 
-The session's `execute()` dispatches active `add`, `addlesson`, `enrol`, `unenrol`, `mark`, `delete`, `list`,
-`lessons`, `search`, `help` and
+The session's `execute()` dispatches active `add`, `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`,
+`deletelesson`, `list`, `lessons`, `showlesson`, `history`, `search`, `help` and
 `exit` commands through its switch. `CanonicalCommandCatalog` defines the permitted command words and guidance,
 independently
 of the retained legacy `CommandCatalog`. The session parses role-aware additions, shared-lesson creation and
-membership changes, attendance marks, listings and own-contact searches before staged execution. Changed data is saved through the
+membership changes, guarded Lesson deletion, attendance marks/removals, listings and own-contact searches before
+staged execution. Changed data is saved through the
 protected writer before publication, stable-ID success feedback or person-view changes. Parse, domain and save
 failures leave
 the original data, allocation counters and complete visible filter/list unchanged.
@@ -1027,8 +1062,8 @@ External dates are parsed using strict ASCII `YYYY-MM-DD` syntax and calendar va
 Status parsing is case-insensitive. Wrong-role person IDs, impossible dates and unknown statuses are rejected.
 `withStatus` returns a replacement record for the same key and leaves the original unchanged. Equality and hashing
 include all three key components and the status, which lets the later canonical aggregate keep one record per key and
-replace its value when correcting attendance. The active `mark` route uses this value model; `unmark` and attendance
-history retrieval is active and read-only; `unmark` remains unavailable.
+replace its value when correcting attendance. The active `mark` and `unmark` routes use this value model; attendance
+history retrieval is active and read-only.
 
 ### Future undo/redo and archiving
 
@@ -1072,8 +1107,9 @@ Canonical people activation and the remaining shared-lesson integration are trac
 [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77),
 [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85), and their dependent command, storage and retrieval
 issues. The requirements below describe the intended product; role-aware add/list, empty-roster shared-lesson
-creation, enrolment/unenrolment, dated attendance marking and history, guarded person deletion, own-contact people search,
-lesson listing and lesson search are active. Attendance removal and relationship search on people remain planned.
+creation, enrolment/unenrolment, dated attendance marking, guarded person deletion, own-contact people search,
+guarded Lesson deletion, lesson listing, lesson search, lesson details and dated attendance removal are active.
+Relationship search on people remains planned.
 
 ### User stories
 
@@ -1180,20 +1216,21 @@ Person selectors in these target use cases are positive indices from the current
 1. The administrator enters `list`, `lessons`, or one `search c/CATEGORY` command with any available filters needed.
 2. PonHub validates the request and retrieves the relevant records, combining relational filters according to the same-student/same-lesson rules.
 3. PonHub displays each distinct match once in creation order with its count. Lesson cards show stable ID, subject, schedule, tutor name/ID, room and current roster size, including zero. People results replace the current people filter and are numbered from one; lesson results preserve its filter, order, selection and indices in a separate scrolling panel.
-4. **Planned detail extension:** To review a shared lesson, the administrator reads its stable ID from the results and enters `showlesson lid/LESSON_ID`, optionally with `d/YYYY-MM-DD` for dated attendance. To review retained attendance now, the administrator enters `history STUDENT_INDEX [lid/LESSON_ID]` using the current people-list position.
-5. PonHub displays the requested read-only result without changing operational data or the people list. The active history view lists recorded dates, stable Lesson IDs, present/absent status and current or former membership; a missing entry is unrecorded. The planned lesson detail view will display the current roster and requested dated attendance.
+4. To review a shared lesson, the administrator reads its stable ID from the results and enters `showlesson lid/LESSON_ID`, optionally with `d/YYYY-MM-DD` for dated attendance.
+5. PonHub displays the current roster and requested dated attendance without changing operational data or the people list. For a date, missing attendance is shown as unrecorded, separately from present or absent.
 
 **Extensions**
 
 * 1a. The administrator runs `lessons si/STUDENT_INDEX`: PonHub resolves the current people-list index once to a Student ID and shows that student's current lessons. An invalid index or wrong role is rejected without altering records or the people view.
 * 2a. A condition is invalid, unavailable in this slice or incompatible with the category: PonHub explains the supported syntax without changing data. The administrator may resubmit at step 1.
 * 3a. No record matches: PonHub displays a successful empty result, and the use case ends. Unfiltered catalogue retrieval includes shared lessons with empty rosters.
-* 4a. A history Student index is invalid or selects another role, or the optional Lesson does not exist: PonHub reports the error without changing data, the people list or the previous result. The planned detail view also rejects an invalid date.
+* 4a. A history Student index is invalid or selects another role, or the optional Lesson does not exist: PonHub reports the error without changing data, the people list or the previous result. The detail view also rejects an invalid date.
 
 **Query design:** #80 supplies the read-only catalogue, stable-ID lookup, current roster/student lessons and indexed
 lesson filtering through the [prepared query backend](#indexed-lesson-query-projections-80). Current membership
-comes only from Lesson-owned IDs. Own-contact people search, catalogue/student lesson listing and all seven lesson search fields are active.
-Relationship search on people and detailed rosters remain separate slices. Dated attendance history is active. A student
+comes only from Lesson-owned IDs. Own-contact people search, catalogue/student lesson listing, all seven lesson
+search fields, detailed lesson roster/attendance views and student attendance history are active.
+Relationship search on people remains a separate slice. A student
 selector is resolved once against the current people view, never an ID suffix or a hidden role list. Empty rosters
 are included unless `sn/` requires a current member; all lesson filters match the same shared lesson.
 
@@ -1253,8 +1290,8 @@ are included unless `sn/` requires a current member; all lesson filters match th
 
 **Related user stories:** US-11, US-12, US-14, US-21
 
-The `mark` main scenario, its validation/correction extensions and the `history` retrieval alternative are active.
-The `unmark` alternative remains planned.
+The `mark` main scenario, `unmark` removal alternative, read-only `history` alternative and their
+validation/correction extensions are active.
 
 **Preconditions:** The Student and shared Lesson exist. The administrator has listed or searched people and checked the student's current people-list position. Canonical attendance and persistence support is integrated.
 
@@ -1267,17 +1304,17 @@ The `unmark` alternative remains planned.
 
 **Extensions**
 
-* 1a. In the planned removal route, the administrator instead enters `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD`. PonHub resolves and validates the Student, lesson and date, removes only the existing dated record and saves the change. Current enrolment and the shared lesson are unchanged. Existing historical attendance can be unmarked after unenrolment.
+* 1a. The administrator instead enters `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD`. PonHub resolves and validates the Student, Lesson and date, removes only the existing dated record and saves the change. Current enrolment, the shared Lesson, other Students and other dates are unchanged. Existing historical attendance can be unmarked after unenrolment.
 * 1a1. No entry exists for the specified key: PonHub reports that there is nothing to unmark and changes nothing.
 * 1b. In the active retrieval route, the administrator enters `history STUDENT_INDEX [lid/LESSON_ID]`. PonHub resolves the Student once and displays their retained dated attendance, optionally filtered by an existing shared Lesson. History includes former enrolments and preserves the people list. A valid empty result distinguishes unrecorded from absent. This read-only request does not save operational data.
 * 2a. The index, role, lesson, date, weekday or status is invalid, or a new mark has no current membership: PonHub rejects the command and explains the problem without changing data.
 * 3a. The same status already exists: PonHub reports no change and performs no operational save.
 * 3b. A different status exists: PonHub corrects that key instead of adding a duplicate, including after unenrolment.
-* 3c. Saving a mark fails: PonHub restores the previous aggregate and active views, reports the failure and ends the use case. The planned `unmark` route must provide the same guarantee.
+* 3c. Saving a mark or unmark fails: PonHub restores the previous aggregate and active views, reports the failure and ends the use case.
 
-**Postconditions:** A successful active mark stores one authoritative status for the key. The planned removal route
-will remove only that key. Active history remains independent of current membership. Failed operations preserve attendance
-and views; remaining attendance references still block student and lesson deletion.
+**Postconditions:** A successful mark stores one authoritative status for the key; a successful unmark removes only
+that key. History remains independent of current membership. Failed operations and no-ops preserve attendance and
+views; remaining attendance references still block student and lesson deletion.
 
 **Future extensions:** Feedback, late/excused statuses, notes, bulk/clickable attendance, percentages, make-up links and fee adjustments are not core attendance promises (US-26, US-43 to US-46, US-48 and US-49).
 
@@ -1331,37 +1368,39 @@ and views; remaining attendance references still block student and lesson deleti
 ### Non-Functional Requirements
 
 1.  Should work on Windows, Linux and macOS using Java `25`. On macOS, use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`), as described in [Setting up and getting started](SettingUp.html#setting-up-the-project-on-your-computer).
-2.  Should be able to hold up to 1,000 persons, 1,000 recurring lessons, and 10,000 attendance records without noticeable sluggishness during typical usage.
-3.  Team performance target: common operations should update the GUI within 2 seconds on a reference machine recorded with its hardware, OS, Java version and test dataset. The reference machine and measured results are still to be documented; this guide does not claim the target has been verified.
-3.  A user with above average typing speed for regular English text (i.e. not code or system administration commands) should be able to accomplish most recurring tasks faster using commands than using the mouse.
-4.  The product should be for a single user and use one local data store, without requiring user accounts, concurrent access, or live synchronisation.
-5.  The product should be packaged into a single executable `.jar` file and should not require an installer.
-6.  The product file size should remain below 100 MB to ensure efficient storage and distribution.
-7.  The GUI should display correctly and without layout issues on screen resolutions of 1920×1080 and higher at 100% and 125% scale.
-8.  The GUI should remain usable (i.e. all functions remain accessible even if the layout is suboptimal) at screen resolutions of 1280×720 and higher at 150% scale.
-9.  All operational data must be stored locally in a human-readable text file without using a database management system.
-10. All successful data changes must be saved automatically and reliably. Failed validation or saving must leave both the in-memory data and stored data file unchanged.
-11. All person, lesson, and attendance data must remain on the user's computer and must never be transmitted over the internet.
-12. The application should function offline without requiring an internet connection or a team-owned remote server.
-13. Invalid inputs must not crash the application or modify existing data. The application should display a specific error message explaining how the user can correct the input.
-14. The application should be implemented primarily using object-oriented programming, with clear separation between the UI, Logic, Model, and Storage components.
-15. Team testing target: the JUnit-based automated test suite should achieve at least 70% line coverage, and all automated tests should pass before a release. The percentage is the team's own goal, not a course-mandated minimum; coverage does not replace behavior-focused regression and integration checks.
+2.  Should be able to hold at least 1,000 persons, 1,000 recurring lessons, and 10,000 attendance records in one local data file.
+3.  Team performance target: with the data volume in NFR 2, common command-to-GUI-update operations should complete within 2 seconds on the reference machine. Verification must record the CPU, memory, OS, Java distribution and version, dataset generator, command mix, timing method, and observed results in [#101](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101). As #101 has not yet recorded these facts, this guide states a target rather than an achieved result.
+4.  A user with above average typing speed for regular English text (i.e. not code or system administration commands) should be able to accomplish most recurring tasks faster using commands than using the mouse.
+5.  The product should be for a single user and use one local data store, without requiring user accounts, concurrent access, or live synchronisation.
+6.  The product should be packaged into a single executable `.jar` file and should not require an installer.
+7.  The product file size should remain below 100 MB to ensure efficient storage and distribution.
+8.  The GUI should display correctly and without layout issues on screen resolutions of 1920×1080 and higher at 100% and 125% scale.
+9.  The GUI should remain usable (i.e. all functions remain accessible even if the layout is suboptimal) at screen resolutions of 1280×720 and higher at 150% scale.
+10. All operational data must be stored locally in a human-readable text file without using a database management system.
+11. All successful data changes must be saved automatically and reliably. Failed validation or saving must leave both the in-memory data and stored data file unchanged.
+12. All person, lesson, and attendance data must remain on the user's computer and must never be transmitted over the internet.
+13. The application should function offline without requiring an internet connection or a team-owned remote server.
+14. Invalid inputs must not crash the application or modify existing data. The application should display a specific error message explaining how the user can correct the input.
+15. The application should be implemented primarily using object-oriented programming, with clear separation between the UI, Logic, Model, and Storage components.
+16. Team testing target: the JUnit-based automated test suite should achieve at least 70% line coverage, and all automated tests should pass before a release. The percentage is the team's own goal, not a course-mandated minimum; coverage does not replace behavior-focused regression and integration checks.
 
 ### Glossary
 
 * **Mainstream OS**: Windows, Linux, Unix, or macOS
 * **AddressBook-Level3 (AB3)**: The upstream SE-EDU desktop application that is incrementally evolved into PonHub
-* **Person record**: A stored record representing one student, tutor, or parent and containing the fields required for that role
+* **Person record**: A stored Student, Tutor, or Parent record composed of one stable Person ID and one Contact Details value, plus fields required for that role
+* **Contact details**: One required name with optional phone, email, and address values composed into a Person record
 * **Role**: The `student`, `tutor`, or `parent` category assigned to a person record, which determines its required fields and applicable operations
-* **Shared recurring lesson**: An independent weekly teaching slot with a stable Lesson ID, day, start/end time, subject, tutor and room; its roster may contain zero or more Student IDs
+* **Lesson catalogue**: The ordered collection of independent shared Lesson records owned by the canonical data aggregate
+* **Shared recurring lesson**: An independent weekly teaching slot with a stable Lesson ID, day, start/end time, subject, one Tutor ID, and room; its roster may contain zero or more Student IDs, and each Student may belong to zero or more Lessons
 * **Lesson occurrence**: One dated instance of a recurring lesson
-* **Attendance record**: A stored record containing the attendance status of one student for one lesson occurrence
+* **Attendance record**: A dated history record containing the attendance status of one Student for one Lesson occurrence, stored separately from current enrolment
 * **Attendance status**: The recorded state of a student for a lesson occurrence, such as `present` or `absent`
-* **Attendance key**: The combination of student, lesson, and date that uniquely identifies one attendance record
+* **Attendance key**: The combination of one stable Student ID, one stable Lesson ID, and one date that uniquely identifies an Attendance record
 * **Exact duplicate person**: A person record with the same role, normalised name, and identifying contact number as an existing record
 * **Displayed person index**: The positive one-based position in the current filtered people list used to select a person in a command; it is distinct from a stable ID and may change when that people view is filtered or reordered. Lesson, roster and history row positions do not supply person command indices
 * **Stable person ID**: The role-prefixed identity stored for a person and used in internal lookup, queries, relationships and persistence; commands resolve a displayed person index once to this identity
-* **Stable lesson ID**: The `L`-prefixed identity of a shared Lesson, persisted and used in attendance references; existing lessons are selected in commands with `lid/LESSON_ID`, never a per-student lesson index
+* **Stable lesson ID**: The `L`-prefixed identity of a shared Lesson, persisted and used in attendance references; existing lessons are selected in commands with `lid/LESSON_ID` using that single canonical identity
 * **Tutor lookup**: Lesson creation resolves a normalized full tutor name and optional exact phone to one Tutor ID; search uses partial tutor-name text instead
 * **Prefix**: A short marker in a command that identifies the type of information represented by the following value
 * **Parser**: The Logic component that converts raw command text into validated parameters and a command object
@@ -1372,15 +1411,15 @@ and views; remaining attendance references still block student and lesson deleti
 * **Human-readable data file**: The local text file used to store PonHub data in a form that can be inspected and edited without a database management system
 * **Tutor clash**: An overlap between lessons assigned to the same tutor on the same day and during an overlapping time range
 * **Room clash**: An overlap between lessons assigned to the same room on the same day and during an overlapping time range
-* **Class**: A tuition-centre term for a shared recurring lesson; core membership uses the Lesson-owned roster, with capacity and one-off reservations deferred
+* **Class**: A tuition-centre term for a shared recurring lesson; core membership uses the Lesson-owned roster, while capacity and one-off reservations are deferred proposals rather than core model fields
 * **Enrolment**: A Student's current membership in a shared Lesson; removing membership retains dated attendance
 * **Roster**: The current enrolled Student IDs owned by one shared Lesson, from which displayed student records are derived
 * **History**: Retained dated attendance keyed by Student ID, Lesson ID and date, independent of current membership
-* **Capacity (future)**: A later limit on the number of students in a class
-* **Make-up booking (future)**: A one-off reservation in a suitable class for a student who missed a regular lesson, without changing regular membership
-* **Waiting list (future)**: An ordered queue of students requesting a place in a class that has reached a later capacity limit
-* **Class-swap request (future)**: A pending request to move a student when a transfer cannot be completed immediately
-* **Archived student (future)**: A withdrawn student retained for historical reference but hidden from the default active-student list
+* **Capacity (proposal)**: A proposed limit on the number of students in a class; it is not a field in the core model
+* **Make-up booking (proposal)**: A proposed one-off reservation in a suitable class for a student who missed a regular lesson, without changing regular membership
+* **Waiting list (proposal)**: A proposed ordered queue of students requesting a place in a class that has reached a capacity limit
+* **Class-swap request (proposal)**: A proposed pending request to move a student when a transfer cannot be completed immediately
+* **Archived student (proposal)**: A proposed withdrawn-student state retained for historical reference but hidden from the default active-student list
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -1393,21 +1432,25 @@ Use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-projec
 Use the active catalogue in the tested build; these examples apply to canonical startup.
 
 1. In a fresh JAR folder, run `help`, then `help add`, `help addlesson`, `help enrol`, `help unenrol`, `help mark`,
-   `help delete`, `help list`, `help lessons`, `help search`, `help help` and `help exit`. Each topic matches its
+   `help unmark`, `help history`, `help delete`, `help deletelesson`, `help list`, `help lessons`, `help showlesson`,
+   `help search`, `help help` and
+   `help exit`. Each topic matches its
    parser and supplies a runnable example; `help exit` keeps
    the app open. Repeat topic/example checks when another route is registered.
 2. Add a person using a runnable `help add` example, then select its card, type an unfinished command
    and choose Help from the menu. Repeat F1 from command
    and result focus. Expect identical inline guidance, retained draft/selection and no separate window.
-3. `help ADD`, `help ADDLESSON`, `help ENROL`, `help UNENROL`, `help MARK` and `help DELETE` match their lowercase topics.
-   `help remove` and
+3. `help ADD`, `help ADDLESSON`, `help ENROL`, `help UNENROL`, `help MARK`, `help UNMARK`, `help DELETE`,
+   `help DELETELESSON` and `help SHOWLESSON` match their lowercase topics. `help remove` and
    `help clear` explain the unknown topic and direct users to `help`. `help add delete` reports
    invalid format and help usage.
 4. At minimum width, run `help add` and scroll to the final example/back to the top. Text wraps
    readably; a new topic resets scrolling. Record actual display conditions using the
    [people-card/whole-window checks](#planned-people-card-display-checks).
-5. `edit 1 n/Alex`, `clear` and `find Alex` report `Unknown command.` without changing data.
-   `list extra`, an invalid `addlesson`, an invalid `mark`, `delete S1`, `lessons sid/S1` and `exit extra` show
+5. `edit 1 n/Alex`, `clear` and `find Alex` identify the unknown command and suggest `help` without changing data.
+   For example, the first input reports `Unknown command: 'edit'. Type 'help' to see available commands.`
+   `list extra`, an invalid `addlesson`, an invalid `mark`, an invalid `unmark`, `delete S1`,
+   `deletelesson 1`, `lessons sid/S1` and `exit extra` show
    validation or usage messages without
    committing data, changing the list or exiting.
 6. Compare operational bytes before/after help: unchanged, or still missing in a fresh folder.
@@ -1518,17 +1561,10 @@ Use that same terminal/runtime when reopening the JAR; substitute its actual fil
    `../outside.json`, an absolute path outside the JAR folder and a symbolic-link escape before any
    operational read/write outside application home.
 
-`ApplicationStartupTest` exercises production `MainApp.init()` and `stop()` in isolated JVM folders
-whose paths contain spaces, with real JavaFX named parameters. It verifies empty missing-store startup,
-legacy/corrupt/unsupported rejection, supported human edits and allocation validation, original-byte
-preservation through help/list/exit and rejected mutations, repaired restart, alternate paths and shared
-GUI preference reload. Its test-only start callback shows a minimal stage and observes a JavaFX pulse
-before requesting exit; phase diagnostics require verified shutdown and launch return in order.
-These checks do not exercise the full production window, native interaction or physical display/scaling
-acceptance. Development classes resolve application home from each child working directory; repeat the
-packaged JAR procedure above to verify the JAR-folder boundary independently. Ernest used OpenAI Codex for these regression
-tests and their current-runtime guide reconciliation. Zhu Zhi Yu used OpenAI Codex for the minimal-stage
-lifecycle checks and shutdown diagnostics.
+Automated initialization/shutdown checks do not establish full-window interaction, physical scaling
+or packaged JAR-folder anchoring. Record actual results for the procedure above. Ernest used OpenAI Codex
+for startup regressions and guide reconciliation; Zhu Zhi Yu used it for minimal-stage lifecycle checks
+and shutdown diagnostics. Historical verification details are preserved in [#84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84#issuecomment-6140874125).
 
 ### Canonical people commands and unsuccessful saves
 
@@ -1610,6 +1646,25 @@ lifecycle checks and shutdown diagnostics.
    publication or file change; attendance, allocation state, filter/order/positions and observable query
    objects/contents remain unchanged. Restore writing and retry; the command commits once and reloads identically.
 
+### Active attendance-removal checks
+
+1. Record attendance for two Students on the same Monday and for one Student on another Monday. Keep a filtered
+   people view where the selected Student's current position differs from the numeric part of their stable ID. Run
+   `unmark STUDENT_INDEX lid/LESSON_ID d/2026-10-05` and verify the feedback identifies that resolved Student and
+   stable Lesson.
+2. Verify exactly the selected Student/Lesson/date key is removed. The other Student/date records, roster, recurring
+   schedule, people filter/order/positions and existing query objects remain. Restart and verify the same persisted
+   result. Repeat the command: it reports no change, produces no query publication and leaves file bytes unchanged.
+3. Reject a Tutor/Parent position, an out-of-range position, a missing Student or Lesson reference, an impossible or
+   wrong-weekday date, `s/present`, and missing/repeated/unknown/blank fields. Each rejection must preserve aggregate
+   state, file bytes, the current people view and subscribed query objects.
+4. Record attendance, unenrol the Student, correct that existing key with `mark`, then remove it with `unmark`.
+   Correction and removal must both succeed without restoring membership. A new mark on another date remains rejected;
+   a repeated unmark is a no-op. The Student and Lesson continue to exist.
+5. Inject a save failure for a valid removal. Expect no success feedback, publication or file change; attendance,
+   roster/schedule, allocation state, filter/order/positions and observable query objects/contents remain unchanged.
+   Restore writing and retry; the removal commits once and reloads identically.
+
 ### Contact validation in the current increment
 
 Use role-aware commands in a disposable selected data file.
@@ -1655,7 +1710,34 @@ For manual checks, use an isolated supported dataset:
    Use an isolated unwritable storage seam, attempt deletion and verify unchanged file, people filter/positions and
    query results. Restore writing and retry: commit only once, then restart and compare the complete saved state.
 
-Attendance removal and lesson deletion remain separate planned routes; these checks do not claim those commands work.
+Use the active `unmark` route to remove the retained Attendance dependency before retrying Student deletion.
+Use the active `deletelesson` route to remove the empty Lesson before retrying Tutor deletion.
+
+### Active guarded shared-lesson deletion (#98)
+
+`DeleteLessonParser` accepts exactly one stable `lid/LESSON_ID`; catalogue, search and per-Student lesson positions
+are never selectors. `CanonicalDeleteLessonCommand` stages `PonHubData.removeLesson`, which reports a non-empty
+roster before retained attendance and never cascades into either collection. Removing an eligible Lesson preserves
+`lastAllocatedLessonSequence`, so the next creation receives a higher ID. The normal snapshot transaction saves
+before publishing query refreshes; failed saving keeps the schedule, allocation counter, file and all held views
+unchanged.
+
+`CanonicalDeleteLessonIntegrationTest` covers roster and former-member attendance guards, explicit clearing through
+the active `unenrol`/`unmark` routes, stable-ID parsing, view refresh, released tutor/room slots, monotonic IDs,
+reload and failed-save retry. For manual checks, use an isolated supported dataset:
+
+1. Create a Lesson, keep its stable ID and enrol two Students. Run `deletelesson lid/LESSON_ID`; expect feedback
+   naming the roster Student IDs and no data/view/file change. Unenrol both Students and retry successfully only if
+   the Lesson has no attendance.
+2. In a separate copy, enrol and mark a Student, then unenrol them. Deletion remains blocked by retained attendance
+   and identifies its Student/date. Use `unmark`, delete the Lesson and verify that people records remain unchanged.
+3. Keep a catalogue, Student-lessons, tutor-schedule or lesson-search result observable. A successful deletion
+   refreshes the held list without replacing its object or the people list/filter. A blocked or save-failed attempt
+   sends no staged list event and preserves the selected lesson context.
+4. After successful deletion, create a Lesson in the same tutor/room/time slot. It succeeds with an ID higher than
+   the deleted ID. Restart and verify the deletion, new ID, catalogue order and allocation counter.
+5. Reject a missing `lid/`, numeric/search-result selectors, repeated/unknown prefixes, malformed IDs and missing
+   Lessons without saving. Protected startup rejects `deletelesson` and hides its help topic.
 
 ### Active lesson listing and search checks (#90)
 
@@ -1680,7 +1762,7 @@ shape for automated integration/UI tests. For manual runs, create lessons with `
    Exercise a failed save: previous results and allocation state remain unchanged, with no staged card visible.
 6. Use the real `enrol`/`unenrol` routes to verify current student results and `sn/` results refresh on commit.
    A former member's dated attendance must not satisfy either query. Exercise active `mark` and guarded `delete`;
-   test `unmark` as it integrates. Deleting the selected unreferenced student leaves their stable-ID lesson view
+   test the active `unmark` route. Deleting the selected unreferenced student leaves their stable-ID lesson view
    empty until another retrieval command selects a new source. Blocked or save-failed deletion preserves both
    panels, selection and lesson context; complete state restore must refresh held results. Automated boundary tests cover
    membership replacement, retained attendance, removal and restore alongside active-session membership command and failed-save/retry/reload tests.
@@ -1693,29 +1775,34 @@ is captured from the real FXML window by setting `PONHUB_CAPTURE_UI` to an absol
 `CanonicalMainWindowTest`; the test uses a temporary canonical file. Offscreen JavaFX checks do not substitute
 for recording native platform/scaling outcomes below.
 
-### Active attendance history checks (#100)
+### Active shared-lesson details and dated attendance (#99)
 
-Use a disposable supported file with a mixed people list, two students sharing a Monday Lesson and another
-Lesson. Mark different dates and statuses, including records for both students on the same date.
+`ShowLessonParser` accepts one `lid/LESSON_ID` and an optional `d/YYYY-MM-DD` in either order, rejecting missing,
+repeated, unknown and blank fields and invalid calendar dates.
+`LessonRetrieval.show` looks up the stable Lesson independently of the current lesson filter and rejects a date
+whose weekday differs from that Lesson's recurrence before replacing any result. It constructs one immutable
+`LessonDetailView` from the committed root: current roster Students remain in people creation order, and absent
+dated records have an empty status that the card labels `unrecorded`. Attendance for Students outside the current
+roster appears in a separate former-member section, newest date first. Without a date, that section shows all
+retained former-member records; with a date, it shows records for that occurrence only. No missing record becomes
+an `absent` entry.
 
-1. Search people so the intended Student appears at position 1 while their stable ID has another suffix. Run
-   `history 1`, then `history 1 lid/L1`. Expect only that Student's recorded entries, newest date first and then
-   numeric Lesson ID. Each row shows Lesson ID, date, present/absent and current membership. An existing Student
-   or Lesson with no matching records gives a successful empty result; a missing occurrence is unrecorded.
-2. While history is visible, correct a mark, then unenrol the Student. Expect the existing row to refresh its
-   status and show former membership, while the people filter, selection, order and indices stay intact. Restart
-   and repeat the history request; retained status and stable IDs must match. Once `unmark` integrates, remove one
-   key and verify only that row disappears, including after restart.
-3. Reject a missing, zero, negative, wrong-role or out-of-range Student index, unknown Lesson ID, repeated or
-   unknown fields and control characters. Expect the previous history result, operational bytes and people view
-   unchanged. Switch to `lessons` or lesson search and confirm the right pane returns to lesson results.
-4. Compare operational bytes before and after history and help requests. During a failed attendance save, keep
-   the active history rows unchanged; after a successful retry, expect one committed refresh. Protected startup
-   must reject `history` and advertise only help/list/exit.
+The selected detail is a separate result source in `LessonRetrieval`. A complete canonical publication rebuilds
+it after enrolment, unenrolment, marking, correction, removal or restoration. A staged failure publishes nothing,
+so the previous detail and people view remain unchanged. If `deletelesson` removes the selected unreferenced
+Lesson, its result becomes empty and the context identifies the unavailable stable ID. `lessons` and lesson
+search switch back to their own sources. The normal lesson ListView remains for catalogue results; the detail
+uses a dedicated width-fitting ScrollPane and wrapping labels for long rosters/history. No roster row number is
+used as a person-command selector.
 
-`LessonQueriesHistoryTest`, `CanonicalHistoryIntegrationTest`, `HistoryListPanelTest` and
-`CanonicalMainWindowTest` cover these behaviors through the query, command and FXML boundaries. History is a
-read-only view of retained attendance, not undo/redo or a command audit log.
+UC-02/manual checks: show a shared Monday Lesson with two current Students, one recorded present and one
+unrecorded, then mark the second absent. Unenrol that Student and verify the dated absence moves to the labelled
+former-member section while the current roster shrinks. Correct or remove the retained entry through active
+`mark` and `unmark` commands and verify immediate refresh; repeat after restart. Reject malformed IDs/dates, a Tuesday
+date for a Monday Lesson, and an unknown ID while preserving the prior detail and operational bytes. Inspect an
+empty roster and many retained records at narrow window widths and scroll to the last row. Keep a filtered people
+view selected throughout; the next person command must still resolve its original one-based position. Protected
+startup exposes no `showlesson` route.
 
 ### Planned shared-lesson workflow checks
 
@@ -1733,10 +1820,11 @@ Run these as the corresponding routes become available, using an isolated suppor
    Student/Lesson/date, same-status no-op and correction. Once a dated result view activates, it must display another
    Monday without a mark as unrecorded.
 5. Unenrol one student using `unenrol STUDENT_INDEX lid/L1`. The active `mark` route must correct their existing
-   key and reject a new key without membership. `history STUDENT_INDEX lid/L1` must retain the record and
-   label it as former membership. Once planned `unmark` activates,
-   `unmark STUDENT_INDEX lid/L1 d/2026-10-05` must remove only that key. Check Student and Lesson deletion guards
-   before and after removing their remaining dependencies once those guarded routes activate.
+   key and reject a new key without membership. The active
+   `unmark STUDENT_INDEX lid/L1 d/2026-10-05` route must then remove only that historical key. Use the active
+   guarded `delete` route before and after removal to verify the Attendance dependency. The active `history STUDENT_INDEX lid/L1` route must expose retained records before removal. Check Student and Lesson
+   references before and after removing their remaining dependencies. Use active `deletelesson lid/L1` only after
+   every roster and attendance dependency is cleared; verify that its stable ID is not reused.
 6. Exercise each activated search filter from the full matrix, including a parent with two linked children and a student with two differently scheduled lessons. Combined filters must not take the name from one child and the lesson from another, or the day from one lesson and the subject from another. Verify distinct-ID counts, successful empty results and empty-lesson discovery when appropriate.
 7. Restart and verify IDs, global creation order, membership and retained attendance. Trigger a save failure in an isolated test seam and verify the aggregate, allocation state and active views are restored. Read-only list/query/history/help operations must not rewrite operational data in the integrated runtime. Record the actual build, platform and results; do not treat unperformed checks as passes.
 
@@ -1744,99 +1832,24 @@ Run these as the corresponding routes become available, using an isolated suppor
 
 ### Canonical loading and recovery
 
-These checks apply to the active selected-file loading boundary. Use copies in disposable test folders and keep the preserved original and backup outside all configured operational paths.
+Use disposable copies; keep originals and backups outside every configured operational path. Record
+build/platform evidence as in [Launch and shutdown](#launch-and-shutdown).
 
-1. In a deliberately separate empty folder, launch the canonical build with no operational file. Expect a valid empty unwritten root and no file after help/list/exit. Add delivered records and restart; expect successful restoration. This does not authorize replacing a legacy or rejected file in an existing folder.
-2. Close the app and make a valid manual edit to supported versioned JSON using its delivered schema, such as correcting a contact value while preserving valid IDs, allocation state and references. Restart; expect the edited records to load. Repeat with valid supported lessons/memberships. Repeat with valid dated history, including a student no longer in the lesson roster. Human editing must remain usable.
-3. In independent copies, test malformed JSON, a null root/record, wrong record shapes, duplicate IDs or normalized duplicate people, dangling lesson/roster references, invalid allocation state, unreadable files and unsupported versions. Test duplicate attendance keys, missing references, invalid dates/statuses and lesson weekday mismatch. Even a future-version file resembling legacy `persons` must be rejected before domain decoding or any write. Expect a controlled diagnostic and recovery instructions rather than a crash.
-4. Capture each rejected file's bytes, then attempt help/list/exit and a data mutation wherever the failure state permits them. The rejected operational bytes must remain identical, and mutations must be blocked. The app must show a protected empty view with recovery guidance; help advertises only help/list/exit and list includes the diagnostic. Preferences are checked separately. Repair or remove a working copy while the app remains open; add must stay blocked until restart.
-5. Test an unversioned AB3 file and formerly accepted contacts rejected by #61. Expect no guessed roles, silent conversion, record dropping or empty writable fallback. Follow the backup/manual re-entry guidance using a separate missing `--data=PATH` inside application home or a JAR copied into a separate empty folder with explicitly chosen roles. Verify only the new supported root is writable and that the old file and preserved backup remain unchanged.
-6. Correct an invalid supported file on a working copy while the app is closed, then restart and verify complete validation succeeds. If recovery uses an older build for inspection, use another working copy rather than the preserved original or backup. Record actual outcomes for the implemented UG/DG recovery path; no importer or recovery command is assumed.
+1. Launch with a missing operational file. Help/list/exit must leave it absent; a successful addition
+   creates supported data that reloads on restart. Never use a rejected or legacy file as the new store.
+2. Close the app and edit a supported copy: correct a contact, preserve IDs/counters, and include valid
+   lessons, rosters and attendance for a former member. Restart and verify the complete edited snapshot.
+3. Test separate copies with malformed JSON, null roots/records, wrong shapes, duplicate IDs or normalized
+   people, dangling/wrong-role references, invalid counters, unreadable files and unsupported versions.
+   Include duplicate attendance keys, invalid dates/statuses and weekday mismatches. A future-version
+   file containing `persons` must still be rejected, not decoded as legacy data.
+4. Record rejected bytes. Expect a protected empty view with recovery guidance, help advertising only
+   help/list/exit and list including the diagnostic. Attempt add and exit: writes stay blocked and the
+   bytes stay identical. Preferences are separate. Repair or remove the disposable working copy while
+   running: add remains blocked. Restart with a corrected supported copy and verify loading succeeds.
+5. For unversioned AB3 or contacts rejected by current validation, follow
+   [legacy re-entry](#planned-protected-loading-and-legacy-upgrade) into a separate unused path. Verify
+   explicit roles/required fields and that the original and backup remain unchanged. No silent conversion,
+   record dropping, guessed roles or importer/recovery command is expected.
 
-
-<a id="prepared-canonical-transaction-handoff-82"></a>
-
-### Canonical transaction boundary (#82)
-
-`PeopleView.beginTransaction()` creates a `CanonicalTransaction` from the view's own canonical root,
-so staged person-index resolution and staged operational data share one source. It copies the current
-role filter and retains the complete immutable `PonHubDataState`, including deleted-ID allocation
-history, exhaustion, lesson rosters and retained attendance. Operational equality includes counters.
-
-`CanonicalCommandExecutor` accepts that live view, a complete snapshot writer, and the authoritative
-protected-session error supplier. A staged command receives only the working aggregate and working
-view. Resolve a displayed index once with `PersonIndexResolver`, prepare changes (for example with
-`PersonAdditionCandidate`), and set the staged filter as needed. The executor saves changed state
-before installing it or returning success. Failures never refresh the live list; successful publication
-refreshes its existing observable projection. Unchanged data skips storage, and unchanged views are
-not refreshed, preserving selection for help/history and identical-status no-ops.
-
-The active canonical session invokes this boundary over its one live root. It supplies the protected
-writer and session error supplier and enforces the help/list/exit-only catalogue before dispatch after
-a rejected load. The guard also rejects staged operational changes while loading is protected.
-`JsonPonHubDataStorage` remains behind that protected adapter. The codec supports lessons, rosters and retained
-attendance. Never strip historical attendance to save.
-
-Regression tests exercise the real aggregate, addition candidate, filtered view, people codec/reload,
-failed-save retry without consuming an ID, retained attendance, roster changes, protected writes,
-invalid attendance rejection, and JavaFX card selection at filtered index 1 with stable ID S7.
-The active application router uses these components through its single session. Component regressions
-support application verification but do not establish unperformed native display/platform results.
-
-
-<a id="prepared-protected-canonical-loading-84"></a>
-
-### Protected canonical loading (#84)
-
-`ProtectedPonHubDataStorage` wraps the canonical codec and file writer for one application session.
-Construct it with the configured operational `Path` and call `load()` once before building the canonical
-model. Only confirmed absence returns a fresh unwritten root. Supported input must pass the version
-classifier and full validation in the canonical codec before any snapshot is returned. Rejection status
-separates unreadable, corrupt, unsupported-version and legacy data. Unrelated programming failures are
-not reclassified as corrupt user files. Uninitialized sessions cannot write either.
-
-A rejected load throws `DataLoadingException`, records actionable path-specific guidance and blocks
-`saveData()` for the entire session. Neither external repair nor deletion unlocks that instance; restart
-with a new storage instance to validate recovery. No rejected snapshot is installed and no fallback
-empty state is returned. If the UI shows an empty protected view, label it as unavailable saved data.
-Preferences keep their existing separate storage/shutdown lifecycle.
-
-The active session installs the returned snapshot in its single root, passes `storage::saveData` and
-`storage::getDataLoadError` to `CanonicalCommandExecutor`, and enforces help/list/exit-only routing after
-rejected startup. `MainApp` connects that session, canonical cards and routing together.
-Do not point the legacy runtime at canonical data or bypass protection via `JsonPonHubDataStorage`.
-The wrapper delegates domain validation to the codec, including attendance field parsing and aggregate
-reference, duplicate-key and weekday checks, without introducing another writable store.
-
-Verification includes missing paths, injected access denial, malformed/null/legacy/unsupported input,
-duplicate identities and invalid allocation history, no overwrite through direct saves or the canonical
-command boundary, and restart-only recovery after deliberate supported edits. Canonical session tests exercise actual add/list/search/help/exit routing. Application startup, configured-path,
-UI/card and packaged platform checks additionally verify the cutover; retained legacy regressions remain
-isolated and do not establish canonical application acceptance. For manual verification, use disposable files, record their original
-bytes, attempt reads and mutations in the protected session, repair a copy, restart and verify successful
-loading. Never delete the original as a recovery shortcut.
-
-
-### Retained attendance persistence (#83)
-
-The version-1 root stores `attendance` as an ordered array independent of lesson rosters:
-
-```json
-"attendance": [
-  {"studentId": "S1", "lessonId": "L2", "date": "2026-10-12", "status": "present"}
-]
-```
-
-All four fields are required strings; unknown fields are rejected. Dates must be real calendar dates
-in `YYYY-MM-DD` form (years 0001–9999) and match the referenced lesson's weekday. Status accepts
-`present` or `absent`, ignoring case and surrounding whitespace, and is saved in lowercase.
-The Student and Lesson must exist, but the Student need not remain enrolled. Duplicate
-`(studentId, lessonId, date)` keys are rejected, including duplicates with different statuses.
-A correction replaces the status at one key; removal omits only that key. Neither changes membership.
-
-`PonHubDataState` validates references, uniqueness, date range and weekday before publication;
-`JsonPonHubDataCodec` validates JSON shapes and parses fields before constructing that snapshot.
-The existing protected loader and staged save boundary persist the entire aggregate without a second store.
-`JsonAttendanceStorageTest` covers shared lessons, retained history after roster removal, corrections,
-single-key removal, complete snapshot equality and rejected input preserving disk and live state.
-These persistence tests support the active `mark` and `history` routes but do not activate planned `unmark`.
+<!-- Vincent used OpenAI Codex for #168 aggregate/storage consolidation, source checks and guide validation. -->

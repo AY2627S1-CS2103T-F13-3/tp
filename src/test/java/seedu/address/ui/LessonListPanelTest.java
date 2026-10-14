@@ -10,6 +10,8 @@ import static seedu.address.testutil.FxTestUtil.runOnFxThread;
 import static seedu.address.testutil.LessonQueryTestData.createData;
 import static seedu.address.testutil.LessonQueryTestData.lesson;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -18,15 +20,18 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
 import seedu.address.MainApp;
 import seedu.address.model.PonHubData;
 import seedu.address.model.PonHubDataState;
+import seedu.address.model.attendance.AttendanceStatus;
 import seedu.address.model.person.ContactDetails;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.PeopleRegistryState;
@@ -34,6 +39,7 @@ import seedu.address.model.person.PersonId;
 import seedu.address.model.person.PersonRole;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Tutor;
+import seedu.address.model.query.LessonDetailView;
 import seedu.address.model.query.LessonQueries;
 import seedu.address.model.query.LessonView;
 
@@ -52,6 +58,21 @@ public class LessonListPanelTest {
             assertLabel(card, "lessonRoom", "Room: R1");
             assertLabel(card, "lessonRosterSize", "Students enrolled: 2");
             assertLabel(new LessonCard(lessons.get(2)).getRoot(), "lessonRosterSize", "Students enrolled: 0");
+            PonHubData data = createData();
+            var detailLesson = data.getLesson(new seedu.address.model.lesson.LessonId("L10")).orElseThrow();
+            var currentStudent = (seedu.address.model.person.Student) data.getPerson(new PersonId("S1"))
+                    .orElseThrow();
+            var currentRoster = List.of(new LessonDetailView.RosterStatus(currentStudent, Optional.empty()));
+            Region dated = new LessonCard(new LessonDetailView(detailLesson, "Mei Lim",
+                    Optional.of(LocalDate.of(2026, 10, 5)), currentRoster, List.of())).getRoot();
+            assertTrue(dated.lookupAll(".label").stream().map(Label.class::cast)
+                    .anyMatch(label -> label.getText().equals("S1 · Alex Tan — unrecorded")));
+            assertTrue(dated.lookupAll(".label").stream().map(Label.class::cast)
+                    .anyMatch(label -> label.getText().equals("No retained attendance for former members.")));
+            Region undated = new LessonCard(new LessonDetailView(detailLesson, "Mei Lim",
+                    Optional.empty(), currentRoster, List.of())).getRoot();
+            assertTrue(undated.lookupAll(".label").stream().map(Label.class::cast)
+                    .anyMatch(label -> label.getText().equals("S1 · Alex Tan")));
             assertThrows(NullPointerException.class, () -> new LessonCard(null));
             assertThrows(NullPointerException.class, () -> new LessonListPanel(null));
             assertThrows(NullPointerException.class, () -> new LessonListPanel(lessons, null));
@@ -147,6 +168,35 @@ public class LessonListPanelTest {
                 var bounds = last.localToScene(last.getBoundsInLocal());
                 assertTrue(bounds.getMinY() >= 0 && bounds.getMaxY() <= panel.getHeight() + 1, bounds.toString());
             }
+        });
+    }
+
+    @Test
+    public void detailCard_manyRetainedRecordsRemainInsideDedicatedScrollPane() throws Exception {
+        runOnFxThread(() -> {
+            PonHubData data = createData();
+            var lesson = data.getLesson(new seedu.address.model.lesson.LessonId("L10")).orElseThrow();
+            var student = (seedu.address.model.person.Student) data.getPerson(new PersonId("S3")).orElseThrow();
+            var records = new ArrayList<LessonDetailView.FormerAttendance>();
+            for (int week = 0; week < 30; week++) {
+                records.add(new LessonDetailView.FormerAttendance(student,
+                        LocalDate.of(2026, 10, 5).plusWeeks(week), AttendanceStatus.ABSENT));
+            }
+            var detail = new LessonDetailView(lesson, "Mei Lim", Optional.empty(), List.of(), records);
+            var results = FXCollections.observableArrayList((LessonView) detail);
+            Region panel = new LessonListPanel(results).getRoot();
+            layout(panel, 260, 320);
+            ScrollPane scroll = (ScrollPane) panel.lookup("#lessonDetailScroll");
+            assertTrue(scroll.isVisible());
+            assertTrue(scroll.getContent().prefHeight(220) > scroll.getViewportBounds().getHeight());
+            assertTrue(scroll.lookupAll(".label").stream().map(Label.class::cast)
+                    .anyMatch(label -> label.getText().contains(records.getLast().date().toString())));
+            scroll.setVvalue(1);
+            scroll.layout();
+            assertEquals(1, scroll.getVvalue());
+            results.setAll(new LessonQueries(data).getLessonList());
+            assertFalse(scroll.isVisible());
+            assertTrue(list(panel).isVisible());
         });
     }
 

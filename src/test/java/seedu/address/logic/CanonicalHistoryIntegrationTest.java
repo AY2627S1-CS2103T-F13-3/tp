@@ -90,6 +90,12 @@ public class CanonicalHistoryIntegrationTest {
         assertEquals("Student S2 · attendance history", session.historyResultContextProperty().get());
         assertThrows(ParseException.class, () -> session.execute("lessons si/0"));
         assertTrue(session.historyViewActiveProperty().get());
+        assertThrows(CommandException.class, () -> session.execute("showlesson lid/L99"));
+        assertThrows(CommandException.class, () -> session.execute("showlesson lid/L10 d/2026-10-06"));
+        assertTrue(session.historyViewActiveProperty().get());
+        session.execute("showlesson lid/L10 d/2026-10-05");
+        assertFalse(session.historyViewActiveProperty().get());
+        session.execute("history 1");
         session.execute("lessons");
         assertFalse(session.historyViewActiveProperty().get());
         session.execute("history 1");
@@ -139,5 +145,41 @@ public class CanonicalHistoryIntegrationTest {
         assertThrows(CommandException.class, () -> session.execute("history 1"));
         assertTrue(session.getDisplayedHistory().isEmpty());
         assertArrayEquals(before, Files.readAllBytes(path));
+    }
+
+    @Test
+    public void history_failedRemovalPreservesRetainedRecordsAndRetryRefreshes() throws Exception {
+        Path path = directory.resolve("canonical.json");
+        PonHubData data = LessonQueryTestData.createData();
+        data.markAttendance(LessonQueryTestData.STUDENT_TWO, LessonQueryTestData.SHARED_LESSON,
+                LocalDate.of(2026, 10, 5), AttendanceStatus.PRESENT);
+        data.unenrolStudent(LessonQueryTestData.STUDENT_TWO, LessonQueryTestData.SHARED_LESSON);
+        JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
+        storage.saveData(data.exportState());
+        byte[] before = Files.readAllBytes(path);
+        int[] writes = {0};
+        CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+            if (writes[0]++ == 0) {
+                throw new IOException("Injected failure");
+            }
+            storage.saveData(state);
+        });
+        session.execute("search c/student n/Jamie");
+        session.execute("history 1 lid/L10");
+        var history = session.getDisplayedHistory();
+        PonHubDataState original = session.getDataSnapshot();
+        assertFalse(history.getFirst().isCurrentlyEnrolled());
+
+        assertThrows(CommandException.class, () -> session.execute("unmark 1 lid/L10 d/2026-10-05"));
+        assertSame(original, session.getDataSnapshot());
+        assertEquals(AttendanceHistoryEntry.Status.PRESENT, history.getFirst().getStatus());
+        assertArrayEquals(before, Files.readAllBytes(path));
+        session.execute("unmark 1 lid/L10 d/2026-10-05");
+        assertTrue(history.isEmpty());
+        assertTrue(session.historyViewActiveProperty().get());
+        session.execute("unmark 1 lid/L10 d/2026-10-05");
+        assertTrue(history.isEmpty());
+        assertEquals(2, writes[0]);
+        assertTrue(new CanonicalPeopleSession(path).getDataSnapshot().attendance().isEmpty());
     }
 }
