@@ -1,0 +1,46 @@
+@startuml
+!include style.puml
+!pragma layout smetana
+
+skinparam linetype ortho
+skinparam nodesep 30
+skinparam ranksep 40
+skinparam arrowThickness 1.1
+skinparam arrowColor MODEL_COLOR
+skinparam classBackgroundColor MODEL_COLOR
+
+package "Canonical aggregate" {
+    class PonHubDataState
+}
+
+package "People" {
+    class PeopleRegistryState
+    interface PersonRecord
+    class Student
+    class Tutor
+    class Parent
+    class PersonId
+    class ContactDetails
+    class Name
+    class Phone
+    class Email
+    class Address
+    class EducationLevel
+}
+
+PonHubDataState "1" *-- "1" PeopleRegistryState : people
+PeopleRegistryState "1" *-- "0..*" PersonRecord : ordered records
+
+PersonRecord <|.. Student
+PersonRecord <|.. Tutor
+PersonRecord <|.. Parent
+PersonRecord "1" *-- "1" PersonId : id
+PersonRecord "1" *-- "1" ContactDetails : contactDetails
+ContactDetails "1" *-- "1" Name : name
+ContactDetails "1" *-- "0..1" Phone : phone
+ContactDetails "1" *-- "0..1" Email : email
+ContactDetails "1" *-- "0..1" Address : address
+Student "1" *-- "1" EducationLevel : level
+Student "1" *-- "1" Phone : parentPhone
+
+@enduml

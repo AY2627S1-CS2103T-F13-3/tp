@@ -1,12 +1,17 @@
 [![Java CI](https://github.com/AY2627S1-CS2103T-F13-3/tp/actions/workflows/gradle.yml/badge.svg)](https://github.com/AY2627S1-CS2103T-F13-3/tp/actions/workflows/gradle.yml)
 
-![Ui](docs/images/Ui.png)
+![People and shared-lesson results](docs/images/LessonResults.png)
 
 # PonHub
 
 PonHub is being developed for tuition centre administrators to manage people, shared lessons, enrolment and dated attendance through a keyboard-focused desktop interface. The shared-lesson target lets two students join one lesson and retains attendance history after unenrolment.
 
-The current Week 8 help increment provides `help` and `help COMMAND` in Result Display, with the same guidance through the Help menu and F1. It still uses inherited contact commands; role-aware people, lesson and attendance features await integration. Read the User Guide's current command summary before using its planned workflow. The existing UI image is awaiting Ben's final integrated capture.
+The current build supports role-aware people addition/listing, own-contact people search, shared-lesson creation,
+enrolment/unenrolment, dated attendance marking/removal and guarded person/lesson deletion. `lessons` and all seven
+lesson-search filters show separate shared-lesson results. Use `help` or `help COMMAND`, the Help menu or F1 for inline guidance.
+Student, Parent and Tutor relationship filters are active. Attendance history and detail views remain planned. Read the User Guide's
+current command summary before trying the wider workflow. The screenshot shows the delivered people and lesson
+panels using disposable sample data.
 
 * [User Guide](docs/UserGuide.md)
 * [Developer Guide](docs/DeveloperGuide.md)
