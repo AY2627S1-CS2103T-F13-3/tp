@@ -3,7 +3,6 @@ package seedu.address.model.search;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -17,7 +16,7 @@ import seedu.address.model.person.Student;
  * Relationship filters require the later relationship-search integration.
  */
 public final class PersonContactSearch {
-    private static final Set<SearchField> OWN_FIELDS = EnumSet.of(SearchField.NAME, SearchField.LEVEL,
+    static final Set<SearchField> OWN_FIELDS = Set.of(SearchField.NAME, SearchField.LEVEL,
             SearchField.PHONE, SearchField.PARENT_PHONE, SearchField.EMAIL, SearchField.ADDRESS);
 
     private PersonContactSearch() {

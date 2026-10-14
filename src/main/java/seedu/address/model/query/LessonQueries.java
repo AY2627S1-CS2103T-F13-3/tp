@@ -21,6 +21,7 @@ import seedu.address.model.lesson.LessonId;
 import seedu.address.model.person.PersonId;
 import seedu.address.model.person.PersonRecord;
 import seedu.address.model.person.PersonRole;
+import seedu.address.model.person.Phone;
 import seedu.address.model.person.Student;
 import seedu.address.model.search.SearchCategory;
 import seedu.address.model.search.SearchCriteria;
@@ -47,6 +48,7 @@ public final class LessonQueries implements LessonQuerySource {
     private final Map<PersonId, List<LessonView>> studentLessons = new HashMap<>();
     private final Map<PersonId, List<LessonView>> tutorSchedules = new HashMap<>();
     private final Map<LessonId, List<StudentView>> rosters = new HashMap<>();
+    private final Map<String, List<Student>> studentsByParentPhone = new HashMap<>();
     private final Map<SearchField, Map<String, List<LessonView>>> exactIndexes = new EnumMap<>(SearchField.class);
     private final Map<PersonId, ResultList<LessonView>> studentSubscriptions = new HashMap<>();
     private final Map<PersonId, ResultList<LessonView>> tutorSubscriptions = new HashMap<>();
@@ -154,12 +156,28 @@ public final class LessonQueries implements LessonQuerySource {
                 "Unknown or wrong-role " + role + " ID: " + id);
     }
 
+    /**
+     * Returns an immutable current snapshot of students linked by exact parent phone, including leading zeros.
+     */
+    public List<Student> getStudentsByParentPhone(Phone phone) {
+        return studentsByParentPhone.getOrDefault(requireNonNull(phone).value, List.of());
+    }
+
+    /**
+     * Resolves immutable Student details from the same stable-ID index used by roster projections.
+     */
+    public Student getStudentRecord(PersonId studentId) {
+        requirePerson(studentId, PersonRole.STUDENT);
+        return (Student) peopleById.get(studentId);
+    }
+
     private void refresh(PonHubDataState snapshot) {
         peopleById.clear();
         lessonsById.clear();
         studentLessons.clear();
         tutorSchedules.clear();
         rosters.clear();
+        studentsByParentPhone.clear();
         exactIndexes.clear();
         EXACT_FIELDS.forEach(field -> exactIndexes.put(field, new HashMap<>()));
         snapshot.people().getPeople().forEach(person -> peopleById.put(person.getId(), person));
@@ -181,6 +199,8 @@ public final class LessonQueries implements LessonQuerySource {
         // Walking people once supplies roster creation order without scanning all people for each lesson.
         for (PersonRecord person : snapshot.people().getPeople()) {
             if (person instanceof Student student) {
+                studentsByParentPhone.computeIfAbsent(student.getParentPhone().value, unused -> new ArrayList<>())
+                        .add(student);
                 StudentView entry = new StudentViewData(student);
                 for (LessonView lesson : studentLessons.getOrDefault(student.getId(), List.of())) {
                     rosters.get(lesson.getLessonId()).add(entry);
@@ -188,6 +208,7 @@ public final class LessonQueries implements LessonQuerySource {
             }
         }
         tutorSchedules.values().forEach(schedule -> schedule.sort(SCHEDULE_ORDER));
+        studentsByParentPhone.replaceAll((phone, students) -> List.copyOf(students));
         // All derived indexes are complete before any observable list publishes replacement entries.
         catalogue.replace(entries);
         refreshSubscriptions(studentSubscriptions, studentLessons);

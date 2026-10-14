@@ -1,7 +1,10 @@
 package seedu.address.logic;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
@@ -15,6 +18,7 @@ import seedu.address.model.person.PersonRecord;
 import seedu.address.model.query.AttendanceHistoryEntry;
 import seedu.address.model.query.LessonView;
 import seedu.address.model.query.StudentView;
+import seedu.address.model.search.PersonSearchMatch;
 
 /**
  * API of the Logic component.
@@ -57,6 +61,11 @@ public interface Logic {
      * @throws UnsupportedOperationException if this adapter does not provide canonical retrieval
      */
     ObservableList<LessonView> getLessonList();
+
+    /**
+     * Returns immutable matching relationship context for the current people search, keyed by stable person ID.
+     */
+    ReadOnlyObjectProperty<Map<PersonId, List<PersonSearchMatch>>> personSearchContextProperty();
 
     /**
      * Returns lessons matching the active lesson filter, without changing the people view.

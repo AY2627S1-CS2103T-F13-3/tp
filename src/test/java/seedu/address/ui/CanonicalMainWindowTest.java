@@ -65,6 +65,70 @@ public class CanonicalMainWindowTest {
     Path directory;
 
     @Test
+    public void tutorRelationshipSearch_displaysTheMatchingRosterAndEmptyLessonContexts() throws Exception {
+        new JsonPonHubDataStorage(directory.resolve("canonical.json"))
+                .saveData(seedu.address.testutil.RelationshipSearchTestData.createData().exportState());
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("search c/tutor sn/Alex d/Mon s/Math");
+                assertCard(fixture, "Tutor · T1", "1. Mei Lim");
+                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                        .anyMatch(label -> label.getText().contains("Student: Alex Tan (S1) · Lesson: L10")));
+                fixture.enter("search c/tutor d/Mon s/Science");
+                assertCard(fixture, "Tutor · T2", "1. Mei Lim");
+                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                        .anyMatch(label -> label.getText().startsWith("Lesson: L3")));
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void parentRelationshipSearch_rendersAssociatedChildAndOnlyTheirMatchingLesson() throws Exception {
+        new JsonPonHubDataStorage(directory.resolve("canonical.json"))
+                .saveData(seedu.address.testutil.RelationshipSearchTestData.createData().exportState());
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("search c/parent n/Pat sn/Alex d/Mon s/Math");
+                assertCard(fixture, "Parent · P1", "1. Pat Tan");
+                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                        .anyMatch(label -> label.getText().contains("Student: Alex Tan (S1) · Lesson: L10")));
+                fixture.enter("search c/parent sn/Alex d/Wed s/中文");
+                assertEquals("Found 0 parent(s).", fixture.feedback());
+                fixture.enter("search c/parent n/Unassigned sn/Alex");
+                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                        .anyMatch(label -> label.getText().equals("Student: Alex Tan (S3)")));
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void studentRelationshipSearch_rendersOnlyMatchingContextAndRefreshesItForTheSamePerson() throws Exception {
+        new JsonPonHubDataStorage(directory.resolve("canonical.json"))
+                .saveData(LessonQueryTestData.createData().exportState());
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("search c/student p/00012345 s/Math d/Mon");
+                assertEquals(1, fixture.people().getItems().size());
+                assertCard(fixture, "Student · S2", "1. Jamie Tan");
+                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                        .anyMatch(label -> label.getText().contains("Lesson: L10")));
+                fixture.enter("enrol 1 lid/L4");
+                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                        .anyMatch(label -> label.getText().contains("Lesson: L4")));
+                fixture.enter("unenrol 1 lid/L4");
+                assertFalse(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                        .anyMatch(label -> label.getText().contains("Lesson: L4")));
+                fixture.enter("search c/student n/Jamie");
+                assertFalse(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                        .anyMatch(label -> label.getText().startsWith("Lesson:")));
+            }
+            return null;
+        });
+    }
+
+    @Test
     public void realMembership_refreshesLessonCardsAndPreservesSelectedPeopleAndContext() throws Exception {
         new JsonPonHubDataStorage(directory.resolve("canonical.json"))
                 .saveData(LessonQueryTestData.createData().exportState());
@@ -286,8 +350,8 @@ public class CanonicalMainWindowTest {
                 fixture.people().getSelectionModel().select(0);
                 fixture.enter("help SEARCH");
                 assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
-                fixture.enter("search c/student d/Mon");
-                assertTrue(fixture.feedback().contains("not available"));
+                fixture.enter("search c/tutor tu/First");
+                assertTrue(fixture.feedback().contains("not supported"));
                 assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
                 assertCard(fixture, "Student · S3", "1. Selected Student");
                 fixture.enter("search c/student n/No Match");

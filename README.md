@@ -10,7 +10,7 @@ The current build supports role-aware people addition/listing, own-contact peopl
 enrolment/unenrolment, dated attendance marking/removal and guarded person/lesson deletion. `lessons` and all seven
 lesson-search filters show separate shared-lesson results; `showlesson` displays a lesson's roster and dated attendance.
 Use `help` or `help COMMAND`, the Help menu or F1 for inline guidance.
-Attendance history and relationship filters on people remain planned. Read the User Guide's
+Student, Parent and Tutor relationship filters are active. Attendance history remains planned. Read the User Guide's
 current command summary before trying the wider workflow. The screenshot shows the delivered people and lesson
 panels using disposable sample data.
 
