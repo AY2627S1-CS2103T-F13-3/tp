@@ -31,7 +31,8 @@ title: Developer Guide
   lesson membership, atomic saves and the canonical aggregate (#76); and #197's lesson creation/membership
   command-boundary regressions; and #91 guarded person deletion, transaction/restart and lesson-view integration
   tests, conflict reconciliation and guide updates; and #97's retired edit/find/clear implementation and
-  test-helper removal, actionable unknown-command feedback, preservation regressions and guide updates.
+  test-helper removal, actionable unknown-command feedback, preservation regressions, retired legacy
+  Person replacement API removal and guide updates.
   He also used Codex for cross-branch conflict reconciliation and its focused validation; original
   feature authorship is preserved.
   These credits do not transfer feature ownership.
@@ -80,8 +81,9 @@ support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, 
 Relationship search on people remains planned.
 Inherited edit/clear/find routes are unavailable, and their command/parser implementations and edit-descriptor
 test helpers have been removed. Canonical boundary tests verify rejected commands preserve the saved aggregate,
-filtered people view and preferences; help and exit remain usable. Other isolated legacy regression seams remain
-pending the remaining cleanup under #97. `mark` creates or corrects attendance; `unmark` removes one dated key.
+filtered people view and preferences; help and exit remain usable. The retired `setPerson` replacement API is
+also removed from the legacy Model, ModelManager, AddressBook and UniquePersonList. Other isolated legacy
+mutation and regression seams remain under #97. `mark` creates or corrects attendance; `unmark` removes one dated key.
 
 `CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
 routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
