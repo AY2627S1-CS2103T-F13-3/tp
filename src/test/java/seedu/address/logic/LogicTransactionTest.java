@@ -83,7 +83,6 @@ public class LogicTransactionTest {
         Command command = new Command() {
             @Override
             public CommandResult execute(Model staged) {
-                staged.setPerson(TypicalPersons.AMY, TypicalPersons.AMY);
                 staged.updateFilteredPersonList(person -> false);
                 return new CommandResult("Unchanged");
             }
