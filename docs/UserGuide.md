@@ -563,7 +563,7 @@ The supported JSON format remains human-editable. Close PonHub and keep a backup
 
 **Q**: Should I use a displayed position or an ID?<br>
 **A**: The active `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `lessons si/` and `history` selectors
-selectors, use the person's current position in the displayed people list. Run `list` or a people
+use the person's current position in the displayed people list. Run `list` or a people
 search and check that position first. Cards label stable person IDs separately; those IDs preserve stored identity
 and relationships. Select a lesson with `lid/L1`, for example, including for active `deletelesson`. Create a lesson
 using the tutor's full name and optional exact phone; search tutor names using fragments. Check `help` for the

@@ -47,7 +47,9 @@ title: Developer Guide
   refresh, Logic delegation, search/transaction regression tests and guide updates. For #90, Ben used Codex
   to connect indexed queries to active lesson commands and cards, add validation/persistence/refresh/UI tests,
   and update guides, diagrams and the final window screenshot. For #99, Ben used Codex to add lesson details,
-  dated roster/retained attendance rendering, command routing, integration tests and guide updates.
+  dated roster/retained attendance rendering, command routing, integration tests and guide updates. For #100,
+  Ben used Codex for retained Student attendance queries, command routing, the history panel and regressions,
+  and to reconcile history with the consolidated manual workflow and current guides.
 * Ernest used OpenAI Codex for the Week 8 command catalogue, inline help, regression tests and shared
   documentation; #129's active UI encapsulation/Javadoc corrections and caller/repository checks;
   #60's architecture/command conventions and AboutUs clarification; #164's shared-guide consolidation,
@@ -341,37 +343,25 @@ so failed commands leave the live root and subscribed results unchanged.
 
 #### Shared lesson scheduling model APIs (#78)
 
-`PonHubData.addLesson(tutorId, timeSlot, subject, room)` is the controlled lesson-creation seam. It resolves the
-stable ID against the aggregate's people snapshot and requires an existing Tutor. It derives the next positive
-`LessonId` from `lastAllocatedLessonSequence`, creates one empty-roster `Lesson`, builds a complete candidate
-`PonHubDataState`, and installs that state only after validation succeeds. Deleted committed IDs are therefore
-not reused. Exhaustion at `Long.MAX_VALUE`, a missing/wrong-role Tutor, or any scheduling conflict leaves the
-catalogue and counter unchanged.
+[`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/PonHubData.java)
+is the lesson mutation and allocation boundary. `addLesson(...)` resolves an existing Tutor ID, derives the next
+positive `LessonId` from the retained counter, creates one empty-roster immutable `Lesson`, and attempts to install
+a complete candidate state. Rejected candidates leave the catalogue and counter unchanged; committed IDs remain
+reserved after deletion and `Long.MAX_VALUE` fails before overflow.
 
-Every complete `PonHubDataState`, including a restored or deserialized candidate, enforces the same global
-schedule invariant. Two lessons whose half-open slots overlap on the same weekday are rejected when either
-their stable Tutor IDs match or their normalized `Room` values match. Empty lessons participate in this check.
-Adjacent intervals, different weekdays, and simultaneous lessons with both different Tutors and different rooms
-are allowed. Tutor names are deliberately irrelevant to clashes; room equality uses `Room`'s locale-independent
-upper-case normalization.
+[`PonHubDataState`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/PonHubDataState.java)
+applies the same scheduling validation to command candidates, restored snapshots and decoded files. Distinct
+same-weekday lessons with overlapping half-open slots are rejected when their Tutor IDs or normalized rooms match.
+This tutor/room rule applies even to empty-roster lessons. Student clashes are different: they are checked when the
+same Student ID appears in the rosters of overlapping lessons. Adjacent slots, different weekdays and overlapping
+lessons with different Tutors, rooms and enrolled Students remain valid.
 
-The aggregate exposes immutable relationship snapshots for retrieval and deletion integration:
-
-| API | Contract and owner use |
-| --- | --- |
-| `getLessons()` / `getLesson(LessonId)` | Canonical catalogue order and stable-ID lookup, including empty lessons. |
-| `getLessonRoster(LessonId)` | Current Students resolved from Lesson-owned IDs in global people creation order. |
-| `getStudentLessons(PersonId)` | Current lessons derived from roster IDs in catalogue creation order. |
-| `getAttendanceForStudent(PersonId)` / `getAttendanceForLesson(LessonId)` | Retained attendance references in aggregate storage order; neither depends on current enrolment. |
-| `isPersonReferenced(PersonRecord)` | Predicate for Zhu's guarded people deletion: Student roster/attendance and Tutor lesson references block removal; Parent links remain derived. |
-| `isLessonReferenced(LessonId)` | Reports whether a non-empty roster or retained Attendance blocks Lesson removal. |
-| `removeLesson(LessonId)` | Removes only an unreferenced Lesson while retaining catalogue order, surviving relationships and the allocation counter. |
-
-`PonHubData` owns normal lesson allocation and atomic state installation. `PonHubDataState` owns whole-root
-identity, reference and scheduling validation. `Lesson` remains the immutable record and sole owner of roster
-membership. Ben may build projections only from the read APIs; they never mutate records or counters. Vincent's
-serialization must preserve the supplied catalogue order and lesson allocation counter, construct the entire
-candidate snapshot before replacement, and use its validation rather than installing partial arrays.
+One immutable `Lesson` owns each roster; Student records never copy lessons or membership. Read APIs derive the
+catalogue, rosters and per-Student lessons from that root, while attendance stays in its separate dated collection.
+The complete read/mutation surface and guard predicates are documented in the linked `PonHubData` source. Selector,
+parent-link, identity and cross-component rules remain authoritative in the
+[shared contract](#shared-lesson-target-contract); [Storage](#storage-component) owns schema, recovery and
+save-before-publication details.
 
 #### Shared lesson creation command (#86)
 
@@ -683,94 +673,36 @@ This section describes some noteworthy details on how certain features are imple
 
 ### Lesson scheduling value contracts
 
-The lesson scheduling foundation is represented by immutable value objects in `model.lesson`. These objects validate and
-normalize scheduling input before later lesson commands or persistence code use it:
+The immutable types in
+[`model.lesson`](https://github.com/AY2627S1-CS2103T-F13-3/tp/tree/master/src/main/java/seedu/address/model/lesson)
+define the exhaustive parsing, normalization and equality rules used by commands, aggregate validation and storage.
+`LessonId` is an `L`-prefixed positive `long`; `LessonDay` stores `Mon`–`Sun`; `LessonTime` stores four-digit 24-hour
+time; and `Subject` and `Room` enforce their length and character contracts. Room case is normalized so it cannot
+bypass clash detection.
 
-* `LessonId` is a stable identifier consisting of `L` followed by a positive `long` sequence number. Lower-case prefixes
-  are normalized, leading zeros are rejected, and advancing beyond `Long.MAX_VALUE` fails explicitly instead of wrapping.
-  The canonical aggregate owns allocation state so committed IDs are not reused.
-* `LessonDay` accepts the case-insensitive abbreviations `Mon` through `Sun` and stores their canonical display form.
-* `LessonTime` accepts exactly four digits in 24-hour `HHMM` format and retains leading zeros when displayed.
-* `LessonTimeSlot` combines one weekday with a start and end time. Its end must be strictly later than its start, so
-  overnight lessons are rejected. Slots are treated as half-open ranges: `[start, end)`. As a result, adjacent slots do
-  not overlap, and equal time ranges on different weekdays do not clash.
-* `Subject` contains 1–50 letters, digits or spaces after trimming and reducing repeated spaces to one.
-* `Room` contains 1–10 letters or digits. It is normalized to upper case so room comparisons do not miss clashes because
-  of letter case.
+`LessonTimeSlot` requires its end to be later than its start and models `[start, end)`. Therefore `1600–1700` and
+`1700–1800` are adjacent rather than overlapping; equal clock times on different weekdays also do not overlap.
+The [whole-root boundary above](#shared-lesson-scheduling-model-apis-78), rather than an individual value object,
+decides whether an otherwise valid slot clashes with existing tutor, room or Student schedules.
 
-These value types are used by the active `addlesson` parser. The canonical aggregate supplies lesson creation,
-global tutor/room clash checks and ID allocation, and the protected transaction persists the complete change.
-
-#### Shared lesson membership commands (#88)
-
-`LessonMembershipParser` accepts exactly `STUDENT_INDEX lid/LESSON_ID`, producing an immutable
-`LessonMembershipInput` without consulting operational state. `CanonicalEnrolCommand` and
-`CanonicalUnenrolCommand` resolve that index once through the current `PeopleView`; wrong-role and out-of-range
-selections therefore cannot be reinterpreted through a separate Student list or as a stable-ID suffix.
-
-`PonHubData.enrolStudent` and `unenrolStudent` replace the one canonical `Lesson` at its existing catalogue
-position. Enrolment rejects duplicate membership and constructs a complete `PonHubDataState`, which applies the
-same Student overlap invariant as loading. Unenrolment requires current membership and changes only the roster;
-dated attendance remains in the aggregate. Both operations preserve Lesson/Student identities, lesson allocation
-history, and the single tutor/room booking owned by that Lesson.
-
-Commands run through `CanonicalCommandExecutor`: a complete candidate is validated and saved before live state
-publication. Successful publication refreshes the existing `LessonQueries` observable list objects and keeps the
-people filter/search and ordering. Parse, domain and save failures publish nothing and leave the saved file, root,
-people view and subscribed lesson/roster results unchanged.
-
-#### Attendance marking command (#89)
-
-`AttendanceMarkParser` accepts exactly one leading `STUDENT_INDEX` and one value for each of `lid/`, `d/` and
-`s/`. The lowercase prefixes are order-independent and unique. It produces an immutable `AttendanceMarkInput`,
-using the existing strict index, `LessonId`, real-date and `AttendanceStatus` validation without consulting live state.
-`CanonicalMarkAttendanceCommand` then resolves the selected current people-list position once to a Student ID;
-a Tutor, Parent or out-of-range position is rejected rather than reinterpreted through another list or as an ID suffix.
-
-`PonHubData.markAttendance` requires an existing Student and Lesson and a date on the Lesson's recurring weekday.
-A new `(Student ID, Lesson ID, date)` key also requires current enrolment. An existing key can be corrected after
-unenrolment, and its replacement keeps the same aggregate position. Separate Students and dates remain independent.
-Requesting the stored status returns the existing immutable `Attendance` without publishing a replacement state, so
-the command can report a true no-op. No date comparison with the current day is made; valid past dates are supported.
-
-The command uses the same staged transaction as other canonical mutations. A changed candidate is validated and
-saved before publication, then existing query objects refresh while the people filter, ordering and command positions
-remain intact. Invalid input, domain rejection, an identical-status no-op or a save failure changes neither the live
-aggregate nor the file. `CanonicalAttendanceIntegrationTest` covers creation, correction, historical correction,
-independent keys, persistence/reload, stable selectors and failed-save isolation.
-
-#### Attendance removal command (#92)
-
-`AttendanceUnmarkParser` accepts exactly one leading `STUDENT_INDEX` and one value for each of `lid/` and `d/`.
-The lowercase prefixes are order-independent and unique; status, repeated, unknown, blank and missing fields are
-rejected. The parser produces an immutable `AttendanceUnmarkInput` using the same strict index, `LessonId` and
-real-date validation as `mark`. `CanonicalUnmarkAttendanceCommand` resolves the current people-list position once,
-so wrong-role and out-of-range selections cannot be reinterpreted as another Student or an ID suffix.
-
-`PonHubData.unmarkAttendance` validates that the Student and Lesson still exist and that the date matches the
-Lesson's recurring weekday. It removes exactly one `(Student ID, Lesson ID, date)` record without changing the roster,
-recurring schedule or any other attendance key. Current membership is not required, so retained attendance can be
-removed after unenrolment. A missing key returns an empty result without publishing a replacement state.
-
-Changed removals use the staged save-before-publication transaction. Successful publication refreshes existing query
-objects while preserving the people filter/order/positions; a missing-key no-op performs no save or publication.
-Invalid input and save failures likewise leave the file, aggregate and active views unchanged. Aggregate, parser and
-canonical integration tests cover exact-key isolation, former-member removal, restart and failed-save retry.
+Active command syntax belongs to the [UG](UserGuide.html) and
+[`CanonicalCommandCatalog`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/CanonicalCommandCatalog.java).
+Every lesson, membership or attendance mutation resolves selectors according to the
+[shared contract](#shared-lesson-target-contract), prepares a complete candidate, and uses the common
+[transaction boundary](#command-transactions). No-op, parsing, domain and save failures publish no state.
 
 ### Immutable shared lesson records
 
-`Lesson` represents one canonical recurring teaching slot. It stores a stable `LessonId`, one tutor-role `PersonId`,
-the validated `LessonTimeSlot`, `Subject` and `Room`, and the set of currently enrolled student-role `PersonId` values.
-An empty roster is valid, and several students can refer to the same lesson without duplicating its tutor, room or
-schedule. Student records contain no copied `Lesson` values.
+[`Lesson`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/lesson/Lesson.java)
+is one canonical recurring slot: stable Lesson and Tutor IDs, a validated time slot, subject, room and the current
+Student-ID roster. It defensively copies that roster, exposes it as an unmodifiable set and rejects non-Student
+members. An empty roster is valid.
 
-The constructor defensively copies the roster and rejects Tutor or Parent IDs in it; the assigned tutor must have a
-Tutor ID. `getEnrolledStudentIds()` exposes an unmodifiable snapshot. `withEnrolledStudentIds`,
-`withEnrolledStudent`, and `withoutEnrolledStudent` return replacement `Lesson` values, leaving the original lesson
-and its stable identity unchanged. Equality, hashing, copying and string representation include every stored field,
-including roster membership. The canonical aggregate owns lesson ordering, ID allocation and clash checks; active
-membership commands provide duplicate/non-member feedback. Lessons load through the supported codec, the active
-`addlesson` route creates an independent empty-roster record, and `enrol`/`unenrol` install replacement values.
+Membership changes create a replacement `Lesson` at the same catalogue position and leave the original immutable
+value untouched. The Lesson-owned roster is the single source of current membership; Student records contain no
+copied lessons, and dated attendance never recreates membership. Consequently many Students can share one lesson
+without duplicating its tutor, room or schedule. Ordering, ID allocation, schedule validation and deletion guards
+remain responsibilities of the canonical aggregate and the [shared contract](#shared-lesson-target-contract).
 
 ### Inline help
 
@@ -1052,18 +984,22 @@ valid zero-result counts. Protected sessions continue to permit only help/list/e
 
 ### Dated attendance records
 
-`Attendance` is a separate immutable association record; it is not nested in a Student or Lesson. Its unique
-`AttendanceKey` combines one student-role `PersonId`, one `LessonId`, and one `LocalDate`. The remaining stored field
-is `AttendanceStatus`, whose only recorded values are `present` and `absent`. A missing key means unrecorded, so no
-`unrecorded` status is stored. Current enrolment also remains outside Attendance, allowing dated history to survive
-later unenrolment.
+[`Attendance`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/attendance/Attendance.java)
+is an immutable dated record stored separately from Students, Lessons and current membership. Its
+[`AttendanceKey`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/attendance/AttendanceKey.java)
+is exactly one Student ID, one Lesson ID and one `LocalDate`; whole-root validation permits at most one record for
+that key. The only stored statuses are `present` and `absent`. No key means **unrecorded**, not absent, so there is no
+stored `unrecorded` status.
 
-External dates are parsed using strict ASCII `YYYY-MM-DD` syntax and calendar validation, including real leap years.
-Status parsing is case-insensitive. Wrong-role person IDs, impossible dates and unknown statuses are rejected.
-`withStatus` returns a replacement record for the same key and leaves the original unchanged. Equality and hashing
-include all three key components and the status, which lets the later canonical aggregate keep one record per key and
-replace its value when correcting attendance. The active `mark` and `unmark` routes use this value model; attendance
-history retrieval is active and read-only.
+Dates use strict real-calendar `YYYY-MM-DD` values and must fall on the recurring Lesson's weekday. Creating a key
+requires current enrolment. Unenrolment then changes only the Lesson roster: the dated record remains, can be
+corrected with `mark`, and can be removed with `unmark`. Correcting to the stored status and unmarking a missing key
+are no-ops; unmark never changes membership. A retained key continues to guard both its Student and Lesson from
+deletion until explicitly removed. Exact value-object and mutation behavior is defined by the linked sources and
+the canonical
+[`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/PonHubData.java)
+API; selectors and cross-component invariants remain in the [shared contract](#shared-lesson-target-contract).
+The active `history` route reads retained entries without changing operational data.
 
 ### Future undo/redo and archiving
 
@@ -1456,7 +1392,8 @@ Use the active catalogue in the tested build; these examples apply to canonical 
 6. Compare operational bytes before/after help: unchanged, or still missing in a fresh folder.
    Repeat with unwritable operational storage; preference saving at shutdown remains separate.
 
-Help checks do not establish the [planned shared-lesson workflow](#planned-shared-lesson-workflow-checks)
+Help checks do not establish the
+[active shared-lesson and attendance workflow](#active-shared-lesson-and-attendance-workflow)
 or final guide/site acceptance ([#102](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/102)).
 
 ### Compact windows and active contact cards
@@ -1604,66 +1541,132 @@ and shutdown diagnostics. Historical verification details are preserved in [#84]
    complete people search and its indices. Repeat with a failing writer: records, counters, bytes, people search
    and lesson projections stay unchanged. Restore writing and retry; the same next Lesson ID is allocated.
 
-### Active shared-lesson membership checks
+### Active shared-lesson and attendance workflow
 
-1. In an isolated supported dataset, add two Tutors and two Students, then create overlapping lessons using
-   different Tutors and rooms, an adjacent lesson, and an equal-time lesson on another weekday. Keep the returned
-   Lesson IDs. Arrange for one Student's stable ID to differ from their current filtered-list position.
-2. Run `search c/student`, note the intended Student's current position, and enter
-   `enrol STUDENT_INDEX lid/LESSON_ID`. Expect feedback naming the resolved Student ID and Lesson ID. Verify one
-   roster membership, no new Lesson/tutor/room booking, unchanged people filter/order/positions, refreshed existing
-   roster/student-lesson query lists, persisted membership after restart, and no attendance changes.
-3. Against clean copies, reject a Tutor/Parent position, an out-of-range position, a missing Lesson ID, duplicate
-   enrolment and a Student timetable overlap. Reject malformed, repeated, unknown and misordered arguments. Each
-   rejection must preserve aggregate state, file bytes, current people view and subscribed lesson results.
-4. Enrol the Student in the adjacent and different-weekday lessons; both must succeed. Enrol a second Student in
-   the same shared lesson; its Lesson ID, tutor, room and schedule remain single canonical values.
-5. With dated attendance already stored, enter `unenrol STUDENT_INDEX lid/LESSON_ID`. Verify only current roster
-   membership is removed, attendance and both records remain, query lists refresh, and restart matches. Repeating
-   `unenrol` reports that the Student is not enrolled and makes no change.
-6. Inject a save failure for a valid membership change. Expect no success feedback, publication or file change;
-   data, attendance, filters, positions and observable query objects/contents remain unchanged. Restore writing and
-   retry the same command; it commits once and reloads identically.
+The following is one end-to-end procedure for the delivered normal session. `addlesson`, `enrol`, `unenrol`,
+`mark`, `unmark`, `deletelesson`, `lessons`, `showlesson`, `history` and lesson search are active. Use a newly selected file in an isolated JAR folder so the IDs below begin at
+`T1`, `S1` and `L1`, for example `java -jar FILENAME.jar --data="manual/lesson-workflow.json"`.
 
-### Active attendance-marking checks
+1. Create two Tutors and two Students:
 
-1. In an isolated supported dataset, create a Monday Lesson, enrol two Students, then use `list r/student` or an
-   own-contact Student search so one Student's current position differs from the numeric part of their stable ID.
-   Run `mark STUDENT_INDEX lid/LESSON_ID d/2026-10-05 s/present`. Verify the resolved Student and stable Lesson ID
-   in the feedback, one persisted attendance record after restart, and unchanged people filter/order/positions.
-2. Mark the other Student absent for the same date and the first Student on another Monday. Verify the records are
-   independent. Correct the first record to absent and verify the existing key is replaced rather than duplicated.
-   Repeating `s/absent` reports no change and leaves the file bytes unchanged. A date with no record remains
-   unrecorded, not absent.
-3. Against clean copies, reject a Tutor/Parent position, an out-of-range position, a missing Lesson ID, an impossible
-   date, a date on the wrong weekday, an unknown status, and missing/repeated/unknown/blank prefixes. Each rejection
-   must preserve aggregate state, file bytes, the current people view and subscribed query objects. A valid past date
-   is accepted; the command does not impose a today-or-future restriction.
-4. Unenrol a Student after recording attendance. Correct that existing Student/Lesson/date key with `mark`; it must
-   succeed and persist. Attempt to mark a different date for the same former member; it must be rejected because new
-   keys require current enrolment. Neither operation changes the Lesson, Student or membership.
-5. Inject a save failure for a valid new mark and, separately, for a correction. Expect no success feedback,
-   publication or file change; attendance, allocation state, filter/order/positions and observable query
-   objects/contents remain unchanged. Restore writing and retry; the command commits once and reloads identically.
+   ```text
+   add r/tutor n/Mei Lim p/92345678
+   add r/tutor n/Ravi Kumar p/93456789
+   add r/student n/Alex Tan l/P1 pp/91234567
+   add r/student n/Jamie Tan l/P2 pp/91234567
+   ```
 
-### Active attendance-removal checks
+2. Create `L1`, then exercise whole-root scheduling. The first two attempted additions must fail for a Tutor and
+   room clash respectively. They must consume no ID. The final two additions succeed as `L2` and `L3`: `L2`
+   overlaps `L1` but has a different Tutor and room, while `L3` starts exactly when `L1` ends.
 
-1. Record attendance for two Students on the same Monday and for one Student on another Monday. Keep a filtered
-   people view where the selected Student's current position differs from the numeric part of their stable ID. Run
-   `unmark STUDENT_INDEX lid/LESSON_ID d/2026-10-05` and verify the feedback identifies that resolved Student and
-   stable Lesson.
-2. Verify exactly the selected Student/Lesson/date key is removed. The other Student/date records, roster, recurring
-   schedule, people filter/order/positions and existing query objects remain. Restart and verify the same persisted
-   result. Repeat the command: it reports no change, produces no query publication and leaves file bytes unchanged.
-3. Reject a Tutor/Parent position, an out-of-range position, a missing Student or Lesson reference, an impossible or
-   wrong-weekday date, `s/present`, and missing/repeated/unknown/blank fields. Each rejection must preserve aggregate
-   state, file bytes, the current people view and subscribed query objects.
-4. Record attendance, unenrol the Student, correct that existing key with `mark`, then remove it with `unmark`.
-   Correction and removal must both succeed without restoring membership. A new mark on another date remains rejected;
-   a repeated unmark is a no-op. The Student and Lesson continue to exist.
-5. Inject a save failure for a valid removal. Expect no success feedback, publication or file change; attendance,
-   roster/schedule, allocation state, filter/order/positions and observable query objects/contents remain unchanged.
-   Restore writing and retry; the removal commits once and reloads identically.
+   ```text
+   addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim tp/92345678 rm/R1
+   addlesson d/Mon st/1700 et/1800 s/English tu/Mei Lim tp/92345678 rm/R2
+   addlesson d/Mon st/1700 et/1800 s/English tu/Ravi Kumar tp/93456789 rm/R1
+   addlesson d/Mon st/1630 et/1700 s/Science tu/Ravi Kumar tp/93456789 rm/R2
+   addlesson d/Mon st/1730 et/1830 s/English tu/Ravi Kumar tp/93456789 rm/R2
+   ```
+
+3. Enter the commands below. Both Students share the one canonical `L1`; its tutor, room and schedule are not
+   copied per Student. Alex's attempted `L2` enrolment fails because it overlaps Alex's existing `L1`, while the
+   adjacent `L3` enrolment succeeds. The retrieval and search commands must preserve the two Student positions;
+   the first search returns only `L1`, and the second returns zero lessons.
+
+   ```text
+   list r/student
+   enrol 1 lid/L1
+   enrol 2 lid/L1
+   enrol 1 lid/L2
+   enrol 1 lid/L3
+   lessons
+   lessons si/1
+   search c/lesson sn/Alex d/Mon s/Math
+   search c/lesson sn/Nobody
+   ```
+
+4. Record two independent keys for Monday 5 October 2026. Repeating Alex's `present` status is a no-op; changing
+   it to `absent` corrects the existing key rather than adding another. Tuesday is rejected because it does not
+   match the Lesson weekday. `showlesson` displays both stored statuses for `2026-10-05`; with no `2026-10-12`
+   keys, the later Monday displays both current Students as unrecorded, not absent. `history 1 lid/L1`
+   shows only Alex's recorded absence for 5 October; the unrecorded later Monday has no history entry.
+
+   ```text
+   mark 1 lid/L1 d/2026-10-05 s/present
+   mark 2 lid/L1 d/2026-10-05 s/absent
+   mark 1 lid/L1 d/2026-10-05 s/present
+   mark 1 lid/L1 d/2026-10-05 s/absent
+   mark 1 lid/L1 d/2026-10-06 s/present
+   showlesson lid/L1 d/2026-10-05
+   showlesson lid/L1 d/2026-10-12
+   history 1 lid/L1
+   ```
+
+5. Remove Alex from both current rosters. Correcting Alex's existing `L1` key still succeeds, while creating the
+   new `2026-10-12` key fails because Alex is no longer enrolled in `L1`. The dated detail moves Alex's corrected
+   result to the former-member section, `lessons si/1` excludes `L1` and `L3`, and `delete 1` remains blocked by
+   retained `L1` attendance. Exit, inspect the closed file, restart with the same `--data` path, and continue with
+   step 6 to verify that membership and retained history both reload.
+
+   ```text
+   list r/student
+   unenrol 1 lid/L1
+   unenrol 1 lid/L3
+   mark 1 lid/L1 d/2026-10-05 s/present
+   mark 1 lid/L1 d/2026-10-12 s/present
+   showlesson lid/L1 d/2026-10-05
+   lessons si/1
+   delete 1
+   exit
+   ```
+
+6. After restarting, restore the Student list. The dated detail, empty Alex-specific Lesson result and blocked
+   person deletion confirm that membership and retained history reloaded. Remove only Alex's dated key; repeating
+   `unmark` is a no-op. `L1` deletion first remains blocked by Jamie's roster. After Jamie is unenrolled, it remains
+   blocked by Jamie's attendance. Removing that final key makes deletion succeed. Recreating the same slot must
+   receive `L4`, not the deleted `L1`. After exiting, hash the closed operational file as described in step 7.
+   Restart once more, run `list r/student` to restore the Student positions, and verify that the catalogue contains
+   `L2`, `L3` and empty-roster `L4` in creation order. `search c/lesson s/Math` returns `L4`, and `lessons si/1`
+   remains empty.
+
+   ```text
+   list r/student
+   showlesson lid/L1 d/2026-10-05
+   lessons si/1
+   delete 1
+   unmark 1 lid/L1 d/2026-10-05
+   unmark 1 lid/L1 d/2026-10-05
+   deletelesson lid/L1
+   unenrol 2 lid/L1
+   deletelesson lid/L1
+   unmark 2 lid/L1 d/2026-10-05
+   deletelesson lid/L1
+   addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim tp/92345678 rm/R1
+   exit
+   ```
+
+7. Keep that final restarted, Student-filtered session open. To confirm that retrieval is read-only, run `lessons`,
+   `lessons si/1`, `search c/lesson s/Math`, `showlesson lid/L4 d/2026-10-05`, `help lessons` and
+   `help showlesson`, exit, and compare the closed operational file's hash with the value captured before this
+   restart. Preferences are a separate file; the operational bytes must match. From the JAR folder, macOS/Linux
+   users can run
+   `shasum -a 256 "manual/lesson-workflow.json"` before and after; on Windows, use
+   `Get-FileHash "manual/lesson-workflow.json" -Algorithm SHA256` in PowerShell.
+
+8. Save failure is not a user command. Exercise the delivered failure seam from the repository root instead:
+
+   ```bash
+   ./gradlew test \
+       --tests "seedu.address.logic.CanonicalLessonMembershipIntegrationTest.execute_enrolSaveFailureRestoresAllStateAndRetryCommitsOnce" \
+       --tests "seedu.address.logic.CanonicalAttendanceIntegrationTest.execute_markSaveFailureRestoresStateViewsAndRetryCommits" \
+       --tests "seedu.address.logic.CanonicalAttendanceIntegrationTest.execute_unmarkSaveFailureRestoresStateViewsAndRetryCommits" \
+       --tests "seedu.address.logic.CanonicalDeleteLessonIntegrationTest.execute_failedSavePreservesStateCountersAndViewsBeforeSuccessfulRetry" \
+       --tests "seedu.address.logic.CanonicalLessonRetrievalIntegrationTest.addLesson_saveFailureThenCommitAndReload_refreshOnlyMatchingSelectedResults"
+   ```
+
+   Expect all targeted tests to pass. They inject failed writes and verify no staged state, counter or view is
+   published, followed by one successful retry and equivalent reload. This developer seam does not claim that an
+   administrator can deliberately trigger a save failure through the packaged UI.
 
 ### Contact validation in the current increment
 
@@ -1713,68 +1716,6 @@ For manual checks, use an isolated supported dataset:
 Use the active `unmark` route to remove the retained Attendance dependency before retrying Student deletion.
 Use the active `deletelesson` route to remove the empty Lesson before retrying Tutor deletion.
 
-### Active guarded shared-lesson deletion (#98)
-
-`DeleteLessonParser` accepts exactly one stable `lid/LESSON_ID`; catalogue, search and per-Student lesson positions
-are never selectors. `CanonicalDeleteLessonCommand` stages `PonHubData.removeLesson`, which reports a non-empty
-roster before retained attendance and never cascades into either collection. Removing an eligible Lesson preserves
-`lastAllocatedLessonSequence`, so the next creation receives a higher ID. The normal snapshot transaction saves
-before publishing query refreshes; failed saving keeps the schedule, allocation counter, file and all held views
-unchanged.
-
-`CanonicalDeleteLessonIntegrationTest` covers roster and former-member attendance guards, explicit clearing through
-the active `unenrol`/`unmark` routes, stable-ID parsing, view refresh, released tutor/room slots, monotonic IDs,
-reload and failed-save retry. For manual checks, use an isolated supported dataset:
-
-1. Create a Lesson, keep its stable ID and enrol two Students. Run `deletelesson lid/LESSON_ID`; expect feedback
-   naming the roster Student IDs and no data/view/file change. Unenrol both Students and retry successfully only if
-   the Lesson has no attendance.
-2. In a separate copy, enrol and mark a Student, then unenrol them. Deletion remains blocked by retained attendance
-   and identifies its Student/date. Use `unmark`, delete the Lesson and verify that people records remain unchanged.
-3. Keep a catalogue, Student-lessons, tutor-schedule or lesson-search result observable. A successful deletion
-   refreshes the held list without replacing its object or the people list/filter. A blocked or save-failed attempt
-   sends no staged list event and preserves the selected lesson context.
-4. After successful deletion, create a Lesson in the same tutor/room/time slot. It succeeds with an ID higher than
-   the deleted ID. Restart and verify the deletion, new ID, catalogue order and allocation counter.
-5. Reject a missing `lid/`, numeric/search-result selectors, repeated/unknown prefixes, malformed IDs and missing
-   Lessons without saving. Protected startup rejects `deletelesson` and hides its help topic.
-
-### Active lesson listing and search checks (#90)
-
-Use a disposable supported file with mixed-role people and two students sharing one lesson. Include a second
-lesson with a different weekday/subject and an empty lesson. The fixture in `LessonQueryTestData` supplies this
-shape for automated integration/UI tests. For manual runs, create lessons with `addlesson`; use the active `enrol` and `unenrol` commands to prepare rosters.
-
-1. Enter `lessons`, then `search c/lesson`. Expect one result per stable Lesson ID in creation order, including
-   empty rosters, and cards showing schedule, subject, tutor name/ID, room and enrolled count. Scroll to the last
-   card at the 450-by-360 minimum window and at normal size; drag the divider and check wrapped values.
-2. Filter people to one student and select their card. Run `lessons si/1`; verify only their current enrolments.
-   Repeat with a mixed-role list where their position differs from the numeric ID. Change the people filter;
-   the selected lesson view must still belong to the originally resolved student.
-3. Combine `sn/d/st/et/s/tu/rm` on one matching lesson, using mixed-case fragments and boundary times. Try a day
-   found only on one lesson and a subject found only on another: expect `Found 0 lesson(s).` and the empty panel.
-   `tu/` matches names; `sn/` checks current members only. Multiple matching students never duplicate a lesson.
-4. Reject missing/blank/repeated/unknown/category-incompatible filters, invalid weekdays, non-HHMM/out-of-range
-   times and end <= start. Reject `si/0`, negative/overflow/ID values, duplicate selectors, wrong-role and
-   out-of-range positions. Previous lesson results and people selection/order/indices must remain unchanged.
-5. With a lesson search active, create a matching then a nonmatching lesson. Only the matching addition enters
-   the selected results. Reload the file and repeat the search; IDs, order, membership and details must agree.
-   Exercise a failed save: previous results and allocation state remain unchanged, with no staged card visible.
-6. Use the real `enrol`/`unenrol` routes to verify current student results and `sn/` results refresh on commit.
-   A former member's dated attendance must not satisfy either query. Exercise active `mark` and guarded `delete`;
-   test the active `unmark` route. Deleting the selected unreferenced student leaves their stable-ID lesson view
-   empty until another retrieval command selects a new source. Blocked or save-failed deletion preserves both
-   panels, selection and lesson context; complete state restore must refresh held results. Automated boundary tests cover
-   membership replacement, retained attendance, removal and restore alongside active-session membership command and failed-save/retry/reload tests.
-7. Compare operational bytes before/after all retrieval/help/error commands. A missing file stays missing.
-   Protected startup rejects `lessons` and lesson search and advertises only help/list/exit.
-
-`CanonicalLessonRetrievalIntegrationTest`, `LessonRetrievalTest`, `LessonListPanelTest` and
-`CanonicalMainWindowTest` cover these routing, publication, validation and layout boundaries. The PNG in the UG
-is captured from the real FXML window by setting `PONHUB_CAPTURE_UI` to an absolute destination when running
-`CanonicalMainWindowTest`; the test uses a temporary canonical file. Offscreen JavaFX checks do not substitute
-for recording native platform/scaling outcomes below.
-
 ### Active shared-lesson details and dated attendance (#99)
 
 `ShowLessonParser` accepts one `lid/LESSON_ID` and an optional `d/YYYY-MM-DD` in either order, rejecting missing,
@@ -1804,29 +1745,24 @@ empty roster and many retained records at narrow window widths and scroll to the
 view selected throughout; the next person command must still resolve its original one-based position. Protected
 startup exposes no `showlesson` route.
 
-### Planned shared-lesson workflow checks
+### Active Student attendance history checks (#100)
 
-Run these as the corresponding routes become available, using an isolated supported dataset. They verify the broader target rather than adding a complete-workflow requirement to every Week 8 PR.
-
-1. Add one Tutor and two Students, then create one lesson with the active command
-   `addlesson d/Mon st/1600 et/1730 s/Math tu/FULL_NAME tp/EXACT_PHONE rm/R1`, replacing the tutor placeholders
-   with the added tutor's values. Expect a new stable Lesson ID and an empty roster in the saved snapshot; restart
-   and verify the same record. The catalogue route must show that lesson once. Substitute the
-   actual returned Lesson ID for `L1` in every later `lid/` argument.
-2. Run `list r/student`, check both current positions and use them in `enrol STUDENT_INDEX lid/L1`. Both students must refer to the same Lesson ID; the tutor and room booking must still exist only once. Check student clashes separately from global tutor/room clashes, including adjacent times.
-3. Keep that people view while running `lessons`, `lessons si/STUDENT_INDEX` and `showlesson lid/L1`. Verify the people filter/order/indices remain unchanged. A roster position must not be reinterpreted as a people-list selector.
-4. Use the active route to mark each student for Monday `2026-10-05` with
-   `mark STUDENT_INDEX lid/L1 d/2026-10-05 s/present` or `s/absent`. Verify one record per
-   Student/Lesson/date, same-status no-op and correction. Once a dated result view activates, it must display another
-   Monday without a mark as unrecorded.
-5. Unenrol one student using `unenrol STUDENT_INDEX lid/L1`. The active `mark` route must correct their existing
-   key and reject a new key without membership. The active
-   `unmark STUDENT_INDEX lid/L1 d/2026-10-05` route must then remove only that historical key. Use the active
-   guarded `delete` route before and after removal to verify the Attendance dependency. The active `history STUDENT_INDEX lid/L1` route must expose retained records before removal. Check Student and Lesson
-   references before and after removing their remaining dependencies. Use active `deletelesson lid/L1` only after
-   every roster and attendance dependency is cleared; verify that its stable ID is not reused.
-6. Exercise each activated search filter from the full matrix, including a parent with two linked children and a student with two differently scheduled lessons. Combined filters must not take the name from one child and the lesson from another, or the day from one lesson and the subject from another. Verify distinct-ID counts, successful empty results and empty-lesson discovery when appropriate.
-7. Restart and verify IDs, global creation order, membership and retained attendance. Trigger a save failure in an isolated test seam and verify the aggregate, allocation state and active views are restored. Read-only list/query/history/help operations must not rewrite operational data in the integrated runtime. Record the actual build, platform and results; do not treat unperformed checks as passes.
+1. Keep a filtered people list where a Student's displayed position differs from their stable ID suffix. Run
+   `history STUDENT_INDEX`, then add `lid/LESSON_ID` for an existing Lesson. Verify the same Student's retained
+   entries, newest date first and then numeric Lesson ID, with stable IDs, status and current/former membership.
+   An existing Student or selected existing Lesson without records produces a successful empty result.
+2. Mark and correct a dated key while history is open, then unenrol the Student. Verify immediate committed refresh
+   and a former-member label without losing the record. Remove the retained key with `unmark`; a repeat is a no-op.
+   Restart and repeat the query to verify persistence. A missing dated key is unrecorded, never an absent entry.
+3. Switch from history to `showlesson`, `lessons` and lesson search, then back to history. Each successful retrieval
+   selects its intended right pane. Invalid indices, wrong roles, stable person IDs, malformed Lesson IDs and missing
+   Lessons preserve the prior pane, people filter/order/selection and operational bytes. Filtering people later must
+   not retarget the held stable-Student history query.
+4. With history selected, exercise the failing-writer seam in `CanonicalHistoryIntegrationTest` for retained-key
+   removal. The failed save preserves entries and membership; a successful retry removes exactly that key. Scroll
+   through long results at narrow widths. Automated FXML checks do not replace native platform/scaling acceptance.
+5. Compare saved bytes before and after history/help/error commands. A missing file stays missing; protected startup
+   rejects history and its help topic. These checks preserve the people list and do not treat history rows as selectors.
 
 <a id="planned-canonical-loading-and-recovery"></a>
 
