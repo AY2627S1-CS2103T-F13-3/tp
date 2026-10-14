@@ -1628,8 +1628,9 @@ retrieval are not. Use a newly selected file in an isolated JAR folder so the ID
 6. After restarting and restoring the Student list, remove only Alex's dated key; repeating `unmark` is a no-op.
    `L1` deletion first remains blocked by Jamie's roster. After Jamie is unenrolled, it remains blocked by Jamie's
    attendance. Removing that final key makes deletion succeed. Recreating the same slot must receive `L4`, not the
-   deleted `L1`. Restart once more and verify the catalogue contains `L2`, `L3` and empty-roster `L4` in creation
-   order; `search c/lesson s/Math` returns `L4`, and `lessons si/1` remains empty.
+   deleted `L1`. After exiting, hash the closed operational file as described in step 7. Restart once more, run
+   `list r/student` to restore the Student positions, and verify that the catalogue contains `L2`, `L3` and
+   empty-roster `L4` in creation order. `search c/lesson s/Math` returns `L4`, and `lessons si/1` remains empty.
 
    ```text
    list r/student
@@ -1644,9 +1645,10 @@ retrieval are not. Use a newly selected file in an isolated JAR folder so the ID
    exit
    ```
 
-7. To confirm that retrieval is read-only, hash the closed operational file, run `lessons`, `lessons si/1`,
-   `search c/lesson s/Math` and `help lessons`, exit, and compare the hash again. Preferences are a separate file;
-   the operational bytes must match. From the JAR folder, macOS/Linux users can run
+7. Keep that final restarted, Student-filtered session open. To confirm that retrieval is read-only, run `lessons`,
+   `lessons si/1`, `search c/lesson s/Math` and `help lessons`, exit, and compare the closed operational file's hash
+   with the value captured before this restart. Preferences are a separate file; the operational bytes must match.
+   From the JAR folder, macOS/Linux users can run
    `shasum -a 256 "manual/lesson-workflow.json"` before and after; on Windows, use
    `Get-FileHash "manual/lesson-workflow.json" -Algorithm SHA256` in PowerShell.
 
