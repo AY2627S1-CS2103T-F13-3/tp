@@ -1,26 +1,20 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import seedu.address.logic.commands.AddCommand;
-import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.ContactDetails;
 import seedu.address.model.person.EducationLevel;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
-import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonRole;
 import seedu.address.model.person.Phone;
-import seedu.address.testutil.PersonBuilder;
-import seedu.address.testutil.PersonUtil;
 
 public class RoleAwareAddParserTest {
 
@@ -282,16 +276,4 @@ public class RoleAwareAddParserTest {
         assertThrows(NullPointerException.class, () -> parser.parse(null));
     }
 
-    @Test
-    public void parseCommand_roleAwareAdd_remainsDormantWhileLegacyAddAndHelpWork() throws Exception {
-        AddressBookParser commandParser = new AddressBookParser();
-        Person legacyPerson = new PersonBuilder().build();
-        assertEquals(new AddCommand(legacyPerson),
-                commandParser.parseCommand(PersonUtil.getAddCommand(legacyPerson)));
-        assertEquals(new HelpCommand("add"), commandParser.parseCommand("help add"));
-        assertEquals(new HelpCommand(), commandParser.parseCommand("help"));
-        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
-        assertThrows(ParseException.class, expectedMessage, () ->
-                commandParser.parseCommand("add " + ALL_STUDENT_ARGUMENTS));
-    }
 }

@@ -56,14 +56,14 @@ public class HelpCommandTest {
 
     @Test
     public void equals_comparesTopic() {
-        HelpCommand addHelp = new HelpCommand("add");
-        assertEquals(addHelp, addHelp);
-        assertEquals(addHelp, new HelpCommand("add"));
-        assertEquals(addHelp.hashCode(), new HelpCommand("add").hashCode());
+        HelpCommand listHelp = new HelpCommand("list");
+        assertEquals(listHelp, listHelp);
+        assertEquals(listHelp, new HelpCommand("list"));
+        assertEquals(listHelp.hashCode(), new HelpCommand("list").hashCode());
         assertEquals(new HelpCommand(), new HelpCommand());
-        assertNotEquals(addHelp, new HelpCommand("delete"));
-        assertNotEquals(addHelp, new HelpCommand());
-        assertNotEquals(addHelp, null);
-        assertNotEquals(addHelp, "add");
+        assertNotEquals(listHelp, new HelpCommand("exit"));
+        assertNotEquals(listHelp, new HelpCommand());
+        assertNotEquals(listHelp, null);
+        assertNotEquals(listHelp, "list");
     }
 }

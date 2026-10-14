@@ -4,12 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static seedu.address.logic.Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
-import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
-import static seedu.address.logic.commands.CommandTestUtil.EMAIL_DESC_AMY;
-import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
-import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.AMY;
 
@@ -23,22 +18,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.api.io.TempDir;
 
-import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.lesson.LessonId;
-import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
-import seedu.address.testutil.PersonBuilder;
 
 public class LogicManagerTest {
     private static final IOException DUMMY_IO_EXCEPTION = new IOException("dummy IO exception");
@@ -63,12 +57,6 @@ public class LogicManagerTest {
     public void execute_invalidCommandFormat_throwsParseException() {
         String invalidCommand = "uicfhmowqewca";
         assertParseException(invalidCommand, MESSAGE_UNKNOWN_COMMAND);
-    }
-
-    @Test
-    public void execute_commandExecutionError_throwsCommandException() {
-        String deleteCommand = "delete 9";
-        assertCommandException(deleteCommand, MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
     }
 
     @Test
@@ -119,81 +107,9 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_addAndDelete_stillPersistChanges() throws Exception {
-        Path data = temporaryFolder.resolve("addressBook.json");
-        logic.execute(AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY + EMAIL_DESC_AMY + ADDRESS_DESC_AMY);
-        assertEquals(1, new JsonAddressBookStorage(data).readAddressBook().orElseThrow().getPersonList().size());
-        logic.execute("delete 1");
-        assertEquals(0, new JsonAddressBookStorage(data).readAddressBook().orElseThrow().getPersonList().size());
-    }
-
-    @Test
-    public void execute_failedDelete_preservesFilteredViewAndObservableList() throws Exception {
-        Person other = new PersonBuilder(AMY).withName("Other Person").build();
-        model.addPerson(other);
-        model.addPerson(AMY);
-        model.updateFilteredPersonList(AMY::equals);
-        ReadOnlyAddressBook before = new seedu.address.model.AddressBook(model.getAddressBook());
-        var visible = model.getFilteredPersonList();
-        int[] notifications = {0};
-        visible.addListener((javafx.collections.ListChangeListener<Person>) change -> notifications[0]++);
-        int[] saves = {0};
-        JsonAddressBookStorage failing = new JsonAddressBookStorage(temporaryFolder.resolve("failed.json")) {
-            @Override
-            public void saveAddressBook(ReadOnlyAddressBook staged) throws IOException {
-                saves[0]++;
-                assertEquals(before, model.getAddressBook());
-                assertEquals(java.util.List.of(other), staged.getPersonList());
-                throw DUMMY_IO_EXCEPTION;
-            }
-        };
-        logic = new LogicManager(model, new StorageManager(failing,
-                new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json"))));
-
-        assertThrows(CommandException.class, () -> logic.execute("delete 1"));
-        assertEquals(before, model.getAddressBook());
-        assertSame(visible, model.getFilteredPersonList());
-        assertEquals(java.util.List.of(AMY), visible);
-        assertEquals(0, notifications[0]);
-        logic.execute("list");
-        assertEquals(before.getPersonList(), visible);
-        assertEquals(1, saves[0]);
-    }
-
-    @Test
-    public void execute_failedAddThenSuccessfulAdd_doesNotPersistRejectedPerson() throws Exception {
-        int[] saves = {0};
-        JsonAddressBookStorage flaky = new JsonAddressBookStorage(temporaryFolder.resolve("retry.json")) {
-            @Override
-            public void saveAddressBook(ReadOnlyAddressBook staged) throws IOException {
-                if (saves[0]++ == 0) {
-                    throw DUMMY_IO_EXCEPTION;
-                }
-                assertTrue(model.getAddressBook().getPersonList().isEmpty());
-                super.saveAddressBook(staged);
-            }
-        };
-        logic = new LogicManager(model, new StorageManager(flaky,
-                new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json"))));
-        String amy = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY + EMAIL_DESC_AMY + ADDRESS_DESC_AMY;
-        assertThrows(CommandException.class, () -> logic.execute(amy));
-        logic.execute("list");
-        assertTrue(model.getFilteredPersonList().isEmpty());
-        var visible = model.getFilteredPersonList();
-        int[] refreshes = {0};
-        visible.addListener((javafx.collections.ListChangeListener<Person>) change -> refreshes[0]++);
-        logic.execute(amy.replace(NAME_DESC_AMY, " n/Other Person"));
-        assertTrue(refreshes[0] > 0);
-        assertSame(visible, model.getFilteredPersonList());
-        assertEquals("Other Person", visible.get(0).getName().fullName);
-        assertEquals(model.getAddressBook(), flaky.readAddressBook().orElseThrow());
-        assertEquals(2, saves[0]);
-    }
-
-    @Test
     public void execute_help_doesNotCreateOperationalDataFile() throws Exception {
         logic.execute("help");
-        logic.execute("help add");
+        logic.execute("help list");
         assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
     }
 
@@ -219,10 +135,22 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_withdrawnCommands_preservesModel() {
+    public void execute_withdrawnCommands_preservesRecordsFilterPreferencesAndFile() throws Exception {
         model.addPerson(AMY);
-        for (String input : new String[]{"edit 1 n/Alex", "clear", "find Amy"}) {
-            assertParseException(input, MESSAGE_UNKNOWN_COMMAND);
+        model.updateFilteredPersonList(person -> false);
+        ReadOnlyAddressBook before = new seedu.address.model.AddressBook(model.getAddressBook());
+        UserPrefs preferences = new UserPrefs(model.getUserPrefs());
+        var visible = model.getFilteredPersonList();
+        Path data = temporaryFolder.resolve("addressBook.json");
+        String original = "{\"_comment\": \"preserve these bytes\", \"persons\": []}\n";
+        Files.writeString(data, original);
+        for (String input : new String[]{"add n/Alex p/123", "delete 1", "edit 1 n/Alex", "clear", "find Amy"}) {
+            assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> logic.execute(input));
+            assertEquals(before, model.getAddressBook());
+            assertEquals(preferences, model.getUserPrefs());
+            assertSame(visible, model.getFilteredPersonList());
+            assertTrue(visible.isEmpty());
+            assertEquals(original, Files.readString(data));
         }
     }
 
@@ -294,14 +222,6 @@ public class LogicManagerTest {
     }
 
     /**
-     * Executes the command, confirms that a CommandException is thrown and that the result message is correct.
-     * @see #assertCommandFailure(String, Class, String, Model)
-     */
-    private void assertCommandException(String inputCommand, String expectedMessage) {
-        assertCommandFailure(inputCommand, CommandException.class, expectedMessage);
-    }
-
-    /**
      * Executes the command, confirms that the exception is thrown and that the result message is correct.
      * @see #assertCommandFailure(String, Class, String, Model)
      */
@@ -345,12 +265,21 @@ public class LogicManagerTest {
                 new JsonUserPrefsStorage(temporaryFolder.resolve("ExceptionUserPrefs.json"));
         StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
 
-        logic = new LogicManager(model, storage);
+        // Exercise the retained transaction's error mapping without exposing a retired command route.
+        logic = new LogicManager(model, storage, new AddressBookParser() {
+            @Override
+            public Command parseCommand(String text) {
+                return new Command() {
+                    @Override
+                    public CommandResult execute(Model staged) {
+                        staged.addPerson(AMY);
+                        return new CommandResult("Staged change");
+                    }
+                };
+            }
+        });
 
-        // Triggers the saveAddressBook method by executing an add command
-        String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY
-                + EMAIL_DESC_AMY + ADDRESS_DESC_AMY;
         ModelManager expectedModel = new ModelManager(model.getAddressBook(), model.getUserPrefs());
-        assertCommandFailure(addCommand, CommandException.class, expectedMessage, expectedModel);
+        assertCommandFailure("test", CommandException.class, expectedMessage, expectedModel);
     }
 }

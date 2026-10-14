@@ -56,6 +56,9 @@ title: Developer Guide
   and rendered-guide checks (#164/#102).
   These credits do not claim teammates' implementations or unperformed human review.
 
+Zhi Yu used OpenAI Codex for #97's isolated legacy add/delete command, parser and fixture removal,
+legacy data-preservation and protected-command regressions, and the matching help/guide updates.
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Setting up, getting started**
@@ -772,7 +775,9 @@ topics/excess arguments and restricts guidance to the protected-session routes a
 Help preserves records and the people view without operational saves; preferences have a separate
 lifecycle. Normal sessions expose help for every [active route](#current-increment-and-command-integration);
 protected sessions expose only help/list/exit guidance.
-Legacy `CommandCatalog`/`HelpCommandParser` remain regression seams.
+Legacy `CommandCatalog`/`HelpCommandParser` expose only list/help/exit as isolated regression seams.
+Their inherited add/delete commands, parsers and obsolete command fixtures have been removed under #97.
+The active canonical catalogue still provides role-aware addition and relationship-guarded deletion.
 
 The Help menu and F1 both invoke `MainWindow.executeCommand("help")`, retaining the command-box
 draft and card selection. `ResultDisplay` is a read-only wrapped TextArea with vertical scrolling;

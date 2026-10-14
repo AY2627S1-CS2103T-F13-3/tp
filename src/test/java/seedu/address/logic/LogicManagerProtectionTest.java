@@ -6,10 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
-import static seedu.address.logic.commands.CommandTestUtil.EMAIL_DESC_AMY;
-import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
-import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
+import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
@@ -26,10 +23,13 @@ import org.junit.jupiter.api.io.TempDir;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.AddressBookParser;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
@@ -70,14 +70,13 @@ public class LogicManagerProtectionTest {
     }
 
     @Test
-    public void execute_protectedAddAndDelete_rejectsWithoutMutationNotificationOrSave() throws Exception {
+    public void execute_withdrawnLegacyMutators_rejectsWithoutMutationNotificationOrSave() throws Exception {
         int[] notifications = {0};
         visible.addListener((ListChangeListener<Person>) change -> notifications[0]++);
-        String addAmy = "add" + NAME_DESC_AMY + PHONE_DESC_AMY + EMAIL_DESC_AMY + ADDRESS_DESC_AMY;
 
-        for (String command : new String[]{addAmy, "delete 1"}) {
-            CommandException failure = assertThrows(CommandException.class, () -> logic.execute(command));
-            assertEquals(GUIDANCE, failure.getMessage());
+        for (String command : new String[]{"add n/Amy p/123", "delete 1"}) {
+            ParseException failure = assertThrows(ParseException.class, () -> logic.execute(command));
+            assertEquals(MESSAGE_UNKNOWN_COMMAND, failure.getMessage());
             assertEquals(List.of(ALICE), visible);
             assertUnchangedOperationalData();
         }
@@ -85,11 +84,31 @@ public class LogicManagerProtectionTest {
     }
 
     @Test
+    public void execute_protectedInjectedMutation_rejectsBeforeExecutionOrSave() throws Exception {
+        logic = new LogicManager(model, storage, new AddressBookParser() {
+            @Override
+            public Command parseCommand(String text) {
+                return new Command() {
+                    @Override
+                    public CommandResult execute(seedu.address.model.Model target) {
+                        throw new AssertionError("Protected logic must reject before command execution");
+                    }
+                };
+            }
+        });
+
+        CommandException failure = assertThrows(CommandException.class, () -> logic.execute("test"));
+        assertEquals(GUIDANCE, failure.getMessage());
+        assertEquals(List.of(ALICE), visible);
+        assertUnchangedOperationalData();
+    }
+
+    @Test
     public void execute_protectedHelp_returnsOverviewAndTopicWithoutChangingFilterOrSaving() throws Exception {
         CommandResult overview = logic.execute("help");
         assertEquals(CommandCatalog.getOverview(), overview.getFeedbackToUser());
         assertFalse(overview.isExit());
-        assertEquals(CommandCatalog.getUsage("add").orElseThrow(), logic.execute("help add").getFeedbackToUser());
+        assertEquals(CommandCatalog.getUsage("list").orElseThrow(), logic.execute("help list").getFeedbackToUser());
         assertEquals(List.of(ALICE), visible);
         assertUnchangedOperationalData();
     }
