@@ -22,6 +22,7 @@ title: Developer Guide
   validation/ASCII-space normalization and constant-stack email validation ([#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61));
   logging fallback, UI startup error handling, and screen-aware window restoration/contact-card wrapping.
   He used Codex for command-input retry/recovery and result-feedback scrolling/F1 regressions (#196).
+  He also used Codex to remove #97's obsolete whole-address-book replacement API and its test seams.
   He also used Codex for [#199](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/199)
   file-boundary regressions (atomic-save recovery, startup link limits and literal-percent logging).
   He also used Codex for #195 preference-corruption recovery and independent save-failure regressions;
@@ -314,6 +315,11 @@ API and its historical diagram retain `AddressBook`, `UniquePersonList`, and `Mo
 Active `PonHubData` instead owns the immutable canonical records and relationships shown above. `PeopleView`
 derives one observable role-filtered projection from that root. UI observes committed projections rather than
 maintaining writable copies. Preferences remain outside operational snapshots.
+
+The retired `clear` command no longer needs whole-address-book replacement through `Model`.
+That public replacement API has been removed. The retained legacy model still supports its isolated
+add/delete and transaction regressions; #97 tracks their remaining cleanup. Canonical state changes
+continue through validated `PonHubData` snapshots and save-before-publication transactions.
 
 The aggregate below implements the [shared ownership and identity contract](#shared-lesson-target-contract).
 Complete independent transaction snapshots preserve records, relationships and allocation state.
