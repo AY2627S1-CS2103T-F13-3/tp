@@ -239,6 +239,8 @@ never replace the people list. Student history retrieval remains planned; see th
 
 **API:** [`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/Logic.java).
 
+Historical AB3 Logic class diagram, including the removed `AddCommand` and `DeleteCommand` examples:
+
 <img src="images/LogicClassDiagram.png" width="550"/>
 
 `CanonicalLogicManager` delegates to the single `CanonicalPeopleSession`. The session's `execute()`
@@ -251,13 +253,15 @@ live records, allocation counters, filter and selection. Read-only commands/no-o
 saving. List clears search criteria and optionally sets a role; own-contact search replaces the people filter,
 while lesson creation and membership changes preserve it. See [Storage](#command-transactions).
 
-The class/parser diagrams describe retained legacy regression seams, not active application wiring.
+The three diagrams in this section provide historical AB3 context. Their add/delete commands and parsers
+have been removed; the remaining legacy Logic classes are isolated regression seams. Active application
+wiring and its transaction boundary are described above.
 
-![Interactions inside Logic for inherited deletion](images/DeleteSequenceDiagram.png)
+![Historical interactions inside Logic for retired deletion](images/DeleteSequenceDiagram.png)
 
-The inherited deletion diagram focuses on parsing and command execution. Its per-call parser
-construction predates the registered catalogue, and it omits the current transaction boundary;
-the active boundary is described above. Legacy parser subclasses share the `Parser` interface:
+The historical deletion sequence illustrates the removed `DeleteCommandParser` and `DeleteCommand` path.
+Its per-call parser construction predates the registered catalogue and omits the current transaction boundary.
+`Parser` remains a shared interface; this historical parser-class diagram includes removed add/delete examples:
 
 <img src="images/ParserClasses.png" width="600"/>
 
