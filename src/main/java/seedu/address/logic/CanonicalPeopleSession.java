@@ -38,6 +38,7 @@ import seedu.address.logic.parser.ParserUtil;
 import seedu.address.logic.parser.PeopleListParser;
 import seedu.address.logic.parser.RoleAwareAddParser;
 import seedu.address.logic.parser.SearchCriteriaParser;
+import seedu.address.logic.parser.ShowLessonParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.PeopleView;
 import seedu.address.model.PonHubData;
@@ -64,6 +65,7 @@ public final class CanonicalPeopleSession {
     public static final String MESSAGE_MARK_USAGE = CanonicalCommandCatalog.MESSAGE_MARK_USAGE;
     public static final String MESSAGE_UNMARK_USAGE = CanonicalCommandCatalog.MESSAGE_UNMARK_USAGE;
     public static final String MESSAGE_DELETE_USAGE = CanonicalCommandCatalog.MESSAGE_DELETE_USAGE;
+    public static final String MESSAGE_SHOW_LESSON_USAGE = CanonicalCommandCatalog.MESSAGE_SHOW_LESSON_USAGE;
     public static final String MESSAGE_DELETE_LESSON_USAGE = CanonicalCommandCatalog.MESSAGE_DELETE_LESSON_USAGE;
     public static final String MESSAGE_HELP_USAGE = CanonicalCommandCatalog.MESSAGE_HELP_USAGE;
     public static final String MESSAGE_UNKNOWN_COMMAND_FORMAT =
@@ -108,7 +110,7 @@ public final class CanonicalPeopleSession {
         view = new PeopleView(data);
         LessonQueries queries = new LessonQueries(data);
         lessonQueries = queries;
-        lessonRetrieval = new LessonRetrieval(queries, view);
+        lessonRetrieval = new LessonRetrieval(queries, view, data);
         executor = new CanonicalCommandExecutor(view, writer, storage::getDataLoadError);
     }
 
@@ -212,6 +214,10 @@ public final class CanonicalPeopleSession {
             case "lessons":
                 return new CommandResult(String.format("Showing %d lesson(s).",
                         lessonRetrieval.list(new LessonsArgumentsParser().parse(arguments)).size()));
+            case "showlesson":
+                var detail = lessonRetrieval.show(new ShowLessonParser().parse(arguments));
+                return new CommandResult("Showing lesson " + detail.getLessonId()
+                        + detail.date().map(date -> " for " + date).orElse("") + ".");
             case "help":
                 return new CommandResult(getHelp(arguments));
             case "exit":
