@@ -98,7 +98,8 @@ Long guidance wraps within Result Display. Scroll vertically to read the rest; e
 * `help addlesson`, `help enrol`, `help unenrol`, `help mark` and `help unmark` show their active syntax and examples. `help remove` returns
   `Unknown command: 'remove'. Type 'help' to see available commands.`
 * `help add delete` returns `Invalid command format!` followed by `Usage: help [COMMAND]` and its explanation. Supply at most one topic.
-* `edit`, `clear` and `find` return `Unknown command.` They are absent from the catalogue.
+* `edit`, `clear` and `find` are absent from the catalogue. For example, `edit` returns
+  `Unknown command: 'edit'. Type 'help' to see available commands.` No data changes.
 * In a protected session, help lists only `help`, `list` and `exit`; `help add`, `help addlesson`, `help enrol`,
   `help unenrol`, `help mark`, `help unmark`, `help delete`, `help deletelesson`, `help lessons` and `help search`
   are unavailable.
@@ -581,7 +582,7 @@ Person/student selectors come from the current people list, while every existing
 | Help | `help [COMMAND]` |
 | Exit | `exit` |
 
-Capacity, waiting lists, make-ups, fees, lesson editing, occurrence cancellation and undo/redo are future scope. So are exports, saved or guided searches, alternative or exclusion search conditions, archives, late/excused attendance, notes, bulk/clickable attendance and attendance percentages. The full relationship-filter matrix above remains part of the planned integration target. The current build's supported commands are listed in [Current command summary](#current-command-summary).
+Capacity, waiting lists, make-ups, fees, person and lesson editing, occurrence cancellation and undo/redo are future scope. So are exports, saved or guided searches, alternative or exclusion search conditions, archives, late/excused attendance, notes, bulk/clickable attendance and attendance percentages. The full relationship-filter matrix above remains part of the planned integration target. The current build's supported commands are listed in [Current command summary](#current-command-summary).
 
 
 ### Checking unsuccessful saves in the current build
