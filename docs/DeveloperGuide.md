@@ -31,7 +31,8 @@ title: Developer Guide
   lesson membership, atomic saves and the canonical aggregate (#76); and #197's lesson creation/membership
   command-boundary regressions; and #91 guarded person deletion, transaction/restart and lesson-view integration
   tests, conflict reconciliation and guide updates; and #97's retired edit/find/clear implementation and
-  test-helper removal, actionable unknown-command feedback, preservation regressions and guide updates.
+  test-helper removal, actionable unknown-command feedback, preservation regressions, retired legacy
+  Person replacement API removal and guide updates.
   These credits do not transfer feature ownership.
 * Yang Shuo (`ys000009`) used OpenAI Codex for #78's scheduling APIs, aggregate invariants,
   read-only relationship queries/guards, tests and design documentation; and #86's active shared-lesson
@@ -73,8 +74,10 @@ protected sessions allow
 only help/list/exit. Attendance history and relationship search on people remain planned.
 Inherited edit/clear/find routes are unavailable, and their command/parser implementations and edit-descriptor
 test helpers have been removed. Canonical boundary tests verify rejected commands preserve the saved aggregate,
-filtered people view and preferences; help and exit remain usable. Other isolated legacy regression seams remain
-pending the remaining cleanup under #97. Stored attendance can be created/corrected with `mark` and removed with
+filtered people view and preferences; help and exit remain usable. The retired `setPerson` replacement API is
+also removed from the legacy Model, ModelManager, AddressBook and UniquePersonList. Isolated legacy add/delete,
+whole-book replacement and regression seams remain pending the remaining cleanup under #97.
+Stored attendance can be created/corrected with `mark` and removed with
 `unmark`; `history` remains unavailable.
 
 `CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
