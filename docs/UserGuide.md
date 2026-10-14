@@ -6,7 +6,7 @@ title: User Guide
 PonHub is a desktop app for tuition centre administrators to manage student, tutor and parent records and create
 shared recurring lessons. Its command box lets you work quickly from the keyboard while the graphical interface
 shows separate people and shared-lesson results. Shared-lesson enrolment, dated attendance marking and guarded
-person deletion are active, as is dated attendance removal; attendance history remains planned.
+person/lesson deletion and dated attendance removal are active; attendance history remains planned.
 
 * Table of Contents
 {:toc}
@@ -29,16 +29,28 @@ person deletion are active, as is dated attendance removal; attendance history r
    * `add r/tutor n/Mei Lim p/92345678 e/mei@example.com` adds a tutor.
    * `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1` creates an empty-roster shared lesson.
    * `add r/student n/Alex Tan l/S2 pp/91234567` adds a student.
-   * `list r/student`, followed by `enrol 1 lid/L1`, enrols the Student currently at position 1 in lesson `L1`.
-   * `mark 1 lid/L1 d/2026-10-05 s/present` records that Student's attendance for a Monday occurrence.
-   * `unenrol 1 lid/L1` removes that current membership without deleting retained attendance.
-   * `unmark 1 lid/L1 d/2026-10-05` removes only that retained attendance record.
+   * `add r/student n/Jamie Tan l/P1 pp/91234567` adds a second student.
+   * `list r/student` shows Alex at position 1 and Jamie at position 2 in this fresh dataset.
+   * `enrol 1 lid/L1`, then `enrol 2 lid/L1`, enrols both students in the same lesson.
+   * `lessons` shows lesson `L1` once with a roster size of 2; `lessons si/1` shows Alex's current lessons.
+   * `mark 1 lid/L1 d/2026-10-05 s/present`, then `mark 2 lid/L1 d/2026-10-05 s/absent`,
+     records independent attendance for the same Monday occurrence.
+   * `mark 1 lid/L1 d/2026-10-05 s/absent` corrects only Alex's record.
+   * `unenrol 1 lid/L1` removes Alex's membership while keeping both attendance records.
+     `lessons si/1` now shows no current lessons; `lessons` still shows `L1` with Jamie enrolled.
+   * `unmark 1 lid/L1 d/2026-10-05` removes Alex's retained record after unenrolment, keeping Jamie's record and membership.
+     Repeating it reports no change.
+   * `deletelesson lid/L1` is blocked because Jamie's membership and attendance still reference `L1`.
+   * `addlesson d/Tue st/1600 et/1730 s/Math tu/Mei Lim rm/R1` creates an unreferenced lesson `L2`.
+     `deletelesson lid/L2` removes it; `L1` and both people records remain.
    * `add r/parent n/Pat Tan p/91234567` adds a parent.
    * `list r/student` displays students; `list` displays all roles.
    * `help ADD` shows the same guidance as `help add`.
    * `exit` closes PonHub.
 
-The first successful mutation creates the data file. Keep the same JAR folder to load the saved records and stable IDs after restart. For a separate store, launch with `java -jar FILENAME.jar --data=data/another-ponhub.json`. Quote an argument containing spaces, for example `java -jar FILENAME.jar --data="separate store/ponhub.json"`. Select a previously unused path when re-entering legacy records; see [Data protection](#data-protection-in-the-current-build).
+The first successful mutation creates the data file. Keep the same JAR folder to load the saved records and stable IDs after restart. Reopen it, run `list r/student`, then `lessons`: Alex and Jamie retain their IDs, and `L1` still has Jamie enrolled. Attendance is saved, but this build has no attendance-history display command yet. These example positions and `L1` assume a fresh dataset; with existing data, use the returned Lesson ID and recheck current people positions before each student command.
+
+For a separate store, launch with `java -jar FILENAME.jar --data=data/another-ponhub.json`. Quote an argument containing spaces, for example `java -jar FILENAME.jar --data="separate store/ponhub.json"`. Select a previously unused path when re-entering legacy records; see [Data protection](#data-protection-in-the-current-build).
 
 ## Current command summary
 
@@ -87,7 +99,8 @@ Long guidance wraps within Result Display. Scroll vertically to read the rest; e
 * `help addlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark` and `help showlesson` show their active syntax and examples. `help remove` returns
   `Unknown command: 'remove'. Type 'help' to see available commands.`
 * `help add delete` returns `Invalid command format!` followed by `Usage: help [COMMAND]` and its explanation. Supply at most one topic.
-* `edit`, `clear` and `find` return `Unknown command.` They are absent from the catalogue.
+* `edit`, `clear` and `find` are absent from the catalogue. For example, `edit` returns
+  `Unknown command: 'edit'. Type 'help' to see available commands.` No data changes.
 * In a protected session, help lists only `help`, `list` and `exit`; `help add`, `help addlesson`, `help enrol`,
   `help unenrol`, `help mark`, `help unmark`, `help delete`, `help deletelesson`, `help lessons`, `help showlesson`
   and `help search`
@@ -584,7 +597,7 @@ Person/student selectors come from the current people list, while every existing
 | Help | `help [COMMAND]` |
 | Exit | `exit` |
 
-Capacity, waiting lists, make-ups, fees, lesson editing, occurrence cancellation and undo/redo are future scope. So are exports, saved or guided searches, alternative or exclusion search conditions, archives, late/excused attendance, notes, bulk/clickable attendance and attendance percentages. The full relationship-filter matrix above remains part of the planned integration target. The current build's supported commands are listed in [Current command summary](#current-command-summary).
+Capacity, waiting lists, make-ups, fees, person and lesson editing, occurrence cancellation and undo/redo are future scope. So are exports, saved or guided searches, alternative or exclusion search conditions, archives, late/excused attendance, notes, bulk/clickable attendance and attendance percentages. The full relationship-filter matrix above remains part of the planned integration target. The current build's supported commands are listed in [Current command summary](#current-command-summary).
 
 
 ### Checking unsuccessful saves in the current build
