@@ -56,8 +56,8 @@ For a separate store, launch with `java -jar FILENAME.jar --data=data/another-po
 
 The active routes use one saved aggregate with role-specific people, stable IDs and shared lessons whose rosters
 can be changed with `enrol` and `unenrol`. Own-contact people search, attendance marking, guarded person and Lesson
-deletion, lesson listing, lesson search, attendance removal and Student lesson relationship search are active.
-Attendance history and Parent/Tutor relationship filters remain planned. Their specifications follow under
+deletion, lesson listing, lesson search, lesson details, attendance removal and Student lesson relationship search
+are active. Attendance history and Parent/Tutor relationship filters remain planned. Their specifications follow under
 [Planned shared-lesson workflow](#planned-shared-lesson-workflow). Type `help` to inspect the commands available
 in your session. `edit`, `clear` and `find` are unavailable.
 
@@ -75,6 +75,7 @@ in your session. `edit`, `clear` and `find` are unavailable.
 | List people | `list [r/ROLE]` | `list r/student` |
 | Search people | `search c/CATEGORY [FILTER/VALUE]...` | `search c/student n/Alex d/Mon s/Math` |
 | List shared lessons | `lessons [si/STUDENT_INDEX]` | `lessons` |
+| Show lesson details | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` | `showlesson lid/L1 d/2026-10-05` |
 | Search shared lessons | `search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]` | `search c/lesson tu/mei d/Mon` |
 | Get help | `help [COMMAND]` | `help add` |
 | Exit | `exit` | `exit` |
@@ -87,21 +88,22 @@ Cards display a current position separately from the stable ID, such as `S1`. Ad
 
 `help` shows the current supported-command catalogue in Result Display. In a normal session, `help add`,
 `help addlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark`, `help delete`, `help deletelesson`,
-`help list`, `help lessons`, `help search`, `help help` and `help exit` show usage guidance. Topic names are
-case-insensitive, so `help ADD` is
+`help list`, `help lessons`, `help showlesson`, `help search`, `help help` and `help exit` show usage guidance.
+Topic names are case-insensitive, so `help ADD` is
 accepted; the command word `help` remains lowercase. Asking for exit guidance does not exit the application.
 
 Choose **Help > Help** or press **F1** for the same catalogue, including when focus is in the command box or Result Display. Menu/F1 preserve unfinished command text. Help preserves records, the active person filter, order, selection and preferences. Typed help clears the submitted command in the usual way. Help needs no internet connection and does not save operational data.
 
 Long guidance wraps within Result Display. Scroll vertically to read the rest; each new result starts at the top.
 
-* `help addlesson`, `help enrol`, `help unenrol`, `help mark` and `help unmark` show their active syntax and examples. `help remove` returns
+* `help addlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark` and `help showlesson` show their active syntax and examples. `help remove` returns
   `Unknown command: 'remove'. Type 'help' to see available commands.`
 * `help add delete` returns `Invalid command format!` followed by `Usage: help [COMMAND]` and its explanation. Supply at most one topic.
 * `edit`, `clear` and `find` are absent from the catalogue. For example, `edit` returns
   `Unknown command: 'edit'. Type 'help' to see available commands.` No data changes.
 * In a protected session, help lists only `help`, `list` and `exit`; `help add`, `help addlesson`, `help enrol`,
-  `help unenrol`, `help mark`, `help unmark`, `help delete`, `help deletelesson`, `help lessons` and `help search`
+  `help unenrol`, `help mark`, `help unmark`, `help delete`, `help deletelesson`, `help lessons`, `help showlesson`
+  and `help search`
   are unavailable.
 
 ### 1. Adding a person: `add`
@@ -415,9 +417,22 @@ Enter `lessons` to view each shared lesson once, including lessons with empty ro
 The catalogue and student lesson results use lesson creation order. Student lessons show current enrolments;
 past attendance alone does not add a lesson to that list. The planned `history` command will inspect attendance retained after unenrolment.
 
-**Details (planned):** `showlesson lid/LESSON_ID [d/YYYY-MM-DD]`.
+**Details (active):** `showlesson lid/LESSON_ID [d/YYYY-MM-DD]`.
 
-For example, `showlesson lid/L1` displays the lesson's schedule, subject, tutor, room and current roster, with stable IDs identifying the records. `showlesson lid/L1 d/2026-10-05` also shows each current roster student's `present`, `absent` or unrecorded status for that real, matching-weekday date. Attendance retained for former members is labelled separately from the current roster. An empty roster is valid. These results preserve the current people list and its command positions.
+For example, `showlesson lid/L1` displays the lesson's stable ID, subject, schedule, tutor name and ID, room and
+current roster, with each Student's stable ID and name. The lesson details use a separate scrolling panel; no
+roster row number is a person-command selector. `showlesson lid/L1 d/2026-10-05` also shows each current roster
+student's `present`, `absent` or `unrecorded` status for that real, matching-weekday date. `Unrecorded` means no
+attendance entry exists; it is never treated as absent. Retained records for former members appear in a separate
+section, limited to the supplied date when one is given. Without a date, that section shows all retained
+former-member records, newest first. The two prefixes may appear in either order, for example
+`showlesson d/2026-10-05 lid/L1`. An empty roster is valid.
+
+An unknown lesson ID, invalid date or date on another weekday leaves the previous lesson result visible. Lesson
+details refresh after saved membership and attendance changes, including corrections and removal by `unmark`.
+Deleting the selected unreferenced Lesson clears its detail and identifies the unavailable ID. A failed save leaves
+the displayed detail unchanged. `lessons` or lesson search restores the catalogue
+view. `showlesson` preserves the current people filter, selection and command positions and does not save data.
 
 ### 5. Enrolling and unenrolling students
 

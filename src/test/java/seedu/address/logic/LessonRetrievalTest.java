@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.LessonQueryTestData.createData;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,13 +18,16 @@ import javafx.collections.ObservableList;
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.SearchCriteriaParser;
+import seedu.address.logic.parser.ShowLessonInput;
 import seedu.address.model.PeopleView;
 import seedu.address.model.PonHubData;
 import seedu.address.model.PonHubDataState;
 import seedu.address.model.attendance.Attendance;
+import seedu.address.model.attendance.AttendanceStatus;
 import seedu.address.model.lesson.LessonId;
 import seedu.address.model.person.PersonId;
 import seedu.address.model.person.PersonRole;
+import seedu.address.model.query.LessonDetailView;
 import seedu.address.model.query.LessonQueries;
 import seedu.address.model.query.LessonView;
 import seedu.address.model.search.SearchCategory;
@@ -41,7 +45,7 @@ public class LessonRetrievalTest {
         data = createData();
         peopleView = new PeopleView(data);
         queries = new LessonQueries(data);
-        retrieval = new LessonRetrieval(queries, peopleView);
+        retrieval = new LessonRetrieval(queries, peopleView, data);
     }
 
     @Test
@@ -115,8 +119,9 @@ public class LessonRetrievalTest {
 
     @Test
     public void invalidArguments_leaveExistingResultsIntact() throws CommandException {
-        assertThrows(NullPointerException.class, () -> new LessonRetrieval(null, peopleView));
-        assertThrows(NullPointerException.class, () -> new LessonRetrieval(queries, null));
+        assertThrows(NullPointerException.class, () -> new LessonRetrieval(null, peopleView, data));
+        assertThrows(NullPointerException.class, () -> new LessonRetrieval(queries, null, data));
+        assertThrows(NullPointerException.class, () -> new LessonRetrieval(queries, peopleView, null));
         assertThrows(NullPointerException.class, () -> retrieval.list(null));
         assertThrows(NullPointerException.class, () -> retrieval.search(null));
         SearchCriteria valid = new SearchCriteria(SearchCategory.LESSON, Map.of(SearchField.DAY, "Mon"));
@@ -196,5 +201,90 @@ public class LessonRetrievalTest {
         data.resetData(original); // Restore the complete prior state.
         assertIds(displayed, "L2", "L10", "L3", "L4", "L11");
         assertSame(displayed, retrieval.getDisplayedLessons());
+    }
+
+    @Test
+    public void show_dateUsesCurrentRosterAndSeparatesRetainedFormerAttendance() throws Exception {
+        PonHubDataState original = data.exportState();
+        LocalDate monday = LocalDate.of(2026, 10, 5);
+        PersonId studentOne = new PersonId("S1");
+        PersonId studentTwo = new PersonId("S2");
+        LessonId lessonId = new LessonId("L10");
+        Attendance present = new Attendance(studentOne, lessonId, monday, AttendanceStatus.PRESENT);
+        Attendance absent = new Attendance(studentTwo, lessonId, monday, AttendanceStatus.ABSENT);
+        Attendance nextWeek = Attendance.fromStrings(studentTwo, lessonId, "2026-10-12", "present");
+        data.resetData(new PonHubDataState(original.people(), original.lessons(),
+                List.of(present, absent, nextWeek), 11));
+        peopleView.setRoleFilter(Optional.of(PersonRole.STUDENT));
+        var people = peopleView.getPeople();
+        var beforePeople = List.copyOf(people);
+        var displayed = retrieval.getDisplayedLessons();
+
+        LessonDetailView result = retrieval.show(new ShowLessonInput(lessonId, Optional.of(monday)));
+        assertSame(result, displayed.getFirst());
+        assertEquals(List.of(studentOne, studentTwo), result.currentRoster().stream()
+                .map(entry -> entry.student().getId()).toList());
+        assertEquals(List.of(Optional.of(AttendanceStatus.PRESENT), Optional.of(AttendanceStatus.ABSENT)),
+                result.currentRoster().stream().map(LessonDetailView.RosterStatus::status).toList());
+        assertTrue(result.formerAttendance().isEmpty());
+        assertEquals(beforePeople, people);
+        assertSame(people, peopleView.getPeople());
+        assertThrows(UnsupportedOperationException.class, displayed::clear);
+        assertThrows(UnsupportedOperationException.class, result.currentRoster()::clear);
+
+        var withoutStudentTwo = original.lessons().stream().map(lesson -> lesson.getId().equals(lessonId)
+                ? lesson.withoutEnrolledStudent(studentTwo) : lesson).toList();
+        data.resetData(new PonHubDataState(original.people(), withoutStudentTwo,
+                List.of(present, absent, nextWeek), 11));
+        LessonDetailView refreshed = (LessonDetailView) displayed.getFirst();
+        assertEquals(List.of(studentOne), refreshed.currentRoster().stream()
+                .map(entry -> entry.student().getId()).toList());
+        assertEquals(List.of(studentTwo), refreshed.formerAttendance().stream()
+                .map(entry -> entry.student().getId()).toList());
+        assertEquals(AttendanceStatus.ABSENT, refreshed.formerAttendance().getFirst().status());
+
+        data.resetData(new PonHubDataState(original.people(), withoutStudentTwo, List.of(absent), 11));
+        assertEquals(Optional.empty(), ((LessonDetailView) displayed.getFirst()).currentRoster().getFirst().status());
+        data.resetData(new PonHubDataState(original.people(), withoutStudentTwo, List.of(), 11));
+        assertTrue(((LessonDetailView) displayed.getFirst()).formerAttendance().isEmpty());
+        assertEquals(beforePeople, people);
+    }
+
+    @Test
+    public void show_withoutDateShowsEmptyRosterAndAllFormerDatesAndValidatesBeforeSwitch() throws Exception {
+        PonHubDataState original = data.exportState();
+        PersonId student = new PersonId("S2");
+        LessonId lessonId = new LessonId("L10");
+        var withoutStudent = original.lessons().stream().map(lesson -> lesson.getId().equals(lessonId)
+                ? lesson.withoutEnrolledStudent(student) : lesson).toList();
+        Attendance older = Attendance.fromStrings(student, lessonId, "2026-10-05", "absent");
+        Attendance newer = Attendance.fromStrings(student, lessonId, "2026-10-12", "present");
+        Attendance sameDay = Attendance.fromStrings(new PersonId("S3"), lessonId, "2026-10-12", "absent");
+        data.resetData(new PonHubDataState(original.people(), withoutStudent, List.of(older, newer, sameDay), 11));
+        retrieval.show(new ShowLessonInput(lessonId, Optional.empty()));
+        LessonDetailView detail = (LessonDetailView) retrieval.getDisplayedLessons().getFirst();
+        assertEquals(List.of(newer.getDate(), sameDay.getDate(), older.getDate()), detail.formerAttendance().stream()
+                .map(LessonDetailView.FormerAttendance::date).toList());
+        assertEquals(List.of(new PersonId("S2"), new PersonId("S3"), new PersonId("S2")),
+                detail.formerAttendance().stream().map(entry -> entry.student().getId()).toList());
+        assertEquals(Optional.empty(), detail.currentRoster().getFirst().status());
+
+        var displayed = retrieval.getDisplayedLessons();
+        assertThrows(CommandException.class, () -> retrieval.show(new ShowLessonInput(new LessonId("L99"),
+                Optional.empty())));
+        assertThrows(CommandException.class, () -> retrieval.show(new ShowLessonInput(lessonId,
+                Optional.of(LocalDate.of(2026, 10, 6)))));
+        assertThrows(NullPointerException.class, () -> retrieval.show(null));
+        assertSame(detail, displayed.getFirst());
+
+        retrieval.show(new ShowLessonInput(new LessonId("L3"), Optional.empty()));
+        assertTrue(((LessonDetailView) displayed.getFirst()).currentRoster().isEmpty());
+        var withoutEmptyLesson = original.lessons().stream()
+                .filter(lesson -> !lesson.getId().equals(new LessonId("L3"))).toList();
+        data.resetData(new PonHubDataState(original.people(), withoutEmptyLesson, List.of(older, newer), 11));
+        assertTrue(displayed.isEmpty());
+        assertTrue(retrieval.contextProperty().get().contains("no longer available"));
+        retrieval.list(Optional.empty());
+        assertIds(displayed, "L2", "L10", "L4", "L11");
     }
 }
