@@ -3,6 +3,7 @@ package seedu.address.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -102,6 +103,61 @@ public class PonHubDataAttendanceTest {
                 firstStudentOnly.getId(), LocalDate.of(2026, 10, 5), AttendanceStatus.ABSENT));
         assertThrows(IllegalArgumentException.class, () -> data.markAttendance(firstStudent.getId(),
                 firstStudentOnly.getId(), LocalDate.of(2026, 10, 6), AttendanceStatus.PRESENT));
+
+        assertSame(before, data.exportState());
+    }
+
+    @Test
+    public void unmarkAttendance_existingKey_removesOnlySelectedRecord() {
+        Attendance selected = new Attendance(firstStudent.getId(), lesson.getId(),
+                LocalDate.of(2026, 10, 5), AttendanceStatus.PRESENT);
+        Attendance otherStudent = new Attendance(secondStudent.getId(), lesson.getId(),
+                LocalDate.of(2026, 10, 5), AttendanceStatus.ABSENT);
+        Attendance otherDate = new Attendance(firstStudent.getId(), lesson.getId(),
+                LocalDate.of(2026, 10, 12), AttendanceStatus.ABSENT);
+        PonHubData data = dataWith(lesson, List.of(selected, otherStudent, otherDate));
+
+        assertEquals(Optional.of(selected), data.unmarkAttendance(firstStudent.getId(), lesson.getId(),
+                selected.getDate()));
+        assertEquals(List.of(otherStudent, otherDate), data.getAttendance());
+        assertEquals(List.of(lesson), data.getLessons());
+        assertEquals(Set.of(firstStudent.getId(), secondStudent.getId()),
+                data.getLesson(lesson.getId()).orElseThrow().getEnrolledStudentIds());
+    }
+
+    @Test
+    public void unmarkAttendance_historicalOrMissingRecord_removesWithoutMembershipAndSkipsNoOp() {
+        Lesson emptyLesson = lesson(Set.of());
+        Attendance historical = new Attendance(firstStudent.getId(), emptyLesson.getId(),
+                LocalDate.of(2026, 10, 5), AttendanceStatus.PRESENT);
+        PonHubData data = dataWith(emptyLesson, List.of(historical));
+
+        assertEquals(Optional.of(historical), data.unmarkAttendance(firstStudent.getId(), emptyLesson.getId(),
+                historical.getDate()));
+        assertTrue(data.getAttendance().isEmpty());
+        PonHubDataState removedState = data.exportState();
+
+        assertEquals(Optional.empty(), data.unmarkAttendance(firstStudent.getId(), emptyLesson.getId(),
+                historical.getDate()));
+        assertSame(removedState, data.exportState());
+        assertEquals(List.of(emptyLesson), data.getLessons());
+    }
+
+    @Test
+    public void unmarkAttendance_invalidReferenceOrWeekday_rejectsWithoutChange() {
+        Attendance attendance = new Attendance(firstStudent.getId(), lesson.getId(),
+                LocalDate.of(2026, 10, 5), AttendanceStatus.PRESENT);
+        PonHubData data = dataWith(lesson, List.of(attendance));
+        PonHubDataState before = data.exportState();
+
+        assertThrows(IllegalArgumentException.class, () -> data.unmarkAttendance(new PersonId("S99"),
+                lesson.getId(), attendance.getDate()));
+        assertThrows(IllegalArgumentException.class, () -> data.unmarkAttendance(tutor.getId(),
+                lesson.getId(), attendance.getDate()));
+        assertThrows(IllegalArgumentException.class, () -> data.unmarkAttendance(firstStudent.getId(),
+                new LessonId("L99"), attendance.getDate()));
+        assertThrows(IllegalArgumentException.class, () -> data.unmarkAttendance(firstStudent.getId(),
+                lesson.getId(), LocalDate.of(2026, 10, 6)));
 
         assertSame(before, data.exportState());
     }
