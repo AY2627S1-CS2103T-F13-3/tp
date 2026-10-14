@@ -5,12 +5,15 @@ import static java.util.Objects.requireNonNull;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
+import seedu.address.model.query.LessonDetailView;
 import seedu.address.model.query.LessonView;
 
 /**
@@ -25,6 +28,8 @@ public class LessonListPanel extends UiPart<Region> {
     private Label lessonContext;
     @FXML
     private ListView<LessonView> lessonListView;
+    @FXML
+    private ScrollPane lessonDetailScroll;
 
     /**
      * Keeps the same observable result list through commands and committed refreshes.
@@ -40,9 +45,25 @@ public class LessonListPanel extends UiPart<Region> {
         super(FXML);
         lessonContext.textProperty().bind(requireNonNull(context));
         lessonListView.setItems(requireNonNull(lessons));
-        lessonSummary.textProperty().bind(Bindings.size(lessons).asString("Showing %d lesson(s)."));
         lessonListView.setCellFactory(list -> new LessonListCell());
         lessonListView.setPlaceholder(new Label("No lessons to display."));
+        lessons.addListener((ListChangeListener<LessonView>) change -> refreshDisplay(lessons));
+        refreshDisplay(lessons);
+    }
+
+    private void refreshDisplay(ObservableList<LessonView> lessons) {
+        boolean showingDetail = lessons.size() == 1 && lessons.getFirst() instanceof LessonDetailView;
+        lessonListView.setVisible(!showingDetail);
+        lessonListView.setManaged(!showingDetail);
+        lessonDetailScroll.setVisible(showingDetail);
+        lessonDetailScroll.setManaged(showingDetail);
+        if (showingDetail) {
+            lessonSummary.setText("Showing lesson details.");
+            lessonDetailScroll.setContent(new LessonCard(lessons.getFirst()).getRoot());
+        } else {
+            lessonSummary.setText(String.format("Showing %d lesson(s).", lessons.size()));
+            lessonDetailScroll.setContent(null);
+        }
     }
 
     /**

@@ -14,4 +14,6 @@
   <Label fx:id="lessonTutor" styleClass="cell_small_label" wrapText="true" minWidth="0" maxWidth="Infinity" />
   <Label fx:id="lessonRoom" styleClass="cell_small_label" wrapText="true" minWidth="0" maxWidth="Infinity" />
   <Label fx:id="lessonRosterSize" styleClass="cell_small_label" wrapText="true" minWidth="0" maxWidth="Infinity" />
+  <VBox fx:id="rosterDetails" spacing="3" visible="false" managed="false" minWidth="0" maxWidth="Infinity" />
+  <VBox fx:id="formerDetails" spacing="3" visible="false" managed="false" minWidth="0" maxWidth="Infinity" />
 </VBox>
