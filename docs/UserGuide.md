@@ -56,8 +56,8 @@ For a separate store, launch with `java -jar FILENAME.jar --data=data/another-po
 
 The active routes use one saved aggregate with role-specific people, stable IDs and shared lessons whose rosters
 can be changed with `enrol` and `unenrol`. Own-contact people search, attendance marking, guarded person and Lesson
-deletion, lesson listing, lesson search, lesson details and attendance removal are active. Attendance history and
-relationship filters on people remain planned. Their specifications follow under
+deletion, lesson listing, lesson search, lesson details, attendance removal and Student lesson relationship search
+are active. Attendance history and Parent/Tutor relationship filters remain planned. Their specifications follow under
 [Planned shared-lesson workflow](#planned-shared-lesson-workflow). Type `help` to inspect the commands available
 in your session. `edit`, `clear` and `find` are unavailable.
 
@@ -73,7 +73,7 @@ in your session. `edit`, `clear` and `find` are unavailable.
 | Delete person | `delete INDEX` | `delete 1` |
 | Delete shared lesson | `deletelesson lid/LESSON_ID` | `deletelesson lid/L1` |
 | List people | `list [r/ROLE]` | `list r/student` |
-| Search people | `search c/CATEGORY [OWN_FIELD/VALUE]...` | `search c/student n/Alex l/S2` |
+| Search people | `search c/CATEGORY [FILTER/VALUE]...` | `search c/student n/Alex d/Mon s/Math` |
 | List shared lessons | `lessons [si/STUDENT_INDEX]` | `lessons` |
 | Show lesson details | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` | `showlesson lid/L1 d/2026-10-05` |
 | Search shared lessons | `search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]` | `search c/lesson tu/mei d/Mon` |
@@ -197,11 +197,11 @@ An empty result is valid. PonHub reports a count of zero and the people panel sh
 
 --------------------------------------------------------------------------------------------------------------------
 
-### Searching people by their own fields: `search`
+### Searching people: `search`
 
 **Formats:**
 
-* `search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS]`
+* `search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]`
 * `search c/tutor|parent [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]`
 
 Category values ignore case. Supply each lowercase prefix once with a nonblank value. All supplied filters must
@@ -218,10 +218,20 @@ Search reads the complete people catalogue, replacing the previous role/search f
 clears search criteria. Use the new displayed positions for subsequent person commands. Search/help do not save
 operational data; failed commands preserve the previous view. A successful person addition resets to all roles.
 
-Relationship filters (`sn/d/st/et/s/tu/rm`) on people remain unavailable and receive explicit feedback.
-These seven fields are available for `c/lesson`. Category-incompatible fields, unknown/repeated/blank prefixes
+Student lesson filters (`d/st/et/s/tu/rm`) are active. Parent and Tutor relationship filters remain unavailable
+and receive explicit feedback. All seven lesson fields remain available for `c/lesson`. Category-incompatible fields, unknown/repeated/blank prefixes
 and invalid values fail validation.
-The complete [planned search matrix](#6-searching-people-and-shared-lessons) remains the integration target.
+The [search matrix](#6-searching-people-and-shared-lessons) describes the complete target.
+
+For example, `search c/student n/Alex d/Mon s/Math tu/mei` requires Alex's own name and **one currently enrolled
+Monday Math lesson** taught by a matching tutor. Math on Tuesday and Science on Monday cannot combine into a match.
+`tu/` matches the tutor's name, and `st/`/`et/` each match exact HHMM times. All supplied lesson conditions must hold
+on that same lesson. A former member's attendance does not imply current enrolment.
+
+Each student appears once by stable ID, with matching lesson IDs, subjects, schedules, tutors and rooms beneath
+their own details. Several matching lessons add context lines, never duplicate student cards. Enrolment changes
+refresh both matches and context; failed saves preserve them. Own-field-only searches still include students with
+no lessons and show no relationship context. `list` clears both the criteria and its matching context.
 
 ### Listing and searching shared lessons
 
@@ -286,10 +296,9 @@ The default startup leaves an older `data/addressbook.json` untouched. Selecting
 
 The following sections record the shared-lesson and guarded-deletion contracts. Role-aware add/list,
 `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `deletelesson`, `lessons`, own-contact people search
-and lesson search are active; attendance history and relationship filters on people remain planned. Their
-availability depends on
-incremental integration; use the [current command summary](#current-command-summary) and your build's `help`
-for active routes.
+and lesson search are active, as is Student lesson relationship search. Attendance history and Parent/Tutor
+relationship filters remain planned. Use the [current command summary](#current-command-summary) and your build's
+`help` for active routes.
 
 ### Reading the planned command formats
 
@@ -454,7 +463,7 @@ failure leave the aggregate, saved file and active views unchanged.
 
 Use `student`, `parent`, `tutor` or `lesson`; category values are case-insensitive. A category-only search imposes no filters. For example, `search c/lesson` shows each shared lesson once, including empty rosters.
 
-The full target filter matrix is below. Own-contact people search and **all seven Lesson-column fields are active**. Relationship filters on Student, Parent and Tutor results remain planned and receive explicit unavailable feedback. Check `help search` for the active formats.
+The full target filter matrix is below. Own-contact people search and **all seven Lesson-column fields are active**. Student lesson filters are active; relationship filters on Parent and Tutor results remain planned and receive explicit unavailable feedback. Check `help search` for the active formats.
 
 | Prefix | Field | Student | Parent | Tutor | Lesson |
 | --- | --- | --- | --- | --- | --- |

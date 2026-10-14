@@ -122,7 +122,7 @@ public class CanonicalSearchIntegrationTest {
             assertThrows(ParseException.class, () -> session.execute(command));
             assertEquals(List.of("S3"), ids(session));
         }
-        for (String command : List.of("search c/student d/Mon", "search c/parent sn/Alex",
+        for (String command : List.of("search c/parent d/Mon", "search c/parent sn/Alex",
                 "search c/tutor rm/R1")) {
             CommandException failure = assertThrows(CommandException.class, () -> session.execute(command));
             assertTrue(failure.getMessage().contains("not available"));
