@@ -51,6 +51,7 @@ jobs:
           sudo apt-get install --yes xvfb xdotool imagemagick
       - name: Build the exact candidate
         working-directory: _temp/candidate
+        shell: bash
         run: |
           mkdir -p ../linux-package
           git rev-parse HEAD > ../linux-package/source.txt

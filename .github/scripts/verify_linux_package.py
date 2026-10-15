@@ -144,6 +144,8 @@ def main():
     session = None
     result = {"passed": False, "source": args.source, "platform": platform.platform(),
               "architecture": platform.machine(), "display": os.environ.get("DISPLAY"),
+              "expected_sha256": args.expected_sha256.lower(),
+              "os_release": Path("/etc/os-release").read_text(),
               "scope": "Actual packaged-JAR X11 automation; no manual physical-display check"}
     try:
         content = args.jar.read_bytes()
