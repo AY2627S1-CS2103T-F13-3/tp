@@ -4,7 +4,7 @@ Owner: Vincent (`gugrusaurus`), #152 / #102. Publisher: Yang (`ys000009`), #153.
 
 ## Source and readiness
 
-The draft [release notes](notes.md) were checked against accepted master `4e3619fc50e74a5b186631b64ff15e2a7496d414`: the canonical command catalogue/session, User Guide and delivered search/history contracts. This is not the final release-candidate identity. PR #249 adds visible quick-start attendance checks; PR #250 addresses #248's native history readability finding. Neither was merged when this draft was prepared.
+The draft [release notes](notes.md) were checked against accepted master `4e3619fc50e74a5b186631b64ff15e2a7496d414`: the canonical command catalogue/session, User Guide and delivered search/history contracts. This is not the final release-candidate identity. PR #249 adds visible quick-start attendance checks; PR #250 addresses #248's native history readability finding. Neither was merged when the initial draft was prepared. #250 has since merged at c5b8233e; #101 and #248 are closed.
 
 Final media and publication remain pending accepted #101/#102 evidence and the exact packaged candidate verified under #103. Do not label baseline checks or existing images as final-candidate evidence.
 
@@ -51,12 +51,26 @@ Optional removal/guard demonstration, after the main captures: `list r/student`,
 
 - [ ] Record accepted source SHA and the exact #103-verified JAR identity/runtime.
 - [ ] Recheck every release-note claim and command against that candidate; record actual demo outcomes, including failures.
-- [ ] Capture the integrated images/recording; record relative paths, captions, authors and source identity here.
-- [ ] Confirm images show readable current UI and no real operational data. Preserve credits for reused Ben media.
+- [x] Capture the integrated images/recording; record relative paths, captions, authors and source identity here.
+- [x] Confirm images show readable current UI and no real operational data. Preserve credits for reused Ben media.
 - [ ] Complete #102's guide/source/published-site consistency checks against accepted changes.
 - [ ] Replace the draft notice in notes.md only when release copy and media are accepted; record any remaining user-facing limitation.
 - [ ] Hand Yang the accepted notes path, media paths, captions and candidate identity for #153; verify GitHub-rendered media and links after publication.
 
-Final source: pending. JAR identity: pending. New capture paths: pending. #152 remains open. This preparation does not publish a release or claim native/package acceptance.
+Capture application source: `c5b8233e9bfaf5b8c7eb7f6af8932345c17c4c63`. The media branch at `003a79d8` has identical production source/resources/build configuration; its additional changes are prose. Local `shadowJar` output SHA-256: `170a22ed680dc687b7e9c5fc79846d246368372cab9ec8995302a6ad4a5e43c3`.
+
+Vincent captured the actual app on macOS 27.0.1 arm64, Azul Java/JavaFX 25.0.3 (`25.0.3.fx-zulu`), in a 740x600 logical window (1480x1200 screenshot pixels). A temporary macOS launcher identified the app to the accessibility tool; it executes the same JAR, without changing application classes/resources. Disposable data only. Captures are full-window images; Ui.png is a format conversion of the original JPEG capture, with no content alteration.
+
+| Image | Author | Verified content |
+| --- | --- | --- |
+| `docs/images/Ui.png` | Vincent, Codex-assisted native capture | Alex and Jamie share L1; roster count 2. |
+| `docs/images/AttendanceDetails.jpg` | Vincent, Codex-assisted native capture | Alex present / Jamie absent for 2026-10-05. |
+| `docs/images/AttendanceHistory.jpg` | Vincent, Codex-assisted native capture | Alex absent after correction and unenrolment; former-enrolment label readable. |
+
+Native command-box replay also verified all four relationship-search categories, correction to absent/absent, complete exit/relaunch, retained IDs/roster/history, selective unmark, repeated unmark no-op and guarded/valid Lesson deletion. The stored file was byte-identical across exit/relaunch and subsequent read-only checks. One automation entry accidentally appended to a rejected command retained by the UI; replacing the full input and rerunning passed. The failed attempt remains in the transcript.
+
+Evidence: `_temp/issue102-final/native-transcript.json`, build/launch logs, isolated JAR and pre-restart JSON in Vincent's Mac workspace. These are source-qualified guide/media checks, not Yang's final #103 artifact or all-platform acceptance. Final release source/JAR reconciliation remains pending; #152 stays open until final handoff. No release is published.
 
 Prepared by Vincent with OpenAI Codex assistance. Ben's feature facts and media remain credited to Ben; feature owners retain implementation/documentation authorship.
+
+See [the integrated guide verification report](guide-verification.md) for completed native, source, render and accepted-site parity checks and the remaining deployment gate.

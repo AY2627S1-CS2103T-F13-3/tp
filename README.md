@@ -1,6 +1,6 @@
 [![Java CI](https://github.com/AY2627S1-CS2103T-F13-3/tp/actions/workflows/gradle.yml/badge.svg)](https://github.com/AY2627S1-CS2103T-F13-3/tp/actions/workflows/gradle.yml)
 
-![People and shared-lesson results](docs/images/LessonResults.png)
+![People and shared-lesson results](docs/images/Ui.png)
 
 # PonHub
 

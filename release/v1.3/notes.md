@@ -1,6 +1,6 @@
 # PonHub v1.3 — What's New
 
-Draft release copy. Final candidate verification and demonstration media are pending; this document does not announce publication. See [the media and publication handoff](media-plan.md).
+Draft release copy. Demonstration media below uses accepted application source c5b8233e. Final release-JAR verification is pending; this document does not announce publication. See [the media and publication handoff](media-plan.md).
 
 PonHub adapts AddressBook-Level3 into a desktop workspace for tuition centre administrators. Manage Students, Tutors and Parents, enrol multiple Students in one recurring Lesson, and keep dated attendance even after a Student leaves. Commands remain keyboard-driven, with separate people and lesson/history views.
 
@@ -38,6 +38,20 @@ PonHub adapts AddressBook-Level3 into a desktop workspace for tuition centre adm
 - Dependency guards prevent deleting a Student with membership/history, a Tutor with assigned Lessons, or a Lesson with a roster/history. Deletion does not silently cascade through related records, and deleted IDs are not reused.
 - Invalid, unsupported or legacy operational files start a protected session with recovery guidance and only `help`, `list` and `exit`. The original file is preserved. Existing AB3 data is not automatically imported: back it up and follow the User Guide's manual re-entry instructions.
 - Inline `help`, `help COMMAND`, the Help menu and F1 describe the routes available in the current session.
+
+## PonHub in action
+
+![Two Students sharing one recurring Lesson](../../docs/images/Ui.png)
+
+Alex and Jamie share one Math Lesson with one Tutor and schedule.
+
+![Independent attendance for the same occurrence](../../docs/images/AttendanceDetails.jpg)
+
+Alex is present while Jamie is absent on the same date.
+
+![Retained attendance after unenrolment](../../docs/images/AttendanceHistory.jpg)
+
+After correcting Alex's record and unenrolling Alex, the dated absence remains visible as former-enrolment history.
 
 ## Before you start
 

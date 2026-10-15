@@ -300,9 +300,9 @@ Examples, after creating the Math lesson above:
 people filters, order, selection and command positions, and never save operational data. Invalid commands leave
 both views intact. Committed changes refresh the selected results; a failed save leaves the previous cards intact.
 
-![Separate people and shared-lesson results](images/LessonResults.png)
+![Separate people and shared-lesson results](images/Ui.png)
 
-The screenshot uses disposable sample data and shows one shared lesson with two students and an empty lesson.
+The screenshot uses disposable sample data and shows Alex and Jamie enrolled in one shared Math lesson.
 
 ## Data protection in the current build
 
@@ -584,6 +584,14 @@ roster/history row or stable ID suffix. `lessons`, `showlesson` or a lesson sear
 
 Deleting the selected Student or the selected Lesson successfully clears that history selection and returns the
 right panel to lesson results. Unrelated deletions and failed deletions preserve a valid history selection.
+
+![Independent dated attendance for two Students](images/AttendanceDetails.jpg)
+
+Alex is present and Jamie is absent for the same Lesson occurrence.
+
+![Retained attendance after unenrolment](images/AttendanceHistory.jpg)
+
+After correcting Alex to absent and unenrolling Alex, history retains the dated absence with former-enrolment context.
 
 <a id="planned-failure-and-data-behavior"></a>
 
