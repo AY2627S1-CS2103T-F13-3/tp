@@ -13,6 +13,8 @@ title: Developer Guide
   [SE-EDU initiative](https://se-education.org); existing licences and reuse credits are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson),
   and [JUnit 5](https://junit.org/junit5/).
+* Vincent (`gugrusaurus`) used OpenAI Codex for #102's integrated guide audit, shared quick-start and
+  active-scope corrections, anchor checks and packaged-parser workflow replay. Feature authorship is retained.
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex for these bounded contributions, including their tests
   and documentation: role records/common interface; ordered registry and import/export state;
   detached and aggregate-backed role-filtered views; current-index resolution; card projections,
@@ -459,7 +461,8 @@ short fragments; `tu/` searches tutor names. `sn/` examines the same lesson's cu
 rosters. Matching two students still emits one Lesson. There is no cross-lesson combination of day, subject, room,
 tutor or student conditions. All seven lesson prefixes follow the existing [criteria matrix](#supported-criteria).
 The parser rejects unsupported, incompatible, blank, repeated and malformed values before query execution.
-An empty search result is valid. People/parent/tutor relationship traversal remains in its separate integration slices.
+An empty search result is valid. Active Student, Parent and Tutor relationship searches consume these indexes
+through `PersonRelationshipSearch`; see the [supported criteria](#supported-criteria) and category-specific explanations.
 
 All derived indexes rebuild on `PonHubData.stateProperty()` publication, after successful save/commit or restore,
 never per query. Already returned observable lists retain object identity while their entries refresh. This covers
@@ -949,14 +952,14 @@ fixture recipes and tracks full-product samples and acceptance after runtime int
 
 [`SearchCriteriaParser`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/parser/SearchCriteriaParser.java)
 parses the arguments
-after `search` into immutable `SearchCriteria`. It produces a value object, not a `Command`; routing and help are
-connected only when each search slice activates. `SearchField` owns category compatibility and field matching, while
+after `search` into immutable `SearchCriteria`. It produces a value object, not a `Command`; the active session
+routes all four search categories and exposes their help. `SearchField` owns category compatibility and field matching, while
 the canonical query layer combines fields against records and relationships. Parsing never writes operational data.
 
 #### Supported criteria
 
 The required category is `c/student`, `c/parent`, `c/tutor` or `c/lesson`, ignoring category-value case. Category-only
-input is valid. Prefixes are lowercase, order-independent and unique within a command. The full planned matrix is:
+input is valid. Prefixes are lowercase, order-independent and unique within a command. The active filter matrix is:
 
 | Prefix | Field | Student | Parent | Tutor | Lesson | Matching |
 |--------|-------|---------|--------|-------|--------|----------|
@@ -1514,7 +1517,9 @@ Use a disposable application folder containing the packaged JAR and a copied sup
    directory. Close the app and compare operational bytes and directory contents with the retained copies.
    Expect no changes. Repeat in a fresh folder with missing operational data; it stays absent.
 
-### Planned person-index integration checks
+<a id="planned-person-index-integration-checks"></a>
+
+### Active person-index integration checks
 
 Role-filtered listing, membership selectors, guarded person deletion, lesson results and add/failure checks
 are active; follow the [shared selector contract](#shared-lesson-target-contract).
@@ -1861,6 +1866,11 @@ startup exposes no `showlesson` route.
    through long results at narrow widths. Automated FXML checks do not replace native platform/scaling acceptance.
 5. Compare saved bytes before and after history/help/error commands. A missing file stays missing; protected startup
    rejects history and its help topic. These checks preserve the people list and do not treat history rows as selectors.
+6. On disposable data, select empty history for an unreferenced Student, then delete that Student using their current
+   people-list position. Repeat with history filtered to an unreferenced empty Lesson, deleting it with `deletelesson`.
+   Each successful deletion clears the history context and restores the lesson pane. Unrelated deletions preserve a
+   valid selection; rejected deletions and injected save failures preserve the previous pane, context and rows.
+   `CanonicalHistoryDeletionTest` covers both identities, failed saves and successful retry.
 
 <a id="planned-canonical-loading-and-recovery"></a>
 
