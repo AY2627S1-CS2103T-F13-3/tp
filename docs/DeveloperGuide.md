@@ -166,8 +166,8 @@ matches or ambiguity without mutation, requesting a phone to disambiguate. Searc
 matches a case-insensitive name fragment; Tutor-category name search uses `n/`.
 
 The [UG command formats](UserGuide.html#planned-command-summary) and [search matrix](#supported-criteria)
-define the complete planned syntax and filters. A delivered search slice advertises only available
-filters while retaining the remaining target. Documentation alone does not activate a route.
+define the supported syntax and filters. The [runtime summary](#current-increment-and-command-integration)
+identifies active routes; future features remain in Requirements.
 
 **Scheduling and history.** Create each lesson once with an empty roster. Reject tutor/room clashes
 between distinct same-weekday lessons, and a student's clashes with other enrolled lessons. Joining
@@ -938,7 +938,7 @@ It supports representative acceptance work without duplicating validation or all
 | Records | Purpose |
 | --- | --- |
 | `S1`, `S2`, `P1` | Siblings share parent phone `00987654`, matching Pat Tan's own phone; optional Student contacts are absent/present. |
-| `T1`, `T2` | Both tutors are Mei Lim with distinct phones; one omits email/address, exercising future name/phone disambiguation. |
+| `T1`, `T2` | Both tutors are Mei Lim with distinct phones; one omits email/address, exercising name/phone disambiguation. |
 | `S1`, `S3` | Same-name Alex Tan students with different parent phones remain distinct. |
 
 Phone zeros and email case are preserved. These samples are dormant and contain no lessons, enrolments,
@@ -949,14 +949,14 @@ fixture recipes and tracks full-product samples and acceptance after runtime int
 
 [`SearchCriteriaParser`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/parser/SearchCriteriaParser.java)
 parses the arguments
-after `search` into immutable `SearchCriteria`. It produces a value object, not a `Command`; routing and help are
-connected only when each search slice activates. `SearchField` owns category compatibility and field matching, while
+after `search` into immutable `SearchCriteria`. It produces a value object, not a `Command`; the canonical session
+routes validated criteria to people or lesson retrieval. `SearchField` owns category compatibility and field matching, while
 the canonical query layer combines fields against records and relationships. Parsing never writes operational data.
 
 #### Supported criteria
 
 The required category is `c/student`, `c/parent`, `c/tutor` or `c/lesson`, ignoring category-value case. Category-only
-input is valid. Prefixes are lowercase, order-independent and unique within a command. The full planned matrix is:
+input is valid. Prefixes are lowercase, order-independent and unique within a command. The supported matrix is:
 
 | Prefix | Field | Student | Parent | Tutor | Lesson | Matching |
 |--------|-------|---------|--------|-------|--------|----------|
@@ -1514,7 +1514,9 @@ Use a disposable application folder containing the packaged JAR and a copied sup
    directory. Close the app and compare operational bytes and directory contents with the retained copies.
    Expect no changes. Repeat in a fresh folder with missing operational data; it stays absent.
 
-### Planned person-index integration checks
+<a id="planned-person-index-integration-checks"></a>
+
+### Person-index integration checks
 
 Role-filtered listing, membership selectors, guarded person deletion, lesson results and add/failure checks
 are active; follow the [shared selector contract](#shared-lesson-target-contract).
@@ -1861,6 +1863,10 @@ startup exposes no `showlesson` route.
    through long results at narrow widths. Automated FXML checks do not replace native platform/scaling acceptance.
 5. Compare saved bytes before and after history/help/error commands. A missing file stays missing; protected startup
    rejects history and its help topic. These checks preserve the people list and do not treat history rows as selectors.
+6. Open empty history for an unreferenced Student, then delete that Student. Repeat with history filtered to an empty,
+   unreferenced Lesson and delete that Lesson. Each successful deletion clears the history context and restores the
+   lesson pane. Unrelated deletions preserve valid history. A dependency rejection or failed save preserves the prior
+   pane, context, entries and stored bytes; a successful retry invalidates only a deleted selection.
 
 <a id="planned-canonical-loading-and-recovery"></a>
 

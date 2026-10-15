@@ -322,14 +322,18 @@ To recover:
 
 The default startup leaves an older `data/addressbook.json` untouched. Selecting an unversioned AB3 file with `--data` rejects it and preserves its bytes; PonHub does not guess roles or migrate it automatically. Back it up, choose a separate previously unused store inside the JAR folder, such as `java -jar FILENAME.jar --data="separate store/ponhub.json"`, then manually add each person with an explicit role. There is no importer or setup command. Verify the new records before relying on the new store.
 
-## Planned shared-lesson workflow
+<a id="planned-shared-lesson-workflow"></a>
+
+## Shared-lesson workflow
 
 The following sections record the shared-lesson and guarded-deletion contracts. Role-aware add/list,
 `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `deletelesson`, `lessons`, own-contact people search,
 lesson details, history, lesson search and Student, Parent and Tutor relationship search are active.
 Use the [current command summary](#current-command-summary) and your build's `help` for active routes.
 
-### Reading the planned command formats
+<a id="reading-the-planned-command-formats"></a>
+
+### Reading the command formats
 
 * Uppercase words are placeholders; replace them with your values. Square brackets indicate optional input and are not typed.
 * `INDEX` is a positive integer identifying a person's position in the currently displayed, filtered people list. `STUDENT_INDEX` uses that same list and must select a student, even when other roles are displayed. Run `list` or a people search and check the current positions before selecting a person.
@@ -340,11 +344,11 @@ Use the [current command summary](#current-command-summary) and your build's `he
 * `st/HHMM` and `et/HHMM` use four-digit 24-hour times. `d/` takes a weekday for lesson creation/search and a real `YYYY-MM-DD` date for attendance or dated lesson details. `s/` takes a subject for creation/search and `present` or `absent` for `mark`.
 * Type command names and prefixes in lowercase. Supply each prefix at most once, in any order. Omit unknown optional fields; do not supply blank values.
 
-### Planned quick start
+<a id="planned-quick-start"></a>
 
-After the remaining commands are integrated, a fresh dataset can use this complete workflow. The active
-`addlesson`, `enrol`, `unenrol`, `mark` and `unmark` commands already support the creation, membership and attendance
-mutation steps below. `addlesson` returns the
+### Shared-lesson example
+
+All commands in this workflow are active. Start with a fresh dataset. `addlesson` returns the
 allocated lesson ID; substitute it for `L1` in later commands if necessary.
 The `list r/student` result below places Alex at position 1 and Jamie at position 2. Recheck those positions when
 using an existing dataset.
@@ -578,10 +582,14 @@ unenrolment, an open history view refreshes from committed data. History retriev
 current people filter, order, selection or indices. Use the Student's current position in the people list, not a
 roster/history row or stable ID suffix. `lessons`, `showlesson` or a lesson search returns the right panel to lesson results. Invalid requests preserve the prior panel.
 
-### Planned failure and data behavior
+Deleting the selected Student or the selected Lesson successfully clears that history selection and returns the
+right panel to lesson results. Unrelated deletions and failed deletions preserve a valid history selection.
 
-The complete target saves people, shared lessons, memberships, attendance and IDs together. Current persistence saves
-people, validated shared lessons/rosters and retained attendance in the selected file. `addlesson`, `deletelesson`,
+<a id="planned-failure-and-data-behavior"></a>
+
+### Failure and data behavior
+
+PonHub saves people, shared lessons/rosters, retained attendance and ID allocation state together in the selected file. `addlesson`, `deletelesson`,
 `enrol` and `unenrol` use that protected transaction, as do changed `mark` and `unmark` operations. Invalid
 attendance commands,
 missing-record/identical-status no-ops and failed saves leave the saved file, aggregate and current people view unchanged.
@@ -612,12 +620,12 @@ name is unique. Use `help addlesson` for the complete active syntax.
 
 --------------------------------------------------------------------------------------------------------------------
 
-## Planned command summary
+<a id="planned-command-summary"></a>
 
-This table preserves the complete target, including active add/addlesson/enrol/unenrol/mark/unmark/delete/
-deletelesson/list/lessons/showlesson/history, own-contact and lesson search/help/exit formats. Other routes remain planned. These
-formats use the
-[planned command conventions](#reading-the-planned-command-formats); listing a route here does not activate it.
+## Command format reference
+
+All formats in this table are active in normal sessions. A protected session permits only `help`, `list` and `exit`.
+These formats use the [command conventions](#reading-the-planned-command-formats).
 Person/student selectors come from the current people list, while every existing-lesson selector uses a stable
 `lid/` reference.
 
