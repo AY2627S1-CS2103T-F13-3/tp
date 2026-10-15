@@ -1,6 +1,6 @@
 # PonHub v1.3 — What's New
 
-Draft release copy. Demonstration media below uses accepted application source c5b8233e. Final release-JAR verification is pending; this document does not announce publication. See [the media and publication handoff](media-plan.md).
+Release copy reconciled against v1.3 candidate source `b513d313d1ba219df662d401bc0949e5afb49309`. The candidate has recorded #103 verification; Vincent confirms that issue is closed. Publication is handled separately under #153. The original Mac demonstration media below retains its `c5b8233e` source identity; exact-candidate Windows captures and the claim-by-claim check are in [the candidate handoff](candidate-handoff.md). See also [the media manifest](media-plan.md).
 
 PonHub adapts AddressBook-Level3 into a desktop workspace for tuition centre administrators. Manage Students, Tutors and Parents, enrol multiple Students in one recurring Lesson, and keep dated attendance even after a Student leaves. Commands remain keyboard-driven, with separate people and lesson/history views.
 

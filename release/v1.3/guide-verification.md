@@ -2,6 +2,8 @@
 
 Vincent's Codex-assisted #102 verification, following [completed #101 acceptance](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101#issuecomment-6194333977). This records completed checks and the remaining integration gate; it is not final release-JAR/platform acceptance.
 
+Current release follow-up: #249/#251 are merged and #102 is complete. [candidate-handoff.md](candidate-handoff.md) reconciles the release copy and original captures against the v1.3 artifact; Vincent confirms #103 is closed. The source/runtime identities and historical deployment observations below remain unchanged.
+
 ## Source and artifact
 
 - Accepted application: `c5b8233e9bfaf5b8c7eb7f6af8932345c17c4c63`, containing merged #250's history contrast fix.
