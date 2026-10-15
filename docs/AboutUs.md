@@ -29,6 +29,7 @@ We are a team based in the [School of Computing, National University of Singapor
 * Responsibilities:
   * Implement saving, validated loading, rollback and retained attendance-history persistence.
   * Coordinate deliverables, deadlines and milestone closeout; maintain README and quick-start material.
+  * Coordinate v1.3 release notes and final integrated UI screenshot/demo capture for #102/#152.
 
 ### Benjamin Ng
 
@@ -39,7 +40,7 @@ We are a team based in the [School of Computing, National University of Singapor
 * Role: Developer (Retrieval and Views)
 * Responsibilities:
   * Develop Model filtering and UI results for search and lesson-information retrieval.
-  * Implement shared-lesson, roster and attendance-history views; capture the actual integrated UI screenshot.
+  * Implement shared-lesson, roster and attendance-history views; contribute retrieval feature facts and media.
   * Maintain retrieval/view feature documentation and Developer Guide use cases.
 
 ### Ernest Chua
@@ -68,4 +69,4 @@ We are a team based in the [School of Computing, National University of Singapor
 
 These responsibilities follow the [agreed shared-lesson contracts](DeveloperGuide.html#shared-lesson-target-contract). Each feature owner writes their own UG/DG sections, tests and applicable AI/reuse attribution as behavior is delivered; Ernest coordinates shared conventions and consistency. Documentation ownership does not imply that a planned feature is already active.
 
-The final `docs/images/Ui.png` capture is owned by Ben. The existing image predates the completed shared-lesson workflow and must be replaced after integration.
+Vincent owns the final integrated UI screenshot/demo capture for #102/#152 against the accepted release candidate. Ben retains authorship of his existing retrieval media and search-feature handoff. Reuse matching media with credit and refresh the guide/README image references consistently after final verification.

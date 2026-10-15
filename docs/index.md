@@ -6,7 +6,7 @@ title: PonHub
 [![Java CI](https://github.com/AY2627S1-CS2103T-F13-3/tp/actions/workflows/gradle.yml/badge.svg)](https://github.com/AY2627S1-CS2103T-F13-3/tp/actions/workflows/gradle.yml)
 [![codecov](https://codecov.io/gh/AY2627S1-CS2103T-F13-3/tp/branch/master/graph/badge.svg)](https://codecov.io/gh/AY2627S1-CS2103T-F13-3/tp)
 
-![Ui](images/LessonResults.png)
+![Two Students sharing one Lesson](images/Ui.png)
 
 
 
