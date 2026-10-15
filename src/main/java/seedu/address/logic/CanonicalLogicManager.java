@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.collections.ObservableList;
@@ -30,8 +31,6 @@ import seedu.address.model.search.PersonSearchMatch;
  * Commands, cards and lesson retrieval share the session's root without an inherited AddressBook model.
  */
 public final class CanonicalLogicManager implements Logic {
-    private static final String ATTENDANCE_UNAVAILABLE = "Attendance history is not implemented yet";
-
     private final Logger logger = LogsCenter.getLogger(CanonicalLogicManager.class);
 
     private final CanonicalPeopleSession session;
@@ -112,12 +111,27 @@ public final class CanonicalLogicManager implements Logic {
 
     @Override
     public ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId) {
-        throw new UnsupportedOperationException(ATTENDANCE_UNAVAILABLE);
+        return session.getLessonQueries().getAttendanceHistory(studentId);
     }
 
     @Override
     public ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId, LessonId lessonId) {
-        throw new UnsupportedOperationException(ATTENDANCE_UNAVAILABLE);
+        return session.getLessonQueries().getAttendanceHistory(studentId, lessonId);
+    }
+
+    @Override
+    public ObservableList<AttendanceHistoryEntry> getDisplayedHistory() {
+        return session.getDisplayedHistory();
+    }
+
+    @Override
+    public ReadOnlyStringProperty historyResultContextProperty() {
+        return session.historyResultContextProperty();
+    }
+
+    @Override
+    public ReadOnlyBooleanProperty historyViewActiveProperty() {
+        return session.historyViewActiveProperty();
     }
 
     @Override

@@ -82,6 +82,13 @@ public final class CanonicalCommandCatalog {
             "Usage: unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD\n"
                     + "Removes only that dated attendance record, including retained history after unenrolment.\n"
                     + "Example: unmark 1 lid/L1 d/2026-10-05";
+    public static final String MESSAGE_HISTORY_USAGE = "Usage: history STUDENT_INDEX [lid/LESSON_ID]\n"
+            + "Shows retained dated attendance, newest first, then by stable Lesson ID.\n"
+            + "STUDENT_INDEX selects a Student in the current people list.\n"
+            + "An optional existing Lesson ID filters records.\n"
+            + "A missing record is unrecorded, not absent. Current and former membership are shown separately.\n"
+            + "The people list and operational data remain unchanged.\n"
+            + "Example: after list r/student, history 1 lid/L1";
     public static final String MESSAGE_DELETE_USAGE = "Usage: delete INDEX\n"
             + "INDEX is the person's current position in the displayed people list.\n"
             + "Students with enrolments or retained attendance and tutors with assigned lessons cannot be deleted.\n"
@@ -102,6 +109,8 @@ public final class CanonicalCommandCatalog {
             MESSAGE_MARK_USAGE);
     private static final Entry UNMARK = new Entry("unmark", "Remove one dated lesson attendance record",
             MESSAGE_UNMARK_USAGE);
+    private static final Entry HISTORY = new Entry("history", "Show a Student's retained attendance",
+            MESSAGE_HISTORY_USAGE);
     private static final Entry DELETE = new Entry("delete", "Delete an unreferenced person", MESSAGE_DELETE_USAGE);
     private static final Entry DELETE_LESSON = new Entry("deletelesson", "Delete an unreferenced shared lesson",
             MESSAGE_DELETE_LESSON_USAGE);
@@ -115,8 +124,8 @@ public final class CanonicalCommandCatalog {
     private static final Entry HELP = new Entry("help", "Show help or one command's guidance", MESSAGE_HELP_USAGE);
     private static final Entry EXIT = new Entry("exit", "Close PonHub", ExitCommand.MESSAGE_USAGE);
     private static final List<Entry> ENTRIES =
-            List.of(ADD, ADD_LESSON, ENROL, UNENROL, MARK, UNMARK, DELETE, DELETE_LESSON, LIST, LESSONS,
-                    SHOW_LESSON, SEARCH, HELP, EXIT);
+            List.of(ADD, ADD_LESSON, ENROL, UNENROL, MARK, UNMARK, HISTORY, DELETE, DELETE_LESSON,
+                    LIST, LESSONS, SHOW_LESSON, SEARCH, HELP, EXIT);
     private static final List<Entry> PROTECTED_ENTRIES = List.of(HELP, LIST, EXIT);
 
     private CanonicalCommandCatalog() {

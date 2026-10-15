@@ -16,6 +16,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import seedu.address.model.PonHubData;
 import seedu.address.model.PonHubDataState;
+import seedu.address.model.attendance.Attendance;
 import seedu.address.model.lesson.Lesson;
 import seedu.address.model.lesson.LessonId;
 import seedu.address.model.person.PersonId;
@@ -40,6 +41,9 @@ public final class LessonQueries implements LessonQuerySource {
             .comparing((LessonView lesson) -> lesson.getTimeSlot().getDay())
             .thenComparing(lesson -> lesson.getTimeSlot().getStartTime())
             .thenComparing(LessonView::getLessonId);
+    private static final Comparator<AttendanceHistoryEntry> HISTORY_ORDER = Comparator
+            .comparing(AttendanceHistoryEntry::getDate).reversed()
+            .thenComparing(AttendanceHistoryEntry::getLessonId);
 
     private final ResultList<LessonView> catalogue = new ResultList<>();
     private final ResultList<LessonView> filtered = new ResultList<>();
@@ -53,6 +57,9 @@ public final class LessonQueries implements LessonQuerySource {
     private final Map<PersonId, ResultList<LessonView>> studentSubscriptions = new HashMap<>();
     private final Map<PersonId, ResultList<LessonView>> tutorSubscriptions = new HashMap<>();
     private final Map<LessonId, ResultList<StudentView>> rosterSubscriptions = new HashMap<>();
+    private final Map<PersonId, List<AttendanceHistoryEntry>> histories = new HashMap<>();
+    private final Map<PersonId, ResultList<AttendanceHistoryEntry>> historySubscriptions = new HashMap<>();
+    private final Map<HistoryKey, ResultList<AttendanceHistoryEntry>> lessonHistorySubscriptions = new HashMap<>();
     private SearchCriteria activeFilter = new SearchCriteria(SearchCategory.LESSON, Map.of());
 
     /** Connects query results to the supplied canonical root's committed publication boundary. */
@@ -94,6 +101,25 @@ public final class LessonQueries implements LessonQuerySource {
     public ObservableList<LessonView> getTutorSchedule(PersonId tutorId) {
         requirePerson(tutorId, PersonRole.TUTOR);
         return subscribed(tutorId, tutorSubscriptions, tutorSchedules);
+    }
+
+    @Override
+    public ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId) {
+        requirePerson(studentId, PersonRole.STUDENT);
+        return subscribed(studentId, historySubscriptions, histories);
+    }
+
+    @Override
+    public ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId, LessonId lessonId) {
+        requirePerson(studentId, PersonRole.STUDENT);
+        requireNonNull(lessonId);
+        checkArgument(lessonsById.containsKey(lessonId), "The lesson does not exist: " + lessonId);
+        HistoryKey key = new HistoryKey(studentId, lessonId);
+        return lessonHistorySubscriptions.computeIfAbsent(key, unused -> {
+            ResultList<AttendanceHistoryEntry> result = new ResultList<>();
+            result.replace(historyForLesson(key));
+            return result;
+        }).readOnly;
     }
 
     /** Returns the immutable criteria used by the active lesson result list. */
@@ -177,13 +203,16 @@ public final class LessonQueries implements LessonQuerySource {
         studentLessons.clear();
         tutorSchedules.clear();
         rosters.clear();
+        histories.clear();
         studentsByParentPhone.clear();
         exactIndexes.clear();
         EXACT_FIELDS.forEach(field -> exactIndexes.put(field, new HashMap<>()));
         snapshot.people().getPeople().forEach(person -> peopleById.put(person.getId(), person));
 
         List<LessonView> entries = new ArrayList<>();
+        Map<LessonId, Lesson> lessons = new HashMap<>();
         for (Lesson lesson : snapshot.lessons()) {
+            lessons.put(lesson.getId(), lesson);
             LessonView entry = new LessonViewData(lesson, peopleById.get(lesson.getTutorId()).getName().fullName);
             entries.add(entry);
             lessonsById.put(lesson.getId(), entry);
@@ -207,6 +236,13 @@ public final class LessonQueries implements LessonQuerySource {
                 }
             }
         }
+        for (Attendance attendance : snapshot.attendance()) {
+            Lesson lesson = lessons.get(attendance.getLessonId());
+            histories.computeIfAbsent(attendance.getStudentId(), unused -> new ArrayList<>())
+                    .add(new AttendanceHistoryEntryData(attendance,
+                            lesson.getEnrolledStudentIds().contains(attendance.getStudentId())));
+        }
+        histories.values().forEach(history -> history.sort(HISTORY_ORDER));
         tutorSchedules.values().forEach(schedule -> schedule.sort(SCHEDULE_ORDER));
         studentsByParentPhone.replaceAll((phone, students) -> List.copyOf(students));
         // All derived indexes are complete before any observable list publishes replacement entries.
@@ -214,7 +250,18 @@ public final class LessonQueries implements LessonQuerySource {
         refreshSubscriptions(studentSubscriptions, studentLessons);
         refreshSubscriptions(tutorSubscriptions, tutorSchedules);
         refreshSubscriptions(rosterSubscriptions, rosters);
+        refreshSubscriptions(historySubscriptions, histories);
+        List.copyOf(lessonHistorySubscriptions.entrySet()).forEach(entry ->
+                entry.getValue().replace(historyForLesson(entry.getKey())));
         filtered.replace(searchLessons(activeFilter));
+    }
+
+    private List<AttendanceHistoryEntry> historyForLesson(HistoryKey key) {
+        return histories.getOrDefault(key.studentId(), List.of()).stream()
+                .filter(entry -> entry.getLessonId().equals(key.lessonId())).toList();
+    }
+
+    private record HistoryKey(PersonId studentId, LessonId lessonId) {
     }
 
     private void index(SearchField field, String value, LessonView entry) {

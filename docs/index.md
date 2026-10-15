@@ -16,7 +16,8 @@ The current build supports role-aware people addition/listing, own-contact peopl
 shared-lesson creation, enrolment/unenrolment, dated attendance marking/removal and guarded person/Lesson deletion.
 Type `help`
 or `help COMMAND` for inline guidance, also available through the Help menu and F1. `lessons` and all seven
-lesson-search filters show separate shared-lesson results. Attendance history remains planned; consult the
+lesson-search filters show separate shared-lesson results; `showlesson` displays roster and dated attendance.
+`history` displays retained Student attendance, and Student, Parent and Tutor relationship searches are active. Consult the
 [current command summary](UserGuide.html#current-command-summary) before trying the wider workflow.
 The UI image shows the current people and lesson panels using disposable sample data.
 

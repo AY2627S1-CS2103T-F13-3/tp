@@ -126,10 +126,13 @@ public class CanonicalLogicManagerTest {
                 logic.getLessonRoster(LessonQueryTestData.SHARED_LESSON));
         assertSame(queries.getTutorSchedule(LessonQueryTestData.TUTOR_ONE),
                 logic.getTutorSchedule(LessonQueryTestData.TUTOR_ONE));
-        assertThrows(UnsupportedOperationException.class, () ->
+        assertSame(queries.getAttendanceHistory(LessonQueryTestData.STUDENT_ONE),
                 logic.getAttendanceHistory(LessonQueryTestData.STUDENT_ONE));
-        assertThrows(UnsupportedOperationException.class, () ->
+        assertSame(queries.getAttendanceHistory(LessonQueryTestData.STUDENT_ONE, LessonQueryTestData.SHARED_LESSON),
                 logic.getAttendanceHistory(LessonQueryTestData.STUDENT_ONE, LessonQueryTestData.SHARED_LESSON));
+        assertSame(session.getDisplayedHistory(), logic.getDisplayedHistory());
+        assertSame(session.historyResultContextProperty(), logic.historyResultContextProperty());
+        assertSame(session.historyViewActiveProperty(), logic.historyViewActiveProperty());
         assertSame(people, logic.getPersonRecords());
         assertEquals(visibleIds, people.stream().map(person -> person.getId()).toList());
         assertArrayEquals(before, Files.readAllBytes(path));
@@ -174,6 +177,9 @@ public class CanonicalLogicManagerTest {
         assertThrows(UnsupportedOperationException.class, legacy::personSearchContextProperty);
         assertThrows(UnsupportedOperationException.class, legacy::getDisplayedLessons);
         assertThrows(UnsupportedOperationException.class, legacy::lessonResultContextProperty);
+        assertThrows(UnsupportedOperationException.class, legacy::getDisplayedHistory);
+        assertThrows(UnsupportedOperationException.class, legacy::historyResultContextProperty);
+        assertThrows(UnsupportedOperationException.class, legacy::historyViewActiveProperty);
         assertFalse(Files.exists(directory.resolve("legacy.json")));
     }
 

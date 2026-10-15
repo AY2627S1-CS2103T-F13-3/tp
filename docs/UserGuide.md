@@ -6,7 +6,7 @@ title: User Guide
 PonHub is a desktop app for tuition centre administrators to manage student, tutor and parent records and create
 shared recurring lessons. Its command box lets you work quickly from the keyboard while the graphical interface
 shows separate people and shared-lesson results. Shared-lesson enrolment, dated attendance marking and guarded
-person/lesson deletion and dated attendance removal are active; attendance history remains planned.
+person/lesson deletion, dated attendance removal and attendance history are active.
 
 * Table of Contents
 {:toc}
@@ -38,6 +38,7 @@ person/lesson deletion and dated attendance removal are active; attendance histo
    * `mark 1 lid/L1 d/2026-10-05 s/absent` corrects only Alex's record.
    * `unenrol 1 lid/L1` removes Alex's membership while keeping both attendance records.
      `lessons si/1` now shows no current lessons; `lessons` still shows `L1` with Jamie enrolled.
+   * `history 1 lid/L1` shows Alex's retained absence with former-member context after unenrolment.
    * `unmark 1 lid/L1 d/2026-10-05` removes Alex's retained record after unenrolment, keeping Jamie's record and membership.
      Repeating it reports no change.
    * `deletelesson lid/L1` is blocked because Jamie's membership and attendance still reference `L1`.
@@ -48,7 +49,7 @@ person/lesson deletion and dated attendance removal are active; attendance histo
    * `help ADD` shows the same guidance as `help add`.
    * `exit` closes PonHub.
 
-The first successful mutation creates the data file. Keep the same JAR folder to load the saved records and stable IDs after restart. Reopen it, run `list r/student`, then `lessons`: Alex and Jamie retain their IDs, and `L1` still has Jamie enrolled. Attendance is saved, but this build has no attendance-history display command yet. These example positions and `L1` assume a fresh dataset; with existing data, use the returned Lesson ID and recheck current people positions before each student command.
+The first successful mutation creates the data file. Keep the same JAR folder to load the saved records and stable IDs after restart. Reopen it, run `list r/student`, then `lessons`: Alex and Jamie retain their IDs, and `L1` still has Jamie enrolled. `history 2 lid/L1` shows Jamie's retained dated attendance. These example positions and `L1` assume a fresh dataset; with existing data, use the returned Lesson ID and recheck current people positions before each student command.
 
 For a separate store, launch with `java -jar FILENAME.jar --data=data/another-ponhub.json`. Quote an argument containing spaces, for example `java -jar FILENAME.jar --data="separate store/ponhub.json"`. Select a previously unused path when re-entering legacy records; see [Data protection](#data-protection-in-the-current-build).
 
@@ -56,8 +57,8 @@ For a separate store, launch with `java -jar FILENAME.jar --data=data/another-po
 
 The active routes use one saved aggregate with role-specific people, stable IDs and shared lessons whose rosters
 can be changed with `enrol` and `unenrol`. Own-contact people search, attendance marking, guarded person and Lesson
-deletion, lesson listing, lesson search, lesson details and attendance removal are active, alongside Student,
-Parent and Tutor relationship search. Attendance history remains planned. Their specifications follow under
+deletion, lesson listing, lesson search, lesson details, attendance removal and attendance history are active,
+alongside Student, Parent and Tutor relationship search. Their specifications follow under
 [Planned shared-lesson workflow](#planned-shared-lesson-workflow). Type `help` to inspect the commands available
 in your session. `edit`, `clear` and `find` are unavailable.
 
@@ -75,6 +76,7 @@ in your session. `edit`, `clear` and `find` are unavailable.
 | List people | `list [r/ROLE]` | `list r/student` |
 | Search people | `search c/CATEGORY [FILTER/VALUE]...` | `search c/student n/Alex d/Mon s/Math` |
 | List shared lessons | `lessons [si/STUDENT_INDEX]` | `lessons` |
+| Attendance history | `history STUDENT_INDEX [lid/LESSON_ID]` | `history 1 lid/L1` |
 | Show lesson details | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` | `showlesson lid/L1 d/2026-10-05` |
 | Search shared lessons | `search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]` | `search c/lesson tu/mei d/Mon` |
 | Get help | `help [COMMAND]` | `help add` |
@@ -88,7 +90,7 @@ Cards display a current position separately from the stable ID, such as `S1`. Ad
 
 `help` shows the current supported-command catalogue in Result Display. In a normal session, `help add`,
 `help addlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark`, `help delete`, `help deletelesson`,
-`help list`, `help lessons`, `help showlesson`, `help search`, `help help` and `help exit` show usage guidance.
+`help list`, `help lessons`, `help showlesson`, `help history`, `help search`, `help help` and `help exit` show usage guidance.
 Topic names are case-insensitive, so `help ADD` is
 accepted; the command word `help` remains lowercase. Asking for exit guidance does not exit the application.
 
@@ -102,7 +104,7 @@ Long guidance wraps within Result Display. Scroll vertically to read the rest; e
 * `edit`, `clear` and `find` are absent from the catalogue. For example, `edit` returns
   `Unknown command: 'edit'. Type 'help' to see available commands.` No data changes.
 * In a protected session, help lists only `help`, `list` and `exit`; `help add`, `help addlesson`, `help enrol`,
-  `help unenrol`, `help mark`, `help unmark`, `help delete`, `help deletelesson`, `help lessons`, `help showlesson`
+  `help unenrol`, `help mark`, `help unmark`, `help history`, `help delete`, `help deletelesson`, `help lessons`, `help showlesson`
   and `help search`
   are unavailable.
 
@@ -279,7 +281,7 @@ To show one student's current lessons, find their position in the **current peop
 at position 1. This selects the visible person once. A stable ID such as `S1`, a lesson ID, zero, negative or
 out-of-range position, repeated `si/`, or a position occupied by a tutor/parent is rejected. Changing the people
 filter later does not change which student's lessons are being shown. Attendance retained after unenrolment
-does not make a lesson part of that student's current enrolments; the separate `history` command is planned.
+does not make a lesson part of that student's current enrolments; use `history` to inspect retained records.
 
 Lesson searches always read the complete catalogue. All supplied filters must match **one lesson**. `sn/`
 checks its current roster; without `sn/`, empty lessons can match. Text filters match fragments ignoring case.
@@ -307,7 +309,7 @@ The screenshot uses disposable sample data and shows one shared lesson with two 
 The current build stores people, shared lessons, rosters and their allocation state in `data/ponhub.json` inside the folder containing the JAR. `--data=PATH` selects a different file within that folder or its subfolders; relative paths start from the JAR folder. Absolute paths are accepted only within that folder. Blank paths and paths escaping it, including through symbolic links, are rejected at startup. Select a separate data file: `preferences.json` and the root `addressbook.log*` logging files are reserved, including aliases to them. Window preferences are saved separately in `preferences.json` in the JAR folder; selecting a different store does not change the preference file.
 
 A missing selected file starts a normal empty session and remains missing until the first successful mutation.
-`help`, `list`, `lessons`, `search` and `exit` do not create or rewrite operational data. An invalid, unreadable, corrupt,
+`help`, `list`, `lessons`, `showlesson`, `history`, `search` and `exit` do not create or rewrite operational data. An invalid, unreadable, corrupt,
 unsupported or legacy selected file produces a **Data file protected** warning. The empty list in that session is
 unavailable saved data: it does **not** mean the original records were deleted. Only `help`, `list` and `exit` are
 available, and operational writes are blocked.
@@ -323,10 +325,9 @@ The default startup leaves an older `data/addressbook.json` untouched. Selecting
 ## Planned shared-lesson workflow
 
 The following sections record the shared-lesson and guarded-deletion contracts. Role-aware add/list,
-`addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `deletelesson`, `lessons`, own-contact people search
-and lesson search are active, alongside Student, Parent and Tutor relationship search. Attendance history
-remains planned. Use the [current command summary](#current-command-summary) and your build's
-`help` for active routes.
+`addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `deletelesson`, `lessons`, own-contact people search,
+lesson details, history, lesson search and Student, Parent and Tutor relationship search are active.
+Use the [current command summary](#current-command-summary) and your build's `help` for active routes.
 
 ### Reading the planned command formats
 
@@ -443,7 +444,7 @@ Cancelling one occurrence and editing a Lesson are future scope.
 Enter `lessons` to view each shared lesson once, including lessons with empty rosters. To view a student's currently enrolled lessons, first run `list r/student` and check their current position. If the intended student appears at position 1, enter `lessons si/1`. Catalogue results preserve the current people list and its indices.
 
 The catalogue and student lesson results use lesson creation order. Student lessons show current enrolments;
-past attendance alone does not add a lesson to that list. The planned `history` command will inspect attendance retained after unenrolment.
+past attendance alone does not add a lesson to that list. Use `history` to inspect attendance retained after unenrolment.
 
 **Details (active):** `showlesson lid/LESSON_ID [d/YYYY-MM-DD]`.
 
@@ -565,13 +566,17 @@ Existing historical attendance can be corrected with `mark` or removed with `unm
 selected record does not exist, PonHub reports that nothing changed and does not save. A successful removal makes that
 occurrence unrecorded, not absent. Success, no-op and failure preserve the current people filter, order and command positions.
 
-**History (planned):** `history STUDENT_INDEX [lid/LESSON_ID]`.
+**History (active):** `history STUDENT_INDEX [lid/LESSON_ID]`.
 
 Example: After `list r/student`, if the intended student appears at position 1, enter `history 1 lid/L1` to view their attendance for lesson `L1`.
 
-History will list dated attendance, including former enrolments. Current membership must be distinguishable from
-historical attendance. History retrieval will not change data or the current people list. Roster and history positions
-are not student command selectors; use the Student's current position in the people list. The `history` route is not yet available.
+History shows recorded entries in a separate scrolling panel, newest date first, then by numeric Lesson ID. Each
+entry shows the stable Lesson ID, date, `present` or `absent`, and whether the Student is currently enrolled or a
+former member. An existing Student with no records, or no records for the selected existing Lesson, gets a successful
+empty result. An unrecorded occurrence has no entry; it is never counted as absent. After `mark`, correction, `unmark` or
+unenrolment, an open history view refreshes from committed data. History retrieval does not save data or change the
+current people filter, order, selection or indices. Use the Student's current position in the people list, not a
+roster/history row or stable ID suffix. `lessons`, `showlesson` or a lesson search returns the right panel to lesson results. Invalid requests preserve the prior panel.
 
 ### Planned failure and data behavior
 
@@ -580,7 +585,7 @@ people, validated shared lessons/rosters and retained attendance in the selected
 `enrol` and `unenrol` use that protected transaction, as do changed `mark` and `unmark` operations. Invalid
 attendance commands,
 missing-record/identical-status no-ops and failed saves leave the saved file, aggregate and current people view unchanged.
-Attendance history retrieval remains unavailable. See
+Attendance history retrieval is active and read-only. See
 [Data protection in the current build](#data-protection-in-the-current-build) for actual paths and recovery.
 
 The supported JSON format remains human-editable. Close PonHub and keep a backup before editing. Preserve the supported schema and version, valid field values, stable IDs, relationships and ID allocation state. Correctly edited supported data loads after complete validation. Read-only commands do not save operational data; invalid commands and failed saves preserve the previous data and view. Future mutations must retain the same guarantees.
@@ -593,8 +598,8 @@ The supported JSON format remains human-editable. Close PonHub and keep a backup
 **A**: Close PonHub on both computers. Install the same version or one that supports your data format on the new computer, then copy your operational file into the new JAR folder, preserving its relative path, or select its new location inside that folder with `--data=PATH`. If you use the default location, copy the `data` folder. Keep a backup of the original folder until you have opened PonHub and checked your records on the new computer. Moving a legacy contact file to a canonical-format build does not migrate it; follow the [current recovery rules](#data-protection-in-the-current-build).
 
 **Q**: Should I use a displayed position or an ID?<br>
-**A**: The active `enrol`, `unenrol`, `mark`, `unmark`, `delete` and `lessons si/` selectors, and planned `history`
-selectors, use the person's current position in the displayed people list. Run `list` or a people
+**A**: The active `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `lessons si/` and `history` selectors
+use the person's current position in the displayed people list. Run `list` or a people
 search and check that position first. Cards label stable person IDs separately; those IDs preserve stored identity
 and relationships. Select a lesson with `lid/L1`, for example, including for active `deletelesson`. Create a lesson
 using the tutor's full name and optional exact phone; search tutor names using fragments. Check `help` for the
@@ -610,7 +615,7 @@ name is unique. Use `help addlesson` for the complete active syntax.
 ## Planned command summary
 
 This table preserves the complete target, including active add/addlesson/enrol/unenrol/mark/unmark/delete/
-deletelesson/list/lessons, own-contact and lesson search/help/exit formats. Other routes remain planned. These
+deletelesson/list/lessons/showlesson/history, own-contact and lesson search/help/exit formats. Other routes remain planned. These
 formats use the
 [planned command conventions](#reading-the-planned-command-formats); listing a route here does not activate it.
 Person/student selectors come from the current people list, while every existing-lesson selector uses a stable
@@ -659,7 +664,7 @@ after deleting records. Do not create overlapping bookings for a tutor, room or 
 back-to-back lessons are allowed. Invalid files are rejected as a whole rather than partially loaded.
 Attendance is supported in saved files as described below. `addlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`,
 `lessons` and lesson search are active, guarded `delete` removes eligible people, and `unmark` removes a selected
-dated attendance record. Attendance history remains unavailable.
+dated attendance record. `history` displays retained records without changing them.
 
 For a disposable-file recovery check, change a saved lesson's tutor ID to an absent
 ID and restart. Expect a recovery warning and unchanged file bytes after help/list/exit or an attempted
@@ -684,4 +689,4 @@ lessons while retaining their attendance records. Keep all allocation counters i
 Restart to load the edited file. Invalid dates, weekday mismatches, duplicate keys, unknown fields
 or missing references protect the entire file from writes. Restore or repair the backup and restart;
 repairing the file does not unlock an already protected session. The active `mark` and `unmark` commands apply these
-same rules; `history` remains planned.
+same rules; `history` displays retained records without changing membership.

@@ -10,6 +10,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -124,7 +125,15 @@ public class MainWindow extends UiPart<Stage> {
 
         LessonListPanel lessonListPanel = new LessonListPanel(logic.getDisplayedLessons(),
                 logic.lessonResultContextProperty());
-        lessonListPanelPlaceholder.getChildren().add(lessonListPanel.getRoot());
+        HistoryListPanel historyListPanel = new HistoryListPanel(logic.getDisplayedHistory(),
+                logic.historyResultContextProperty());
+        Region lessonRoot = lessonListPanel.getRoot();
+        Region historyRoot = historyListPanel.getRoot();
+        lessonRoot.visibleProperty().bind(logic.historyViewActiveProperty().not());
+        lessonRoot.managedProperty().bind(lessonRoot.visibleProperty());
+        historyRoot.visibleProperty().bind(logic.historyViewActiveProperty());
+        historyRoot.managedProperty().bind(historyRoot.visibleProperty());
+        lessonListPanelPlaceholder.getChildren().addAll(lessonRoot, historyRoot);
 
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());

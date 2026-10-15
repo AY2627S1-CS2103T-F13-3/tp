@@ -132,7 +132,7 @@ public interface Logic {
      * @param studentId stable identity of an existing student
      * @throws NullPointerException if {@code studentId} is null, once integrated
      * @throws IllegalArgumentException if the ID has the wrong role or is unknown, once integrated
-     * @throws UnsupportedOperationException until canonical retrieval is integrated
+     * @throws UnsupportedOperationException in the retained legacy adapter
      */
     ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId);
 
@@ -143,9 +143,24 @@ public interface Logic {
      * @param lessonId stable identity of an existing lesson
      * @throws NullPointerException if either ID is null, once integrated
      * @throws IllegalArgumentException if an ID has the wrong role or is unknown, once integrated
-     * @throws UnsupportedOperationException until canonical retrieval is integrated
+     * @throws UnsupportedOperationException in the retained legacy adapter
      */
     ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId, LessonId lessonId);
+
+    /** Returns the active attendance result list in the canonical UI. */
+    default ObservableList<AttendanceHistoryEntry> getDisplayedHistory() {
+        throw new UnsupportedOperationException("Attendance history view is unavailable");
+    }
+
+    /** Describes the active attendance selector. */
+    default ReadOnlyStringProperty historyResultContextProperty() {
+        throw new UnsupportedOperationException("Attendance history view is unavailable");
+    }
+
+    /** Indicates whether the right result pane shows attendance history. */
+    default javafx.beans.property.ReadOnlyBooleanProperty historyViewActiveProperty() {
+        throw new UnsupportedOperationException("Attendance history view is unavailable");
+    }
 
     /**
      * Returns the user prefs' GUI settings.
