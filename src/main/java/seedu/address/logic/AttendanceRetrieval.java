@@ -18,7 +18,9 @@ import seedu.address.model.lesson.LessonId;
 import seedu.address.model.query.AttendanceHistoryEntry;
 import seedu.address.model.query.LessonQuerySource;
 
-/** Keeps the selected Student's retained history live in a separate read-only result view. */
+/**
+ * Keeps the selected Student's retained history live in a separate read-only result view.
+ */
 public final class AttendanceRetrieval {
     private final LessonQuerySource queries;
     private final PeopleView peopleView;

@@ -10,7 +10,9 @@ import seedu.address.commons.core.index.Index;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.lesson.LessonId;
 
-/** Parses a current people-list Student index and an optional stable Lesson ID. */
+/**
+ * Parses a current people-list Student index and an optional stable Lesson ID.
+ */
 public final class HistoryArgumentsParser {
     public static final String MESSAGE_USAGE = "Format: history STUDENT_INDEX [lid/LESSON_ID]";
     private static final Pattern FORMAT = Pattern.compile("([0-9]+)(?: +lid/([^\\s]+))?");

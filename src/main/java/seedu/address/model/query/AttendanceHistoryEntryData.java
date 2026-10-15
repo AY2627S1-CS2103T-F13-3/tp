@@ -10,7 +10,9 @@ import seedu.address.model.lesson.LessonId;
 import seedu.address.model.person.PersonId;
 import seedu.address.model.person.PersonRole;
 
-/** Immutable attendance projection with membership taken from the current lesson roster. */
+/**
+ * Immutable attendance projection with membership taken from the current lesson roster.
+ */
 public record AttendanceHistoryEntryData(PersonId studentId, LessonId lessonId, LocalDate date,
         Status status, boolean currentlyEnrolled) implements AttendanceHistoryEntry {
 

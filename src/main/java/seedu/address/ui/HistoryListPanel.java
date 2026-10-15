@@ -12,7 +12,9 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.Region;
 import seedu.address.model.query.AttendanceHistoryEntry;
 
-/** Scrolling retained attendance results, separate from the numbered people list. */
+/**
+ * Scrolling retained attendance results, separate from the numbered people list.
+ */
 public class HistoryListPanel extends UiPart<Region> {
     private static final String FXML = "HistoryListPanel.fxml";
 
