@@ -66,7 +66,7 @@ class PackageSession:
         # CommandBox is directly below the menu, in client-window coordinates.
         run("xdotool", "mousemove", "--window", self.window, "200", "45", "click", "1")
 
-    def command(self, text):
+    def command(self, text, expected_feedback=None):
         offset = self.log.stat().st_size
         run("xdotool", "key", "--clearmodifiers", "ctrl+a")
         run("xdotool", "type", "--clearmodifiers", "--delay", "1", text)
@@ -83,6 +83,9 @@ class PackageSession:
 
         output = self.wait(completed, f"successful command {text!r}")
         self.transcript.append({"session": self.name, "command": text, "output": output})
+        if expected_feedback is not None:
+            require(f"Result: {expected_feedback}" in output,
+                    f"Unexpected result for {text!r}: {output}")
         time.sleep(0.2)  # Allow the resulting control updates to reach the next display pulse.
 
     def screenshot(self, name):
@@ -110,7 +113,7 @@ class PackageSession:
         self.output.close()
 
 
-def verify_state(path):
+def verify_state(path, members=("S2",), first_status="absent"):
     state = json.loads(path.read_text())
     require([person["id"] for person in state["people"]] == ["T1", "S1", "S2"],
             "Creation order or stable person IDs differ")
@@ -119,11 +122,11 @@ def verify_state(path):
     require(len(state["lessons"]) == 1, "Expected one shared Lesson")
     lesson = state["lessons"][0]
     require(lesson["id"] == "L1" and lesson["tutorId"] == "T1"
-            and lesson["enrolledStudentIds"] == ["S2"], "Shared Lesson membership differs")
+            and lesson["enrolledStudentIds"] == list(members), "Shared Lesson membership differs")
     records = {(record["studentId"], record["lessonId"], record["date"], record["status"])
                for record in state["attendance"]}
     require(len(state["attendance"]) == 2 and records == {
-        ("S1", "L1", "2026-10-05", "absent"),
+        ("S1", "L1", "2026-10-05", first_status),
         ("S2", "L1", "2026-10-05", "absent"),
     }, "Independent/corrected/former-member attendance differs")
 
@@ -164,13 +167,15 @@ def main():
             "list r/student", "enrol 1 lid/L1", "enrol 2 lid/L1",
             "mark 1 lid/L1 d/2026-10-05 s/present",
             "mark 2 lid/L1 d/2026-10-05 s/absent",
-            "showlesson lid/L1 d/2026-10-05",
         ]:
             session.command(command)
+        verify_state(data, members=("S1", "S2"), first_status="present")
+        session.command("showlesson lid/L1 d/2026-10-05", "Showing lesson L1 for 2026-10-05.")
         session.screenshot("shared-attendance")
-        for command in ["mark 1 lid/L1 d/2026-10-05 s/absent", "unenrol 1 lid/L1",
-                        "history 1 lid/L1"]:
-            session.command(command)
+        session.command("mark 1 lid/L1 d/2026-10-05 s/absent")
+        verify_state(data, members=("S1", "S2"))
+        session.command("unenrol 1 lid/L1")
+        session.command("history 1 lid/L1", "Showing 1 attendance record(s).")
         verify_state(data)
         original = data.read_bytes()
         session.screenshot("retained-history")
@@ -178,9 +183,19 @@ def main():
         require(data.read_bytes() == original, "Shutdown rewrote operational data")
         session = PackageSession(folder, evidence, "restart", transcript)
         session.ready()
-        for command in ["list r/student", "lessons", "showlesson lid/L1 d/2026-10-05",
-                        "history 1 lid/L1"]:
-            session.command(command)
+        for command, feedback in [
+            ("list r/student", "Showing 2 student(s)."),
+            ("lessons", "Showing 1 lesson(s)."),
+            ("lessons si/1", "Showing 0 lesson(s)."),
+            ("lessons si/2", "Showing 1 lesson(s)."),
+            ("showlesson lid/L1 d/2026-10-05", "Showing lesson L1 for 2026-10-05."),
+            ("history 1 lid/L1", "Showing 1 attendance record(s)."),
+        ]:
+            session.command(command, feedback)
+        for index in (1, 2):
+            session.command(f"mark {index} lid/L1 d/2026-10-05 s/absent",
+                            f"Attendance for Student S{index} in lesson L1 on 2026-10-05 "
+                            "is already marked absent. No changes made.")
         verify_state(data)
         session.screenshot("restarted-history")
         session.exit()
