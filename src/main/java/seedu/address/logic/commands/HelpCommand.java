@@ -15,7 +15,7 @@ public class HelpCommand extends Command {
     public static final String MESSAGE_USAGE = "Usage: help [COMMAND]\n"
             + "Shows available commands, or syntax and an example for one command.\n"
             + "COMMAND is optional and case-insensitive. Supply at most one command word.\n"
-            + "Examples: help, help add";
+            + "Examples: help, help list";
 
     public static final String MESSAGE_UNKNOWN_TOPIC =
             "Unknown command: '%s'. Type 'help' to see available commands.";

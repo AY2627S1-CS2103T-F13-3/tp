@@ -15,7 +15,7 @@ import seedu.address.logic.parser.AddressBookParser;
 public class CommandCatalogTest {
     @Test
     public void getCommandWords_onlyActiveCommandsAndImmutable() {
-        assertEquals(List.of("add", "delete", "list", "help", "exit"), CommandCatalog.getCommandWords());
+        assertEquals(List.of("list", "help", "exit"), CommandCatalog.getCommandWords());
         assertThrows(UnsupportedOperationException.class, () -> CommandCatalog.getCommandWords().add("clear"));
         assertTrue(CommandCatalog.getUsage("clear").isEmpty());
         assertTrue(CommandCatalog.getUsage("ADD").isEmpty());
@@ -29,7 +29,7 @@ public class CommandCatalogTest {
             assertTrue(CommandCatalog.getOverview().contains("\n" + word + " - "));
             assertFalse(usage.isBlank());
             assertEquals(new HelpCommand(word), parser.parseCommand("help " + word));
-            String example = word.equals("help") ? "help add"
+            String example = word.equals("help") ? "help list"
                     : usage.substring(usage.indexOf("Example: ") + "Example: ".length());
             assertTrue(parser.parseCommand(example) != null);
         }

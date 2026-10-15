@@ -36,7 +36,8 @@ public class HelpCommandParserTest {
 
     @Test
     public void parse_unknownOrWithdrawnTopic_reportsOriginalInput() {
-        for (String topic : new String[]{"REMOVE", "edit", "clear", "find", "addlesson", "mark", "history"}) {
+        for (String topic : new String[]{"REMOVE", "add", "delete", "edit", "clear", "find", "addlesson", "mark",
+            "history"}) {
             assertThrows(ParseException.class, String.format(HelpCommand.MESSAGE_UNKNOWN_TOPIC, topic), ()
                     -> parser.parse(topic));
         }

@@ -67,6 +67,9 @@ title: Developer Guide
   and rendered-guide checks (#164/#102).
   These credits do not claim teammates' implementations or unperformed human review.
 
+Zhi Yu used OpenAI Codex for #97's isolated legacy add/delete command, parser and fixture removal,
+legacy data-preservation and protected-command regressions, and the matching help/guide updates.
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Setting up, getting started**
@@ -89,8 +92,9 @@ test helpers have been removed. The retired `find` name matcher and its isolated
 canonical search uses the role-aware query matchers. Canonical boundary tests verify rejected commands preserve
 the saved aggregate, filtered people view and preferences; help and exit remain usable. The retired
 `setPerson` replacement API is
-also removed from the legacy Model, ModelManager, AddressBook and UniquePersonList. Other isolated legacy
-mutation and regression seams remain under #97. `mark` creates or corrects attendance; `unmark` removes one dated key.
+also removed from the legacy Model, ModelManager, AddressBook and UniquePersonList. Inherited add/delete
+commands, parsers and obsolete fixtures are also removed. Isolated legacy model and transaction fixtures
+remain for regression coverage. `mark` creates or corrects attendance; `unmark` removes one dated key.
 
 `CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
 routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
@@ -242,6 +246,8 @@ never replace the people list. Student history retrieval remains planned; see th
 
 **API:** [`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/Logic.java).
 
+Historical AB3 Logic class diagram, including the removed `AddCommand` and `DeleteCommand` examples:
+
 <img src="images/LogicClassDiagram.png" width="550"/>
 
 `CanonicalLogicManager` delegates to the single `CanonicalPeopleSession`. The session's `execute()`
@@ -254,13 +260,15 @@ live records, allocation counters, filter and selection. Read-only commands/no-o
 saving. List clears search criteria and optionally sets a role; own-contact search replaces the people filter,
 while lesson creation and membership changes preserve it. See [Storage](#command-transactions).
 
-The class/parser diagrams describe retained legacy regression seams, not active application wiring.
+The three diagrams in this section provide historical AB3 context. Their add/delete commands and parsers
+have been removed; the remaining legacy Logic classes are isolated regression seams. Active application
+wiring and its transaction boundary are described above.
 
-![Interactions inside Logic for inherited deletion](images/DeleteSequenceDiagram.png)
+![Historical interactions inside Logic for retired deletion](images/DeleteSequenceDiagram.png)
 
-The inherited deletion diagram focuses on parsing and command execution. Its per-call parser
-construction predates the registered catalogue, and it omits the current transaction boundary;
-the active boundary is described above. Legacy parser subclasses share the `Parser` interface:
+The historical deletion sequence illustrates the removed `DeleteCommandParser` and `DeleteCommand` path.
+Its per-call parser construction predates the registered catalogue and omits the current transaction boundary.
+`Parser` remains a shared interface; this historical parser-class diagram includes removed add/delete examples:
 
 <img src="images/ParserClasses.png" width="600"/>
 
@@ -325,9 +333,9 @@ derives one observable role-filtered projection from that root. UI observes comm
 maintaining writable copies. Preferences remain outside operational snapshots.
 
 The retired `clear` command no longer needs whole-address-book replacement through `Model`.
-That public replacement API has been removed. The retained legacy model still supports its isolated
-add/delete and transaction regressions; #97 tracks their remaining cleanup. Canonical state changes
-continue through validated `PonHubData` snapshots and save-before-publication transactions.
+That public replacement API has been removed. The retained legacy model supports isolated model and
+injected transaction regressions; its add/delete commands and obsolete command fixtures are removed.
+Canonical state changes continue through validated `PonHubData` snapshots and save-before-publication transactions.
 
 The aggregate below implements the [shared ownership and identity contract](#shared-lesson-target-contract).
 Complete independent transaction snapshots preserve records, relationships and allocation state.
@@ -722,7 +730,9 @@ topics/excess arguments and restricts guidance to the protected-session routes a
 Help preserves records and the people view without operational saves; preferences have a separate
 lifecycle. Normal sessions expose help for every [active route](#current-increment-and-command-integration);
 protected sessions expose only help/list/exit guidance.
-Legacy `CommandCatalog`/`HelpCommandParser` remain regression seams.
+Legacy `CommandCatalog`/`HelpCommandParser` expose only list/help/exit as isolated regression seams.
+Their inherited add/delete commands, parsers and obsolete command fixtures have been removed under #97.
+The active canonical catalogue still provides role-aware addition and relationship-guarded deletion.
 
 The Help menu and F1 both invoke `MainWindow.executeCommand("help")`, retaining the command-box
 draft and card selection. `ResultDisplay` is a read-only wrapped TextArea with vertical scrolling;
