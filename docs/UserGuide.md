@@ -348,9 +348,9 @@ Use the [current command summary](#current-command-summary) and your build's `he
 
 <a id="planned-quick-start"></a>
 
-### Shared-lesson quick start
+### Shared-lesson example
 
-The current build supports this complete workflow on a fresh dataset. `addlesson` returns the
+All commands in this workflow are active. Start with a fresh dataset. `addlesson` returns the
 allocated lesson ID; substitute it for `L1` in later commands if necessary.
 The `list r/student` result below places Alex at position 1 and Jamie at position 2. Recheck those positions when
 using an existing dataset.
@@ -583,15 +583,15 @@ empty result. An unrecorded occurrence has no entry; it is never counted as abse
 unenrolment, an open history view refreshes from committed data. History retrieval does not save data or change the
 current people filter, order, selection or indices. Use the Student's current position in the people list, not a
 roster/history row or stable ID suffix. `lessons`, `showlesson` or a lesson search returns the right panel to lesson results. Invalid requests preserve the prior panel.
-Deleting the selected Student or optional Lesson clears the history context and restores the lesson panel.
-Unrelated deletions and rejected commands or failed saves preserve a valid history selection.
+
+Deleting the selected Student or the selected Lesson successfully clears that history selection and returns the
+right panel to lesson results. Unrelated deletions and failed deletions preserve a valid history selection.
 
 <a id="planned-failure-and-data-behavior"></a>
 
 ### Failure and data behavior
 
-The complete target saves people, shared lessons, memberships, attendance and IDs together. Current persistence saves
-people, validated shared lessons/rosters and retained attendance in the selected file. `addlesson`, `deletelesson`,
+PonHub saves people, shared lessons/rosters, retained attendance and ID allocation state together in the selected file. `addlesson`, `deletelesson`,
 `enrol` and `unenrol` use that protected transaction, as do changed `mark` and `unmark` operations. Invalid
 attendance commands,
 missing-record/identical-status no-ops and failed saves leave the saved file, aggregate and current people view unchanged.
@@ -624,11 +624,10 @@ name is unique. Use `help addlesson` for the complete active syntax.
 
 <a id="planned-command-summary"></a>
 
-## Command reference and future scope
+## Command format reference
 
-Every command in this table is active in a normal session. The future features listed below the table are not
-supported commands. These formats use the
-[command conventions](#reading-the-planned-command-formats).
+All formats in this table are active in normal sessions. A protected session permits only `help`, `list` and `exit`.
+These formats use the [command conventions](#reading-the-planned-command-formats).
 Person/student selectors come from the current people list, while every existing-lesson selector uses a stable
 `lid/` reference.
 
