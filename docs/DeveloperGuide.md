@@ -13,6 +13,8 @@ title: Developer Guide
   [SE-EDU initiative](https://se-education.org); existing licences and reuse credits are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson),
   and [JUnit 5](https://junit.org/junit5/).
+* Vincent (`gugrusaurus`) used OpenAI Codex for #102's integrated guide audit, shared quick-start and
+  active-scope corrections, anchor checks and packaged-parser workflow replay. Feature authorship is retained.
 * Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex for these bounded contributions, including their tests
   and documentation: role records/common interface; ordered registry and import/export state;
   detached and aggregate-backed role-filtered views; current-index resolution; card projections,

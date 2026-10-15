@@ -35,7 +35,9 @@ person/lesson deletion, dated attendance removal and attendance history are acti
    * `lessons` shows lesson `L1` once with a roster size of 2; `lessons si/1` shows Alex's current lessons.
    * `mark 1 lid/L1 d/2026-10-05 s/present`, then `mark 2 lid/L1 d/2026-10-05 s/absent`,
      records independent attendance for the same Monday occurrence.
+     `showlesson lid/L1 d/2026-10-05` displays Alex as present and Jamie as absent.
    * `mark 1 lid/L1 d/2026-10-05 s/absent` corrects only Alex's record.
+     Run `showlesson lid/L1 d/2026-10-05` again to see both students recorded as absent.
    * `unenrol 1 lid/L1` removes Alex's membership while keeping both attendance records.
      `lessons si/1` now shows no current lessons; `lessons` still shows `L1` with Jamie enrolled.
    * `history 1 lid/L1` shows Alex's retained absence with former-member context after unenrolment.
