@@ -15,8 +15,9 @@ title: Developer Guide
   and [JUnit 5](https://junit.org/junit5/).
 * Vincent (`gugrusaurus`) used OpenAI Codex for #102's integrated guide audit, shared quick-start and
   active-scope corrections, anchor checks and packaged-parser workflow replay. Feature authorship is retained.
-* Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex for these bounded contributions, including their tests
-  and documentation: role records/common interface; ordered registry and import/export state;
+* Zhu Zhi Yu (`ultramanarm`) uses OpenAI Codex throughout his PonHub implementation, refactoring,
+  testing, documentation and integration work. Earlier contributions include:
+  role records/common interface; ordered registry and import/export state;
   detached and aggregate-backed role-filtered views; current-index resolution; card projections,
   FXML/list rendering, previews and Linux CI virtual-display setup; representative people samples;
   role-aware addition parsing/candidates/commands and canonical session; #85 application cutover

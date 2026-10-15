@@ -27,6 +27,27 @@ public class AttendanceUnmarkParserTest {
     }
 
     @Test
+    public void parse_unicodeBoundarySpaces_returnsEquivalentInput() throws Exception {
+        AttendanceUnmarkInput expected = parser.parse("2 lid/L12 d/2026-10-05");
+        for (String space : new String[]{"\u00A0", "\u202F", "\u3000"}) {
+            assertEquals(expected, parser.parse(space + "2" + space + "lid/" + space + "L12"
+                    + space + "d/" + space + "2026-10-05" + space));
+        }
+    }
+
+    @Test
+    public void parse_invalidFieldsWithUnicodeSpaces_preservesErrorPrecedence() {
+        assertThrows(ParseException.class, "Unmark prefix 'lid/' requires a non-blank value.", () -> parser.parse(
+                "0 lid/\u202F d/2026-10-05"));
+        assertThrows(ParseException.class, "Repeated unmark prefix 'lid/'.", () -> parser.parse(
+                "0 lid/L1\u00A0lid/\u3000 d/2026-10-05"));
+        assertThrows(ParseException.class, "Unknown unmark prefix 's/'.", () -> parser.parse(
+                "0 lid/L1 d/2026-10-05\u3000s/\u202F"));
+        assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_INDEX, () -> parser.parse(
+                "\u00A00\u202F lid/L01 d/invalid"));
+    }
+
+    @Test
     public void parse_missingIndexOrPrefix_throwsParseException() {
         for (String arguments : new String[]{"", "1", "lid/L1 d/2026-10-05",
             "1 d/2026-10-05", "1 lid/L1"}) {
@@ -59,10 +80,13 @@ public class AttendanceUnmarkParserTest {
 
     @Test
     public void parse_lineBreakOrControlCharacter_throwsSingleLineMessage() {
-        for (String arguments : new String[]{"1 lid/L1 d/2026-10-05\n",
-            "1 lid/L1\rd/2026-10-05", "1\tlid/L1 d/2026-10-05"}) {
-            assertThrows(ParseException.class, AttendanceUnmarkParser.MESSAGE_SINGLE_LINE, () -> parser.parse(
-                    arguments));
+        for (String control : new String[]{"\t", "\n", "\r", "\r\n", "\u0000", "\u001F", "\u007F",
+            "\u0085", "\u2028", "\u2029"}) {
+            for (String arguments : new String[]{control, control + "0 s/value", "0 lid/L01" + control,
+                "1 lid/L1" + control + "d/2026-10-05"}) {
+                assertThrows(ParseException.class, AttendanceUnmarkParser.MESSAGE_SINGLE_LINE, () -> parser.parse(
+                        arguments));
+            }
         }
     }
 
