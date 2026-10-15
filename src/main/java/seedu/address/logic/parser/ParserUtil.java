@@ -23,11 +23,17 @@ public class ParserUtil {
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
 
     /**
-     * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be
-     * trimmed.
+     * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Rejects non-whitespace ISO controls
+     * before trimming leading and trailing whitespace.
+     *
      * @throws ParseException if the specified index is invalid (not a non-zero unsigned integer).
      */
     public static Index parseIndex(String oneBasedIndex) throws ParseException {
+        if (oneBasedIndex.codePoints().anyMatch(codePoint ->
+                Character.isISOControl(codePoint) && !Character.isWhitespace(codePoint))) {
+            throw new ParseException(MESSAGE_INVALID_INDEX);
+        }
+
         String trimmedIndex = oneBasedIndex.trim();
         if (!StringUtil.isNonZeroUnsignedInteger(trimmedIndex)) {
             throw new ParseException(MESSAGE_INVALID_INDEX);

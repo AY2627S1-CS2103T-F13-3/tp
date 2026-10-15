@@ -18,7 +18,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import javafx.collections.ListChangeListener;
+import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.ParserUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.PonHubData;
 import seedu.address.model.PonHubDataState;
@@ -196,6 +198,63 @@ public class CanonicalDeleteIntegrationTest {
         assertThrows(IllegalArgumentException.class, () -> data.removePerson(new PersonId("S99")));
         assertThrows(NullPointerException.class, () -> data.removePerson(null));
         assertSame(before, data.exportState());
+    }
+
+    @Test
+    public void execute_controlBearingSelectors_preservesBytesSnapshotAndSearchPositions() throws Exception {
+        Path path = savedData(Set.of());
+        JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
+        int[] writes = {0};
+        CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+            writes[0]++;
+            storage.saveData(state);
+        });
+        session.execute("search c/parent n/Other");
+        var visible = session.getPeople();
+        PersonRecord selected = PersonIndexResolver.resolve(Index.fromOneBased(1), visible);
+        assertEquals(new PersonId("P5"), selected.getId());
+        var searchContext = session.personSearchContextProperty().get();
+        var before = session.getDataSnapshot();
+        byte[] original = Files.readAllBytes(path);
+        int[] events = {0};
+        visible.addListener((ListChangeListener<PersonRecord>) change -> events[0]++);
+
+        for (String control : List.of("\0", "\b", "\u001b", "\u0010", "\u007f", "\u0080", "\u009f")) {
+            for (String index : List.of(control + "1", "1" + control, "1" + control + "1")) {
+                ParseException failure = assertThrows(ParseException.class, () -> session.execute("delete " + index));
+                assertEquals(ParserUtil.MESSAGE_INVALID_INDEX, failure.getMessage());
+                assertEquals(0, writes[0]);
+                assertSame(before, session.getDataSnapshot());
+                assertArrayEquals(original, Files.readAllBytes(path));
+                assertSame(visible, session.getPeople());
+                assertEquals(Optional.of(PersonRole.PARENT), session.getRoleFilter());
+                assertSame(searchContext, session.personSearchContextProperty().get());
+                assertEquals(List.of(new PersonId("P5")), visibleIds(session));
+                assertSame(selected, PersonIndexResolver.resolve(Index.fromOneBased(1), visible));
+                assertEquals(0, events[0]);
+            }
+        }
+        assertEquals(before, new CanonicalPeopleSession(path).getDataSnapshot());
+
+        // A valid retry must still use the narrowed search, not another Parent's global position.
+        assertEquals("Deleted parent: Other Parent (P5).", session.execute("delete \t1\t ").getFeedbackToUser());
+        assertEquals(1, writes[0]);
+        assertTrue(visible.isEmpty());
+        assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
+    }
+
+    @Test
+    public void execute_lineBreakWithControl_keepsSingleLineErrorPrecedence() throws Exception {
+        Path path = savedData(Set.of());
+        CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+            throw new AssertionError("Rejected deletion must not save");
+        });
+        var before = session.getDataSnapshot();
+        byte[] original = Files.readAllBytes(path);
+        ParseException failure = assertThrows(ParseException.class, () -> session.execute("delete 1\0\n"));
+        assertEquals("Commands must be on one line.", failure.getMessage());
+        assertSame(before, session.getDataSnapshot());
+        assertArrayEquals(original, Files.readAllBytes(path));
     }
 
     @Test

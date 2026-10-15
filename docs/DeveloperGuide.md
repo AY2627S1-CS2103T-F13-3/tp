@@ -1790,7 +1790,8 @@ Use role-aware commands in a disposable selected data file.
 
 ### Active guarded person deletion (#91)
 
-The session parses a positive people-list index using `ParserUtil`. `CanonicalDeleteCommand` resolves it once through
+The session parses a positive people-list index using `ParserUtil`, rejecting non-whitespace ISO control characters
+before trimming the selector. `CanonicalDeleteCommand` resolves it once through
 `PersonIndexResolver` and passes the stable ID to `PonHubData.removePerson`. The aggregate identifies a blocking
 current enrolment, retained attendance key or assigned lesson before creating a replacement people registry.
 Registry removal and the validated aggregate retain all allocation counters, surviving people order, lessons and
@@ -1813,6 +1814,8 @@ For manual checks, use an isolated supported dataset:
 4. In a separate dataset, enrol, mark and unenrol a Student. Deletion must remain blocked by retained attendance;
    feedback names the Lesson and date. Restart and verify that the same guard remains. An unassigned Tutor is deletable.
 5. Reject `delete`, `delete S1`, `delete 0`, `delete -1`, extra arguments and out-of-range positions without changes.
+   `CanonicalDeleteIntegrationTest` also sends actual NUL, backspace and escape characters at both boundaries and
+   inside selectors, verifying zero saves and unchanged bytes, snapshots, search filters and displayed positions.
    Use an isolated unwritable storage seam, attempt deletion and verify unchanged file, people filter/positions and
    query results. Restore writing and retry: commit only once, then restart and compare the complete saved state.
 
