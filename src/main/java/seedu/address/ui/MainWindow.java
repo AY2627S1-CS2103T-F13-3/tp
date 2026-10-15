@@ -120,7 +120,7 @@ public class MainWindow extends UiPart<Stage> {
      * Fills up all the placeholders of this window.
      */
     void fillInnerParts() {
-        personListPanel = new PersonRecordListPanel(logic.getPersonRecords());
+        personListPanel = new PersonRecordListPanel(logic.getPersonRecords(), logic.personSearchContextProperty());
         personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
 
         LessonListPanel lessonListPanel = new LessonListPanel(logic.getDisplayedLessons(),

@@ -6,11 +6,13 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.collections.ObservableList;
 import seedu.address.commons.exceptions.DataLoadingException;
@@ -45,12 +47,14 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.PeopleView;
 import seedu.address.model.PonHubData;
 import seedu.address.model.PonHubDataState;
+import seedu.address.model.person.PersonId;
 import seedu.address.model.person.PersonRecord;
 import seedu.address.model.person.PersonRole;
 import seedu.address.model.query.AttendanceHistoryEntry;
 import seedu.address.model.query.LessonQueries;
 import seedu.address.model.query.LessonQuerySource;
 import seedu.address.model.query.LessonView;
+import seedu.address.model.search.PersonSearchMatch;
 import seedu.address.model.search.SearchCategory;
 import seedu.address.model.search.SearchCriteria;
 import seedu.address.storage.ProtectedPonHubDataStorage;
@@ -112,8 +116,8 @@ public final class CanonicalPeopleSession {
         } catch (DataLoadingException failure) {
             // Storage retains the authoritative rejection guidance and a session-long write lock.
         }
-        view = new PeopleView(data);
         LessonQueries queries = new LessonQueries(data);
+        view = new PeopleView(data, queries);
         lessonQueries = queries;
         lessonRetrieval = new LessonRetrieval(queries, view, data);
         attendanceRetrieval = new AttendanceRetrieval(queries, view);
@@ -122,6 +126,10 @@ public final class CanonicalPeopleSession {
 
     public ObservableList<PersonRecord> getPeople() {
         return view.getPeople();
+    }
+
+    public ReadOnlyObjectProperty<Map<PersonId, List<PersonSearchMatch>>> personSearchContextProperty() {
+        return view.searchContextProperty();
     }
 
     public Optional<PersonRole> getRoleFilter() {
@@ -232,7 +240,7 @@ public final class CanonicalPeopleSession {
                     attendanceRetrieval.hide();
                     return new CommandResult(String.format("Found %d lesson(s).", count));
                 }
-                return executor.execute(new CanonicalSearchCommand(criteria));
+                return new CanonicalSearchCommand(criteria).execute(data, view);
             case "lessons":
                 int lessonCount = lessonRetrieval.list(new LessonsArgumentsParser().parse(arguments)).size();
                 attendanceRetrieval.hide();

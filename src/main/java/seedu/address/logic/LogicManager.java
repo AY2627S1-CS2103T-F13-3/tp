@@ -2,9 +2,12 @@ package seedu.address.logic;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
@@ -25,6 +28,7 @@ import seedu.address.model.person.PersonId;
 import seedu.address.model.query.AttendanceHistoryEntry;
 import seedu.address.model.query.LessonView;
 import seedu.address.model.query.StudentView;
+import seedu.address.model.search.PersonSearchMatch;
 import seedu.address.storage.Storage;
 
 /**
@@ -94,6 +98,11 @@ public class LogicManager implements Logic {
     @Override
     public ObservableList<Person> getFilteredPersonList() {
         return model.getFilteredPersonList();
+    }
+
+    @Override
+    public ReadOnlyObjectProperty<Map<PersonId, List<PersonSearchMatch>>> personSearchContextProperty() {
+        throw new UnsupportedOperationException("Relationship context requires canonical people records");
     }
 
     @Override

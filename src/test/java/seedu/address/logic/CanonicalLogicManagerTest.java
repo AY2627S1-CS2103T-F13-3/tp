@@ -47,6 +47,7 @@ public class CanonicalLogicManagerTest {
         var people = logic.getPersonRecords();
 
         assertSame(session.getPeople(), people);
+        assertSame(session.personSearchContextProperty(), logic.personSearchContextProperty());
         assertEquals(CanonicalCommandCatalog.getOverview(Optional.empty()), logic.execute("help").getFeedbackToUser());
         assertEquals("Showing 0 parent(s).", logic.execute("list r/parent").getFeedbackToUser());
         assertFalse(Files.exists(path));
@@ -73,9 +74,12 @@ public class CanonicalLogicManagerTest {
         GuiSettings settings = new GuiSettings(900, 700, 30, 40);
         prefs.setGuiSettings(settings);
         Logic logic = new CanonicalLogicManager(session, prefs);
-        logic.execute("list r/student");
+        logic.execute("search c/student d/Mon s/Math");
         var people = logic.getPersonRecords();
         List<PersonId> visibleIds = people.stream().map(person -> person.getId()).toList();
+        var context = logic.personSearchContextProperty();
+        var matchingLessons = context.get();
+        assertFalse(matchingLessons.isEmpty());
         var before = session.getDataSnapshot();
         byte[] original = Files.readAllBytes(path);
 
@@ -86,6 +90,8 @@ public class CanonicalLogicManagerTest {
             assertSame(before, session.getDataSnapshot());
             assertArrayEquals(original, Files.readAllBytes(path));
             assertSame(people, logic.getPersonRecords());
+            assertSame(context, logic.personSearchContextProperty());
+            assertSame(matchingLessons, context.get());
             assertEquals(visibleIds, people.stream().map(person -> person.getId()).toList());
             assertEquals(settings, prefs.getGuiSettings());
         }
@@ -168,6 +174,7 @@ public class CanonicalLogicManagerTest {
 
         assertTrue(legacy.getFilteredPersonList().isEmpty());
         assertThrows(UnsupportedOperationException.class, legacy::getPersonRecords);
+        assertThrows(UnsupportedOperationException.class, legacy::personSearchContextProperty);
         assertThrows(UnsupportedOperationException.class, legacy::getDisplayedLessons);
         assertThrows(UnsupportedOperationException.class, legacy::lessonResultContextProperty);
         assertThrows(UnsupportedOperationException.class, legacy::getDisplayedHistory);

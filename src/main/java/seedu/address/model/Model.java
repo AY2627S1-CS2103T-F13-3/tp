@@ -45,11 +45,6 @@ public interface Model {
      */
     void setGuiSettings(GuiSettings guiSettings);
 
-    /**
-     * Replaces address book data with the data in {@code addressBook}.
-     */
-    void setAddressBook(ReadOnlyAddressBook addressBook);
-
     /** Returns the AddressBook */
     ReadOnlyAddressBook getAddressBook();
 

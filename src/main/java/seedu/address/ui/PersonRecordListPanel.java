@@ -2,7 +2,12 @@ package seedu.address.ui;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.List;
+import java.util.Map;
+
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -10,7 +15,9 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.Region;
 import seedu.address.model.PeopleView;
+import seedu.address.model.person.PersonId;
 import seedu.address.model.person.PersonRecord;
+import seedu.address.model.search.PersonSearchMatch;
 
 /**
  * A scrolling host for the canonical people's read-only observable projection.
@@ -31,7 +38,7 @@ public class PersonRecordListPanel extends UiPart<Region> {
      * Later filter changes and explicit model refreshes update the same list and renumber visible cards.
      */
     public PersonRecordListPanel(PeopleView peopleView) {
-        this(requireNonNull(peopleView).getPeople());
+        this(requireNonNull(peopleView).getPeople(), peopleView.searchContextProperty());
     }
 
     /**
@@ -39,10 +46,20 @@ public class PersonRecordListPanel extends UiPart<Region> {
      * Committed changes and filtering update that shared list without creating another data source.
      */
     public PersonRecordListPanel(ObservableList<PersonRecord> people) {
+        this(people, new ReadOnlyObjectWrapper<Map<PersonId, List<PersonSearchMatch>>>(Map.of()).getReadOnlyProperty());
+    }
+
+    /**
+     * Refreshes contextual cards from Logic's immutable projection without changing operational relationships.
+     */
+    public PersonRecordListPanel(ObservableList<PersonRecord> people,
+            ObservableValue<Map<PersonId, List<PersonSearchMatch>>> contexts) {
         super(FXML);
+        requireNonNull(contexts);
         personListView.setItems(requireNonNull(people));
         summary.textProperty().bind(Bindings.size(people).asString("Showing %d person(s)."));
-        personListView.setCellFactory(list -> new PersonRecordListCell());
+        personListView.setCellFactory(list -> new PersonRecordListCell(contexts));
+        contexts.addListener((observable, previous, current) -> personListView.refresh());
         personListView.setPlaceholder(new Label("No persons to display."));
     }
 
@@ -50,8 +67,10 @@ public class PersonRecordListPanel extends UiPart<Region> {
      * Renders the cell's current position separately from stable identity and fits wrapping to its content width.
      */
     private static class PersonRecordListCell extends ListCell<PersonRecord> {
+        private final ObservableValue<Map<PersonId, List<PersonSearchMatch>>> contexts;
 
-        private PersonRecordListCell() {
+        private PersonRecordListCell(ObservableValue<Map<PersonId, List<PersonSearchMatch>>> contexts) {
+            this.contexts = contexts;
             indexProperty().addListener((observable, oldIndex, newIndex) -> updateCard());
         }
 
@@ -74,7 +93,8 @@ public class PersonRecordListPanel extends UiPart<Region> {
                 return;
             }
 
-            Region card = new PersonRecordCard(getItem(), getIndex() + 1).getRoot();
+            Region card = new PersonRecordCard(getItem(), getIndex() + 1,
+                    contexts.getValue().getOrDefault(getItem().getId(), List.of())).getRoot();
             card.prefWidthProperty().bind(Bindings.createDoubleBinding(() ->
                     Math.max(0, getWidth() - getInsets().getLeft() - getInsets().getRight()),
                     widthProperty(), insetsProperty()));

@@ -2,13 +2,20 @@ package seedu.address.model;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import seedu.address.model.person.PersonId;
 import seedu.address.model.person.PersonRecord;
 import seedu.address.model.person.PersonRole;
-import seedu.address.model.search.PersonContactSearch;
+import seedu.address.model.query.LessonQueries;
+import seedu.address.model.search.PersonRelationshipSearch;
+import seedu.address.model.search.PersonSearchMatch;
 import seedu.address.model.search.SearchCriteria;
 
 /**
@@ -24,12 +31,23 @@ public final class PeopleView {
     private final ObservableList<PersonRecord> readOnlyPeople = FXCollections.unmodifiableObservableList(people);
     private Optional<PersonRole> roleFilter = Optional.empty();
     private Optional<SearchCriteria> searchCriteria = Optional.empty();
+    private final LessonQueries queries;
+    private final ReadOnlyObjectWrapper<Map<PersonId, List<PersonSearchMatch>>> contexts =
+            new ReadOnlyObjectWrapper<>(Map.of());
 
     /**
      * Creates an all-roles projection of the supplied canonical root without copying its writable state.
      */
     public PeopleView(PonHubData source) {
+        this(source, new LessonQueries(source));
+    }
+
+    /**
+     * Shares the session's existing query indexes instead of building another live membership graph.
+     */
+    public PeopleView(PonHubData source, LessonQueries queries) {
         this.source = requireNonNull(source);
+        this.queries = requireNonNull(queries);
         refresh();
     }
 
@@ -39,6 +57,10 @@ public final class PeopleView {
      */
     public ObservableList<PersonRecord> getPeople() {
         return readOnlyPeople;
+    }
+
+    public ReadOnlyObjectProperty<Map<PersonId, List<PersonSearchMatch>>> searchContextProperty() {
+        return contexts.getReadOnlyProperty();
     }
 
     /**
@@ -71,10 +93,11 @@ public final class PeopleView {
      * Search criteria are immutable and retain the category and every supplied own-contact filter.
      */
     public void setSearchCriteria(SearchCriteria criteria) {
-        var matches = PersonContactSearch.search(source.getPeople(), requireNonNull(criteria));
+        var matches = PersonRelationshipSearch.search(source.getPeople(), queries, requireNonNull(criteria));
         roleFilter = Optional.of(PersonRole.valueOf(criteria.getCategory().name()));
         searchCriteria = Optional.of(criteria);
-        people.setAll(matches);
+        contexts.set(matches.contexts());
+        people.setAll(matches.people());
     }
 
     /**
@@ -96,9 +119,12 @@ public final class PeopleView {
      */
     public void refresh() {
         if (searchCriteria.isPresent()) {
-            people.setAll(PersonContactSearch.search(source.getPeople(), searchCriteria.orElseThrow()));
+            var matches = PersonRelationshipSearch.search(source.getPeople(), queries, searchCriteria.orElseThrow());
+            contexts.set(matches.contexts());
+            people.setAll(matches.people());
             return;
         }
+        contexts.set(Map.of());
         people.setAll(source.getPeople().stream()
                 .filter(person -> roleFilter.isEmpty() || person.getRole() == roleFilter.get())
                 .toList());
