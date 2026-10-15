@@ -459,7 +459,8 @@ short fragments; `tu/` searches tutor names. `sn/` examines the same lesson's cu
 rosters. Matching two students still emits one Lesson. There is no cross-lesson combination of day, subject, room,
 tutor or student conditions. All seven lesson prefixes follow the existing [criteria matrix](#supported-criteria).
 The parser rejects unsupported, incompatible, blank, repeated and malformed values before query execution.
-An empty search result is valid. People/parent/tutor relationship traversal remains in its separate integration slices.
+An empty search result is valid. Active Student, Parent and Tutor relationship search reuses these indexes
+through `PersonRelationshipSearch`.
 
 All derived indexes rebuild on `PonHubData.stateProperty()` publication, after successful save/commit or restore,
 never per query. Already returned observable lists retain object identity while their entries refresh. This covers

@@ -59,7 +59,7 @@ The active routes use one saved aggregate with role-specific people, stable IDs 
 can be changed with `enrol` and `unenrol`. Own-contact people search, attendance marking, guarded person and Lesson
 deletion, lesson listing, lesson search, lesson details, attendance removal and attendance history are active,
 alongside Student, Parent and Tutor relationship search. Their specifications follow under
-[Planned shared-lesson workflow](#planned-shared-lesson-workflow). Type `help` to inspect the commands available
+[Shared-lesson workflow](#planned-shared-lesson-workflow). Type `help` to inspect the commands available
 in your session. `edit`, `clear` and `find` are unavailable.
 
 | Action | Format | Example |
