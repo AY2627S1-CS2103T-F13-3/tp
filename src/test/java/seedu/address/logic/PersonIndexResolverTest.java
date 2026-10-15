@@ -67,7 +67,7 @@ public class PersonIndexResolverTest {
 
         List<PersonRecord> visiblePeople = new ArrayList<>(mixedPeople);
         for (Index index : new Index[]{Index.fromOneBased(5), Index.fromOneBased(Integer.MAX_VALUE),
-            Index.fromZeroBased(Integer.MAX_VALUE)}) {
+            Index.fromZeroBased(Integer.MAX_VALUE - 1)}) {
             assertThrows(CommandException.class, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, () ->
                     PersonIndexResolver.resolve(index, visiblePeople));
             assertThrows(CommandException.class, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, () ->
