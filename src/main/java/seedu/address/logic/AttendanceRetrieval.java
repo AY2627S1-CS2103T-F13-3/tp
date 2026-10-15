@@ -14,7 +14,9 @@ import javafx.collections.ObservableList;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.HistoryArgumentsParser.Input;
 import seedu.address.model.PeopleView;
+import seedu.address.model.PonHubData;
 import seedu.address.model.lesson.LessonId;
+import seedu.address.model.person.PersonId;
 import seedu.address.model.query.AttendanceHistoryEntry;
 import seedu.address.model.query.LessonQuerySource;
 
@@ -31,11 +33,16 @@ public final class AttendanceRetrieval {
     private final ReadOnlyStringWrapper context = new ReadOnlyStringWrapper("Attendance history");
     private final ReadOnlyBooleanWrapper active = new ReadOnlyBooleanWrapper(false);
     private ObservableList<AttendanceHistoryEntry> selected;
+    private PersonId selectedStudentId;
+    private Optional<LessonId> selectedLessonId = Optional.empty();
 
-    /** Connects history results to one canonical query source and people view. */
-    public AttendanceRetrieval(LessonQuerySource queries, PeopleView peopleView) {
+    /**
+     * Connects history results and selection validity to the same canonical root and people view.
+     */
+    public AttendanceRetrieval(LessonQuerySource queries, PeopleView peopleView, PonHubData data) {
         this.queries = requireNonNull(queries);
         this.peopleView = requireNonNull(peopleView);
+        requireNonNull(data).stateProperty().addListener((observable, previous, current) -> invalidateIfMissing(data));
     }
 
     public ObservableList<AttendanceHistoryEntry> getDisplayedHistory() {
@@ -71,6 +78,8 @@ public final class AttendanceRetrieval {
             selected.addListener(refresh);
             displayed.setAll(selected);
         }
+        selectedStudentId = student.getId();
+        selectedLessonId = lessonId;
         context.set("Student " + student.getId() + " · attendance history"
                 + lessonId.map(id -> " · " + id).orElse(""));
         active.set(true);
@@ -80,5 +89,22 @@ public final class AttendanceRetrieval {
     /** Lesson retrieval restores the independent lesson view. */
     public void hide() {
         active.set(false);
+    }
+
+    /**
+     * Clears a deleted selection only after committed publication, including already-empty query results.
+     */
+    private void invalidateIfMissing(PonHubData data) {
+        if (selectedStudentId == null || (data.getPerson(selectedStudentId).isPresent()
+                && selectedLessonId.map(id -> data.getLesson(id).isPresent()).orElse(true))) {
+            return;
+        }
+        selected.removeListener(refresh);
+        selected = null;
+        selectedStudentId = null;
+        selectedLessonId = Optional.empty();
+        displayed.clear();
+        context.set("Attendance history");
+        hide();
     }
 }

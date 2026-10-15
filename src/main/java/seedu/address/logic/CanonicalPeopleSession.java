@@ -120,7 +120,7 @@ public final class CanonicalPeopleSession {
         view = new PeopleView(data, queries);
         lessonQueries = queries;
         lessonRetrieval = new LessonRetrieval(queries, view, data);
-        attendanceRetrieval = new AttendanceRetrieval(queries, view);
+        attendanceRetrieval = new AttendanceRetrieval(queries, view, data);
         executor = new CanonicalCommandExecutor(view, writer, storage::getDataLoadError);
     }
 

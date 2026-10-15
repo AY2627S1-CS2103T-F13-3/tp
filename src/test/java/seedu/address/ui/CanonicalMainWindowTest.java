@@ -135,6 +135,40 @@ public class CanonicalMainWindowTest {
     }
 
     @Test
+    public void history_deletedSelectionRestoresLessonPane() throws Exception {
+        new JsonPonHubDataStorage(directory.resolve("canonical.json"))
+                .saveData(LessonQueryTestData.createData().exportState());
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("search c/student");
+                fixture.people().getSelectionModel().select(1);
+                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.enter("history 2 lid/L3");
+                assertTrue(fixture.history().getParent().isVisible());
+                fixture.enter("deletelesson lid/L3");
+                assertEquals("Deleted lesson: L3.", fixture.feedback());
+                assertFalse(fixture.history().getParent().isVisible());
+                assertTrue(fixture.lessons().getParent().isVisible());
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertTrue(fixture.lessons().getItems().stream()
+                        .noneMatch(lesson -> lesson.getLessonId().equals(LessonQueryTestData.EMPTY_LESSON)));
+                fixture.enter("history 3");
+                assertTrue(fixture.history().getParent().isVisible());
+                fixture.enter("delete 3");
+                assertFalse(fixture.history().getParent().isVisible());
+                assertTrue(fixture.lessons().getParent().isVisible());
+                assertEquals("Attendance history", ((Label) fixture.root().lookup("#historyContext")).getText());
+                fixture.enter("history 2 lid/L10");
+                fixture.enter("delete 2");
+                assertTrue(fixture.history().getParent().isVisible());
+                Label historyContext = (Label) fixture.root().lookup("#historyContext");
+                assertEquals("Student S2 · attendance history · L10", historyContext.getText());
+            }
+            return null;
+        });
+    }
+
+    @Test
     public void tutorRelationshipSearch_displaysTheMatchingRosterAndEmptyLessonContexts() throws Exception {
         new JsonPonHubDataStorage(directory.resolve("canonical.json"))
                 .saveData(seedu.address.testutil.RelationshipSearchTestData.createData().exportState());
