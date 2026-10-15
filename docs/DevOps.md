@@ -22,7 +22,7 @@ The following commands perform common Gradle tasks.
 * **`shadowJar`**: Uses the Shadow plugin to create the fat JAR file `build/libs/ponhub.jar`.<br>
   For example: `./gradlew shadowJar`
 
-The Week 8 increment uses Gradle version `1.2` and `MainApp.VERSION` `v1.2`. This identifies the increment, not completion of all planned shared-lesson features. For a packaged check, copy `ponhub.jar` into a fresh folder, confirm `java -version` reports Java 25, and run `java -jar ponhub.jar`. Verify Help/menu/F1 and the current supported commands there. Yang owns the final integrated product launch check; v1.2 publication is optional.
+The v1.3 release-candidate build uses Gradle version `1.3` and `MainApp.VERSION` `v1.3`. Build the final candidate from the exact integrated source commit, copy `ponhub.jar` into a fresh folder, confirm `java -version` reports Java 25, and run `java -jar ponhub.jar`. Verify Help/menu/F1, the documented shared-lesson workflow and restart persistence there. Record the source commit, JAR size and SHA-256 checksum with the launch result. Publishing a release is not required for this packaged check.
 
 Packaged checks use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-project-on-your-computer). On macOS, use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) for the Mac's architecture. Record the OS, architecture, JDK distribution/version and actual launch result. Additional macOS trials with other distributions, including plain Oracle JDK, are optional portability checks; they are not required for the prescribed macOS acceptance check. Compatibility with Windows, Linux and macOS remains required.
 
