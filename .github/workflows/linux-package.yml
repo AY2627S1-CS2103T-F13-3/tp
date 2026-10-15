@@ -1,0 +1,73 @@
+name: Verify Linux release package
+
+on:
+  push:
+    paths:
+      - '.github/workflows/linux-package.yml'
+      - '.github/scripts/verify_linux_package.py'
+  pull_request:
+    paths:
+      - '.github/workflows/linux-package.yml'
+      - '.github/scripts/verify_linux_package.py'
+  workflow_dispatch:
+    inputs:
+      candidate_ref:
+        description: Reviewed team source commit to package
+        required: true
+        default: b513d313d1ba219df662d401bc0949e5afb49309
+      expected_sha256:
+        description: SHA-256 of the exact candidate JAR
+        required: true
+        default: f932224736b8a9ea9c87228ef7ce65e5a6f31313e9a4be2a1013c16263354c05
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CANDIDATE_REF: ${{ inputs.candidate_ref || 'b513d313d1ba219df662d401bc0949e5afb49309' }}
+      EXPECTED_SHA256: ${{ inputs.expected_sha256 || 'f932224736b8a9ea9c87228ef7ce65e5a6f31313e9a4be2a1013c16263354c05' }}
+    steps:
+      - name: Check out verification tooling
+        uses: actions/checkout@v7
+      - name: Check out the reviewed candidate
+        uses: actions/checkout@v7
+        with:
+          repository: AY2627S1-CS2103T-F13-3/tp
+          ref: ${{ env.CANDIDATE_REF }}
+          path: _temp/candidate
+      - name: Set up Java 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: '25'
+          java-package: jdk
+      - name: Install virtual-display verification tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes xvfb xdotool imagemagick
+      - name: Build the exact candidate
+        working-directory: _temp/candidate
+        run: |
+          mkdir -p ../linux-package
+          git rev-parse HEAD > ../linux-package/source.txt
+          ./gradlew shadowJar --no-daemon 2>&1 | tee ../linux-package/build.log
+      - name: Launch, exercise and restart the packaged application
+        run: |
+          xvfb-run --auto-servernum --server-args='-screen 0 1280x800x24' \
+            python3 .github/scripts/verify_linux_package.py \
+            --jar _temp/candidate/build/libs/ponhub.jar \
+            --source "$(cat _temp/linux-package/source.txt)" \
+            --expected-sha256 "$EXPECTED_SHA256" \
+            --evidence _temp/linux-package
+      - name: Retain exact JAR, runtime, logs, data and screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-package-evidence
+          path: _temp/linux-package
+          if-no-files-found: error
+          retention-days: 30
