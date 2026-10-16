@@ -27,6 +27,27 @@ public class AttendanceMarkParserTest {
     }
 
     @Test
+    public void parse_unicodeBoundarySpaces_returnsEquivalentInput() throws Exception {
+        AttendanceMarkInput expected = parser.parse("2 lid/L12 d/2026-10-05 s/present");
+        for (String space : new String[]{"\u00A0", "\u202F", "\u3000"}) {
+            assertEquals(expected, parser.parse(space + "2" + space + "lid/" + space + "L12"
+                    + space + "d/" + space + "2026-10-05" + space + "s/" + space + "present" + space));
+        }
+    }
+
+    @Test
+    public void parse_invalidFieldsWithUnicodeSpaces_preservesErrorPrecedence() {
+        assertThrows(ParseException.class, "Mark prefix 'lid/' requires a non-blank value.", () -> parser.parse(
+                "0 lid/\u202F d/2026-10-05 s/present"));
+        assertThrows(ParseException.class, "Repeated mark prefix 'lid/'.", () -> parser.parse(
+                "0 lid/L1\u00A0lid/\u3000 d/2026-10-05 s/present"));
+        assertThrows(ParseException.class, "Unknown mark prefix 'x/'.", () -> parser.parse(
+                "0 lid/L1 d/2026-10-05 s/present\u3000x/\u202F"));
+        assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_INDEX, () -> parser.parse(
+                "\u00A00\u202F lid/L01 d/invalid s/invalid"));
+    }
+
+    @Test
     public void parse_missingIndexOrPrefix_throwsParseException() {
         for (String arguments : new String[]{"", "1", "lid/L1 d/2026-10-05 s/present",
             "1 d/2026-10-05 s/present", "1 lid/L1 s/present", "1 lid/L1 d/2026-10-05"}) {
@@ -58,10 +79,13 @@ public class AttendanceMarkParserTest {
 
     @Test
     public void parse_lineBreakOrControlCharacter_throwsSingleLineMessage() {
-        for (String arguments : new String[]{"1 lid/L1 d/2026-10-05 s/present\n",
-            "1 lid/L1\rd/2026-10-05 s/present", "1\tlid/L1 d/2026-10-05 s/present"}) {
-            assertThrows(ParseException.class, AttendanceMarkParser.MESSAGE_SINGLE_LINE, () -> parser.parse(
-                    arguments));
+        for (String control : new String[]{"\t", "\n", "\r", "\r\n", "\u0000", "\u001F", "\u007F",
+            "\u0085", "\u2028", "\u2029"}) {
+            for (String arguments : new String[]{control, control + "0 x/value", "0 lid/L01" + control,
+                "1 lid/L1" + control + "d/2026-10-05 s/present"}) {
+                assertThrows(ParseException.class, AttendanceMarkParser.MESSAGE_SINGLE_LINE, () -> parser.parse(
+                        arguments));
+            }
         }
     }
 
