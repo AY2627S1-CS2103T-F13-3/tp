@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 public class LogsCenterTest {
-    private static final String LOG_FILE_NAME = "addressbook.log.0";
+    private static final String LOG_FILE_NAME = "ponhub.log.0";
     private static final String FIRST_MESSAGE = "First message after logging startup";
     private static final String REPEATED_MESSAGE = "Message after repeated logger lookup";
     private static final String OTHER_MESSAGE = "Message from another logger";
@@ -37,6 +37,22 @@ public class LogsCenterTest {
         Path logFile = temporaryDirectory.resolve(LOG_FILE_NAME);
         assertTrue(Files.isRegularFile(logFile));
         assertMessagesAppearOnce(Files.readString(logFile));
+    }
+
+    @Test
+    public void initializeFileLogging_existingLegacyLogs_createsPonHubLogWithoutChangingLegacyFiles() throws Exception {
+        List<String> legacyNames = List.of("addressbook.log", "addressbook.log.0", "addressbook.log.4",
+                "addressbook.log.0.lck", "addressbook.log.future");
+        for (String name : legacyNames) {
+            Files.writeString(temporaryDirectory.resolve(name), "Preserve " + name);
+        }
+
+        assertMessagesAppearOnce(runLoggingProcess());
+
+        assertMessagesAppearOnce(Files.readString(temporaryDirectory.resolve(LOG_FILE_NAME)));
+        for (String name : legacyNames) {
+            assertEquals("Preserve " + name, Files.readString(temporaryDirectory.resolve(name)));
+        }
     }
 
     @Test
@@ -175,6 +191,10 @@ public class LogsCenterTest {
             Logger firstLogger = LogsCenter.getLogger(LoggingStartup.class);
             Logger repeatedLogger = LogsCenter.getLogger(LoggingStartup.class);
             Logger otherLogger = LogsCenter.getLogger("AnotherStartupLogger");
+            if (!firstLogger.getName().equals("ponhub.LoggingStartup")
+                    || !otherLogger.getName().equals("ponhub.AnotherStartupLogger")) {
+                throw new AssertionError("Application loggers must use the PonHub namespace.");
+            }
 
             if (!List.of(args).contains("console-only")) {
                 LogsCenter.initializeFileLogging();

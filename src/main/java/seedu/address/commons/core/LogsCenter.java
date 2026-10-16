@@ -25,7 +25,8 @@ import seedu.address.commons.util.ApplicationPaths;
  * Packaged logs stay in the JAR's folder even when launched from another working directory.
  */
 public class LogsCenter {
-    public static final String LOG_FILE_PREFIX = "addressbook.log";
+    public static final String LOG_FILE_PREFIX = "ponhub.log";
+    private static final String LEGACY_LOG_FILE_PREFIX = "addressbook.log";
 
     // Change this to a lower level (e.g., Level.FINE) to enable more detailed log messages
     private static final Level LOG_LEVEL = Level.INFO;
@@ -38,6 +39,15 @@ public class LogsCenter {
     // This static block ensures essential loggers are created early
     static {
         setBaseLogger();
+    }
+
+    /**
+     * Reserves current and legacy log names, including rotation, lock and future suffixes.
+     * Legacy logs remain reserved for compatibility but are never opened by this logger.
+     */
+    public static boolean isReservedLogFileName(String name) {
+        requireNonNull(name);
+        return name.startsWith(LOG_FILE_PREFIX) || name.startsWith(LEGACY_LOG_FILE_PREFIX);
     }
 
     /**
@@ -110,11 +120,11 @@ public class LogsCenter {
     }
 
     /**
-     * Creates a logger named 'ab3' with console output, leaving file output until explicit initialization.
+     * Creates a logger named 'ponhub' with console output, leaving file output until explicit initialization.
      * Sets it as the {@code baseLogger}, to be used as the parent logger of all other loggers.
      */
     private static void setBaseLogger() {
-        baseLogger = Logger.getLogger("ab3");
+        baseLogger = Logger.getLogger("ponhub");
         baseLogger.setUseParentHandlers(false);
         removeHandlers(baseLogger);
         // set the level of the baseLogger, which will be inherited by other loggers

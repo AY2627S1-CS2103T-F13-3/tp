@@ -343,8 +343,17 @@ public class ProtectedStartupTest {
 
     @Test
     public void selectDataPath_reservedLogNames_rejectsBeforeOriginalBytesAreChanged() throws Exception {
-        for (String filename : List.of("addressbook.log", "addressbook.log.0", "addressbook.log.4",
-                "addressbook.log.0.lck", "addressbook.log.0.1", "addressbook.log.future")) {
+        assertReservedLogNames("addressbook.log");
+    }
+
+    @Test
+    public void selectDataPath_reservedLogNames_rejectsBeforeOriginalBytesAreChangedPonHub() throws Exception {
+        assertReservedLogNames("ponhub.log");
+    }
+
+    private void assertReservedLogNames(String prefix) throws Exception {
+        for (String suffix : List.of("", ".0", ".4", ".0.lck", ".0.1", ".future")) {
+            String filename = prefix + suffix;
             Path data = testFolder.resolve(filename);
             Files.writeString(data, "rejected original " + filename);
             byte[] original = Files.readAllBytes(data);
@@ -354,14 +363,23 @@ public class ProtectedStartupTest {
             assertArrayEquals(original, Files.readAllBytes(data));
         }
         assertThrows(IllegalArgumentException.class, () ->
-                MainApp.selectDataPath(Map.of("data", "addressbook.log.2"), testFolder));
-        assertFalse(Files.exists(testFolder.resolve("addressbook.log.2")));
+                MainApp.selectDataPath(Map.of("data", prefix + ".2"), testFolder));
+        assertFalse(Files.exists(testFolder.resolve(prefix + ".2")));
         assertFalse(Files.exists(testFolder.resolve("preferences.json")));
     }
 
     @Test
     public void selectDataPath_reservedLogSymbolicAlias_preservesOriginalAndLink() throws Exception {
-        Path log = testFolder.resolve("addressbook.log.0");
+        assertLogSymbolicAlias("addressbook.log.0");
+    }
+
+    @Test
+    public void selectDataPath_reservedLogSymbolicAlias_preservesOriginalAndLinkPonHub() throws Exception {
+        assertLogSymbolicAlias("ponhub.log.0");
+    }
+
+    private void assertLogSymbolicAlias(String filename) throws Exception {
+        Path log = testFolder.resolve(filename);
         Files.writeString(log, "rejected original");
         byte[] original = Files.readAllBytes(log);
         Path alias = testFolder.resolve("selected.json");
@@ -384,10 +402,19 @@ public class ProtectedStartupTest {
 
     @Test
     public void selectDataPath_reservedLogHardLinkAlias_preservesOperationalBytes() throws Exception {
-        Path data = testFolder.resolve("selected.json");
+        assertLogHardLinkAlias("addressbook.log.0");
+    }
+
+    @Test
+    public void selectDataPath_reservedLogHardLinkAlias_preservesOperationalBytesPonHub() throws Exception {
+        assertLogHardLinkAlias("ponhub.log.0");
+    }
+
+    private void assertLogHardLinkAlias(String filename) throws Exception {
+        Path data = Files.createDirectory(testFolder.resolve("data")).resolve("selected.json");
         Files.writeString(data, "rejected original");
         byte[] original = Files.readAllBytes(data);
-        Path log = testFolder.resolve("addressbook.log.0");
+        Path log = testFolder.resolve(filename);
         try {
             Files.createLink(log, data);
         } catch (IOException | UnsupportedOperationException | SecurityException exception) {
@@ -402,10 +429,19 @@ public class ProtectedStartupTest {
 
     @Test
     public void startup_preferencesSymbolicAliasToLog_preservesBothOriginalFiles() throws Exception {
+        assertPreferencesSymbolicLogAlias("addressbook.log.0");
+    }
+
+    @Test
+    public void startup_preferencesSymbolicAliasToLog_preservesBothOriginalFilesPonHub() throws Exception {
+        assertPreferencesSymbolicLogAlias("ponhub.log.0");
+    }
+
+    private void assertPreferencesSymbolicLogAlias(String filename) throws Exception {
         Path data = testFolder.resolve("canonical.json");
         Files.writeString(data, "rejected operational bytes");
         byte[] originalData = Files.readAllBytes(data);
-        Path log = testFolder.resolve("addressbook.log.0");
+        Path log = testFolder.resolve(filename);
         Files.writeString(log, "preserve log bytes");
         byte[] originalLog = Files.readAllBytes(log);
         Path prefs = testFolder.resolve("preferences.json");
@@ -428,10 +464,19 @@ public class ProtectedStartupTest {
 
     @Test
     public void startup_preferencesHardLinkAliasToLog_preservesBothOriginalFiles() throws Exception {
+        assertPreferencesHardLogAlias("addressbook.log.0");
+    }
+
+    @Test
+    public void startup_preferencesHardLinkAliasToLog_preservesBothOriginalFilesPonHub() throws Exception {
+        assertPreferencesHardLogAlias("ponhub.log.0");
+    }
+
+    private void assertPreferencesHardLogAlias(String filename) throws Exception {
         Path data = testFolder.resolve("canonical.json");
         Files.writeString(data, "rejected operational bytes");
         byte[] originalData = Files.readAllBytes(data);
-        Path log = testFolder.resolve("addressbook.log.0");
+        Path log = testFolder.resolve(filename);
         Files.writeString(log, "preserve log bytes");
         byte[] originalLog = Files.readAllBytes(log);
         Path prefs = testFolder.resolve("preferences.json");
@@ -445,6 +490,31 @@ public class ProtectedStartupTest {
         assertArrayEquals(originalData, Files.readAllBytes(data));
         assertArrayEquals(originalLog, Files.readAllBytes(log));
         assertArrayEquals(originalLog, Files.readAllBytes(prefs));
+    }
+
+    @Test
+    public void selectDataPath_logLinksToNestedStore_rejectsExistingAndMissingTargets() throws Exception {
+        for (String prefix : List.of("addressbook.log", "ponhub.log")) {
+            Path home = Files.createDirectory(testFolder.resolve(prefix));
+            Path data = Files.createDirectory(home.resolve("data")).resolve("selected.json");
+            Files.writeString(data, "Preserve nested operational data");
+            Path log = home.resolve(prefix + ".0");
+            try {
+                Files.createSymbolicLink(log, home.relativize(data));
+            } catch (IOException | UnsupportedOperationException | SecurityException exception) {
+                assumeTrue(false, "Symbolic links unavailable: " + exception);
+            }
+
+            assertThrows(IllegalArgumentException.class, () ->
+                    MainApp.selectDataPath(Map.of("data", "data/selected.json"), home));
+            assertEquals("Preserve nested operational data", Files.readString(data));
+            Files.delete(data);
+            assertThrows(IllegalArgumentException.class, () ->
+                    MainApp.selectDataPath(Map.of("data", "data/selected.json"), home));
+            assertTrue(Files.isSymbolicLink(log));
+            assertFalse(Files.exists(data));
+            assertFalse(Files.exists(home.resolve("preferences.json")));
+        }
     }
 
     private MainApp startSession(Path data) throws IOException {

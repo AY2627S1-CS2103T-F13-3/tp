@@ -98,13 +98,14 @@ public class MainApp extends Application {
     private static void rejectLogAlias(Path storagePath, Path applicationDirectory) throws IOException {
         Path resolvedPath = resolveStoragePath(storagePath, 0);
         if (applicationDirectory.equals(resolvedPath.getParent())
-                && resolvedPath.getFileName().toString().startsWith(LogsCenter.LOG_FILE_PREFIX)) {
+                && LogsCenter.isReservedLogFileName(resolvedPath.getFileName().toString())) {
             throw new IllegalArgumentException("Data and preferences must use separate files from application logs.");
         }
         if (Files.notExists(applicationDirectory)) {
             return;
         }
-        try (var logFiles = Files.newDirectoryStream(applicationDirectory, LogsCenter.LOG_FILE_PREFIX + "*")) {
+        try (var logFiles = Files.newDirectoryStream(applicationDirectory,
+                path -> LogsCenter.isReservedLogFileName(path.getFileName().toString()))) {
             for (Path logFile : logFiles) {
                 boolean isSameExistingFile = Files.exists(storagePath) && Files.exists(logFile)
                         && Files.isSameFile(storagePath, logFile);
