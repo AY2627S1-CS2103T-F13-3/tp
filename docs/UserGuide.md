@@ -308,7 +308,11 @@ The screenshot uses disposable sample data and shows Alex and Jamie enrolled in 
 
 ## Data protection in the current build
 
-The current build stores people, shared lessons, rosters and their allocation state in `data/ponhub.json` inside the folder containing the JAR. `--data=PATH` selects a different file within that folder or its subfolders; relative paths start from the JAR folder. Absolute paths are accepted only within that folder. Blank paths and paths escaping it, including through symbolic links, are rejected at startup. Select a separate data file: `preferences.json` and the root `addressbook.log*` logging files are reserved, including aliases to them. Window preferences are saved separately in `preferences.json` in the JAR folder; selecting a different store does not change the preference file.
+PonHub saves people, shared lessons, rosters, retained attendance and ID allocation state together in
+`data/ponhub.json` inside the folder containing the JAR. Attendance history is retained when a student
+is unenrolled from a lesson.
+
+`--data=PATH` selects a different file within that folder or its subfolders; relative paths start from the JAR folder. Absolute paths are accepted only within that folder. Blank paths and paths escaping it, including through symbolic links, are rejected at startup. Select a separate data file: `preferences.json` and the root `addressbook.log*` logging files are reserved, including aliases to them. Window preferences are saved separately in `preferences.json` in the JAR folder; selecting a different store does not change the preference file.
 
 A missing selected file starts a normal empty session and remains missing until the first successful mutation.
 `help`, `list`, `lessons`, `showlesson`, `history`, `search` and `exit` do not create or rewrite operational data. An invalid, unreadable, corrupt,
@@ -318,9 +322,12 @@ available, and operational writes are blocked.
 
 To recover:
 
-1. Close PonHub and preserve a backup of the original file before making changes.
-2. For a supported file, restore a known-good compatible copy or deliberately correct its JSON/access permissions after inspecting the error. Keep stable IDs, relationships and allocation counters valid.
-3. Restart PonHub and check the loaded records. Repairing or removing the file while the app is running does not unlock that session. Do not delete the original to dismiss the protection.
+1. Note the selected file path and the reason in the warning. Close PonHub and back up the original file before making changes.
+2. For a supported file, restore a known-good compatible backup or correct the reported JSON/access-permission problem on a working copy. Preserve stable IDs, relationships, retained attendance and allocation counters. For an unsupported version, use a compatible PonHub build on a separate copy. Follow the legacy-file instructions below for unversioned AB3 data.
+3. Restart PonHub with the recovered file selected. Check the people, lessons, rosters and attendance history before continuing, and keep the original backup until you have verified recovery.
+
+Repairing or removing the file while PonHub is running does not unlock that session. Do not delete
+the original file to dismiss the protection.
 
 The default startup leaves an older `data/addressbook.json` untouched. Selecting an unversioned AB3 file with `--data` rejects it and preserves its bytes; PonHub does not guess roles or migrate it automatically. Back it up, choose a separate previously unused store inside the JAR folder, such as `java -jar FILENAME.jar --data="separate store/ponhub.json"`, then manually add each person with an explicit role. There is no importer or setup command. Verify the new records before relying on the new store.
 
