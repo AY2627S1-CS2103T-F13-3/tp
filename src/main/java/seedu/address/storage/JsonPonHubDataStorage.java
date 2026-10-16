@@ -15,7 +15,7 @@ import seedu.address.model.PonHubDataState;
 
 /**
  * Standalone canonical codec/file access. Runtime callers use {@link ProtectedPonHubDataStorage}
- * for startup validation and session write protection; coordinated routing activation remains separate.
+ * for startup validation and session write protection.
  */
 public final class JsonPonHubDataStorage {
     private final Path filePath;

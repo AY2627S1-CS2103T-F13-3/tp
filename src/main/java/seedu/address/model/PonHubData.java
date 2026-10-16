@@ -29,6 +29,8 @@ import seedu.address.model.person.Student;
 /**
  * Canonical operational data root used by the active session and protected JSON storage.
  * Accepts only validated immutable state at the replacement boundary.
+ * Mutations install state in this container only; they perform no persistence. During command execution,
+ * this container is staged, and the executor saves its snapshot before publishing it to the live root.
  * Intended for the application's single model thread, not concurrent writers.
  */
 public final class PonHubData {
@@ -59,14 +61,16 @@ public final class PonHubData {
 
     /**
      * Observes complete, validated state publication without exposing a writable property.
-     * Query projections refresh here after a committed change or restore; staged changes use another container.
+     * Query projections refresh when this container installs state; staged changes use another container.
+     * Notification alone does not indicate that a snapshot has been saved to disk.
      */
     public ReadOnlyObjectProperty<PonHubDataState> stateProperty() {
         return state.getReadOnlyProperty();
     }
 
     /**
-     * Restores validated state, including allocation counters. This is a restore boundary, not a normal edit.
+     * Installs validated state, including allocation counters, for restore or transaction publication.
+     * This in-memory replacement does not write a file; the caller owns any required save ordering.
      * Immutable state can be shared safely; neither this container nor its caller can change its collections.
      */
     public void resetData(PonHubDataState replacement) {
@@ -143,7 +147,7 @@ public final class PonHubData {
     }
 
     /**
-     * Creates an empty-roster lesson for an existing tutor and returns the committed record.
+     * Creates an empty-roster lesson for an existing tutor and returns the record installed in this container.
      * The complete candidate state is validated before installation, so a rejected creation changes neither the
      * lesson catalogue nor its allocation history.
      *
