@@ -351,6 +351,27 @@ public class ProtectedStartupTest {
         assertReservedLogNames("ponhub.log");
     }
 
+    @Test
+    public void selectDataPath_caseVariedLogNames_rejectsExistingAndMissingFiles() throws Exception {
+        assertReservedLogNames("PonHub.LOG");
+        assertReservedLogNames("AddressBook.LOG");
+    }
+
+    @Test
+    public void selectDataPath_caseVariedHardLink_preservesOperationalBytes() throws Exception {
+        assertLogHardLinkAlias("PonHub.LOG.0");
+    }
+
+    @Test
+    public void startup_caseVariedPreferencesHardLink_preservesOriginalFiles() throws Exception {
+        assertPreferencesHardLogAlias("AddressBook.LOG.0");
+    }
+
+    @Test
+    public void startup_caseVariedPreferencesSymbolicLink_preservesExistingAndMissingTargets() throws Exception {
+        assertPreferencesSymbolicLogAlias("PonHub.LOG.0");
+    }
+
     private void assertReservedLogNames(String prefix) throws Exception {
         for (String suffix : List.of("", ".0", ".4", ".0.lck", ".0.1", ".future")) {
             String filename = prefix + suffix;
@@ -494,8 +515,8 @@ public class ProtectedStartupTest {
 
     @Test
     public void selectDataPath_logLinksToNestedStore_rejectsExistingAndMissingTargets() throws Exception {
-        for (String prefix : List.of("addressbook.log", "ponhub.log")) {
-            Path home = Files.createDirectory(testFolder.resolve(prefix));
+        for (String prefix : List.of("addressbook.log", "ponhub.log", "AddressBook.LOG", "PonHub.LOG")) {
+            Path home = Files.createTempDirectory(testFolder, "log-home-");
             Path data = Files.createDirectory(home.resolve("data")).resolve("selected.json");
             Files.writeString(data, "Preserve nested operational data");
             Path log = home.resolve(prefix + ".0");
