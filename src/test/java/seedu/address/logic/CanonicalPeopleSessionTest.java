@@ -52,6 +52,42 @@ public class CanonicalPeopleSessionTest {
     Path directory;
 
     @Test
+    public void execute_unicodeFieldBoundaries_preservesCommandFeedbackAndPersistence() throws Exception {
+        Path path = directory.resolve("unicode-boundaries.json");
+        CanonicalPeopleSession session = new CanonicalPeopleSession(path);
+
+        assertEquals("New tutor added: Mei Lim (T1).", session.execute(
+                "add r/\u00A0tutor\u202Fn/\u3000Mei Lim\u00A0p/00123456\u3000").getFeedbackToUser());
+        assertEquals("New student added: Alex Tan (S1).", session.execute(
+                "add r/student n/Alex Tan l/S2 pp/00123456").getFeedbackToUser());
+        assertEquals("New lesson added: L1.", session.execute(
+                "addlesson d/\u00A0Mon\u202Fst/\u30000900\u00A0et/1030\u3000s/Math\u00A0tu/Mei Lim\u202Frm/R1\u3000")
+                .getFeedbackToUser());
+        session.execute("list r/student");
+        session.execute("enrol 1 lid/L1");
+        assertEquals("Attendance for Student S1 in lesson L1 on 2026-10-05 marked present.", session.execute(
+                "mark \u00A01\u202Flid/\u3000L1\u00A0d/2026-10-05 s/\u202Fpresent\u3000").getFeedbackToUser());
+        assertEquals("Attendance for Student S1 in lesson L1 on 2026-10-05 removed.", session.execute(
+                "unmark \u30001\u00A0lid/\u202FL1\u3000d/\u00A02026-10-05\u202F").getFeedbackToUser());
+
+        assertTrue(session.getDataSnapshot().attendance().isEmpty());
+        assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
+
+        PonHubDataState before = session.getDataSnapshot();
+        byte[] originalBytes = Files.readAllBytes(path);
+        String[][] rejectedCommands = {
+            {"mark 0 x/value\t", "Mark arguments must be on one line and use spaces rather than control characters."},
+            {"addlesson x/value\n", "Commands must be on one line."}
+        };
+        for (String[] rejected : rejectedCommands) {
+            ParseException failure = assertThrows(ParseException.class, () -> session.execute(rejected[0]));
+            assertEquals(rejected[1], failure.getMessage());
+            assertSame(before, session.getDataSnapshot());
+            assertArrayEquals(originalBytes, Files.readAllBytes(path));
+        }
+    }
+
+    @Test
     public void construct_missingFile_startsEmptyAndReadCommandsDoNotCreateFile() throws Exception {
         Path path = directory.resolve("fresh folder/canonical.json");
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);

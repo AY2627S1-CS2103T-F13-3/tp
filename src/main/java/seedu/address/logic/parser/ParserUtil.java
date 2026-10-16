@@ -23,6 +23,40 @@ public class ParserUtil {
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
 
     /**
+     * Removes boundary code points for which {@link Character#isWhitespace(int)} or
+     * {@link Character#isSpaceChar(int)} is true, preserving all internal text.
+     * Callers that forbid controls or line breaks must reject them before trimming;
+     * this method does not validate the field and can remove whitespace controls.
+     *
+     * @throws NullPointerException if the value is null.
+     */
+    public static String stripUnicodeBoundaryWhitespace(String value) {
+        requireNonNull(value);
+        int start = 0;
+        while (start < value.length()) {
+            int codePoint = value.codePointAt(start);
+            if (!isBoundaryWhitespace(codePoint)) {
+                break;
+            }
+            start += Character.charCount(codePoint);
+        }
+
+        int end = value.length();
+        while (end > start) {
+            int codePoint = value.codePointBefore(end);
+            if (!isBoundaryWhitespace(codePoint)) {
+                break;
+            }
+            end -= Character.charCount(codePoint);
+        }
+        return value.substring(start, end);
+    }
+
+    private static boolean isBoundaryWhitespace(int codePoint) {
+        return Character.isWhitespace(codePoint) || Character.isSpaceChar(codePoint);
+    }
+
+    /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Rejects non-whitespace ISO controls
      * before trimming leading and trailing whitespace.
      *
