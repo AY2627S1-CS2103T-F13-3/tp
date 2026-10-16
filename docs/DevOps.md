@@ -22,11 +22,14 @@ The following commands perform common Gradle tasks.
 * **`shadowJar`**: Uses the Shadow plugin to create the fat JAR file `build/libs/ponhub.jar`.<br>
   For example: `./gradlew shadowJar`
 
-The v1.3 release-candidate build uses Gradle version `1.3` and `MainApp.VERSION` `v1.3`. Build the final candidate from the exact integrated source commit, copy `ponhub.jar` into a fresh folder, confirm `java -version` reports Java 25, and run `java -jar ponhub.jar`. Verify Help/menu/F1, the documented shared-lesson workflow and restart persistence there. Record the source commit, JAR size and SHA-256 checksum with the launch result. Publishing a release is not required for this packaged check.
-
-For Linux packaged verification without a local Linux machine, run **Verify Linux release package** in GitHub Actions. Supply the reviewed team source commit and the SHA-256 of the intended JAR; the defaults identify the v1.3 candidate from #252. The hosted Ubuntu job rebuilds that source, rejects a different checksum, launches the real JAR on a virtual display, and drives its command box through shared attendance, correction, retained history and restart. Download `linux-package-evidence` for the exact JAR, runtime details, command logs, disposable saved data and screenshots. This automated X11 check does not establish manual physical-display acceptance. A failed or unavailable run remains unverified.
-
-Packaged checks use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-project-on-your-computer). On macOS, use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) for the Mac's architecture. Record the OS, architecture, JDK distribution/version and actual launch result. Additional macOS trials with other distributions, including plain Oracle JDK, are optional portability checks; they are not required for the prescribed macOS acceptance check. Compatibility with Windows, Linux and macOS remains required.
+Use the checked-in Gradle wrapper, which selects the Gradle distribution in
+[`gradle-wrapper.properties`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/gradle/wrapper/gradle-wrapper.properties).
+The product version is separate: [`build.gradle`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/build.gradle)
+sets `version` for the JAR's `Implementation-Version` manifest attribute;
+[`MainApp.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/MainApp.java)
+sets `MainApp.VERSION` for the version reported in the startup log. Update both for a release, preserving their
+existing convention (`1.3` and `v1.3`, for example). These values do not select the Gradle version.
+See [Making a release](#making-a-release) for candidate, package and publication checks.
 
 * **`run`**: Builds and runs the application.<br>
   **`runShadow`**: Builds the application as a fat JAR, then runs it.
@@ -42,7 +45,12 @@ Packaged checks use Java 25 and the [runtime prerequisites](SettingUp.html#setti
 
 ## Continuous integration (CI)
 
-This project uses GitHub Actions for CI. The necessary workflow configuration files are in `.github/workflows`. No further setup is required.
+This project uses GitHub Actions for CI. The
+[Java workflow](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/.github/workflows/gradle.yml)
+runs `check coverage` on Windows, Linux and macOS with Java 25, using a virtual display on Linux.
+Verify the checks on the PR's current head; results from an earlier commit are historical evidence.
+Unit/integration CI, a packaged launch, and a rendered website check establish different things;
+record their outcomes separately. Website preview instructions are in the [Documentation guide](Documentation.html#build-and-preview-locally).
 
 ### Code coverage
 
@@ -56,11 +64,13 @@ To enable Codecov for forks of this project, follow the steps given in [this se-
 
 In addition to Gradle checks, CI runs repository-wide checks. Unlike Gradle checks, which cover files used in the build, these checks cover every repository file and enforce rules that are hard to apply on development machines, such as line-ending requirements.
 
-These checks are implemented as POSIX shell scripts, and thus can only be run on POSIX-compliant operating systems such as macOS and Linux. To run all checks locally on these operating systems, execute the following in the repository root directory:
+These checks are POSIX shell scripts. Run them from the repository root in a compatible shell on macOS,
+Linux or Windows with Git Bash:
 
 `./.github/run-checks.sh`
 
-Any warnings or errors will be printed out to the console.
+Any warnings or errors will be printed out to the console. The scripts inspect Git's index, so stage the
+intended files with `git add` before running them. Review the staged diff before committing.
 
 **If adding new checks:**
 
@@ -77,10 +87,70 @@ Any warnings or errors will be printed out to the console.
 
 ## Making a release
 
-Here are the steps to create a new release.
+This procedure is for the release maintainer. Prepare notes and a demonstration plan while features are
+being implemented, then validate them against the reviewed candidate before publication. Keep dated
+coordination and acceptance records in the relevant issues rather than copying them into this runbook.
+For historical context only, the v1.3 release work is recorded in
+[#103](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/103),
+[#153](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/153) and
+[#154](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/154).
 
-1. Update the version number in [`MainApp.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/MainApp.java).
-1. Generate a fat JAR file using Gradle (i.e., `./gradlew shadowJar`).
-1. Verify the built JAR on Windows, Linux and macOS using the packaged-check environment above, including the prescribed Azul JDK with JavaFX on macOS. Record the actual results before publishing.
-1. Tag the repo with the version number. e.g. `v0.1`
-1. [Create a new release using GitHub](https://help.github.com/articles/creating-releases/). Upload the JAR file you created.
+### Freeze and identify the candidate
+
+1. Confirm the intended feature scope, known limitations and owner checks. Update both product-version
+   declarations described under [Build automation](#build-automation), then obtain review and integration.
+2. From a clean checkout of the exact reviewed team commit, run `git rev-parse HEAD`, `java -version`,
+   `./gradlew check coverage` and `./gradlew shadowJar` (use `gradlew.bat` in PowerShell).
+   Run the [repository-wide checks](#repository-wide-checks) and verify current-head CI.
+3. Record the source SHA, runtime, commands/results, JAR size and SHA-256 of `build/libs/ponhub.jar`.
+   On macOS use `shasum -a 256 build/libs/ponhub.jar`, on Linux `sha256sum build/libs/ponhub.jar`,
+   or in PowerShell `Get-FileHash build/libs/ponhub.jar -Algorithm SHA256`.
+   The source, tag and uploaded asset must identify the same accepted candidate; recheck affected evidence
+   if source or artifact changes.
+
+### Verify the packaged application
+
+Copy the candidate JAR into a fresh disposable folder, confirm Java 25 in the launch terminal, and run
+`java -jar ponhub.jar`. Follow the [runtime prerequisites](SettingUp.html#setting-up-the-project-on-your-computer).
+On macOS use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) for the Mac's architecture.
+Record the OS, architecture, JDK distribution/version, source SHA, JAR hash and actual launch result.
+Other runtime trials are optional portability evidence, not substitutes for the prescribed Mac check.
+Compatibility with Windows, Linux and macOS remains required; use the existing JAR distribution.
+
+Use the [User Guide](UserGuide.html) and [developer manual checks](DeveloperGuide.html#appendix-instructions-for-manual-testing)
+for the candidate's supported commands and acceptance cases. Verify Help/menu/F1, the shared-lesson workflow,
+retained attendance/history, and save/restart persistence. Include newly delivered mutations and their
+failure cases without claiming proposed features work. In a fresh folder, missing operational data should
+remain unwritten until the first successful mutation; preferences and logs are separate. Exercise rejected
+data and recovery on disposable copies, preserving original bytes. Also launch from another working
+directory and confirm packaged files remain anchored to the JAR folder. Record limitations and failures.
+Building a JAR or passing Java CI alone does not establish these packaged outcomes.
+
+For hosted Linux verification, manually dispatch **Verify Linux release package** in GitHub Actions using
+the [workflow](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/.github/workflows/linux-package.yml).
+Set both `candidate_ref` to the reviewed **team source SHA** and `expected_sha256` to the intended JAR's
+**matching SHA-256**. Its current defaults and push/PR fallbacks are frozen v1.3 values; a run using them
+does not verify a later candidate. The v1.4 candidate owner tracks final package verification in
+[#271](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/271).
+
+The hosted Ubuntu job rebuilds that source, rejects a different checksum and drives the real JAR's command
+box on a virtual display through attendance, correction, retained history and restart. Check the
+[verification script](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/.github/scripts/verify_linux_package.py)
+for its actual coverage; arrange additional checks for new features it does not exercise. Download
+`linux-package-evidence` promptly (the workflow retains it for 30 days): it contains the exact JAR, runtime,
+logs, disposable data and screenshots. Record the run URL and result. Automated X11 results do not establish
+manual physical-display acceptance; a failed or unavailable check remains unverified.
+
+### Publish and verify the release
+
+1. Reconcile release notes, guide examples and media against the accepted candidate. Describe changes since
+   the previous release and retain known limitations and author/AI/reuse credits. Capture fictitious data;
+   reuse existing media only when it still matches and its provenance is retained.
+2. Verify that the intended version tag points to the accepted source commit. Have the designated release
+   owner [create the GitHub release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)
+   with the accepted notes, exact verified JAR and working media links.
+3. Download the public JAR and compare its SHA-256 with the accepted hash. Check the public tag/source,
+   release copy and media, and verify the deployed guides via the
+   [website checks](Documentation.html#maintain-and-publish-the-website). Record the release URL and outcomes.
+4. Reconcile issue acceptance and the iteration's release records before milestone closure. An uploaded
+   asset or closed issue alone does not prove a working release; retain explicit unresolved limitations.
