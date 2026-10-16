@@ -1,0 +1,49 @@
+@startuml
+skinparam arrowThickness 1.1
+' Match the storage palette in style.puml without unrelated sequence-diagram settings.
+skinparam arrowColor #A38300
+skinparam classBackgroundColor #A38300
+skinparam classFontColor #FFFFFF
+skinparam classFontName Arial
+skinparam classBorderColor #FFFFFF
+skinparam packageBackgroundColor #FFFFFF
+hide empty members
+top to bottom direction
+
+package "Operational storage" {
+    class ProtectedPonHubDataStorage
+    class JsonDataVersionDetector
+    class JsonPonHubDataCodec
+    class JsonPonHubDataStorage
+}
+
+package "Preferences (separate file)" {
+    class JsonUserPrefsStorage
+    class JsonUtil
+}
+
+package "Shared file writing" {
+    class FileUtil
+    class AtomicFileWriter
+}
+
+ProtectedPonHubDataStorage --> "1" JsonPonHubDataStorage : owns
+ProtectedPonHubDataStorage ..> JsonDataVersionDetector : classify load
+ProtectedPonHubDataStorage ..> JsonPonHubDataCodec : validate/decode load
+JsonPonHubDataStorage ..> JsonPonHubDataCodec : encode/decode
+JsonPonHubDataStorage ..> FileUtil : save JSON
+JsonUserPrefsStorage ..> JsonUtil : preferences JSON
+JsonUtil ..> FileUtil : save JSON
+FileUtil ..> AtomicFileWriter : create writer
+JsonPonHubDataCodec -[hidden]down-> FileUtil
+
+note top of ProtectedPonHubDataStorage
+  One load attempt per session.
+  Rejected data keeps writes locked.
+end note
+
+note bottom of AtomicFileWriter
+  Temporary sibling, then replacement.
+  Backup/recovery fallback is not atomic.
+end note
+@enduml

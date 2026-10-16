@@ -662,13 +662,15 @@ Capacity, waiting lists, make-ups, fees, person and lesson editing, occurrence c
 
 ### Checking unsuccessful saves in the current build
 
-On a disposable copy, run `list r/student`, select a card and note the saved people and their IDs. Make the selected operational data location unwritable for the app's account, then attempt a valid role-aware addition. Expect a save error, no success message and unchanged people, IDs, role filter and selection. Restore write access and retry; the successful addition must use the next unconsumed ID, appear last in the all-role view and survive restart. Automated tests inject save failures without changing filesystem permissions.
+If a command reports a save error, its change has not been applied to the current session. Check the
+reported file path and cause before retrying. If the error names a recovery backup, recover its contents
+before continuing. See [Data protection](#data-protection-in-the-current-build) for backup and recovery steps.
 
 ### Canonical loading and recovery
 
-Use disposable copies and record file bytes before each check. Launch with a missing `--data` path: expect an empty normal session and no file after help/list/exit; a successful add creates supported JSON. Restart with the same path and verify the saved people and IDs.
-
-Select an invalid or unversioned AB3 file: expect a protected empty view, recovery guidance, only help/list/exit and unchanged file bytes. Repair or remove a working copy while the app is open, then attempt add again; the same session stays protected. Close the app, restore a valid supported copy and restart to validate recovery. For legacy records, preserve the original and manually re-enter roles into a separate previously unused path as described in [Data protection](#data-protection-in-the-current-build).
+An empty protected view does not mean your saved records have been deleted. Follow the warning and
+[Data protection recovery steps](#data-protection-in-the-current-build), then restart with the recovered
+file selected. Changing the file while the app is running does not unlock the protected session.
 
 ### Editing saved shared lessons (supported format)
 
@@ -684,10 +686,8 @@ Attendance is supported in saved files as described below. `addlesson`, `deletel
 `lessons` and lesson search are active, guarded `delete` removes eligible people, and `unmark` removes a selected
 dated attendance record. `history` displays retained records without changing them.
 
-For a disposable-file recovery check, change a saved lesson's tutor ID to an absent
-ID and restart. Expect a recovery warning and unchanged file bytes after help/list/exit or an attempted
-mutation. Restore the valid backup and restart to verify loading. Codec and protected-storage tests
-cover these guarantees; record actual application outcomes when performing this check.
+If an edited file is rejected, close PonHub and restore the valid backup before restarting. Follow
+[Data protection](#data-protection-in-the-current-build) rather than deleting records to bypass the warning.
 
 
 ### Editing saved attendance (supported format; mark and unmark active)
