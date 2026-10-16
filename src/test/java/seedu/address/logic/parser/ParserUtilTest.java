@@ -35,6 +35,56 @@ public class ParserUtilTest {
     private static final String WHITESPACE = " \t\r\n";
 
     @Test
+    public void stripUnicodeBoundaryWhitespace_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.stripUnicodeBoundaryWhitespace(null));
+    }
+
+    @Test
+    public void stripUnicodeBoundaryWhitespace_emptyAndBlank_returnsEmptyString() {
+        for (String value : new String[]{"", " ", "\u00A0", "\u202F", "\u3000", " \u2002\u2003\u2007"}) {
+            assertEquals("", ParserUtil.stripUnicodeBoundaryWhitespace(value));
+        }
+    }
+
+    @Test
+    public void stripUnicodeBoundaryWhitespace_boundarySpaces_removesOnlyBoundaries() {
+        for (String space : new String[]{" ", "\u00A0", "\u202F", "\u3000", "\u2002", "\u2003", "\u2007"}) {
+            assertEquals("value", ParserUtil.stripUnicodeBoundaryWhitespace(space + "value"));
+            assertEquals("value", ParserUtil.stripUnicodeBoundaryWhitespace("value" + space));
+            assertEquals("value", ParserUtil.stripUnicodeBoundaryWhitespace(space + "value" + space));
+        }
+        assertEquals("value", ParserUtil.stripUnicodeBoundaryWhitespace(" \u00A0value\u202F\u3000"));
+    }
+
+    @Test
+    public void stripUnicodeBoundaryWhitespace_internalText_preservesExactly() {
+        String value = "Block  1\u00A0Unit\u202F2\u3000A\tB\nC";
+        assertEquals(value, ParserUtil.stripUnicodeBoundaryWhitespace(value));
+        assertEquals(value, ParserUtil.stripUnicodeBoundaryWhitespace("\u3000" + value + "\u00A0"));
+    }
+
+    @Test
+    public void stripUnicodeBoundaryWhitespace_supplementaryCharacters_preservesSurrogatePairs() {
+        String value = "\uD801\uDC00  \uD83D\uDE00";
+        assertEquals(value, ParserUtil.stripUnicodeBoundaryWhitespace(value));
+        assertEquals(value, ParserUtil.stripUnicodeBoundaryWhitespace("\u00A0" + value + "\u3000"));
+    }
+
+    @Test
+    public void stripUnicodeBoundaryWhitespace_otherCharacters_stopsTrimming() {
+        for (String boundary : new String[]{"\u0000", "\u007F", "\u0085", "\u200B", "\uFEFF"}) {
+            String value = boundary + " value " + boundary;
+            assertEquals(value, ParserUtil.stripUnicodeBoundaryWhitespace(" " + value + " "));
+        }
+    }
+
+    @Test
+    public void stripUnicodeBoundaryWhitespace_whitespaceControls_trimsWithoutValidating() {
+        String controls = "\t\n\r\u001F\u2028\u2029";
+        assertEquals("value", ParserUtil.stripUnicodeBoundaryWhitespace(controls + "value" + controls));
+    }
+
+    @Test
     public void parseIndex_invalidInput_throwsParseException() {
         assertThrows(ParseException.class, () -> ParserUtil.parseIndex("10 a"));
     }

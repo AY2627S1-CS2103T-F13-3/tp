@@ -308,7 +308,11 @@ The screenshot uses disposable sample data and shows Alex and Jamie enrolled in 
 
 ## Data protection in the current build
 
-The current build stores people, shared lessons, rosters and their allocation state in `data/ponhub.json` inside the folder containing the JAR. `--data=PATH` selects a different file within that folder or its subfolders; relative paths start from the JAR folder. Absolute paths are accepted only within that folder. Blank paths and paths escaping it, including through symbolic links, are rejected at startup. Select a separate data file: `preferences.json` and the root `ponhub.log*` and legacy `addressbook.log*` names are reserved, including rotation/lock files, future suffixes and aliases to them. New logs use `ponhub.log*`; old `addressbook.log*` files remain untouched and reserved for compatibility. Window preferences are saved separately in `preferences.json` in the JAR folder; selecting a different store does not change the preference file.
+PonHub saves people, shared lessons, rosters, retained attendance and ID allocation state together in
+`data/ponhub.json` inside the folder containing the JAR. Attendance history is retained when a student
+is unenrolled from a lesson.
+
+`--data=PATH` selects a different file within that folder or its subfolders; relative paths start from the JAR folder. Absolute paths are accepted only within that folder. Blank paths and paths escaping it, including through symbolic links, are rejected at startup. Select a separate data file: `preferences.json` and the root `ponhub.log*` and legacy `addressbook.log*` names are reserved, including rotation/lock files, future suffixes, case variants and aliases to them. New logs use `ponhub.log*`; old `addressbook.log*` files remain untouched and reserved for compatibility. Window preferences are saved separately in `preferences.json` in the JAR folder; selecting a different store does not change the preference file.
 
 A missing selected file starts a normal empty session and remains missing until the first successful mutation.
 `help`, `list`, `lessons`, `showlesson`, `history`, `search` and `exit` do not create or rewrite operational data. An invalid, unreadable, corrupt,
@@ -318,9 +322,12 @@ available, and operational writes are blocked.
 
 To recover:
 
-1. Close PonHub and preserve a backup of the original file before making changes.
-2. For a supported file, restore a known-good compatible copy or deliberately correct its JSON/access permissions after inspecting the error. Keep stable IDs, relationships and allocation counters valid.
-3. Restart PonHub and check the loaded records. Repairing or removing the file while the app is running does not unlock that session. Do not delete the original to dismiss the protection.
+1. Note the selected file path and the reason in the warning. Close PonHub and back up the original file before making changes.
+2. For a supported file, restore a known-good compatible backup or correct the reported JSON/access-permission problem on a working copy. Preserve stable IDs, relationships, retained attendance and allocation counters. For an unsupported version, use a compatible PonHub build on a separate copy. Follow the legacy-file instructions below for unversioned AB3 data.
+3. Restart PonHub with the recovered file selected. Check the people, lessons, rosters and attendance history before continuing, and keep the original backup until you have verified recovery.
+
+Repairing or removing the file while PonHub is running does not unlock that session. Do not delete
+the original file to dismiss the protection.
 
 The default startup leaves an older `data/addressbook.json` untouched. Selecting an unversioned AB3 file with `--data` rejects it and preserves its bytes; PonHub does not guess roles or migrate it automatically. Back it up, choose a separate previously unused store inside the JAR folder, such as `java -jar FILENAME.jar --data="separate store/ponhub.json"`, then manually add each person with an explicit role. There is no importer or setup command. Verify the new records before relying on the new store.
 
@@ -662,13 +669,15 @@ Capacity, waiting lists, make-ups, fees, person and lesson editing, occurrence c
 
 ### Checking unsuccessful saves in the current build
 
-On a disposable copy, run `list r/student`, select a card and note the saved people and their IDs. Make the selected operational data location unwritable for the app's account, then attempt a valid role-aware addition. Expect a save error, no success message and unchanged people, IDs, role filter and selection. Restore write access and retry; the successful addition must use the next unconsumed ID, appear last in the all-role view and survive restart. Automated tests inject save failures without changing filesystem permissions.
+If a command reports a save error, its change has not been applied to the current session. Check the
+reported file path and cause before retrying. If the error names a recovery backup, recover its contents
+before continuing. See [Data protection](#data-protection-in-the-current-build) for backup and recovery steps.
 
 ### Canonical loading and recovery
 
-Use disposable copies and record file bytes before each check. Launch with a missing `--data` path: expect an empty normal session and no file after help/list/exit; a successful add creates supported JSON. Restart with the same path and verify the saved people and IDs.
-
-Select an invalid or unversioned AB3 file: expect a protected empty view, recovery guidance, only help/list/exit and unchanged file bytes. Repair or remove a working copy while the app is open, then attempt add again; the same session stays protected. Close the app, restore a valid supported copy and restart to validate recovery. For legacy records, preserve the original and manually re-enter roles into a separate previously unused path as described in [Data protection](#data-protection-in-the-current-build).
+An empty protected view does not mean your saved records have been deleted. Follow the warning and
+[Data protection recovery steps](#data-protection-in-the-current-build), then restart with the recovered
+file selected. Changing the file while the app is running does not unlock the protected session.
 
 ### Editing saved shared lessons (supported format)
 
@@ -684,10 +693,8 @@ Attendance is supported in saved files as described below. `addlesson`, `deletel
 `lessons` and lesson search are active, guarded `delete` removes eligible people, and `unmark` removes a selected
 dated attendance record. `history` displays retained records without changing them.
 
-For a disposable-file recovery check, change a saved lesson's tutor ID to an absent
-ID and restart. Expect a recovery warning and unchanged file bytes after help/list/exit or an attempted
-mutation. Restore the valid backup and restart to verify loading. Codec and protected-storage tests
-cover these guarantees; record actual application outcomes when performing this check.
+If an edited file is rejected, close PonHub and restore the valid backup before restarting. Follow
+[Data protection](#data-protection-in-the-current-build) rather than deleting records to bypass the warning.
 
 
 ### Editing saved attendance (supported format; mark and unmark active)

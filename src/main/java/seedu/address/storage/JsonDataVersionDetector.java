@@ -21,7 +21,7 @@ public final class JsonDataVersionDetector {
     private JsonDataVersionDetector() {
     }
 
-    /** Describes the format boundary for a future protected loader. */
+    /** Describes the format boundary checked by {@link ProtectedPonHubDataStorage} before domain decoding. */
     public enum Format {
         LEGACY_AB3,
         PONHUB_V1_CANDIDATE,
@@ -33,7 +33,7 @@ public final class JsonDataVersionDetector {
 
     /**
      * Classifies a complete JSON document without modifying it or constructing model objects.
-     * A versioned candidate still needs complete envelope and domain validation by the future loader.
+     * A versioned candidate still needs complete envelope and domain validation by {@link JsonPonHubDataCodec}.
      * A legacy classification identifies only the root shape, not the validity of individual contacts.
      * File absence and read failures must be handled separately by the caller, never as empty JSON.
      *

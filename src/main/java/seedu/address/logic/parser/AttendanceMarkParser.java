@@ -65,7 +65,7 @@ public final class AttendanceMarkParser {
         if (!matcher.find()) {
             throw new ParseException(MESSAGE_ARGUMENTS);
         }
-        String studentIndex = stripBoundaryWhitespace(arguments.substring(0, matcher.start()));
+        String studentIndex = ParserUtil.stripUnicodeBoundaryWhitespace(arguments.substring(0, matcher.start()));
         if (studentIndex.isEmpty()) {
             throw new ParseException(MESSAGE_ARGUMENTS);
         }
@@ -82,7 +82,7 @@ public final class AttendanceMarkParser {
             if (values.containsKey(prefix)) {
                 throw new ParseException("Repeated mark prefix '" + prefix + "'.");
             }
-            String value = stripBoundaryWhitespace(arguments.substring(valueStart, valueEnd));
+            String value = ParserUtil.stripUnicodeBoundaryWhitespace(arguments.substring(valueStart, valueEnd));
             if (value.isEmpty()) {
                 throw new ParseException("Mark prefix '" + prefix + "' requires a non-blank value.");
             }
@@ -100,34 +100,6 @@ public final class AttendanceMarkParser {
             throw new ParseException("Missing required mark prefix '" + prefix + "'.");
         }
         return value;
-    }
-
-    /**
-     * Strips Unicode whitespace at a field boundary.
-     */
-    private static String stripBoundaryWhitespace(String value) {
-        int start = 0;
-        while (start < value.length()) {
-            int codePoint = value.codePointAt(start);
-            if (!isBoundaryWhitespace(codePoint)) {
-                break;
-            }
-            start += Character.charCount(codePoint);
-        }
-
-        int end = value.length();
-        while (end > start) {
-            int codePoint = value.codePointBefore(end);
-            if (!isBoundaryWhitespace(codePoint)) {
-                break;
-            }
-            end -= Character.charCount(codePoint);
-        }
-        return value.substring(start, end);
-    }
-
-    private static boolean isBoundaryWhitespace(int codePoint) {
-        return Character.isWhitespace(codePoint) || Character.isSpaceChar(codePoint);
     }
 
     /**

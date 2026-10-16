@@ -3,7 +3,9 @@ package seedu.address.commons.core.index;
 import seedu.address.commons.util.ToStringBuilder;
 
 /**
- * Represents a zero-based or one-based index.
+ * Represents an index whose zero-based and one-based values both fit in an {@code int}.
+ * Zero-based values range from 0 to {@code Integer.MAX_VALUE - 1}; one-based values range from
+ * 1 to {@code Integer.MAX_VALUE}.
  *
  * {@code Index} should be used right from the start (when parsing in a new user input), so that if the current
  * component wants to communicate with another component, it can send an {@code Index} to avoid having to know what
@@ -11,17 +13,13 @@ import seedu.address.commons.util.ToStringBuilder;
  * convert it back to an int if the index will not be passed to a different component again.
  */
 public class Index {
-    private int zeroBasedIndex;
+    private final int zeroBasedIndex;
 
     /**
      * Index can only be created by calling {@link Index#fromZeroBased(int)} or
      * {@link Index#fromOneBased(int)}.
      */
     private Index(int zeroBasedIndex) {
-        if (zeroBasedIndex < 0) {
-            throw new IndexOutOfBoundsException();
-        }
-
         this.zeroBasedIndex = zeroBasedIndex;
     }
 
@@ -35,15 +33,28 @@ public class Index {
 
     /**
      * Creates a new {@code Index} using a zero-based index.
+     *
+     * @throws IndexOutOfBoundsException if {@code zeroBasedIndex} is negative or its one-based
+     *     value cannot be represented as an {@code int}.
      */
     public static Index fromZeroBased(int zeroBasedIndex) {
+        if (zeroBasedIndex < 0 || zeroBasedIndex == Integer.MAX_VALUE) {
+            throw new IndexOutOfBoundsException();
+        }
+
         return new Index(zeroBasedIndex);
     }
 
     /**
      * Creates a new {@code Index} using a one-based index.
+     *
+     * @throws IndexOutOfBoundsException if {@code oneBasedIndex} is not positive.
      */
     public static Index fromOneBased(int oneBasedIndex) {
+        if (oneBasedIndex <= 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
         return new Index(oneBasedIndex - 1);
     }
 
@@ -59,6 +70,11 @@ public class Index {
         }
 
         return zeroBasedIndex == otherIndex.zeroBasedIndex;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(zeroBasedIndex);
     }
 
     @Override
