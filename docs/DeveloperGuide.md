@@ -39,6 +39,7 @@ title: Developer Guide
   regressions, retired legacy Person replacement API removal and guide updates.
   He also used Codex for cross-branch conflict reconciliation and its focused validation; original
   feature authorship is preserved.
+  He also used Codex for #292's closure of immutable contact values to inheritance and regression checks.
   These credits do not transfer feature ownership.
 * Yang Shuo (`ys000009`) used OpenAI Codex for #78's scheduling APIs, aggregate invariants,
   read-only relationship queries/guards, tests and design documentation; and #86's active shared-lesson
