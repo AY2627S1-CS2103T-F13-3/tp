@@ -16,6 +16,9 @@ import org.junit.jupiter.api.Test;
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.PersonIndexResolver;
 import seedu.address.logic.parser.PeopleListParser;
+import seedu.address.model.PeopleView;
+import seedu.address.model.PonHubData;
+import seedu.address.model.PonHubDataState;
 import seedu.address.model.person.ContactDetails;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Parent;
@@ -28,7 +31,6 @@ import seedu.address.model.person.Phone;
 import seedu.address.model.person.Student;
 import seedu.address.model.person.Tutor;
 import seedu.address.ui.PersonRecordCardData;
-import seedu.address.ui.PersonRecordListData;
 
 public class PeopleSampleDataUtilTest {
 
@@ -147,22 +149,22 @@ public class PeopleSampleDataUtilTest {
 
     private static void assertView(PeopleRegistry people, String arguments, List<String> expectedIds) throws Exception {
         PeopleRegistryState before = people.exportState();
-        PersonRecordListData view = new PersonRecordListData(people.getPeople(),
-                new PeopleListParser().parse(arguments));
-        List<PersonRecord> visiblePeople = view.getEntries().stream().map(PersonRecordListData.Entry::person).toList();
+        PonHubData source = new PonHubData(new PonHubDataState(before, List.of(), List.of(), 0));
+        PeopleView view = new PeopleView(source);
+        view.setRoleFilter(new PeopleListParser().parse(arguments));
+        List<PersonRecord> visiblePeople = view.getPeople();
         assertEquals(expectedIds, getIds(visiblePeople));
         for (int i = 0; i < expectedIds.size(); i++) {
-            PersonRecordListData.Entry entry = view.getEntries().get(i);
             PersonRecord person = getPerson(people, expectedIds.get(i));
-            assertEquals(i + 1, entry.displayedIndex());
             assertSame(person, PersonIndexResolver.resolve(Index.fromOneBased(i + 1), visiblePeople));
             if (person instanceof Student student) {
                 assertSame(student, PersonIndexResolver.resolveStudent(Index.fromOneBased(i + 1), visiblePeople));
             }
-            PersonRecordCardData card = new PersonRecordCardData(entry.person(), entry.displayedIndex());
+            PersonRecordCardData card = new PersonRecordCardData(visiblePeople.get(i), i + 1);
             assertEquals((i + 1) + ". " + person.getName().fullName, card.getHeading());
             assertTrue(card.getIdentity().endsWith(" · " + expectedIds.get(i)));
         }
+        assertSame(before, source.exportState().people());
         assertEquals(before, people.exportState());
     }
 }

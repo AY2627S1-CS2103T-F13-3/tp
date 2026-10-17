@@ -18,11 +18,9 @@ import seedu.address.model.person.Name;
 import seedu.address.model.person.Parent;
 import seedu.address.model.person.PersonId;
 import seedu.address.model.person.PersonRecord;
-import seedu.address.model.person.PersonRole;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Student;
 import seedu.address.model.person.Tutor;
-import seedu.address.ui.PersonRecordListData;
 
 public class PersonIndexResolverTest {
 
@@ -44,12 +42,8 @@ public class PersonIndexResolverTest {
 
     @Test
     public void resolve_filteredProjection_usesCurrentPositionsRatherThanUnfilteredOrderOrIdSuffix() throws Exception {
-        PersonRecordListData students = new PersonRecordListData(mixedPeople, Optional.of(PersonRole.STUDENT));
-        List<PersonRecord> visibleStudents = students.getEntries().stream()
-                .map(PersonRecordListData.Entry::person).toList();
+        List<PersonRecord> visibleStudents = List.of(firstStudent, secondStudent);
 
-        assertEquals(1, students.getEntries().get(0).displayedIndex());
-        assertEquals(2, students.getEntries().get(1).displayedIndex());
         assertSame(firstStudent, PersonIndexResolver.resolve(Index.fromOneBased(1), visibleStudents));
         assertSame(secondStudent, PersonIndexResolver.resolve(Index.fromOneBased(2), visibleStudents));
         assertSame(secondStudent, PersonIndexResolver.resolveStudent(Index.fromOneBased(2), visibleStudents));
@@ -108,15 +102,12 @@ public class PersonIndexResolverTest {
 
     @Test
     public void resolveStudent_viewRefresh_preservesCapturedRecordAndStableIdentity() throws Exception {
-        PersonRecordListData allPeople = new PersonRecordListData(mixedPeople, Optional.empty());
-        List<PersonRecord> visiblePeople = new ArrayList<>(allPeople.getEntries().stream()
-                .map(PersonRecordListData.Entry::person).toList());
+        List<PersonRecord> visiblePeople = new ArrayList<>(mixedPeople);
         Index selectedIndex = Index.fromOneBased(2);
         Student selectedStudent = PersonIndexResolver.resolveStudent(selectedIndex, visiblePeople);
 
-        PersonRecordListData refreshed = new PersonRecordListData(List.of(secondStudent, parent), Optional.empty());
         visiblePeople.clear();
-        visiblePeople.addAll(refreshed.getEntries().stream().map(PersonRecordListData.Entry::person).toList());
+        visiblePeople.addAll(List.of(secondStudent, parent));
 
         assertSame(firstStudent, selectedStudent);
         assertEquals(new PersonId("S9"), selectedStudent.getId());
