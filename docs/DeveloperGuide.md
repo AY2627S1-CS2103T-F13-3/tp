@@ -2,6 +2,41 @@
 layout: page
 title: Developer Guide
 ---
+## **Introduction**
+
+PonHub is a keyboard-focused desktop application for tuition centre administrators. It brings student,
+tutor and parent records, shared lessons, enrolment and dated attendance into one local workflow.
+Administrators can manage a lesson's roster and review attendance retained after unenrolment.
+
+This guide is for developers maintaining and extending PonHub. The
+[User Guide](UserGuide.html#current-command-summary) explains supported commands for administrators;
+the [requirements appendix](#product-scope) records the target audience, value proposition and intended scope.
+
+### Maintainer reading path
+
+1. **Understand the structure.** Start with [Architecture](#architecture) and its component responsibilities,
+   then the [shared-lesson contract](#shared-lesson-target-contract) for the relationships and identity rules
+   that those components preserve.
+2. **Trace one active command.** Follow [Canonical people commands](#canonical-people-commands) with
+   `add r/student n/Alex Tan l/P1 pp/91234567` in a normal session. Read
+   [Command transactions](#command-transactions) to see why addition prepares a candidate, saves it, then
+   publishes the data and people view. A failed save must leave the live state unchanged.
+3. **Find the code and checks.** Follow routing in
+   [`CanonicalPeopleSession`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/CanonicalPeopleSession.java),
+   staging in [`CanonicalAddCommand`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/commands/CanonicalAddCommand.java)
+   and save/publication ordering in
+   [`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/CanonicalCommandExecutor.java).
+   [`CanonicalPeopleSessionTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/seedu/address/logic/CanonicalPeopleSessionTest.java)
+   covers routing and protected loading;
+   [`CanonicalPeopleCommandIntegrationTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/seedu/address/logic/commands/CanonicalPeopleCommandIntegrationTest.java)
+   covers addition, save/reload and failed-save preservation.
+
+Use [Setting up](SettingUp.html) to prepare a development environment and the
+[Testing guide](Testing.html#running-tests) to run the relevant checks. Startup, window and storage details
+remain available through the table of contents when a change needs them.
+
+--------------------------------------------------------------------------------------------------------------------
+
 * Table of Contents
 {:toc}
 
