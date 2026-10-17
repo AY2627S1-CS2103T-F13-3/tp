@@ -1,0 +1,46 @@
+@startuml
+!pragma layout smetana
+
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classBackgroundColor #9D0012
+skinparam classFontColor white
+skinparam classAttributeFontColor white
+skinparam classBorderColor white
+skinparam arrowColor #9D0012
+skinparam classFontSize 15
+skinparam classAttributeFontSize 14
+show members
+hide empty members
+hide circle
+
+class PonHubData
+class PonHubDataState
+class PeopleRegistryState {
+    lastAllocatedSequences
+}
+interface PersonRecord {
+    getId(): PersonId
+}
+class PersonId
+class PeopleView {
+    getPeople(): ObservableList<PersonRecord>
+}
+class PersonIndexResolver {
+    {static} resolve(index, visiblePeople): PersonRecord
+}
+
+PonHubData "1" --> "1" PonHubDataState : state
+PonHubDataState "1" --> "1" PeopleRegistryState : people
+PeopleRegistryState "1" --> "0..*" PersonRecord : people {ordered}
+PersonRecord --> "1" PersonId : id
+PeopleView --> "1" PonHubData : source
+PeopleView --> "0..*" PersonRecord : current people\n{ordered, read-only}
+PersonIndexResolver ..> PersonRecord : returns selected record
+
+note bottom of PersonIndexResolver
+  Command callers supply the current list
+  from PeopleView.getPeople().
+  A position is not a PersonId suffix.
+end note
+@enduml
