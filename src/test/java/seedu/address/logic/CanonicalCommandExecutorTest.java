@@ -119,7 +119,6 @@ public class CanonicalCommandExecutorTest {
             throw denied;
         }, Optional::empty);
 
-        // Ernest used OpenAI Codex for this permission-denied transaction regression (#191).
         CommandException failure = assertThrows(CommandException.class, () -> executor.execute((staged, stagedView) -> {
             assertEquals(new PersonId("S7"), PersonIndexResolver.resolve(Index.fromOneBased(1),
                     stagedView.getPeople()).getId());
