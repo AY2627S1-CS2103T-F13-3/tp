@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.commons.core.index.Index;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
@@ -102,6 +103,31 @@ public class ParserUtilTest {
 
         // Leading and trailing whitespaces
         assertEquals(INDEX_FIRST_PERSON, ParserUtil.parseIndex("  1  "));
+    }
+
+    @Test
+    public void parseIndex_nonWhitespaceIsoControls_throwsIndexConstraint() {
+        for (int codePoint = 0; codePoint <= 0x9f; codePoint++) {
+            if (!Character.isISOControl(codePoint) || Character.isWhitespace(codePoint)) {
+                continue;
+            }
+            String control = Character.toString(codePoint);
+            for (String index : List.of(control + "1", "1" + control, "1" + control + "2")) {
+                assertThrows(ParseException.class, MESSAGE_INVALID_INDEX, () -> ParserUtil.parseIndex(index));
+            }
+        }
+    }
+
+    @Test
+    public void parseIndex_supportedWhitespaceAndNumericBoundaries_preservesPolicy() throws Exception {
+        String whitespace = " \t\r\n\f\u000b\u001c\u001d\u001e\u001f";
+        assertEquals(INDEX_FIRST_PERSON, ParserUtil.parseIndex(whitespace + "1" + whitespace));
+        assertEquals(INDEX_FIRST_PERSON, ParserUtil.parseIndex("01"));
+        assertEquals(INDEX_FIRST_PERSON, ParserUtil.parseIndex("１"));
+        assertEquals(Index.fromOneBased(Integer.MAX_VALUE), ParserUtil.parseIndex("2147483647"));
+        for (String index : List.of("", " ", "0", "-1", "+1", "2147483648", "1\t2", "\u00a01")) {
+            assertThrows(ParseException.class, MESSAGE_INVALID_INDEX, () -> ParserUtil.parseIndex(index));
+        }
     }
 
     @Test
