@@ -71,12 +71,12 @@ public final class AddLessonParser {
         Map<String, String> values = new LinkedHashMap<>();
         Matcher matcher = PREFIX_PATTERN.matcher(arguments);
         if (!matcher.find()) {
-            if (stripBoundaryWhitespace(arguments).isEmpty()) {
+            if (ParserUtil.stripUnicodeBoundaryWhitespace(arguments).isEmpty()) {
                 return values;
             }
             throw new ParseException(MESSAGE_PREAMBLE);
         }
-        if (!stripBoundaryWhitespace(arguments.substring(0, matcher.start())).isEmpty()) {
+        if (!ParserUtil.stripUnicodeBoundaryWhitespace(arguments.substring(0, matcher.start())).isEmpty()) {
             throw new ParseException(MESSAGE_PREAMBLE);
         }
         boolean hasNext;
@@ -91,7 +91,7 @@ public final class AddLessonParser {
             if (values.containsKey(prefix)) {
                 throw new ParseException("Repeated addlesson prefix '" + prefix + "'.");
             }
-            String value = stripBoundaryWhitespace(arguments.substring(valueStart, valueEnd));
+            String value = ParserUtil.stripUnicodeBoundaryWhitespace(arguments.substring(valueStart, valueEnd));
             if (value.isEmpty()) {
                 throw new ParseException("Addlesson prefix '" + prefix + "' requires a non-blank value.");
             }
@@ -111,31 +111,4 @@ public final class AddLessonParser {
         return value;
     }
 
-    /**
-     * Strips Unicode whitespace at a field boundary while preserving spaces within a value.
-     */
-    private static String stripBoundaryWhitespace(String value) {
-        int start = 0;
-        while (start < value.length()) {
-            int codePoint = value.codePointAt(start);
-            if (!isBoundaryWhitespace(codePoint)) {
-                break;
-            }
-            start += Character.charCount(codePoint);
-        }
-
-        int end = value.length();
-        while (end > start) {
-            int codePoint = value.codePointBefore(end);
-            if (!isBoundaryWhitespace(codePoint)) {
-                break;
-            }
-            end -= Character.charCount(codePoint);
-        }
-        return value.substring(start, end);
-    }
-
-    private static boolean isBoundaryWhitespace(int codePoint) {
-        return Character.isWhitespace(codePoint) || Character.isSpaceChar(codePoint);
-    }
 }

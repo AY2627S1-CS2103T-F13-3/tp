@@ -38,6 +38,10 @@ public final class CanonicalTransaction implements ModelTransaction<PonHubData> 
         return !before.equals(staged.exportState());
     }
 
+    /**
+     * Publishes staged data and filters in memory without validation or I/O.
+     * The command executor must save any changed operational snapshot successfully before calling this method.
+     */
     @Override
     public void commit() {
         boolean dataChanged = hasOperationalChanges();

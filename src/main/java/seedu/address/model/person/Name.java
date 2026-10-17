@@ -9,7 +9,7 @@ import seedu.address.commons.util.StringUtil;
  * Represents a Person's name in the address book.
  * Guarantees: immutable; is valid as declared in {@link #isValidName(String)}
  */
-public class Name {
+public final class Name {
 
     public static final int MAX_LENGTH = 100;
     public static final String MESSAGE_CONSTRAINTS =

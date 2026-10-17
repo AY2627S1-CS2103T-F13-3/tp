@@ -6,7 +6,10 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -25,7 +28,8 @@ import seedu.address.commons.util.ApplicationPaths;
  * Packaged logs stay in the JAR's folder even when launched from another working directory.
  */
 public class LogsCenter {
-    public static final String LOG_FILE_PREFIX = "addressbook.log";
+    public static final String LOG_FILE_PREFIX = "ponhub.log";
+    private static final String LEGACY_LOG_FILE_PREFIX = "addressbook.log";
 
     // Change this to a lower level (e.g., Level.FINE) to enable more detailed log messages
     private static final Level LOG_LEVEL = Level.INFO;
@@ -38,6 +42,17 @@ public class LogsCenter {
     // This static block ensures essential loggers are created early
     static {
         setBaseLogger();
+    }
+
+    /**
+     * Reserves current and legacy log names, including rotation, lock and future suffixes.
+     * Case variants are reserved on every platform so data paths remain safe when moved between filesystems.
+     * Legacy logs remain reserved for compatibility but are never opened by this logger.
+     */
+    public static boolean isReservedLogFileName(String name) {
+        requireNonNull(name);
+        String normalized = name.toLowerCase(Locale.ROOT);
+        return normalized.startsWith(LOG_FILE_PREFIX) || normalized.startsWith(LEGACY_LOG_FILE_PREFIX);
     }
 
     /**
@@ -66,7 +81,7 @@ public class LogsCenter {
 
     /**
      * Attempts file logging once after the application has validated its operational and preference paths.
-     * Existing symbolic log paths disable file logging so their targets remain untouched.
+     * Existing symbolic log paths and aliases to legacy logs disable file logging to preserve their targets.
      * Failures retain the existing console handler and recovery warning.
      */
     public static synchronized void initializeFileLogging() {
@@ -76,7 +91,7 @@ public class LogsCenter {
         isFileLoggingInitialized = true;
         try {
             Path home = ApplicationPaths.getHomeDirectory();
-            rejectSymbolicLogs(home);
+            rejectUnsafeLogs(home);
             // FileHandler interprets percent tokens, so retain literal characters in the application folder.
             String filePattern = home.resolve(LOG_FILE_PREFIX).toString().replace("%", "%%");
             FileHandler fileHandler = new FileHandler(filePattern, MAX_FILE_SIZE_IN_BYTES, MAX_FILE_COUNT, true);
@@ -89,13 +104,30 @@ public class LogsCenter {
     }
 
     /**
-     * Rejects symbolic links in the reserved log namespace before FileHandler can open or rotate those files.
+     * Checks every current log name before FileHandler can open, lock or rotate files. Case variants
+     * are included, and file identity detects hard links to legacy logs as well as symbolic aliases.
      */
-    private static void rejectSymbolicLogs(Path home) throws IOException {
-        try (DirectoryStream<Path> logPaths = Files.newDirectoryStream(home, LOG_FILE_PREFIX + "*")) {
+    private static void rejectUnsafeLogs(Path home) throws IOException {
+        List<Path> currentLogs = new ArrayList<>();
+        List<Path> legacyLogs = new ArrayList<>();
+        try (DirectoryStream<Path> logPaths = Files.newDirectoryStream(home,
+                path -> isReservedLogFileName(path.getFileName().toString()))) {
             for (Path logPath : logPaths) {
-                if (Files.isSymbolicLink(logPath)) {
-                    throw new IOException("Refusing a symbolic log path: " + logPath);
+                String name = logPath.getFileName().toString().toLowerCase(Locale.ROOT);
+                if (name.startsWith(LOG_FILE_PREFIX)) {
+                    if (Files.isSymbolicLink(logPath)) {
+                        throw new IOException("Refusing a symbolic log path: " + logPath);
+                    }
+                    currentLogs.add(logPath);
+                } else {
+                    legacyLogs.add(logPath);
+                }
+            }
+        }
+        for (Path current : currentLogs) {
+            for (Path legacy : legacyLogs) {
+                if (!Files.notExists(legacy) && Files.isSameFile(current, legacy)) {
+                    throw new IOException("Refusing a log path aliased to a legacy log: " + current);
                 }
             }
         }
@@ -110,11 +142,11 @@ public class LogsCenter {
     }
 
     /**
-     * Creates a logger named 'ab3' with console output, leaving file output until explicit initialization.
+     * Creates a logger named 'ponhub' with console output, leaving file output until explicit initialization.
      * Sets it as the {@code baseLogger}, to be used as the parent logger of all other loggers.
      */
     private static void setBaseLogger() {
-        baseLogger = Logger.getLogger("ab3");
+        baseLogger = Logger.getLogger("ponhub");
         baseLogger.setUseParentHandlers(false);
         removeHandlers(baseLogger);
         // set the level of the baseLogger, which will be inherited by other loggers

@@ -53,6 +53,18 @@ public class AttendanceMarkParserTest {
     }
 
     @Test
+    public void parse_invalidFieldsWithUnicodeSpaces_preservesErrorPrecedence() {
+        assertThrows(ParseException.class, "Mark prefix 'lid/' requires a non-blank value.", () -> parser.parse(
+                "0 lid/\u202F d/2026-10-05 s/present"));
+        assertThrows(ParseException.class, "Repeated mark prefix 'lid/'.", () -> parser.parse(
+                "0 lid/L1\u00A0lid/\u3000 d/2026-10-05 s/present"));
+        assertThrows(ParseException.class, "Unknown mark prefix 'x/'.", () -> parser.parse(
+                "0 lid/L1 d/2026-10-05 s/present\u3000x/\u202F"));
+        assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_INDEX, () -> parser.parse(
+                "\u00A00\u202F lid/L01 d/invalid s/invalid"));
+    }
+
+    @Test
     public void parse_missingIndex_reportsArgumentsMessage() {
         for (String arguments : new String[]{"", "1", "lid/L12 d/2026-10-05 s/present"}) {
             assertThrows(ParseException.class, AttendanceMarkParser.MESSAGE_ARGUMENTS, () ->
@@ -138,7 +150,8 @@ public class AttendanceMarkParserTest {
         for (String control : new String[]{"\t", "\n", "\r", "\r\n", "\u0000", "\u001F", "\u007F",
             "\u0085", "\u2028", "\u2029"}) {
             for (String arguments : new String[]{control, control + VALID_ARGUMENTS,
-                VALID_ARGUMENTS + control, "invalid unknown/value" + control}) {
+                VALID_ARGUMENTS + control, "invalid unknown/value" + control, control + "0 x/value",
+                "0 lid/L01" + control, "1 lid/L1" + control + "d/2026-10-05 s/present"}) {
                 assertThrows(ParseException.class, AttendanceMarkParser.MESSAGE_SINGLE_LINE, () ->
                         parser.parse(arguments));
             }

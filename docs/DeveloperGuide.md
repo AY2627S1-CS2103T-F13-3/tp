@@ -15,8 +15,9 @@ title: Developer Guide
   and [JUnit 5](https://junit.org/junit5/).
 * Vincent (`gugrusaurus`) used OpenAI Codex for #102's integrated guide audit, shared quick-start and
   active-scope corrections, anchor checks and packaged-parser workflow replay. Feature authorship is retained.
-* Zhu Zhi Yu (`ultramanarm`) used OpenAI Codex for these bounded contributions, including their tests
-  and documentation: role records/common interface; ordered registry and import/export state;
+* Zhu Zhi Yu (`ultramanarm`) uses OpenAI Codex throughout his PonHub implementation, refactoring,
+  testing, documentation and integration work. Earlier contributions include:
+  role records/common interface; ordered registry and import/export state;
   detached and aggregate-backed role-filtered views; current-index resolution; card projections,
   FXML/list rendering, previews and Linux CI virtual-display setup; representative people samples;
   role-aware addition parsing/candidates/commands and canonical session; #85 application cutover
@@ -38,6 +39,7 @@ title: Developer Guide
   regressions, retired legacy Person replacement API removal and guide updates.
   He also used Codex for cross-branch conflict reconciliation and its focused validation; original
   feature authorship is preserved.
+  He also used Codex for #292's closure of immutable contact values to inheritance and regression checks.
   These credits do not transfer feature ownership.
 * Yang Shuo (`ys000009`) used OpenAI Codex for #78's scheduling APIs, aggregate invariants,
   read-only relationship queries/guards, tests and design documentation; and #86's active shared-lesson
@@ -116,8 +118,11 @@ See [startup](#canonical-application-startup-85), [Storage](#storage-component) 
 directory; development launches fall back to the working directory. Relative `--data` paths resolve from
 that home; absolute paths are allowed only inside it. Blank paths, `..` escapes and symbolic-link escapes
 are rejected before operational/preferences access. Data, preferences and the root reserved
-`addressbook.log*` files must remain separate, including symbolic/hard-link aliases. File logging starts
-only after this preflight; symbolic log files retain console-only logging. Quote a path containing spaces, for example
+`ponhub.log*` and legacy `addressbook.log*` files must remain separate, including rotation/lock names,
+future suffixes, case variants and symbolic/hard-link aliases. New logs use `ponhub.log*` and the `ponhub` logger;
+legacy logs remain untouched and reserved for compatibility. File logging starts
+only after this preflight; symbolic `ponhub.log*` files and new log files aliased to legacy logs
+retain console-only logging. Quote a path containing spaces, for example
 `java -jar ponhub.jar --data="separate store/ponhub.json"`. The status footer shows the selected operational
 path. Preferences use `home/preferences.json` and logs stay in that same application home; an old
 preference's legacy address-book path does not select canonical operational data.
@@ -500,11 +505,14 @@ of JavaFX callback errors, consistent held roster/filter results and continued u
 snapshots and `JsonPonHubDataStorage` performs file access. Preferences use `JsonUserPrefsStorage`
 separately. [Application startup](#canonical-application-startup-85) selects and checks paths.
 
-<img src="images/StorageClassDiagram.png" width="550" />
+<img src="images/CanonicalStorageClassDiagram.png" alt="Active canonical storage and separate preference storage sharing the safe file writer" width="800" />
 
-This inherited diagram describes the legacy `StorageManager`/`JsonAddressBookStorage` regression
-implementation, not a second active store. The authoritative operational contract is: validate the whole
-snapshot, save before publication, and protect rejected data until deliberate recovery and restart.
+The diagram shows the active storage classes; solid arrows show a held reference and dashed arrows show
+dependencies. The protected loader reads and classifies operational JSON before decoding the complete
+snapshot. Only a successful load or confirmed absence permits later saves through its owned
+`JsonPonHubDataStorage`. Preferences use their own codec/path through `JsonUtil`; both save paths reach
+`AtomicFileWriter` through `FileUtil`. The writer's replacement and recovery limits are described once
+under [Safe JSON saves](#safe-json-saves). This is the current implementation, not a proposed storage migration.
 
 #### Preference recovery
 
@@ -557,7 +565,39 @@ allocation counters, filter, selection and subscribed query results.
 Read-only commands and operational no-ops skip saving. Successful publication retains observable-list
 identity; unchanged views avoid refresh, while a changed role filter can publish without an operational
 write. Publication performs no new validation or I/O. Preferences follow their separate lifecycle.
-Legacy `LogicManager`/`ModelTransaction` remain isolated regression seams.
+Legacy `LogicManager` remains an isolated regression seam. `ModelTransaction` is also implemented by
+the active `CanonicalTransaction`; it is not exclusively legacy infrastructure.
+
+##### Example: candidate, saved file and live state
+
+Suppose a normal session contains Parent `P1` and its parent allocation counter is `1`.
+Run `add r/parent n/Robin p/91234567` with a name/phone that does not duplicate an existing Parent.
+The complete snapshot also contains any existing students, tutors, lessons, rosters and retained attendance.
+
+| Boundary | Candidate state | Operational file | Live state and views |
+| --- | --- | --- | --- |
+| Before execution | No candidate yet | Contains `P1`, parent counter `1` | Same saved records; current filter/selection |
+| Validate in the staged root | Contains `P1`, new `P2`, parent counter `2`; other records retained | Still the previous snapshot | Still the previous state; no success feedback |
+| Save completes | Complete validated candidate | Contains the candidate snapshot | Still the previous state until publication |
+| Publish and return success | Candidate installed in the live root | Saved candidate | Add returns to the all-role people view containing `P2`; subscribed list objects keep their identity |
+
+Installing a record in the **staged** `PonHubData` is an in-memory operation, not a file commit.
+`CanonicalCommandExecutor` calls the protected snapshot writer before `CanonicalTransaction.commit()`
+publishes that state to the live root. The table separates these boundaries for explanation; it does not
+introduce a user-visible intermediate mode. This add command also stages its all-role filter change;
+that filter is published only after the save succeeds.
+
+If input/domain validation fails, there is no save or publication. If saving reports a permission/I/O
+failure, the candidate is discarded: live records, counters, filters, selection and subscribed results
+remain unchanged, no success is reported, and a corrected retry can still allocate `P2`. File recovery
+follows [Safe JSON saves](#safe-json-saves), including the retained-backup case if fallback restoration
+itself fails; unchanged live state is not a promise of power-loss durability.
+
+A rejected startup file follows a different path: no writable snapshot is loaded, its original bytes are
+preserved, and the session stays protected even if the file is externally repaired or removed. Recovery
+requires a compatible corrected copy and a restart, as described under
+[protected startup](#protected-canonical-loading-84). Read-only commands and operational
+no-ops skip saving; changing only a view filter may publish that filter without writing operational data.
 
 #### JSON version detection foundation
 
@@ -1896,3 +1936,4 @@ build/platform evidence as in [Launch and shutdown](#launch-and-shutdown).
    record dropping, guessed roles or importer/recovery command is expected.
 
 <!-- Vincent used OpenAI Codex for #168 aggregate/storage consolidation, source checks and guide validation. -->
+<!-- Vincent used OpenAI Codex for #217's active storage UML, transaction example and guide/API wording audit. -->
