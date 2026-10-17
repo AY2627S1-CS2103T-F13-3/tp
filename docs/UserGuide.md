@@ -84,7 +84,9 @@ in your session. `edit`, `clear` and `find` are unavailable.
 | Get help | `help [COMMAND]` | `help add` |
 | Exit | `exit` | `exit` |
 
-Cards display a current position separately from the stable ID, such as `S1`. Addition allocates that ID; do not supply it as an add argument. Command names and prefixes are lowercase, each prefix may appear only once, and role values ignore case. Optional values must be nonblank. `exit` accepts no arguments.
+Use the [shared command-format rules](#reading-the-command-formats) for placeholders, prefixes and selectors.
+The [people example](#people-positions-and-stable-ids) shows how positions change while IDs stay fixed.
+Addition allocates the ID; do not supply it as an add argument. Role values ignore case. `exit` accepts no arguments.
 
 ### Viewing command help: `help`
 
@@ -134,7 +136,7 @@ Creates a student, tutor or parent record.
 
 For email addresses, the local part before `@` may contain English letters, digits, periods, underscores, `%`, `+` and `-`. It must not begin or end with a period or contain consecutive periods. Domain labels may contain English letters, digits and hyphens. The domain must contain at least two dot-separated labels, with no leading or trailing hyphens in a label. Its final label must contain 2–63 English letters. Email spelling and letter case are preserved.
 
-**Current behavior:** The role-specific formats and contact rules above are active. Each prefix is allowed once; unknown, repeated, missing or blank fields are rejected. `l/` and `pp/` are student-only. Tags and the inherited contact-only add format are unavailable. Saved records must satisfy the same validation rules when loaded.
+**Current behavior:** The role-specific formats and contact rules above are active. Unknown, repeated, missing or blank fields are rejected. `l/` and `pp/` are student-only. Tags and the inherited contact-only add format are unavailable. Saved records must satisfy the same validation rules when loaded.
 
 **Testing older data:** Back up the data file before testing this increment and use a working copy. If an older file fails validation, the app starts a [protected session](#data-protection-in-the-current-build): the empty view is not your saved data, only `help`, `list` and `exit` are available, and the original file is preserved. Close the app before restoring or deliberately correcting a compatible file, then restart.
 
@@ -186,12 +188,32 @@ Displays all people or only people with a specified role, including each current
 
 #### Expected result
 
-People appear in creation order, numbered from 1 within the displayed result. Each card shows that current command index and separately identifies its role and stable ID. For example, a student with ID `S12` may appear at position `1`; student commands then use `1`. Filtering renumbers positions without changing IDs.
+People appear in creation order, numbered from 1 within the displayed result. Each card labels its role and stable ID separately from its current position. Use positions according to the [shared selector rules](#reading-the-command-formats).
 
 Example feedback:
 `Showing 3 student(s).`
 
 An empty result is valid. PonHub reports a count of zero and the people panel shows `No persons to display.`
+
+<a id="people-positions-and-stable-ids"></a>
+
+#### Example: positions change, IDs stay fixed
+
+In a fresh, empty dataset, run these commands in order. The result column abbreviates the people cards as **position: name (ID)**.
+
+| Command | Displayed people after the command |
+| --- | --- |
+| `add r/tutor n/Mei Lim p/92345678` | **1:** Mei Lim (`T1`) |
+| `add r/student n/Alex Tan l/S2 pp/91234567` | **1:** Mei Lim (`T1`); **2:** Alex Tan (`S1`) |
+| `add r/student n/Jamie Tan l/S2 pp/91234567` | **1:** Mei Lim (`T1`); **2:** Alex Tan (`S1`); **3:** Jamie Tan (`S2`) |
+| `list r/student` | **1:** Alex Tan (`S1`); **2:** Jamie Tan (`S2`) |
+| `delete 1` | **1:** Jamie Tan (`S2`) |
+| `add r/student n/Robin Tan l/S2 pp/91234567` | **1:** Mei Lim (`T1`); **2:** Jamie Tan (`S2`); **3:** Robin Tan (`S3`) |
+
+`delete 1` removes Alex, who has no lesson or attendance references in this example. Jamie keeps `S2` throughout;
+Robin receives `S3` because deleted IDs are never reused. Addition shows all roles again, so Jamie moves to
+position 2. Check the current people cards before the next person command. With existing data, use your actual
+positions and IDs rather than this example's numbers.
 
 #### Things to note
 
@@ -398,6 +420,8 @@ position. No record means unrecorded, rather than absent.
 
 1. `list r/parent`
 2. Check the intended parent's current position. If Pat Tan is at position 1 in this result, enter `delete 1`.
+
+For a complete add/filter/delete sequence, follow the [people-position example](#people-positions-and-stable-ids).
 
 #### Expected result
 
