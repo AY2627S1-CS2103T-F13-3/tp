@@ -280,7 +280,10 @@ wiring and its transaction boundary are described above.
 
 The historical deletion sequence illustrates the removed `DeleteCommandParser` and `DeleteCommand` path.
 Its per-call parser construction predates the registered catalogue and omits the current transaction boundary.
-`Parser` remains a shared interface; this historical parser-class diagram includes removed add/delete examples:
+`Parser` remains available to retained parsers. This parser-class diagram is historical: its add/delete
+examples and the `ArgumentTokenizer`/`ArgumentMultimap`/`Prefix`/`CliSyntax` toolkit have been removed.
+Active canonical parsers keep their own strict unknown/repeated/blank-prefix validation and share
+`ParserUtil`'s Unicode-boundary helper where needed; they do not use the retired tokenizer.
 
 <img src="images/ParserClasses.png" width="600"/>
 
