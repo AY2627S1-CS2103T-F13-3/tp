@@ -145,6 +145,95 @@ constraints are described [below](#future-undoredo-and-archiving).
 Ownership and implementation coordination remain in [AboutUs](AboutUs.html#project-team) and
 [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59).
 
+#### Planned v1.4 editing contract
+
+**Planned, not executable yet.** The 16 October scope decision adds person and lesson editing
+([#258](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/258)); the earlier MVP deferral in
+[#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60) remains a historical decision.
+Ben owns person editing, Yang Shuo lesson editing, Vincent durability checks, Zhi Yu people stories,
+and Ernest shared contracts/help. Keep these routes out of the active catalogue and UG command
+summary until their working increments merge. Other deferred features retain their status.
+
+**Person grammar:**
+
+```text
+edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [l/LEVEL] [pp/PARENT_PHONE]
+```
+
+Resolve the current displayed people index once to a stable ID before preparing an immutable
+replacement at the same global position. Preserve its role, ID, all allocation counters, Lessons,
+rosters and attendance. At least one editable prefix is required. Omission keeps the old value;
+an explicit blank `e/` or `a/` clears that optional value. Blank `p/` clears only a Student's optional
+own phone; Tutor/Parent phones remain required. `l/` and `pp/` are Student-only and cannot be cleared;
+`n/` cannot be cleared for any role. Reject role/ID edits, unknown/repeated prefixes, invalid values
+and wrong-role fields before publication. Reuse the current field validators/normalization rather
+than relaxing their character or length rules.
+
+Check duplicates against every other record, excluding the target ID: Student uses normalized name
+and parent phone; Tutor/Parent use normalized name and own phone within the same role. A Tutor rename
+keeps every Lesson's Tutor ID. Changing a Parent's own phone or a Student's parent phone recomputes
+exact-phone derived links without changing another person's stored phone, creating a Parent or
+requiring a matching Parent.
+
+**Lesson grammar:**
+
+```text
+editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT]
+    [tu/TUTOR_NAME [tp/TUTOR_PHONE]] [rm/ROOM]
+```
+
+The line break above is for display; enter one command. Require an existing stable Lesson ID and
+at least one editable field; omitted fields stay unchanged and supplied values cannot be blank.
+Keep the ID, catalogue position, enrolled Student IDs, attendance keys/statuses and allocation
+counters. A replacement Tutor uses the existing normalized full-name/optional exact-phone lookup;
+reject `tp/` without `tu/`, zero matches, ambiguity or a supplied phone mismatch. Reject unknown or
+repeated prefixes. Validate the complete resulting slot, including `start < end`, against every
+other Lesson for Tutor, room and enrolled-Student clashes; exclude the edited Lesson itself and
+allow adjacent slots. Reject a weekday change if any retained attendance date, including a former
+member's, would become invalid. Never move, remove or rewrite history automatically.
+
+**Execution and views.** Parsers prepare omitted/clear/set intent without allocating IDs or mutating
+live records. Model increments expose only the immutable replacement support needed by these
+commands; existing constructors and whole-root invariants remain authoritative. Both commands use
+the staged `CanonicalCommandExecutor`: validate, save the complete changed candidate, then publish.
+Protected sessions reject them before mutation parsing. Invalid input, duplicates, clashes and
+failed saves preserve file bytes, counters, live lists, filters, selection and the active right pane.
+Compare complete resulting canonical values for a no-op, not just duplicate keys: `Alex Tan` to
+`Alex  Tan` is unchanged after normalization; `Alex Tan` to `ALEX TAN` is a display change. An identical
+edit reports no change and does not save or publish operational data. Keep the existing JSON schema
+and dependencies.
+
+After a successful edit, retain the people role/search filter and re-evaluate all predicates and
+relationship contexts against committed state, preserving global relative order and renumbering
+visible positions. Keep a selected person by stable ID only while still visible; otherwise clear
+selection, never transfer it to the old position's new occupant. Lesson catalogue, Student-specific
+lists, lesson searches, selected detail and history keep their stable-ID subscriptions and refresh
+current names/fields after publication. Preserve the selected right-pane mode. For a selected dated
+detail whose date no longer matches a permitted weekday edit, retain the Lesson but clear its date
+filter and context date; do not label that old date as a new occurrence. History keys and statuses
+remain unchanged. Recheck displayed people positions before the next indexed command.
+
+Representative acceptance cases below are **handoff targets**, not claims of passing edit tests.
+Use a fixture where current Student position 1 is `S7` named Alex Tan, Parent `P2` shares its parent
+phone, and `L3` is Monday 1600–1700 with that Student enrolled. Isolate conflicting/no-history variants.
+
+| Case | Input and expected result | Verification owner |
+| --- | --- | --- |
+| Set and clear | `edit 1 l/P2 e/ a/ p/` changes only `S7`, clears optional contacts, retains position/ID/roster/history/counters. | Ben |
+| Required/role fields | Reject `edit 1 pp/`; reject `l/P2` or blank `p/` when position 1 is a Tutor/Parent. | Ben |
+| No-op/display spelling | `edit 1 n/Alex  Tan` makes no write; `edit 1 n/ALEX TAN` saves the changed display spelling, with no duplicate-self error. | Ben |
+| True duplicate/link refresh | Reject a name/phone combination already held by another same-role record. A valid `pp/` change refreshes Parent results without editing `P2`. | Ben, Zhi Yu |
+| Search/selection refresh | Under `search c/student n/Alex`, rename `S7` to Jamie Tan: keep the criteria, remove `S7` from results, clear its people selection, retain stable-Student history. | Ben |
+| Lesson success/clash | `editlesson lid/L3 et/1730` retains roster/history if conflict-free; reject an overlapping Tutor/room/Student booking, allow a 1730-adjacent slot. | Yang Shuo |
+| Retained history/detail | Reject `editlesson lid/L3 d/Tue` with Monday attendance, even after unenrolment. Without attendance, permit it if clash-free and clear an incompatible selected detail date. | Yang Shuo, Ben |
+| Save/protection | Inject permission/IO failure for a valid edit: no publication or allocation change; one successful retry persists and reloads. Protected sessions reject edits, including no-ops. | Vincent, feature owner |
+
+Source baseline: `942dd019`. Field/duplicate rules are in `ContactDetails`, `Student`, `Tutor`,
+`Parent` and `PeopleRegistryState`; scheduling/history rules are in `PonHubDataState`.
+`CanonicalTransaction`/`CanonicalCommandExecutor`, `PeopleView`, `LessonQueries`, `LessonRetrieval`
+and `AttendanceRetrieval` provide the existing staging, refresh and stable-subscription boundaries.
+The edit routes and edit-specific selection/date handling above still require implementation and tests.
+
 <div markdown="span" class="alert alert-primary">
 
 :bulb: **Tip:** The `.puml` files used to create diagrams are in `docs/diagrams`. Refer to the [_PlantUML Tutorial_ at se-edu/guides](https://se-education.org/guides/tutorials/plantUml.html) to learn how to create and edit diagrams.
