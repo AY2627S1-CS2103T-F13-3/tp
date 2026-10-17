@@ -153,8 +153,11 @@ See [startup](#canonical-application-startup-85), [Storage](#storage-component) 
 directory; development launches fall back to the working directory. Relative `--data` paths resolve from
 that home; absolute paths are allowed only inside it. Blank paths, `..` escapes and symbolic-link escapes
 are rejected before operational/preferences access. Data, preferences and the root reserved
-`addressbook.log*` files must remain separate, including symbolic/hard-link aliases. File logging starts
-only after this preflight; symbolic log files retain console-only logging. Quote a path containing spaces, for example
+`ponhub.log*` and legacy `addressbook.log*` files must remain separate, including rotation/lock names,
+future suffixes, case variants and symbolic/hard-link aliases. New logs use `ponhub.log*` and the `ponhub` logger;
+legacy logs remain untouched and reserved for compatibility. File logging starts
+only after this preflight; symbolic `ponhub.log*` files and new log files aliased to legacy logs
+retain console-only logging. Quote a path containing spaces, for example
 `java -jar ponhub.jar --data="separate store/ponhub.json"`. The status footer shows the selected operational
 path. Preferences use `home/preferences.json` and logs stay in that same application home; an old
 preference's legacy address-book path does not select canonical operational data.

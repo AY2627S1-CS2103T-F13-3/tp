@@ -312,7 +312,7 @@ PonHub saves people, shared lessons, rosters, retained attendance and ID allocat
 `data/ponhub.json` inside the folder containing the JAR. Attendance history is retained when a student
 is unenrolled from a lesson.
 
-`--data=PATH` selects a different file within that folder or its subfolders; relative paths start from the JAR folder. Absolute paths are accepted only within that folder. Blank paths and paths escaping it, including through symbolic links, are rejected at startup. Select a separate data file: `preferences.json` and the root `addressbook.log*` logging files are reserved, including aliases to them. Window preferences are saved separately in `preferences.json` in the JAR folder; selecting a different store does not change the preference file.
+`--data=PATH` selects a different file within that folder or its subfolders; relative paths start from the JAR folder. Absolute paths are accepted only within that folder. Blank paths and paths escaping it, including through symbolic links, are rejected at startup. Select a separate data file: `preferences.json` and the root `ponhub.log*` and legacy `addressbook.log*` names are reserved, including rotation/lock files, future suffixes, case variants and aliases to them. New logs use `ponhub.log*`; old `addressbook.log*` files remain untouched and reserved for compatibility. Window preferences are saved separately in `preferences.json` in the JAR folder; selecting a different store does not change the preference file.
 
 A missing selected file starts a normal empty session and remains missing until the first successful mutation.
 `help`, `list`, `lessons`, `showlesson`, `history`, `search` and `exit` do not create or rewrite operational data. An invalid, unreadable, corrupt,

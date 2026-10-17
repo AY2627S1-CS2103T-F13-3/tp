@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 public class LogsCenterTest {
-    private static final String LOG_FILE_NAME = "addressbook.log.0";
+    private static final String LOG_FILE_NAME = "ponhub.log.0";
     private static final String FIRST_MESSAGE = "First message after logging startup";
     private static final String REPEATED_MESSAGE = "Message after repeated logger lookup";
     private static final String OTHER_MESSAGE = "Message from another logger";
@@ -37,6 +37,22 @@ public class LogsCenterTest {
         Path logFile = temporaryDirectory.resolve(LOG_FILE_NAME);
         assertTrue(Files.isRegularFile(logFile));
         assertMessagesAppearOnce(Files.readString(logFile));
+    }
+
+    @Test
+    public void initializeFileLogging_existingLegacyLogs_createsPonHubLogWithoutChangingLegacyFiles() throws Exception {
+        List<String> legacyNames = List.of("addressbook.log", "addressbook.log.0", "addressbook.log.4",
+                "addressbook.log.0.lck", "addressbook.log.future");
+        for (String name : legacyNames) {
+            Files.writeString(temporaryDirectory.resolve(name), "Preserve " + name);
+        }
+
+        assertMessagesAppearOnce(runLoggingProcess());
+
+        assertMessagesAppearOnce(Files.readString(temporaryDirectory.resolve(LOG_FILE_NAME)));
+        for (String name : legacyNames) {
+            assertEquals("Preserve " + name, Files.readString(temporaryDirectory.resolve(name)));
+        }
     }
 
     @Test
@@ -100,6 +116,52 @@ public class LogsCenterTest {
         assertTrue(Files.isSymbolicLink(logPath));
         assertEquals("Keep outside data unchanged", Files.readString(outside));
         assertFalse(Files.exists(home.resolve(LOG_FILE_NAME + ".lck")));
+    }
+
+    @Test
+    public void initializeFileLogging_hardLinkedLegacyLogs_preservesBytesAndUsesConsole() throws Exception {
+        for (String name : List.of("ponhub.log.0", "PonHub.LOG.4", "ponhub.log.0.lck")) {
+            Path home = Files.createDirectory(temporaryDirectory.resolve(name + "-home"));
+            Path legacy = home.resolve("AddressBook.LOG.0");
+            Files.writeString(legacy, "Preserve legacy log bytes");
+            Path current = home.resolve(name);
+            try {
+                Files.createLink(current, legacy);
+            } catch (IOException | UnsupportedOperationException exception) {
+                assumeTrue(false, "Hard links unavailable: " + exception);
+            }
+
+            String output = runLoggingProcess(home);
+
+            assertMessagesAppearOnce(output);
+            assertTrue(output.contains("Unable to initialize file logging"), output);
+            assertEquals("Preserve legacy log bytes", Files.readString(legacy));
+            assertEquals("Preserve legacy log bytes", Files.readString(current));
+            try (var files = Files.list(home)) {
+                assertEquals(2, files.count());
+            }
+        }
+    }
+
+    @Test
+    public void initializeFileLogging_caseVariedSymbolicLog_preservesTargetAndUsesConsole() throws Exception {
+        Path home = Files.createDirectory(temporaryDirectory.resolve("case-log-home"));
+        Path target = temporaryDirectory.resolve("original.json");
+        Files.writeString(target, "Preserve target bytes");
+        try {
+            Files.createSymbolicLink(home.resolve("PonHub.LOG.0"), target);
+        } catch (IOException | UnsupportedOperationException exception) {
+            assumeTrue(false, "Symbolic links unavailable: " + exception);
+        }
+
+        String output = runLoggingProcess(home);
+
+        assertMessagesAppearOnce(output);
+        assertTrue(output.contains("Unable to initialize file logging"), output);
+        assertEquals("Preserve target bytes", Files.readString(target));
+        try (var files = Files.list(home)) {
+            assertEquals(1, files.count());
+        }
     }
 
     private String runLoggingProcess(String... options) throws Exception {
@@ -175,6 +237,10 @@ public class LogsCenterTest {
             Logger firstLogger = LogsCenter.getLogger(LoggingStartup.class);
             Logger repeatedLogger = LogsCenter.getLogger(LoggingStartup.class);
             Logger otherLogger = LogsCenter.getLogger("AnotherStartupLogger");
+            if (!firstLogger.getName().equals("ponhub.LoggingStartup")
+                    || !otherLogger.getName().equals("ponhub.AnotherStartupLogger")) {
+                throw new AssertionError("Application loggers must use the PonHub namespace.");
+            }
 
             if (!List.of(args).contains("console-only")) {
                 LogsCenter.initializeFileLogging();

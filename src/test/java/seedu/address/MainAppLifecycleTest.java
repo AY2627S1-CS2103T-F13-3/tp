@@ -55,7 +55,8 @@ public class MainAppLifecycleTest {
         assertFalse(Files.exists(directory.resolve("data/ponhub.json")));
         assertFalse(Files.exists(directory.resolve("data")));
         assertSavedPreferences();
-        assertTrue(Files.isRegularFile(directory.resolve("addressbook.log.0")));
+        assertTrue(Files.isRegularFile(directory.resolve("ponhub.log.0")));
+        assertFalse(Files.exists(directory.resolve("addressbook.log.0")));
     }
 
     @Test
