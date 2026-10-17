@@ -32,8 +32,6 @@ import seedu.address.storage.ProtectedPonHubDataStorage.LoadStatus;
 
 /**
  * Exercises MainApp initialization and shutdown with a minimal stage in isolated process folders.
- * Ernest used OpenAI Codex for these bootstrap/path/preferences regression tests and guide notes.
- * Zhu Zhi Yu used OpenAI Codex for the stage/pulse lifecycle checks and shutdown diagnostics.
  */
 public class ApplicationStartupTest {
     private static final String VALID_DATA = """

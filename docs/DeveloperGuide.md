@@ -13,70 +13,12 @@ title: Developer Guide
   [SE-EDU initiative](https://se-education.org); existing licences and reuse credits are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson),
   and [JUnit 5](https://junit.org/junit5/).
-* Vincent (`gugrusaurus`) used OpenAI Codex for #102's integrated guide audit, shared quick-start and
-  active-scope corrections, anchor checks and packaged-parser workflow replay. Feature authorship is retained.
-* Zhu Zhi Yu (`ultramanarm`) uses OpenAI Codex throughout his PonHub implementation, refactoring,
-  testing, documentation and integration work. Earlier contributions include:
-  role records/common interface; ordered registry and import/export state;
-  detached and aggregate-backed role-filtered views; current-index resolution; card projections,
-  FXML/list rendering, previews and Linux CI virtual-display setup; representative people samples;
-  role-aware addition parsing/candidates/commands and canonical session; #85 application cutover
-  (startup/path selection, active catalogue/Logic adapter, cards, integration tests and guides); contact
-  validation/ASCII-space normalization and constant-stack email validation ([#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61));
-  logging fallback, UI startup error handling, and screen-aware window restoration/contact-card wrapping.
-  He used Codex for command-input retry/recovery and result-feedback scrolling/F1 regressions (#196).
-  He also used Codex to remove #97's obsolete whole-address-book replacement API and its test seams.
-  He also used Codex for [#199](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/199)
-  file-boundary regressions (atomic-save recovery, startup link limits and literal-percent logging).
-  He also used Codex for #195 preference-corruption recovery and independent save-failure regressions;
-  product scope/user stories;
-  confirmed selectors/command formats/search scope, recovery/use cases/manual checks, prescribed
-  Java/macOS setup, and review/conflict reconciliation/Javadoc corrections in search, inline help,
-  lesson membership, atomic saves and the canonical aggregate (#76); and #197's lesson creation/membership
-  command-boundary regressions; and #91 guarded person deletion, transaction/restart and lesson-view integration
-  tests, conflict reconciliation and guide updates; and #97's retired edit/find/clear implementation and
-  test-helper and unused name-matcher removal, actionable unknown-command feedback, preservation
-  regressions, retired legacy Person replacement API removal and guide updates.
-  He also used Codex for cross-branch conflict reconciliation and its focused validation; original
-  feature authorship is preserved.
-  He also used Codex for #292's closure of immutable contact values to inheritance and regression checks.
-  These credits do not transfer feature ownership.
-* Yang Shuo (`ys000009`) used OpenAI Codex for #78's scheduling APIs, aggregate invariants,
-  read-only relationship queries/guards, tests and design documentation; and #86's active shared-lesson
-  creation parser and command, tutor resolution, transaction/persistence regressions, conflict
-  reconciliation and guide updates. He also used Codex for #88's active shared-lesson enrolment and
-  unenrolment commands, aggregate mutations, persistence/query regressions and guide updates; and #89's
-  active attendance-marking parser and command, correction rules, transaction regressions and guide updates;
-  #92's active attendance-removal parser and command, no-op/rollback regressions and guide updates; and #98's
-  guarded shared-lesson deletion parser, aggregate mutation, transaction/view regressions and guide updates.
-* Ben (`ben58882`) used OpenAI Codex for #80's indexed lesson/roster projections, committed-state
-  refresh, Logic delegation, search/transaction regression tests and guide updates. For #90, Ben used Codex
-  to connect indexed queries to active lesson commands and cards, add validation/persistence/refresh/UI tests,
-  and update guides, diagrams and the final window screenshot. For #99, Ben used Codex to add lesson details,
-  dated roster/retained attendance rendering, command routing, integration tests and guide updates. For #100,
-  Ben used Codex for retained Student attendance queries, command routing, the history panel and regressions,
-  and to reconcile history with the consolidated manual workflow and current guides.
-  For #94, Codex added indexed Student relationship search, immutable matching context, card refresh and
-  same-lesson/read-only/integration regressions, and corrected the active manual-test expectations after review.
-  For #95, Ben used Codex for exact-phone Parent search, same-child/same-lesson context and regression tests,
-  and the reviewed manual-test corrections.
-  For #96, Ben used Codex to reconcile Tutor search with the delivered lesson-detail implementation
-  and current guides, retaining the existing relationship regressions.
-* Ernest used OpenAI Codex to reconcile #100 history with merged Student/Parent/Tutor search,
-  preserve both query indexes and pane/selection behavior, and verify the integrated tests and guides;
-  for the Week 8 command catalogue, inline help, regression tests and shared
-  documentation; #129's active UI encapsulation/Javadoc corrections and caller/repository checks;
-  #60's architecture/command conventions and AboutUs clarification; #164's shared-guide consolidation,
-  canonical-runtime reconciliation, source verification and rendered checks; and Round 4 #87 activation
-  over Ben's matcher (session routing, complete people-view filter transactions, integration/UI regressions
-  and merged lesson-creation checks). Ben remains the search feature owner. Ernest also used Codex for
-  #191's permission-denied save regression and the available UG/help workflow rehearsals; and the 13 and 14 October
-  Round 1 shared quick-start/README corrections, master conflict reconciliation, packaged-router rehearsal
-  and rendered-guide checks (#164/#102).
-  These credits do not claim teammates' implementations or unperformed human review.
-
-Zhi Yu used OpenAI Codex for #97's isolated legacy add/delete command, parser and fixture removal,
-legacy data-preservation and protected-command regressions, and the matching help/guide updates.
+* OpenAI Codex was used by Ernest Chua (`ErnestChuaa`), Benjamin Ng (`ben58882`),
+  Yang Shuo (`ys000009`), Vincent Lin (`gugrusaurus`) and Zhu Zhi Yu (`ultramanarm`)
+  across implementation and refactoring, test development, documentation, review support,
+  integration/conflict reconciliation and verification support. The students remain responsible
+  for the submitted work; this acknowledgement preserves each contributor's feature ownership
+  and does not claim unaided authorship or human checks that were not performed.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -1612,8 +1554,6 @@ Record the source commit, JAR SHA-256, OS/architecture and Java distribution/ver
 Run `java -version` in the launch terminal and confirm the [prescribed Java 25 runtime](SettingUp.html#setting-up-the-project-on-your-computer).
 Use that same terminal/runtime when reopening the JAR; substitute its actual filename if different.
 
-<!-- Ernest used OpenAI Codex for #102's canonical startup/transaction guide reconciliation and manual evidence fields. -->
-
 1. Build or obtain the matching `ponhub.jar`, copy it to a disposable empty JAR folder, and launch
    from that folder's terminal with Java 25: `java -jar ponhub.jar`. Expect the canonical GUI and an empty
    people view, with the initial window inside the current desktop work area. Run help/list/exit;
@@ -1635,9 +1575,8 @@ Use that same terminal/runtime when reopening the JAR; substitute its actual fil
    operational read/write outside application home.
 
 Automated initialization/shutdown checks do not establish full-window interaction, physical scaling
-or packaged JAR-folder anchoring. Record actual results for the procedure above. Ernest used OpenAI Codex
-for startup regressions and guide reconciliation; Zhu Zhi Yu used it for minimal-stage lifecycle checks
-and shutdown diagnostics. Historical verification details are preserved in [#84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84#issuecomment-6140874125).
+or packaged JAR-folder anchoring. Record actual results for the procedure above.
+Historical verification details are preserved in [#84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84#issuecomment-6140874125).
 
 ### Canonical people commands and unsuccessful saves
 
@@ -1937,6 +1876,3 @@ build/platform evidence as in [Launch and shutdown](#launch-and-shutdown).
    [legacy re-entry](#planned-protected-loading-and-legacy-upgrade) into a separate unused path. Verify
    explicit roles/required fields and that the original and backup remain unchanged. No silent conversion,
    record dropping, guessed roles or importer/recovery command is expected.
-
-<!-- Vincent used OpenAI Codex for #168 aggregate/storage consolidation, source checks and guide validation. -->
-<!-- Vincent used OpenAI Codex for #217's active storage UML, transaction example and guide/API wording audit. -->
