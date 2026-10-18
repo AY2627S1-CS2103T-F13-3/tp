@@ -64,7 +64,7 @@ public class ProtectedPonHubDataStorageTest {
                     storage::saveData, storage::getDataLoadError);
             for (String command : List.of("help", "list", "exit")) {
                 CommandResult result = executor.execute((staged, view) ->
-                        new CommandResult(command, command.equals("help"), command.equals("exit")));
+                        new CommandResult(command, command.equals("exit")));
                 assertEquals(command.equals("exit"), result.isExit());
                 assertArrayEquals(original, Files.readAllBytes(path));
             }

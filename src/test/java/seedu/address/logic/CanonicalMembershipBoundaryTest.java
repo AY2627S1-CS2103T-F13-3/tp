@@ -89,7 +89,8 @@ public class CanonicalMembershipBoundaryTest {
 
             CommandException failure = assertThrows(CommandException.class, () -> fixture.logic.execute(command));
 
-            assertEquals(String.format(LogicManager.FILE_OPS_ERROR_FORMAT, fixture.saveFailure.getMessage()),
+            assertEquals(String.format(CanonicalCommandExecutor.FILE_OPS_ERROR_FORMAT,
+                    fixture.saveFailure.getMessage()),
                     failure.getMessage());
             assertSame(fixture.saveFailure, failure.getCause());
             fixture.assertUnchanged(before, bytes);

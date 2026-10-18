@@ -105,7 +105,8 @@ public class CanonicalLessonCreationBoundaryTest {
         CommandException saveFailure = assertThrows(CommandException.class, () -> fixture.logic.execute(
                 SECOND_TUTOR_COMMAND));
         assertSame(fixture.saveFailure, saveFailure.getCause());
-        assertEquals(String.format(LogicManager.FILE_OPS_ERROR_FORMAT, fixture.saveFailure.getMessage()),
+        assertEquals(String.format(CanonicalCommandExecutor.FILE_OPS_ERROR_FORMAT,
+                    fixture.saveFailure.getMessage()),
                 saveFailure.getMessage());
         fixture.assertUnchanged(fixture.initial, originalBytes);
         assertEquals(1, fixture.writes);

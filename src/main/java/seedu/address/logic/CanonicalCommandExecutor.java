@@ -20,6 +20,10 @@ import seedu.address.model.PonHubDataState;
  * It must still enforce the protected session's allowed-command catalogue before calling this boundary.
  */
 public final class CanonicalCommandExecutor {
+    public static final String FILE_OPS_ERROR_FORMAT = "Could not save data due to the following error: %s";
+    public static final String FILE_OPS_PERMISSION_ERROR_FORMAT =
+            "Could not save data to file %s due to insufficient permissions to write to the file or the folder.";
+
     private final PeopleView view;
     private final SnapshotWriter writer;
     private final Supplier<Optional<String>> loadError;
@@ -52,10 +56,10 @@ public final class CanonicalCommandExecutor {
             try {
                 writer.save(transaction.getStagedModel().exportState());
             } catch (AccessDeniedException failure) {
-                throw new CommandException(String.format(LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT,
+                throw new CommandException(String.format(CanonicalCommandExecutor.FILE_OPS_PERMISSION_ERROR_FORMAT,
                         failure.getMessage()), failure);
             } catch (IOException failure) {
-                throw new CommandException(String.format(LogicManager.FILE_OPS_ERROR_FORMAT,
+                throw new CommandException(String.format(CanonicalCommandExecutor.FILE_OPS_ERROR_FORMAT,
                         failure.getMessage()), failure);
             }
         }

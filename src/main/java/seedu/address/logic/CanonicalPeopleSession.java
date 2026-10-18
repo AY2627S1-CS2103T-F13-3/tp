@@ -28,8 +28,6 @@ import seedu.address.logic.commands.CanonicalSearchCommand;
 import seedu.address.logic.commands.CanonicalUnenrolCommand;
 import seedu.address.logic.commands.CanonicalUnmarkAttendanceCommand;
 import seedu.address.logic.commands.CommandResult;
-import seedu.address.logic.commands.ExitCommand;
-import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddLessonParser;
 import seedu.address.logic.parser.AttendanceMarkParser;
@@ -255,9 +253,9 @@ public final class CanonicalPeopleSession {
             case "exit":
                 if (!arguments.isBlank()) {
                     throw new ParseException(String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT,
-                            ExitCommand.MESSAGE_USAGE));
+                            CanonicalCommandCatalog.MESSAGE_EXIT_USAGE));
                 }
-                return new CommandResult(ExitCommand.MESSAGE_EXIT_ACKNOWLEDGEMENT, false, true);
+                return new CommandResult(CanonicalCommandCatalog.MESSAGE_EXIT_ACKNOWLEDGEMENT, true);
             default:
                 throw new ParseException(String.format(MESSAGE_UNKNOWN_COMMAND_FORMAT, word));
         }
@@ -275,6 +273,6 @@ public final class CanonicalPeopleSession {
             throw new ParseException(String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, MESSAGE_HELP_USAGE));
         }
         return CanonicalCommandCatalog.getUsage(topic, getDataLoadError().isPresent()).orElseThrow(() ->
-                new ParseException(String.format(HelpCommand.MESSAGE_UNKNOWN_TOPIC, topic)));
+                new ParseException(String.format(CanonicalCommandCatalog.MESSAGE_UNKNOWN_HELP_TOPIC, topic)));
     }
 }

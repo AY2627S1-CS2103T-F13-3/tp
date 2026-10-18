@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -18,15 +19,12 @@ import org.junit.jupiter.api.io.TempDir;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.PersonId;
-import seedu.address.model.query.LessonQueries;
-import seedu.address.model.query.LessonQuerySource;
-import seedu.address.storage.JsonAddressBookStorage;
+import seedu.address.model.person.PersonRole;
 import seedu.address.storage.JsonPonHubDataStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
-import seedu.address.storage.StorageManager;
+import seedu.address.storage.ProtectedPonHubDataStorage;
 import seedu.address.testutil.LessonQueryTestData;
 
 /**
@@ -58,7 +56,6 @@ public class CanonicalLogicManagerTest {
         assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
         assertEquals(settings, prefs.getGuiSettings());
         assertThrows(UnsupportedOperationException.class, people::clear);
-        assertThrows(UnsupportedOperationException.class, logic::getFilteredPersonList);
         assertThrows(ParseException.class, () -> logic.execute("delete S1"));
         assertThrows(ParseException.class, () -> logic.execute("find Alice"));
         assertSame(people, logic.getPersonRecords());
@@ -167,35 +164,58 @@ public class CanonicalLogicManagerTest {
     }
 
     @Test
-    public void inheritedLogic_exposesOnlyItsRetainedViewAndRejectsCanonicalPeopleAccess() {
-        Logic legacy = new LogicManager(new ModelManager(), new StorageManager(
-                new JsonAddressBookStorage(directory.resolve("legacy.json")),
-                new JsonUserPrefsStorage(directory.resolve("preferences.json"))));
-
-        assertTrue(legacy.getFilteredPersonList().isEmpty());
-        assertThrows(UnsupportedOperationException.class, legacy::getPersonRecords);
-        assertThrows(UnsupportedOperationException.class, legacy::personSearchContextProperty);
-        assertThrows(UnsupportedOperationException.class, legacy::getDisplayedLessons);
-        assertThrows(UnsupportedOperationException.class, legacy::lessonResultContextProperty);
-        assertThrows(UnsupportedOperationException.class, legacy::getDisplayedHistory);
-        assertThrows(UnsupportedOperationException.class, legacy::historyResultContextProperty);
-        assertThrows(UnsupportedOperationException.class, legacy::historyViewActiveProperty);
-        assertFalse(Files.exists(directory.resolve("legacy.json")));
-    }
-
-    @Test
-    public void inheritedLogic_queryCapableTestAdapterReturnsItsFilteredView() {
-        LessonQueries queries = new LessonQueries(LessonQueryTestData.createData());
-        ModelManager model = new ModelManager() {
-            @Override
-            public LessonQuerySource getLessonQueries() {
-                return queries;
+    public void helpAndExit_everyStartupStatus_preserveDataPreferencesAndPeopleWithoutSaving() throws Exception {
+        for (String status : List.of("missing", "loaded", "protected")) {
+            Path path = directory.resolve(status + ".json");
+            if (status.equals("loaded")) {
+                new JsonPonHubDataStorage(path).saveData(LessonQueryTestData.createData().exportState());
+                Files.writeString(path, Files.readString(path) + "\n  ");
+            } else if (status.equals("protected")) {
+                Files.writeString(path, "Rejected original bytes");
             }
-        };
-        Logic legacy = new LogicManager(model, new StorageManager(
-                new JsonAddressBookStorage(directory.resolve("legacy.json")),
-                new JsonUserPrefsStorage(directory.resolve("preferences.json"))));
-        assertSame(queries.getFilteredLessonList(), legacy.getDisplayedLessons());
-        assertFalse(Files.exists(directory.resolve("legacy.json")));
+            byte[] original = Files.exists(path) ? Files.readAllBytes(path) : null;
+            CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+                throw new AssertionError("Help/list/exit must not save operational data");
+            });
+            UserPrefs prefs = new UserPrefs();
+            GuiSettings settings = new GuiSettings(900, 700, 30, 40);
+            prefs.setGuiSettings(settings);
+            Logic logic = new CanonicalLogicManager(session, prefs);
+            logic.execute("list r/student");
+            var before = session.getDataSnapshot();
+            var people = logic.getPersonRecords();
+            var visible = List.copyOf(people);
+            Locale previous = Locale.getDefault();
+            try {
+                Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+                for (String topic : CanonicalCommandCatalog.getCommandWords(session.getDataLoadError().isPresent())) {
+                    var result = logic.execute("help " + topic.toUpperCase(Locale.ROOT));
+                    assertEquals(CanonicalCommandCatalog.getUsage(topic, session.getDataLoadError().isPresent())
+                            .orElseThrow(), result.getFeedbackToUser());
+                    assertFalse(result.isExit());
+                }
+            } finally {
+                Locale.setDefault(previous);
+            }
+            assertEquals(CanonicalCommandCatalog.getOverview(session.getDataLoadError()),
+                    logic.execute("help").getFeedbackToUser());
+            for (String invalid : List.of("help unknown", "help list exit", "exit extra")) {
+                assertThrows(ParseException.class, () -> logic.execute(invalid));
+            }
+            var exit = logic.execute("exit");
+            assertEquals("Exiting PonHub as requested ...", exit.getFeedbackToUser());
+            assertTrue(exit.isExit());
+            assertSame(before, session.getDataSnapshot());
+            assertSame(people, logic.getPersonRecords());
+            assertEquals(visible, people);
+            assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
+            assertEquals(settings, logic.getGuiSettings());
+            if (original == null) {
+                assertFalse(Files.exists(path));
+            } else {
+                assertArrayEquals(original, Files.readAllBytes(path));
+            }
+        }
     }
+
 }
