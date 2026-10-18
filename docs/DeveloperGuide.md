@@ -98,9 +98,13 @@ also removed from the legacy Model, ModelManager, AddressBook and UniquePersonLi
 commands, parsers and obsolete fixtures are also removed. Isolated legacy model and transaction fixtures
 remain for regression coverage. `mark` creates or corrects attendance; `unmark` removes one dated key.
 
-`CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
-routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
-catalogue and routing tests, and UG/manual checks, using this same root/view and compatible persistence.
+`CanonicalCommandDefinition` defines each command word, guidance and protected-session eligibility;
+declaration order supplies normal help order, while recovery order preserves `help`, `list`, `exit`.
+`CanonicalCommandCatalog` derives guidance from these definitions. `CanonicalPeopleSession.execute()`
+resolves the word once and dispatches through an exhaustive enum switch without a default arm, so a new
+definition requires a route before compilation succeeds. Protection precedes argument parsing.
+Register or withdraw a definition with matching parser/usage, catalogue and routing tests, and UG/manual
+checks, using this same root/view and compatible persistence.
 Inherited model/storage classes remain regression seams; the legacy command execution path is retired.
 See [startup](#canonical-application-startup-85), [Storage](#storage-component) and the
 [UG](UserGuide.html#current-command-summary) for loading, transactions and supported syntax.

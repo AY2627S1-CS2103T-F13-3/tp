@@ -196,69 +196,68 @@ public final class CanonicalPeopleSession {
         }
         String word = matcher.group("commandWord");
         String arguments = matcher.group("arguments");
+        Optional<CanonicalCommandDefinition> definition = CanonicalCommandDefinition.fromWord(word);
         Optional<String> loadError = getDataLoadError();
-        if (loadError.isPresent() && !getCommandWords().contains(word)) {
+        if (loadError.isPresent()
+                && definition.filter(CanonicalCommandDefinition::isAllowedWhenProtected).isEmpty()) {
             throw new CommandException(loadError.get());
         }
         if (LINE_BREAK_PATTERN.matcher(commandText).find()) {
             throw new ParseException("Commands must be on one line.");
         }
 
-        switch (word) {
-            case "add":
-                return executor.execute(new CanonicalAddCommand(new RoleAwareAddParser().parse(arguments)));
-            case "addlesson":
-                return executor.execute(new CanonicalAddLessonCommand(new AddLessonParser().parse(arguments)));
-            case "enrol":
-                return executor.execute(new CanonicalEnrolCommand(new LessonMembershipParser().parse(arguments)));
-            case "unenrol":
-                return executor.execute(new CanonicalUnenrolCommand(new LessonMembershipParser().parse(arguments)));
-            case "mark":
-                return executor.execute(new CanonicalMarkAttendanceCommand(new AttendanceMarkParser().parse(
-                        arguments)));
-            case "unmark":
-                return executor.execute(new CanonicalUnmarkAttendanceCommand(new AttendanceUnmarkParser().parse(
-                        arguments)));
-            case "history":
-                return new CommandResult(String.format("Showing %d attendance record(s).",
-                        attendanceRetrieval.show(new HistoryArgumentsParser().parse(arguments)).size()));
-            case "delete":
-                return executor.execute(new CanonicalDeleteCommand(ParserUtil.parseIndex(arguments)));
-            case "deletelesson":
-                return executor.execute(new CanonicalDeleteLessonCommand(new DeleteLessonParser().parse(arguments)));
-            case "list":
+        CanonicalCommandDefinition command = definition.orElseThrow(() ->
+                new ParseException(String.format(MESSAGE_UNKNOWN_COMMAND_FORMAT, word)));
+        return switch (command) {
+            case ADD -> executor.execute(new CanonicalAddCommand(new RoleAwareAddParser().parse(arguments)));
+            case ADD_LESSON -> executor.execute(new CanonicalAddLessonCommand(new AddLessonParser().parse(arguments)));
+            case ENROL -> executor.execute(new CanonicalEnrolCommand(new LessonMembershipParser().parse(arguments)));
+            case UNENROL -> executor.execute(new CanonicalUnenrolCommand(
+                    new LessonMembershipParser().parse(arguments)));
+            case MARK -> executor.execute(new CanonicalMarkAttendanceCommand(new AttendanceMarkParser().parse(
+                    arguments)));
+            case UNMARK -> executor.execute(new CanonicalUnmarkAttendanceCommand(new AttendanceUnmarkParser().parse(
+                    arguments)));
+            case HISTORY -> new CommandResult(String.format("Showing %d attendance record(s).",
+                    attendanceRetrieval.show(new HistoryArgumentsParser().parse(arguments)).size()));
+            case DELETE -> executor.execute(new CanonicalDeleteCommand(ParserUtil.parseIndex(arguments)));
+            case DELETE_LESSON -> executor.execute(new CanonicalDeleteLessonCommand(
+                    new DeleteLessonParser().parse(arguments)));
+            case LIST -> {
                 CommandResult result = executor.execute(
                         new CanonicalListCommand(new PeopleListParser().parse(arguments)));
-                return loadError.map(error -> new CommandResult(result.getFeedbackToUser() + "\n\n" + error))
+                yield loadError.map(error -> new CommandResult(result.getFeedbackToUser() + "\n\n" + error))
                         .orElse(result);
-            case "search":
+            }
+            case SEARCH -> {
                 SearchCriteria criteria = new SearchCriteriaParser().parse(arguments);
                 if (criteria.getCategory() == SearchCategory.LESSON) {
                     int count = lessonRetrieval.search(criteria).size();
                     attendanceRetrieval.hide();
-                    return new CommandResult(String.format("Found %d lesson(s).", count));
+                    yield new CommandResult(String.format("Found %d lesson(s).", count));
                 }
-                return new CanonicalSearchCommand(criteria).execute(data, view);
-            case "lessons":
+                yield new CanonicalSearchCommand(criteria).execute(data, view);
+            }
+            case LESSONS -> {
                 int lessonCount = lessonRetrieval.list(new LessonsArgumentsParser().parse(arguments)).size();
                 attendanceRetrieval.hide();
-                return new CommandResult(String.format("Showing %d lesson(s).", lessonCount));
-            case "showlesson":
+                yield new CommandResult(String.format("Showing %d lesson(s).", lessonCount));
+            }
+            case SHOW_LESSON -> {
                 var detail = lessonRetrieval.show(new ShowLessonParser().parse(arguments));
                 attendanceRetrieval.hide();
-                return new CommandResult("Showing lesson " + detail.getLessonId()
+                yield new CommandResult("Showing lesson " + detail.getLessonId()
                         + detail.date().map(date -> " for " + date).orElse("") + ".");
-            case "help":
-                return new CommandResult(getHelp(arguments));
-            case "exit":
+            }
+            case HELP -> new CommandResult(getHelp(arguments));
+            case EXIT -> {
                 if (!arguments.isBlank()) {
                     throw new ParseException(String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT,
                             CanonicalCommandCatalog.MESSAGE_EXIT_USAGE));
                 }
-                return new CommandResult(CanonicalCommandCatalog.MESSAGE_EXIT_ACKNOWLEDGEMENT, true);
-            default:
-                throw new ParseException(String.format(MESSAGE_UNKNOWN_COMMAND_FORMAT, word));
-        }
+                yield new CommandResult(CanonicalCommandCatalog.MESSAGE_EXIT_ACKNOWLEDGEMENT, true);
+            }
+        };
     }
 
     /**
