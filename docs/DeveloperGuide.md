@@ -227,6 +227,24 @@ keeps every Lesson's Tutor ID. Changing a Parent's own phone or a Student's pare
 exact-phone derived links without changing another person's stored phone, creating a Parent or
 requiring a matching Parent.
 
+**Person model API (#261).** `PersonEditInput` contains typed immutable field operations:
+`Field.keep()` retains an omitted field, `Field.clear()` represents an explicit blank, and
+`Field.set(value)` supplies a canonical validated value. The model accepts all-kept intent as a no-op;
+the later command parser must require an editable prefix and reject unknown/repeated prefixes.
+`PersonEditCandidate.prepare(source, targetId, input)` resolves intent against one complete snapshot,
+rejects required-field clearing and Student-only fields on other roles, and constructs the same immutable
+role with the same ID. It exposes `getCandidateState()`, `getEditedPerson()` and `isChanged()` without
+changing live state, reserving IDs or writing storage. Compare complete canonical field values, including
+display capitalization; a no-op returns the original snapshot and record.
+
+`PonHubData.replacePerson(replacement)` is the single canonical installation boundary used in preparation.
+It locates the existing ID, replaces only that global position, and validates new `PeopleRegistryState`
+and complete `PonHubDataState` before installation. Rebuilding the ordered registry excludes the old
+record from duplicate matching while retaining all counters; Lessons, rosters and attendance stay intact.
+An equal replacement performs no state notification. The later edit command must prepare from its fresh
+staged snapshot, save a changed candidate before publication, and skip save/publication for a no-op.
+This model support does not activate `edit`, alter the JSON schema or restore the retired AB3 API.
+
 **Lesson grammar:**
 
 ```text
