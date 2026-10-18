@@ -821,8 +821,8 @@ The active canonical catalogue still provides role-aware addition and relationsh
 
 The Help menu and F1 both invoke `MainWindow.executeCommand("help")`, retaining the command-box
 draft and card selection. `ResultDisplay` is a read-only wrapped TextArea with vertical scrolling;
-each new result starts at the top. Focused text-control F1 handling uses that same route. The unused
-inherited `HelpWindow` is never constructed by supported entry points.
+each new result starts at the top. Focused text-control F1 handling uses that same route.
+Help is rendered by this existing result control in the main window.
 
 See [manual help checks](#inline-help-and-supported-routes) for topic, menu/F1 and scrolling behavior.
 Guidance follows the [current runtime summary](#current-increment-and-command-integration);
