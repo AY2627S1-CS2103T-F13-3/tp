@@ -21,6 +21,7 @@ import seedu.address.model.lesson.LessonTimeSlot;
 import seedu.address.model.lesson.Room;
 import seedu.address.model.lesson.Subject;
 import seedu.address.model.person.PeopleRegistry;
+import seedu.address.model.person.PeopleRegistryState;
 import seedu.address.model.person.PersonId;
 import seedu.address.model.person.PersonRecord;
 import seedu.address.model.person.PersonRole;
@@ -114,6 +115,34 @@ public final class PonHubData {
     public Optional<PersonRecord> getPerson(PersonId id) {
         requireNonNull(id);
         return getPeople().stream().filter(person -> person.getId().equals(id)).findFirst();
+    }
+
+    /**
+     * Replaces one immutable person at its existing global position without allocating an identity.
+     * The existing ID determines the target and role; complete registry and root validation precede installation.
+     * Lessons, rosters, attendance and every allocation counter are retained. Equal complete values leave the
+     * original snapshot installed and return the existing record without a state notification.
+     *
+     * @return the installed or unchanged immutable record.
+     * @throws NullPointerException if the replacement is null.
+     * @throws IllegalArgumentException if its ID is missing or the replacement is not a supported immutable record.
+     * @throws seedu.address.model.person.exceptions.DuplicatePersonException if another record has its duplicate key.
+     */
+    public PersonRecord replacePerson(PersonRecord replacement) {
+        requireNonNull(replacement);
+        PersonRecord original = getPerson(replacement.getId()).orElseThrow(() ->
+                new IllegalArgumentException("The person does not exist: " + replacement.getId()));
+        if (original.equals(replacement)) {
+            return original;
+        }
+        List<PersonRecord> people = new ArrayList<>(getPeople());
+        people.set(people.indexOf(original), replacement);
+        PeopleRegistryState replacementPeople = new PeopleRegistryState(people,
+                state.get().people().getLastAllocatedSequences());
+        PonHubDataState replacementState = new PonHubDataState(replacementPeople, getLessons(), getAttendance(),
+                state.get().lastAllocatedLessonSequence());
+        state.set(replacementState);
+        return replacement;
     }
 
     /**
