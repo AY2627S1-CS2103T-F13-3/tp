@@ -1252,9 +1252,11 @@ examples do not describe an implemented PonHub feature.
 
 **Value proposition**: For tuition centre administrative staff who need to keep people, lessons and attendance organised, PonHub provides a single place to manage and search these records, with scheduling checks and attendance tracking to support reliable daily administration.
 
-Compared with maintaining separate contact lists, timetables and attendance records, PonHub connects the information needed for routine tasks and checks conflicting or invalid changes. Planned requirements such as make-up booking extend this support to absence follow-up.
+Compared with maintaining separate contact lists, timetables and attendance records, PonHub connects the information needed for routine tasks and checks conflicting or invalid changes. The intended v1.4 person and Lesson edits support correcting records while retaining their identities and history. Make-up booking remains a future proposal.
 
 **Shared-lesson MVP target:** Lessons are created independently of student enrolment, including lessons with empty rosters. Each shared `Lesson` owns its currently enrolled student IDs; student lessons, rosters, and tutor schedules are retrieved from that canonical membership rather than copied into each student. Attendance is a separate dated record for one student and one lesson. Unenrolment removes current membership and retains attendance history; an existing historical entry can still be corrected or removed. A missing attendance entry means unrecorded, distinct from present and absent.
+
+**Intended v1.4 scope:** The [alpha plan (#276)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/276) retains the shared-Lesson product and adds person editing (US-55) and Lesson editing (US-37). Both are planned until their activation increments merge: [person editing (#263)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/263) and [Lesson editing (#264)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/264). Their [planned editing contract](#planned-v14-editing-contract) preserves stable identities, shared rosters and retained attendance; it does not make these commands available today.
 
 **Delivered versus planned:** The [student foundation (#57)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/57), [tutor and parent foundations (#62)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/62), [ordered people registry (#70)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/70), [person-card components (#119)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/119), [role-filtered listing components (#122)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/122), [search criteria foundation (#64)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/64), and [lesson scheduling values (#63)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/63) provide independently tested APIs. The registry, canonical cards and role-filtered listing are now connected to the active people session. [Inline help (#68)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/68) and [safe file replacement (#66)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/66) are connected to the active canonical people runtime.
 
@@ -1269,10 +1271,10 @@ Student, Parent and Tutor relationship search and attendance history are active.
 
 ### User stories
 
-These stories describe the broader shared-lesson target and future ideas; they do not imply completed functionality or require every High-priority story to be delivered in Week 8.
+These stories distinguish the shared-lesson product and intended v1.4 additions from future proposals. A priority states the intended scope, not implementation status.
 
-Priorities: **High** (core shared-lesson target), **Medium** (future extensions), **Low** (future consideration).
-The target includes shared rosters and regular enrolment. Capacity, make-up reservations and waiting lists are future work, as are export, saved searches, archive/restore, richer attendance and percentages, fees and guided workflows. Medium and Low priorities remain proposals for later iterations.
+Priorities: **High** (core shared-lesson product and intended v1.4 additions), **Medium** (future extensions), **Low** (future consideration).
+The target includes shared rosters, regular enrolment and the planned person/Lesson edits (US-55 and US-37). Capacity, make-up reservations and waiting lists are future work, as are export, saved searches, archive/restore, richer attendance and percentages, fees and guided workflows. Medium and Low priorities remain proposals beyond the agreed release scope.
 
 Shared lessons, current membership, and retained dated attendance are separate concepts in these stories. The stories specify user goals; command selectors and the complete planned search-filter matrix are confirmed in the [shared-lesson target contract](#shared-lesson-target-contract) and [#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60). Implementation proceeds in working increments, and only the [active command routes](#current-increment-and-command-integration) are available today.
 
@@ -1314,7 +1316,7 @@ Shared lessons, current membership, and retained dated attendance are separate c
 | US-34 | Medium | tuition centre administrator | record names, contact numbers and education levels beyond the MVP formats | represent a wider range of people accurately. |
 | US-35 | Medium | tuition centre administrator | preview the person or lesson affected by a deletion | check its consequences before removing it. |
 | US-36 | Medium | tuition centre administrator | reuse recurring lesson templates | assign similar lessons without re-entering the same details. |
-| US-37 | Medium | tuition centre administrator | edit an existing lesson directly | update its details without deleting and recreating it. |
+| US-37 | High | tuition centre administrator | edit an existing lesson directly | update its details without deleting and recreating it. |
 | US-38 | Medium | tuition centre administrator | combine alternative search conditions and exclude unwanted matches | express more complex searches. |
 | US-39 | Medium | tuition centre administrator | receive spelling suggestions, relevance ordering and highlighted search matches | identify the intended records more easily. |
 | US-40 | Medium | tuition centre administrator | save and reuse searches | repeat common lookups without entering every filter again. |
@@ -1332,6 +1334,7 @@ Shared lessons, current membership, and retained dated attendance are separate c
 | US-52 | High | tuition centre administrator | distinguish an unrecorded lesson occurrence from a present or absent attendance entry | identify attendance that still needs to be recorded. |
 | US-53 | High | tuition centre administrator | retrieve the canonical lesson catalogue, including shared lessons with empty rosters, and a student's currently enrolled lessons | discover available teaching slots and review each student's current schedule. |
 | US-54 | High | tuition centre administrator | use stable person and lesson identities unchanged by filtering and restart, with deleted IDs never reused | keep record references reliable as displayed lists change. |
+| US-55 | High | tuition centre administrator | edit an existing student, tutor or parent while retaining their role, stable identity and linked records | correct their details without deleting and recreating the person. |
 
 ### Use cases
 
