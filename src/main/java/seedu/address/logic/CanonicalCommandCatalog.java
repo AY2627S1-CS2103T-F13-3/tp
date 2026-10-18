@@ -5,8 +5,6 @@ import static java.util.Objects.requireNonNull;
 import java.util.List;
 import java.util.Optional;
 
-import seedu.address.logic.parser.PeopleListParser;
-
 /**
  * Authoritative command words and guidance for the canonical application's supported routes.
  * Rejected startup permits only recovery commands.
@@ -105,35 +103,6 @@ public final class CanonicalCommandCatalog {
             + "Unenrol every Student and unmark every attendance record before deleting the Lesson.\n"
             + "The Lesson ID is never reused. Example: deletelesson lid/L1";
 
-    private static final Entry ADD = new Entry("add", "Add a student, tutor or parent", MESSAGE_ADD_USAGE);
-    private static final Entry ADD_LESSON = new Entry("addlesson", "Create an empty-roster shared lesson",
-            MESSAGE_ADD_LESSON_USAGE);
-    private static final Entry ENROL = new Entry("enrol", "Enrol a Student in a shared lesson", MESSAGE_ENROL_USAGE);
-    private static final Entry UNENROL = new Entry("unenrol", "Unenrol a Student from a shared lesson",
-            MESSAGE_UNENROL_USAGE);
-    private static final Entry MARK = new Entry("mark", "Record or correct dated lesson attendance",
-            MESSAGE_MARK_USAGE);
-    private static final Entry UNMARK = new Entry("unmark", "Remove one dated lesson attendance record",
-            MESSAGE_UNMARK_USAGE);
-    private static final Entry HISTORY = new Entry("history", "Show a Student's retained attendance",
-            MESSAGE_HISTORY_USAGE);
-    private static final Entry DELETE = new Entry("delete", "Delete an unreferenced person", MESSAGE_DELETE_USAGE);
-    private static final Entry DELETE_LESSON = new Entry("deletelesson", "Delete an unreferenced shared lesson",
-            MESSAGE_DELETE_LESSON_USAGE);
-    private static final Entry LIST = new Entry("list", "Show all people or one role", PeopleListParser.MESSAGE_USAGE);
-    private static final Entry LESSONS = new Entry("lessons", "Show shared lessons or one student's enrolments",
-            MESSAGE_LESSONS_USAGE);
-    private static final Entry SHOW_LESSON = new Entry("showlesson", "Show one lesson's roster and dated attendance",
-            MESSAGE_SHOW_LESSON_USAGE);
-    private static final Entry SEARCH = new Entry("search", "Find people or shared lessons",
-            MESSAGE_SEARCH_USAGE);
-    private static final Entry HELP = new Entry("help", "Show help or one command's guidance", MESSAGE_HELP_USAGE);
-    private static final Entry EXIT = new Entry("exit", "Close PonHub", MESSAGE_EXIT_USAGE);
-    private static final List<Entry> ENTRIES =
-            List.of(ADD, ADD_LESSON, ENROL, UNENROL, MARK, UNMARK, HISTORY, DELETE, DELETE_LESSON,
-                    LIST, LESSONS, SHOW_LESSON, SEARCH, HELP, EXIT);
-    private static final List<Entry> PROTECTED_ENTRIES = List.of(HELP, LIST, EXIT);
-
     private CanonicalCommandCatalog() {
     }
 
@@ -141,7 +110,8 @@ public final class CanonicalCommandCatalog {
      * Returns supported command words in help order, applying the protected session's restrictions.
      */
     public static List<String> getCommandWords(boolean isProtected) {
-        return getEntries(isProtected).stream().map(Entry::word).toList();
+        return CanonicalCommandDefinition.forSession(isProtected).stream()
+                .map(CanonicalCommandDefinition::getWord).toList();
     }
 
     /**
@@ -149,8 +119,9 @@ public final class CanonicalCommandCatalog {
      */
     public static Optional<String> getUsage(String word, boolean isProtected) {
         requireNonNull(word);
-        return getEntries(isProtected).stream().filter(entry -> entry.word().equals(word))
-                .map(Entry::usage).findFirst();
+        return CanonicalCommandDefinition.fromWord(word)
+                .filter(definition -> !isProtected || definition.isAllowedWhenProtected())
+                .map(CanonicalCommandDefinition::getUsage);
     }
 
     /**
@@ -159,23 +130,12 @@ public final class CanonicalCommandCatalog {
     public static String getOverview(Optional<String> loadError) {
         requireNonNull(loadError);
         StringBuilder overview = new StringBuilder("PonHub commands available in this build:\n");
-        getEntries(loadError.isPresent()).forEach(entry -> overview.append(entry.word()).append(" - ")
-                .append(entry.description()).append('\n').append(entry.usage()).append("\n\n"));
+        CanonicalCommandDefinition.forSession(loadError.isPresent()).forEach(definition ->
+                overview.append(definition.getWord()).append(" - ").append(definition.getDescription())
+                        .append('\n').append(definition.getUsage()).append("\n\n"));
         overview.append("\nType help COMMAND for syntax and an example, e.g. help list.\n\n");
         loadError.ifPresent(error -> overview.append(error).append("\n\n"));
         return overview.append("Scroll this Result Display to read long guidance.").toString();
     }
 
-    /**
-     * Returns the command definitions permitted by the startup protection state.
-     */
-    private static List<Entry> getEntries(boolean isProtected) {
-        return isProtected ? PROTECTED_ENTRIES : ENTRIES;
-    }
-
-    /**
-     * Holds one supported command's user guidance.
-     */
-    private record Entry(String word, String description, String usage) {
-    }
 }
