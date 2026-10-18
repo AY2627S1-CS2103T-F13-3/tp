@@ -80,6 +80,22 @@ public class ProtectedPonHubDataStorageTest {
     }
 
     @Test
+    public void load_invalidUtf8_blocksWritesAndPreservesOriginalBytes() throws Exception {
+        Path path = directory.resolve("invalid-utf8.json");
+        byte[] original = {(byte) 0xc3, (byte) 0x28};
+        Files.write(path, original);
+        ProtectedPonHubDataStorage storage = new ProtectedPonHubDataStorage(path);
+
+        assertThrows(DataLoadingException.class, storage::load);
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.UNREADABLE, storage.getLoadStatus());
+        assertTrue(storage.getDataLoadError().orElseThrow().contains(path.toAbsolutePath().toString()));
+        assertThrows(IOException.class, () -> storage.saveData(new PonHubData().exportState()));
+        assertArrayEquals(original, Files.readAllBytes(path));
+        assertThrows(IllegalStateException.class, storage::load);
+        assertArrayEquals(original, Files.readAllBytes(path));
+    }
+
+    @Test
     public void load_classifiesLegacyUnsupportedCorruptAndUnreadable() throws Exception {
         Path path = directory.resolve("data.json");
         for (var entry : java.util.Map.of("{\"persons\":[]}", ProtectedPonHubDataStorage.LoadStatus.LEGACY,
