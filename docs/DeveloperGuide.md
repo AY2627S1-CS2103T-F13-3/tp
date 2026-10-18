@@ -137,7 +137,7 @@ The main window has a 450-by-360 logical minimum where the work area allows it. 
 people and lesson lists retain visible scrolling viewports. Canonical cards fit their list cells and wrap
 required and optional values. A resizable split pane keeps people and lesson results independent.
 `addlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `lessons`, lesson search and
-`showlesson` and `history` are active through the command box. Inherited contact/tag cards are isolated compatibility checks.
+`showlesson` and `history` are active through the command box.
 
 ### Shared-lesson target contract
 
@@ -326,7 +326,7 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/AY2
 
 The JavaFX `MainWindow` composes `UiPart` controls such as `CommandBox`, `ResultDisplay`, `PersonRecordListPanel`, `LessonListPanel` and `HistoryListPanel`; their
 layouts live in `src/main/resources/view`. UI sends commands through `Logic` and observes model-backed results so
-committed changes refresh the display. The diagram shows the active canonical cards; retained legacy cards are compatibility test seams.
+committed changes refresh the display. The diagram shows the active canonical cards.
 
 The active canonical cards display immutable `PersonRecord` projections from the session's same observable people
 list, with separate current-view positions and stable IDs and wrapping labels for required and optional fields.
@@ -1041,9 +1041,8 @@ list for both command selection and `PersonRecordListPanel`, preserving global r
 application thread when controls are attached. Refresh retains the selected role; parse list arguments before
 changing it. A successful addition's reset to all roles belongs to the transaction above.
 
-For detached feedback, `PersonRecordListData` copies an immutable snapshot and supplies numbered entries,
-count and an empty message; it does not observe later changes. `PeopleListParser` accepts empty arguments
-or one `r/student|tutor|parent` value, with case-insensitive role names, and rejects malformed arguments without
+`PeopleListParser` accepts empty arguments or one `r/student|tutor|parent` value, with case-insensitive
+role names, and rejects malformed arguments without
 changing any view.
 
 `PersonRecordCardData` separates the numbered name heading from the role/stable-ID line and renders the
@@ -1623,7 +1622,7 @@ or final guide/site acceptance ([#102](https://github.com/AY2627S1-CS2103T-F13-3
 
 1. In an isolated working folder, launch the application on a 1280×720 display at 150% scaling and on a 1920×1080 display at 100% and 125%. Record the OS, scaling, Java version and usable desktop work area. The complete window must fit inside that work area; menu actions, command entry, results and the people list must remain reachable. Logical-size previews are useful checks, but do not replace actual platform/scaling results.
 2. Resize to the minimum window size. Run `help add` and scroll to the final example. Scroll the people list to its last card. Expect separate usable result and people scrollbars, with the command box and menus still visible.
-3. Add role-aware people with a long valid name, postal address and unbroken email using the active syntax, such as `add r/tutor n/Alexandra Catherine Elizabeth Montgomery Wellington p/001234567890123 e/alexandracatherineelizabethmontgomerywellington@example.com a/123 Long Residential Avenue Clementi District Block 456 Unit 12-345 Singapore 123456`. Run `list` followed by `help add` to refresh the cards, then narrow, widen and narrow the window again. Expect full values to wrap within the card without horizontal overflow; scroll vertically to reach the bottom of a tall card and the final person. Canonical add does not accept tags; inherited long-tag wrapping remains covered separately by compatibility regressions.
+3. Add role-aware people with a long valid name, postal address and unbroken email using the active syntax, such as `add r/tutor n/Alexandra Catherine Elizabeth Montgomery Wellington p/001234567890123 e/alexandracatherineelizabethmontgomerywellington@example.com a/123 Long Residential Avenue Clementi District Block 456 Unit 12-345 Singapore 123456`. Run `list` followed by `help add` to refresh the cards, then narrow, widen and narrow the window again. Expect full values to wrap within the card without horizontal overflow; scroll vertically to reach the bottom of a tall card and the final person. Canonical add does not accept tags.
 4. Close the application and restart with the retained preferences. Valid sizes and coordinates remain unchanged. In the isolated folder, test an oversized saved window, coordinates from a removed monitor and a still-connected monitor to the left or above the primary display. Expect an oversized/offscreen window to fit a current work area, while valid secondary-monitor coordinates remain usable.
 
 Automated bounds regressions cover scaled work areas, desktop bars, removed and secondary monitors, partial overlap and invalid saved dimensions. Actual-FXML layout checks use isolated fixture data; they do not establish Windows or Linux font/scaling behavior. Keep real display results in issue #128.
