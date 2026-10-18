@@ -60,7 +60,6 @@ public class LessonIdTest {
         assertThrows(IllegalStateException.class, maximumId::next);
     }
 
-    // OpenAI Codex assisted Zhu Zhi Yu with these boundary regressions (#198).
     @Test
     public void compareTo_digitLengthAndLongBoundaries_ordersByNumericSequence() {
         LessonId two = new LessonId("L2");

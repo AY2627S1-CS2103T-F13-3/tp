@@ -48,70 +48,12 @@ remain available through the table of contents when a change needs them.
   [SE-EDU initiative](https://se-education.org); existing licences and reuse credits are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson),
   and [JUnit 5](https://junit.org/junit5/).
-* Vincent (`gugrusaurus`) used OpenAI Codex for #102's integrated guide audit, shared quick-start and
-  active-scope corrections, anchor checks and packaged-parser workflow replay. Feature authorship is retained.
-* Zhu Zhi Yu (`ultramanarm`) uses OpenAI Codex throughout his PonHub implementation, refactoring,
-  testing, documentation and integration work. Earlier contributions include:
-  role records/common interface; ordered registry and import/export state;
-  detached and aggregate-backed role-filtered views; current-index resolution; card projections,
-  FXML/list rendering, previews and Linux CI virtual-display setup; representative people samples;
-  role-aware addition parsing/candidates/commands and canonical session; #85 application cutover
-  (startup/path selection, active catalogue/Logic adapter, cards, integration tests and guides); contact
-  validation/ASCII-space normalization and constant-stack email validation ([#61](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/61));
-  logging fallback, UI startup error handling, and screen-aware window restoration/contact-card wrapping.
-  He used Codex for command-input retry/recovery and result-feedback scrolling/F1 regressions (#196).
-  He also used Codex to remove #97's obsolete whole-address-book replacement API and its test seams.
-  He also used Codex for [#199](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/199)
-  file-boundary regressions (atomic-save recovery, startup link limits and literal-percent logging).
-  He also used Codex for #195 preference-corruption recovery and independent save-failure regressions;
-  product scope/user stories;
-  confirmed selectors/command formats/search scope, recovery/use cases/manual checks, prescribed
-  Java/macOS setup, and review/conflict reconciliation/Javadoc corrections in search, inline help,
-  lesson membership, atomic saves and the canonical aggregate (#76); and #197's lesson creation/membership
-  command-boundary regressions; and #91 guarded person deletion, transaction/restart and lesson-view integration
-  tests, conflict reconciliation and guide updates; and #97's retired edit/find/clear implementation and
-  test-helper and unused name-matcher removal, actionable unknown-command feedback, preservation
-  regressions, retired legacy Person replacement API removal and guide updates.
-  He also used Codex for cross-branch conflict reconciliation and its focused validation; original
-  feature authorship is preserved.
-  He also used Codex for #292's closure of immutable contact values to inheritance and regression checks.
-  These credits do not transfer feature ownership.
-* Yang Shuo (`ys000009`) used OpenAI Codex for #78's scheduling APIs, aggregate invariants,
-  read-only relationship queries/guards, tests and design documentation; and #86's active shared-lesson
-  creation parser and command, tutor resolution, transaction/persistence regressions, conflict
-  reconciliation and guide updates. He also used Codex for #88's active shared-lesson enrolment and
-  unenrolment commands, aggregate mutations, persistence/query regressions and guide updates; and #89's
-  active attendance-marking parser and command, correction rules, transaction regressions and guide updates;
-  #92's active attendance-removal parser and command, no-op/rollback regressions and guide updates; and #98's
-  guarded shared-lesson deletion parser, aggregate mutation, transaction/view regressions and guide updates.
-* Ben (`ben58882`) used OpenAI Codex for #80's indexed lesson/roster projections, committed-state
-  refresh, Logic delegation, search/transaction regression tests and guide updates. For #90, Ben used Codex
-  to connect indexed queries to active lesson commands and cards, add validation/persistence/refresh/UI tests,
-  and update guides, diagrams and the final window screenshot. For #99, Ben used Codex to add lesson details,
-  dated roster/retained attendance rendering, command routing, integration tests and guide updates. For #100,
-  Ben used Codex for retained Student attendance queries, command routing, the history panel and regressions,
-  and to reconcile history with the consolidated manual workflow and current guides.
-  For #94, Codex added indexed Student relationship search, immutable matching context, card refresh and
-  same-lesson/read-only/integration regressions, and corrected the active manual-test expectations after review.
-  For #95, Ben used Codex for exact-phone Parent search, same-child/same-lesson context and regression tests,
-  and the reviewed manual-test corrections.
-  For #96, Ben used Codex to reconcile Tutor search with the delivered lesson-detail implementation
-  and current guides, retaining the existing relationship regressions.
-* Ernest used OpenAI Codex to reconcile #100 history with merged Student/Parent/Tutor search,
-  preserve both query indexes and pane/selection behavior, and verify the integrated tests and guides;
-  for the Week 8 command catalogue, inline help, regression tests and shared
-  documentation; #129's active UI encapsulation/Javadoc corrections and caller/repository checks;
-  #60's architecture/command conventions and AboutUs clarification; #164's shared-guide consolidation,
-  canonical-runtime reconciliation, source verification and rendered checks; and Round 4 #87 activation
-  over Ben's matcher (session routing, complete people-view filter transactions, integration/UI regressions
-  and merged lesson-creation checks). Ben remains the search feature owner. Ernest also used Codex for
-  #191's permission-denied save regression and the available UG/help workflow rehearsals; and the 13 and 14 October
-  Round 1 shared quick-start/README corrections, master conflict reconciliation, packaged-router rehearsal
-  and rendered-guide checks (#164/#102).
-  These credits do not claim teammates' implementations or unperformed human review.
-
-Zhi Yu used OpenAI Codex for #97's isolated legacy add/delete command, parser and fixture removal,
-legacy data-preservation and protected-command regressions, and the matching help/guide updates.
+* OpenAI Codex was used by Ernest Chua (`ErnestChuaa`), Benjamin Ng (`ben58882`),
+  Yang Shuo (`ys000009`), Vincent Lin (`gugrusaurus`) and Zhu Zhi Yu (`ultramanarm`)
+  across implementation and refactoring, test development, documentation, review support,
+  integration/conflict reconciliation and verification support. The students remain responsible
+  for the submitted work; this acknowledgement preserves each contributor's feature ownership
+  and does not claim unaided authorship or human checks that were not performed.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -238,6 +180,95 @@ constraints are described [below](#future-undoredo-and-archiving).
 Ownership and implementation coordination remain in [AboutUs](AboutUs.html#project-team) and
 [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59).
 
+#### Planned v1.4 editing contract
+
+**Planned, not executable yet.** The 16 October scope decision adds person and lesson editing
+([#258](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/258)); the earlier MVP deferral in
+[#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60) remains a historical decision.
+Ben owns person editing, Yang Shuo lesson editing, Vincent durability checks, Zhi Yu people stories,
+and Ernest shared contracts/help. Keep these routes out of the active catalogue and UG command
+summary until their working increments merge. Other deferred features retain their status.
+
+**Person grammar:**
+
+```text
+edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [l/LEVEL] [pp/PARENT_PHONE]
+```
+
+Resolve the current displayed people index once to a stable ID before preparing an immutable
+replacement at the same global position. Preserve its role, ID, all allocation counters, Lessons,
+rosters and attendance. At least one editable prefix is required. Omission keeps the old value;
+an explicit blank `e/` or `a/` clears that optional value. Blank `p/` clears only a Student's optional
+own phone; Tutor/Parent phones remain required. `l/` and `pp/` are Student-only and cannot be cleared;
+`n/` cannot be cleared for any role. Reject role/ID edits, unknown/repeated prefixes, invalid values
+and wrong-role fields before publication. Reuse the current field validators/normalization rather
+than relaxing their character or length rules.
+
+Check duplicates against every other record, excluding the target ID: Student uses normalized name
+and parent phone; Tutor/Parent use normalized name and own phone within the same role. A Tutor rename
+keeps every Lesson's Tutor ID. Changing a Parent's own phone or a Student's parent phone recomputes
+exact-phone derived links without changing another person's stored phone, creating a Parent or
+requiring a matching Parent.
+
+**Lesson grammar:**
+
+```text
+editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT]
+    [tu/TUTOR_NAME [tp/TUTOR_PHONE]] [rm/ROOM]
+```
+
+The line break above is for display; enter one command. Require an existing stable Lesson ID and
+at least one editable field; omitted fields stay unchanged and supplied values cannot be blank.
+Keep the ID, catalogue position, enrolled Student IDs, attendance keys/statuses and allocation
+counters. A replacement Tutor uses the existing normalized full-name/optional exact-phone lookup;
+reject `tp/` without `tu/`, zero matches, ambiguity or a supplied phone mismatch. Reject unknown or
+repeated prefixes. Validate the complete resulting slot, including `start < end`, against every
+other Lesson for Tutor, room and enrolled-Student clashes; exclude the edited Lesson itself and
+allow adjacent slots. Reject a weekday change if any retained attendance date, including a former
+member's, would become invalid. Never move, remove or rewrite history automatically.
+
+**Execution and views.** Parsers prepare omitted/clear/set intent without allocating IDs or mutating
+live records. Model increments expose only the immutable replacement support needed by these
+commands; existing constructors and whole-root invariants remain authoritative. Both commands use
+the staged `CanonicalCommandExecutor`: validate, save the complete changed candidate, then publish.
+Protected sessions reject them before mutation parsing. Invalid input, duplicates, clashes and
+failed saves preserve file bytes, counters, live lists, filters, selection and the active right pane.
+Compare complete resulting canonical values for a no-op, not just duplicate keys: `Alex Tan` to
+`Alex  Tan` is unchanged after normalization; `Alex Tan` to `ALEX TAN` is a display change. An identical
+edit reports no change and does not save or publish operational data. Keep the existing JSON schema
+and dependencies.
+
+After a successful edit, retain the people role/search filter and re-evaluate all predicates and
+relationship contexts against committed state, preserving global relative order and renumbering
+visible positions. Keep a selected person by stable ID only while still visible; otherwise clear
+selection, never transfer it to the old position's new occupant. Lesson catalogue, Student-specific
+lists, lesson searches, selected detail and history keep their stable-ID subscriptions and refresh
+current names/fields after publication. Preserve the selected right-pane mode. For a selected dated
+detail whose date no longer matches a permitted weekday edit, retain the Lesson but clear its date
+filter and context date; do not label that old date as a new occurrence. History keys and statuses
+remain unchanged. Recheck displayed people positions before the next indexed command.
+
+Representative acceptance cases below are **handoff targets**, not claims of passing edit tests.
+Use a fixture where current Student position 1 is `S7` named Alex Tan, Parent `P2` shares its parent
+phone, and `L3` is Monday 1600–1700 with that Student enrolled. Isolate conflicting/no-history variants.
+
+| Case | Input and expected result | Verification owner |
+| --- | --- | --- |
+| Set and clear | `edit 1 l/P2 e/ a/ p/` changes only `S7`, clears optional contacts, retains position/ID/roster/history/counters. | Ben |
+| Required/role fields | Reject `edit 1 pp/`; reject `l/P2` or blank `p/` when position 1 is a Tutor/Parent. | Ben |
+| No-op/display spelling | `edit 1 n/Alex  Tan` makes no write; `edit 1 n/ALEX TAN` saves the changed display spelling, with no duplicate-self error. | Ben |
+| True duplicate/link refresh | Reject a name/phone combination already held by another same-role record. A valid `pp/` change refreshes Parent results without editing `P2`. | Ben, Zhi Yu |
+| Search/selection refresh | Under `search c/student n/Alex`, rename `S7` to Jamie Tan: keep the criteria, remove `S7` from results, clear its people selection, retain stable-Student history. | Ben |
+| Lesson success/clash | `editlesson lid/L3 et/1730` retains roster/history if conflict-free; reject an overlapping Tutor/room/Student booking, allow a 1730-adjacent slot. | Yang Shuo |
+| Retained history/detail | Reject `editlesson lid/L3 d/Tue` with Monday attendance, even after unenrolment. Without attendance, permit it if clash-free and clear an incompatible selected detail date. | Yang Shuo, Ben |
+| Save/protection | Inject permission/IO failure for a valid edit: no publication or allocation change; one successful retry persists and reloads. Protected sessions reject edits, including no-ops. | Vincent, feature owner |
+
+Source baseline: `942dd019`. Field/duplicate rules are in `ContactDetails`, `Student`, `Tutor`,
+`Parent` and `PeopleRegistryState`; scheduling/history rules are in `PonHubDataState`.
+`CanonicalTransaction`/`CanonicalCommandExecutor`, `PeopleView`, `LessonQueries`, `LessonRetrieval`
+and `AttendanceRetrieval` provide the existing staging, refresh and stable-subscription boundaries.
+The edit routes and edit-specific selection/date handling above still require implementation and tests.
+
 <div markdown="span" class="alert alert-primary">
 
 :bulb: **Tip:** The `.puml` files used to create diagrams are in `docs/diagrams`. Refer to the [_PlantUML Tutorial_ at se-edu/guides](https://se-education.org/guides/tutorials/plantUml.html) to learn how to create and edit diagrams.
@@ -315,7 +346,10 @@ wiring and its transaction boundary are described above.
 
 The historical deletion sequence illustrates the removed `DeleteCommandParser` and `DeleteCommand` path.
 Its per-call parser construction predates the registered catalogue and omits the current transaction boundary.
-`Parser` remains a shared interface; this historical parser-class diagram includes removed add/delete examples:
+`Parser` remains available to retained parsers. This parser-class diagram is historical: its add/delete
+examples and the `ArgumentTokenizer`/`ArgumentMultimap`/`Prefix`/`CliSyntax` toolkit have been removed.
+Active canonical parsers keep their own strict unknown/repeated/blank-prefix validation and share
+`ParserUtil`'s Unicode-boundary helper where needed; they do not use the retired tokenizer.
 
 <img src="images/ParserClasses.png" width="600"/>
 
@@ -1647,8 +1681,6 @@ Record the source commit, JAR SHA-256, OS/architecture and Java distribution/ver
 Run `java -version` in the launch terminal and confirm the [prescribed Java 25 runtime](SettingUp.html#setting-up-the-project-on-your-computer).
 Use that same terminal/runtime when reopening the JAR; substitute its actual filename if different.
 
-<!-- Ernest used OpenAI Codex for #102's canonical startup/transaction guide reconciliation and manual evidence fields. -->
-
 1. Build or obtain the matching `ponhub.jar`, copy it to a disposable empty JAR folder, and launch
    from that folder's terminal with Java 25: `java -jar ponhub.jar`. Expect the canonical GUI and an empty
    people view, with the initial window inside the current desktop work area. Run help/list/exit;
@@ -1670,9 +1702,8 @@ Use that same terminal/runtime when reopening the JAR; substitute its actual fil
    operational read/write outside application home.
 
 Automated initialization/shutdown checks do not establish full-window interaction, physical scaling
-or packaged JAR-folder anchoring. Record actual results for the procedure above. Ernest used OpenAI Codex
-for startup regressions and guide reconciliation; Zhu Zhi Yu used it for minimal-stage lifecycle checks
-and shutdown diagnostics. Historical verification details are preserved in [#84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84#issuecomment-6140874125).
+or packaged JAR-folder anchoring. Record actual results for the procedure above.
+Historical verification details are preserved in [#84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84#issuecomment-6140874125).
 
 ### Canonical people commands and unsuccessful saves
 
@@ -1865,7 +1896,8 @@ Use role-aware commands in a disposable selected data file.
 
 ### Active guarded person deletion (#91)
 
-The session parses a positive people-list index using `ParserUtil`. `CanonicalDeleteCommand` resolves it once through
+The session parses a positive people-list index using `ParserUtil`, rejecting non-whitespace ISO control characters
+before trimming the selector. `CanonicalDeleteCommand` resolves it once through
 `PersonIndexResolver` and passes the stable ID to `PonHubData.removePerson`. The aggregate identifies a blocking
 current enrolment, retained attendance key or assigned lesson before creating a replacement people registry.
 Registry removal and the validated aggregate retain all allocation counters, surviving people order, lessons and
@@ -1888,6 +1920,8 @@ For manual checks, use an isolated supported dataset:
 4. In a separate dataset, enrol, mark and unenrol a Student. Deletion must remain blocked by retained attendance;
    feedback names the Lesson and date. Restart and verify that the same guard remains. An unassigned Tutor is deletable.
 5. Reject `delete`, `delete S1`, `delete 0`, `delete -1`, extra arguments and out-of-range positions without changes.
+   `CanonicalDeleteIntegrationTest` also sends actual NUL, backspace and escape characters at both boundaries and
+   inside selectors, verifying zero saves and unchanged bytes, snapshots, search filters and displayed positions.
    Use an isolated unwritable storage seam, attempt deletion and verify unchanged file, people filter/positions and
    query results. Restore writing and retry: commit only once, then restart and compare the complete saved state.
 
@@ -1969,6 +2003,3 @@ build/platform evidence as in [Launch and shutdown](#launch-and-shutdown).
    [legacy re-entry](#planned-protected-loading-and-legacy-upgrade) into a separate unused path. Verify
    explicit roles/required fields and that the original and backup remain unchanged. No silent conversion,
    record dropping, guessed roles or importer/recovery command is expected.
-
-<!-- Vincent used OpenAI Codex for #168 aggregate/storage consolidation, source checks and guide validation. -->
-<!-- Vincent used OpenAI Codex for #217's active storage UML, transaction example and guide/API wording audit. -->

@@ -39,7 +39,6 @@ import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
 
-// Developed with OpenAI Codex assistance for ultramanarm.
 /**
  * Guards the protected-command allowlist in the retained legacy logic.
  */
