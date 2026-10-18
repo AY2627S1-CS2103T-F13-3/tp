@@ -3,10 +3,7 @@ package seedu.address.logic.parser;
 import static java.util.Objects.requireNonNull;
 
 import java.time.LocalDate;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import seedu.address.commons.core.index.Index;
@@ -25,8 +22,6 @@ public final class AttendanceUnmarkParser {
             "Unmark arguments must be on one line and use spaces rather than control characters.";
 
     private static final Set<String> PREFIXES = Set.of("lid/", "d/");
-    private static final Pattern PREFIX_PATTERN = Pattern.compile("(?<!\\S)([^\\s/]+/)",
-            Pattern.UNICODE_CHARACTER_CLASS);
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
 
     /**
@@ -43,66 +38,14 @@ public final class AttendanceUnmarkParser {
             throw new ParseException(MESSAGE_SINGLE_LINE);
         }
 
-        ParsedArguments parsed = extractValues(arguments);
+        AttendanceArguments parsed = AttendanceArguments.extract(arguments, "unmark", PREFIXES, MESSAGE_ARGUMENTS);
         Index studentIndex = ParserUtil.parseIndex(parsed.studentIndex());
         try {
-            LessonId lessonId = new LessonId(requireValue(parsed.values(), "lid/"));
-            LocalDate date = Attendance.parseDate(requireValue(parsed.values(), "d/"));
+            LessonId lessonId = new LessonId(parsed.requireValue("lid/"));
+            LocalDate date = Attendance.parseDate(parsed.requireValue("d/"));
             return new AttendanceUnmarkInput(studentIndex, lessonId, date);
         } catch (IllegalArgumentException exception) {
             throw new ParseException(exception.getMessage(), exception);
         }
-    }
-
-    /**
-     * Extracts the leading Student index and one nonblank value per supported prefix.
-     */
-    private static ParsedArguments extractValues(String arguments) throws ParseException {
-        Map<String, String> values = new LinkedHashMap<>();
-        Matcher matcher = PREFIX_PATTERN.matcher(arguments);
-        if (!matcher.find()) {
-            throw new ParseException(MESSAGE_ARGUMENTS);
-        }
-        String studentIndex = ParserUtil.stripUnicodeBoundaryWhitespace(arguments.substring(0, matcher.start()));
-        if (studentIndex.isEmpty()) {
-            throw new ParseException(MESSAGE_ARGUMENTS);
-        }
-
-        boolean hasNext;
-        do {
-            String prefix = matcher.group(1);
-            int valueStart = matcher.end();
-            hasNext = matcher.find();
-            int valueEnd = hasNext ? matcher.start() : arguments.length();
-            if (!PREFIXES.contains(prefix)) {
-                throw new ParseException("Unknown unmark prefix '" + prefix + "'.");
-            }
-            if (values.containsKey(prefix)) {
-                throw new ParseException("Repeated unmark prefix '" + prefix + "'.");
-            }
-            String value = ParserUtil.stripUnicodeBoundaryWhitespace(arguments.substring(valueStart, valueEnd));
-            if (value.isEmpty()) {
-                throw new ParseException("Unmark prefix '" + prefix + "' requires a non-blank value.");
-            }
-            values.put(prefix, value);
-        } while (hasNext);
-        return new ParsedArguments(studentIndex, values);
-    }
-
-    /**
-     * Returns a required value or reports its missing prefix.
-     */
-    private static String requireValue(Map<String, String> values, String prefix) throws ParseException {
-        String value = values.get(prefix);
-        if (value == null) {
-            throw new ParseException("Missing required unmark prefix '" + prefix + "'.");
-        }
-        return value;
-    }
-
-    /**
-     * Parsed raw attendance arguments before value-object validation.
-     */
-    private record ParsedArguments(String studentIndex, Map<String, String> values) {
     }
 }
