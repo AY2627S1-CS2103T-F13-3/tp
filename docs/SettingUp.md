@@ -3,55 +3,66 @@ layout: page
 title: Setting up and getting started
 ---
 
+This guide helps a new contributor build PonHub, launch a development session and find the active code.
+PonHub manages people, shared lessons and attendance; the [User Guide](UserGuide.html#current-command-summary)
+describes the commands available in the current build.
+
 * Table of Contents
 {:toc}
 
-
---------------------------------------------------------------------------------------------------------------------
-
 ## Setting up the project on your computer
 
-<div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
+1. **Fork and clone** the [team repository](https://github.com/AY2627S1-CS2103T-F13-3/tp), then open a terminal
+   in the cloned repository's root, where `gradlew` and `build.gradle` are located.
+2. **Select JDK 25.** On macOS, follow the [course's Mac advisory](https://nus-cs2103-ay2627-s1.github.io/website/admin/programmingLanguages.html)
+   and [Mac installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html): use the
+   prescribed **Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`)** for your Mac's architecture. Confirm `java -version`
+   in the launching terminal. With SDKMAN, `sdk current java` identifies the selected distribution and
+   `sdk use java 25.0.3.fx-zulu` selects that installed Mac JDK for the current terminal.
+   Windows and Linux also require Java 25. PonHub must remain compatible with all three platforms.
+   Plain Oracle Java without JavaFX on Mac is an optional portability diagnostic; required Mac checks use
+   the prescribed Azul setup above.
+3. **Verify the build environment** using the included Gradle wrapper; a separate Gradle installation is unnecessary.
 
-Follow the steps below precisely. The setup may fail if you skip or change a step.
-</div>
+   ```sh
+   ./gradlew --version
+   ./gradlew check coverage
+   ```
 
-First, **fork** this repo, and **clone** the fork into your computer.
+   On Windows PowerShell or Command Prompt, use `gradlew.bat` in place of `./gradlew`
+   (`.\gradlew.bat` in PowerShell). Check that Gradle reports Java 25. See the
+   [Testing guide](Testing.html#running-tests) for Linux virtual-display requirements, reports and failure diagnosis.
+4. **Launch the development application** with `./gradlew run` (`gradlew.bat run` on Windows).
+   This launch enables assertions. In a fresh clone, PonHub starts with an empty people/lesson view;
+   try `help` and `list`, then `exit`. Development data and preferences are relative to the working directory,
+   so use a disposable clone when trying commands that change records.
 
-Use **JDK 25** for development and Java 25 when launching the packaged JAR. On macOS, follow the [course's Mac advisory](https://nus-cs2103-ay2627-s1.github.io/website/admin/programmingLanguages.html) and install **Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`)** using the [Mac installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html). This is the required macOS setup for development and release checks. Confirm `java -version` reports Java 25 in the terminal used for Gradle and JAR launches; if using SDKMAN, `sdk current java` should identify `25.0.3.fx-zulu` on macOS.
+### Using IntelliJ IDEA
 
-If you plan to use IntelliJ IDEA (highly recommended):
-1. **Configure the JDK**: Follow the guide [_[se-edu/guides] IDEA: Configuring the JDK_](https://se-education.org/guides/tutorials/intellijJdk.html) to ensure IntelliJ's project SDK and Gradle JVM use **JDK 25**, including the prescribed Azul JDK with JavaFX on macOS.
-1. **Import the project as a Gradle project**: Follow the guide [_[se-edu/guides] IDEA: Importing a Gradle project_](https://se-education.org/guides/tutorials/intellijImportGradleProject.html) to import the project into IDEA.<br>
-  :exclamation: Note: Importing a Gradle project is slightly different from importing a normal Java project.
-1. **Verify the setup**:
-   1. Run `seedu.address.Main` and try a few commands.
-   1. [Run the tests](Testing.html) to ensure they all pass.
+Import the root as a [Gradle project](https://se-education.org/guides/tutorials/intellijImportGradleProject.html).
+Set both the [project SDK and Gradle JVM](https://se-education.org/guides/tutorials/intellijJdk.html) to JDK 25,
+including the prescribed Azul JDK with JavaFX on macOS. The IDE can use a different JVM from your terminal.
 
---------------------------------------------------------------------------------------------------------------------
+Prefer the Gradle `run` task for the same development launch as above. For a native **Application** run
+configuration, select `seedu.address.Main` and add `-ea` to **VM options**. Follow the
+[development assertions check](DeveloperGuide.html#development-assertions) for the configuration you actually use;
+remove its temporary probe before committing. The packaged user launch does not require `-ea`.
 
 ## Before writing code
 
-1. **Configure the coding style**
+1. **Follow the current design.** Read [PonHub's architecture](DeveloperGuide.html#architecture), then trace
+   [canonical people commands](DeveloperGuide.html#canonical-people-commands) through routing, staged changes,
+   persistence and view publication. The DG's [maintainer reading path](DeveloperGuide.html#maintainer-reading-path)
+   links the source and representative tests.
+2. **Configure code style.** Follow the [IDEA code-style guide](https://se-education.org/guides/tutorials/intellijCodeStyle.html).
+   The optional [Checkstyle integration](https://se-education.org/guides/tutorials/checkstyle.html) gives feedback
+   while editing; `./gradlew check coverage` remains the repository validation path.
+3. **Run focused checks, then repository checks.** Use the [Testing guide](Testing.html) for selection and reports,
+   [Logging](Logging.html) for startup diagnosis, and [Documentation](Documentation.html#build-and-preview-locally)
+   when changing the website. GitHub Actions runs the configured checks on pushes and pull requests;
+   inspect the actual run, including any fork Actions settings, before reporting CI as passed.
 
-   If using IDEA, follow the guide [_[se-edu/guides] IDEA: Configuring the code style_](https://se-education.org/guides/tutorials/intellijCodeStyle.html) to set up IDEA's coding style to match ours.
-
-   <div markdown="span" class="alert alert-primary">:bulb: **Tip:**
-
-   Optionally, follow the guide [_[se-edu/guides] Using Checkstyle_](https://se-education.org/guides/tutorials/checkstyle.html) to learn how to use Checkstyle in IDEA, for example to report problems _as_ you write code.
-   </div>
-
-1. **Set up CI**
-
-   This project includes GitHub Actions configuration files in `.github/workflows`. GitHub runs CI automatically for every push and pull request. No setup is required.
-
-1. **Learn the design**
-
-   When you are ready to start coding, we recommend that you get some sense of the overall design by reading about [AddressBook’s architecture](DeveloperGuide.html#architecture).
-
-1. **Do the tutorials**
-   These tutorials will help you get acquainted with the codebase.
-
-   * [Tracing code](https://se-education.org/guides/tutorials/ab3TracingCode.html)
-   * [Adding a new command](https://se-education.org/guides/tutorials/ab3AddRemark.html)
-   * [Removing fields](https://se-education.org/guides/tutorials/ab3RemovingFields.html)
+PonHub evolved from AddressBook-Level3. Its upstream [tracing](https://se-education.org/guides/tutorials/ab3TracingCode.html),
+[adding a command](https://se-education.org/guides/tutorials/ab3AddRemark.html) and
+[removing fields](https://se-education.org/guides/tutorials/ab3RemovingFields.html) tutorials are optional background
+on that design. Their AddressBook classes and command examples are not the active PonHub command path.

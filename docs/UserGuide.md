@@ -128,6 +128,11 @@ Addition allocates the ID; do not supply it as an add argument. Role values igno
 Topic names are case-insensitive, so `help ADD` is
 accepted; the command word `help` remains lowercase. Asking for exit guidance does not exit the application.
 
+Drag the horizontal divider below Result Display down to show more help or feedback, or up to give the
+people and Lesson lists more room. Both areas keep a minimum height. Your split stays in place while you
+enter commands or open help during the same session. Long messages still wrap and scroll vertically;
+you can select and copy their text.
+
 Choose **Help > Help** or press **F1** for the same catalogue, including when focus is in the command box or Result Display. Menu/F1 preserve unfinished command text. Help preserves records, the active person filter, order, selection and preferences. Typed help clears the submitted command in the usual way. Help needs no internet connection and does not save operational data.
 
 Long guidance wraps within Result Display. Scroll vertically to read the rest; each new result starts at the top.

@@ -98,10 +98,14 @@ also removed from the legacy Model, ModelManager, AddressBook and UniquePersonLi
 commands, parsers and obsolete fixtures are also removed. Isolated legacy model and transaction fixtures
 remain for regression coverage. `mark` creates or corrects attendance; `unmark` removes one dated key.
 
-`CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
-routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
-catalogue and routing tests, and UG/manual checks, using this same root/view and compatible persistence.
-Inherited model classes remain regression seams; the legacy command and storage paths are retired.
+`CanonicalCommandDefinition` defines each command word, guidance and protected-session eligibility;
+declaration order supplies normal help order, while recovery order preserves `help`, `list`, `exit`.
+`CanonicalCommandCatalog` derives guidance from these definitions. `CanonicalPeopleSession.execute()`
+resolves the word once and dispatches through an exhaustive enum switch without a default arm, so a new
+definition requires a route before compilation succeeds. Protection precedes argument parsing.
+Register or withdraw a definition with matching parser/usage, catalogue and routing tests, and UG/manual
+checks, using this same root/view and compatible persistence.
+Inherited model/storage classes remain regression seams; the legacy command execution and storage paths are retired.
 See [startup](#canonical-application-startup-85), [Storage](#storage-component) and the
 [UG](UserGuide.html#current-command-summary) for loading, transactions and supported syntax.
 
@@ -651,7 +655,7 @@ shutdown-save failure is logged without preventing shutdown.
 
 #### Safe JSON saves
 
-Canonical operational data and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
+Canonical operational data, retained legacy storage and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
 Existing destinations are resolved to their real paths, so saving through a symbolic link updates its
 target and preserves the link. Dangling/cyclic links and inaccessible destinations fail before writing.
 New files use a resolved parent directory, creating missing directories as needed. Concurrent external
@@ -690,7 +694,7 @@ Read-only commands and operational no-ops skip saving. Successful publication re
 identity; unchanged views avoid refresh, while a changed role filter can publish without an operational
 write. Publication performs no new validation or I/O. Preferences follow their separate lifecycle.
 The legacy command execution path is retired. `ModelTransaction` remains because the active
-`CanonicalTransaction` implements it; retained model tests have their own regression seams.
+`CanonicalTransaction` implements it; retained model/storage tests have their own regression seams.
 
 ##### Example: candidate, saved file and live state
 
