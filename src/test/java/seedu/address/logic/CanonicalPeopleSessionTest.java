@@ -190,6 +190,7 @@ public class CanonicalPeopleSessionTest {
             assertThrows(ParseException.class, () -> session.execute("help deletelesson"));
             assertThrows(ParseException.class, () -> session.execute("help lessons"));
             for (String command : List.of("add", "add\n", addCommand(PersonRole.STUDENT), "delete 1", "edit 1",
+                    "delete \0 1", "delete 1\b", "delete 1\u001b", "delete 1\0\n",
                     "addlesson d/Mon st/0900 et/1000 s/Math tu/Tutor Tan rm/R1",
                     "enrol 1 lid/L1", "unenrol 1 lid/L1", "mark 1 lid/L1 d/2026-10-05 s/present",
                     "unmark 1 lid/L1 d/2026-10-05", "deletelesson lid/L1", "lessons", "search c/lesson",
