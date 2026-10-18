@@ -5,7 +5,6 @@ import static java.util.Objects.requireNonNull;
 import java.util.List;
 import java.util.Optional;
 
-import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.parser.PeopleListParser;
 
 /**
@@ -13,6 +12,13 @@ import seedu.address.logic.parser.PeopleListParser;
  * Rejected startup permits only recovery commands; inherited command parsers are a separate implementation.
  */
 public final class CanonicalCommandCatalog {
+    public static final String MESSAGE_UNKNOWN_HELP_TOPIC =
+            "Unknown command: '%s'. Type 'help' to see available commands.";
+    public static final String MESSAGE_EXIT_USAGE = "Usage: exit\n"
+            + "Closes PonHub. No parameters.\n"
+            + "Example: exit";
+    public static final String MESSAGE_EXIT_ACKNOWLEDGEMENT = "Exiting PonHub as requested ...";
+
     public static final String MESSAGE_ADD_USAGE =
             "Usage: add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]\n"
             + "       add r/tutor|parent n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]\n"
@@ -122,7 +128,7 @@ public final class CanonicalCommandCatalog {
     private static final Entry SEARCH = new Entry("search", "Find people or shared lessons",
             MESSAGE_SEARCH_USAGE);
     private static final Entry HELP = new Entry("help", "Show help or one command's guidance", MESSAGE_HELP_USAGE);
-    private static final Entry EXIT = new Entry("exit", "Close PonHub", ExitCommand.MESSAGE_USAGE);
+    private static final Entry EXIT = new Entry("exit", "Close PonHub", MESSAGE_EXIT_USAGE);
     private static final List<Entry> ENTRIES =
             List.of(ADD, ADD_LESSON, ENROL, UNENROL, MARK, UNMARK, HISTORY, DELETE, DELETE_LESSON,
                     LIST, LESSONS, SHOW_LESSON, SEARCH, HELP, EXIT);

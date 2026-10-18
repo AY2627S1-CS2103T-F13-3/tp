@@ -51,6 +51,33 @@ public class CanonicalCommandExecutorTest {
     @TempDir
     public Path directory;
 
+    @Test
+    public void execute_validationFailureAfterStaging_preservesDataViewAndNotifications() {
+        PonHubDataState before = fixture(true);
+        PonHubData live = new PonHubData(before);
+        PeopleView view = new PeopleView(live);
+        view.setRoleFilter(Optional.of(PersonRole.STUDENT));
+        var visible = view.getPeople();
+        int[] notifications = {0};
+        visible.addListener((ListChangeListener<PersonRecord>) change -> notifications[0]++);
+        CanonicalCommandExecutor executor = new CanonicalCommandExecutor(view, state -> {
+            throw new AssertionError("A rejected command must not save");
+        }, Optional::empty);
+        CommandException rejected = new CommandException("Validation failed after staged changes");
+
+        assertSame(rejected, assertThrows(CommandException.class, () -> executor.execute((staged, stagedView) -> {
+            staged.resetData(new PonHubDataState(before.people(), before.lessons(), before.attendance(),
+                    Long.MAX_VALUE));
+            stagedView.setRoleFilter(Optional.empty());
+            throw rejected;
+        })));
+        assertSame(before, live.exportState());
+        assertSame(visible, view.getPeople());
+        assertEquals(Optional.of(PersonRole.STUDENT), view.getRoleFilter());
+        assertEquals(List.of(before.people().getPeople().get(1)), visible);
+        assertEquals(0, notifications[0]);
+    }
+
     private PonHubDataState fixture(boolean withLesson) {
         Student student = new Student(new PersonId("S7"), new ContactDetails(new Name("Student")),
                 new EducationLevel("P1"), new Phone("91234567"));
@@ -82,7 +109,7 @@ public class CanonicalCommandExecutorTest {
             assertEquals(before.attendance(), state.attendance());
             throw new IOException("Disk unavailable");
         }, Optional::empty);
-        assertThrows(CommandException.class, () -> executor.execute((staged, stagedView) -> {
+        CommandException failure = assertThrows(CommandException.class, () -> executor.execute((staged, stagedView) -> {
             assertEquals(new PersonId("S7"), PersonIndexResolver.resolve(Index.fromOneBased(1),
                     stagedView.getPeople()).getId());
             var counters = new HashMap<>(before.people().getLastAllocatedSequences());
@@ -93,6 +120,9 @@ public class CanonicalCommandExecutorTest {
             stagedView.setRoleFilter(Optional.empty());
             return new CommandResult("Unsaved");
         }));
+        assertEquals("Could not save data due to the following error: Disk unavailable", failure.getMessage());
+        assertTrue(failure.getCause() instanceof IOException);
+        assertEquals("Disk unavailable", failure.getCause().getMessage());
         assertEquals(before, live.exportState());
         assertSame(visible, view.getPeople());
         assertEquals(Optional.of(PersonRole.STUDENT), view.getRoleFilter());
