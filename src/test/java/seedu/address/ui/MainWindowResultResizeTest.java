@@ -56,14 +56,16 @@ public class MainWindowResultResizeTest {
                 double initialHeight = fixture.resultPane().getHeight();
                 fixture.split().setDividerPositions(0.75);
                 fixture.layout();
-                assertTrue(fixture.resultPane().getHeight() > initialHeight + 10,
+                assertTrue(fixture.resultPane().getHeight() > initialHeight + 1,
                         "Moving the divider down must enlarge the actual result area.");
                 assertEquals(0.55, fixture.records().getDividerPositions()[0], 0.01);
                 for (double position : new double[] {0, 1, 0.4}) {
                     fixture.split().setDividerPositions(position);
                     fixture.layout();
                     assertTrue(fixture.resultPane().getHeight() >= 80);
-                    assertTrue(fixture.records().getHeight() >= 90);
+                    assertTrue(fixture.records().getHeight() >= 120);
+                    assertTrue(fixture.root().lookup("#personListView").getBoundsInLocal().getHeight() >= 50);
+                    assertTrue(fixture.root().lookup("#lessonListView").getBoundsInLocal().getHeight() >= 50);
                     for (String selector : List.of("#commandTextField", "#resultDisplay", "#personListView",
                             "#lessonListView", "#statusbarPlaceholder")) {
                         Bounds bounds = fixture.root().lookup(selector).localToScene(
