@@ -13,6 +13,35 @@ person/lesson deletion, dated attendance removal and attendance history are acti
 
 --------------------------------------------------------------------------------------------------------------------
 
+<a id="reading-the-planned-command-formats"></a>
+
+## Reading the command formats
+
+* Uppercase words such as `NAME` are placeholders. Replace them with your values; type lowercase words such as `r/student` literally.
+* Square brackets mark optional input. For `help [COMMAND]`, enter `help` or `help add`, without brackets.
+* A vertical bar (`|`) separates alternatives. For `s/present|absent`, enter either `s/present` or `s/absent`, without the bar.
+* A prefix identifies a value: `n/Alex Tan` supplies a name, including its internal space. Type command names and prefixes in lowercase. Prefixed fields may appear in any order, once each; omit unknown optional values instead of leaving a prefix blank.
+* An ellipsis (`...`) means more supported fields may follow. For search, combine different filters allowed for that category; do not type the dots or repeat a prefix. Accepted values and case rules are given with each command.
+* Person positions and stored IDs select different things. Follow [Selecting people and lessons](#selecting-people-and-lessons) before using `INDEX`, `STUDENT_INDEX` or `LESSON_ID`.
+
+### Selecting people and lessons
+
+`INDEX` is a positive, one-based position in the **currently displayed people list**. `STUDENT_INDEX` uses
+that same list and must select a student, even when other roles are displayed. Run `list` or a people search
+and check the current cards before each person command. Filtering, addition and deletion can change positions.
+
+Cards show a stable person ID separately: `S1` for a student, `T1` for a tutor or `P1` for a parent.
+Stored IDs and relationships survive view changes and restart. Commands resolve the current position to that ID;
+do not type a person ID where a position is required. Addition allocates IDs automatically.
+
+Shared lessons use stable IDs such as `L1`. Select an existing lesson with `lid/LESSON_ID`; there is no
+per-student lesson index. Lesson, roster and history results preserve the people list and do not supply person
+positions. To create a lesson, use the [tutor lookup rules](#4-creating-shared-lessons-and-other-lesson-operations).
+
+`st/HHMM` and `et/HHMM` use four-digit, 24-hour times. A prefix's meaning depends on the command:
+`d/` accepts a weekday for lesson creation/search and a real `YYYY-MM-DD` date for attendance or dated details;
+`s/` accepts a subject for creation/search and an attendance status for `mark`.
+
 ## Quick start
 
 1. Ensure that Java `25` is installed on your computer.<br>
@@ -60,31 +89,32 @@ For a separate store, launch with `java -jar FILENAME.jar --data=data/another-po
 The active routes use one saved aggregate with role-specific people, stable IDs and shared lessons whose rosters
 can be changed with `enrol` and `unenrol`. Own-contact people search, attendance marking, guarded person and Lesson
 deletion, lesson listing, lesson search, lesson details, attendance removal and attendance history are active,
-alongside Student, Parent and Tutor relationship search. Their specifications follow under
-[Shared-lesson workflow](#planned-shared-lesson-workflow). Type `help` to inspect the commands available
-in your session. `edit`, `clear` and `find` are unavailable.
+alongside Student, Parent and Tutor relationship search. Use this single summary to find a command's syntax and example; the linked action names lead to its details.
+The [shared conventions](#reading-the-command-formats) explain the notation and selectors. Type `help` for your
+session's catalogue. A protected session permits only `help`, `list` and `exit`. Person/Lesson editing is
+[planned](#planned-scope-and-saved-file-reference); `edit`, `editlesson`, `clear` and `find` are unavailable.
 
 | Action | Format | Example |
 | --- | --- | --- |
-| Add student | `add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]` | `add r/student n/Alex Tan l/S2 pp/91234567` |
-| Add tutor or parent | `add r/ROLE n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]` | `add r/tutor n/Mei Lim p/92345678` |
-| Create shared lesson | `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` | `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1` |
-| Enrol student | `enrol STUDENT_INDEX lid/LESSON_ID` | `enrol 1 lid/L1` |
-| Unenrol student | `unenrol STUDENT_INDEX lid/LESSON_ID` | `unenrol 1 lid/L1` |
-| Mark attendance | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent</code> | `mark 1 lid/L1 d/2026-10-05 s/present` |
-| Unmark attendance | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` | `unmark 1 lid/L1 d/2026-10-05` |
-| Delete person | `delete INDEX` | `delete 1` |
-| Delete shared lesson | `deletelesson lid/LESSON_ID` | `deletelesson lid/L1` |
-| List people | `list [r/ROLE]` | `list r/student` |
-| Search people | `search c/CATEGORY [FILTER/VALUE]...` | `search c/student n/Alex d/Mon s/Math` |
-| List shared lessons | `lessons [si/STUDENT_INDEX]` | `lessons` |
-| Attendance history | `history STUDENT_INDEX [lid/LESSON_ID]` | `history 1 lid/L1` |
-| Show lesson details | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` | `showlesson lid/L1 d/2026-10-05` |
-| Search shared lessons | `search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]` | `search c/lesson tu/mei d/Mon` |
-| Get help | `help [COMMAND]` | `help add` |
+| [Add student](#1-adding-a-person-add) | `add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]` | `add r/student n/Alex Tan l/S2 pp/91234567` |
+| [Add tutor or parent](#1-adding-a-person-add) | `add r/ROLE n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]` | `add r/tutor n/Mei Lim p/92345678` |
+| [Create shared lesson](#4-creating-shared-lessons-and-other-lesson-operations) | `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` | `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1` |
+| [Enrol student](#5-enrolling-and-unenrolling-students) | `enrol STUDENT_INDEX lid/LESSON_ID` | `enrol 1 lid/L1` |
+| [Unenrol student](#5-enrolling-and-unenrolling-students) | `unenrol STUDENT_INDEX lid/LESSON_ID` | `unenrol 1 lid/L1` |
+| [Mark attendance](#7-recording-attendance-and-retrieving-history) | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent</code> | `mark 1 lid/L1 d/2026-10-05 s/present` |
+| [Unmark attendance](#7-recording-attendance-and-retrieving-history) | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` | `unmark 1 lid/L1 d/2026-10-05` |
+| [Delete person](#3-deleting-a-person-delete) | `delete INDEX` | `delete 1` |
+| [Delete shared lesson](#4-creating-shared-lessons-and-other-lesson-operations) | `deletelesson lid/LESSON_ID` | `deletelesson lid/L1` |
+| [List people](#2-listing-people-list) | `list [r/ROLE]` | `list r/student` |
+| [Search people](#searching-people-search) | `search c/CATEGORY [FILTER/VALUE]...` | `search c/student n/Alex d/Mon s/Math` |
+| [List shared lessons](#listing-and-searching-shared-lessons) | `lessons [si/STUDENT_INDEX]` | `lessons` |
+| [Attendance history](#7-recording-attendance-and-retrieving-history) | `history STUDENT_INDEX [lid/LESSON_ID]` | `history 1 lid/L1` |
+| [Show lesson details](#listing-and-searching-shared-lessons) | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` | `showlesson lid/L1 d/2026-10-05` |
+| [Search shared lessons](#listing-and-searching-shared-lessons) | `search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]` | `search c/lesson tu/mei d/Mon` |
+| [Get help](#viewing-command-help-help) | `help [COMMAND]` | `help add` |
 | Exit | `exit` | `exit` |
 
-Cards display a current position separately from the stable ID, such as `S1`. Addition allocates that ID; do not supply it as an add argument. Command names and prefixes are lowercase, each prefix may appear only once, and role values ignore case. Optional values must be nonblank. `exit` accepts no arguments.
+Use the [selector rules](#selecting-people-and-lessons) to choose a person or lesson. `exit` accepts no arguments.
 
 ### Viewing command help: `help`
 
@@ -340,51 +370,14 @@ The following sections record the shared-lesson and guarded-deletion contracts. 
 lesson details, history, lesson search and Student, Parent and Tutor relationship search are active.
 Use the [current command summary](#current-command-summary) and your build's `help` for active routes.
 
-<a id="reading-the-planned-command-formats"></a>
-
-### Reading the command formats
-
-* Uppercase words are placeholders; replace them with your values. Square brackets indicate optional input and are not typed.
-* `INDEX` is a positive integer identifying a person's position in the currently displayed, filtered people list. `STUDENT_INDEX` uses that same list and must select a student, even when other roles are displayed. Run `list` or a people search and check the current positions before selecting a person.
-* Person cards distinguish their numbered command position from their stable ID: `S1` for a student, `T1` for a tutor or `P1` for a parent. Filtering and deletion can change positions; stable IDs and stored relationships survive those changes and restarts. Use a current position for `delete` and student operations.
-* Create a lesson by supplying an existing tutor's full name with `tu/TUTOR_NAME` and, optionally, their phone with `tp/TUTOR_PHONE`. Search uses `tu/QUERY` for a fragment of the tutor's name instead.
-* Shared lessons have stable IDs such as `L1`. Use `lid/LESSON_ID` wherever a command selects a lesson; there is no per-student lesson index.
-* Lesson catalogue, roster and history results preserve the current people list, its filter and its command positions. Select a student from the people list, rather than a position in those other results.
-* `st/HHMM` and `et/HHMM` use four-digit 24-hour times. `d/` takes a weekday for lesson creation/search and a real `YYYY-MM-DD` date for attendance or dated lesson details. `s/` takes a subject for creation/search and `present` or `absent` for `mark`.
-* Type command names and prefixes in lowercase. Supply each prefix at most once, in any order. Omit unknown optional fields; do not supply blank values.
-
 <a id="planned-quick-start"></a>
 
 ### Shared-lesson example
 
-All commands in this workflow are active. Start with a fresh dataset. `addlesson` returns the
-allocated lesson ID; substitute it for `L1` in later commands if necessary.
-The `list r/student` result below places Alex at position 1 and Jamie at position 2. Recheck those positions when
-using an existing dataset.
-
-```text
-add r/tutor n/Mei Lim p/92345678
-add r/student n/Alex Tan l/S2 pp/91234567
-add r/student n/Jamie Tan l/S2 pp/91234567
-addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1
-lessons
-list r/student
-enrol 1 lid/L1
-enrol 2 lid/L1
-search c/lesson
-mark 1 lid/L1 d/2026-10-05 s/present
-mark 2 lid/L1 d/2026-10-05 s/absent
-showlesson lid/L1 d/2026-10-05
-unenrol 2 lid/L1
-history 2 lid/L1
-mark 2 lid/L1 d/2026-10-05 s/present
-unmark 2 lid/L1 d/2026-10-05
-```
-
-Expect one shared lesson with two students before unenrolment. Lesson search and history results preserve Alex and
-Jamie's positions in the people list. Jamie's dated history remains correctable and removable after leaving. Restart
-and verify the same stable IDs, roster and remaining history; run `list r/student` again before selecting a student by
-position. No record means unrecorded, rather than absent.
+Follow the [Quick start](#quick-start) for one runnable journey: create two students and one shared lesson,
+enrol both students, record and correct dated attendance, retain history after unenrolment, and remove a record.
+It also shows deletion guards and restart checks. For individual operations, use the
+[command summary](#current-command-summary) and the command's examples below.
 
 ### 3. Deleting a person: `delete`
 
@@ -623,49 +616,30 @@ The supported JSON format remains human-editable. Close PonHub and keep a backup
 **A**: Close PonHub on both computers. Install the same version or one that supports your data format on the new computer, then copy your operational file into the new JAR folder, preserving its relative path, or select its new location inside that folder with `--data=PATH`. If you use the default location, copy the `data` folder. Keep a backup of the original folder until you have opened PonHub and checked your records on the new computer. Moving a legacy contact file to a canonical-format build does not migrate it; follow the [current recovery rules](#data-protection-in-the-current-build).
 
 **Q**: Should I use a displayed position or an ID?<br>
-**A**: The active `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `lessons si/` and `history` selectors
-use the person's current position in the displayed people list. Run `list` or a people
-search and check that position first. Cards label stable person IDs separately; those IDs preserve stored identity
-and relationships. Select a lesson with `lid/L1`, for example, including for active `deletelesson`. Create a lesson
-using the tutor's full name and optional exact phone; search tutor names using fragments. Check `help` for the
-commands available in your build.
+**A**: Use the current people-list position for a person and a stable `lid/` reference for a lesson.
+The [selector rules](#selecting-people-and-lessons) explain which list supplies each value.
 
 **Q**: How do I choose the tutor for `addlesson`?<br>
-**A**: Supply the tutor's complete name with `tu/`. Matching ignores letter case and repeated spaces. If more than one
-tutor has that name, add their exact phone with `tp/`; leading zeros matter. A supplied phone must match even when the
-name is unique. Use `help addlesson` for the complete active syntax.
+**A**: Follow the [lesson-creation tutor lookup](#4-creating-shared-lessons-and-other-lesson-operations),
+including exact-phone disambiguation. `help addlesson` gives the same active syntax and an example.
 
 --------------------------------------------------------------------------------------------------------------------
 
 <a id="planned-command-summary"></a>
 
-## Command format reference
+<a id="command-format-reference"></a>
 
-All formats in this table are active in normal sessions. A protected session permits only `help`, `list` and `exit`.
-These formats use the [command conventions](#reading-the-planned-command-formats).
-Person/student selectors come from the current people list, while every existing-lesson selector uses a stable
-`lid/` reference.
+## Planned scope and saved-file reference
 
-| Action | Format |
-| --- | --- |
-| Add student | `add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]` |
-| Add tutor or parent | `add r/ROLE n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]` |
-| List people | `list [r/ROLE]` |
-| Delete person | `delete INDEX` |
-| Create shared lesson | `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` |
-| Delete lesson | `deletelesson lid/LESSON_ID` |
-| Lesson catalogue | `lessons [si/STUDENT_INDEX]` |
-| Lesson details | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` |
-| Enrol / unenrol | `enrol STUDENT_INDEX lid/LESSON_ID` / `unenrol STUDENT_INDEX lid/LESSON_ID` |
-| Search | `search c/CATEGORY [FILTER_PREFIX/VALUE]...` |
-| Mark attendance | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent</code> |
-| Unmark attendance | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` |
-| History | `history STUDENT_INDEX [lid/LESSON_ID]` |
-| Help | `help [COMMAND]` |
-| Exit | `exit` |
+For active formats, use the [current command summary](#current-command-summary).
+Person and Lesson editing are intended v1.4 additions under the
+[planned editing contract](DeveloperGuide.html#planned-v14-editing-contract); neither command is available yet.
+Capacity, waiting lists, make-ups, fees, occurrence cancellation and undo/redo remain future proposals.
+So do exports, saved/guided searches, alternative/exclusion search conditions, archives, late/excused attendance,
+notes, bulk/clickable attendance and attendance percentages. The relationship-filter matrix above is active.
 
-Capacity, waiting lists, make-ups, fees, person and lesson editing, occurrence cancellation and undo/redo are future scope. So are exports, saved or guided searches, alternative or exclusion search conditions, archives, late/excused attendance, notes, bulk/clickable attendance and attendance percentages. The full relationship-filter matrix above is active. The current build's supported commands are listed in [Current command summary](#current-command-summary).
-
+The following sections describe existing saved-file and recovery behavior. Manual file editing is separate
+from a planned application edit command.
 
 ### Checking unsuccessful saves in the current build
 
