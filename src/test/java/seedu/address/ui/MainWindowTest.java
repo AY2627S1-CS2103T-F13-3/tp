@@ -79,7 +79,8 @@ public class MainWindowTest {
     @Test
     public void layout_compactAndLargeScenes_keepControlsAndListAccessible() throws Exception {
         Region root = callOnFxThread(() -> (Region) createWindow().getPrimaryStage().getScene().getRoot());
-        String feedback = "Long feedback that must remain readable. ".repeat(100) + "Final feedback marker.";
+        // Exceed even the enlarged result viewport at the widest scene, including compact Mac font metrics.
+        String feedback = "Long feedback that must remain readable. ".repeat(400) + "Final feedback marker.";
         for (int[] size : new int[][] {{450, 330}, {853, 420}, {1536, 800}, {1920, 1020}}) {
             runOnFxThread(() -> {
                 layoutScene(root, size[0], size[1]);
