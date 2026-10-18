@@ -26,6 +26,23 @@ title: Developer Guide
 
 Refer to the guide [_Setting up and getting started_](SettingUp.html).
 
+### Development assertions
+
+Gradle development launches (`./gradlew run`, or `gradlew.bat run` on Windows) enable Java assertions.
+The Gradle `test` task already enables them by default. In IntelliJ, a run configuration delegated to
+the Gradle `run` task uses this setting. For a native **Application** configuration launching
+`seedu.address.Main`, add `-ea` to its **VM options**; project SDK and Gradle JVM should still use Java 25.
+Each contributor should verify the configuration they actually launch.
+
+To check that path, use a disposable local code copy: temporarily put
+`assert false : "Development assertion check";` at the beginning of `Main.main`, launch with the chosen
+configuration and expect an `AssertionError` before the window opens. Remove the deliberate failure,
+rerun and verify that PonHub opens normally. Never commit the probe. Run the existing tests afterwards;
+assertions check programmer invariants, while invalid user input still needs normal validation and exceptions.
+
+The packaged user launch remains `java -jar ponhub.jar`; users do not need to add `-ea`.
+See the [Testing guide](Testing.html#running-tests) for regression checks.
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Design**
