@@ -26,6 +26,23 @@ title: Developer Guide
 
 Refer to the guide [_Setting up and getting started_](SettingUp.html).
 
+### Development assertions
+
+Gradle development launches (`./gradlew run`, or `gradlew.bat run` on Windows) enable Java assertions.
+The Gradle `test` task already enables them by default. In IntelliJ, a run configuration delegated to
+the Gradle `run` task uses this setting. For a native **Application** configuration launching
+`seedu.address.Main`, add `-ea` to its **VM options**; project SDK and Gradle JVM should still use Java 25.
+Each contributor should verify the configuration they actually launch.
+
+To check that path, use a disposable local code copy: temporarily put
+`assert false : "Development assertion check";` at the beginning of `Main.main`, launch with the chosen
+configuration and expect an `AssertionError` before the window opens. Remove the deliberate failure,
+rerun and verify that PonHub opens normally. Never commit the probe. Run the existing tests afterwards;
+assertions check programmer invariants, while invalid user input still needs normal validation and exceptions.
+
+The packaged user launch remains `java -jar ponhub.jar`; users do not need to add `-ea`.
+See the [Testing guide](Testing.html#running-tests) for regression checks.
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## **Design**
@@ -947,7 +964,7 @@ The solid arrows show references; the dashed arrow shows the resolver's dependen
 `PersonIndexResolver`; the resolver does not own a second people list. Filtering changes positions in this
 projection, while records retain their `PersonId`. The registry snapshot also retains allocation counters after
 deletion, so a position can be reused but an allocated ID cannot. The
-[UG walkthrough](UserGuide.md#people-positions-and-stable-ids) demonstrates both changes with executable commands.
+[UG walkthrough](UserGuide.html#people-positions-and-stable-ids) demonstrates both changes with executable commands.
 The diagram omits contact fields, lesson/attendance references and transaction staging; their existing contracts
 above still apply. This is the current add/list/delete runtime.
 
