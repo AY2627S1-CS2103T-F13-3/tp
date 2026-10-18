@@ -496,12 +496,23 @@ public final class PonHubData {
     }
 
     /**
-     * Installs one replacement lesson at its existing catalogue position after validating the complete snapshot.
+     * Replaces one immutable Lesson at its existing catalogue position without allocating an identity.
+     * Complete root validation precedes installation, retaining people, attendance and every allocation counter.
+     * Equal complete values leave the original snapshot installed and return the existing Lesson without a
+     * state notification.
+     *
+     * @return the installed or unchanged immutable Lesson.
+     * @throws NullPointerException if the replacement is null.
+     * @throws IllegalArgumentException if its ID is missing or the resulting aggregate is invalid.
      */
-    private Lesson replaceLesson(Lesson replacement) {
+    public Lesson replaceLesson(Lesson replacement) {
         requireNonNull(replacement);
+        Lesson original = requireLesson(replacement.getId());
+        if (original.equals(replacement)) {
+            return original;
+        }
         List<Lesson> lessons = new ArrayList<>(getLessons());
-        int lessonIndex = lessons.indexOf(requireLesson(replacement.getId()));
+        int lessonIndex = lessons.indexOf(original);
         lessons.set(lessonIndex, replacement);
         PonHubDataState replacementState = new PonHubDataState(state.get().people(), lessons,
                 state.get().attendance(), state.get().lastAllocatedLessonSequence());

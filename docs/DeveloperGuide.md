@@ -262,6 +262,25 @@ other Lesson for Tutor, room and enrolled-Student clashes; exclude the edited Le
 allow adjacent slots. Reject a weekday change if any retained attendance date, including a former
 member's, would become invalid. Never move, remove or rewrite history automatically.
 
+**Lesson model API (#262).** `LessonEditInput` contains one typed optional replacement for each
+editable value: day, start time, end time, subject, Tutor ID and room. An empty optional retains the
+existing value. The model accepts an all-omitted input as a no-op; the later command parser must
+require at least one editable prefix, reject blanks and resolve the Tutor name/phone to a stable ID.
+`LessonEditCandidate.prepare(source, targetId, input)` combines supplied and retained values into one
+complete immutable `Lesson`, preserving the target ID, catalogue position and roster order/membership.
+It exposes `getCandidateState()`, `getEditedLesson()` and `isChanged()` without changing live state,
+allocating an ID or writing storage. Complete canonical equality determines a no-op.
+
+`PonHubData.replaceLesson(replacement)` is the canonical installation boundary shared with roster
+updates. It replaces only the existing catalogue position and validates a complete `PonHubDataState`
+before installation. This excludes the old Lesson from conflict checks while rechecking the replacement
+against every other Tutor, room and enrolled Student schedule. Whole-root validation also rejects a
+weekday that disagrees with any retained attendance date, including a former member's record. People,
+attendance and allocation counters are retained, and an equal replacement performs no state notification.
+The later `editlesson` command must prepare from its fresh staged snapshot, save a changed candidate before
+publication, and skip save/publication for a no-op. This model support does not activate the command or
+change the JSON schema.
+
 **Execution and views.** Parsers prepare omitted/clear/set intent without allocating IDs or mutating
 live records. Model increments expose only the immutable replacement support needed by these
 commands; existing constructors and whole-root invariants remain authoritative. Both commands use
