@@ -13,8 +13,9 @@ import seedu.address.model.person.Phone;
 import seedu.address.model.person.Tutor;
 
 /**
- * Immutable, ID-free input for a future role-aware addition. It contains no registry or writable model state.
- * Contact values use the shared validators; duplicate checks and committed ID allocation belong to integration.
+ * Immutable, ID-free fields for a role-aware person addition, with no writable model state.
+ * Shared contact validators and this record enforce field requirements. Candidate preparation checks
+ * duplicates and allocates an ID without changing the live registry.
  */
 public record PersonAdditionInput(PersonRole role, ContactDetails contactDetails,
         Optional<EducationLevel> level, Optional<Phone> parentPhone) {
