@@ -26,6 +26,7 @@ import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
@@ -650,9 +651,20 @@ public class CanonicalMainWindowTest {
         byte[] original = Files.readAllBytes(dataPath);
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
-                fixture.window.handleHelp();
+                String draft = "add r/student n/Unfinished";
+                fixture.input().setText(draft);
+                MenuBar menu = (MenuBar) fixture.root().lookup("#menuBar");
+                menu.getMenus().get(1).getItems().get(0).fire();
+                String guidance = fixture.feedback();
                 assertTrue(fixture.feedback().contains("Operational writes are blocked"));
                 assertFalse(fixture.feedback().contains("add -"));
+                for (var target : List.of(fixture.input(), fixture.root().lookup("#resultDisplay"))) {
+                    Event.fireEvent(target, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F1,
+                            false, false, false, false));
+                    assertEquals(guidance, fixture.feedback());
+                    assertEquals(draft, fixture.input().getText());
+                    assertArrayEquals(original, Files.readAllBytes(dataPath));
+                }
                 fixture.enter("list");
                 assertTrue(fixture.feedback().contains("Showing 0 person(s)."));
                 assertTrue(fixture.feedback().contains("An empty view is not your saved data"));

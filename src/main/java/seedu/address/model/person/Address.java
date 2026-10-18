@@ -6,7 +6,7 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 import seedu.address.commons.util.StringUtil;
 
 /**
- * Represents a Person's address in the address book.
+ * Represents a person's postal address in PonHub contact details.
  * Guarantees: immutable; is valid as declared in {@link #isValidAddress(String)}
  */
 public final class Address {

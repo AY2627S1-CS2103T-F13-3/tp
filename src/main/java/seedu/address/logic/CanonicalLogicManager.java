@@ -28,7 +28,7 @@ import seedu.address.model.search.PersonSearchMatch;
 
 /**
  * Application logic over one canonical session and separately persisted GUI preferences.
- * Commands, cards and lesson retrieval share the session's root without an inherited AddressBook model.
+ * Commands, person cards, lesson retrieval and attendance history share the session's canonical data root.
  */
 public final class CanonicalLogicManager implements Logic {
     private final Logger logger = LogsCenter.getLogger(CanonicalLogicManager.class);
