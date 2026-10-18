@@ -38,7 +38,6 @@ public class LessonTimeSlotTest {
         assertTrue(first.overlaps(same));
     }
 
-    // OpenAI Codex assisted Zhu Zhi Yu with these boundary regressions (#198).
     @Test
     public void overlaps_strictContainment_returnsTrueInBothDirections() {
         LessonTimeSlot containing = slot(LessonDay.MONDAY, "0900", "1200");

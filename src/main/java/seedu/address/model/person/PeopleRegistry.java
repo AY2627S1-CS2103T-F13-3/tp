@@ -20,7 +20,7 @@ import seedu.address.model.person.exceptions.ReferencedPersonException;
 /**
  * A canonical ordered registry of immutable student, tutor, and parent records.
  * IDs increase independently per role and are never reclaimed by removal. Read APIs return immutable snapshots.
- * This model foundation is not yet connected to the inherited application's commands, UI, or storage.
+ * The canonical aggregate stores people and allocation history through exported registry state.
  */
 public final class PeopleRegistry {
 

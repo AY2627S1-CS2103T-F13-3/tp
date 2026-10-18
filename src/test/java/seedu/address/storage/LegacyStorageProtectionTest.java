@@ -27,7 +27,6 @@ import seedu.address.model.PonHubData;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 
-// Developed with OpenAI Codex assistance for ultramanarm.
 /**
  * Guards the retained legacy persistence boundary until its planned removal.
  */

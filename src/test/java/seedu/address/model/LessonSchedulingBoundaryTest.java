@@ -30,7 +30,6 @@ import seedu.address.model.person.Phone;
 import seedu.address.model.person.Student;
 import seedu.address.model.person.Tutor;
 
-// OpenAI Codex assisted Zhu Zhi Yu with these boundary regressions (#198).
 public class LessonSchedulingBoundaryTest {
     private PeopleRegistry registry;
     private Tutor firstTutor;

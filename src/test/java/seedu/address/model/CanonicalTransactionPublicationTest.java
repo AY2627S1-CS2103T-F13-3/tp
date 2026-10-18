@@ -44,7 +44,6 @@ import seedu.address.model.search.SearchField;
 
 /**
  * Observer regressions for the save-before-publication and unchanged-view transaction contracts.
- * Zhu Zhi Yu used OpenAI Codex to prepare these focused tests for issue #202.
  */
 public class CanonicalTransactionPublicationTest {
     @Test

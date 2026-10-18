@@ -10,10 +10,9 @@ import seedu.address.model.person.exceptions.DuplicatePersonException;
 import seedu.address.model.person.exceptions.PersonIdExhaustedException;
 
 /**
- * An immutable complete candidate for a future role-aware addition transaction.
+ * An immutable complete candidate for a role-aware person addition.
  * Preparation changes no live data and reserves no identity in the source allocation history.
- * The candidate and its new person become operational only after a successful save-and-install transaction.
- * This foundation does not execute commands, save data, refresh views, or activate canonical routing.
+ * The add command installs this state into its staged model; the transaction saves it before publication.
  */
 public final class PersonAdditionCandidate {
 

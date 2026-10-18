@@ -62,7 +62,6 @@ public class AttendanceTest {
         assertThrows(NullPointerException.class, () -> Attendance.parseDate(null));
     }
 
-    // OpenAI Codex assisted Zhu Zhi Yu with these boundary regressions (#198).
     @Test
     public void parseDate_yearLimitsAndLeapCenturies_preservesStrictCalendarDates() {
         assertEquals(LocalDate.of(1, 1, 1), Attendance.parseDate("0001-01-01"));

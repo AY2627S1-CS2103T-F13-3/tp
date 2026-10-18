@@ -13,7 +13,7 @@ import seedu.address.model.person.Student;
 /**
  * Resolves command indices through a supplied current people view to immutable canonical records.
  * Callers retain the resolved stable identity throughout the operation, even if the view later changes.
- * This foundation does not select a view, change operational data, or activate canonical commands.
+ * Resolution uses the supplied visible order without changing the view or model.
  */
 public final class PersonIndexResolver {
 

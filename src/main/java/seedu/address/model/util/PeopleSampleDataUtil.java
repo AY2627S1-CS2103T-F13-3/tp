@@ -11,7 +11,7 @@ import seedu.address.model.person.PeopleRegistry;
 import seedu.address.model.person.Phone;
 
 /**
- * Prepares representative canonical people for isolated development and future runtime integration.
+ * Prepares representative canonical people for isolated development and testing.
  * The samples contain no lessons or attendance and are not installed into the active application.
  */
 public final class PeopleSampleDataUtil {
