@@ -425,9 +425,7 @@ public class CanonicalPeopleSessionTest {
         assertTrue(session.execute("help LESSONS").getFeedbackToUser().contains("Usage: lessons"));
         assertTrue(session.execute("help list").getFeedbackToUser().contains("r/"));
         assertFalse(session.execute("help").isExit());
-        assertFalse(session.execute("help").isShowHelp());
         assertTrue(session.execute("exit").isExit());
-        assertFalse(session.execute("exit").isShowHelp());
     }
 
     @Test

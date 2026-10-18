@@ -255,7 +255,7 @@ public final class CanonicalPeopleSession {
                     throw new ParseException(String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT,
                             CanonicalCommandCatalog.MESSAGE_EXIT_USAGE));
                 }
-                return new CommandResult(CanonicalCommandCatalog.MESSAGE_EXIT_ACKNOWLEDGEMENT, false, true);
+                return new CommandResult(CanonicalCommandCatalog.MESSAGE_EXIT_ACKNOWLEDGEMENT, true);
             default:
                 throw new ParseException(String.format(MESSAGE_UNKNOWN_COMMAND_FORMAT, word));
         }

@@ -33,4 +33,4 @@ This project has three types of tests:
 1. *Integration tests* check how multiple code units work together; the individual units are assumed to work.<br>
    For example: `seedu.address.storage.StorageManagerTest`
 1. *Hybrid tests* combine unit and integration testing. These tests check both the individual units and how they work together.<br>
-   For example: `seedu.address.logic.LogicManagerTest`
+   For example: `seedu.address.logic.CanonicalLogicManagerTest`

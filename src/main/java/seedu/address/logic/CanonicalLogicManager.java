@@ -18,7 +18,6 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.lesson.LessonId;
-import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
 import seedu.address.model.person.PersonRecord;
 import seedu.address.model.query.AttendanceHistoryEntry;
@@ -54,14 +53,6 @@ public final class CanonicalLogicManager implements Logic {
     @Override
     public ObservableList<PersonRecord> getPersonRecords() {
         return session.getPeople();
-    }
-
-    /**
-     * Rejects inherited person access because the application owns only canonical records.
-     */
-    @Override
-    public ObservableList<Person> getFilteredPersonList() {
-        throw new UnsupportedOperationException("Use the canonical people view through getPersonRecords()");
     }
 
     @Override

@@ -2,7 +2,6 @@ package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.util.Locale;
@@ -226,11 +225,5 @@ public class SearchCriteriaParserTest {
     @Test
     public void parse_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> parser.parse(null));
-    }
-
-    @Test
-    public void parseCommand_searchRoute_remainsInactive() {
-        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () ->
-                new AddressBookParser().parseCommand("search c/student n/Alex"));
     }
 }

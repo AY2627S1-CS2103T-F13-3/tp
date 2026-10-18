@@ -9,7 +9,7 @@ import seedu.address.logic.parser.PeopleListParser;
 
 /**
  * Authoritative command words and guidance for the canonical application's supported routes.
- * Rejected startup permits only recovery commands; inherited command parsers are a separate implementation.
+ * Rejected startup permits only recovery commands.
  */
 public final class CanonicalCommandCatalog {
     public static final String MESSAGE_UNKNOWN_HELP_TOPIC =

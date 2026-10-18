@@ -101,7 +101,7 @@ remain for regression coverage. `mark` creates or corrects attendance; `unmark` 
 `CanonicalCommandCatalog` defines available command words and guidance; `CanonicalPeopleSession`
 routes commands through `execute()`. Register or withdraw a route with matching parser/usage,
 catalogue and routing tests, and UG/manual checks, using this same root/view and compatible persistence.
-Inherited AB3 classes remain regression seams; they do not form a second active people store.
+Inherited model/storage classes remain regression seams; the legacy command execution path is retired.
 See [startup](#canonical-application-startup-85), [Storage](#storage-component) and the
 [UG](UserGuide.html#current-command-summary) for loading, transactions and supported syntax.
 
@@ -374,15 +374,16 @@ saving. List clears search criteria and optionally sets a role; own-contact sear
 while lesson creation and membership changes preserve it. See [Storage](#command-transactions).
 
 The three diagrams in this section provide historical AB3 context. Their add/delete commands and parsers
-have been removed; the remaining legacy Logic classes are isolated regression seams. Active application
-wiring and its transaction boundary are described above.
+have been removed; the legacy Logic manager, catalogue, parser interface and help/list/exit commands are
+retired. Active application wiring and its transaction boundary are described above.
 
 ![Historical interactions inside Logic for retired deletion](images/DeleteSequenceDiagram.png)
 
 The historical deletion sequence illustrates the removed `DeleteCommandParser` and `DeleteCommand` path.
 Its per-call parser construction predates the registered catalogue and omits the current transaction boundary.
-`Parser` remains available to retained parsers. This parser-class diagram is historical: its add/delete
-examples and the `ArgumentTokenizer`/`ArgumentMultimap`/`Prefix`/`CliSyntax` toolkit have been removed.
+The legacy `Parser` interface is also retired; active parsers return typed canonical inputs. This
+parser-class diagram is historical: its add/delete examples and the
+`ArgumentTokenizer`/`ArgumentMultimap`/`Prefix`/`CliSyntax` toolkit have been removed.
 Active canonical parsers keep their own strict unknown/repeated/blank-prefix validation and share
 `ParserUtil`'s Unicode-boundary helper where needed; they do not use the retired tokenizer.
 
@@ -669,8 +670,8 @@ allocation counters, filter, selection and subscribed query results.
 Read-only commands and operational no-ops skip saving. Successful publication retains observable-list
 identity; unchanged views avoid refresh, while a changed role filter can publish without an operational
 write. Publication performs no new validation or I/O. Preferences follow their separate lifecycle.
-Legacy `LogicManager` remains an isolated regression seam. `ModelTransaction` is also implemented by
-the active `CanonicalTransaction`; it is not exclusively legacy infrastructure.
+The legacy command execution path is retired. `ModelTransaction` remains because the active
+`CanonicalTransaction` implements it; retained model/storage tests have their own regression seams.
 
 ##### Example: candidate, saved file and live state
 
@@ -885,9 +886,9 @@ topics/excess arguments and restricts guidance to the protected-session routes a
 Help preserves records and the people view without operational saves; preferences have a separate
 lifecycle. Normal sessions expose help for every [active route](#current-increment-and-command-integration);
 protected sessions expose only help/list/exit guidance.
-Legacy `CommandCatalog`/`HelpCommandParser` expose only list/help/exit as isolated regression seams.
-Their inherited add/delete commands, parsers and obsolete command fixtures have been removed under #97.
-The active canonical catalogue still provides role-aware addition and relationship-guarded deletion.
+Help and exit text now belong to the active catalogue. The legacy catalogue, help parser and
+help/list/exit command classes are retired. Inline help returns ordinary feedback; `CommandResult`
+contains feedback and the live exit flag, with no separate help effect.
 
 The Help menu and F1 both invoke `MainWindow.executeCommand("help")`, retaining the command-box
 draft and card selection. `ResultDisplay` is a read-only wrapped TextArea with vertical scrolling;
@@ -1038,15 +1039,16 @@ application thread once controls are attached.
 
 The session's `execute()` dispatches active `add`, `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`,
 `deletelesson`, `list`, `lessons`, `showlesson`, `history`, `search`, `help` and
-`exit` commands through its switch. `CanonicalCommandCatalog` defines the permitted command words and guidance,
-independently
-of the retained legacy `CommandCatalog`. The session parses role-aware additions, shared-lesson creation and
+`exit` commands through its switch. `CanonicalCommandCatalog` defines the permitted command words and guidance
+for normal and protected sessions. The session parses role-aware additions, shared-lesson creation and
 membership changes, guarded Lesson deletion, attendance marks/removals, listings and own-contact searches before
 staged execution. Changed data is saved through the
 protected writer before publication, stable-ID success feedback or person-view changes. Parse, domain and save
 failures leave
 the original data, allocation counters and complete visible filter/list unchanged.
-Read-only commands perform no operational saves.
+Read-only commands perform no operational saves. `CanonicalCommandExecutor` owns the exact IO and
+permission-error messages and retains the original exception cause. `Logic` exposes canonical people,
+lesson and history views directly; its inherited `Person` getter and compatibility-only defaults are removed.
 
 A confirmed missing file starts an unwritten empty store. A rejected file produces a protected empty view,
 with its original bytes preserved and recovery guidance retained. Only `help`, `list` and `exit` are available

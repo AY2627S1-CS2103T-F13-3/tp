@@ -1,15 +1,12 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.PersonRole;
 
@@ -66,11 +63,4 @@ public class PeopleListParserTest {
         assertThrows(NullPointerException.class, () -> parser.parse(null));
     }
 
-    @Test
-    public void parseCommand_roleListing_remainsDormantInLegacyRuntime() throws Exception {
-        AddressBookParser commandParser = new AddressBookParser();
-        assertTrue(commandParser.parseCommand("list") instanceof ListCommand);
-        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, ListCommand.MESSAGE_USAGE);
-        assertThrows(ParseException.class, expectedMessage, () -> commandParser.parseCommand("list r/student"));
-    }
 }
