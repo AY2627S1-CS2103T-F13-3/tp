@@ -38,6 +38,9 @@ public class HistoryListPanel extends UiPart<Region> {
     static class HistoryCell extends ListCell<AttendanceHistoryEntry> {
         HistoryCell() {
             setWrapText(true);
+            // Let VirtualFlow allocate the viewport breadth, including space for its vertical scrollbar.
+            // Measuring the unwrapped text as the preferred breadth would instead enable horizontal scrolling.
+            setPrefWidth(0);
         }
 
         @Override
