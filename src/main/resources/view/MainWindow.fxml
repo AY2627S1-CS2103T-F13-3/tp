@@ -39,26 +39,29 @@
           </padding>
         </StackPane>
 
-        <StackPane VBox.vgrow="SOMETIMES" fx:id="resultDisplayPlaceholder" styleClass="pane-with-border"
-                   minHeight="80" prefHeight="160" maxHeight="250">
-          <padding>
-            <Insets top="5" right="10" bottom="5" left="10" />
-          </padding>
-        </StackPane>
+        <SplitPane fx:id="resultSplitPane" orientation="VERTICAL" dividerPositions="0.32"
+                   minHeight="210" VBox.vgrow="ALWAYS">
+          <StackPane fx:id="resultDisplayPlaceholder" styleClass="pane-with-border"
+                     minHeight="80" prefHeight="160">
+            <padding>
+              <Insets top="5" right="10" bottom="5" left="10" />
+            </padding>
+          </StackPane>
 
-        <SplitPane dividerPositions="0.5" minHeight="90" VBox.vgrow="ALWAYS">
-          <VBox fx:id="personList" styleClass="pane-with-border" minWidth="0" minHeight="0">
-            <padding>
-              <Insets top="10" right="10" bottom="10" left="10" />
-            </padding>
-            <StackPane fx:id="personListPanelPlaceholder" minHeight="0" VBox.vgrow="ALWAYS"/>
-          </VBox>
-          <VBox styleClass="pane-with-border" minWidth="0" minHeight="0">
-            <padding>
-              <Insets top="10" right="10" bottom="10" left="10" />
-            </padding>
-            <StackPane fx:id="lessonListPanelPlaceholder" minHeight="0" VBox.vgrow="ALWAYS"/>
-          </VBox>
+          <SplitPane fx:id="recordsSplitPane" dividerPositions="0.5" minHeight="120">
+            <VBox fx:id="personList" styleClass="pane-with-border" minWidth="0" minHeight="0">
+              <padding>
+                <Insets top="10" right="10" bottom="10" left="10" />
+              </padding>
+              <StackPane fx:id="personListPanelPlaceholder" minHeight="0" VBox.vgrow="ALWAYS"/>
+            </VBox>
+            <VBox styleClass="pane-with-border" minWidth="0" minHeight="0">
+              <padding>
+                <Insets top="10" right="10" bottom="10" left="10" />
+              </padding>
+              <StackPane fx:id="lessonListPanelPlaceholder" minHeight="0" VBox.vgrow="ALWAYS"/>
+            </VBox>
+          </SplitPane>
         </SplitPane>
 
         <StackPane fx:id="statusbarPlaceholder" VBox.vgrow="NEVER" />

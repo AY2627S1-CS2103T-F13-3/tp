@@ -81,6 +81,13 @@
     -fx-border-color: transparent transparent transparent #4d4d4d;
 }
 
+#resultSplitPane > .split-pane-divider {
+    -fx-background-color: #555555;
+    -fx-border-color: #777777 transparent #333333 transparent;
+    -fx-padding: 3;
+    -fx-cursor: v-resize;
+}
+
 .split-pane {
     -fx-border-radius: 1;
     -fx-border-width: 1;
