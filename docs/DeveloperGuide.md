@@ -1006,6 +1006,21 @@ current people list. With students `[S4, S9]`, positions `1` and `2` select thos
 `S2`. Resolve once and retain the returned ID throughout the operation. Student-only resolution rejects a
 Tutor/Parent at that position without searching another list; range/role failures leave data and view unchanged.
 
+<a id="current-people-selection"></a>
+
+**Current people selection and stored identity:**
+
+![Current people selection class diagram](images/PeopleSelectionClassDiagram.png)
+
+The solid arrows show references; the dashed arrow shows the resolver's dependency on the returned record type.
+`PeopleView` derives an ordered, read-only list from its `PonHubData` source. Command callers pass that list to
+`PersonIndexResolver`; the resolver does not own a second people list. Filtering changes positions in this
+projection, while records retain their `PersonId`. The registry snapshot also retains allocation counters after
+deletion, so a position can be reused but an allocated ID cannot. The
+[UG walkthrough](UserGuide.html#people-positions-and-stable-ids) demonstrates both changes with executable commands.
+The diagram omits contact fields, lesson/attendance references and transaction staging; their existing contracts
+above still apply. This is the current add/list/delete runtime.
+
 The [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85) cutover activates these commands through
 one session and people panel. The inherited delete route remains retired; #91 activates guarded canonical deletion.
 Canonical storage supports lessons, rosters and retained attendance. `addlesson`, `enrol`, `unenrol`, `mark`,
