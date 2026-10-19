@@ -140,6 +140,10 @@ At startup, `WindowPlacement` fits saved window dimensions and coordinates to th
 The main window has a 450-by-360 logical minimum where the work area allows it. The result area and both
 people and lesson lists retain visible scrolling viewports. Canonical cards fit their list cells and wrap
 required and optional values. A resizable split pane keeps people and lesson results independent.
+The compact header holds the product name and menus on one row. `commandBoxPlaceholder` is a sibling
+below `resultSplitPane`, spanning beneath both record columns; it does not move with either list or the
+shared feedback divider. The people sidebar starts at 32% of the records width and remains adjustable.
+The existing vertical result split retains its separate pane minima and session divider behavior.
 `addlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `lessons`, lesson search and
 `showlesson` and `history` are active through the command box.
 
