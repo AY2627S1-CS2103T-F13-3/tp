@@ -38,7 +38,7 @@ public final class PersonContactSearch {
                     "Search prefix '" + field.getPrefix() + "' is not available for person contact search yet.");
         }
 
-        PersonRole role = PersonRole.valueOf(criteria.getCategory().name());
+        PersonRole role = criteria.getCategory().getPersonRole().orElseThrow();
         return people.stream()
                 .filter(person -> person.getRole() == role && matchesOwnFields(person, criteria))
                 .toList();
