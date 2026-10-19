@@ -92,11 +92,10 @@ Student, Parent and Tutor relationship search and attendance history are active.
 Inherited edit/clear/find routes are unavailable, and their command/parser implementations and edit-descriptor
 test helpers have been removed. The retired `find` name matcher and its isolated tests are also removed;
 canonical search uses the role-aware query matchers. Canonical boundary tests verify rejected commands preserve
-the saved aggregate, filtered people view and preferences; help and exit remain usable. The retired
-`setPerson` replacement API is
-also removed from the legacy Model, ModelManager, AddressBook and UniquePersonList. Inherited add/delete
-commands, parsers and obsolete fixtures are also removed. Isolated legacy model and transaction fixtures
-remain for regression coverage. `mark` creates or corrects attendance; `unmark` removes one dated key.
+the saved aggregate, filtered people view and preferences; help and exit remain usable. The inherited
+AddressBook model, person/tag types, add/delete commands, parsers and their exclusive tests/builders
+are removed. Shared contact values, preferences and canonical transaction support remain. `mark` creates or
+corrects attendance; `unmark` removes one dated key.
 
 `CanonicalCommandDefinition` defines each command word, guidance and protected-session eligibility;
 declaration order supplies normal help order, while recovery order preserves `help`, `list`, `exit`.
@@ -105,7 +104,7 @@ resolves the word once and dispatches through an exhaustive enum switch without 
 definition requires a route before compilation succeeds. Protection precedes argument parsing.
 Register or withdraw a definition with matching parser/usage, catalogue and routing tests, and UG/manual
 checks, using this same root/view and compatible persistence.
-Inherited model classes remain regression seams; the legacy command execution and storage paths are retired.
+The legacy model, command execution and storage paths are retired.
 See [startup](#canonical-application-startup-85), [Storage](#storage-component) and the
 [UG](UserGuide.html#current-command-summary) for loading, transactions and supported syntax.
 
@@ -440,8 +439,8 @@ lists, while an unknown lesson lookup yields an empty `Optional`. Lesson queries
 wrong-role IDs for list retrieval; exact signatures and exceptions are in the linked source/Javadoc.
 
 **Integration status:** #80's lesson/roster backend is connected to the active canonical session and exposed by
-`CanonicalLogicManager`; the retained legacy `ModelManager` still reports retrieval unavailable. Attendance-history
-methods are active through #100. `Logic.getDisplayedLessons()` exposes the selected catalogue, student or search result
+`CanonicalLogicManager`. Attendance-history methods are active through #100. `Logic.getDisplayedLessons()`
+exposes the selected catalogue, student or search result
 through one stable observable list. Active lesson commands enter through `Logic.execute(String)` and follow
 the Lesson fields of the [search matrix](#supported-criteria). History queries retain stable observable lists,
 sort records by descending date and numeric Lesson ID, and derive current membership from the Lesson roster.
@@ -469,16 +468,14 @@ exactly one Tutor and owns zero or more stable Student IDs; this produces the St
 membership without copying lesson data into Student records. Each Attendance record refers to exactly one Student
 and one Lesson through its dated `AttendanceKey`. Attendance is retained history, not current membership.
 
-The inherited [`Model`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/Model.java)
-API and its historical diagram retain `AddressBook`, `UniquePersonList`, and `ModelManager` for regression tests.
-Active `PonHubData` instead owns the immutable canonical records and relationships shown above. `PeopleView`
-derives one observable role-filtered projection from that root. UI observes committed projections rather than
-maintaining writable copies. Preferences remain outside operational snapshots.
+[`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/PonHubData.java)
+owns the immutable canonical records and relationships shown above. `PeopleView` derives one observable
+role-filtered projection from that root. UI observes committed projections rather than maintaining writable
+copies. Preferences remain outside operational snapshots. The inherited AddressBook model and its exclusive
+regression fixtures are removed; shared `Name`, `Phone`, `Email`, `Address` and preferences remain.
 
-The retired `clear` command no longer needs whole-address-book replacement through `Model`.
-That public replacement API has been removed. The retained legacy model supports isolated model and
-injected transaction regressions; its add/delete commands and obsolete command fixtures are removed.
 Canonical state changes continue through validated `PonHubData` snapshots and save-before-publication transactions.
+`CanonicalTransaction` implements the retained `ModelTransaction` boundary for that canonical root and its view.
 
 The aggregate below implements the [shared ownership and identity contract](#shared-lesson-target-contract).
 Complete independent transaction snapshots preserve records, relationships and allocation state.

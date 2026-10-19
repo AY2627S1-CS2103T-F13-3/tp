@@ -1,5 +1,5 @@
 {
-  "_comment": "AddressBook save file which contains the same Person values as in TypicalPersons#getTypicalAddressBook()",
+  "_comment": "Legacy AddressBook-format save file used to detect unsupported operational data",
   "persons" : [ {
     "name" : "Alice Pauline",
     "phone" : "94351253",
