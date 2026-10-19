@@ -50,13 +50,12 @@ import seedu.address.model.person.EducationLevel;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.PeopleRegistry;
-import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonId;
+import seedu.address.model.person.PersonRecord;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Student;
 import seedu.address.storage.JsonPonHubDataStorage;
 import seedu.address.testutil.FxTestUtil;
-import seedu.address.testutil.TypicalPersons;
 
 public class MainWindowTest {
 
@@ -67,6 +66,14 @@ public class MainWindowTest {
                     Optional.of(new Address("12 " + "A long residential road ".repeat(8).strip()))),
             new EducationLevel("P1"), new Phone("009876543210123"));
     private static final String LONG_PERSON_IDENTITY = "Student · S1";
+    private static final List<ContactDetails> TUTOR_CONTACTS = List.of(
+            contacts("Alice Pauline", "94351253", "alice@example.com", "123, Jurong West Ave 6, #08-111"),
+            contacts("Benson Meier", "98765432", "johnd@example.com", "311, Clementi Ave 2, #02-25"),
+            contacts("Carl Kurz", "95352563", "heinz@example.com", "wall street"),
+            contacts("Daniel Meier", "87652533", "cornelia@example.com", "10th street"),
+            contacts("Elle Meyer", "9482224", "werner@example.com", "michegan ave"),
+            contacts("Fiona Kunz", "9482427", "lydia@example.com", "little tokyo"),
+            contacts("George Best", "9482442", "anna@example.com", "4th street"));
 
     @TempDir
     public Path tempDirectory;
@@ -194,7 +201,7 @@ public class MainWindowTest {
                 Region lastCard = findCard(people, "Tutor · T7");
                 Node lastField = lastCard.lookupAll(".label").stream()
                         .filter(node -> ((Label) node).getText().equals("Address: "
-                                + TypicalPersons.GEORGE.getAddress().value))
+                                + TUTOR_CONTACTS.getLast().getAddress().orElseThrow().value))
                         .findFirst().orElseThrow();
                 Bounds lastFieldBounds = lastField.localToScene(lastField.getBoundsInLocal());
                 Bounds viewport = people.localToScene(people.getBoundsInLocal());
@@ -216,10 +223,14 @@ public class MainWindowTest {
             command.setText("list r/tutor");
             Event.fireEvent(command, new ActionEvent());
             ListView<?> people = (ListView<?>) root.lookup("#personListView");
-            assertEquals(7, people.getItems().size());
+            assertEquals(List.of("T1", "T2", "T3", "T4", "T5", "T6", "T7"),
+                    people.getItems().stream().map(PersonRecord.class::cast)
+                            .map(person -> person.getId().toString()).toList());
             command.setText("list");
             Event.fireEvent(command, new ActionEvent());
-            assertEquals(8, people.getItems().size());
+            assertEquals(List.of("S1", "T1", "T2", "T3", "T4", "T5", "T6", "T7"),
+                    people.getItems().stream().map(PersonRecord.class::cast)
+                            .map(person -> person.getId().toString()).toList());
             command.setText("help add");
             Event.fireEvent(command, new ActionEvent());
             root.applyCss();
@@ -282,9 +293,8 @@ public class MainWindowTest {
     private MainWindow createWindow() throws IOException {
         PeopleRegistry people = new PeopleRegistry();
         people.addStudent(LONG_PERSON.getContactDetails(), LONG_PERSON.getLevel(), LONG_PERSON.getParentPhone());
-        for (Person person : TypicalPersons.getTypicalPersons()) {
-            people.addTutor(new ContactDetails(person.getName(), Optional.of(person.getPhone()),
-                    Optional.of(person.getEmail()), Optional.of(person.getAddress())));
+        for (ContactDetails contacts : TUTOR_CONTACTS) {
+            people.addTutor(contacts);
         }
         Path dataPath = tempDirectory.resolve("contacts.json");
         new JsonPonHubDataStorage(dataPath).saveData(
@@ -293,6 +303,11 @@ public class MainWindowTest {
         MainWindow window = new MainWindow(new Stage(), logic, dataPath);
         window.fillInnerParts();
         return window;
+    }
+
+    private static ContactDetails contacts(String name, String phone, String email, String address) {
+        return new ContactDetails(new Name(name), Optional.of(new Phone(phone)),
+                Optional.of(new Email(email)), Optional.of(new Address(address)));
     }
 
     /**
