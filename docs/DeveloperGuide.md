@@ -105,7 +105,7 @@ resolves the word once and dispatches through an exhaustive enum switch without 
 definition requires a route before compilation succeeds. Protection precedes argument parsing.
 Register or withdraw a definition with matching parser/usage, catalogue and routing tests, and UG/manual
 checks, using this same root/view and compatible persistence.
-Inherited model/storage classes remain regression seams; the legacy command execution path is retired.
+Inherited model classes remain regression seams; the legacy command execution and storage paths are retired.
 See [startup](#canonical-application-startup-85), [Storage](#storage-component) and the
 [UG](UserGuide.html#current-command-summary) for loading, transactions and supported syntax.
 
@@ -655,7 +655,7 @@ shutdown-save failure is logged without preventing shutdown.
 
 #### Safe JSON saves
 
-Canonical operational data, retained legacy storage and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
+Canonical operational data and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
 Existing destinations are resolved to their real paths, so saving through a symbolic link updates its
 target and preserves the link. Dangling/cyclic links and inaccessible destinations fail before writing.
 New files use a resolved parent directory, creating missing directories as needed. Concurrent external
@@ -694,7 +694,7 @@ Read-only commands and operational no-ops skip saving. Successful publication re
 identity; unchanged views avoid refresh, while a changed role filter can publish without an operational
 write. Publication performs no new validation or I/O. Preferences follow their separate lifecycle.
 The legacy command execution path is retired. `ModelTransaction` remains because the active
-`CanonicalTransaction` implements it; retained model/storage tests have their own regression seams.
+`CanonicalTransaction` implements it; retained model tests have their own regression seams.
 
 ##### Example: candidate, saved file and live state
 
