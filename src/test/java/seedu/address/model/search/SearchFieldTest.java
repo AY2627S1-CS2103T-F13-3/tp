@@ -130,6 +130,7 @@ public class SearchFieldTest {
             assertEquals(new EducationLevel(input).toString(), SearchField.LEVEL.normalizeValue(input));
             assertEquals(level, SearchField.LEVEL.normalizeValue(level));
         }
+        assertEquals("S1", SearchField.LEVEL.normalizeValue("ſ1"));
     }
 
     @Test
@@ -139,6 +140,38 @@ public class SearchFieldTest {
             assertFalse(EducationLevel.isValid(level), level);
             assertThrows(IllegalArgumentException.class, error, () -> SearchField.LEVEL.normalizeValue(level));
         }
+    }
+
+    @Test
+    public void normalizeValue_levelWithBoundaryControls_preservesSearchRejectionDespiteDomainTrimming() {
+        String error = "Search filter 'l/' requires P1-P6, S1-S5, JC1 or JC2.";
+        for (String level : List.of("\u0000s2\u0000", "\u001bp1", "jc2\b")) {
+            assertTrue(EducationLevel.isValid(level));
+            assertThrows(IllegalArgumentException.class, error, () -> SearchField.LEVEL.normalizeValue(level));
+        }
+    }
+
+    @Test
+    public void normalizeValue_exactFieldBoundaries_preservesWhitespaceAndControlRules() {
+        Map<SearchField, String[]> cases = Map.of(
+                SearchField.PHONE, new String[]{"00123", "Search filter 'p/' requires 3-15 digits."},
+                SearchField.PARENT_PHONE, new String[]{"00123", "Search filter 'pp/' requires 3-15 digits."},
+                SearchField.LEVEL, new String[]{"S2", "Search filter 'l/' requires P1-P6, S1-S5, JC1 or JC2."},
+                SearchField.DAY, new String[]{"mon",
+                    "Search filter 'd/' requires Mon, Tue, Wed, Thu, Fri, Sat or Sun."},
+                SearchField.START_TIME, new String[]{"0000", "Search filter 'st/' requires a valid four-digit HHMM."},
+                SearchField.END_TIME, new String[]{"2359", "Search filter 'et/' requires a valid four-digit HHMM."});
+        cases.forEach((field, values) -> {
+            for (String boundary : List.of("\t", "\u001f", "\u2003", "\u3000")) {
+                assertEquals(values[0], field.normalizeValue(boundary + values[0] + boundary), field.name());
+            }
+            for (String boundary : List.of("\u0000", "\b", "\u001b", "\u00a0", "\u2007", "\u202f")) {
+                assertThrows(IllegalArgumentException.class, values[1], () ->
+                        field.normalizeValue(boundary + values[0]));
+                assertThrows(IllegalArgumentException.class, values[1], () ->
+                        field.normalizeValue(values[0] + boundary));
+            }
+        });
     }
 
     @Test
@@ -158,7 +191,7 @@ public class SearchFieldTest {
     @Test
     public void normalizeValue_invalidWeekdays_preservesAcceptedSpellingsAndError() {
         String error = "Search filter 'd/' requires Mon, Tue, Wed, Thu, Fri, Sat or Sun.";
-        for (String day : List.of("M", "Monday", "Tues", "Thur", "Funday", "ſun", "frı")) {
+        for (String day : List.of("M", "Monday", "Tues", "Thur", "Funday", "ſun", "frı", "frİ")) {
             assertThrows(IllegalArgumentException.class, error, () -> SearchField.DAY.normalizeValue(day));
         }
     }

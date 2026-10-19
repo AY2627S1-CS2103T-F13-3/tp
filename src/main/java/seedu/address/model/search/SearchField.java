@@ -95,7 +95,10 @@ public enum SearchField {
             }
             case LEVEL -> {
                 try {
-                    yield new EducationLevel(trimmed).getValue();
+                    String level = new EducationLevel(trimmed).getValue();
+                    // Domain trimming must not accept controls outside the search whitespace boundary.
+                    checkArgument(level.equals(trimmed.toUpperCase(Locale.ROOT)), EducationLevel.MESSAGE_CONSTRAINTS);
+                    yield level;
                 } catch (IllegalArgumentException e) {
                     throw new IllegalArgumentException("Search filter 'l/' requires P1-P6, S1-S5, JC1 or JC2.");
                 }
