@@ -63,7 +63,7 @@ public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, 
             checkArgument(lesson != null, "Attendance refers to a missing lesson.");
             checkArgument(record.getDate().getYear() >= 1 && record.getDate().getYear() <= 9999,
                     "Attendance date must have a year between 0001 and 9999.");
-            checkArgument(record.getDate().getDayOfWeek().name().equals(lesson.getTimeSlot().getDay().name()),
+            checkArgument(lesson.getTimeSlot().getDay().matches(record.getDate()),
                     "Attendance date does not match lesson weekday.");
         }
         validateLessonSchedules(lessons);
