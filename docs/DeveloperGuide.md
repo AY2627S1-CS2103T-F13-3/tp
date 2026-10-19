@@ -488,6 +488,19 @@ exactly one Tutor and owns zero or more stable Student IDs; this produces the St
 membership without copying lesson data into Student records. Each Attendance record refers to exactly one Student
 and one Lesson through its dated `AttendanceKey`. Attendance is retained history, not current membership.
 
+**Example: one Lesson, two Students and independent dated attendance**
+
+![Lesson and attendance state changes](images/LessonAttendanceStateDiagram.png)
+
+In this Monday `L1`, `S1` is Alex and `S2` is Jamie. The Lesson owns the roster `{S1, S2}` while the separate
+attendance collection owns one key per Student for `2026-10-05`. Marking Alex present and Jamie absent creates
+two keys; marking Alex absent later replaces only Alex's status for the same key. Unenrolling Alex removes only
+`S1` from the roster, so Alex's absence remains as former-member history and Jamie's membership and absence remain
+unchanged. `unmark` can then remove Alex's retained key without changing `L1` or Jamie. Every changed step uses the
+shared [save-before-publication transaction](#command-transactions); a validation or save failure retains the
+preceding complete state and file. The editable diagram source is
+`docs/diagrams/LessonAttendanceStateDiagram.puml`.
+
 [`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/PonHubData.java)
 owns the immutable canonical records and relationships shown above. `PeopleView` derives one observable
 role-filtered projection from that root. UI observes committed projections rather than maintaining writable
@@ -1608,7 +1621,12 @@ views; remaining attendance references still block student and lesson deletion.
 
 1.  Should work on Windows, Linux and macOS using Java `25`. On macOS, use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`), as described in [Setting up and getting started](SettingUp.html#setting-up-the-project-on-your-computer).
 2.  Should be able to hold at least 1,000 persons, 1,000 recurring lessons, and 10,000 attendance records in one local data file.
-3.  Team performance target: with the data volume in NFR 2, common command-to-GUI-update operations should complete within 2 seconds on the reference machine. Verification must record the CPU, memory, OS, Java distribution and version, dataset generator, command mix, timing method, and observed results in [#101](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101). As #101 has not yet recorded these facts, this guide states a target rather than an achieved result.
+3.  Team performance target: with the data volume in NFR 2, common command-to-GUI-update operations should complete
+    within 2 seconds on the reference machine. [Completed #101 evidence](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101#issuecomment-6194333977)
+    records 285 native command-to-render measurements on an Apple M4 Pro MacBook Pro with 24 GB RAM, macOS 15.7.7
+    and the prescribed Azul Java/JavaFX 25.0.3 runtime; the maximum was 53.435 ms at source `0ecf1adc`. This bounded
+    source/harness result met the team target. It is not a universal performance guarantee or packaged-JAR,
+    cross-platform, cold-start or physical-display acceptance result.
 4.  A user with above average typing speed for regular English text (i.e. not code or system administration commands) should be able to accomplish most recurring tasks faster using commands than using the mouse.
 5.  The product should be for a single user and use one local data store, without requiring user accounts, concurrent access, or live synchronisation.
 6.  The product should be packaged into a single executable `.jar` file and should not require an installer.
