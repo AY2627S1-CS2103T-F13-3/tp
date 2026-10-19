@@ -70,6 +70,37 @@ public class CanonicalMainWindowTest {
     Path directory;
 
     @Test
+    public void initializeMainWindow_shownStage_focusesCommandInput() throws Exception {
+        AppHarness app = new AppHarness();
+        Stage stage = callOnFxThread(() -> {
+            Path dataPath = directory.resolve("canonical.json");
+            app.initializePaths(dataPath, directory.resolve("preferences.json"));
+            Stage primaryStage = new Stage();
+            new UiManager(app.getLogic(), dataPath).initializeMainWindow(primaryStage);
+            return primaryStage;
+        });
+        try {
+            callOnFxThread(() -> {
+                stage.getScene().getRoot().applyCss();
+                stage.getScene().getRoot().layout();
+                TextField input = (TextField) stage.getScene().lookup("#commandTextField");
+                assertTrue(stage.isShowing());
+                assertSame(input, stage.getScene().getFocusOwner());
+                TextArea feedback = (TextArea) stage.getScene().lookup("#resultDisplay");
+                feedback.requestFocus();
+                assertSame(feedback, stage.getScene().getFocusOwner());
+                return null;
+            });
+        } finally {
+            callOnFxThread(() -> {
+                stage.hide();
+                app.stop();
+                return null;
+            });
+        }
+    }
+
+    @Test
     public void history_showsRetainedRowsWithoutChangingPeopleSelection() throws Exception {
         Path path = directory.resolve("canonical.json");
         PonHubData data = LessonQueryTestData.createData();
