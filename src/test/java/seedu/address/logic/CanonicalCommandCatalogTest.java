@@ -11,6 +11,27 @@ import org.junit.jupiter.api.Test;
 
 public class CanonicalCommandCatalogTest {
     @Test
+    public void editingGuidance_describesSelectorsAndDifferentBlankValueRules() {
+        String person = CanonicalCommandCatalog.getUsage("edit", false).orElseThrow();
+        assertTrue(person.contains("current displayed people position and at least one field"));
+        assertTrue(person.contains("omitted fields stay unchanged"));
+        assertTrue(person.contains("Blank e/ or a/ clears that value"));
+        assertTrue(person.contains("blank p/ clears only a Student's phone"));
+        assertTrue(person.contains("Names, Student levels/parent phones and Tutor/Parent phones cannot be cleared"));
+
+        String lesson = CanonicalCommandCatalog.getUsage("editlesson", false).orElseThrow();
+        assertTrue(lesson.contains("stable Lesson ID and at least one field"));
+        assertTrue(lesson.contains("omitted fields stay unchanged"));
+        assertTrue(lesson.contains("Supplied values must be nonblank; Lesson fields cannot be cleared"));
+        assertTrue(lesson.contains("Use tp/ only with tu/"));
+        assertTrue(lesson.contains("must not clash for its tutor, room or Students"));
+        assertTrue(lesson.contains("weekday change cannot invalidate retained attendance"));
+        for (String word : List.of("edit", "editlesson")) {
+            assertTrue(CanonicalCommandCatalog.getUsage(word, true).isEmpty());
+        }
+    }
+
+    @Test
     public void guidance_preservesHelpOrderAndProtectedAllowList() {
         List<String> normal = List.of("add", "edit", "addlesson", "editlesson", "enrol", "unenrol", "mark",
                 "unmark", "history", "delete", "deletelesson", "list", "lessons", "showlesson", "search",
@@ -37,6 +58,7 @@ public class CanonicalCommandCatalogTest {
         }
         assertTrue(CanonicalCommandCatalog.getUsage("add", true).isEmpty());
         assertTrue(CanonicalCommandCatalog.getUsage("edit", true).isEmpty());
+        assertTrue(CanonicalCommandCatalog.getUsage("editlesson", true).isEmpty());
         assertThrows(NullPointerException.class, () -> CanonicalCommandCatalog.getUsage(null, false));
         assertThrows(NullPointerException.class, () -> CanonicalCommandCatalog.getOverview(null));
     }

@@ -83,6 +83,7 @@ public final class CanonicalCommandCatalog {
             "Usage: editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] "
                     + "[tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM]\n"
             + "Supply a stable Lesson ID and at least one field; omitted fields stay unchanged.\n"
+            + "Supplied values must be nonblank; Lesson fields cannot be cleared.\n"
             + "Use tp/ only with tu/. Tutor matching uses normalized full name and optional exact phone.\n"
             + "The complete edited slot must have start before end and must not clash for its tutor, room "
                     + "or Students.\n"
