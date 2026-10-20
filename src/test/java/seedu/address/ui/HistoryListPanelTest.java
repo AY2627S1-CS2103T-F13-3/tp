@@ -23,6 +23,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.layout.Region;
+import javafx.scene.shape.Shape;
 import javafx.scene.text.Text;
 import seedu.address.model.lesson.LessonId;
 import seedu.address.model.query.AttendanceHistoryEntry;
@@ -67,6 +68,17 @@ public class HistoryListPanelTest {
             list.scrollTo(0);
             layout(panel);
             assertWrappedRow(list, history.getFirst());
+            // A glyph-based check must still reject actual text outside the viewport.
+            ListCell<?> refreshedCell = list.lookupAll(".list-cell").stream().map(ListCell.class::cast)
+                    .filter(candidate -> history.getFirst().equals(candidate.getItem())).findFirst().orElseThrow();
+            Text refreshedText = (Text) refreshedCell.lookup(".text");
+            double originalTranslation = refreshedText.getTranslateX();
+            try {
+                refreshedText.setTranslateX(list.getWidth());
+                assertThrows(AssertionError.class, () -> assertWrappedRow(list, history.getFirst()));
+            } finally {
+                refreshedText.setTranslateX(originalTranslation);
+            }
             history.clear();
             layout(panel);
             assertTrue(list.lookupAll(".list-cell").stream().map(ListCell.class::cast)
@@ -100,8 +112,16 @@ public class HistoryListPanelTest {
         Bounds cellBounds = cell.localToScene(cell.getBoundsInLocal());
         Bounds viewport = list.lookup(".clipped-container").localToScene(
                 list.lookup(".clipped-container").getBoundsInLocal());
-        assertTrue(textBounds.getMinX() >= viewport.getMinX() - 1
-                && textBounds.getMaxX() <= viewport.getMaxX() + 1, textBounds.toString());
+        // Logical text bounds include trailing spaces at wrapped line ends (e.g. Segoe UI on Windows).
+        // Union preserves the actual glyph outlines and maps them to this fixture's scene coordinates.
+        // Developed with OpenAI Codex assistance.
+        Bounds glyphBounds = Shape.union(text, text).getBoundsInLocal();
+        assertFalse(glyphBounds.isEmpty(), "The row must contain visible glyphs.");
+        assertTrue(glyphBounds.getMinX() >= viewport.getMinX() - 1
+                && glyphBounds.getMaxX() <= viewport.getMaxX() + 1,
+                "Visible text must fit the viewport: glyphs=" + glyphBounds + ", logical=" + textBounds
+                        + ", viewport=" + viewport + ", font=" + text.getFont()
+                        + ", wrappingWidth=" + text.getWrappingWidth());
         assertTrue(textBounds.getHeight() <= cellBounds.getHeight() + 1,
                 "The row must grow to fit all wrapped lines.");
         Text singleLine = new Text(expected);
