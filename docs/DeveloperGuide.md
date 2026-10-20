@@ -1816,10 +1816,14 @@ Use the active catalogue in the tested build; these examples apply to canonical 
 2. Add a person using a runnable `help add` example, then select its card, type an unfinished command
    and choose Help from the menu. Repeat F1 from command
    and result focus. Expect identical inline guidance, retained draft/selection and no separate window.
-3. `help ADD`, `help ADDLESSON`, `help EDITLESSON`, `help ENROL`, `help UNENROL`, `help MARK`, `help UNMARK`, `help DELETE`,
+3. `help ADD`, `help EDIT`, `help ADDLESSON`, `help EDITLESSON`, `help ENROL`, `help UNENROL`, `help MARK`, `help UNMARK`, `help DELETE`,
    `help DELETELESSON` and `help SHOWLESSON` match their lowercase topics. `help remove` and
    `help clear` explain the unknown topic and direct users to `help`. `help add delete` reports
    invalid format and help usage.
+   Check that `help edit` explains optional email/address/Student-phone clearing and required-field guards;
+   `help editlesson` requires nonblank supplied values and `tu/` with `tp/`. In a protected session, both editing
+   topics are unavailable, both mutation routes return recovery guidance before parsing, and menu/F1 list only
+   help/list/exit while retaining the draft and original rejected bytes.
 4. At minimum width, run `help add` and scroll to the final example/back to the top. Text wraps
    readably; a new topic resets scrolling. Record actual display conditions using the
    [people-card/whole-window checks](#planned-people-card-display-checks).

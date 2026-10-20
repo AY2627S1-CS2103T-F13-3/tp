@@ -155,7 +155,8 @@ Long guidance wraps within Result Display. Scroll vertically to read the rest; e
   `Unknown command: 'remove'. Type 'help' to see available commands.`
 * `help add delete` returns `Invalid command format!` followed by `Usage: help [COMMAND]` and its explanation. Supply at most one topic.
 * `clear` and `find` are absent from the catalogue. `edit` and `editlesson` each require a selector and at least one
-  field; use their help topics for syntax. Invalid commands make no data changes.
+  field; use their help topics for syntax. `edit` permits explicit blanks only for optional email, address and a
+  Student's own phone. Every supplied `editlesson` value must be nonblank. Invalid commands make no data changes.
 * In a protected session, help lists only `help`, `list` and `exit`; `help add`, `help edit`, `help addlesson`, `help editlesson`, `help enrol`,
   `help unenrol`, `help mark`, `help unmark`, `help history`, `help delete`, `help deletelesson`, `help lessons`, `help showlesson`
   and `help search`
@@ -556,7 +557,8 @@ Once every Student has been unenrolled and every dated attendance record has bee
 that Lesson. Its tutor and room times become available again. Surviving Lesson IDs do not change, and a later
 `addlesson` receives a new higher ID rather than reusing the deleted ID. A missing Lesson, invalid command, blocked
 deletion or failed save preserves the saved file, schedule, allocation counter and current people/lesson views.
-Cancelling one occurrence and editing a Lesson are future scope.
+Use [`editlesson`](#editing-a-shared-lesson-editlesson) to change a shared Lesson's recurring details while
+preserving its stable ID, roster and retained attendance. Cancelling one occurrence remains future scope.
 
 **Catalogue (active):** `lessons [si/STUDENT_INDEX]`.
 

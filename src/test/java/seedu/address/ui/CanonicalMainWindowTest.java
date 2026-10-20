@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import javax.imageio.ImageIO;
@@ -37,6 +38,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import seedu.address.MainApp;
+import seedu.address.logic.CanonicalCommandCatalog;
 import seedu.address.logic.Logic;
 import seedu.address.model.PonHubData;
 import seedu.address.model.PonHubDataState;
@@ -715,17 +717,35 @@ public class CanonicalMainWindowTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 byte[] original = Files.readAllBytes(fixture.dataPath);
+                fixture.enter("search c/student");
+                var snapshot = fixture.app.snapshot();
+                var visible = List.copyOf(fixture.people().getItems());
+                var settings = fixture.app.getLogic().getGuiSettings();
                 fixture.people().getSelectionModel().select(1);
-                fixture.input().setText("add r/student n/Unfinished");
-                fixture.window.handleHelp();
-                assertTrue(fixture.feedback().contains("add r/student"));
-                assertTrue(fixture.feedback().contains("delete -"));
-                assertEquals("add r/student n/Unfinished", fixture.input().getText());
-                assertEquals(new PersonId("S9"), fixture.people().getSelectionModel().getSelectedItem().getId());
-                Event.fireEvent(fixture.input(), new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F1,
-                        false, false, false, false));
-                assertTrue(fixture.feedback().contains("help [COMMAND]"));
-                assertEquals("add r/student n/Unfinished", fixture.input().getText());
+                String draft = "editlesson lid/L1 s/Unfinished";
+                fixture.input().setText(draft);
+                MenuBar menu = (MenuBar) fixture.root().lookup("#menuBar");
+                menu.getMenus().get(1).getItems().get(0).fire();
+                String overview = CanonicalCommandCatalog.getOverview(Optional.empty());
+                assertEquals(overview, fixture.feedback());
+                for (var target : List.of(fixture.input(), fixture.root().lookup("#resultDisplay"))) {
+                    Event.fireEvent(target, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F1,
+                            false, false, false, false));
+                    assertEquals(overview, fixture.feedback());
+                    assertEquals(draft, fixture.input().getText());
+                    assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
+                }
+                for (String topic : List.of("edit", "EDIT", "editlesson", "EDITLESSON")) {
+                    fixture.enter("help " + topic);
+                    assertEquals(CanonicalCommandCatalog.getUsage(topic.toLowerCase(Locale.ROOT), false)
+                            .orElseThrow(), fixture.feedback());
+                    assertTrue(fixture.input().getText().isEmpty());
+                    assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
+                }
+                assertEquals(visible, fixture.people().getItems());
+                assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.roleFilter());
+                assertEquals(snapshot, fixture.app.snapshot());
+                assertEquals(settings, fixture.app.getLogic().getGuiSettings());
                 assertArrayEquals(original, Files.readAllBytes(fixture.dataPath));
                 fixture.enter("exit");
                 fixture.app.stop();
@@ -764,6 +784,17 @@ public class CanonicalMainWindowTest {
                 assertTrue(fixture.people().getItems().isEmpty());
                 fixture.enter("add r/student n/Rejected Student l/P1 pp/91234567");
                 assertTrue(fixture.feedback().contains("Operational writes are blocked"));
+                for (String command : List.of("help EDIT", "help EDITLESSON", "edit invalid", "editlesson invalid")) {
+                    fixture.enter(command);
+                    assertEquals(command, fixture.input().getText());
+                    assertTrue(fixture.input().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
+                    assertFalse(fixture.feedback().isBlank());
+                    if (!command.startsWith("help")) {
+                        assertTrue(fixture.feedback().contains("Operational writes are blocked"));
+                    }
+                    assertTrue(fixture.people().getItems().isEmpty());
+                    assertArrayEquals(original, Files.readAllBytes(dataPath));
+                }
                 fixture.enter("exit");
             }
             assertArrayEquals(original, Files.readAllBytes(dataPath));

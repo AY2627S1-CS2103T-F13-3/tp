@@ -174,6 +174,7 @@ public class CanonicalPeopleSessionTest {
             assertFalse(overview.contains("delete -"));
             assertFalse(overview.contains("deletelesson -"));
             assertFalse(overview.contains("add -"));
+            assertFalse(overview.contains("edit -"));
             assertFalse(overview.contains("addlesson -"));
             assertFalse(overview.contains("editlesson -"));
             assertFalse(overview.contains("enrol -"));
@@ -182,8 +183,10 @@ public class CanonicalPeopleSessionTest {
             assertFalse(overview.contains("unmark -"));
             assertFalse(overview.contains("lessons -"));
             assertThrows(ParseException.class, () -> session.execute("help add"));
+            assertThrows(ParseException.class, () -> session.execute("help EDIT"));
             assertThrows(ParseException.class, () -> session.execute("help addlesson"));
             assertThrows(ParseException.class, () -> session.execute("help editlesson"));
+            assertThrows(ParseException.class, () -> session.execute("help EDITLESSON"));
             assertThrows(ParseException.class, () -> session.execute("help enrol"));
             assertThrows(ParseException.class, () -> session.execute("help unenrol"));
             assertThrows(ParseException.class, () -> session.execute("help mark"));
