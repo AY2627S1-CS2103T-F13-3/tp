@@ -95,8 +95,8 @@ public class CanonicalPeopleSessionTest {
         assertEquals(LoadStatus.MISSING, session.getLoadStatus());
         assertEquals(path, session.getDataFilePath());
         assertTrue(session.getDataLoadError().isEmpty());
-        assertEquals(List.of("add", "edit", "addlesson", "enrol", "unenrol", "mark", "unmark", "history", "delete",
-                "deletelesson", "list", "lessons", "showlesson", "search", "help", "exit"),
+        assertEquals(List.of("add", "edit", "addlesson", "editlesson", "enrol", "unenrol", "mark", "unmark",
+                "history", "delete", "deletelesson", "list", "lessons", "showlesson", "search", "help", "exit"),
                 session.getCommandWords());
         assertEquals(new PonHubData().exportState(), session.getDataSnapshot());
         assertTrue(session.getPeople().isEmpty());
@@ -134,9 +134,9 @@ public class CanonicalPeopleSessionTest {
         assertEquals("Showing 1 parent(s).", session.execute("list r/parent").getFeedbackToUser());
         assertEquals("Showing 4 person(s).", session.execute("list").getFeedbackToUser());
         assertEquals(Optional.empty(), session.getRoleFilter());
-        for (String command : List.of("help", "help ADD", "help ADDLESSON", "help ENROL", "help UNENROL",
-                "help MARK", "help UNMARK", "help DELETE", "help DELETELESSON", "help list", "help LESSONS",
-                "help help", "help exit", "exit")) {
+        for (String command : List.of("help", "help ADD", "help ADDLESSON", "help EDITLESSON", "help ENROL",
+                "help UNENROL", "help MARK", "help UNMARK", "help DELETE", "help DELETELESSON", "help list",
+                "help LESSONS", "help help", "help exit", "exit")) {
             session.execute(command);
         }
 
@@ -175,6 +175,7 @@ public class CanonicalPeopleSessionTest {
             assertFalse(overview.contains("deletelesson -"));
             assertFalse(overview.contains("add -"));
             assertFalse(overview.contains("addlesson -"));
+            assertFalse(overview.contains("editlesson -"));
             assertFalse(overview.contains("enrol -"));
             assertFalse(overview.contains("unenrol -"));
             assertFalse(overview.contains("mark -"));
@@ -182,6 +183,7 @@ public class CanonicalPeopleSessionTest {
             assertFalse(overview.contains("lessons -"));
             assertThrows(ParseException.class, () -> session.execute("help add"));
             assertThrows(ParseException.class, () -> session.execute("help addlesson"));
+            assertThrows(ParseException.class, () -> session.execute("help editlesson"));
             assertThrows(ParseException.class, () -> session.execute("help enrol"));
             assertThrows(ParseException.class, () -> session.execute("help unenrol"));
             assertThrows(ParseException.class, () -> session.execute("help mark"));
@@ -192,6 +194,7 @@ public class CanonicalPeopleSessionTest {
             for (String command : List.of("add", "add\n", addCommand(PersonRole.STUDENT), "delete 1", "edit 1",
                     "delete \0 1", "delete 1\b", "delete 1\u001b", "delete 1\0\n",
                     "addlesson d/Mon st/0900 et/1000 s/Math tu/Tutor Tan rm/R1",
+                    "editlesson lid/L1 s/Math",
                     "enrol 1 lid/L1", "unenrol 1 lid/L1", "mark 1 lid/L1 d/2026-10-05 s/present",
                     "unmark 1 lid/L1 d/2026-10-05", "deletelesson lid/L1", "lessons", "search c/lesson",
                     "find Name", "unknown", "ADD")) {
@@ -416,6 +419,9 @@ public class CanonicalPeopleSessionTest {
         String addLessonUsage = session.execute("help ADDLESSON").getFeedbackToUser();
         assertTrue(addLessonUsage.contains("d/DAY"));
         assertTrue(addLessonUsage.contains("tp/TUTOR_PHONE"));
+        String editLessonUsage = session.execute("help EDITLESSON").getFeedbackToUser();
+        assertTrue(editLessonUsage.contains("lid/LESSON_ID"));
+        assertTrue(editLessonUsage.contains("at least one field"));
         assertTrue(session.execute("help ENROL").getFeedbackToUser().contains("STUDENT_INDEX lid/LESSON_ID"));
         assertTrue(session.execute("help UNENROL").getFeedbackToUser().contains("dated attendance"));
         assertTrue(session.execute("help MARK").getFeedbackToUser().contains("d/YYYY-MM-DD"));

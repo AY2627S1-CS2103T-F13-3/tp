@@ -11,7 +11,7 @@ import seedu.address.model.lesson.LessonTimeSlot;
 
 /**
  * An immutable complete candidate for editing one Lesson without changing live state or allocating an ID.
- * Command activation and persistence belong to the following increment; preparation never saves or publishes.
+ * Preparation never saves or publishes; the active command installs it only within the staged transaction.
  */
 public final class LessonEditCandidate {
 
