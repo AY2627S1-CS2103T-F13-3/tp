@@ -32,7 +32,7 @@ import seedu.address.model.search.SearchField;
  * Indexed, read-only lesson projections over one canonical root.
  * Indexes and subscribed results refresh only when that root publishes a complete snapshot.
  * This component has model lifetime and runs on the single model/JavaFX application thread.
- * It prepares retrieval and lesson filtering without activating commands or owning another writable store.
+ * Active retrieval and relationship search share these projections without owning another writable store.
  */
 public final class LessonQueries implements LessonQuerySource {
     private static final List<SearchField> EXACT_FIELDS =

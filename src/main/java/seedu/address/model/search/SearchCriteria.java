@@ -10,7 +10,7 @@ import java.util.Optional;
 import seedu.address.commons.util.ToStringBuilder;
 
 /**
- * Immutable, validated category and filters for a future search command.
+ * Immutable, validated category and filters shared by active people and lesson search.
  * This value object contains no records or writable model state. Relationship traversal is left to query integration.
  */
 public final class SearchCriteria {
