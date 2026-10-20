@@ -20,7 +20,7 @@ person/lesson deletion, dated attendance removal and attendance history are acti
 * Uppercase words such as `NAME` are placeholders. Replace them with your values; type lowercase words such as `r/student` literally.
 * Square brackets mark optional input. For `help [COMMAND]`, enter `help` or `help add`, without brackets.
 * A vertical bar (`|`) separates alternatives. For `s/present|absent`, enter either `s/present` or `s/absent`, without the bar.
-* A prefix identifies a value: `n/Alex Tan` supplies a name, including its internal space. Type command names and prefixes in lowercase. Prefixed fields may appear in any order, once each; omit unknown optional values instead of leaving a prefix blank.
+* A prefix identifies a value: `n/Alex Tan` supplies a name, including its internal space. Type command names and prefixes in lowercase. Prefixed fields may appear in any order, once each; omit unknown optional values. Only `edit` accepts explicit blank optional fields to clear them.
 * An ellipsis (`...`) means more supported fields may follow. For search, combine different filters allowed for that category; do not type the dots or repeat a prefix. Accepted values and case rules are given with each command.
 * Person positions and stored IDs select different things. Follow [Selecting people and lessons](#selecting-people-and-lessons) before using `INDEX`, `STUDENT_INDEX` or `LESSON_ID`.
 
@@ -91,13 +91,14 @@ can be changed with `enrol` and `unenrol`. Own-contact people search, attendance
 deletion, lesson listing, lesson search, lesson details, attendance removal and attendance history are active,
 alongside Student, Parent and Tutor relationship search. Use this single summary to find a command's syntax and example; the linked action names lead to its details.
 The [shared conventions](#reading-the-command-formats) explain the notation and selectors. Type `help` for your
-session's catalogue. A protected session permits only `help`, `list` and `exit`. Person/Lesson editing is
-[planned](#planned-scope-and-saved-file-reference); `edit`, `editlesson`, `clear` and `find` are unavailable.
+session's catalogue. A protected session permits only `help`, `list` and `exit`. Person editing is active;
+Lesson editing is [planned](#planned-scope-and-saved-file-reference). `editlesson`, `clear` and `find` are unavailable.
 
 | Action | Format | Example |
 | --- | --- | --- |
 | [Add student](#1-adding-a-person-add) | `add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]` | `add r/student n/Alex Tan l/S2 pp/91234567` |
 | [Add tutor or parent](#1-adding-a-person-add) | `add r/ROLE n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]` | `add r/tutor n/Mei Lim p/92345678` |
+| [Edit person](#editing-a-person-edit) | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [l/LEVEL] [pp/PARENT_PHONE]` | `edit 1 l/P2 e/` |
 | [Create shared lesson](#4-creating-shared-lessons-and-other-lesson-operations) | `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` | `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1` |
 | [Enrol student](#5-enrolling-and-unenrolling-students) | `enrol STUDENT_INDEX lid/LESSON_ID` | `enrol 1 lid/L1` |
 | [Unenrol student](#5-enrolling-and-unenrolling-students) | `unenrol STUDENT_INDEX lid/LESSON_ID` | `unenrol 1 lid/L1` |
@@ -123,7 +124,7 @@ Addition allocates the ID; do not supply it as an add argument. Role values igno
 **Format:** `help [COMMAND]`
 
 `help` shows the current supported-command catalogue in Result Display. In a normal session, `help add`,
-`help addlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark`, `help delete`, `help deletelesson`,
+`help edit`, `help addlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark`, `help delete`, `help deletelesson`,
 `help list`, `help lessons`, `help showlesson`, `help history`, `help search`, `help help` and `help exit` show usage guidance.
 Topic names are case-insensitive, so `help ADD` is
 accepted; the command word `help` remains lowercase. Asking for exit guidance does not exit the application.
@@ -140,9 +141,9 @@ Long guidance wraps within Result Display. Scroll vertically to read the rest; e
 * `help addlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark` and `help showlesson` show their active syntax and examples. `help remove` returns
   `Unknown command: 'remove'. Type 'help' to see available commands.`
 * `help add delete` returns `Invalid command format!` followed by `Usage: help [COMMAND]` and its explanation. Supply at most one topic.
-* `edit`, `clear` and `find` are absent from the catalogue. For example, `edit` returns
-  `Unknown command: 'edit'. Type 'help' to see available commands.` No data changes.
-* In a protected session, help lists only `help`, `list` and `exit`; `help add`, `help addlesson`, `help enrol`,
+* `editlesson`, `clear` and `find` are absent from the catalogue. `edit` requires a position and at least one field;
+  use `help edit` for its syntax. Invalid commands make no data changes.
+* In a protected session, help lists only `help`, `list` and `exit`; `help add`, `help edit`, `help addlesson`, `help enrol`,
   `help unenrol`, `help mark`, `help unmark`, `help history`, `help delete`, `help deletelesson`, `help lessons`, `help showlesson`
   and `help search`
   are unavailable.
@@ -406,6 +407,30 @@ enrol both students, record and correct dated attendance, retain history after u
 It also shows deletion guards and restart checks. For individual operations, use the
 [command summary](#current-command-summary) and the command's examples below.
 
+<!-- @@author ErnestChuaa -->
+### Editing a person: `edit`
+
+Correct one student, tutor or parent while retaining their role, stable ID and linked records.
+
+**Format:** `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [l/LEVEL] [pp/PARENT_PHONE]`
+
+Run `list` or a people search and check the current position first. Supply at least one field, using the
+same value rules as [adding a person](#1-adding-a-person-add). Omitted fields remain unchanged.
+Only students accept `l/` and `pp/`. Blank `e/` or `a/` clears that optional value; blank `p/` clears a
+student's own phone. Names, student levels/parent phones and tutor/parent phones cannot be cleared.
+Role/ID changes, repeated or unknown prefixes, invalid values and duplicates of another person are rejected.
+
+For example, after the quick-start data, `list r/student` then `edit 1 l/P2 e/` updates Alex's level and
+clears their email. `edit 1 n/Alex  Tan` reports no change after space normalization and does not save;
+`edit 1 n/ALEX TAN` saves the corrected display capitalization. Successful changes survive restart.
+
+The role/search filter stays active and results are re-evaluated. A renamed person may disappear from a
+name search; recheck positions before the next indexed command. Lessons, rosters, attendance and counters
+retain their identities. A tutor rename updates current lesson labels. Changing `pp/`, or a parent's `p/`,
+recomputes exact-phone relationships without changing anyone else's stored phone.
+Protected sessions reject edits. Invalid input and save errors preserve the previous data and view.
+<!-- @@author -->
+
 ### 3. Deleting a person: `delete`
 
 **Active.** Removes one unreferenced person selected by their current displayed index in the people list.
@@ -661,14 +686,14 @@ including exact-phone disambiguation. `help addlesson` gives the same active syn
 ## Planned scope and saved-file reference
 
 For active formats, use the [current command summary](#current-command-summary).
-Person and Lesson editing are intended v1.4 additions under the
-[planned editing contract](DeveloperGuide.html#planned-v14-editing-contract); neither command is available yet.
+Person editing is active. Lesson editing remains an intended v1.4 addition under the
+[editing contract](DeveloperGuide.html#planned-v14-editing-contract); `editlesson` is not available yet.
 Capacity, waiting lists, make-ups, fees, occurrence cancellation and undo/redo remain future proposals.
 So do exports, saved/guided searches, alternative/exclusion search conditions, archives, late/excused attendance,
 notes, bulk/clickable attendance and attendance percentages. The relationship-filter matrix above is active.
 
 The following sections describe existing saved-file and recovery behavior. Manual file editing is separate
-from a planned application edit command.
+from application edit commands.
 
 ### Checking unsuccessful saves in the current build
 

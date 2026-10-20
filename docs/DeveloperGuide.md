@@ -85,11 +85,11 @@ See the [Testing guide](Testing.html#running-tests) for regression checks.
 ### Current increment and command integration
 
 `MainApp` connects one canonical session/root to Logic, cards and protected storage. Normal sessions
-support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, guarded `delete` and
+support role-aware `add`, partial person `edit`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, guarded `delete` and
 `deletelesson`, `list`, `lessons`, `showlesson`, `history`, own-contact people search, all seven lesson-search fields,
 `help` and `exit`; protected sessions allow only help/list/exit.
 Student, Parent and Tutor relationship search and attendance history are active.
-Inherited edit/clear/find routes are unavailable, and their command/parser implementations and edit-descriptor
+Inherited AB3 edit/clear/find implementations are unavailable, and their command/parser implementations and edit-descriptor
 test helpers have been removed. The retired `find` name matcher and its isolated tests are also removed;
 canonical search uses the role-aware query matchers. Canonical boundary tests verify rejected commands preserve
 the saved aggregate, filtered people view and preferences; help and exit remain usable. The inherited
@@ -202,12 +202,13 @@ Ownership and implementation coordination remain in [AboutUs](AboutUs.html#proje
 
 #### Planned v1.4 editing contract
 
-**Planned, not executable yet.** The 16 October scope decision adds person and lesson editing
+**Person editing is active; Lesson editing remains planned.** The 16 October scope decision adds person and lesson editing
 ([#258](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/258)); the earlier MVP deferral in
 [#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60) remains a historical decision.
-Ben owns person editing, Yang Shuo lesson editing, Vincent durability checks, Zhi Yu people stories,
-and Ernest shared contracts/help. Keep these routes out of the active catalogue and UG command
-summary until their working increments merge. Other deferred features retain their status.
+Ernest delivers the person command activation (#263), using Ben's person model increment (#261).
+Yang Shuo owns Lesson editing, Vincent durability checks, Zhi Yu people stories, and Ernest shared contracts/help.
+Keep the Lesson edit route out of the active catalogue until its working increment merges.
+Other deferred features retain their status.
 
 **Person grammar:**
 
@@ -233,7 +234,7 @@ requiring a matching Parent.
 **Person model API (#261).** `PersonEditInput` contains typed immutable field operations:
 `Field.keep()` retains an omitted field, `Field.clear()` represents an explicit blank, and
 `Field.set(value)` supplies a canonical validated value. The model accepts all-kept intent as a no-op;
-the later command parser must require an editable prefix and reject unknown/repeated prefixes.
+`PersonEditParser` requires an editable prefix and rejects unknown/repeated prefixes.
 `PersonEditCandidate.prepare(source, targetId, input)` resolves intent against one complete snapshot,
 rejects required-field clearing and Student-only fields on other roles, and constructs the same immutable
 role with the same ID. It exposes `getCandidateState()`, `getEditedPerson()` and `isChanged()` without
@@ -244,9 +245,18 @@ display capitalization; a no-op returns the original snapshot and record.
 It locates the existing ID, replaces only that global position, and validates new `PeopleRegistryState`
 and complete `PonHubDataState` before installation. Rebuilding the ordered registry excludes the old
 record from duplicate matching while retaining all counters; Lessons, rosters and attendance stay intact.
-An equal replacement performs no state notification. The later edit command must prepare from its fresh
-staged snapshot, save a changed candidate before publication, and skip save/publication for a no-op.
-This model support does not activate `edit`, alter the JSON schema or restore the retired AB3 API.
+An equal replacement performs no state notification.
+
+<!-- @@author ErnestChuaa -->
+**Person command activation (#263).** `PersonEditParser.Input` holds a validated displayed `Index` and
+`PersonEditInput`. `CanonicalEditCommand` resolves that position once against the staged current people
+view, prepares `PersonEditCandidate` from the fresh staged snapshot, and installs a changed candidate only
+in that staged root. The existing executor saves before publication and skips save/publication for a no-op.
+The session registers `edit` with matching `help edit` guidance; protected sessions reject it before parsing.
+No inherited AB3 command, schema change or new dependency is involved. `PersonEditParserTest` and
+`CanonicalEditIntegrationTest` cover parsing, optional clears, role guards, duplicates, stable identity,
+no-op versus display capitalization, protected startup and persistence through the real session.
+<!-- @@author -->
 
 **Lesson grammar:**
 

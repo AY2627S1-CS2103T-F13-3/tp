@@ -21,6 +21,7 @@ import seedu.address.logic.commands.CanonicalAddCommand;
 import seedu.address.logic.commands.CanonicalAddLessonCommand;
 import seedu.address.logic.commands.CanonicalDeleteCommand;
 import seedu.address.logic.commands.CanonicalDeleteLessonCommand;
+import seedu.address.logic.commands.CanonicalEditCommand;
 import seedu.address.logic.commands.CanonicalEnrolCommand;
 import seedu.address.logic.commands.CanonicalListCommand;
 import seedu.address.logic.commands.CanonicalMarkAttendanceCommand;
@@ -38,6 +39,7 @@ import seedu.address.logic.parser.LessonMembershipParser;
 import seedu.address.logic.parser.LessonsArgumentsParser;
 import seedu.address.logic.parser.ParserUtil;
 import seedu.address.logic.parser.PeopleListParser;
+import seedu.address.logic.parser.PersonEditParser;
 import seedu.address.logic.parser.RoleAwareAddParser;
 import seedu.address.logic.parser.SearchCriteriaParser;
 import seedu.address.logic.parser.ShowLessonParser;
@@ -210,6 +212,7 @@ public final class CanonicalPeopleSession {
                 new ParseException(String.format(MESSAGE_UNKNOWN_COMMAND_FORMAT, word)));
         return switch (command) {
             case ADD -> executor.execute(new CanonicalAddCommand(new RoleAwareAddParser().parse(arguments)));
+            case EDIT -> executor.execute(new CanonicalEditCommand(new PersonEditParser().parse(arguments)));
             case ADD_LESSON -> executor.execute(new CanonicalAddLessonCommand(new AddLessonParser().parse(arguments)));
             case ENROL -> executor.execute(new CanonicalEnrolCommand(new LessonMembershipParser().parse(arguments)));
             case UNENROL -> executor.execute(new CanonicalUnenrolCommand(
