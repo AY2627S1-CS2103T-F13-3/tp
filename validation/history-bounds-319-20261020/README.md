@@ -2,8 +2,8 @@
 
 Recorded on 20 October 2026 by Ernest Chua with OpenAI Codex assistance.
 Item 6 remains unchecked pending review and owner reconciliation. This is
-automated Windows fixture evidence; whether this PC is different from the
-original reporter's machine has not been confirmed.
+automated Windows fixture evidence, including a separate GitHub-hosted Windows
+machine running the original reporter's exact JDK version.
 
 ## Environment and source
 
@@ -87,6 +87,47 @@ on the full retry. This records a separate intermittent native-window observatio
 no navigation code or assertion was changed or excluded.
 The repository `.github/run-checks.sh` checks passed against the staged change.
 
-This evidence explains the reported Windows geometry failure; it does not
-establish independent cross-machine verification, complete #317/#321 native
-acceptance, or close #319. Its owner and existing milestone/deadline are unchanged.
+## Independent hosted Windows comparison
+
+[Completed comparison run](https://github.com/ErnestChuaa/tp/actions/runs/39427906045),
+20 October 2026, 21:09–21:10 SGT:
+
+- Separate Azure-hosted machine `runnervm0xl3a`.
+- Microsoft Windows Server 2025 Datacenter x64, `10.0.26100`, build `26100`.
+- Runner image `windows-2025-vs2026`, version `20261007.264.1`.
+- Oracle JDK **25.0.4.1**, runtime/HotSpot **25.0.4.1+1-LTS-5**.
+  The official Oracle archive's SHA-256 was verified before extraction.
+- `JAVA_HOME=D:\a\_temp\oracle-jdk\jdk-25.0.4.1`.
+- Both workers loaded the project's **JavaFX 17.0.7 Windows JAR**; this Oracle
+  JDK does not substitute bundled JavaFX for the declared dependency.
+
+| Source commit | Focused result |
+| --- | --- |
+| `93f0162f40b6d8e56a9e6c5df9534bfde9f283bd`, unmodified | FAIL: 1 test, 1 failure, 0 errors/skips |
+| `97cdf7d340a8b30de28187c97d65edf2f51e6f3a`, corrected | PASS: 1 test, 0 failures/errors/skips |
+
+The baseline reports the **same** logical right bound, `185.291015625 px`.
+The corrected test preserves all original width cases and the 1 px tolerance,
+and its negative control also passes. Both commands used the Gradle wrapper,
+the original fully qualified test selector, `--no-daemon --console=plain`.
+See the retained [baseline XML](hosted-baseline.xml) and
+[corrected XML](hosted-corrected.xml). The successful workflow intentionally
+continued after the baseline failure; its overall green status does not mean
+the baseline passed.
+
+Diagnostic-only workflow commit `8d52ef3d54567f2642a26874d55419d4a977395f`
+on `ernest/verify-history-bounds-319` checks out the two immutable source SHAs.
+Its workflow changes are excluded from the correction PR.
+
+## Remaining gates
+
+PR #350 remains draft. Its first team CI run passed the history test but failed
+the unchanged navigation-window test on Linux (expected stage width 450 px,
+observed 740 px), cancelling the other matrix jobs. This is separate from the
+history bounds failure; the fork's corresponding Windows and Linux jobs passed.
+No CI exception or review gate has been waived.
+
+The evidence explains the reported geometry failure and supplies an automated
+second-Windows-machine comparison. It does not complete #317/#321 human/native
+acceptance or close #319. Keep item 6 unchecked for owner/reviewer reconciliation;
+its owner and existing milestone/deadline are unchanged.
