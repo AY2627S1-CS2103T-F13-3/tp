@@ -30,7 +30,7 @@ scroll within a list to reach details below its viewport. The command box remain
 * Uppercase words such as `NAME` are placeholders. Replace them with your values; type lowercase words such as `r/student` literally.
 * Square brackets mark optional input. For `help [COMMAND]`, enter `help` or `help add`, without brackets.
 * A vertical bar (`|`) separates alternatives. For `s/present|absent`, enter either `s/present` or `s/absent`, without the bar.
-* A prefix identifies a value: `n/Alex Tan` supplies a name, including its internal space. Type command names and prefixes in lowercase. Prefixed fields may appear in any order, once each; omit unknown optional values instead of leaving a prefix blank.
+* A prefix identifies a value: `n/Alex Tan` supplies a name, including its internal space. Type command names and prefixes in lowercase. Prefixed fields may appear in any order, once each; omit unknown optional values. Only `edit` accepts explicit blank optional fields to clear them.
 * An ellipsis (`...`) means more supported fields may follow. For search, combine different filters allowed for that category; do not type the dots or repeat a prefix. Accepted values and case rules are given with each command.
 * Person positions and stored IDs select different things. Follow [Selecting people and lessons](#selecting-people-and-lessons) before using `INDEX`, `STUDENT_INDEX` or `LESSON_ID`.
 
@@ -101,14 +101,16 @@ can be changed with `enrol` and `unenrol`. Own-contact people search, attendance
 deletion, lesson listing, lesson search, lesson details, attendance removal and attendance history are active,
 alongside Student, Parent and Tutor relationship search. Use this single summary to find a command's syntax and example; the linked action names lead to its details.
 The [shared conventions](#reading-the-command-formats) explain the notation and selectors. Type `help` for your
-session's catalogue. A protected session permits only `help`, `list` and `exit`. Person/Lesson editing is
-[planned](#planned-scope-and-saved-file-reference); `edit`, `editlesson`, `clear` and `find` are unavailable.
+session's catalogue. A protected session permits only `help`, `list` and `exit`. Person and Lesson editing are active;
+`clear` and `find` are unavailable.
 
 | Action | Format | Example |
 | --- | --- | --- |
 | [Add student](#1-adding-a-person-add) | `add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]` | `add r/student n/Alex Tan l/S2 pp/91234567` |
 | [Add tutor or parent](#1-adding-a-person-add) | `add r/ROLE n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]` | `add r/tutor n/Mei Lim p/92345678` |
+| [Edit person](#editing-a-person-edit) | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [l/LEVEL] [pp/PARENT_PHONE]` | `edit 1 l/P2 e/` |
 | [Create shared lesson](#4-creating-shared-lessons-and-other-lesson-operations) | `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM` | `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1` |
+| [Edit shared lesson](#editing-a-shared-lesson-editlesson) | `editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM]` | `editlesson lid/L1 st/1630 s/Advanced Math` |
 | [Enrol student](#5-enrolling-and-unenrolling-students) | `enrol STUDENT_INDEX lid/LESSON_ID` | `enrol 1 lid/L1` |
 | [Unenrol student](#5-enrolling-and-unenrolling-students) | `unenrol STUDENT_INDEX lid/LESSON_ID` | `unenrol 1 lid/L1` |
 | [Mark attendance](#7-recording-attendance-and-retrieving-history) | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent</code> | `mark 1 lid/L1 d/2026-10-05 s/present` |
@@ -133,7 +135,7 @@ Addition allocates the ID; do not supply it as an add argument. Role values igno
 **Format:** `help [COMMAND]`
 
 `help` shows the current supported-command catalogue in Result Display. In a normal session, `help add`,
-`help addlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark`, `help delete`, `help deletelesson`,
+`help edit`, `help addlesson`, `help editlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark`, `help delete`, `help deletelesson`,
 `help list`, `help lessons`, `help showlesson`, `help history`, `help search`, `help help` and `help exit` show usage guidance.
 Topic names are case-insensitive, so `help ADD` is
 accepted; the command word `help` remains lowercase. Asking for exit guidance does not exit the application.
@@ -147,12 +149,12 @@ Choose **Help > Help** or press **F1** for the same catalogue, including when fo
 
 Long guidance wraps within Result Display. Scroll vertically to read the rest; each new result starts at the top.
 
-* `help addlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark` and `help showlesson` show their active syntax and examples. `help remove` returns
+* `help addlesson`, `help editlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark` and `help showlesson` show their active syntax and examples. `help remove` returns
   `Unknown command: 'remove'. Type 'help' to see available commands.`
 * `help add delete` returns `Invalid command format!` followed by `Usage: help [COMMAND]` and its explanation. Supply at most one topic.
-* `edit`, `clear` and `find` are absent from the catalogue. For example, `edit` returns
-  `Unknown command: 'edit'. Type 'help' to see available commands.` No data changes.
-* In a protected session, help lists only `help`, `list` and `exit`; `help add`, `help addlesson`, `help enrol`,
+* `clear` and `find` are absent from the catalogue. `edit` and `editlesson` each require a selector and at least one
+  field; use their help topics for syntax. Invalid commands make no data changes.
+* In a protected session, help lists only `help`, `list` and `exit`; `help add`, `help edit`, `help addlesson`, `help editlesson`, `help enrol`,
   `help unenrol`, `help mark`, `help unmark`, `help history`, `help delete`, `help deletelesson`, `help lessons`, `help showlesson`
   and `help search`
   are unavailable.
@@ -403,7 +405,7 @@ The default startup leaves an older `data/addressbook.json` untouched. Selecting
 ## Shared-lesson workflow
 
 The following sections record the shared-lesson and guarded-deletion contracts. Role-aware add/list,
-`addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `deletelesson`, `lessons`, own-contact people search,
+`addlesson`, `editlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `deletelesson`, `lessons`, own-contact people search,
 lesson details, history, lesson search and Student, Parent and Tutor relationship search are active.
 Use the [current command summary](#current-command-summary) and your build's `help` for active routes.
 
@@ -415,6 +417,58 @@ Follow the [Quick start](#quick-start) for one runnable journey: create two stud
 enrol both students, record and correct dated attendance, retain history after unenrolment, and remove a record.
 It also shows deletion guards and restart checks. For individual operations, use the
 [command summary](#current-command-summary) and the command's examples below.
+
+<!-- @@author ErnestChuaa -->
+### Editing a person: `edit`
+
+Correct one student, tutor or parent while retaining their role, stable ID and linked records.
+
+**Format:** `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [l/LEVEL] [pp/PARENT_PHONE]`
+
+Run `list` or a people search and check the current position first. Supply at least one field, using the
+same value rules as [adding a person](#1-adding-a-person-add). Omitted fields remain unchanged.
+Only students accept `l/` and `pp/`. Blank `e/` or `a/` clears that optional value; blank `p/` clears a
+student's own phone. Names, student levels/parent phones and tutor/parent phones cannot be cleared.
+Role/ID changes, repeated or unknown prefixes, invalid values and duplicates of another person are rejected.
+
+For example, after the quick-start data, `list r/student` then `edit 1 l/P2 e/` updates Alex's level and
+clears their email. `edit 1 n/Alex  Tan` reports no change after space normalization and does not save;
+`edit 1 n/ALEX TAN` saves the corrected display capitalization. Successful changes survive restart.
+
+The role/search filter stays active and results are re-evaluated. A renamed person may disappear from a
+name search; recheck positions before the next indexed command. Lessons, rosters, attendance and counters
+retain their identities. A tutor rename updates current lesson labels. Changing `pp/`, or a parent's `p/`,
+recomputes exact-phone relationships without changing anyone else's stored phone.
+Protected sessions reject edits. Invalid input and save errors preserve the previous data and view.
+<!-- @@author -->
+
+<!-- @@author ys000009 -->
+### Editing a shared lesson: `editlesson`
+
+Correct one existing Lesson while retaining its stable ID, catalogue position, roster and attendance history.
+
+**Format:** `editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM]`
+
+Use the stable ID shown by `lessons` or `showlesson` and supply at least one field. Omitted fields remain
+unchanged, so either time endpoint can be edited by itself when the complete resulting slot still has its start
+before its end. Values follow the same day, time, subject, Tutor and room rules as `addlesson`. Use `tp/` only
+together with `tu/`; the optional phone selects one exact Tutor when normalized full names are shared.
+
+For example, `editlesson lid/L1 st/1630 s/Advanced Math` keeps `L1`'s weekday, end time, Tutor, room and roster.
+An identical edit reports `No changes to lesson: L1.` and does not save. A successful change updates current
+lesson cards, searches and selected details, and survives restart without changing IDs or allocation counters.
+
+The complete replacement is checked against every other Lesson. Tutor, room and enrolled-Student overlaps are
+rejected; the Lesson being edited is not treated as its own conflict, and adjacent slots remain valid. A weekday
+change is rejected while any current or former Student has retained attendance on an incompatible date. PonHub
+does not move or delete that history automatically: use `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` for each
+identified record only if removal is intended, then retry. If a selected dated detail has no attendance but its
+date no longer matches an allowed weekday change, PonHub keeps the Lesson selected and clears that obsolete date.
+
+Unknown, repeated, blank or missing fields, a missing Lesson, Tutor lookup failures, malformed resulting slots,
+schedule clashes and save failures preserve the saved and visible state. Protected sessions reject the command
+before parsing and omit `help editlesson`.
+<!-- @@author -->
 
 ### 3. Deleting a person: `delete`
 
@@ -638,7 +692,7 @@ After correcting Alex to absent and unenrolling Alex, history retains the dated 
 
 ### Failure and data behavior
 
-PonHub saves people, shared lessons/rosters, retained attendance and ID allocation state together in the selected file. `addlesson`, `deletelesson`,
+PonHub saves people, shared lessons/rosters, retained attendance and ID allocation state together in the selected file. `addlesson`, `editlesson`, `deletelesson`,
 `enrol` and `unenrol` use that protected transaction, as do changed `mark` and `unmark` operations. Invalid
 attendance commands,
 missing-record/identical-status no-ops and failed saves leave the saved file, aggregate and current people view unchanged.
@@ -658,9 +712,10 @@ The supported JSON format remains human-editable. Close PonHub and keep a backup
 **A**: Use the current people-list position for a person and a stable `lid/` reference for a lesson.
 The [selector rules](#selecting-people-and-lessons) explain which list supplies each value.
 
-**Q**: How do I choose the tutor for `addlesson`?<br>
+**Q**: How do I choose the tutor for `addlesson` or `editlesson`?<br>
 **A**: Follow the [lesson-creation tutor lookup](#4-creating-shared-lessons-and-other-lesson-operations),
-including exact-phone disambiguation. `help addlesson` gives the same active syntax and an example.
+including exact-phone disambiguation. Both Lesson commands use the same lookup; their help topics give the
+active syntax and examples.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -671,14 +726,14 @@ including exact-phone disambiguation. `help addlesson` gives the same active syn
 ## Planned scope and saved-file reference
 
 For active formats, use the [current command summary](#current-command-summary).
-Person and Lesson editing are intended v1.4 additions under the
-[planned editing contract](DeveloperGuide.html#planned-v14-editing-contract); neither command is available yet.
+Person and Lesson editing are active under the
+[editing contract](DeveloperGuide.html#planned-v14-editing-contract).
 Capacity, waiting lists, make-ups, fees, occurrence cancellation and undo/redo remain future proposals.
 So do exports, saved/guided searches, alternative/exclusion search conditions, archives, late/excused attendance,
 notes, bulk/clickable attendance and attendance percentages. The relationship-filter matrix above is active.
 
 The following sections describe existing saved-file and recovery behavior. Manual file editing is separate
-from a planned application edit command.
+from application edit commands.
 
 ### Checking unsuccessful saves in the current build
 
@@ -702,7 +757,7 @@ Before editing, close the app and retain a backup. Keep referenced tutors/studen
 use each lesson ID once and each student ID once per roster, and preserve allocation counters even
 after deleting records. Do not create overlapping bookings for a tutor, room or enrolled student;
 back-to-back lessons are allowed. Invalid files are rejected as a whole rather than partially loaded.
-Attendance is supported in saved files as described below. `addlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`,
+Attendance is supported in saved files as described below. `addlesson`, `editlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`,
 `lessons` and lesson search are active, guarded `delete` removes eligible people, and `unmark` removes a selected
 dated attendance record. `history` displays retained records without changing them.
 

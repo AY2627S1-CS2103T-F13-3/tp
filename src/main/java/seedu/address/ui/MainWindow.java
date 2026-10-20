@@ -199,7 +199,9 @@ public class MainWindow extends UiPart<Stage> {
      */
     private CommandResult executeCommand(String commandText) throws CommandException, ParseException {
         try {
+            var selectedPerson = personListPanel.getSelectedPersonId();
             CommandResult commandResult = logic.execute(commandText);
+            selectedPerson.ifPresent(personListPanel::restoreSelection);
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
 

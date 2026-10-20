@@ -85,11 +85,11 @@ See the [Testing guide](Testing.html#running-tests) for regression checks.
 ### Current increment and command integration
 
 `MainApp` connects one canonical session/root to Logic, cards and protected storage. Normal sessions
-support role-aware `add`, empty-roster `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, guarded `delete` and
+support role-aware `add`, partial person `edit`, empty-roster `addlesson`, partial `editlesson`, `enrol`, `unenrol`, `mark`, `unmark`, guarded `delete` and
 `deletelesson`, `list`, `lessons`, `showlesson`, `history`, own-contact people search, all seven lesson-search fields,
 `help` and `exit`; protected sessions allow only help/list/exit.
 Student, Parent and Tutor relationship search and attendance history are active.
-Inherited edit/clear/find routes are unavailable, and their command/parser implementations and edit-descriptor
+Inherited AB3 edit/clear/find implementations are unavailable, and their command/parser implementations and edit-descriptor
 test helpers have been removed. The retired `find` name matcher and its isolated tests are also removed;
 canonical search uses the role-aware query matchers. Canonical boundary tests verify rejected commands preserve
 the saved aggregate, filtered people view and preferences; help and exit remain usable. The inherited
@@ -149,7 +149,7 @@ The [20 October shell validation record](https://github.com/gugrusaurus/tp/tree/
 contains user-executed native checks and screenshots for the tested build. A later custom-scaling
 follow-up completed the 1280×720/150% checks; the earlier NOT RUN entry remains historical. The report
 records the remaining matrix and content-coverage limits separately.
-`addlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `lessons`, lesson search and
+`addlesson`, `editlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `lessons`, lesson search and
 `showlesson` and `history` are active through the command box.
 
 ### Shared-lesson target contract
@@ -210,14 +210,17 @@ constraints are described [below](#future-undoredo-and-archiving).
 Ownership and implementation coordination remain in [AboutUs](AboutUs.html#project-team) and
 [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59).
 
-#### Planned v1.4 editing contract
+<a id="planned-v14-editing-contract"></a>
 
-**Planned, not executable yet.** The 16 October scope decision adds person and lesson editing
+#### v1.4 editing contract
+
+**Person and Lesson editing are active.** The 16 October scope decision adds person and lesson editing
 ([#258](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/258)); the earlier MVP deferral in
 [#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60) remains a historical decision.
-Ben owns person editing, Yang Shuo lesson editing, Vincent durability checks, Zhi Yu people stories,
-and Ernest shared contracts/help. Keep these routes out of the active catalogue and UG command
-summary until their working increments merge. Other deferred features retain their status.
+Ernest delivered the person command activation (#263), using Ben's person model increment (#261).
+Yang Shuo delivers Lesson editing (#264) using the merged model increment (#262); Vincent owns shared durability
+checks, Zhi Yu people stories, and Ernest shared contracts/help.
+Other deferred features retain their status.
 
 **Person grammar:**
 
@@ -243,7 +246,7 @@ requiring a matching Parent.
 **Person model API (#261).** `PersonEditInput` contains typed immutable field operations:
 `Field.keep()` retains an omitted field, `Field.clear()` represents an explicit blank, and
 `Field.set(value)` supplies a canonical validated value. The model accepts all-kept intent as a no-op;
-the later command parser must require an editable prefix and reject unknown/repeated prefixes.
+`PersonEditParser` requires an editable prefix and rejects unknown/repeated prefixes.
 `PersonEditCandidate.prepare(source, targetId, input)` resolves intent against one complete snapshot,
 rejects required-field clearing and Student-only fields on other roles, and constructs the same immutable
 role with the same ID. It exposes `getCandidateState()`, `getEditedPerson()` and `isChanged()` without
@@ -254,9 +257,23 @@ display capitalization; a no-op returns the original snapshot and record.
 It locates the existing ID, replaces only that global position, and validates new `PeopleRegistryState`
 and complete `PonHubDataState` before installation. Rebuilding the ordered registry excludes the old
 record from duplicate matching while retaining all counters; Lessons, rosters and attendance stay intact.
-An equal replacement performs no state notification. The later edit command must prepare from its fresh
-staged snapshot, save a changed candidate before publication, and skip save/publication for a no-op.
-This model support does not activate `edit`, alter the JSON schema or restore the retired AB3 API.
+An equal replacement performs no state notification.
+
+<!-- @@author ErnestChuaa -->
+**Person command activation (#263).** `PersonEditParser.Input` holds a validated displayed `Index` and
+`PersonEditInput`. `CanonicalEditCommand` resolves that position once against the staged current people
+view, prepares `PersonEditCandidate` from the fresh staged snapshot, and installs a changed candidate only
+in that staged root. The existing executor saves before publication and skips save/publication for a no-op.
+The session registers `edit` with matching `help edit` guidance; protected sessions reject it before parsing.
+No inherited AB3 command, schema change or new dependency is involved. `PersonEditParserTest` and
+`CanonicalEditIntegrationTest` cover parsing, optional clears, role guards, duplicates, stable identity,
+no-op versus display capitalization, protected startup and persistence through the real session.
+`MainWindow` captures the selected stable Person ID before successful command execution and asks
+`PersonRecordListPanel` to restore that identity only while it remains visible. This avoids losing selection
+when an immutable replacement has different fields, or transferring selection to another search result.
+Failed commands never restore or publish a replacement. Attached production-window regressions verify
+successful edits, disappearing search results, failed saves and retry with a selected Lesson detail.
+<!-- @@author -->
 
 **Lesson grammar:**
 
@@ -277,8 +294,8 @@ member's, would become invalid. Never move, remove or rewrite history automatica
 
 **Lesson model API (#262).** `LessonEditInput` contains one typed optional replacement for each
 editable value: day, start time, end time, subject, Tutor ID and room. An empty optional retains the
-existing value. The model accepts an all-omitted input as a no-op; the later command parser must
-require at least one editable prefix, reject blanks and resolve the Tutor name/phone to a stable ID.
+existing value. The model accepts an all-omitted input as a no-op; the active command parser
+requires at least one editable prefix, rejects blanks and resolves the Tutor name/phone to a stable ID.
 `LessonEditCandidate.prepare(source, targetId, input)` combines supplied and retained values into one
 complete immutable `Lesson`, preserving the target ID, catalogue position and roster order/membership.
 It exposes `getCandidateState()`, `getEditedLesson()` and `isChanged()` without changing live state,
@@ -290,9 +307,28 @@ before installation. This excludes the old Lesson from conflict checks while rec
 against every other Tutor, room and enrolled Student schedule. Whole-root validation also rejects a
 weekday that disagrees with any retained attendance date, including a former member's record. People,
 attendance and allocation counters are retained, and an equal replacement performs no state notification.
-The later `editlesson` command must prepare from its fresh staged snapshot, save a changed candidate before
-publication, and skip save/publication for a no-op. This model support does not activate the command or
-change the JSON schema.
+The `editlesson` command prepares from its fresh staged snapshot, saves a changed candidate before
+publication, and skips save/publication for a no-op. Activation does not change the JSON schema.
+
+<!-- @@author ys000009 -->
+**Lesson command activation (#264).** `LessonEditParser.Input` holds the stable Lesson ID, typed optional
+replacement values and unresolved Tutor name/phone. It requires at least one editable field, permits either time
+endpoint alone for later complete-slot validation, and rejects blank, unknown, repeated and orphan `tp/` fields.
+`TutorResolver` gives `addlesson` and `editlesson` one normalized-full-name and optional exact-phone rule.
+
+`CanonicalEditLessonCommand` first confirms the target and reports an incompatible retained attendance date with
+an explicit `unmark` option. It resolves any replacement Tutor, prepares `LessonEditCandidate` from the executor's
+fresh staged snapshot and installs only a changed candidate. `CanonicalCommandExecutor` then saves before
+publication; identical edits skip both write and publication. The session and command catalogue expose
+`editlesson` only in normal sessions. `LessonRetrieval` retains a selected Lesson after publication but clears a
+dated filter and its context date when a permitted weekday change makes that date obsolete.
+
+`LessonEditParserTest` covers the prefix grammar, Unicode boundary whitespace, controls and typed values.
+`CanonicalLessonEditIntegrationTest` exercises the real parser, command, session and storage path for independent
+time-endpoint changes, Tutor disambiguation, stable roster/history/counters, self-exclusion and Tutor/room/Student
+clashes, current/former retained history, no-op writes, selected-detail refresh, protected startup, injected IO and
+permission failures, retry and reload.
+<!-- @@author -->
 
 **Execution and views.** Parsers prepare omitted/clear/set intent without allocating IDs or mutating
 live records. Model increments expose only the immutable replacement support needed by these
@@ -315,17 +351,18 @@ detail whose date no longer matches a permitted weekday edit, retain the Lesson 
 filter and context date; do not label that old date as a new occurrence. History keys and statuses
 remain unchanged. Recheck displayed people positions before the next indexed command.
 
-Representative acceptance cases below are **handoff targets**, not claims of passing edit tests.
+The person cases below are covered by `CanonicalEditIntegrationTest` and the edit-specific
+`CanonicalMainWindowTest` regressions. Lesson cases are covered by `CanonicalLessonEditIntegrationTest`.
 Use a fixture where current Student position 1 is `S7` named Alex Tan, Parent `P2` shares its parent
 phone, and `L3` is Monday 1600–1700 with that Student enrolled. Isolate conflicting/no-history variants.
 
 | Case | Input and expected result | Verification owner |
 | --- | --- | --- |
-| Set and clear | `edit 1 l/P2 e/ a/ p/` changes only `S7`, clears optional contacts, retains position/ID/roster/history/counters. | Ben |
-| Required/role fields | Reject `edit 1 pp/`; reject `l/P2` or blank `p/` when position 1 is a Tutor/Parent. | Ben |
-| No-op/display spelling | `edit 1 n/Alex  Tan` makes no write; `edit 1 n/ALEX TAN` saves the changed display spelling, with no duplicate-self error. | Ben |
-| True duplicate/link refresh | Reject a name/phone combination already held by another same-role record. A valid `pp/` change refreshes Parent results without editing `P2`. | Ben, Zhi Yu |
-| Search/selection refresh | Under `search c/student n/Alex`, rename `S7` to Jamie Tan: keep the criteria, remove `S7` from results, clear its people selection, retain stable-Student history. | Ben |
+| Set and clear | `edit 1 l/P2 e/ a/ p/` changes only `S7`, clears optional contacts, retains position/ID/roster/history/counters. | Ernest |
+| Required/role fields | Reject `edit 1 pp/`; reject `l/P2` or blank `p/` when position 1 is a Tutor/Parent. | Ernest |
+| No-op/display spelling | `edit 1 n/Alex  Tan` makes no write; `edit 1 n/ALEX TAN` saves the changed display spelling, with no duplicate-self error. | Ernest |
+| True duplicate/link refresh | Reject a name/phone combination already held by another same-role record. A valid `pp/` change refreshes Parent results without editing `P2`. | Ernest, Zhi Yu |
+| Search/selection refresh | Under `search c/student n/Alex`, rename `S7` to Jamie Tan: keep the criteria, remove `S7` from results, clear its people selection, retain stable-Student history. | Ernest |
 | Lesson success/clash | `editlesson lid/L3 et/1730` retains roster/history if conflict-free; reject an overlapping Tutor/room/Student booking, allow a 1730-adjacent slot. | Yang Shuo |
 | Retained history/detail | Reject `editlesson lid/L3 d/Tue` with Monday attendance, even after unenrolment. Without attendance, permit it if clash-free and clear an incompatible selected detail date. | Yang Shuo, Ben |
 | Save/protection | Inject permission/IO failure for a valid edit: no publication or allocation change; one successful retry persists and reloads. Protected sessions reject edits, including no-ops. | Vincent, feature owner |
@@ -334,7 +371,9 @@ Source baseline: `942dd019`. Field/duplicate rules are in `ContactDetails`, `Stu
 `Parent` and `PeopleRegistryState`; scheduling/history rules are in `PonHubDataState`.
 `CanonicalTransaction`/`CanonicalCommandExecutor`, `PeopleView`, `LessonQueries`, `LessonRetrieval`
 and `AttendanceRetrieval` provide the existing staging, refresh and stable-subscription boundaries.
-The edit routes and edit-specific selection/date handling above still require implementation and tests.
+The person and Lesson routes, stable-ID selection handling and edit-specific date handling are active.
+Person tests additionally inject both IO and
+permission failures through the real session's writer seam, then retry and reload the persisted result.
 
 <div markdown="span" class="alert alert-primary">
 
@@ -477,6 +516,19 @@ catalogue of shared `Lesson` records, and separate dated `Attendance` records. E
 exactly one Tutor and owns zero or more stable Student IDs; this produces the Student-Lesson many-to-many
 membership without copying lesson data into Student records. Each Attendance record refers to exactly one Student
 and one Lesson through its dated `AttendanceKey`. Attendance is retained history, not current membership.
+
+**Example: one Lesson, two Students and independent dated attendance**
+
+![Lesson and attendance state changes](images/LessonAttendanceStateDiagram.png)
+
+In this Monday `L1`, `S1` is Alex and `S2` is Jamie. The Lesson owns the roster `{S1, S2}` while the separate
+attendance collection owns one key per Student for `2026-10-05`. Marking Alex present and Jamie absent creates
+two keys; marking Alex absent later replaces only Alex's status for the same key. Unenrolling Alex removes only
+`S1` from the roster, so Alex's absence remains as former-member history and Jamie's membership and absence remain
+unchanged. `unmark` can then remove Alex's retained key without changing `L1` or Jamie. Every changed step uses the
+shared [save-before-publication transaction](#command-transactions); a validation or save failure retains the
+preceding complete state and file. The editable diagram source is
+`docs/diagrams/LessonAttendanceStateDiagram.puml`.
 
 [`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/PonHubData.java)
 owns the immutable canonical records and relationships shown above. `PeopleView` derives one observable
@@ -1054,7 +1106,7 @@ above still apply. This is the current add/list/delete runtime.
 
 The [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85) cutover activates these commands through
 one session and people panel. The inherited delete route remains retired; #91 activates guarded canonical deletion.
-Canonical storage supports lessons, rosters and retained attendance. `addlesson`, `enrol`, `unenrol`, `mark`,
+Canonical storage supports lessons, rosters and retained attendance. `addlesson`, `editlesson`, `enrol`, `unenrol`, `mark`,
 `unmark`, guarded `delete`/`deletelesson`, `lessons`, `showlesson`, `history` and all lesson-search fields are active.
 
 <a id="prepared-canonical-people-session"></a>
@@ -1067,11 +1119,11 @@ share that root. Callers receive immutable data snapshots and the same unmodifia
 the session does not expose writable operational data. Execute on the single model thread, or the JavaFX
 application thread once controls are attached.
 
-The session's `execute()` dispatches active `add`, `addlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`,
+The session's `execute()` dispatches active `add`, `edit`, `addlesson`, `editlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`,
 `deletelesson`, `list`, `lessons`, `showlesson`, `history`, `search`, `help` and
 `exit` commands through its switch. `CanonicalCommandCatalog` defines the permitted command words and guidance
-for normal and protected sessions. The session parses role-aware additions, shared-lesson creation and
-membership changes, guarded Lesson deletion, attendance marks/removals, listings and own-contact searches before
+for normal and protected sessions. The session parses role-aware additions and edits, shared-lesson creation and
+editing, membership changes, guarded Lesson deletion, attendance marks/removals, listings and own-contact searches before
 staged execution. Changed data is saved through the
 protected writer before publication, stable-ID success feedback or person-view changes. Parse, domain and save
 failures leave
@@ -1322,11 +1374,11 @@ examples do not describe an implemented PonHub feature.
 
 **Value proposition**: For tuition centre administrative staff who need to keep people, lessons and attendance organised, PonHub provides a single place to manage and search these records, with scheduling checks and attendance tracking to support reliable daily administration.
 
-Compared with maintaining separate contact lists, timetables and attendance records, PonHub connects the information needed for routine tasks and checks conflicting or invalid changes. The intended v1.4 person and Lesson edits support correcting records while retaining their identities and history. Make-up booking remains a future proposal.
+Compared with maintaining separate contact lists, timetables and attendance records, PonHub connects the information needed for routine tasks and checks conflicting or invalid changes. The active v1.4 person and Lesson edits support correcting records while retaining their identities and history. Make-up booking remains a future proposal.
 
 **Shared-lesson MVP target:** Lessons are created independently of student enrolment, including lessons with empty rosters. Each shared `Lesson` owns its currently enrolled student IDs; student lessons, rosters, and tutor schedules are retrieved from that canonical membership rather than copied into each student. Attendance is a separate dated record for one student and one lesson. Unenrolment removes current membership and retains attendance history; an existing historical entry can still be corrected or removed. A missing attendance entry means unrecorded, distinct from present and absent.
 
-**Intended v1.4 scope:** The [alpha plan (#276)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/276) retains the shared-Lesson product and adds person editing (US-55) and Lesson editing (US-37). Both are planned until their activation increments merge: [person editing (#263)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/263) and [Lesson editing (#264)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/264). Their [planned editing contract](#planned-v14-editing-contract) preserves stable identities, shared rosters and retained attendance; it does not make these commands available today.
+**Intended v1.4 scope:** The [alpha plan (#276)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/276) retains the shared-Lesson product and adds person editing (US-55) and Lesson editing (US-37). [Person editing (#263)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/263) and [Lesson editing (#264)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/264) are active in this increment. Their [editing contract](#planned-v14-editing-contract) preserves stable identities, shared rosters and retained attendance.
 
 **Delivered versus planned:** The [student foundation (#57)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/57), [tutor and parent foundations (#62)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/62), [ordered people registry (#70)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/70), [person-card components (#119)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/119), [role-filtered listing components (#122)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/122), [search criteria foundation (#64)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/64), and [lesson scheduling values (#63)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/63) provide independently tested APIs. The registry, canonical cards and role-filtered listing are now connected to the active people session. [Inline help (#68)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/68) and [safe file replacement (#66)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/66) are connected to the active canonical people runtime.
 
@@ -1344,7 +1396,7 @@ Student, Parent and Tutor relationship search and attendance history are active.
 These stories distinguish the shared-lesson product and intended v1.4 additions from future proposals. A priority states the intended scope, not implementation status.
 
 Priorities: **High** (core shared-lesson product and intended v1.4 additions), **Medium** (future extensions), **Low** (future consideration).
-The target includes shared rosters, regular enrolment and the planned person/Lesson edits (US-55 and US-37). Capacity, make-up reservations and waiting lists are future work, as are export, saved searches, archive/restore, richer attendance and percentages, fees and guided workflows. Medium and Low priorities remain proposals beyond the agreed release scope.
+The target includes shared rosters, regular enrolment and active person/Lesson edits (US-55 and US-37). Capacity, make-up reservations and waiting lists are future work, as are export, saved searches, archive/restore, richer attendance and percentages, fees and guided workflows. Medium and Low priorities remain proposals beyond the agreed release scope.
 
 Shared lessons, current membership, and retained dated attendance are separate concepts in these stories. The stories specify user goals; command selectors and the complete planned search-filter matrix are confirmed in the [shared-lesson target contract](#shared-lesson-target-contract) and [#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60). Implementation proceeds in working increments, and only the [active command routes](#current-increment-and-command-integration) are available today.
 
@@ -1490,7 +1542,8 @@ are included unless `sn/` requires a current member; all lesson filters match th
 
 **Postconditions:** One clash-free shared lesson with an empty roster is stored, or one unreferenced lesson is removed. Adding a student later does not recreate the lesson or book its tutor/room again. Failed operations preserve the prior schedule and allocation state.
 
-**Future extensions:** Lesson templates, edits, replacement tutors, one-occurrence cancellation and automatic today views are separate later requirements (US-27, US-28, US-36, US-37 and US-47).
+**Future extensions:** Lesson templates, one-occurrence cancellation and automatic today views are separate later
+requirements (US-27, US-28 and US-47). Lesson field and replacement-Tutor edits are active under US-37.
 
 #### UC-04: Enrol or unenrol a student in a shared lesson
 
@@ -1598,7 +1651,12 @@ views; remaining attendance references still block student and lesson deletion.
 
 1.  Should work on Windows, Linux and macOS using Java `25`. On macOS, use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`), as described in [Setting up and getting started](SettingUp.html#setting-up-the-project-on-your-computer).
 2.  Should be able to hold at least 1,000 persons, 1,000 recurring lessons, and 10,000 attendance records in one local data file.
-3.  Team performance target: with the data volume in NFR 2, common command-to-GUI-update operations should complete within 2 seconds on the reference machine. Verification must record the CPU, memory, OS, Java distribution and version, dataset generator, command mix, timing method, and observed results in [#101](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101). As #101 has not yet recorded these facts, this guide states a target rather than an achieved result.
+3.  Team performance target: with the data volume in NFR 2, common command-to-GUI-update operations should complete
+    within 2 seconds on the reference machine. [Completed #101 evidence](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101#issuecomment-6194333977)
+    records 285 native command-to-render measurements on an Apple M4 Pro MacBook Pro with 24 GB RAM, macOS 15.7.7
+    and the prescribed Azul Java/JavaFX 25.0.3 runtime; the maximum was 53.435 ms at source `0ecf1adc`. This bounded
+    source/harness result met the team target. It is not a universal performance guarantee or packaged-JAR,
+    cross-platform, cold-start or physical-display acceptance result.
 4.  A user with above average typing speed for regular English text (i.e. not code or system administration commands) should be able to accomplish most recurring tasks faster using commands than using the mouse.
 5.  The product should be for a single user and use one local data store, without requiring user accounts, concurrent access, or live synchronisation.
 6.  The product should be packaged into a single executable `.jar` file and should not require an installer.
@@ -1656,11 +1714,70 @@ views; remaining attendance references still block student and lesson deletion.
 
 Use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-project-on-your-computer) for these checks. On macOS, use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) for the Mac's architecture. Confirm the terminal used for `java -jar` selects that installation and record the OS, architecture and JDK distribution/version with the test results. Additional macOS trials with other distributions, including plain Oracle JDK, are optional portability checks.
 
+<!-- @@author ErnestChuaa -->
+### Person editing
+
+In a fresh disposable store, follow the [UG quick start](UserGuide.html#quick-start) through the first
+`history 1 lid/L1` command, stopping before `unmark` so Alex's former-member history remains.
+Then add `add r/parent n/Pat Tan p/91234567`. These are manual acceptance steps; the automated tests
+named above do not certify native display/scaling acceptance.
+
+1. Run `list r/student`, select Alex's card, then `edit 1 l/P2 p/ e/ a/`. Expect `Edited student: Alex Tan (S1).`,
+   level P2, empty optional contacts, the same selected ID and Student filter. Run `edit 1 n/Alex  Tan`;
+   expect `No changes to student: Alex Tan (S1).` and no data-file write. `edit 1 n/ALEX TAN` changes display case.
+2. Reject `edit 1`, `edit S1 n/Alex`, `edit 0 n/Alex`, an out-of-range position, `edit 1 n/`, `edit 1 pp/`,
+   `edit 1 p/abc`, `edit 1 r/tutor`, `edit 1 n/Alex n/Alex` and `edit 1 a/Block x/value`.
+   Verify unchanged file bytes, cards, selected ID and current people mapping after each rejection.
+3. Reject `edit 1 n/Jamie Tan pp/91234567` as a true duplicate. Use `list r/tutor`, then reject
+   `edit 1 p/`, `edit 1 l/P2` and `edit 1 pp/91234567`. Repeat required-phone and Student-only guards on Parents.
+4. With `list r/tutor`, run `showlesson lid/L1 d/2026-10-05`, then `edit 1 n/Corrected Tutor`.
+   Expect the same Lesson/Tutor IDs and date, current tutor label, roster and retained former-member attendance.
+5. Run `search c/parent sn/Alex`, then `edit 1 p/90000000`. Pat leaves the retained search result; the
+   Student's stored parent phone remains unchanged. Run `list r/student`, then `edit 1 pp/90000000` and
+   repeat the Parent search: Pat links to Alex again. No additional Parent is created or edited implicitly.
+6. Run `list r/student`, `history 1 lid/L1`, then `search c/student n/Alex`. Select Alex and run
+   `edit 1 n/Changed Student`. Expect Alex to leave the people search and selection to clear, while
+   the right pane keeps Student S1's retained history. Recheck positions before another indexed command.
+7. Follow [unsuccessful-save checks](UserGuide.html#checking-unsuccessful-saves-in-the-current-build) with a
+   disposable store: a reported save failure preserves cards, selected ID, detail/history mode and allocations.
+   After correcting the reported cause, retry once and restart; verify the saved change and stable relationships.
+8. Start with rejected disposable data: `edit 1 n/Alex` is blocked before parsing, `help edit` is unavailable,
+   and original bytes remain untouched. Recovery still requires correcting/restoring the file and restarting.
+<!-- @@author -->
+
+<!-- @@author ys000009 -->
+### Lesson editing
+
+Use a disposable store and follow the first three steps of the
+[active shared-lesson workflow](#active-shared-lesson-and-attendance-workflow) so `L1`, `L2` and `L3` exist and
+Students 1 and 2 are enrolled in `L1`. Record Monday attendance for both Students before the history checks.
+
+1. Run `editlesson lid/L1 st/1630 s/Advanced Math`. Expect `Edited lesson: L1.`, the same ID, roster, Tutor,
+   room and end time, and a refreshed Lesson card. Restart with the same file and verify the replacement persists.
+2. Run a valid edit with only `st/`, then one with only `et/`. Reject an endpoint that makes start equal to or
+   later than end. Run an identical normalized edit and expect `No changes to lesson: L1.` with unchanged bytes.
+3. Add two Tutors with the same normalized full name but different phones. Reject `tu/NAME` as ambiguous; select
+   one with `tu/NAME tp/PHONE`. Reject `tp/` without `tu/` and an exact phone that belongs to no matching Tutor.
+4. Attempt edits that overlap another Lesson for the replacement Tutor, room and one enrolled Student. Expect the
+   relevant stable IDs in the rejection, unchanged current cards/file and no ID allocation. Verify an adjacent
+   boundary and the Lesson's unchanged own slot are not treated as overlaps.
+5. With current and former-member Monday attendance retained for `L1`, reject `editlesson lid/L1 d/Tue`. The
+   message must identify an incompatible date and explain that it can be explicitly unmarked; it must not delete,
+   move or relabel history. Remove each record with `unmark` only for this test, select
+   `showlesson lid/L1 d/2026-10-05`, then retry the Tuesday edit. Expect the Lesson detail to remain selected with
+   no date filter or date in its context.
+6. Follow [unsuccessful-save checks](UserGuide.html#checking-unsuccessful-saves-in-the-current-build). A failed
+   save retains the old Lesson card, selected detail, roster/history, file bytes and counters. Retry after restoring
+   access, restart and verify exactly one persisted replacement.
+7. With rejected disposable data, `editlesson lid/L1 s/Math` is blocked before parsing, `help editlesson` is
+   unavailable and original bytes remain unchanged. Recovery requires correcting/restoring the file and restarting.
+<!-- @@author -->
+
 ### Inline help and supported routes
 
 Use the active catalogue in the tested build; these examples apply to canonical startup.
 
-1. In a fresh JAR folder, run `help`, then `help add`, `help addlesson`, `help enrol`, `help unenrol`, `help mark`,
+1. In a fresh JAR folder, run `help`, then `help add`, `help edit`, `help addlesson`, `help editlesson`, `help enrol`, `help unenrol`, `help mark`,
    `help unmark`, `help history`, `help delete`, `help deletelesson`, `help list`, `help lessons`, `help showlesson`,
    `help search`, `help help` and
    `help exit`. Each topic matches its
@@ -1669,15 +1786,15 @@ Use the active catalogue in the tested build; these examples apply to canonical 
 2. Add a person using a runnable `help add` example, then select its card, type an unfinished command
    and choose Help from the menu. Repeat F1 from command
    and result focus. Expect identical inline guidance, retained draft/selection and no separate window.
-3. `help ADD`, `help ADDLESSON`, `help ENROL`, `help UNENROL`, `help MARK`, `help UNMARK`, `help DELETE`,
+3. `help ADD`, `help ADDLESSON`, `help EDITLESSON`, `help ENROL`, `help UNENROL`, `help MARK`, `help UNMARK`, `help DELETE`,
    `help DELETELESSON` and `help SHOWLESSON` match their lowercase topics. `help remove` and
    `help clear` explain the unknown topic and direct users to `help`. `help add delete` reports
    invalid format and help usage.
 4. At minimum width, run `help add` and scroll to the final example/back to the top. Text wraps
    readably; a new topic resets scrolling. Record actual display conditions using the
    [people-card/whole-window checks](#planned-people-card-display-checks).
-5. `edit 1 n/Alex`, `clear` and `find Alex` identify the unknown command and suggest `help` without changing data.
-   For example, the first input reports `Unknown command: 'edit'. Type 'help' to see available commands.`
+5. `clear` and `find Alex` identify the unknown command and suggest `help` without changing data.
+   `edit` and `editlesson` are active canonical routes; verify their guards with the edit checks above.
    `list extra`, an invalid `addlesson`, an invalid `mark`, an invalid `unmark`, `delete S1`,
    `deletelesson 1`, `lessons sid/S1` and `exit extra` show
    validation or usage messages without
@@ -1842,7 +1959,7 @@ Historical verification details are preserved in [#84](https://github.com/AY2627
 
 ### Active shared-lesson and attendance workflow
 
-The following is one end-to-end procedure for the delivered normal session. `addlesson`, `enrol`, `unenrol`,
+The following is one end-to-end procedure for the delivered normal session. `addlesson`, `editlesson`, `enrol`, `unenrol`,
 `mark`, `unmark`, `deletelesson`, `lessons`, `showlesson`, `history` and lesson search are active. Use a newly selected file in an isolated JAR folder so the IDs below begin at
 `T1`, `S1` and `L1`, for example `java -jar FILENAME.jar --data="manual/lesson-workflow.json"`.
 

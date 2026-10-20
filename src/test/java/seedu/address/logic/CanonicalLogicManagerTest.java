@@ -80,7 +80,7 @@ public class CanonicalLogicManagerTest {
         var before = session.getDataSnapshot();
         byte[] original = Files.readAllBytes(path);
 
-        for (String command : List.of("edit 1 n/Changed", "find Alex", "clear", "clear 1", "unknown")) {
+        for (String command : List.of("find Alex", "clear", "clear 1", "unknown")) {
             ParseException failure = assertThrows(ParseException.class, () -> logic.execute(command));
             assertEquals(String.format(CanonicalPeopleSession.MESSAGE_UNKNOWN_COMMAND_FORMAT,
                     command.split(" ")[0]), failure.getMessage());

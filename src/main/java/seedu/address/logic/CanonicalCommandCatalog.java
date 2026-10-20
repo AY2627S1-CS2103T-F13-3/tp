@@ -10,6 +10,14 @@ import java.util.Optional;
  * Rejected startup permits only recovery commands.
  */
 public final class CanonicalCommandCatalog {
+    public static final String MESSAGE_EDIT_USAGE =
+            "Usage: edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [l/LEVEL] [pp/PARENT_PHONE]\n"
+            + "Use the current displayed people position and at least one field; omitted fields stay unchanged.\n"
+            + "Only Students accept l/ and pp/. Blank e/ or a/ clears that value; "
+            + "blank p/ clears only a Student's phone.\n"
+            + "Names, Student levels/parent phones and Tutor/Parent phones cannot be cleared. Role and ID stay fixed.\n"
+            + "Filters are retained and search results refresh. Recheck displayed positions after editing.\n"
+            + "An identical edit makes no write. Example: list r/student, then edit 1 l/P2 e/";
     public static final String MESSAGE_UNKNOWN_HELP_TOPIC =
             "Unknown command: '%s'. Type 'help' to see available commands.";
     public static final String MESSAGE_EXIT_USAGE = "Usage: exit\n"
@@ -71,6 +79,15 @@ public final class CanonicalCommandCatalog {
             + "DAY is Mon-Sun; times use four-digit 24-hour HHMM and start before end.\n"
             + "Tutor matching uses the normalized full name. Supply the exact phone to disambiguate.\n"
             + "Example: addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1";
+    public static final String MESSAGE_EDIT_LESSON_USAGE =
+            "Usage: editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] "
+                    + "[tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM]\n"
+            + "Supply a stable Lesson ID and at least one field; omitted fields stay unchanged.\n"
+            + "Use tp/ only with tu/. Tutor matching uses normalized full name and optional exact phone.\n"
+            + "The complete edited slot must have start before end and must not clash for its tutor, room "
+                    + "or Students.\n"
+            + "A weekday change cannot invalidate retained attendance; unmark incompatible records explicitly first.\n"
+            + "An identical edit makes no write. Example: editlesson lid/L1 st/1630 s/Advanced Math";
     public static final String MESSAGE_ENROL_USAGE = "Usage: enrol STUDENT_INDEX lid/LESSON_ID\n"
             + "STUDENT_INDEX is the current people-list position of a Student. LESSON_ID is stable.\n"
             + "Example: enrol 1 lid/L1";
