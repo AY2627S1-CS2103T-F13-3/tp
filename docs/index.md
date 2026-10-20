@@ -6,27 +6,28 @@ title: PonHub
 [![Java CI](https://github.com/AY2627S1-CS2103T-F13-3/tp/actions/workflows/gradle.yml/badge.svg)](https://github.com/AY2627S1-CS2103T-F13-3/tp/actions/workflows/gradle.yml)
 [![codecov](https://codecov.io/gh/AY2627S1-CS2103T-F13-3/tp/branch/master/graph/badge.svg)](https://codecov.io/gh/AY2627S1-CS2103T-F13-3/tp)
 
-![Two Students sharing one Lesson](images/Ui.png)
+PonHub helps tuition centre administrators manage students, tutors, parents, shared recurring lessons and
+dated attendance through a keyboard-focused desktop interface.
 
+![PonHub Lesson board with a filtered Student list, shared Lesson results, navigation buttons and bottom command box](images/LessonBoardNavigation.png)
 
+The Lesson board above uses fictitious records. The current source build supports creating, editing and
+searching people and shared lessons, enrolment/unenrolment, attendance marking/removal and guarded deletion.
+Roster and attendance-history views retain dated records after unenrolment. Person and Lesson edits retain
+stable IDs and linked records, with validation and schedule checks protecting changes.
 
-PonHub is being developed for tuition centre administrators to manage people, shared lessons, enrolment and dated attendance through a keyboard-focused desktop interface. The shared-lesson target lets two students join one lesson and retains attendance history after unenrolment.
+For published JARs and version-specific instructions, visit [Releases](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases).
+The v1.3 release predates person/Lesson editing and this Lesson board. To use the features described here,
+[build the current source](DevOps.html#build-automation) and follow the [Quick start](UserGuide.html#quick-start).
 
-The current build supports role-aware people addition/listing, own-contact people search and empty-roster
-shared-lesson creation, enrolment/unenrolment, dated attendance marking/removal and guarded person/Lesson deletion.
-Type `help`
-or `help COMMAND` for inline guidance, also available through the Help menu and F1. `lessons` and all seven
-lesson-search filters show separate shared-lesson results; `showlesson` displays roster and dated attendance.
-`history` displays retained Student attendance, and Student, Parent and Tutor relationship searches are active. Consult the
-[current command summary](UserGuide.html#current-command-summary) before trying the wider workflow.
-The UI image shows the current people and lesson panels using disposable sample data.
-
-* [User Guide](UserGuide.html#current-command-summary)
+* [User Guide and command summary](UserGuide.html#current-command-summary) — supported commands and examples;
+  use `help` or `help COMMAND` in the app for inline guidance.
 * [Developer Guide](DeveloperGuide.html)
 * [About Us](AboutUs.html)
+* [Report a problem](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues)
 
 **Acknowledgements**
 
 This project is based on the AddressBook-Level3 project created by the [SE-EDU initiative](https://se-education.org).
 
-* Libraries used: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), [JUnit5](https://github.com/junit-team/junit5)
+* Libraries used: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), [JUnit 5](https://junit.org/junit5/)
