@@ -1,23 +1,26 @@
 [![Java CI](https://github.com/AY2627S1-CS2103T-F13-3/tp/actions/workflows/gradle.yml/badge.svg)](https://github.com/AY2627S1-CS2103T-F13-3/tp/actions/workflows/gradle.yml)
 
-![People and shared-lesson results](docs/images/Ui.png)
-
 # PonHub
 
-PonHub is being developed for tuition centre administrators to manage people, shared lessons, enrolment and dated attendance through a keyboard-focused desktop interface. The shared-lesson target lets two students join one lesson and retains attendance history after unenrolment.
+PonHub helps tuition centre administrators manage students, tutors, parents, shared recurring lessons and
+dated attendance through a keyboard-focused desktop interface.
 
-The current build supports role-aware people addition/listing, own-contact people search, shared-lesson creation,
-enrolment/unenrolment, dated attendance marking/removal and guarded person/lesson deletion. `lessons` and all seven
-lesson-search filters show separate shared-lesson results; `showlesson` displays a lesson's roster and dated attendance.
-Use `help` or `help COMMAND`, the Help menu or F1 for inline guidance.
-`history` displays retained Student attendance; Student, Parent and Tutor relationship filters are active.
-Read the User Guide's
-current command summary before trying the wider workflow. The screenshot shows the delivered people and lesson
-panels using disposable sample data.
+![PonHub Lesson board with a filtered Student list, shared Lesson results, navigation buttons and bottom command box](docs/images/LessonBoardNavigation.png)
 
-* [User Guide](docs/UserGuide.md)
+The Lesson board above uses fictitious records. The current source build supports creating, editing and
+searching people and shared lessons, enrolment/unenrolment, attendance marking/removal and guarded deletion.
+Roster and attendance-history views retain dated records after unenrolment. Person and Lesson edits retain
+stable IDs and linked records, with validation and schedule checks protecting changes.
+
+For published JARs and version-specific instructions, visit [Releases](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases).
+The v1.3 release predates person/Lesson editing and this Lesson board. To use the features described here,
+[build the current source](docs/DevOps.md#build-automation) and follow the [Quick start](docs/UserGuide.md#quick-start).
+
+* [User Guide and command summary](docs/UserGuide.md#current-command-summary) — supported commands and examples;
+  use `help` or `help COMMAND` in the app for inline guidance.
 * [Developer Guide](docs/DeveloperGuide.md)
 * [Project website](https://ay2627s1-cs2103t-f13-3.github.io/tp/)
+* [Report a problem](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues)
 
 ##### Acknowledgements
 
