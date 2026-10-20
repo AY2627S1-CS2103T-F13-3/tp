@@ -11,10 +11,12 @@ person/lesson deletion, dated attendance removal and attendance history are acti
 The people list is on the left, with Lesson or attendance results on the right. Enter commands in the
 full-width box below both lists and press Enter. The shared feedback/help area above the lists remains
 resizable; drag its divider to adjust reading space, and scroll either list independently.
+The optional **Lessons**, **Student lessons** and **Attendance** buttons above the results provide shortcuts
+to the same commands; see [moving between results](#moving-between-results).
 
-![PonHub Lesson board with separate people and Lesson results](images/LessonBoardShell.png)
+![PonHub Lesson board with optional navigation and separate people and Lesson results](images/LessonBoardNavigation.png)
 
-The Lesson board above uses fictitious Tutor, Parent and Student records and one empty-roster Lesson.
+The Lesson board above uses fictitious records, with a filtered Student list beside the full Lesson catalogue.
 Drag the divider between the two lists to adjust their widths. Long contact and Lesson values wrap;
 scroll within a list to reach details below its viewport. The command box remains below both lists.
 
@@ -343,7 +345,8 @@ repeat the Tutor query. Listing clears the relationship criteria and context.
 
 The right-hand lesson panel initially shows the full catalogue. `lessons` restores it after a lesson search or
 student selection. Every shared lesson appears once in creation order, including empty rosters. Cards show its
-stable Lesson ID, subject, weekday and time, tutor name and ID, room and the number of currently enrolled students.
+subject as the heading, followed by a line with its stable Lesson ID, weekday and time, then tutor name and ID,
+room and the number of currently enrolled students.
 The lesson heading identifies the selected Student ID or active filters even after another command changes
 the feedback. Scroll either panel independently; drag the divider to give long values more room. Labels wrap within their cards.
 
@@ -371,9 +374,26 @@ Examples, after creating the Math lesson above:
 people filters, order, selection and command positions, and never save operational data. Invalid commands leave
 both views intact. Committed changes refresh the selected results; a failed save leaves the previous cards intact.
 
-![Separate people and shared-lesson results](images/Ui.png)
+### Moving between results
 
-The screenshot uses disposable sample data and shows Alex and Jamie enrolled in one shared Math lesson.
+Enter `lessons`, `lessons si/STUDENT_INDEX`, `history STUDENT_INDEX`, `showlesson lid/LESSON_ID` or a `search`
+command from any current result. Successful commands display their results automatically. Typed commands use
+their supplied selectors and filters, regardless of which people card is selected; no preliminary button click
+is needed. Check the current people-list position before supplying a Student index.
+
+If you prefer a shortcut, use the buttons above the results:
+
+| Button | Equivalent command | Selection needed |
+| --- | --- | --- |
+| **Lessons** | `lessons` | None |
+| **Student lessons** | `lessons si/STUDENT_INDEX` | A Student card in the current people list |
+| **Attendance** | `history STUDENT_INDEX` | A Student card in the current people list |
+
+The Student shortcuts use the selected card's current displayed position. Select a Student again if filtering
+or a data change removes that selection. With no current Student selected, including a selected Tutor or Parent,
+the buttons explain what to select and keep the previous results. Clicking a shortcut preserves any unfinished
+command text. The shortcuts follow the same validation and protected-session restrictions as typed commands.
+For dated Lesson details, Lesson-specific history or search filters, enter the full command directly.
 
 ## Data protection in the current build
 
@@ -549,7 +569,8 @@ past attendance alone does not add a lesson to that list. Use `history` to inspe
 
 For example, `showlesson lid/L1` displays the lesson's stable ID, subject, schedule, tutor name and ID, room and
 current roster, with each Student's stable ID and name. The lesson details use a separate scrolling panel; no
-roster row number is a person-command selector. `showlesson lid/L1 d/2026-10-05` also shows each current roster
+extra click is needed to expand the roster or retained former-member attendance. Scroll to reach all entries;
+no roster row number is a person-command selector. `showlesson lid/L1 d/2026-10-05` also shows each current roster
 student's `present`, `absent` or `unrecorded` status for that real, matching-weekday date. `Unrecorded` means no
 attendance entry exists; it is never treated as absent. Retained records for former members appear in a separate
 section, limited to the supplied date when one is given. Without a date, that section shows all retained

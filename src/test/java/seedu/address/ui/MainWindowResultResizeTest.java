@@ -63,6 +63,7 @@ public class MainWindowResultResizeTest {
                     fixture.split().setDividerPositions(position);
                     fixture.layout();
                     assertTrue(fixture.resultPane().getHeight() >= 80);
+                    assertTrue(fixture.root().lookup("#resultDisplayPlaceholder").getBoundsInLocal().getHeight() >= 50);
                     assertTrue(fixture.records().getHeight() >= 120);
                     assertTrue(fixture.root().lookup("#personListView").getBoundsInLocal().getHeight() >= 50);
                     assertTrue(fixture.root().lookup("#lessonListView").getBoundsInLocal().getHeight() >= 50);
@@ -183,7 +184,7 @@ public class MainWindowResultResizeTest {
         }
 
         private Region resultPane() {
-            return (Region) root.lookup("#resultDisplayPlaceholder");
+            return (Region) root.lookup("#feedbackSection");
         }
 
         private TextArea result() {

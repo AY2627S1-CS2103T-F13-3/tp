@@ -52,8 +52,8 @@ public class LessonListPanelTest {
         runOnFxThread(() -> {
             var lessons = new LessonQueries(createData()).getLessonList();
             Region card = new LessonCard(lessons.get(1)).getRoot();
-            assertLabel(card, "lessonHeading", "L10 · Math");
-            assertLabel(card, "lessonSchedule", "Schedule: Mon 0900-1000");
+            assertLabel(card, "lessonHeading", "Math");
+            assertLabel(card, "lessonSchedule", "Lesson L10 · Mon 0900-1000");
             assertLabel(card, "lessonTutor", "Tutor: Mei Lim (T1)");
             assertLabel(card, "lessonRoom", "Room: R1");
             assertLabel(card, "lessonRosterSize", "Students enrolled: 2");
@@ -118,7 +118,7 @@ public class LessonListPanelTest {
             assertTrue(previous.getPrefWidth() <= 320);
             cell.updateItem(lessons.get(1), false);
             assertFalse(previous.prefWidthProperty().isBound());
-            assertLabel((Region) cell.getGraphic(), "lessonHeading", "L10 · Math");
+            assertLabel((Region) cell.getGraphic(), "lessonHeading", "Math");
             cell.updateItem(null, false);
             assertNull(cell.getGraphic());
             cell.updateItem(lessons.get(0), false);
@@ -163,7 +163,7 @@ public class LessonListPanelTest {
                 }
                 view.layout();
                 var last = view.lookupAll("#lessonCardPane").stream()
-                        .filter(node -> ((Label) node.lookup("#lessonHeading")).getText().startsWith("L2 ·"))
+                        .filter(node -> ((Label) node.lookup("#lessonSchedule")).getText().startsWith("Lesson L2 ·"))
                         .findFirst().orElseThrow();
                 var bounds = last.localToScene(last.getBoundsInLocal());
                 assertTrue(bounds.getMinY() >= 0 && bounds.getMaxY() <= panel.getHeight() + 1, bounds.toString());
