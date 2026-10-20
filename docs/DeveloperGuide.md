@@ -143,6 +143,11 @@ The compact header holds the PonHub wordmark and menus on one row. `commandBoxPl
 below `resultSplitPane`, spanning beneath both record columns; it does not move with either list or the
 shared feedback divider. The people sidebar starts at 32% of the records width and remains adjustable.
 The existing vertical result split retains its separate pane minima and session divider behavior.
+After populating the window, startup explicitly focuses the command input. Result Display remains
+focusable for text selection and copying; menu/F1 help preserves an unfinished command draft.
+The [20 October shell validation record](https://github.com/gugrusaurus/tp/tree/draft-lesson-board-layout-319/validation/shell-319-20261020)
+contains user-executed native checks and screenshots for the tested build. It records the unavailable
+1280×720/150% configuration as NOT RUN, with supplementary 2560×1440/150% coverage kept separate.
 `addlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `lessons`, lesson search and
 `showlesson` and `history` are active through the command box.
 
