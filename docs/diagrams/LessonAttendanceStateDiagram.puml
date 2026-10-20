@@ -4,6 +4,7 @@
 
 skinparam stateBackgroundColor MODEL_COLOR
 skinparam stateBorderColor MODEL_COLOR
+skinparam stateFontColor #FFFFFF
 skinparam arrowColor MODEL_COLOR
 
 state "L1 roster: {S1, S2}\nNo attendance for 2026-10-05" as Unrecorded
