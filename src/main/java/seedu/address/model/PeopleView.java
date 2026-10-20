@@ -94,7 +94,7 @@ public final class PeopleView {
      */
     public void setSearchCriteria(SearchCriteria criteria) {
         var matches = PersonRelationshipSearch.search(source.getPeople(), queries, requireNonNull(criteria));
-        roleFilter = Optional.of(PersonRole.valueOf(criteria.getCategory().name()));
+        roleFilter = criteria.getCategory().getPersonRole();
         searchCriteria = Optional.of(criteria);
         contexts.set(matches.contexts());
         people.setAll(matches.people());

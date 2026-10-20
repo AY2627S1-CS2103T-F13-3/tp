@@ -92,11 +92,10 @@ Student, Parent and Tutor relationship search and attendance history are active.
 Inherited edit/clear/find routes are unavailable, and their command/parser implementations and edit-descriptor
 test helpers have been removed. The retired `find` name matcher and its isolated tests are also removed;
 canonical search uses the role-aware query matchers. Canonical boundary tests verify rejected commands preserve
-the saved aggregate, filtered people view and preferences; help and exit remain usable. The retired
-`setPerson` replacement API is
-also removed from the legacy Model, ModelManager, AddressBook and UniquePersonList. Inherited add/delete
-commands, parsers and obsolete fixtures are also removed. Isolated legacy model and transaction fixtures
-remain for regression coverage. `mark` creates or corrects attendance; `unmark` removes one dated key.
+the saved aggregate, filtered people view and preferences; help and exit remain usable. The inherited
+AddressBook model, person/tag types, add/delete commands, parsers and their exclusive tests/builders
+are removed. Shared contact values, preferences and canonical transaction support remain. `mark` creates or
+corrects attendance; `unmark` removes one dated key.
 
 `CanonicalCommandDefinition` defines each command word, guidance and protected-session eligibility;
 declaration order supplies normal help order, while recovery order preserves `help`, `list`, `exit`.
@@ -105,7 +104,7 @@ resolves the word once and dispatches through an exhaustive enum switch without 
 definition requires a route before compilation succeeds. Protection precedes argument parsing.
 Register or withdraw a definition with matching parser/usage, catalogue and routing tests, and UG/manual
 checks, using this same root/view and compatible persistence.
-Inherited model/storage classes remain regression seams; the legacy command execution path is retired.
+The legacy model, command execution and storage paths are retired.
 See [startup](#canonical-application-startup-85), [Storage](#storage-component) and the
 [UG](UserGuide.html#current-command-summary) for loading, transactions and supported syntax.
 
@@ -140,7 +139,7 @@ At startup, `WindowPlacement` fits saved window dimensions and coordinates to th
 The main window has a 450-by-360 logical minimum where the work area allows it. The result area and both
 people and lesson lists retain visible scrolling viewports. Canonical cards fit their list cells and wrap
 required and optional values. A resizable split pane keeps people and lesson results independent.
-The compact header holds the product name and menus on one row. `commandBoxPlaceholder` is a sibling
+The compact header holds the PonHub wordmark and menus on one row. `commandBoxPlaceholder` is a sibling
 below `resultSplitPane`, spanning beneath both record columns; it does not move with either list or the
 shared feedback divider. The people sidebar starts at 32% of the records width and remains adjustable.
 The existing vertical result split retains its separate pane minima and session divider behavior.
@@ -444,8 +443,8 @@ lists, while an unknown lesson lookup yields an empty `Optional`. Lesson queries
 wrong-role IDs for list retrieval; exact signatures and exceptions are in the linked source/Javadoc.
 
 **Integration status:** #80's lesson/roster backend is connected to the active canonical session and exposed by
-`CanonicalLogicManager`; the retained legacy `ModelManager` still reports retrieval unavailable. Attendance-history
-methods are active through #100. `Logic.getDisplayedLessons()` exposes the selected catalogue, student or search result
+`CanonicalLogicManager`. Attendance-history methods are active through #100. `Logic.getDisplayedLessons()`
+exposes the selected catalogue, student or search result
 through one stable observable list. Active lesson commands enter through `Logic.execute(String)` and follow
 the Lesson fields of the [search matrix](#supported-criteria). History queries retain stable observable lists,
 sort records by descending date and numeric Lesson ID, and derive current membership from the Lesson roster.
@@ -473,16 +472,14 @@ exactly one Tutor and owns zero or more stable Student IDs; this produces the St
 membership without copying lesson data into Student records. Each Attendance record refers to exactly one Student
 and one Lesson through its dated `AttendanceKey`. Attendance is retained history, not current membership.
 
-The inherited [`Model`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/Model.java)
-API and its historical diagram retain `AddressBook`, `UniquePersonList`, and `ModelManager` for regression tests.
-Active `PonHubData` instead owns the immutable canonical records and relationships shown above. `PeopleView`
-derives one observable role-filtered projection from that root. UI observes committed projections rather than
-maintaining writable copies. Preferences remain outside operational snapshots.
+[`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/PonHubData.java)
+owns the immutable canonical records and relationships shown above. `PeopleView` derives one observable
+role-filtered projection from that root. UI observes committed projections rather than maintaining writable
+copies. Preferences remain outside operational snapshots. The inherited AddressBook model and its exclusive
+regression fixtures are removed; shared `Name`, `Phone`, `Email`, `Address` and preferences remain.
 
-The retired `clear` command no longer needs whole-address-book replacement through `Model`.
-That public replacement API has been removed. The retained legacy model supports isolated model and
-injected transaction regressions; its add/delete commands and obsolete command fixtures are removed.
 Canonical state changes continue through validated `PonHubData` snapshots and save-before-publication transactions.
+`CanonicalTransaction` implements the retained `ModelTransaction` boundary for that canonical root and its view.
 
 The aggregate below implements the [shared ownership and identity contract](#shared-lesson-target-contract).
 Complete independent transaction snapshots preserve records, relationships and allocation state.
@@ -659,7 +656,7 @@ shutdown-save failure is logged without preventing shutdown.
 
 #### Safe JSON saves
 
-Canonical operational data, retained legacy storage and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
+Canonical operational data and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
 Existing destinations are resolved to their real paths, so saving through a symbolic link updates its
 target and preserves the link. Dangling/cyclic links and inaccessible destinations fail before writing.
 New files use a resolved parent directory, creating missing directories as needed. Concurrent external
@@ -698,7 +695,7 @@ Read-only commands and operational no-ops skip saving. Successful publication re
 identity; unchanged views avoid refresh, while a changed role filter can publish without an operational
 write. Publication performs no new validation or I/O. Preferences follow their separate lifecycle.
 The legacy command execution path is retired. `ModelTransaction` remains because the active
-`CanonicalTransaction` implements it; retained model/storage tests have their own regression seams.
+`CanonicalTransaction` implements it; retained model tests have their own regression seams.
 
 ##### Example: candidate, saved file and live state
 
@@ -1205,6 +1202,12 @@ complete criteria across membership changes. `Logic.personSearchContextProperty(
 through a read-only property. `PersonRecordListPanel` refreshes contextual cards when that property changes, even
 when the eligible person IDs are unchanged. Wrapping context labels show stable IDs, schedule, tutor and room.
 Listing and successful person addition clear search context; failed commands preserve the previous projection.
+
+Exact search values reuse `Phone`, `EducationLevel`, `LessonDay` and `LessonTime` conversion. `SearchField`
+retains search-specific errors and canonical keys (phone digits with leading zeros, uppercase levels,
+lowercase weekdays and four-digit times). Text fragments bypass complete-field constructors.
+`SearchCategory.getPersonRole()` explicitly maps the three people categories and returns no role for `LESSON`;
+both own-contact matching and `PeopleView` use it after rejecting lesson criteria through their existing boundaries.
 
 For bounded field lengths, Student relationship search takes `O(P + B + R_B + K)`: own-field filtering reads `P`
 people, the existing exact bucket bounds lesson candidates to `B`, current roster links cost `R_B`, and `K`

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+
+<!-- Original text-only wordmark, assisted by OpenAI Codex; see DG acknowledgements. -->
+<HBox alignment="CENTER_LEFT" styleClass="ponhub-wordmark" mouseTransparent="true"
+      accessibleText="PonHub" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+  <stylesheets>
+    <URL value="@PonHubWordmark.css" />
+  </stylesheets>
+  <Label text="Pon" styleClass="wordmark-pon" minWidth="-Infinity" />
+  <Label text="Hub" styleClass="wordmark-hub" minWidth="-Infinity" />
+</HBox>

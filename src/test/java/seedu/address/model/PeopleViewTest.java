@@ -30,6 +30,9 @@ import seedu.address.model.person.PersonRole;
 import seedu.address.model.person.Phone;
 import seedu.address.model.person.Student;
 import seedu.address.model.person.Tutor;
+import seedu.address.model.search.SearchCategory;
+import seedu.address.model.search.SearchCriteria;
+import seedu.address.model.search.SearchField;
 
 public class PeopleViewTest {
 
@@ -179,6 +182,42 @@ public class PeopleViewTest {
         view.setRoleFilter(parser.parse(""));
         assertEquals(originalPeople, view.getPeople());
         assertSame(originalState, source.exportState());
+    }
+
+    @Test
+    public void setSearchCriteria_eachPersonCategory_setsTypedRoleAndPreservesCurrentList() {
+        PonHubData source = new PonHubData(originalState);
+        PeopleView view = new PeopleView(source);
+        var people = view.getPeople();
+        Map<SearchCategory, PersonRole> roles = Map.of(SearchCategory.STUDENT, PersonRole.STUDENT,
+                SearchCategory.PARENT, PersonRole.PARENT, SearchCategory.TUTOR, PersonRole.TUTOR);
+        roles.forEach((category, role) -> {
+            view.setSearchCriteria(new SearchCriteria(category, Map.of()));
+            assertEquals(Optional.of(role), view.getRoleFilter());
+            assertEquals(originalPeople.stream().filter(person -> person.getRole() == role).toList(), people);
+            assertSame(people, view.getPeople());
+        });
+        assertSame(originalState, source.exportState());
+    }
+
+    @Test
+    public void setSearchCriteria_lessonCategory_rejectsBeforeChangingPeopleFilterOrContext() {
+        PonHubData source = new PonHubData(originalState);
+        PeopleView view = new PeopleView(source);
+        SearchCriteria criteria = new SearchCriteria(SearchCategory.STUDENT, Map.of(SearchField.NAME, "Alex"));
+        view.setSearchCriteria(criteria);
+        var context = view.searchContextProperty().get();
+
+        for (Map<SearchField, String> filters : List.of(Map.<SearchField, String>of(),
+                Map.of(SearchField.DAY, "Mon"))) {
+            assertThrows(IllegalArgumentException.class, () ->
+                    view.setSearchCriteria(new SearchCriteria(SearchCategory.LESSON, filters)));
+            assertEquals(List.of(firstStudent), view.getPeople());
+            assertEquals(Optional.of(PersonRole.STUDENT), view.getRoleFilter());
+            assertSame(criteria, view.getSearchCriteria().orElseThrow());
+            assertSame(context, view.searchContextProperty().get());
+            assertSame(originalState, source.exportState());
+        }
     }
 
     private static PonHubDataState createState(List<PersonRecord> people) {

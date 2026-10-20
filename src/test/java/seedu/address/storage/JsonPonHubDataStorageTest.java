@@ -171,6 +171,35 @@ public class JsonPonHubDataStorageTest {
         assertEquals(edited, JsonPonHubDataCodec.decode(JsonPonHubDataCodec.encode(edited)));
     }
 
+    @Test
+    public void decode_largeSpaceRuns_normalizesCanonicalContacts() throws Exception {
+        String spaces = " ".repeat(100_000);
+        ObjectNode root = (ObjectNode) mapper.readTree(JsonPonHubDataCodec.encode(original));
+        person(root, 0).put("name", spaces + "Anne-Marie" + spaces + "O'Neil" + spaces)
+                .put("address", spaces + "Blk 10," + spaces + "#01-02" + spaces);
+        Files.createDirectories(storage.getDataFilePath().getParent());
+        Files.writeString(storage.getDataFilePath(), root.toString());
+
+        var contact = storage.readData().orElseThrow().people().getPeople().get(0).getContactDetails();
+        assertEquals(new Name("Anne-Marie O'Neil"), contact.getName());
+        assertEquals(new Address("Blk 10, #01-02"), contact.getAddress().orElseThrow());
+    }
+
+    @Test
+    public void decode_largeInvalidContacts_preservesFileAndLiveData() throws Exception {
+        String spaces = " ".repeat(100_000);
+        assertRejected(root -> person(root, 0).put("name", "Anne-Marie" + spaces + "O'Neil\t"));
+        assertRejected(root -> person(root, 0).put("address", "Blk 10," + spaces + "#01-02\n"));
+        assertRejected(root -> person(root, 0).put("name", "A".repeat(101)));
+        assertRejected(root -> person(root, 0).put("phone", "1234567890123456"));
+        for (String email : new String[]{"a.".repeat(5000) + "a@example.com",
+            "a@" + "a-".repeat(5000) + "ab", "a@" + "a.".repeat(5000) + "ab",
+            "a@" + "a".repeat(10000), "a.".repeat(5000) + "a!@example.com",
+            "a@" + "a-".repeat(5000) + "a", "a@" + "a.".repeat(5000) + "a"}) {
+            assertRejected(root -> person(root, 0).put("email", email));
+        }
+    }
+
     private void assertRejected(Consumer<ObjectNode> edit) throws Exception {
         ObjectNode root = (ObjectNode) mapper.readTree(JsonPonHubDataCodec.encode(original));
         edit.accept(root);

@@ -172,8 +172,10 @@ public class SearchCriteriaParserTest {
 
     @Test
     public void parse_invalidLevel_throwsParseException() {
-        for (String level : new String[]{"P0", "P7", "S0", "S6", "JC0", "JC3", "P01", "JC01", "Primary 1"}) {
-            assertThrows(ParseException.class, () -> parser.parse("c/student l/" + level));
+        for (String level : new String[]{"P0", "P7", "S0", "S6", "JC0", "JC3", "P01", "JC01", "Primary 1",
+            "\u0000s2\u0000", "\u001bp1", "jc2\b"}) {
+            assertThrows(ParseException.class, "Search filter 'l/' requires P1-P6, S1-S5, JC1 or JC2.", () ->
+                    parser.parse("c/student l/" + level));
         }
     }
 

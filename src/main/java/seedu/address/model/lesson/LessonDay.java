@@ -2,25 +2,30 @@ package seedu.address.model.lesson;
 
 import static java.util.Objects.requireNonNull;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+
 /**
  * A supported weekday for a weekly recurring lesson.
  */
 public enum LessonDay {
-    MONDAY("Mon"),
-    TUESDAY("Tue"),
-    WEDNESDAY("Wed"),
-    THURSDAY("Thu"),
-    FRIDAY("Fri"),
-    SATURDAY("Sat"),
-    SUNDAY("Sun");
+    MONDAY("Mon", DayOfWeek.MONDAY),
+    TUESDAY("Tue", DayOfWeek.TUESDAY),
+    WEDNESDAY("Wed", DayOfWeek.WEDNESDAY),
+    THURSDAY("Thu", DayOfWeek.THURSDAY),
+    FRIDAY("Fri", DayOfWeek.FRIDAY),
+    SATURDAY("Sat", DayOfWeek.SATURDAY),
+    SUNDAY("Sun", DayOfWeek.SUNDAY);
 
     public static final String MESSAGE_CONSTRAINTS =
             "Lesson days should be one of Mon, Tue, Wed, Thu, Fri, Sat or Sun";
 
     private final String displayValue;
+    private final DayOfWeek dayOfWeek;
 
-    LessonDay(String displayValue) {
+    LessonDay(String displayValue, DayOfWeek dayOfWeek) {
         this.displayValue = displayValue;
+        this.dayOfWeek = dayOfWeek;
     }
 
     /**
@@ -49,6 +54,14 @@ public enum LessonDay {
             }
         }
         return false;
+    }
+
+    /**
+     * Returns true if the date falls on this lesson day.
+     */
+    public boolean matches(LocalDate date) {
+        requireNonNull(date);
+        return dayOfWeek == date.getDayOfWeek();
     }
 
     @Override

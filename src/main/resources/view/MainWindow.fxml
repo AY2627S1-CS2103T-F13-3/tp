@@ -3,7 +3,6 @@
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Scene?>
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
@@ -27,11 +26,7 @@
 
       <VBox>
         <HBox fx:id="boardHeader" alignment="CENTER_LEFT" VBox.vgrow="NEVER">
-          <Label fx:id="productTitle" text="PonHub" styleClass="label-bright">
-            <padding>
-              <Insets right="10" left="10" />
-            </padding>
-          </Label>
+          <fx:include fx:id="ponhubWordmark" source="PonHubWordmark.fxml" />
           <MenuBar fx:id="menuBar" HBox.hgrow="ALWAYS">
             <Menu mnemonicParsing="false" text="File">
               <MenuItem mnemonicParsing="false" onAction="#handleExit" text="Exit" />

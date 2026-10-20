@@ -17,8 +17,7 @@ import org.junit.jupiter.api.Test;
 public class JsonDataVersionDetectorTest {
     @Test
     public void detect_existingLegacyFixture_identifiesLegacy() throws Exception {
-        Path fixture = Path.of("src", "test", "data", "JsonSerializableAddressBookTest",
-                "typicalPersonsAddressBook.json");
+        Path fixture = Path.of("src", "test", "data", "JsonDataVersionDetectorTest", "legacyAddressBook.json");
         assertEquals(LEGACY_AB3, JsonDataVersionDetector.detect(Files.readString(fixture)));
         assertEquals(LEGACY_AB3, JsonDataVersionDetector.detect("{\"persons\": []}"));
     }

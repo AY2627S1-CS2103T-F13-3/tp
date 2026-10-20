@@ -1,6 +1,7 @@
 package seedu.address.model.search;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.model.search.SearchCategory.LESSON;
 import static seedu.address.model.search.SearchCategory.PARENT;
 import static seedu.address.model.search.SearchCategory.STUDENT;
@@ -11,6 +12,10 @@ import java.util.Locale;
 import java.util.Set;
 
 import seedu.address.commons.util.StringUtil;
+import seedu.address.model.lesson.LessonDay;
+import seedu.address.model.lesson.LessonTime;
+import seedu.address.model.person.EducationLevel;
+import seedu.address.model.person.Phone;
 
 /**
  * Search prefixes, their category compatibility and their field-level matching rules.
@@ -69,7 +74,8 @@ public enum SearchField {
     }
 
     /**
-     * Validates and normalizes one query value without depending on unfinished domain record types.
+     * Normalizes exact values through their domain types and leaves text queries as permissive fragments.
+     * Search-specific errors and canonical query strings remain independent of domain display messages.
      */
     String normalizeValue(String value) {
         requireNonNull(value);
@@ -81,32 +87,40 @@ public enum SearchField {
 
         return switch (this) {
             case PHONE, PARENT_PHONE -> {
-                if (!trimmed.matches("[0-9]{3,15}")) {
+                try {
+                    yield new Phone(trimmed).value;
+                } catch (IllegalArgumentException e) {
                     throw new IllegalArgumentException("Search filter '" + prefix + "' requires 3-15 digits.");
                 }
-                yield trimmed;
             }
             case LEVEL -> {
-                String level = trimmed.toUpperCase(Locale.ROOT);
-                if (!level.matches("P[1-6]|S[1-5]|JC[12]")) {
+                try {
+                    String level = new EducationLevel(trimmed).getValue();
+                    // Domain trimming must not accept controls outside the search whitespace boundary.
+                    checkArgument(level.equals(trimmed.toUpperCase(Locale.ROOT)), EducationLevel.MESSAGE_CONSTRAINTS);
+                    yield level;
+                } catch (IllegalArgumentException e) {
                     throw new IllegalArgumentException("Search filter 'l/' requires P1-P6, S1-S5, JC1 or JC2.");
                 }
-                yield level;
             }
             case DAY -> {
-                String day = trimmed.toLowerCase(Locale.ROOT);
-                if (!Set.of("mon", "tue", "wed", "thu", "fri", "sat", "sun").contains(day)) {
+                try {
+                    String day = LessonDay.fromString(trimmed).toString().toLowerCase(Locale.ROOT);
+                    // Retain the canonical query spelling even for Unicode case-folding aliases.
+                    checkArgument(day.equals(trimmed.toLowerCase(Locale.ROOT)), LessonDay.MESSAGE_CONSTRAINTS);
+                    yield day;
+                } catch (IllegalArgumentException e) {
                     throw new IllegalArgumentException("Search filter 'd/' requires "
                             + "Mon, Tue, Wed, Thu, Fri, Sat or Sun.");
                 }
-                yield day;
             }
             case START_TIME, END_TIME -> {
-                if (!trimmed.matches("([01][0-9]|2[0-3])[0-5][0-9]")) {
+                try {
+                    yield new LessonTime(trimmed).toString();
+                } catch (IllegalArgumentException e) {
                     throw new IllegalArgumentException("Search filter '" + prefix
                             + "' requires a valid four-digit HHMM.");
                 }
-                yield trimmed;
             }
             default -> StringUtil.normalizeSpaces(trimmed).toLowerCase(Locale.ROOT);
         };
