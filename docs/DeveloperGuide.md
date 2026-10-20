@@ -1199,6 +1199,12 @@ through a read-only property. `PersonRecordListPanel` refreshes contextual cards
 when the eligible person IDs are unchanged. Wrapping context labels show stable IDs, schedule, tutor and room.
 Listing and successful person addition clear search context; failed commands preserve the previous projection.
 
+Exact search values reuse `Phone`, `EducationLevel`, `LessonDay` and `LessonTime` conversion. `SearchField`
+retains search-specific errors and canonical keys (phone digits with leading zeros, uppercase levels,
+lowercase weekdays and four-digit times). Text fragments bypass complete-field constructors.
+`SearchCategory.getPersonRole()` explicitly maps the three people categories and returns no role for `LESSON`;
+both own-contact matching and `PeopleView` use it after rejecting lesson criteria through their existing boundaries.
+
 For bounded field lengths, Student relationship search takes `O(P + B + R_B + K)`: own-field filtering reads `P`
 people, the existing exact bucket bounds lesson candidates to `B`, current roster links cost `R_B`, and `K`
 counts emitted people/context entries. Index construction occurs on root publication, not per read-only query.
