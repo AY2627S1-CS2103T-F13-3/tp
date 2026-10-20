@@ -200,7 +200,9 @@ constraints are described [below](#future-undoredo-and-archiving).
 Ownership and implementation coordination remain in [AboutUs](AboutUs.html#project-team) and
 [tracker #59](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/59).
 
-#### Planned v1.4 editing contract
+<a id="planned-v14-editing-contract"></a>
+
+#### v1.4 editing contract
 
 **Person editing is active; Lesson editing remains planned.** The 16 October scope decision adds person and lesson editing
 ([#258](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/258)); the earlier MVP deferral in
@@ -256,6 +258,11 @@ The session registers `edit` with matching `help edit` guidance; protected sessi
 No inherited AB3 command, schema change or new dependency is involved. `PersonEditParserTest` and
 `CanonicalEditIntegrationTest` cover parsing, optional clears, role guards, duplicates, stable identity,
 no-op versus display capitalization, protected startup and persistence through the real session.
+`MainWindow` captures the selected stable Person ID before successful command execution and asks
+`PersonRecordListPanel` to restore that identity only while it remains visible. This avoids losing selection
+when an immutable replacement has different fields, or transferring selection to another search result.
+Failed commands never restore or publish a replacement. Attached production-window regressions verify
+successful edits, disappearing search results, failed saves and retry with a selected Lesson detail.
 <!-- @@author -->
 
 **Lesson grammar:**
@@ -315,17 +322,18 @@ detail whose date no longer matches a permitted weekday edit, retain the Lesson 
 filter and context date; do not label that old date as a new occurrence. History keys and statuses
 remain unchanged. Recheck displayed people positions before the next indexed command.
 
-Representative acceptance cases below are **handoff targets**, not claims of passing edit tests.
+The person cases below are covered by `CanonicalEditIntegrationTest` and the edit-specific
+`CanonicalMainWindowTest` regressions. Lesson cases remain **handoff targets** for #264.
 Use a fixture where current Student position 1 is `S7` named Alex Tan, Parent `P2` shares its parent
 phone, and `L3` is Monday 1600–1700 with that Student enrolled. Isolate conflicting/no-history variants.
 
 | Case | Input and expected result | Verification owner |
 | --- | --- | --- |
-| Set and clear | `edit 1 l/P2 e/ a/ p/` changes only `S7`, clears optional contacts, retains position/ID/roster/history/counters. | Ben |
-| Required/role fields | Reject `edit 1 pp/`; reject `l/P2` or blank `p/` when position 1 is a Tutor/Parent. | Ben |
-| No-op/display spelling | `edit 1 n/Alex  Tan` makes no write; `edit 1 n/ALEX TAN` saves the changed display spelling, with no duplicate-self error. | Ben |
-| True duplicate/link refresh | Reject a name/phone combination already held by another same-role record. A valid `pp/` change refreshes Parent results without editing `P2`. | Ben, Zhi Yu |
-| Search/selection refresh | Under `search c/student n/Alex`, rename `S7` to Jamie Tan: keep the criteria, remove `S7` from results, clear its people selection, retain stable-Student history. | Ben |
+| Set and clear | `edit 1 l/P2 e/ a/ p/` changes only `S7`, clears optional contacts, retains position/ID/roster/history/counters. | Ernest |
+| Required/role fields | Reject `edit 1 pp/`; reject `l/P2` or blank `p/` when position 1 is a Tutor/Parent. | Ernest |
+| No-op/display spelling | `edit 1 n/Alex  Tan` makes no write; `edit 1 n/ALEX TAN` saves the changed display spelling, with no duplicate-self error. | Ernest |
+| True duplicate/link refresh | Reject a name/phone combination already held by another same-role record. A valid `pp/` change refreshes Parent results without editing `P2`. | Ernest, Zhi Yu |
+| Search/selection refresh | Under `search c/student n/Alex`, rename `S7` to Jamie Tan: keep the criteria, remove `S7` from results, clear its people selection, retain stable-Student history. | Ernest |
 | Lesson success/clash | `editlesson lid/L3 et/1730` retains roster/history if conflict-free; reject an overlapping Tutor/room/Student booking, allow a 1730-adjacent slot. | Yang Shuo |
 | Retained history/detail | Reject `editlesson lid/L3 d/Tue` with Monday attendance, even after unenrolment. Without attendance, permit it if clash-free and clear an incompatible selected detail date. | Yang Shuo, Ben |
 | Save/protection | Inject permission/IO failure for a valid edit: no publication or allocation change; one successful retry persists and reloads. Protected sessions reject edits, including no-ops. | Vincent, feature owner |
@@ -334,7 +342,9 @@ Source baseline: `942dd019`. Field/duplicate rules are in `ContactDetails`, `Stu
 `Parent` and `PeopleRegistryState`; scheduling/history rules are in `PonHubDataState`.
 `CanonicalTransaction`/`CanonicalCommandExecutor`, `PeopleView`, `LessonQueries`, `LessonRetrieval`
 and `AttendanceRetrieval` provide the existing staging, refresh and stable-subscription boundaries.
-The edit routes and edit-specific selection/date handling above still require implementation and tests.
+The person route and stable-ID selection handling are active. The Lesson route and edit-specific date
+handling still require implementation and tests in #264. Person tests additionally inject both IO and
+permission failures through the real session's writer seam, then retry and reload the persisted result.
 
 <div markdown="span" class="alert alert-primary">
 
@@ -1326,7 +1336,7 @@ Compared with maintaining separate contact lists, timetables and attendance reco
 
 **Shared-lesson MVP target:** Lessons are created independently of student enrolment, including lessons with empty rosters. Each shared `Lesson` owns its currently enrolled student IDs; student lessons, rosters, and tutor schedules are retrieved from that canonical membership rather than copied into each student. Attendance is a separate dated record for one student and one lesson. Unenrolment removes current membership and retains attendance history; an existing historical entry can still be corrected or removed. A missing attendance entry means unrecorded, distinct from present and absent.
 
-**Intended v1.4 scope:** The [alpha plan (#276)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/276) retains the shared-Lesson product and adds person editing (US-55) and Lesson editing (US-37). Both are planned until their activation increments merge: [person editing (#263)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/263) and [Lesson editing (#264)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/264). Their [planned editing contract](#planned-v14-editing-contract) preserves stable identities, shared rosters and retained attendance; it does not make these commands available today.
+**Intended v1.4 scope:** The [alpha plan (#276)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/276) retains the shared-Lesson product and adds person editing (US-55) and Lesson editing (US-37). [Person editing (#263)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/263) is active in this increment; [Lesson editing (#264)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/264) remains planned. Their [editing contract](#planned-v14-editing-contract) preserves stable identities, shared rosters and retained attendance.
 
 **Delivered versus planned:** The [student foundation (#57)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/57), [tutor and parent foundations (#62)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/62), [ordered people registry (#70)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/70), [person-card components (#119)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/119), [role-filtered listing components (#122)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/122), [search criteria foundation (#64)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/64), and [lesson scheduling values (#63)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/63) provide independently tested APIs. The registry, canonical cards and role-filtered listing are now connected to the active people session. [Inline help (#68)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/68) and [safe file replacement (#66)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/66) are connected to the active canonical people runtime.
 
@@ -1656,11 +1666,42 @@ views; remaining attendance references still block student and lesson deletion.
 
 Use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-project-on-your-computer) for these checks. On macOS, use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) for the Mac's architecture. Confirm the terminal used for `java -jar` selects that installation and record the OS, architecture and JDK distribution/version with the test results. Additional macOS trials with other distributions, including plain Oracle JDK, are optional portability checks.
 
+<!-- @@author ErnestChuaa -->
+### Person editing
+
+In a fresh disposable store, follow the [UG quick start](UserGuide.html#quick-start) through the first
+`history 1 lid/L1` command, stopping before `unmark` so Alex's former-member history remains.
+Then add `add r/parent n/Pat Tan p/91234567`. These are manual acceptance steps; the automated tests
+named above do not certify native display/scaling acceptance.
+
+1. Run `list r/student`, select Alex's card, then `edit 1 l/P2 p/ e/ a/`. Expect `Edited student: Alex Tan (S1).`,
+   level P2, empty optional contacts, the same selected ID and Student filter. Run `edit 1 n/Alex  Tan`;
+   expect `No changes to student: Alex Tan (S1).` and no data-file write. `edit 1 n/ALEX TAN` changes display case.
+2. Reject `edit 1`, `edit S1 n/Alex`, `edit 0 n/Alex`, an out-of-range position, `edit 1 n/`, `edit 1 pp/`,
+   `edit 1 p/abc`, `edit 1 r/tutor`, `edit 1 n/Alex n/Alex` and `edit 1 a/Block x/value`.
+   Verify unchanged file bytes, cards, selected ID and current people mapping after each rejection.
+3. Reject `edit 1 n/Jamie Tan pp/91234567` as a true duplicate. Use `list r/tutor`, then reject
+   `edit 1 p/`, `edit 1 l/P2` and `edit 1 pp/91234567`. Repeat required-phone and Student-only guards on Parents.
+4. With `list r/tutor`, run `showlesson lid/L1 d/2026-10-05`, then `edit 1 n/Corrected Tutor`.
+   Expect the same Lesson/Tutor IDs and date, current tutor label, roster and retained former-member attendance.
+5. Run `search c/parent sn/Alex`, then `edit 1 p/90000000`. Pat leaves the retained search result; the
+   Student's stored parent phone remains unchanged. Run `list r/student`, then `edit 1 pp/90000000` and
+   repeat the Parent search: Pat links to Alex again. No additional Parent is created or edited implicitly.
+6. Run `list r/student`, `history 1 lid/L1`, then `search c/student n/Alex`. Select Alex and run
+   `edit 1 n/Changed Student`. Expect Alex to leave the people search and selection to clear, while
+   the right pane keeps Student S1's retained history. Recheck positions before another indexed command.
+7. Follow [unsuccessful-save checks](UserGuide.html#checking-unsuccessful-saves-in-the-current-build) with a
+   disposable store: a reported save failure preserves cards, selected ID, detail/history mode and allocations.
+   After correcting the reported cause, retry once and restart; verify the saved change and stable relationships.
+8. Start with rejected disposable data: `edit 1 n/Alex` is blocked before parsing, `help edit` is unavailable,
+   and original bytes remain untouched. Recovery still requires correcting/restoring the file and restarting.
+<!-- @@author -->
+
 ### Inline help and supported routes
 
 Use the active catalogue in the tested build; these examples apply to canonical startup.
 
-1. In a fresh JAR folder, run `help`, then `help add`, `help addlesson`, `help enrol`, `help unenrol`, `help mark`,
+1. In a fresh JAR folder, run `help`, then `help add`, `help edit`, `help addlesson`, `help enrol`, `help unenrol`, `help mark`,
    `help unmark`, `help history`, `help delete`, `help deletelesson`, `help list`, `help lessons`, `help showlesson`,
    `help search`, `help help` and
    `help exit`. Each topic matches its
@@ -1676,8 +1717,8 @@ Use the active catalogue in the tested build; these examples apply to canonical 
 4. At minimum width, run `help add` and scroll to the final example/back to the top. Text wraps
    readably; a new topic resets scrolling. Record actual display conditions using the
    [people-card/whole-window checks](#planned-people-card-display-checks).
-5. `edit 1 n/Alex`, `clear` and `find Alex` identify the unknown command and suggest `help` without changing data.
-   For example, the first input reports `Unknown command: 'edit'. Type 'help' to see available commands.`
+5. `clear` and `find Alex` identify the unknown command and suggest `help` without changing data.
+   `edit` is an active canonical route; verify its argument and role guards with the person-edit checks above.
    `list extra`, an invalid `addlesson`, an invalid `mark`, an invalid `unmark`, `delete S1`,
    `deletelesson 1`, `lessons sid/S1` and `exit extra` show
    validation or usage messages without

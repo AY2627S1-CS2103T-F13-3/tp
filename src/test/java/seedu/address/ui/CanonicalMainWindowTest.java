@@ -501,6 +501,68 @@ public class CanonicalMainWindowTest {
     }
 
     @Test
+    public void commandBox_personEdit_retainsVisibleIdentityAndClearsDisappearingSelection() throws Exception {
+        seedMixedPeople();
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("list r/student");
+                fixture.people().getSelectionModel().select(1);
+                fixture.enter("edit 2 n/Corrected Student");
+                assertEquals("Edited student: Corrected Student (S3).", fixture.feedback());
+                assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
+                assertCard(fixture, "Student · S3", "2. Corrected Student");
+                fixture.enter("search c/student n/Student");
+                fixture.people().getSelectionModel().select(0);
+                fixture.enter("edit 1 n/Changed Person");
+                assertEquals(List.of(new PersonId("S3")),
+                        fixture.people().getItems().stream().map(PersonRecord::getId).toList());
+                assertTrue(fixture.people().getSelectionModel().isEmpty());
+                assertCard(fixture, "Student · S3", "1. Corrected Student");
+                fixture.enter("help edit");
+                assertTrue(fixture.feedback().contains("Usage: edit INDEX"));
+                assertEquals(fixture.app.snapshot(),
+                        new JsonPonHubDataStorage(fixture.dataPath).readData().orElseThrow());
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void commandBox_personEditFailedSave_preservesSelectionAndDetailUntilRetry() throws Exception {
+        seedMixedPeople();
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("addlesson d/Mon st/0900 et/1000 s/Math tu/First Tutor rm/R1");
+                fixture.enter("list r/student");
+                fixture.enter("enrol 1 lid/L1");
+                fixture.enter("showlesson lid/L1");
+                fixture.people().getSelectionModel().select(0);
+                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                var detail = fixture.lessons().getItems().getFirst();
+                var original = fixture.app.snapshot();
+                Path backup = directory.resolve("edit-original.json");
+                Files.move(fixture.dataPath, backup);
+                Files.createDirectory(fixture.dataPath);
+                fixture.enter("edit 1 n/Corrected Student");
+                assertEquals("edit 1 n/Corrected Student", fixture.input().getText());
+                assertTrue(fixture.feedback().contains("Could not save"));
+                assertEquals(original, fixture.app.snapshot());
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(detail, fixture.lessons().getItems().getFirst());
+                Files.delete(fixture.dataPath);
+                Files.move(backup, fixture.dataPath);
+                fixture.enter("edit 1 n/Corrected Student");
+                assertEquals("Edited student: Corrected Student (S9).", fixture.feedback());
+                assertEquals(new PersonId("S9"), fixture.people().getSelectionModel().getSelectedItem().getId());
+                assertEquals(List.of("L1"), lessonIds(fixture));
+                assertEquals(fixture.app.snapshot(),
+                        new JsonPonHubDataStorage(fixture.dataPath).readData().orElseThrow());
+            }
+            return null;
+        });
+    }
+
+    @Test
     public void commandBox_guardedDeletion_preservesFilteredCardsAndRenumbers() throws Exception {
         seedMixedPeople();
         callOnFxThread(() -> {

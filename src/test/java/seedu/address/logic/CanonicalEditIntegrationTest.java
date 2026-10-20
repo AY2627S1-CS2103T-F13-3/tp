@@ -7,10 +7,13 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
@@ -24,6 +27,7 @@ import seedu.address.model.person.PersonId;
 import seedu.address.model.person.PersonRecord;
 import seedu.address.model.person.PersonRole;
 import seedu.address.model.person.Student;
+import seedu.address.model.query.LessonDetailView;
 import seedu.address.storage.JsonPonHubDataStorage;
 import seedu.address.storage.ProtectedPonHubDataStorage;
 
@@ -130,6 +134,117 @@ public class CanonicalEditIntegrationTest {
         assertFalse(session.getCommandWords().contains("edit"));
         assertThrows(ParseException.class, () -> session.execute("help edit"));
         assertEquals("{", Files.readString(path));
+    }
+
+    @Test
+    public void execute_failedSaves_preserveAllLiveViewsUntilSuccessfulRetry() throws Exception {
+        Path path = fixture();
+        for (IOException failure : List.of(new IOException("disk failure"),
+                new AccessDeniedException(path.toString()))) {
+            AtomicBoolean failSave = new AtomicBoolean(true);
+            AtomicInteger saves = new AtomicInteger();
+            CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+                saves.incrementAndGet();
+                if (failSave.get()) {
+                    throw failure;
+                }
+                new JsonPonHubDataStorage(path).saveData(state);
+            });
+            session.execute("search c/student n/Alex");
+            var before = session.getDataSnapshot();
+            var person = session.getPeople().getFirst();
+            var contexts = session.personSearchContextProperty().get();
+            byte[] bytes = Files.readAllBytes(path);
+            AtomicInteger notifications = new AtomicInteger();
+            session.getPeople().addListener((ListChangeListener<PersonRecord>) c -> notifications.incrementAndGet());
+            assertThrows(CommandException.class, () -> session.execute("edit 1 n/Changed Student"));
+            assertEquals(1, saves.get());
+            assertEquals(0, notifications.get());
+            assertSame(before, session.getDataSnapshot());
+            assertSame(person, session.getPeople().getFirst());
+            assertSame(contexts, session.personSearchContextProperty().get());
+            assertArrayEquals(bytes, Files.readAllBytes(path));
+            failSave.set(false);
+            session.execute("edit 1 n/Changed Student");
+            assertTrue(session.getPeople().isEmpty());
+            assertEquals(2, saves.get());
+            assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
+            // Restore the same fixture for the next independently injected failure.
+            new JsonPonHubDataStorage(path).saveData(before);
+        }
+    }
+
+    @Test
+    public void execute_populatedHistoryAndTutorRename_refreshStableDetailAndSearchSubscriptions() throws Exception {
+        CanonicalPeopleSession session = linkedSession();
+        session.execute("history 1 lid/L1");
+        var history = session.getDisplayedHistory();
+        var entries = List.copyOf(history);
+        session.execute("search c/student n/Alex");
+        session.execute("edit 1 n/Changed Student");
+        assertTrue(session.getPeople().isEmpty());
+        assertSame(history, session.getDisplayedHistory());
+        assertEquals(entries, history);
+        assertTrue(session.historyViewActiveProperty().get());
+        assertEquals("Student S1 · attendance history · L1", session.historyResultContextProperty().get());
+
+        session.execute("list r/tutor");
+        session.execute("search c/lesson tu/Mei");
+        var lessons = session.getDisplayedLessons();
+        assertEquals(1, lessons.size());
+        session.execute("edit 1 n/New Tutor");
+        assertSame(lessons, session.getDisplayedLessons());
+        assertTrue(lessons.isEmpty());
+        assertEquals("Lesson search: tu/mei", session.lessonResultContextProperty().get());
+        session.execute("showlesson lid/L1 d/2026-10-05");
+        var detail = (LessonDetailView) lessons.getFirst();
+        assertEquals("New Tutor", detail.getTutorName());
+        assertEquals(new PersonId("T1"), detail.getTutorId());
+        assertEquals("Changed Student", detail.formerAttendance().getFirst().student().getName().toString());
+        assertEquals(1, detail.currentRoster().size());
+        var before = session.getDataSnapshot();
+        session.execute("edit 1 n/Corrected Tutor");
+        assertEquals("Corrected Tutor", lessons.getFirst().getTutorName());
+        assertEquals(before.lessons(), session.getDataSnapshot().lessons());
+        assertEquals(before.attendance(), session.getDataSnapshot().attendance());
+        assertEquals(before.people().getLastAllocatedSequences(),
+                session.getDataSnapshot().people().getLastAllocatedSequences());
+        assertEquals(session.getDataSnapshot(),
+                new CanonicalPeopleSession(session.getDataFilePath()).getDataSnapshot());
+    }
+
+    @Test
+    public void execute_parentAndStudentPhoneEdits_recomputeExactLinksWithoutCascading() throws Exception {
+        CanonicalPeopleSession session = linkedSession();
+        session.execute("search c/parent sn/Alex");
+        assertEquals(1, session.getPeople().size());
+        session.execute("edit 1 p/90000000");
+        assertTrue(session.getPeople().isEmpty());
+        assertEquals("91234567", ((Student) session.getDataSnapshot().people().getPeople().get(1))
+                .getParentPhone().value);
+        session.execute("list r/student");
+        session.execute("edit 1 pp/90000000");
+        session.execute("search c/parent sn/Alex");
+        assertEquals(new PersonId("P1"), session.getPeople().getFirst().getId());
+        assertEquals(new PersonId("S1"), session.personSearchContextProperty().get()
+                .get(new PersonId("P1")).getFirst().student().orElseThrow().getId());
+        session.execute("list r/student");
+        session.execute("edit 1 pp/90000001");
+        session.execute("search c/parent sn/Alex");
+        assertTrue(session.getPeople().isEmpty());
+        assertEquals(4, session.getDataSnapshot().people().getPeople().size());
+    }
+
+    private CanonicalPeopleSession linkedSession() throws Exception {
+        CanonicalPeopleSession session = new CanonicalPeopleSession(fixture());
+        session.execute("addlesson d/Mon st/1600 et/1700 s/Math tu/Mei Lim rm/R1");
+        session.execute("list r/student");
+        session.execute("enrol 1 lid/L1");
+        session.execute("enrol 2 lid/L1");
+        session.execute("mark 1 lid/L1 d/2026-10-05 s/present");
+        session.execute("mark 2 lid/L1 d/2026-10-05 s/absent");
+        session.execute("unenrol 1 lid/L1");
+        return session;
     }
 
     private Path fixture() throws Exception {

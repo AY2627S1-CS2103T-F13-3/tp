@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -61,6 +62,22 @@ public class PersonRecordListPanel extends UiPart<Region> {
         personListView.setCellFactory(list -> new PersonRecordListCell(contexts));
         contexts.addListener((observable, previous, current) -> personListView.refresh());
         personListView.setPlaceholder(new Label("No persons to display."));
+    }
+
+    /** Returns the selected stable identity before a command can replace immutable records. */
+    public Optional<PersonId> getSelectedPersonId() {
+        return Optional.ofNullable(personListView.getSelectionModel().getSelectedItem()).map(PersonRecord::getId);
+    }
+
+    /** Retains selection by identity only while visible, clearing it if a filter removed that person. */
+    public void restoreSelection(PersonId id) {
+        requireNonNull(id);
+        var replacement = personListView.getItems().stream().filter(person -> person.getId().equals(id)).findFirst();
+        if (replacement.isPresent()) {
+            personListView.getSelectionModel().select(replacement.orElseThrow());
+        } else {
+            personListView.getSelectionModel().clearSelection();
+        }
     }
 
     /**

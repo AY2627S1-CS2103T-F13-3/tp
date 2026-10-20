@@ -52,6 +52,7 @@ We are a team based in the [School of Computing, National University of Singapor
 * Role: Developer (Help), Code Quality, Documentation Coordination
 * Responsibilities:
   * Implement and maintain the help command and command assistance.
+  * Deliver person-edit command activation, tests and UG/DG/manual checks for #263, reassigned on 20 October 2026; Benjamin retains authorship of the merged #261 model support.
   * Coordinate code quality and the integration of project documentation.
   * Maintain help documentation, shared command conventions and the command summary; reconcile each owner's own UG/DG feature contributions.
 
