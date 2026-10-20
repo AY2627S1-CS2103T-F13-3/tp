@@ -34,7 +34,7 @@ Protected data SHA-256 before/after matches:
 - Search context and protected feedback were checked only at restored 2560x1440/100%, not throughout the required matrix.
 - Copying was confirmed at 1080/100%; not repeated at other scales.
 - One Lesson card does not demonstrate multi-Lesson final-card scrolling or populated roster/attendance/history views.
-- No claim of full #319 closure, independent review, rendered-guide validation, #320 handoff or merge is made. No GitHub state was changed.
+- This evidence was published to PR #334's branch. No claim of full #319 closure, independent review, rendered-guide validation, #320 handoff or merge is made.
 
 ## Configuration follow-up — 20 October 2026
 
