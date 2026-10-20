@@ -113,8 +113,8 @@ public final class LessonRetrieval {
         requireNonNull(input);
         Lesson lesson = data.getLesson(input.lessonId()).orElseThrow(() ->
                 new CommandException("The lesson does not exist: " + input.lessonId()));
-        if (input.date().isPresent() && !lesson.getTimeSlot().getDay().name()
-                .equals(input.date().orElseThrow().getDayOfWeek().name())) {
+        if (input.date().isPresent()
+                && !lesson.getTimeSlot().getDay().matches(input.date().orElseThrow())) {
             throw new CommandException("Date " + input.date().orElseThrow() + " must be a "
                     + lesson.getTimeSlot().getDay() + " for lesson " + lesson.getId() + ".");
         }

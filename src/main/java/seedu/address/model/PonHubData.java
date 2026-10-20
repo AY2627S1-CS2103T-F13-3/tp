@@ -489,7 +489,7 @@ public final class PonHubData {
     private Lesson requireAttendanceLesson(LessonId lessonId, LocalDate date) {
         requireNonNull(date);
         Lesson lesson = requireLesson(lessonId);
-        checkArgument(date.getDayOfWeek().name().equals(lesson.getTimeSlot().getDay().name()),
+        checkArgument(lesson.getTimeSlot().getDay().matches(date),
                 "Attendance date " + date + " does not match lesson " + lessonId + "'s "
                         + lesson.getTimeSlot().getDay() + " schedule.");
         return lesson;
