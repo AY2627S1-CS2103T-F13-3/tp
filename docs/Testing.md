@@ -27,7 +27,7 @@ in the launching terminal. On Windows, replace `./gradlew` with `gradlew.bat`
 matching the Java CI validation command. Use `./gradlew clean test` when a clean rebuild is useful;
 cleaning is not necessary for every run. Gradle tests enable assertions by default, and the Gradle `run`
 task enables them for development. For native IntelliJ application launches, follow the
-[development assertions check](DeveloperGuide.html#development-assertions), including the `-ea` VM option.
+[development assertion configuration](DeveloperGuide.html#development-assertions), including the `-ea` VM option.
 
 Some tests initialize JavaFX and need a display. On Linux without a graphical session, install Xvfb
 using your system's package manager and run the CI form:
