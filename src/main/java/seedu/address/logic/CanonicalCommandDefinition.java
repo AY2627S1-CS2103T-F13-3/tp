@@ -15,6 +15,7 @@ import seedu.address.logic.parser.PeopleListParser;
  */
 public enum CanonicalCommandDefinition {
     ADD("add", "Add a student, tutor or parent", CanonicalCommandCatalog.MESSAGE_ADD_USAGE, -1),
+    EDIT("edit", "Correct a person's details", CanonicalCommandCatalog.MESSAGE_EDIT_USAGE, -1),
     ADD_LESSON("addlesson", "Create an empty-roster shared lesson",
             CanonicalCommandCatalog.MESSAGE_ADD_LESSON_USAGE, -1),
     ENROL("enrol", "Enrol a Student in a shared lesson", CanonicalCommandCatalog.MESSAGE_ENROL_USAGE, -1),

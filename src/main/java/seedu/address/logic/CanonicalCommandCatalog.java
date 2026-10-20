@@ -10,6 +10,14 @@ import java.util.Optional;
  * Rejected startup permits only recovery commands.
  */
 public final class CanonicalCommandCatalog {
+    public static final String MESSAGE_EDIT_USAGE =
+            "Usage: edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [l/LEVEL] [pp/PARENT_PHONE]\n"
+            + "Use the current displayed people position and at least one field; omitted fields stay unchanged.\n"
+            + "Only Students accept l/ and pp/. Blank e/ or a/ clears that value; "
+            + "blank p/ clears only a Student's phone.\n"
+            + "Names, Student levels/parent phones and Tutor/Parent phones cannot be cleared. Role and ID stay fixed.\n"
+            + "Filters are retained and search results refresh. Recheck displayed positions after editing.\n"
+            + "An identical edit makes no write. Example: list r/student, then edit 1 l/P2 e/";
     public static final String MESSAGE_UNKNOWN_HELP_TOPIC =
             "Unknown command: '%s'. Type 'help' to see available commands.";
     public static final String MESSAGE_EXIT_USAGE = "Usage: exit\n"

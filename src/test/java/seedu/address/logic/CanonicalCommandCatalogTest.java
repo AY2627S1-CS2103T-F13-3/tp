@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 public class CanonicalCommandCatalogTest {
     @Test
     public void guidance_preservesHelpOrderAndProtectedAllowList() {
-        List<String> normal = List.of("add", "addlesson", "enrol", "unenrol", "mark", "unmark", "history",
+        List<String> normal = List.of("add", "edit", "addlesson", "enrol", "unenrol", "mark", "unmark", "history",
                 "delete", "deletelesson", "list", "lessons", "showlesson", "search", "help", "exit");
         List<String> protectedWords = List.of("help", "list", "exit");
         assertEquals(normal, CanonicalCommandCatalog.getCommandWords(false));
@@ -35,6 +35,7 @@ public class CanonicalCommandCatalogTest {
             assertTrue(CanonicalCommandCatalog.getUsage("EXIT", isProtected).isEmpty());
         }
         assertTrue(CanonicalCommandCatalog.getUsage("add", true).isEmpty());
+        assertTrue(CanonicalCommandCatalog.getUsage("edit", true).isEmpty());
         assertThrows(NullPointerException.class, () -> CanonicalCommandCatalog.getUsage(null, false));
         assertThrows(NullPointerException.class, () -> CanonicalCommandCatalog.getOverview(null));
     }
