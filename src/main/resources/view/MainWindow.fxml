@@ -3,11 +3,13 @@
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Scene?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.image.Image?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
@@ -39,12 +41,19 @@
 
         <SplitPane fx:id="resultSplitPane" orientation="VERTICAL" dividerPositions="0.32"
                    minHeight="210" VBox.vgrow="ALWAYS">
-          <StackPane fx:id="resultDisplayPlaceholder" styleClass="pane-with-border"
-                     minHeight="80" prefHeight="160">
-            <padding>
-              <Insets top="5" right="10" bottom="5" left="10" />
-            </padding>
-          </StackPane>
+          <VBox fx:id="feedbackSection" minHeight="80" prefHeight="160">
+            <FlowPane fx:id="viewNavigation" hgap="6" vgap="4" styleClass="view-navigation" VBox.vgrow="NEVER">
+              <Button fx:id="lessonsButton" text="Lessons" onAction="#handleLessons" />
+              <Button fx:id="studentLessonsButton" text="Student lessons" onAction="#handleStudentLessons" />
+              <Button fx:id="attendanceButton" text="Attendance" onAction="#handleAttendance" />
+            </FlowPane>
+            <StackPane fx:id="resultDisplayPlaceholder" styleClass="pane-with-border" minHeight="50"
+                       VBox.vgrow="ALWAYS">
+              <padding>
+                <Insets top="5" right="10" bottom="5" left="10" />
+              </padding>
+            </StackPane>
+          </VBox>
 
           <SplitPane fx:id="recordsSplitPane" dividerPositions="0.32" minHeight="120">
             <VBox fx:id="personList" styleClass="pane-with-border" minWidth="160" minHeight="0">

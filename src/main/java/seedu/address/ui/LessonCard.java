@@ -39,8 +39,8 @@ public class LessonCard extends UiPart<Region> {
     public LessonCard(LessonView lesson) {
         super(FXML);
         requireNonNull(lesson);
-        lessonHeading.setText(lesson.getLessonId() + " · " + lesson.getSubject());
-        lessonSchedule.setText("Schedule: " + lesson.getTimeSlot());
+        lessonHeading.setText(lesson.getSubject().toString());
+        lessonSchedule.setText("Lesson " + lesson.getLessonId() + " · " + lesson.getTimeSlot());
         lessonTutor.setText("Tutor: " + lesson.getTutorName() + " (" + lesson.getTutorId() + ")");
         lessonRoom.setText("Room: " + lesson.getRoom());
         lessonRosterSize.setText("Students enrolled: " + lesson.getRosterSize());

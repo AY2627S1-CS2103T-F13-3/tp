@@ -139,7 +139,8 @@ public class MainWindowTest {
             runOnFxThread(() -> {
                 root.layout();
                 for (String selector : List.of("#menuBar", "#commandTextField", "#resultDisplay",
-                        "#personListView", "#statusbarPlaceholder")) {
+                        "#personListView", "#statusbarPlaceholder", "#lessonsButton", "#studentLessonsButton",
+                        "#attendanceButton")) {
                     assertAccessible(root.lookup(selector), root);
                 }
 

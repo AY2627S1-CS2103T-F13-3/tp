@@ -271,6 +271,20 @@
     -fx-border-color: #FF9900;
 }
 
+.view-navigation {
+    -fx-padding: 4 10 4 10;
+}
+
+.view-navigation .button {
+    -fx-padding: 3 10 3 10;
+    -fx-font-size: 12px;
+}
+
+.view-navigation .button:active {
+    -fx-background-color: #FF9900;
+    -fx-text-fill: black;
+}
+
 .button:default {
     -fx-background-color: #FF9900;
     -fx-text-fill: black;

@@ -420,11 +420,25 @@ committed changes refresh the display. The diagram shows the active canonical ca
 The active canonical cards display immutable `PersonRecord` projections from the session's same observable people
 list, with separate current-view positions and stable IDs and wrapping labels for required and optional fields.
 `LessonListPanel` observes `Logic.getDisplayedLessons()` and renders wrapping `LessonCard`s with stable lesson/tutor
-IDs, schedule, subject, room and roster size. `showlesson` switches the right pane to a scrolling detail view with
-the current roster and retained former-member attendance. Each panel scrolls independently, and lesson commands
+IDs, schedule, subject, room and roster size. The subject is the card heading, followed by one line with the
+stable Lesson ID and schedule. `showlesson` switches the right pane to a scrolling detail view with
+the current roster and retained former-member attendance, both expanded immediately for undated and dated
+results. Missing dated records remain labelled `unrecorded`. Each panel scrolls independently, and lesson commands
 never replace the people list. `HistoryListPanel` shares the right pane for dated records with current/former
 membership labels and refreshes after committed changes. See the
 [shared selector contract](#shared-lesson-target-contract).
+
+The optional **Lessons**, **Student lessons** and **Attendance** buttons share a wrapping `FlowPane` at the top
+of `feedbackSection`, the upper child of `resultSplitPane`, spanning both record columns. Navigation and feedback
+share that section's 80-pixel minimum height, with a 50-pixel minimum for the feedback placeholder. The shared
+divider resizes this section; command entry stays fixed below both record columns. The buttons route through
+`MainWindow` to the same `Logic.execute` boundary as the command box, using `lessons`, `lessons si/CURRENT_INDEX` and
+`history CURRENT_INDEX` respectively. Student shortcuts resolve the selected stable Person ID against the current
+people list and require a Student before creating the indexed command. Missing or stale selection and Tutor/Parent
+selection produce feedback without replacing either result source. Buttons preserve the command-box draft and
+use the normal command guards, including protected-session rejection. Typed retrieval and search commands require
+no GUI selection; their supplied arguments select the appropriate people, Lesson/detail or history results from
+any current result. Navigation introduces no parser grammar, stored state or alternate query implementation.
 
 ### Logic component
 
@@ -1805,6 +1819,35 @@ Use the active catalogue in the tested build; these examples apply to canonical 
 Help checks do not establish the
 [active shared-lesson and attendance workflow](#active-shared-lesson-and-attendance-workflow)
 or final guide/site acceptance ([#102](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/102)).
+
+### Lesson cards and result navigation (#320)
+
+Use a disposable mixed-role store with two Students, a shared Lesson, an empty-roster Lesson and retained
+former-member attendance. The [active shared-lesson workflow](#active-shared-lesson-and-attendance-workflow)
+supplies the commands. Record the tested commit, OS, Java version, window size and actual outcomes; these steps
+are a manual checklist, not evidence that a display/scaling matrix has passed.
+
+1. From history, enter `lessons`, `lessons si/STUDENT_INDEX`, a Lesson search, an undated `showlesson` and a dated
+   `showlesson` in turn, using valid current indices and IDs. Repeat with a different Student card selected.
+   Each typed command selects its own results without a button click or reliance on the selected card. Run a
+   people search from Lesson details and verify its matching people/context, then `history STUDENT_INDEX` to
+   display that specified Student's history. People positions and stable IDs remain distinct.
+2. Select one Student card, type an unfinished command, then click **Student lessons**, **Attendance** and
+   **Lessons**. Expect the same results as `lessons si/CURRENT_INDEX`, `history CURRENT_INDEX` and `lessons`.
+   Each click retains the draft and people filter/order/selection; the unfiltered Lesson button needs no selection.
+3. Clear selection and click each Student shortcut. Repeat with a Tutor and Parent selected, and after a people
+   filter or deletion removes the previously selected Student. Expect explanatory feedback, unchanged prior
+   results and draft, and no fallback to another person at the old position. Select a visible Student and retry.
+4. In a protected session, click **Lessons** and expect the normal protected-command rejection. Click
+   **Student lessons** and **Attendance** in that empty people view and expect guidance that no current Student
+   is selected. No button changes results or the draft, writes operational data or bypasses protection; unavailable
+   records cannot be selected. `help`, `list` and `exit` remain usable.
+5. Inspect catalogue cards and both undated and dated `showlesson` details at narrow and wide widths. Expect the
+   subject once as heading, the stable Lesson ID and schedule on the next line, Tutor name/ID, room and current
+   enrolment count.
+   Current roster and former-member attendance are expanded without another click; dated missing records say
+   `unrecorded`. Check empty sections, long names and enough retained records to scroll to the last entry. Resize
+   both dividers and verify independent scrolling and reachable navigation, feedback and command entry.
 
 ### Compact windows and active contact cards
 

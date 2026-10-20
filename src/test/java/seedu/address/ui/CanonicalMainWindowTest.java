@@ -358,7 +358,7 @@ public class CanonicalMainWindowTest {
                 ScrollPane detail = (ScrollPane) fixture.root().lookup("#lessonDetailScroll");
                 assertTrue(detail.isVisible());
                 assertFalse(fixture.lessons().isVisible());
-                assertEquals("L10 · Math", ((Label) detail.lookup("#lessonHeading")).getText());
+                assertEquals("Math", ((Label) detail.lookup("#lessonHeading")).getText());
                 assertTrue(detail.lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("S1 · Alex Tan — present")));
                 assertTrue(detail.lookupAll(".label").stream().map(Label.class::cast)

@@ -3,9 +3,11 @@ package seedu.address.ui;
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
+import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCombination;
@@ -20,6 +22,7 @@ import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.PersonRole;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -38,6 +41,12 @@ public class MainWindow extends UiPart<Stage> {
     // Independent Ui parts residing in this Ui container
     private PersonRecordListPanel personListPanel;
     private ResultDisplay resultDisplay;
+
+    @FXML
+    private Button lessonsButton;
+
+    @FXML
+    private Button attendanceButton;
 
     @FXML
     private StackPane commandBoxPlaceholder;
@@ -134,6 +143,8 @@ public class MainWindow extends UiPart<Stage> {
         historyRoot.visibleProperty().bind(logic.historyViewActiveProperty());
         historyRoot.managedProperty().bind(historyRoot.visibleProperty());
         lessonListPanelPlaceholder.getChildren().addAll(lessonRoot, historyRoot);
+        logic.historyViewActiveProperty().addListener((observable, previous, current) -> updateNavigation());
+        updateNavigation();
 
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
@@ -144,6 +155,57 @@ public class MainWindow extends UiPart<Stage> {
         CommandBox commandBox = new CommandBox(this::executeCommand);
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
         commandBox.requestFocus();
+    }
+
+    private void updateNavigation() {
+        boolean isHistoryActive = logic.historyViewActiveProperty().get();
+        PseudoClass active = PseudoClass.getPseudoClass("active");
+        lessonsButton.pseudoClassStateChanged(active, !isHistoryActive);
+        attendanceButton.pseudoClassStateChanged(active, isHistoryActive);
+    }
+
+    @FXML
+    private void handleLessons() {
+        executeViewingCommand("lessons");
+    }
+
+    @FXML
+    private void handleStudentLessons() {
+        executeStudentViewingCommand("lessons si/");
+    }
+
+    @FXML
+    private void handleAttendance() {
+        executeStudentViewingCommand("history ");
+    }
+
+    /** Resolves the selected identity against current displayed positions immediately before execution. */
+    private void executeStudentViewingCommand(String commandPrefix) {
+        var selectedId = personListPanel.getSelectedPersonId();
+        var people = logic.getPersonRecords();
+        for (int index = 0; index < people.size(); index++) {
+            var person = people.get(index);
+            if (selectedId.filter(person.getId()::equals).isPresent()) {
+                if (person.getId().getRole() != PersonRole.STUDENT) {
+                    resultDisplay.setFeedbackToUser("Select a Student card for this view, or enter "
+                            + "lessons si/STUDENT_INDEX or history STUDENT_INDEX.");
+                    return;
+                }
+                executeViewingCommand(commandPrefix + (index + 1));
+                return;
+            }
+        }
+        resultDisplay.setFeedbackToUser("No current Student card is selected. Select a Student card, or enter "
+                + "lessons si/STUDENT_INDEX or history STUDENT_INDEX using the current people list.");
+    }
+
+    /** Runs optional viewing controls through the same validation and feedback route as typed commands. */
+    private void executeViewingCommand(String command) {
+        try {
+            executeCommand(command);
+        } catch (CommandException | ParseException e) {
+            logger.info("Viewing request rejected: " + e.getMessage());
+        }
     }
 
     /**
