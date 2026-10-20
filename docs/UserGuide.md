@@ -8,6 +8,16 @@ shared recurring lessons. Its command box lets you work quickly from the keyboar
 shows separate people and shared-lesson results. Shared-lesson enrolment, dated attendance marking and guarded
 person/lesson deletion, dated attendance removal and attendance history are active.
 
+The people list is on the left, with Lesson or attendance results on the right. Enter commands in the
+full-width box below both lists and press Enter. The shared feedback/help area above the lists remains
+resizable; drag its divider to adjust reading space, and scroll either list independently.
+
+![PonHub Lesson board with separate people and Lesson results](images/LessonBoardShell.png)
+
+The Lesson board above uses fictitious Tutor, Parent and Student records and one empty-roster Lesson.
+Drag the divider between the two lists to adjust their widths. Long contact and Lesson values wrap;
+scroll within a list to reach details below its viewport. The command box remains below both lists.
+
 * Table of Contents
 {:toc}
 

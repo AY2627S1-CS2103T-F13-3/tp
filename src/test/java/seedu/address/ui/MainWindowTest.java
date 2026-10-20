@@ -31,6 +31,7 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -81,6 +82,38 @@ public class MainWindowTest {
     @BeforeAll
     public static void startToolkit() throws Exception {
         FxTestUtil.initializeToolkit();
+    }
+
+    @Test
+    public void layout_bottomDock_spansBothColumnsAndStaysOutsideResizableContent() throws Exception {
+        Region root = callOnFxThread(() -> (Region) createWindow().getPrimaryStage().getScene().getRoot());
+        for (int[] size : new int[][] {{450, 330}, {853, 420}, {1536, 800}, {1920, 1020}}) {
+            runOnFxThread(() -> {
+                layoutScene(root, size[0], size[1]);
+                SplitPane results = (SplitPane) root.lookup("#resultSplitPane");
+                SplitPane records = (SplitPane) root.lookup("#recordsSplitPane");
+                TextField command = (TextField) root.lookup("#commandTextField");
+                command.setText("unfinished draft");
+                command.selectRange(2, 7);
+                for (double position : new double[] {0.2, 0.8}) {
+                    results.setDividerPositions(position);
+                    records.setDividerPositions(position);
+                    root.layout();
+                    Bounds dock = root.lookup("#commandBoxPlaceholder").localToScene(
+                            root.lookup("#commandBoxPlaceholder").getBoundsInLocal());
+                    Bounds workspace = results.localToScene(results.getBoundsInLocal());
+                    assertTrue(dock.getMinY() >= workspace.getMaxY() - 1,
+                            "Command input must stay below the result and both record columns.");
+                    assertEquals(0, dock.getMinX(), 1);
+                    assertEquals(root.getWidth(), dock.getWidth(), 1);
+                    assertAccessible(command, root);
+                    assertAccessible(root.lookup("#ponhubWordmark"), root);
+                    assertEquals("unfinished draft", command.getText());
+                    assertEquals(2, command.getSelection().getStart());
+                    assertEquals(7, command.getSelection().getEnd());
+                }
+            });
+        }
     }
 
     @Test
