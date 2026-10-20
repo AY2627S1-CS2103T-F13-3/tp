@@ -34,17 +34,21 @@ Protected data SHA-256 before/after matches:
 - Search context and protected feedback were checked only at restored 2560x1440/100%, not throughout the required matrix.
 - Copying was confirmed at 1080/100%; not repeated at other scales.
 - One Lesson card does not demonstrate multi-Lesson final-card scrolling or populated roster/attendance/history views.
-- This evidence was published to PR #334's branch. No claim of full #319 closure, independent review, rendered-guide validation, #320 handoff or merge is made.
+- All currently submitted reviews are Codex-assisted `ultramanarm` reviews in `COMMENTED` state. This is non-author account coverage of the changed evidence; it is not an additional independent human/native acceptance run.
+- No new functional merge blocker was reported. The former 1280x720/150% evidence gap is resolved by the configuration follow-up below.
+- The #319 closure/readiness record and owner checklist remain unreconciled. Preserve the existing 19 October 2026, 22:00 SGT deadline; no rescheduling is proposed.
+- Keep #317's independent help checks and #321's redesign checks separate from shell merge readiness. The stable-shell SHA handoff to #320 follows accepted shell integration and does not wait for #320 to finish.
+- This evidence was published to PR #334's branch. No claim of full #319 closure, rendered-guide validation, #320 handoff or merge is made.
 
 ## Configuration follow-up — 20 October 2026
 
 The user later applied Windows custom scaling at 150% while the display was set to 1280x720. The supplied Settings screenshots show that configuration and a separate screenshot confirms restoration to 2560x1440/100% with extended displays. The exact 1280x720/150% setup was then exercised in PonHub as itemized above; this supersedes the earlier NOT RUN note. It does not close the remaining matrix and content-coverage items above or substitute for independent #317/#321 acceptance.
 
 
-## Documentation reconciliation
+## Documentation and independent review status
 
-The UG now includes an actual populated shell screenshot and explains both adjustable columns and the fixed bottom command dock. The DG describes startup focus and links this evidence. Existing Ui.png and its separate shared-roster caption are retained.
+The UG now includes an actual populated shell screenshot and explains both adjustable columns and the fixed bottom command dock. The DG describes startup focus and links this evidence. Existing Ui.png and its separate shared-roster caption are retained. The DG now refers to the 1280x720/150% follow-up and preserves the earlier NOT RUN note as history.
 
-Rendered-guide validation remains BLOCKED. The repository frozen Windows Gemfile adds wdm, absent from Gemfile.lock. A temporary Gemfile excluding only the Windows watcher got past that mismatch, but installing the remaining locked native extensions failed because MSYS2 is unavailable. Repository Gemfile/lockfile were not changed. No successful Jekyll build or rendered-guide acceptance is claimed.
+The earlier author-run Windows Jekyll attempt is historical: the frozen Windows Gemfile adds wdm, absent from Gemfile.lock; a temporary Gemfile excluding only the watcher got past that mismatch, but installing the remaining locked native extensions failed because MSYS2 was unavailable. Repository Gemfile/lockfile were not changed. This historical failure does not establish the current independent guide-build result.
 
-Prepared as Vincent with OpenAI Codex assistance. User supplied and executed the manual native checks; these are author checks, not independent non-author acceptance.
+Prepared as Vincent with OpenAI Codex assistance. User supplied and executed the manual native checks; these remain author-run native checks. The independent guide-build result should be cited separately from the historical Windows failure.

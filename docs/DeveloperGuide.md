@@ -146,8 +146,9 @@ The existing vertical result split retains its separate pane minima and session 
 After populating the window, startup explicitly focuses the command input. Result Display remains
 focusable for text selection and copying; menu/F1 help preserves an unfinished command draft.
 The [20 October shell validation record](https://github.com/gugrusaurus/tp/tree/draft-lesson-board-layout-319/validation/shell-319-20261020)
-contains user-executed native checks and screenshots for the tested build. It records the unavailable
-1280×720/150% configuration as NOT RUN, with supplementary 2560×1440/150% coverage kept separate.
+contains user-executed native checks and screenshots for the tested build. A later custom-scaling
+follow-up completed the 1280×720/150% checks; the earlier NOT RUN entry remains historical. The report
+records the remaining matrix and content-coverage limits separately.
 `addlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `lessons`, lesson search and
 `showlesson` and `history` are active through the command box.
 
