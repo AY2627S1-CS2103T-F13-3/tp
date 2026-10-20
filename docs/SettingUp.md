@@ -44,9 +44,9 @@ Set both the [project SDK and Gradle JVM](https://se-education.org/guides/tutori
 including the prescribed Azul JDK with JavaFX on macOS. The IDE can use a different JVM from your terminal.
 
 Prefer the Gradle `run` task for the same development launch as above. For a native **Application** run
-configuration, select `seedu.address.Main` and add `-ea` to **VM options**. Follow the
-[development assertions check](DeveloperGuide.html#development-assertions) for the configuration you actually use;
-remove its temporary probe before committing. The packaged user launch does not require `-ea`.
+configuration, select `seedu.address.Main` and add `-ea` to **VM options**. See the
+[development assertion configuration](DeveloperGuide.html#development-assertions) for the launch path you use.
+The packaged user launch does not require `-ea`.
 
 ## Before writing code
 
