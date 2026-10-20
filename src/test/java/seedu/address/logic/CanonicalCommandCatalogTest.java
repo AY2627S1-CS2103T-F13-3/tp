@@ -12,8 +12,9 @@ import org.junit.jupiter.api.Test;
 public class CanonicalCommandCatalogTest {
     @Test
     public void guidance_preservesHelpOrderAndProtectedAllowList() {
-        List<String> normal = List.of("add", "edit", "addlesson", "enrol", "unenrol", "mark", "unmark", "history",
-                "delete", "deletelesson", "list", "lessons", "showlesson", "search", "help", "exit");
+        List<String> normal = List.of("add", "edit", "addlesson", "editlesson", "enrol", "unenrol", "mark",
+                "unmark", "history", "delete", "deletelesson", "list", "lessons", "showlesson", "search",
+                "help", "exit");
         List<String> protectedWords = List.of("help", "list", "exit");
         assertEquals(normal, CanonicalCommandCatalog.getCommandWords(false));
         assertEquals(protectedWords, CanonicalCommandCatalog.getCommandWords(true));

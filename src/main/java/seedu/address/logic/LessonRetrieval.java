@@ -139,7 +139,13 @@ public final class LessonRetrieval {
             context.set("Lesson " + selectedDetailId + " is no longer available");
             return;
         }
-        detail.setAll(buildDetail(lesson.orElseThrow(), selectedDate));
+        Lesson selectedLesson = lesson.orElseThrow();
+        if (selectedDate.isPresent()
+                && !selectedLesson.getTimeSlot().getDay().matches(selectedDate.orElseThrow())) {
+            selectedDate = Optional.empty();
+            context.set("Lesson " + selectedDetailId + " · current roster and retained attendance");
+        }
+        detail.setAll(buildDetail(selectedLesson, selectedDate));
     }
 
     private LessonDetailView buildDetail(Lesson lesson, Optional<LocalDate> date) {

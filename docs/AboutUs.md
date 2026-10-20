@@ -64,7 +64,7 @@ We are a team based in the [School of Computing, National University of Singapor
 
 * Role: Developer (Lessons, Enrolment and Attendance)
 * Responsibilities:
-  * Implement shared lessons, enrolment/unenrolment, and attendance marking/unmarking.
+  * Implement shared lessons, Lesson editing, enrolment/unenrolment, and attendance marking/unmarking.
   * Maintain lesson/attendance feature documentation, domain diagrams, non-functional requirements and glossary.
   * Coordinate DevOps and packaged application verification.
 
