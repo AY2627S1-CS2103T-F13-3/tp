@@ -396,6 +396,11 @@
     -fx-text-fill: black;
 }
 
+.menu-item:disabled, .menu-item:disabled:focused {
+    -fx-opacity: 1;
+    -fx-background-color: transparent;
+}
+
 .menu-item:disabled .label {
     -fx-text-fill: #B8B8B8;
 }
