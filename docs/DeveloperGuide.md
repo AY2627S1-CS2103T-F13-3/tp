@@ -612,87 +612,125 @@ stable Lesson ID and the saved lesson is immediately available through the lifet
 
 #### Indexed lesson query projections (#80)
 
-`model.query.LessonQueries` implements `LessonQuerySource` over one supplied canonical root. Its immutable
-`LessonViewData` and `StudentViewData` entries resolve current Tutor/Student information by stable ID. Lessons alone
-own membership; attendance never supplies a roster or enrolment. Shared lessons appear once, including empty ones.
-The active session owns this component for its lifetime; `CanonicalLogicManager` delegates its six lesson
-retrieval methods without saving data or changing the people filter. The retained legacy adapter has no
-canonical query source. The active lesson commands and separate result panel share this same query component.
+`LessonQueries` derives read-only lessons, rosters and history from one canonical `PonHubData` root.
+A Lesson's roster is the only source of current membership; retained attendance never enrols a Student.
+The session shares one query component between lesson retrieval and people relationship search, so both
+paths resolve the same stable IDs and committed records. The UI owns neither a membership graph nor an index.
 
-`LessonsArgumentsParser` parses `lessons [si/STUDENT_INDEX]` as an optional current people-list `Index`.
-`LessonRetrieval` resolves that index once through the shared `PeopleView`, checks the Student role, and passes its
-stable ID to `LessonQueries`. It also applies `c/lesson` criteria to the separate filtered lesson result list. Both
-methods return the query layer's read-only observable results without changing the people view or operational data.
-`CanonicalPeopleSession` routes `lessons` and lesson-category search directly to this read-only boundary after
-parsing; people search validates and publishes only its people projection. Neither lesson route invokes the
-snapshot writer or copies the complete aggregate. Protected startup rejects both routes before parsing.
+##### Follow one indexed search
 
-`LessonRetrieval.getDisplayedLessons()` supplies a stable unmodifiable observable UI list, initially the catalogue.
-A successful command selects the catalogue, a stable-ID student subscription, or the filtered lesson subscription.
-The selector removes the old source listener before attaching the new one and copies only the selected `K` entries
-in `O(K)`. Committed publications/restore update that source and refresh the panel; staged or failed writes publish
-nothing. Changing the people filter cannot retarget a selected student. Invalid parsing, role/range or search
-criteria preserve both panels. Feedback counts come from the selected results, including zero. `Logic.lessonResultContextProperty()` exposes
-a read-only heading for the selected stable Student ID or normalized filters; it survives later people commands.
+Use the [UG worked example](UserGuide.html#worked-search-example) in a fresh separate store. Its setup creates
+Tutor `T1` (Mei Lim), Students `S1` (Alex Tan) and `S2` (Jamie Tan), and Parent `P1` (Pat Tan). Both Students'
+parent phone exactly matches Pat's own phone. The four Lessons, in creation order, are:
 
-![Canonical lesson retrieval and view ownership](images/LessonRetrieval.png)
+| Lesson | Schedule | Subject / room | Current roster |
+| --- | --- | --- | --- |
+| `L1` | Mon 1600–1730 | Math / R1 | Jamie (`S2`) |
+| `L2` | Tue 1600–1730 | Math / R1 | Alex (`S1`) |
+| `L3` | Mon 1800–1900 | Science / R1 | Alex (`S1`) |
+| `L4` | Mon 1900–2000 | Math / R2 | Empty |
 
-The source diagram is `docs/diagrams/LessonRetrieval.puml`. `MainWindow` binds once through
-`CanonicalLogicManager.getDisplayedLessons()`. The UI owns no membership graph, search index or operational records;
-`LessonCard` reads immutable `LessonView` entries. Creation order and stable lesson IDs avoid deduplication by name
-or schedule. The screenshot in the [UG](UserGuide.html#listing-and-searching-shared-lessons) uses the real window
-with disposable test data.
+All four are assigned to Mei. Consider
+`search c/lesson d/Mon st/1600 s/Math tu/mei rm/r1 sn/a`:
 
-| Query API | Implementation |
+1. **Choose candidates.** The exact weekday bucket is `[L1, L3, L4]`; the exact start-time bucket is
+   `[L1, L2]`. `LessonQueries` chooses the smaller supplied bucket, `[L1, L2]`, rather than scanning all
+   four Lessons. Exact end-time filters can also supply a bucket; text filters cannot.
+2. **Check every condition on each candidate.** `L2` fails Monday. `L1` matches Monday, 1600, Math, Mei
+   and R1, and its current roster contains Jamie, whose name contains `a` ignoring case. The result is
+   `[L1]`, in catalogue order, with feedback `Found 1 lesson(s).` The index only narrows candidates;
+   it never replaces the remaining predicates.
+3. **Do not borrow a match.** `search c/student n/Alex d/Mon s/Math` returns zero: Alex has Tuesday Math
+   and Monday Science, not Monday Math. `search c/parent sn/Alex d/Mon s/Math` also returns zero even
+   though Pat's other child Jamie has Monday Math. The named child and the enrolled Lesson must both match.
+4. **Keep results distinct.** After `list r/student` and `enrol 1 lid/L1`, both Students match `sn/a`
+   within `L1`. Repeating the lesson query still returns one `L1`, while the Alex and Pat queries now
+   each return one person. Multiple roster or context matches do not duplicate stable-ID results.
+
+The [criteria matrix](#supported-criteria) gives the accepted fields and validation rules. Exact-value
+buckets preserve substring semantics for `s/`, `tu/`, `rm/` and `sn/`; a prefix trie would not preserve
+arbitrary fragments such as `s/ath`. Without a supplied day or time, candidates are the whole catalogue.
+For bounded field lengths, searching costs `O(B + R_B + K)`: `B` candidates, their roster links `R_B` when
+`sn/` is supplied, and `K` results. This is not a constant-time text search or a mutation/persistence bound.
+
+##### Select a view without changing another panel
+
+[![Canonical lesson retrieval and view ownership](images/LessonRetrieval.png)](images/LessonRetrieval.png)
+
+[`LessonRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/LessonRetrieval.java)
+keeps one unmodifiable observable displayed list. `MainWindow` binds it once to the Lesson panel through
+`CanonicalLogicManager`; commands switch its source and detach the previous source listener. The source
+is the catalogue, a Student's current lessons, the filtered lesson list, or a single Lesson detail.
+The heading identifies the selected Student ID, Lesson ID/date or normalized filters independently of
+later people commands. This diagram focuses on the Lesson path; history uses the separate selector described below.
+The source is `docs/diagrams/LessonRetrieval.puml`.
+The [UG panel illustration](UserGuide.html#listing-and-searching-shared-lessons) reuses the integrated
+navigation capture rather than presenting this running dataset as a screenshot.
+
+| Path | Important difference |
 | --- | --- |
-| `findLessonById(id)` | Hash lookup in the complete catalogue, independent of the active filter. |
-| `getLessonList()` | Stable, unmodifiable observable catalogue in source creation order. |
-| `getStudentLessons(id)` | Reverse index derived from Lesson-owned roster IDs, in catalogue order. |
-| `getLessonRoster(id)` | Current Student projections in global people creation order. |
-| `getTutorSchedule(id)` | Assigned lessons by Monday-first weekday, start time, then numeric Lesson ID. |
-| `getFilteredLessonList()` | Separate observable lesson results; leaves person positions unchanged. |
-| `searchLessons(criteria)` | Immutable result snapshot; does not change the active filter or stored data. |
-| `getLessonFilter()` / `setLessonFilter(criteria)` | Model view state only; a category-only lesson filter restores all results. Invalid criteria preserve the previous filter/results. |
+| People search | Replaces the people criteria and context; evaluates own fields first, then the same-child/same-Lesson relationships. It does not change the lesson filter or selected lesson/history source. |
+| `lessons si/INDEX` | Resolves the current visible person once, requires a Student, then subscribes by stable Student ID. Later people filtering cannot retarget that subscription. |
+| Lesson search | Searches the complete catalogue, including empty rosters unless `sn/` is supplied. It changes only the lesson filter and selected lesson source. |
+| `showlesson lid/ID [d/DATE]` | Looks up the complete catalogue by stable Lesson ID, independently of filters. A dated detail separates unrecorded current members from present/absent records and retained former-member attendance. |
+| `history INDEX [lid/ID]` | Resolves a visible Student once and selects a separate history list, newest date first then Lesson ID. It includes former enrolments and switches the right panel to history. Successful lesson retrieval switches that panel back. |
 
-Construction builds people/lesson ID maps, Student-to-Lesson and Tutor-to-Lesson indexes, ordered roster projections,
-and exact weekday/start/end buckets. A search selects the smallest supplied exact-value bucket, then applies every
-criterion to each candidate Lesson. `s/`, `tu/`, `rm/` and `sn/` retain case-insensitive substring matching, including
-short fragments; `tu/` searches tutor names. `sn/` examines the same lesson's current roster and excludes empty
-rosters. Matching two students still emits one Lesson. There is no cross-lesson combination of day, subject, room,
-tutor or student conditions. All seven lesson prefixes follow the existing [criteria matrix](#supported-criteria).
-The parser rejects unsupported, incompatible, blank, repeated and malformed values before query execution.
-An empty search result is valid. Active Student, Parent and Tutor relationship search reuses these indexes
-through `PersonRelationshipSearch`.
+Read-only routes validate before changing selection and never save or stage a copy of the aggregate.
+An invalid role, range, date or filter leaves the preceding panels intact. Student selectors always come
+from the current people list; a roster row, history row or stable-ID suffix supplies no person position.
 
-All derived indexes rebuild on `PonHubData.stateProperty()` publication, after successful save/commit or restore,
-never per query. Already returned observable lists retain object identity while their entries refresh. This covers
-lesson addition/deletion, current membership edits, person detail edits, attendance changes and rollback. If a
-subscribed record is removed, its held list becomes empty; a new list query for that missing ID is rejected. Restoring
-the record repopulates the same held list. Previously returned projection objects and `searchLessons` snapshots
-remain immutable historical snapshots. All operations run on the single model/JavaFX application thread; UI selection
-must follow stable IDs when immutable entries are replaced. The runtime adapter owns one query component for its lifetime.
+##### Refresh only after publication
 
-Each subscription refresh snapshots its existing entries before firing list-change callbacks. A read-only callback
-may request another Student, Tutor or roster list; that new list starts from the complete current indexes and stays
-subscribed for later publications. It cannot interrupt the current refresh by changing the traversed map.
+Keep the lesson query above selected after enrolling Alex in `L1`, then run `editlesson lid/L1 s/English`.
+The sequence separates the staged candidate from the live root; the user sees no intermediate mode.
 
-For `P` people, `L` lessons and `R` roster links, query-index construction is `O(P + L + R + L log L)` in the worst case
-(the final term sorts tutor schedules). Derived storage is `O(P + L + R + C)`, where `C` counts subscribed IDs,
-including removed records whose held lists must survive restore. Stable-ID lookup and returning an already
-subscribed list take expected `O(1)`; first subscription
-copies its `K` entries in `O(K)`. A search checks `B` candidates from the smallest exact bucket, plus their roster
-links when `sn/` is supplied: `O(B + R_B + K)` for bounded field lengths and `K` returned results. Without an exact
-filter, `B = L`; text-only substring searches still scan the catalogue. Reading/rendering `K` results costs `O(K)`.
-These bounds describe queries, excluding the existing whole-snapshot validation and persistence work on mutations.
-A prefix trie would change substring behaviour; there is no constant-time guarantee for arbitrary text searches.
-Refreshing subscription snapshots also takes `O(C)` time and temporary space, in addition to copying result entries.
+[![A saved Lesson edit refreshes the held query result](images/LessonQueryRefresh.png)](images/LessonQueryRefresh.png)
 
-Regression tests compare indexed results with an independent raw-record scan for 7,500 seeded filter combinations,
-including membership changes and restore. They cover missing/wrong-role/null IDs, duplicate names, shared/empty
-lessons, optional contacts and leading zeros, case/Unicode/text fragments, invalid/repeated prefixes, time boundaries,
-same-lesson counterexamples, immutable results, held-list refresh, retained attendance and failed-save isolation.
-Listener regressions cover adding populated and empty Student/Tutor/roster subscriptions during refresh, absence
-of JavaFX callback errors, consistent held roster/filter results and continued updates after subsequent publication.
+The lifelines name the executor, transaction, snapshot writer, live `PonHubData` root, `LessonQueries`
+and `LessonRetrieval` selector. Select either diagram to view it at full size.
+
+| Boundary | Candidate / saved state | Live queries and displayed result |
+| --- | --- | --- |
+| Before the edit | Saved `L1` is Math | Active query contains `[L1]`; a held Student lesson list contains Math `L1`. |
+| Validate the staged edit | Candidate `L1` is English; saved file still has Math | Still Math and `[L1]`; the candidate is a different root. |
+| Save fails or validation rejects | Candidate is discarded; file recovery follows the storage contract | Still Math and `[L1]`, with the same filter, selected source and list objects. No success is reported. |
+| Save succeeds, then commit publishes | Saved and live `L1` are English with the same ID, roster and attendance | Indexes rebuild; the active Math query becomes empty and the held Student list now contains English `L1`. The displayed list object remains the same. |
+
+[`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/CanonicalCommandExecutor.java)
+saves changed snapshots before `CanonicalTransaction.commit()` publishes to the live root. `LessonQueries`
+listens to that root's `stateProperty()`, completes its derived indexes, then refreshes the catalogue,
+subscriptions and active filter. Retained observable lists keep their identity across committed changes
+and restore. Their immutable entries are replaced; a previously returned `searchLessons(...)` snapshot
+still describes the old Math result. A held subscription to a deleted record becomes empty and can
+repopulate on restore; requesting a new subscription for a missing ID is rejected.
+
+Lesson details rebuild the selected stable-ID snapshot on publication. If an edited weekday no longer
+matches the selected detail date, the detail drops that date and shows the undated Lesson. History retains
+its selected Student through people-list changes, but deleting that Student or its selected Lesson clears
+the history selection. Unenrolment only changes current-membership context; it does not erase history.
+These are source-level contracts; the separate [post-edit acceptance task (#268)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/268)
+and final packaged/native checks retain their own evidence requirements.
+
+##### Find exact contracts and regression checks
+
+Use [`LessonQuerySource`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonQuerySource.java)
+for retrieval signatures, ordering and missing-ID contracts, and
+[`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonQueries.java)
+for indexes, immutable snapshots, active filters and subscription refresh. Stable-ID maps, reverse
+membership indexes and day/time buckets are derived once per publication, not per read. Tutor schedules
+sort by weekday/start/ID; catalogue results retain creation order. Callbacks may request another subscription
+because refresh snapshots the subscription entries before notifying listeners. All access runs on the
+single model/JavaFX application thread. Construction/refresh includes index rebuilding, schedule sorting
+and copying subscribed results; the query cost above excludes that work.
+
+[`PersonRelationshipSearch`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/search/PersonRelationshipSearch.java)
+shows the category-specific conjunction, parent-phone linking and distinct context rules.
+[`LessonQueriesTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/seedu/address/model/query/LessonQueriesTest.java)
+compares indexed results with a raw-record scan and covers held lists/restore;
+[`CanonicalLessonRetrievalIntegrationTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/seedu/address/logic/CanonicalLessonRetrievalIntegrationTest.java)
+checks routing, independent views and failed-save isolation. The editable refresh sequence is
+`docs/diagrams/LessonQueryRefresh.puml`. These source links carry the detailed inventories rather than
+repeating them here.
 
 ### Storage component
 
@@ -1516,7 +1554,7 @@ Person selectors in these target use cases are positive indices from the current
 * 4a. A history Student index is invalid or selects another role, or the optional Lesson does not exist: PonHub reports the error without changing data, the people list or the previous result. The detail view also rejects an invalid date.
 
 **Query design:** #80 supplies the read-only catalogue, stable-ID lookup, current roster/student lessons and indexed
-lesson filtering through the [prepared query backend](#indexed-lesson-query-projections-80). Current membership
+lesson filtering through the [indexed query backend](#indexed-lesson-query-projections-80). Current membership
 comes only from Lesson-owned IDs. Own-contact and relationship people search, catalogue/student lesson listing,
 all seven lesson search fields, detailed lesson roster/attendance views and student attendance history are active.
 A student

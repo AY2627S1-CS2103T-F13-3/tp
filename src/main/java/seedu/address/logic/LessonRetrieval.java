@@ -33,7 +33,7 @@ import seedu.address.model.search.SearchCriteria;
 
 /**
  * Selects live lesson results from the canonical query source without changing the people view.
- * The UI keeps one read-only list while commands switch its source between catalogue, student and search results.
+ * The UI keeps one read-only list while commands select catalogue, student, search or lesson-detail results.
  */
 public final class LessonRetrieval {
     private final LessonQueries queries;
@@ -70,7 +70,8 @@ public final class LessonRetrieval {
     }
 
     /**
-     * Identifies the selected catalogue, stable student or normalized search filters independently of people filtering.
+     * Identifies the catalogue, stable student, search filters or selected lesson/date.
+     * People filtering does not change this context.
      */
     public ReadOnlyStringProperty contextProperty() {
         return context.getReadOnlyProperty();

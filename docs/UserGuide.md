@@ -14,11 +14,8 @@ resizable; drag its divider to adjust reading space, and scroll either list inde
 The optional **Lessons**, **Student lessons** and **Attendance** buttons above the results provide shortcuts
 to the same commands; see [moving between results](#moving-between-results).
 
-![PonHub Lesson board with optional navigation and separate people and Lesson results](images/LessonBoardNavigation.png)
-
-The Lesson board above uses fictitious records, with a filtered Student list beside the full Lesson catalogue.
-Drag the divider between the two lists to adjust their widths. Long contact and Lesson values wrap;
-scroll within a list to reach details below its viewport. The command box remains below both lists.
+The [Lesson board example](#listing-and-searching-shared-lessons) shows a filtered people list beside
+independent Lesson results.
 
 * Table of Contents
 {:toc}
@@ -275,67 +272,23 @@ positions and IDs rather than this example's numbers.
 
 ### Searching people: `search`
 
-**Formats:**
-
-* `search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]`
-* `search c/parent [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]`
-* `search c/tutor [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [rm/ROOM]`
-
-Category values ignore case. Supply each lowercase prefix once with a nonblank value. All supplied filters must
-match the same person. Name, email and address use case-insensitive text fragments; name/address queries trim and
-collapse repeated spaces. Levels and complete 3–15 digit phones match exactly, including leading zeros.
-Missing optional contacts do not match a supplied filter. Category-only searches include unlinked people.
-
-After adding the Quick start records, `search c/student n/alex l/s2 pp/91234567` reports `Found 1 student(s).`
-and displays Alex at position 1. `search c/tutor n/mei e/@example` displays Mei; `search c/parent p/91234567`
-displays Pat. Results retain creation order, show each stable ID once, and renumber current positions from 1.
-`search c/student n/No Match` is a successful empty view with feedback `Found 0 student(s).`
-
-Search reads the complete people catalogue, replacing the previous role/search filter. `list` or `list r/ROLE`
-clears search criteria. Use the new displayed positions for subsequent person commands. Search/help do not save
-operational data; failed commands preserve the previous view. A successful person addition resets to all roles.
-
-Student, Parent and Tutor relationship filters are active according to the category matrix.
-All seven lesson fields remain available for `c/lesson`. Category-incompatible fields, unknown/repeated/blank prefixes
-and invalid values fail validation.
-The [search matrix](#6-searching-people-and-shared-lessons) describes the complete target.
-
-For example, `search c/student n/Alex d/Mon s/Math tu/mei` requires Alex's own name and **one currently enrolled
-Monday Math lesson** taught by a matching tutor. Math on Tuesday and Science on Monday cannot combine into a match.
-`tu/` matches the tutor's name, and `st/`/`et/` each match exact HHMM times. All supplied lesson conditions must hold
-on that same lesson. A former member's attendance does not imply current enrolment.
-
-Each student appears once by stable ID, with matching lesson IDs, subjects, schedules, tutors and rooms beneath
-their own details. Several matching lessons add context lines, never duplicate student cards. Enrolment changes
-refresh both matches and context; failed saves preserve them. Own-field-only searches still include students with
-no lessons and show no relationship context. `list` clears both the criteria and its matching context.
+Enter `search c/student`, `search c/parent` or `search c/tutor`, followed by any filters needed.
+For example, `search c/student n/alex l/s2 pp/91234567` finds students whose own details match all three values.
+See [Searching people and shared lessons](#6-searching-people-and-shared-lessons) for the complete filter matrix,
+matching rules and a reusable example. Results replace the people list, so check its new positions before
+issuing a person command.
 
 ### Searching parents through their children
 
-A Parent is linked to every Student whose stored parent phone exactly equals that Parent's own phone, including
-leading zeros. Names, email and addresses never establish this link, and a separate Parent record is optional.
-`search c/parent sn/Alex d/Mon s/Math` requires **one linked child named Alex and one Monday Math lesson in which
-that same child is currently enrolled**. Alex in Science and Jamie in Math cannot combine into a match; nor can
-Math on Tuesday and Science on Monday. All own-contact conditions still apply to the Parent.
-
-With only `sn/`, a matching child need not have lessons. With only Parent own fields, unlinked Parents remain
-eligible. Each stable Parent ID appears once with matching Student IDs/names and, when lesson filters are supplied,
-matching lesson details beneath the card. Different Parent records sharing an exact number may legitimately link
-to the same children. Empty search results have `Found 0 parent(s).` feedback. Student operations still require a
-Student in the **current people list**: run `list r/student` before enrol/unenrol, then repeat the Parent search.
+Use `search c/parent` with `sn/` or Lesson filters to find Parents through their linked children.
+The [relationship rules](#relationship-search-rules) explain exact parent-phone links and why one child's
+name cannot combine with another child's Lesson.
 
 ### Searching tutors through assigned lessons
 
-`search c/tutor n/mei sn/Alex d/Mon s/Math rm/r1` requires one lesson assigned to that Tutor's stable ID, matching
-all supplied lesson conditions, and a matching Student in that same lesson's current roster. Another assigned
-lesson cannot contribute its day, subject or roster. `n/` filters the Tutor's own name; `tu/` is rejected in this
-category. Tutors with the same name remain separate results identified by stable IDs.
-
-Without `sn/`, empty assigned lessons can match; own-field-only queries also include Tutors without lessons.
-Each Tutor appears once with matching lesson details and, when `sn/` is supplied, matching Student context.
-Enrolment changes refresh current roster matching; retained attendance does not make a former member match.
-To change a student's membership, first display Students and use their current people-list positions, then
-repeat the Tutor query. Listing clears the relationship criteria and context.
+Use `search c/tutor` with `sn/` or Lesson filters to find Tutors through their assigned Lessons.
+The [relationship rules](#relationship-search-rules) explain stable Tutor assignments and current rosters;
+use `n/` for the Tutor's own name in this category.
 
 ### Listing and searching shared lessons
 
@@ -358,22 +311,22 @@ out-of-range position, repeated `si/`, or a position occupied by a tutor/parent 
 filter later does not change which student's lessons are being shown. Attendance retained after unenrolment
 does not make a lesson part of that student's current enrolments; use `history` to inspect retained records.
 
-Lesson searches always read the complete catalogue. All supplied filters must match **one lesson**. `sn/`
-checks its current roster; without `sn/`, empty lessons can match. Text filters match fragments ignoring case.
-`tu/mei` means a tutor name, not Tutor ID `T1`. `d/` uses Mon–Sun ignoring case; `st/` and `et/` each match an
-exact four-digit 24-hour time. Either time may be supplied alone; together, end must be later than start.
-The [search matrix](#6-searching-people-and-shared-lessons) describes each field.
+For Lesson search, use `search c/lesson` with the filters in the
+[search matrix](#6-searching-people-and-shared-lessons). A search starts from the complete catalogue rather
+than narrowing the previously displayed results. `lessons` reports `Showing N lesson(s).`; Lesson search
+reports `Found N lesson(s).`. An empty result is valid and shows `No lessons to display.`.
 
-Examples, after creating the Math lesson above:
+![PonHub Lesson board with optional navigation and separate people and Lesson results](images/LessonBoardNavigation.png)
 
-* `search c/lesson tu/MEI d/mon s/ath` finds it even with no students enrolled.
-* `search c/lesson st/1600 et/1730 rm/r1` matches its exact times and room fragment.
-* `search c/lesson sn/Alex d/Mon s/Math` finds it only when Alex is currently enrolled.
-* `search c/lesson sn/No Match` succeeds with `Found 0 lesson(s).` and `No lessons to display.`
+This Lesson board example uses fictitious records to show a filtered Student list beside the full
+Lesson catalogue. Its records are separate from the [worked search example](#worked-search-example) below.
+The heading above each panel identifies its active results. Drag the divider to adjust their widths;
+long values wrap, and either list scrolls independently. The command box remains below both lists.
 
-`lessons` reports `Showing N lesson(s).`; lesson search reports `Found N lesson(s).`. These commands preserve
-people filters, order, selection and command positions, and never save operational data. Invalid commands leave
-both views intact. Committed changes refresh the selected results; a failed save leaves the previous cards intact.
+Lesson retrieval preserves people filters, order, selection and command positions, and never saves operational
+data. A people search likewise preserves the selected Lesson or history results. Committed changes refresh
+both panels as needed; invalid requests and failed saves leave the previous results intact. See
+[Lesson details](#lesson-details) and [attendance history](#attendance-history) for the other right-panel views.
 
 ### Moving between results
 
@@ -560,12 +513,10 @@ deletion or failed save preserves the saved file, schedule, allocation counter a
 Use [`editlesson`](#editing-a-shared-lesson-editlesson) to change a shared Lesson's recurring details while
 preserving its stable ID, roster and retained attendance. Cancelling one occurrence remains future scope.
 
-**Catalogue (active):** `lessons [si/STUDENT_INDEX]`.
+For catalogue and current Student enrolments, see
+[Listing and searching shared lessons](#listing-and-searching-shared-lessons).
 
-Enter `lessons` to view each shared lesson once, including lessons with empty rosters. To view a student's currently enrolled lessons, first run `list r/student` and check their current position. If the intended student appears at position 1, enter `lessons si/1`. Catalogue results preserve the current people list and its indices.
-
-The catalogue and student lesson results use lesson creation order. Student lessons show current enrolments;
-past attendance alone does not add a lesson to that list. Use `history` to inspect attendance retained after unenrolment.
+<a id="lesson-details"></a>
 
 **Details (active):** `showlesson lid/LESSON_ID [d/YYYY-MM-DD]`.
 
@@ -612,9 +563,10 @@ failure leave the aggregate, saved file and active views unchanged.
 
 **Format:** `search c/CATEGORY [FILTER_PREFIX/VALUE]...`
 
-Use `student`, `parent`, `tutor` or `lesson`; category values are case-insensitive. A category-only search imposes no filters. For example, `search c/lesson` shows each shared lesson once, including empty rosters.
-
-The full target filter matrix is below. Own-contact people search and **all seven Lesson-column fields are active**. Student, Parent and Tutor relationship fields are active according to this matrix. Check `help search` for the active formats.
+Use `student`, `parent`, `tutor` or `lesson`; category values ignore case. Type command names and prefixes in
+lowercase, supply each prefix once, and give every supplied prefix a nonblank value. Prefixes may appear in
+any order. A category-only search imposes no filters: `search c/student` includes students without Lessons,
+and `search c/lesson` includes Lessons with empty rosters. The complete active filter matrix is below.
 
 | Prefix | Field | Student | Parent | Tutor | Lesson |
 | --- | --- | --- | --- | --- | --- |
@@ -632,32 +584,113 @@ The full target filter matrix is below. Own-contact people search and **all seve
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes |
 | `rm/` | Lesson room | Yes | Yes | Yes | Yes |
 
-Name, email, address, associated student name, subject, tutor name and room filters match case-insensitive text fragments. For example, `n/al` can match Sally Tan and `e/@example` can match `mei@example.com`. `tu/mei` searches tutor names, not tutor IDs; use `n/mei` when the result category is `tutor`.
+Name, email, address, associated Student name, subject, Tutor name and room match case-insensitive text
+fragments. Text queries trim surrounding whitespace and collapse repeated spaces. For example, `n/al` can
+match Sally Tan and `e/@example` can match `mei@example.com`. `tu/mei` searches Tutor names, not IDs;
+use `n/mei` for the Tutor's own name when the result category is `tutor`.
 
-Phone and parent-phone filters match the complete 3–15-digit number, including leading zeros. Level and weekday filters match the complete allowed value, ignoring case. Use `P1`–`P6`, `S1`–`S5`, `JC1` or `JC2` for `l/`, and `Mon` through `Sun` for `d/`. `st/` and `et/` each match an exact four-digit HHMM time. Either time filter may be used alone; when both are supplied, end must be later than start on the same day.
+Phone and parent-phone filters match the complete 3–15-digit number, including leading zeros. Level and
+weekday filters match a complete allowed value, ignoring case: `P1`–`P6`, `S1`–`S5`, `JC1` or `JC2` for
+`l/`, and `Mon` through `Sun` for `d/`. Start and end each match an exact four-digit, 24-hour `HHMM` time.
+Either time may be supplied alone; together, end must be later than start on the same day. Missing optional
+contacts do not match a supplied filter. Unsupported, category-incompatible, blank or repeated prefixes,
+invalid values, slashes and line breaks in values are rejected before replacing either result panel.
 
-All supplied filters must match together:
+<a id="relationship-search-rules"></a>
 
-* **Student:** Own-field filters apply to that student. All lesson filters must match one lesson in which the student is currently enrolled. Math on Tuesday and Science on Monday do not satisfy `s/Math d/Mon`.
-* **Parent:** Own-field filters apply to the parent. Linked students have a parent phone exactly equal to that parent's own phone. One linked student must match `sn/`, if supplied; all lesson filters must match one lesson of that same student. Different siblings or lessons cannot contribute separate parts of a match.
-* **Tutor:** Own-field filters apply to the tutor. All lesson filters must match one lesson assigned to that tutor; `sn/`, if supplied, must match a student enrolled in that same lesson. Different assigned lessons cannot contribute separate parts of a match.
-* **Lesson:** All filters apply to one shared lesson. `sn/`, if supplied, matches a student in its current roster. Empty lessons remain discoverable when no `sn/` filter is supplied.
+#### Matching people through relationships
 
-People with no matching relationship still qualify for own-field-only searches. Each matching person or lesson appears once, distinguished by stable ID. An absent optional contact field does not match a supplied filter. Unsupported, category-incompatible, blank and repeated filters are rejected, as are slashes or line breaks in values. A valid search with no matches reports an empty result.
+All supplied filters must hold together. Own-field filters (`n/`, `l/`, `p/`, `pp/`, `e/`, `a/`, where supported)
+apply to the result person. Relationship filters follow these rules:
 
-Lesson results retain catalogue creation order. For example, `search c/lesson d/Mon s/Math sn/al` requires one Monday
-Math lesson with a currently enrolled student whose name contains `al`. A former member's attendance does not satisfy
-`sn/`, and several matching students in one lesson still produce one result. After a successful change or rollback,
-displayed lesson and roster results must reflect the resulting current data.
+* **Student:** All Lesson conditions must match **one currently enrolled Lesson**. Math on Tuesday and Science
+  on Monday cannot satisfy `s/Math d/Mon` together.
+* **Parent:** A child is linked when the child's stored parent phone exactly equals the Parent's own phone,
+  including leading zeros. Names, emails and addresses do not establish a link; a separate Parent record is
+  optional for a Student. **One linked child** must match `sn/`, if supplied, and **one Lesson of that same
+  child** must match all Lesson conditions. Alex in Science and Jamie in Math cannot satisfy
+  `sn/Alex s/Math`; two different Lessons cannot contribute separate day and subject matches either.
+* **Tutor:** All Lesson conditions must match **one Lesson assigned to that Tutor's stable ID**. If supplied,
+  `sn/` must match a Student in that same Lesson's current roster. Another assigned Lesson cannot supply the
+  Student, day or subject. Tutors with the same name remain separate people; `tu/` is rejected in this category.
+* **Lesson:** Every condition must match **one shared Lesson**. If supplied, `sn/` checks that Lesson's current
+  roster. A former member's retained attendance never satisfies current-roster matching.
 
-Examples:
+With only own-field filters, people without relationships remain eligible and have no matching relationship
+context. With only `sn/`, a Parent's matching child need not have a Lesson. Without `sn/`, an empty assigned
+Lesson can match a Tutor or Lesson search. Different Parent records with the same exact phone can link to the
+same children.
 
-* `search c/student n/Alex l/S2 pp/91234567`
-* `search c/parent sn/Jamie d/Mon s/Math`
-* `search c/tutor n/mei sn/Alex rm/R1`
-* `search c/lesson tu/mei d/Mon st/1600 s/Math`
+Each matching stable person or Lesson ID appears once, in creation order. People cards include the matching
+Student and Lesson context relevant to the query; several matching Lessons add context rather than duplicate
+cards. Likewise, several matching Students in one Lesson produce one Lesson result. A valid search with no
+matches succeeds with `Found 0 student(s).`, `Found 0 parent(s).`, `Found 0 tutor(s).` or `Found 0 lesson(s).`.
 
-People searches replace the displayed people list and number its results from 1. Use those current positions for subsequent person commands. Lesson searches display separate results and preserve the current people list, its filter and its indices; lesson results do not supply person command indices.
+#### Result panels and refresh
+
+Each search starts from the complete relevant catalogue. People searches replace the people list and number
+its results from 1; `list` or `list r/ROLE` clears their criteria and relationship context. A successful person
+addition also restores all roles. Recheck the current positions before a person command, especially after a
+change removes a match. To enrol a Student while viewing Parents or Tutors, display Students first, perform
+the command using the current position, then repeat the relationship search.
+
+Lesson searches use the independent right panel and preserve the people list, its filter, selection and
+positions. People searches preserve the selected Lesson, roster or history view. `lessons si/STUDENT_INDEX`
+and `history STUDENT_INDEX` resolve the current people-list position once, then keep the selected stable
+Student ID even if the people filter changes. Lesson cards, roster rows, history rows and stable ID suffixes
+do not supply person-command positions. See [Selecting people and lessons](#selecting-people-and-lessons).
+
+Searches and other retrieval commands do not save operational data. A committed edit, membership change or
+attendance change refreshes the affected active results and relationship context. Until saving succeeds,
+prepared changes are not displayed; invalid commands and failed saves preserve the previous data, criteria
+and cards. A retained history record never recreates current membership.
+
+#### Worked search example
+
+Use a fresh separate store so these positions and IDs are reproducible. Launch
+`java -jar FILENAME.jar --data=data/search-example.json` with a previously unused path, then enter:
+
+```text
+add r/tutor n/Mei Lim p/92345678 e/mei@example.com
+add r/student n/Alex Tan l/S2 pp/91234567
+add r/student n/Jamie Tan l/P1 pp/91234567
+add r/parent n/Pat Tan p/91234567
+addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1
+addlesson d/Tue st/1600 et/1730 s/Math tu/Mei Lim rm/R1
+addlesson d/Mon st/1800 et/1900 s/Science tu/Mei Lim rm/R1
+addlesson d/Mon st/1900 et/2000 s/Math tu/Mei Lim rm/R2
+list r/student
+enrol 2 lid/L1
+enrol 1 lid/L2
+enrol 1 lid/L3
+```
+
+The example has Mei (`T1`), Alex (`S1`), Jamie (`S2`) and Pat (`P1`). Alex and Jamie share Pat's exact parent
+phone. Lessons are `L1` Monday Math with Jamie, `L2` Tuesday Math with Alex, `L3` Monday Science with Alex,
+and `L4` Monday Math with an empty roster. All four are assigned to Mei. The times do not overlap.
+
+| Command | Expected result before further changes |
+| --- | --- |
+| `search c/student n/alex l/s2 pp/91234567` | Alex (`S1`) at people position 1. |
+| `search c/student d/Mon s/Math` | Jamie (`S2`) once; Alex's Tuesday Math and Monday Science cannot combine. |
+| `search c/parent sn/Alex d/Mon s/Math` | No Parents; Jamie's Monday Math cannot satisfy Alex's Lesson conditions. |
+| `search c/tutor n/mei sn/Alex d/Mon s/Math` | No Tutors; Mei's different assigned Lessons cannot combine. |
+| `search c/lesson d/Mon s/Math` | `L1`, then empty-roster `L4`. |
+| `search c/lesson d/Mon st/1600 s/Math tu/mei rm/r1 sn/a` | `L1` once: Jamie matches `sn/a`; `L2` has the wrong weekday. |
+
+Now run `list r/student`, then `enrol 1 lid/L1`. Alex joins Jamie in `L1`; repeating the Parent and Tutor queries
+now finds Pat and Mei respectively. The final Lesson query still displays `L1` only once when both Students match
+`sn/a`. Run `search c/student d/Mon s/Math` to show both Students while keeping that Lesson query on the right.
+A successful `editlesson lid/L1 s/English` immediately empties both active searches. A successful
+`editlesson lid/L1 s/Math` restores them. If saving either edit fails, its proposed subject and result changes
+remain invisible; the previous subject and both result panels remain intact.
+
+To compare current membership with retained history in the same example, run `list r/student`,
+`mark 1 lid/L1 d/2026-10-05 s/present`, `history 1 lid/L1`, then `unenrol 1 lid/L1`. Alex's open history retains
+the recorded presence and refreshes its label to former member. `lessons si/1` then shows only `L2` and `L3`;
+`search c/lesson sn/Alex d/Mon s/Math` returns no Lessons. `showlesson lid/L1 d/2026-10-05` shows Jamie's
+current-roster status as unrecorded and Alex's retained presence separately. See [Lesson details](#lesson-details)
+and [attendance history](#attendance-history) for their complete behavior.
 
 ### 7. Recording attendance and retrieving history
 
@@ -687,6 +720,8 @@ other Students' and dates' attendance.
 Existing historical attendance can be corrected with `mark` or removed with `unmark` after unenrolment. If the
 selected record does not exist, PonHub reports that nothing changed and does not save. A successful removal makes that
 occurrence unrecorded, not absent. Success, no-op and failure preserve the current people filter, order and command positions.
+
+<a id="attendance-history"></a>
 
 **History (active):** `history STUDENT_INDEX [lid/LESSON_ID]`.
 
