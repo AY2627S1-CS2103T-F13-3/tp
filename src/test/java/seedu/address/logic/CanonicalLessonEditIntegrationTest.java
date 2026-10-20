@@ -22,6 +22,7 @@ import javafx.collections.ListChangeListener;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.PonHubDataState;
+import seedu.address.model.attendance.AttendanceStatus;
 import seedu.address.model.lesson.Lesson;
 import seedu.address.model.lesson.LessonDay;
 import seedu.address.model.lesson.LessonId;
@@ -29,6 +30,7 @@ import seedu.address.model.lesson.LessonTime;
 import seedu.address.model.lesson.Room;
 import seedu.address.model.lesson.Subject;
 import seedu.address.model.person.PersonId;
+import seedu.address.model.query.AttendanceHistoryEntry;
 import seedu.address.model.query.LessonDetailView;
 import seedu.address.model.query.LessonView;
 import seedu.address.storage.JsonPonHubDataStorage;
@@ -68,6 +70,73 @@ public class CanonicalLessonEditIntegrationTest {
         assertEquals(before.people().getLastAllocatedSequences(), after.people().getLastAllocatedSequences());
         assertEquals(before.lastAllocatedLessonSequence(), after.lastAllocatedLessonSequence());
         assertEquals(after, new CanonicalPeopleSession(session.getDataFilePath()).getDataSnapshot());
+    }
+
+    @Test
+    public void execute_emptyAndPopulatedLessons_refreshesRosterDetailAndHistoryResults() throws Exception {
+        CanonicalPeopleSession session = baseline("result-views.json");
+        session.execute("addlesson d/Wed st/1400 et/1500 s/English tu/Tutor One rm/R4");
+        session.execute("lessons");
+        var displayedLessons = session.getDisplayedLessons();
+
+        LessonView emptyBefore = findDisplayedLesson(displayedLessons, "L4");
+        assertEquals(0, emptyBefore.getRosterSize());
+        assertEquals("Edited lesson: L4.", session.execute(
+                "editlesson lid/L4 st/1430 et/1530 s/Physics rm/R5").getFeedbackToUser());
+        LessonView emptyAfter = findDisplayedLesson(displayedLessons, "L4");
+        assertSame(displayedLessons, session.getDisplayedLessons());
+        assertEquals(new LessonId("L4"), emptyAfter.getLessonId());
+        assertEquals(0, emptyAfter.getRosterSize());
+        assertEquals(new Subject("Physics"), emptyAfter.getSubject());
+        assertEquals(new Room("R5"), emptyAfter.getRoom());
+        assertEquals(new LessonTime("1430"), emptyAfter.getTimeSlot().getStartTime());
+        assertEquals(new LessonTime("1530"), emptyAfter.getTimeSlot().getEndTime());
+
+        session.execute("mark 1 lid/L1 d/2026-10-05 s/present");
+        session.execute("enrol 2 lid/L1");
+        session.execute("mark 2 lid/L1 d/2026-10-05 s/absent");
+        session.execute("unenrol 2 lid/L1");
+        PonHubDataState beforeEdit = session.getDataSnapshot();
+        List<LessonId> lessonIds = beforeEdit.lessons().stream().map(Lesson::getId).toList();
+        session.execute("showlesson lid/L1 d/2026-10-05");
+        var displayedDetail = session.getDisplayedLessons();
+
+        assertEquals("Edited lesson: L1.", session.execute("editlesson lid/L1 st/0915 et/1045 "
+                + "s/Advanced Math tu/Tutor Two tp/00333333 rm/R6").getFeedbackToUser());
+        assertSame(displayedDetail, session.getDisplayedLessons());
+        LessonDetailView detail = (LessonDetailView) displayedDetail.getFirst();
+        assertEquals(new LessonId("L1"), detail.getLessonId());
+        assertEquals(new PersonId("T3"), detail.getTutorId());
+        assertEquals(new Subject("Advanced Math"), detail.getSubject());
+        assertEquals(List.of(new PersonId("S1")), detail.currentRoster().stream()
+                .map(entry -> entry.student().getId()).toList());
+        assertEquals(List.of(new PersonId("S2")), detail.formerAttendance().stream()
+                .map(entry -> entry.student().getId()).toList());
+        assertTrue(detail.currentRoster().getFirst().status().isPresent());
+        assertEquals(AttendanceStatus.PRESENT, detail.currentRoster().getFirst().status().orElseThrow());
+        assertEquals(AttendanceStatus.ABSENT, detail.formerAttendance().getFirst().status());
+
+        assertEquals("Showing 1 attendance record(s).",
+                session.execute("history 1 lid/L1").getFeedbackToUser());
+        AttendanceHistoryEntry currentHistory = session.getDisplayedHistory().getFirst();
+        assertEquals(new PersonId("S1"), currentHistory.getStudentId());
+        assertEquals(new LessonId("L1"), currentHistory.getLessonId());
+        assertTrue(currentHistory.isCurrentlyEnrolled());
+        assertEquals(AttendanceHistoryEntry.Status.PRESENT, currentHistory.getStatus());
+        assertEquals("Showing 1 attendance record(s).",
+                session.execute("history 2 lid/L1").getFeedbackToUser());
+        AttendanceHistoryEntry formerHistory = session.getDisplayedHistory().getFirst();
+        assertEquals(new PersonId("S2"), formerHistory.getStudentId());
+        assertEquals(new LessonId("L1"), formerHistory.getLessonId());
+        assertFalse(formerHistory.isCurrentlyEnrolled());
+        assertEquals(AttendanceHistoryEntry.Status.ABSENT, formerHistory.getStatus());
+
+        PonHubDataState afterEdit = session.getDataSnapshot();
+        assertEquals(lessonIds, afterEdit.lessons().stream().map(Lesson::getId).toList());
+        assertEquals(beforeEdit.attendance(), afterEdit.attendance());
+        assertEquals(beforeEdit.people().getLastAllocatedSequences(), afterEdit.people().getLastAllocatedSequences());
+        assertEquals(beforeEdit.lastAllocatedLessonSequence(), afterEdit.lastAllocatedLessonSequence());
+        assertEquals(afterEdit, new CanonicalPeopleSession(session.getDataFilePath()).getDataSnapshot());
     }
 
     @Test
@@ -126,6 +195,31 @@ public class CanonicalLessonEditIntegrationTest {
     }
 
     @Test
+    public void execute_wrongAndMissingSelectors_preserveResultsStateAndSavedBytes() throws Exception {
+        CanonicalPeopleSession session = baseline("selectors.json");
+        session.execute("lessons");
+        PonHubDataState before = session.getDataSnapshot();
+        var displayed = session.getDisplayedLessons();
+        List<LessonView> results = List.copyOf(displayed);
+        byte[] bytes = Files.readAllBytes(session.getDataFilePath());
+
+        for (String command : List.of("editlesson s/Math", "editlesson lid/L0 s/Math",
+                "editlesson lid/L1", "editlesson L1 s/Math")) {
+            assertThrows(ParseException.class, () -> session.execute(command), command);
+            assertSame(before, session.getDataSnapshot());
+            assertSame(displayed, session.getDisplayedLessons());
+            assertEquals(results, displayed);
+            assertArrayEquals(bytes, Files.readAllBytes(session.getDataFilePath()));
+        }
+        CommandException missing = assertThrows(CommandException.class, () ->
+                session.execute("editlesson lid/L99 s/Math"));
+        assertEquals("The lesson does not exist: L99", missing.getMessage());
+        assertSame(before, session.getDataSnapshot());
+        assertEquals(results, displayed);
+        assertArrayEquals(bytes, Files.readAllBytes(session.getDataFilePath()));
+    }
+
+    @Test
     public void execute_retainedAttendanceRejectsDayChangeThenClearsObsoleteSelectedDate() throws Exception {
         CanonicalPeopleSession session = baseline("weekday.json");
         session.execute("mark 1 lid/L1 d/2026-10-05 s/present");
@@ -157,7 +251,9 @@ public class CanonicalLessonEditIntegrationTest {
 
     @Test
     public void execute_failedSavesAndProtectedStartup_preserveStateAndHideRoute() throws Exception {
-        Path path = baseline("save-failure.json").getDataFilePath();
+        CanonicalPeopleSession seeded = baseline("save-failure.json");
+        seeded.execute("mark 1 lid/L1 d/2026-10-05 s/present");
+        Path path = seeded.getDataFilePath();
         for (IOException injected : List.of(new IOException("disk failure"),
                 new AccessDeniedException(path.toString()))) {
             AtomicBoolean failSave = new AtomicBoolean(true);
@@ -169,6 +265,11 @@ public class CanonicalLessonEditIntegrationTest {
                 }
                 new JsonPonHubDataStorage(path).saveData(state);
             });
+            session.execute("list r/student");
+            session.execute("history 1 lid/L1");
+            var history = session.getDisplayedHistory();
+            AttendanceHistoryEntry selectedHistory = history.getFirst();
+            String historyContext = session.historyResultContextProperty().get();
             session.execute("showlesson lid/L1 d/2026-10-05");
             PonHubDataState unchanged = session.getDataSnapshot();
             var displayed = session.getDisplayedLessons();
@@ -181,6 +282,9 @@ public class CanonicalLessonEditIntegrationTest {
             assertSame(displayed, session.getDisplayedLessons());
             assertSame(selected, displayed.getFirst());
             assertEquals(context, session.lessonResultContextProperty().get());
+            assertSame(history, session.getDisplayedHistory());
+            assertSame(selectedHistory, history.getFirst());
+            assertEquals(historyContext, session.historyResultContextProperty().get());
             assertArrayEquals(unchangedBytes, Files.readAllBytes(path));
             assertEquals(1, saves.get());
 
@@ -220,5 +324,10 @@ public class CanonicalLessonEditIntegrationTest {
         session.execute("enrol 1 lid/L2");
         session.execute("enrol 2 lid/L3");
         return session;
+    }
+
+    private static LessonView findDisplayedLesson(List<LessonView> lessons, String id) {
+        LessonId lessonId = new LessonId(id);
+        return lessons.stream().filter(lesson -> lesson.getLessonId().equals(lessonId)).findFirst().orElseThrow();
     }
 }

@@ -1779,6 +1779,28 @@ Students 1 and 2 are enrolled in `L1`. Record Monday attendance for both Student
    access, restart and verify exactly one persisted replacement.
 7. With rejected disposable data, `editlesson lid/L1 s/Math` is blocked before parsing, `help editlesson` is
    unavailable and original bytes remain unchanged. Recovery requires correcting/restoring the file and restarting.
+
+#### Lesson edit owner verification record (#269)
+
+Yang Shuo ran the source-level owner checks on 20 October 2026 from team-master baseline `d1a2b9b5`, using
+macOS 26.6.2 on arm64 and Azul Zulu OpenJDK 25.0.3. The focused command was
+`./gradlew test --tests seedu.address.logic.CanonicalLessonEditIntegrationTest --no-daemon`; Gradle reported
+`BUILD SUCCESSFUL`. The complete `./gradlew check --no-daemon` repository verification also reported
+`BUILD SUCCESSFUL` after recording these results.
+
+| Result | Case and recorded observation |
+| --- | --- |
+| PASS | Partial changes to an empty `L4` refreshed the held catalogue result with the same stable ID and roster size 0. Subject, room and both time endpoints changed without allocating another Lesson. |
+| PASS | A populated `L1` retained current Student `S1`, former Student `S2`, all attendance and allocation counters after schedule, subject, Tutor and room changes. The dated detail still showed S1 present and S2 absent. |
+| PASS | `history 1 lid/L1` retained S1's current-member present result; `history 2 lid/L1` retained S2's former-member absent result. Reloading the saved file produced the same complete snapshot. |
+| PASS | Editing only `st/` or only `et/` succeeded when the resulting slot was valid. An adjacent boundary and the edited Lesson's own prior slot were not treated as overlaps. |
+| PASS | Independent Tutor, room and enrolled-Student overlaps were rejected. Missing, malformed and nonexistent `lid/` selectors preserved the held Lesson results, snapshot and saved bytes. |
+| PASS | A normalized no-op performed no save or result publication. Injected IO and permission failures retained Lesson detail, history context, snapshot and bytes before a successful retry and reload. |
+| PASS | Current and former Monday attendance both blocked a Tuesday weekday edit without mutation. After explicit `unmark` commands, the change succeeded and cleared only the obsolete selected-detail date. |
+
+This is source-level owner evidence, not packaged/native or independent acceptance. The #271/#272 verifier should
+rerun the same empty/populated, conflict, roster/detail/history, no-op, invalid-selector, retained-weekday and
+failed-save cases on the exact final candidate, reporting PASS, FAIL or NOT RUN for each affected case.
 <!-- @@author -->
 
 ### Inline help and supported routes
