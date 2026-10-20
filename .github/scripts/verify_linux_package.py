@@ -14,6 +14,10 @@ import platform
 import shutil
 import subprocess
 import time
+import zipfile
+
+
+MAX_JAR_BYTES = 100 * 1024 * 1024
 
 
 def require(condition, message):
@@ -26,11 +30,12 @@ def run(*arguments, **options):
 
 
 class PackageSession:
-    def __init__(self, folder, evidence, name, transcript):
+    def __init__(self, folder, evidence, name, transcript, expected_version):
         self.folder = folder
         self.evidence = evidence
         self.name = name
         self.transcript = transcript
+        self.expected_version = expected_version
         self.log = evidence / f"{name}.log"
         self.output = self.log.open("w")
         self.process = subprocess.Popen(
@@ -60,6 +65,9 @@ class PackageSession:
 
     def ready(self):
         self.window = self.wait(self.find_window, "a visible production PonHub window")
+        expected_message = f"Starting PonHub v{self.expected_version}"
+        self.wait(lambda: expected_message if expected_message in self.log.read_text() else None,
+                  f"startup log entry {expected_message!r}")
         # The stage is mapped before UiManager finishes filling its controls.
         time.sleep(0.5)
         run("xdotool", "windowfocus", "--sync", self.window)
@@ -88,6 +96,24 @@ class PackageSession:
                     f"Unexpected result for {text!r}: {output}")
         time.sleep(0.2)  # Allow the resulting control updates to reach the next display pulse.
 
+    def reject(self, text):
+        offset = self.log.stat().st_size
+        run("xdotool", "key", "--clearmodifiers", "ctrl+a")
+        run("xdotool", "type", "--clearmodifiers", "--delay", "1", text)
+        run("xdotool", "key", "Return")
+
+        def completed():
+            with self.log.open() as log:
+                log.seek(offset)
+                output = log.read()
+            require("SEVERE:" not in output, f"Fatal application error: {output}")
+            marker = f"An error occurred while executing command: {text}"
+            return output if marker in output else None
+
+        output = self.wait(completed, f"rejected command {text!r}")
+        self.transcript.append({"session": self.name, "command": text, "rejected": True, "output": output})
+        time.sleep(0.2)
+
     def screenshot(self, name):
         run("import", "-window", self.window, str(self.evidence / f"{name}.png"))
 
@@ -113,16 +139,53 @@ class PackageSession:
         self.output.close()
 
 
+def read_manifest(jar):
+    with zipfile.ZipFile(jar) as archive:
+        raw_manifest = archive.read("META-INF/MANIFEST.MF").decode("utf-8")
+        entries = set(archive.namelist())
+    attributes = {}
+    current_name = None
+    for line in raw_manifest.splitlines():
+        if line.startswith(" "):
+            require(current_name is not None, "Manifest continuation has no preceding attribute")
+            attributes[current_name] += line[1:]
+        elif line:
+            name, separator, value = line.partition(": ")
+            require(separator, f"Malformed manifest line: {line}")
+            attributes[name] = value
+            current_name = name
+    return attributes, entries
+
+
+def verify_package_metadata(jar, expected_version):
+    require(jar.name == "ponhub.jar", "Candidate JAR must retain the distribution filename ponhub.jar")
+    attributes, entries = read_manifest(jar)
+    require(attributes.get("Implementation-Title") == "PonHub", "Unexpected implementation title")
+    require(attributes.get("Implementation-Version") == expected_version,
+            "Manifest implementation version differs from the release candidate")
+    main_class = attributes.get("Main-Class")
+    require(main_class is not None, "Manifest does not declare Main-Class")
+    require(main_class.replace(".", "/") + ".class" in entries, "Manifest entry point is absent from the JAR")
+    return attributes
+
+
 def verify_state(path, members=("S2",), first_status="absent"):
     state = json.loads(path.read_text())
     require([person["id"] for person in state["people"]] == ["T1", "S1", "S2"],
             "Creation order or stable person IDs differ")
     require(state["personCounters"] == {"STUDENT": 2, "TUTOR": 1, "PARENT": 0},
             "Person allocation counters differ")
-    require(len(state["lessons"]) == 1, "Expected one shared Lesson")
+    student = state["people"][1]
+    require(student["name"] == "Alex Lee" and student["level"] == "P3",
+            "Edited Student fields were not retained")
+    require(state["lastAllocatedLessonSequence"] == 2, "Lesson allocation counter differs")
+    require([lesson["id"] for lesson in state["lessons"]] == ["L1", "L2"],
+            "Creation order or stable Lesson IDs differ")
     lesson = state["lessons"][0]
     require(lesson["id"] == "L1" and lesson["tutorId"] == "T1"
             and lesson["enrolledStudentIds"] == list(members), "Shared Lesson membership differs")
+    require((lesson["day"], lesson["startTime"], lesson["endTime"], lesson["subject"], lesson["room"])
+            == ("Mon", "1630", "1730", "Advanced Math", "R3"), "Edited Lesson fields differ")
     records = {(record["studentId"], record["lessonId"], record["date"], record["status"])
                for record in state["attendance"]}
     require(len(state["attendance"]) == 2 and records == {
@@ -136,6 +199,7 @@ def main():
     parser.add_argument("--jar", type=Path, required=True)
     parser.add_argument("--source", required=True)
     parser.add_argument("--expected-sha256", required=True)
+    parser.add_argument("--expected-version", required=True)
     parser.add_argument("--evidence", type=Path, required=True)
     args = parser.parse_args()
     evidence = args.evidence.resolve()
@@ -152,6 +216,8 @@ def main():
         digest = hashlib.sha256(content).hexdigest()
         result.update(jar_sha256=digest, jar_bytes=len(content))
         require(digest == args.expected_sha256.lower(), "Candidate JAR SHA-256 mismatch")
+        require(len(content) <= MAX_JAR_BYTES, "Candidate JAR exceeds the 100 MiB release limit")
+        result["manifest"] = verify_package_metadata(args.jar, args.expected_version)
         with (evidence / "runtime.txt").open("w") as runtime:
             run("java", "-XshowSettings:properties", "-version",
                 stdout=runtime, stderr=subprocess.STDOUT)
@@ -159,18 +225,28 @@ def main():
         folder.mkdir()
         shutil.copyfile(args.jar, folder / "ponhub.jar")
         data = folder / "data" / "ponhub.json"
-        session = PackageSession(folder, evidence, "initial", transcript)
+        session = PackageSession(folder, evidence, "initial", transcript, args.expected_version)
         session.ready()
         for command in [
             "add r/tutor n/Mei Lim p/92345678 e/mei@example.com",
             "addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1",
+            "addlesson d/Mon st/1730 et/1830 s/Science tu/Mei Lim rm/R2",
             "add r/student n/Alex Tan l/S2 pp/91234567",
             "add r/student n/Jamie Tan l/P1 pp/91234567",
             "list r/student", "enrol 1 lid/L1", "enrol 2 lid/L1",
+            "edit 1 n/Alex Lee l/P3",
+            "editlesson lid/L1 st/1630 s/Advanced Math rm/R3",
             "mark 1 lid/L1 d/2026-10-05 s/present",
             "mark 2 lid/L1 d/2026-10-05 s/absent",
         ]:
             session.command(command)
+        unchanged = data.read_bytes()
+        session.reject("edit 1 l/P7")
+        session.reject("edit 1 n/Jamie Tan pp/91234567")
+        session.reject("editlesson lid/L2 st/1700")
+        require(data.read_bytes() == unchanged, "Rejected edits changed operational data")
+        session.command("edit 1 n/ Alex   Lee l/p3", "No changes to student: Alex Lee (S1).")
+        require(data.read_bytes() == unchanged, "No-op person edit rewrote operational data")
         verify_state(data, members=("S1", "S2"), first_status="present")
         session.command("showlesson lid/L1 d/2026-10-05", "Showing lesson L1 for 2026-10-05.")
         session.screenshot("shared-attendance")
@@ -183,11 +259,11 @@ def main():
         session.screenshot("retained-history")
         session.exit()
         require(data.read_bytes() == original, "Shutdown rewrote operational data")
-        session = PackageSession(folder, evidence, "restart", transcript)
+        session = PackageSession(folder, evidence, "restart", transcript, args.expected_version)
         session.ready()
         for command, feedback in [
             ("list r/student", "Showing 2 student(s)."),
-            ("lessons", "Showing 1 lesson(s)."),
+            ("lessons", "Showing 2 lesson(s)."),
             ("lessons si/1", "Showing 0 lesson(s)."),
             ("lessons si/2", "Showing 1 lesson(s)."),
             ("showlesson lid/L1 d/2026-10-05", "Showing lesson L1 for 2026-10-05."),
@@ -203,7 +279,7 @@ def main():
         session.exit()
         require(data.read_bytes() == original, "Restart/read-only commands rewrote operational data")
         result["passed"] = True
-        print("PASS: exact JAR launch, shared Lesson, attendance correction, retained history and restart")
+        print("PASS: exact JAR metadata/launch, edits, shared Lesson, attendance, history and restart")
     except Exception as failure:
         result["error"] = str(failure)
         raise
