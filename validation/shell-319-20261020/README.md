@@ -12,11 +12,11 @@ JAR SHA-256 before/after: 06C576BF8A9EE577C752D898259B6C2B723C36DE620F698ED522C0
 | --- | --- |
 | 1920x1080, 100% | User confirmed startup command focus and Enter help submission. Help divider shortened; final guidance reached and copied. F1/menu draft preservation confirmed. Missing-prefix error readable and failed input retained. Long Tutor contacts fully wrap at narrow People width. Final Student card including parent phone/missing contacts reached. Lesson subject, schedule, Tutor, room and count wrap at narrow Lesson width. Screenshots show maximised/restored layouts and both column-width extremes with bottom dock accessible. |
 | 1920x1080, 125% | Settings proof supplied. User confirmed startup typing and divider dragging. Screenshot shows final help guidance and complete final Student card. Both help routes preserve draft; subsequent screenshot shows readable missing-prefix error and retained input. Bottom command dock accessible. |
-| 1280x720, 150% | NOT RUN: at 1280x720, Windows scale selector was disabled at 100%; screenshot records the unavailable setting. No substitute is claimed equivalent. |
+| 1280x720, 150% | Completed after the user applied custom scaling. Settings screenshots show 1280x720 and 150% custom scaling; PonHub screenshots show the maximised app with the dock visible. Help opened with Enter and was scrolled to its final guidance; F1 preserved an unfinished command. In the narrow People column, the Tutor's email and full address wrap across scroll screenshots. In the narrow Lesson column, subject, schedule, Tutor, room and student count are readable across scroll screenshots. A missing required `p/` error is readable, the rejected command remains in the input, and the People count remains 3. |
 | 2560x1440, 150% | Supplementary supported setting, with Settings proof. User confirmed startup typing. Screenshots show both column extremes, long-contact/Lesson wrapping, final help guidance and final Student address line. Both help routes preserve draft; rejection screenshot shows readable error and retained input. Bottom dock accessible. |
 | 2560x1440, 100% restored | Settings screenshot confirms original resolution/scale and extended displays restored. Search c/tutor a/Wrapping returns only Tutor T1 with complete matching address visible at narrow width. Separate protected fixture startup dialog and blocked mutation feedback are fully readable. Zero people added. |
 
-29 supplied PNGs are preserved beside this report with their original attachment names. Settings proofs: 8cdf35c0 (1080/100), af409e70 (1080/125), c4604d4c (720 unavailable scale), bbc83075 (1440/150), 484d8596 (restoration); identify each by its filename prefix after codex-clipboard-.
+45 supplied PNGs are preserved beside this report with their original attachment names. Settings proofs: 8cdf35c0 (1080/100), af409e70 (1080/125), c4604d4c (earlier 720 scale-selector state), 8cabf23c and 0f74ba8b (1280x720 with 150% custom scaling), bbc83075 (1440/150), acba4b11 (2560x1440/100% restored); identify each by its filename prefix after codex-clipboard-.
 
 ## Synthetic fixture
 
@@ -31,15 +31,14 @@ Protected data SHA-256 before/after matches:
 
 ## Remaining limits
 
-- Exact 1280x720 at 150% remains NOT RUN and the acceptance gap must remain explicit.
 - Search context and protected feedback were checked only at restored 2560x1440/100%, not throughout the required matrix.
 - Copying was confirmed at 1080/100%; not repeated at other scales.
 - One Lesson card does not demonstrate multi-Lesson final-card scrolling or populated roster/attendance/history views.
 - No claim of full #319 closure, independent review, rendered-guide validation, #320 handoff or merge is made. No GitHub state was changed.
 
-## Team environment limitation — user confirmation
+## Configuration follow-up — 20 October 2026
 
-The user confirmed that none of the team's machines can run 1280x720 at 150% scaling. The exact configuration remains NOT RUN due to unavailable hardware/OS configuration. On the inspected Windows machine, selecting 1280x720 disabled the scale selector at 100%. Supplementary native checks at 2560x1440/150% do not certify the exact configuration. This records the limitation; it does not waive or revise the acceptance requirement.
+The user later applied Windows custom scaling at 150% while the display was set to 1280x720. The supplied Settings screenshots show that configuration and a separate screenshot confirms restoration to 2560x1440/100% with extended displays. The exact 1280x720/150% setup was then exercised in PonHub as itemized above; this supersedes the earlier NOT RUN note. It does not close the remaining matrix and content-coverage items above or substitute for independent #317/#321 acceptance.
 
 
 ## Documentation reconciliation
