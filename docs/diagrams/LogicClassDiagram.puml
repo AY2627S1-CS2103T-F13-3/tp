@@ -1,52 +1,46 @@
 @startuml
-!include style.puml
-skinparam arrowThickness 1.1
-skinparam arrowColor LOGIC_COLOR_T4
-skinparam classBackgroundColor LOGIC_COLOR
-
-package Logic as LogicPackage {
-
-package "Parser Classes" as ParserClasses{
+' Updated by Ernest Chua with OpenAI Codex assistance (#220).
+!pragma layout smetana
+hide empty members
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+interface Logic #E1F2DC {
+  execute(commandText)
+  observable retrieval API
 }
-Class XYZCommand
-Class CommandResult
-Class "{abstract}\nCommand" as Command
-
-
-Class "<<interface>>\nLogic" as Logic
-Class LogicManager
-Class CommandCatalog
-Class HelpCommand
+class CanonicalLogicManager #E5E5FA
+class CanonicalPeopleSession #E5E5FA {
+  execute(commandText)
+  protection, parsing and dispatch
 }
-
-package Model {
-Class HiddenModel #FFFFFF
+class CanonicalCommandExecutor #E5E5FA {
+  execute(command)
+  save changed snapshot before commit
 }
-
-package Storage {
+interface "CanonicalCommandExecutor.\nStagedCommand" as StagedCommand #E5E5FA {
+  execute(staged, stagedView)
 }
-
-Class HiddenOutside #FFFFFF
-HiddenOutside ..> Logic
-
-LogicManager .right.|> Logic
-LogicManager -right->"1" ParserClasses
-ParserClasses ..> XYZCommand : <<create>>
-
-XYZCommand -up-|> Command
-LogicManager .left.> Command : <<call>>
-
-LogicManager --> Model
-LogicManager --> Storage
-Storage --[hidden] Model
-Command .[hidden]up.> Storage
-Command .right.> Model
-note right of XYZCommand: XYZCommand = AddCommand, \nDeleteCommand, etc
-ParserClasses ..> CommandCatalog
-HelpCommand -up-|> Command
-HelpCommand ..> CommandCatalog : guidance
-
-Logic ..> CommandResult
-LogicManager .down.> CommandResult
-Command .up.> CommandResult : <<create>>
+class CanonicalTransaction #FBE3E6 {
+  getStagedModel()
+  getStagedPeopleView()
+  hasOperationalChanges()
+  commit()
+}
+interface "CanonicalCommandExecutor.\nSnapshotWriter" as Writer #FFF0BD {
+  save(state)
+}
+CanonicalLogicManager ..|> Logic
+CanonicalLogicManager --> CanonicalPeopleSession : delegates
+CanonicalPeopleSession --> CanonicalCommandExecutor : mutations / list
+CanonicalCommandExecutor ..> StagedCommand : calls on isolated copies
+CanonicalCommandExecutor ..> CanonicalTransaction : obtains via PeopleView
+CanonicalCommandExecutor --> Writer : injected callback
+CanonicalTransaction -[hidden]-> Writer
+legend bottom
+  Solid arrow: retained collaborator
+  Dashed arrow: use; hollow triangle: implements
+  Only command-boundary collaborators are shown.
+endlegend
 @enduml
