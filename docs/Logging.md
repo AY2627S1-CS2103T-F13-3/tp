@@ -20,7 +20,7 @@ Use `./gradlew run` for development or `java -jar ponhub.jar` for a built JAR; s
 | Packaged JAR | The JAR's containing folder, even when the terminal's working directory is elsewhere. |
 | Development classes / Gradle `run` | The application's working directory (the repository root for the normal Gradle launch). |
 
-[`LogsCenter`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/commons/core/LogsCenter.java)
+[`LogsCenter`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/commons/core/LogsCenter.java)
 uses `java.util.logging` under the `ponhub` logger. Console logging is available immediately.
 File logging appends to `ponhub.log*`, normally `ponhub.log.0`, rotating at about 5 MiB per file with up to
 five files. Java's `FileHandler` may add uniqueness or lock suffixes, so inspect the matching files rather
@@ -52,9 +52,9 @@ Log useful context and exception causes without dumping contact records, complet
 command arguments. Avoid duplicate messages at multiple layers for the same failure.
 
 For focused regression checks, inspect
-[`LogsCenterTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/seedu/address/commons/core/LogsCenterTest.java)
+[`LogsCenterTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/commons/core/LogsCenterTest.java)
 for file output, legacy preservation and console fallback, and
-[`ProtectedStartupTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/seedu/address/ProtectedStartupTest.java)
+[`ProtectedStartupTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/ProtectedStartupTest.java)
 for data/preferences/log separation. Use the [Testing guide](Testing.html#selecting-tests-during-development)
 to run those classes; the [DG manual procedure](DeveloperGuide.html#appendix-instructions-for-manual-testing)
 owns packaged launch and recovery checks.

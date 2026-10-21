@@ -26,7 +26,7 @@ Use the checked-in Gradle wrapper, which selects the Gradle distribution in
 [`gradle-wrapper.properties`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/gradle/wrapper/gradle-wrapper.properties).
 The product version is separate: [`build.gradle`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/build.gradle)
 sets `version` for the JAR's `Implementation-Version` manifest attribute;
-[`MainApp.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/MainApp.java)
+[`MainApp.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java)
 sets `MainApp.VERSION` for the version reported in the startup log. Update both for a release, preserving their
 existing convention (`1.3` and `v1.3`, for example). These values do not select the Gradle version.
 See [Making a release](#making-a-release) for candidate, package and publication checks.
