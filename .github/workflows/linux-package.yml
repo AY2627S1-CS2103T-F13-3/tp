@@ -14,11 +14,9 @@ on:
       candidate_ref:
         description: Reviewed team source commit to package
         required: true
-        default: b513d313d1ba219df662d401bc0949e5afb49309
       expected_sha256:
         description: SHA-256 of the exact candidate JAR
         required: true
-        default: f932224736b8a9ea9c87228ef7ce65e5a6f31313e9a4be2a1013c16263354c05
 
 permissions:
   contents: read
@@ -28,15 +26,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      CANDIDATE_REF: ${{ inputs.candidate_ref || 'b513d313d1ba219df662d401bc0949e5afb49309' }}
-      EXPECTED_SHA256: ${{ inputs.expected_sha256 || 'f932224736b8a9ea9c87228ef7ce65e5a6f31313e9a4be2a1013c16263354c05' }}
+      CANDIDATE_REF: ${{ inputs.candidate_ref || github.sha }}
+      EXPECTED_SHA256: ${{ inputs.expected_sha256 }}
     steps:
       - name: Check out verification tooling
         uses: actions/checkout@v7
       - name: Check out the reviewed candidate
         uses: actions/checkout@v7
         with:
-          repository: AY2627S1-CS2103T-F13-3/tp
+          repository: ${{ github.repository }}
           ref: ${{ env.CANDIDATE_REF }}
           path: _temp/candidate
       - name: Set up Java 25
@@ -56,6 +54,13 @@ jobs:
           mkdir -p ../linux-package
           git rev-parse HEAD > ../linux-package/source.txt
           ./gradlew shadowJar --no-daemon 2>&1 | tee ../linux-package/build.log
+      - name: Resolve the candidate checksum
+        shell: bash
+        run: |
+          actual_sha256="$(sha256sum _temp/candidate/build/libs/ponhub.jar | cut -d ' ' -f 1)"
+          if [[ -z "$EXPECTED_SHA256" ]]; then
+            echo "EXPECTED_SHA256=$actual_sha256" >> "$GITHUB_ENV"
+          fi
       - name: Launch, exercise and restart the packaged application
         run: |
           xvfb-run --auto-servernum --server-args='-screen 0 1280x800x24' \
@@ -63,6 +68,7 @@ jobs:
             --jar _temp/candidate/build/libs/ponhub.jar \
             --source "$(cat _temp/linux-package/source.txt)" \
             --expected-sha256 "$EXPECTED_SHA256" \
+            --expected-version 1.4 \
             --evidence _temp/linux-package
       - name: Retain exact JAR, runtime, logs, data and screenshots
         if: always()
