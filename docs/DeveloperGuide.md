@@ -22,13 +22,13 @@ the [requirements appendix](#product-scope) records the target audience, value p
    [Command transactions](#command-transactions) to see why addition prepares a candidate, saves it, then
    publishes the data and people view. A failed save must leave the live state unchanged.
 3. **Find the code and checks.** Follow routing in
-   [`CanonicalPeopleSession`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/CanonicalPeopleSession.java),
-   staging in [`CanonicalAddCommand`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/commands/CanonicalAddCommand.java)
+   [`CanonicalPeopleSession`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalPeopleSession.java),
+   staging in [`CanonicalAddCommand`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/commands/CanonicalAddCommand.java)
    and save/publication ordering in
-   [`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/CanonicalCommandExecutor.java).
-   [`CanonicalPeopleSessionTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/seedu/address/logic/CanonicalPeopleSessionTest.java)
+   [`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandExecutor.java).
+   [`CanonicalPeopleSessionTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/CanonicalPeopleSessionTest.java)
    covers routing and protected loading;
-   [`CanonicalPeopleCommandIntegrationTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/seedu/address/logic/commands/CanonicalPeopleCommandIntegrationTest.java)
+   [`CanonicalPeopleCommandIntegrationTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/commands/CanonicalPeopleCommandIntegrationTest.java)
    covers addition, save/reload and failed-save preservation.
 
 Use [Setting up](SettingUp.html) to prepare a development environment and the
@@ -66,7 +66,7 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 Gradle development launches (`./gradlew run`, or `gradlew.bat run` on Windows) enable Java assertions.
 The Gradle `test` task already enables them by default. In IntelliJ, a run configuration delegated to
 the Gradle `run` task uses this setting. For a native **Application** configuration launching
-`seedu.address.Main`, add `-ea` to its **VM options**; project SDK and Gradle JVM should still use Java 25.
+`ponhub.Main`, add `-ea` to its **VM options**; project SDK and Gradle JVM should still use Java 25.
 Use assertions for programmer invariants; validate user input with normal checks and exceptions.
 
 The packaged user launch remains `java -jar ponhub.jar`; users do not need to add `-ea`.
@@ -378,7 +378,7 @@ permission failures through the real session's writer seam, then retry and reloa
 
 ![Current component responsibilities and dependencies](images/ArchitectureDiagram.png)
 
-`Main` launches JavaFX; [`MainApp`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/MainApp.java)
+`Main` launches JavaFX; [`MainApp`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java)
 checks application paths, constructs the canonical session and separate preferences, then connects
 `CanonicalLogicManager` and UI. It saves preferences separately at shutdown.
 
@@ -418,7 +418,7 @@ coordination rather than duplicating either contract. Command source references 
 
 ### UI component
 
-The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/ui/Ui.java)
+The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/Ui.java)
 
 ![Structure of the UI Component](images/UiClassDiagram.png)
 
@@ -451,7 +451,7 @@ any current result. Navigation introduces no parser grammar, stored state or alt
 
 ### Logic component
 
-**API:** [`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/Logic.java).
+**API:** [`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/Logic.java).
 
 ![Active command-boundary collaborators](images/LogicClassDiagram.png)
 
@@ -478,26 +478,26 @@ Commands use the [shared selector contract](#shared-lesson-target-contract) for 
 versus stable IDs.
 
 Trace the implementation through
-[`CanonicalPeopleSession.execute`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/CanonicalPeopleSession.java),
-[`CanonicalEditCommand`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/commands/CanonicalEditCommand.java),
-[`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/CanonicalCommandExecutor.java)
-and [`CanonicalTransaction`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/CanonicalTransaction.java).
+[`CanonicalPeopleSession.execute`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalPeopleSession.java),
+[`CanonicalEditCommand`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/commands/CanonicalEditCommand.java),
+[`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandExecutor.java)
+and [`CanonicalTransaction`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/CanonicalTransaction.java).
 
 #### Read-only retrieval API contract (#113)
 
-[`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/Logic.java)
-declares the UI-facing retrieval methods; [`LessonQuerySource`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonQuerySource.java)
-and [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonQueries.java)
+[`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/Logic.java)
+declares the UI-facing retrieval methods; [`LessonQuerySource`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQuerySource.java)
+and [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQueries.java)
 define the lesson backend supplied by the active `CanonicalPeopleSession`. Its canonical Model owns projections
 from one `PonHubData` root; `CanonicalLogicManager` delegates to that same source. Catalogue and filtered
 results contain each lesson once in creation order, including empty lessons. Student lessons derive from current
 Lesson-owned membership; rosters use people creation order, and tutor schedules use weekday, start time and numeric
 lesson ID. Lookup by lesson ID reads the full catalogue regardless of its active filter.
 
-[`LessonView`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonView.java)
-and [`StudentView`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/StudentView.java)
+[`LessonView`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonView.java)
+and [`StudentView`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/StudentView.java)
 expose current display fields without becoming stored records.
-[`AttendanceHistoryEntry`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/AttendanceHistoryEntry.java)
+[`AttendanceHistoryEntry`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/AttendanceHistoryEntry.java)
 also distinguishes recorded present/absent status from current enrolment; history comes from dated attendance and
 survives unenrolment. A missing entry means unrecorded. See the [shared contract](#shared-lesson-target-contract) for
 command indices versus stable IDs and for preservation of the people view.
@@ -550,7 +550,7 @@ shared [save-before-publication transaction](#command-transactions); a validatio
 preceding complete state and file. The editable diagram source is
 `docs/diagrams/LessonAttendanceStateDiagram.puml`.
 
-[`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/PonHubData.java)
+[`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PonHubData.java)
 owns the immutable canonical records and relationships shown above. `PeopleView` derives one observable
 role-filtered projection from that root. UI observes committed projections rather than maintaining writable
 copies. Preferences remain outside operational snapshots. The inherited AddressBook model and its exclusive
@@ -583,13 +583,13 @@ so failed commands leave the live root and subscribed results unchanged.
 
 #### Shared lesson scheduling model APIs (#78)
 
-[`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/PonHubData.java)
+[`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PonHubData.java)
 is the lesson mutation and allocation boundary. `addLesson(...)` resolves an existing Tutor ID, derives the next
 positive `LessonId` from the retained counter, creates one empty-roster immutable `Lesson`, and attempts to install
 a complete candidate state. Rejected candidates leave the catalogue and counter unchanged; committed IDs remain
 reserved after deletion and `Long.MAX_VALUE` fails before overflow.
 
-[`PonHubDataState`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/PonHubDataState.java)
+[`PonHubDataState`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PonHubDataState.java)
 applies the same scheduling validation to command candidates, restored snapshots and decoded files. Distinct
 same-weekday lessons with overlapping half-open slots are rejected when their Tutor IDs or normalized rooms match.
 This tutor/room rule applies even to empty-roster lessons. Student clashes are different: they are checked when the
@@ -669,7 +669,7 @@ For bounded field lengths, searching costs `O(B + R_B + K)`: `B` candidates, the
 
 [![Canonical lesson retrieval and view ownership](images/LessonRetrieval.png)](images/LessonRetrieval.png)
 
-[`LessonRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/LessonRetrieval.java)
+[`LessonRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/LessonRetrieval.java)
 keeps one unmodifiable observable displayed list. `MainWindow` binds it once to the Lesson panel through
 `CanonicalLogicManager`; commands switch its source and detach the previous source listener. The source
 is the catalogue, a Student's current lessons, the filtered lesson list, or a single Lesson detail.
@@ -708,7 +708,7 @@ and `LessonRetrieval` selector. Select either diagram to view it at full size.
 | Save fails or validation rejects | Candidate is discarded; file recovery follows the storage contract | Still Math and `[L1]`, with the same filter, selected source and list objects. No success is reported. |
 | Save succeeds, then commit publishes | Saved and live `L1` are English with the same ID, roster and attendance | Indexes rebuild; the active Math query becomes empty and the held Student list now contains English `L1`. The displayed list object remains the same. |
 
-[`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/CanonicalCommandExecutor.java)
+[`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandExecutor.java)
 saves changed snapshots before `CanonicalTransaction.commit()` publishes to the live root. `LessonQueries`
 listens to that root's `stateProperty()`, completes its derived indexes, then refreshes the catalogue,
 subscriptions and active filter. Retained observable lists keep their identity across committed changes
@@ -725,9 +725,9 @@ and final packaged/native checks retain their own evidence requirements.
 
 ##### Find exact contracts and regression checks
 
-Use [`LessonQuerySource`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonQuerySource.java)
+Use [`LessonQuerySource`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQuerySource.java)
 for retrieval signatures, ordering and missing-ID contracts, and
-[`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/query/LessonQueries.java)
+[`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQueries.java)
 for indexes, immutable snapshots, active filters and subscription refresh. Stable-ID maps, reverse
 membership indexes and day/time buckets are derived once per publication, not per read. Tutor schedules
 sort by weekday/start/ID; catalogue results retain creation order. Callbacks may request another subscription
@@ -735,11 +735,11 @@ because refresh snapshots the subscription entries before notifying listeners. A
 single model/JavaFX application thread. Construction/refresh includes index rebuilding, schedule sorting
 and copying subscribed results; the query cost above excludes that work.
 
-[`PersonRelationshipSearch`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/search/PersonRelationshipSearch.java)
+[`PersonRelationshipSearch`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/search/PersonRelationshipSearch.java)
 shows the category-specific conjunction, parent-phone linking and distinct context rules.
-[`LessonQueriesTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/seedu/address/model/query/LessonQueriesTest.java)
+[`LessonQueriesTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/model/query/LessonQueriesTest.java)
 compares indexed results with a raw-record scan and covers held lists/restore;
-[`CanonicalLessonRetrievalIntegrationTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/seedu/address/logic/CanonicalLessonRetrievalIntegrationTest.java)
+[`CanonicalLessonRetrievalIntegrationTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/CanonicalLessonRetrievalIntegrationTest.java)
 checks routing, independent views and failed-save isolation. The editable refresh sequence is
 `docs/diagrams/LessonQueryRefresh.puml`. These source links carry the detailed inventories rather than
 repeating them here.
@@ -975,7 +975,7 @@ human edits to the supported schema must load; invalid edits follow [startup pro
 
 ### Common classes
 
-`seedu.address.commons` contains shared settings/value helpers, exceptions, JSON/file/string utilities
+`ponhub.commons` contains shared settings/value helpers, exceptions, JSON/file/string utilities
 and `LogsCenter`. Keep reusable infrastructure here; domain invariants belong to Model and command
 syntax to Logic. Logging setup and its console fallback are documented in [Logging](Logging.html).
 
@@ -988,7 +988,7 @@ This section describes some noteworthy details on how certain features are imple
 ### Lesson scheduling value contracts
 
 The immutable types in
-[`model.lesson`](https://github.com/AY2627S1-CS2103T-F13-3/tp/tree/master/src/main/java/seedu/address/model/lesson)
+[`model.lesson`](https://github.com/AY2627S1-CS2103T-F13-3/tp/tree/master/src/main/java/ponhub/model/lesson)
 define the exhaustive parsing, normalization and equality rules used by commands, aggregate validation and storage.
 `LessonId` is an `L`-prefixed positive `long`; `LessonDay` stores `Mon`–`Sun`; `LessonTime` stores four-digit 24-hour
 time; and `Subject` and `Room` enforce their length and character contracts. Room case is normalized so it cannot
@@ -1000,14 +1000,14 @@ The [whole-root boundary above](#shared-lesson-scheduling-model-apis-78), rather
 decides whether an otherwise valid slot clashes with existing tutor, room or Student schedules.
 
 Active command syntax belongs to the [UG](UserGuide.html) and
-[`CanonicalCommandCatalog`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/CanonicalCommandCatalog.java).
+[`CanonicalCommandCatalog`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandCatalog.java).
 Every lesson, membership or attendance mutation resolves selectors according to the
 [shared contract](#shared-lesson-target-contract), prepares a complete candidate, and uses the common
 [transaction boundary](#command-transactions). No-op, parsing, domain and save failures publish no state.
 
 ### Immutable shared lesson records
 
-[`Lesson`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/lesson/Lesson.java)
+[`Lesson`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/lesson/Lesson.java)
 is one canonical recurring slot: stable Lesson and Tutor IDs, a validated time slot, subject, room and the current
 Student-ID roster. It defensively copies that roster, exposes it as an unmodifiable set and rejects non-Student
 members. An empty roster is valid.
@@ -1064,7 +1064,7 @@ different IDs, optional contacts or student levels cannot bypass this rule. Diff
 <a id="registry-apis"></a>
 <a id="allocation-and-state-validation"></a>
 
-[`PeopleRegistry`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/person/PeopleRegistry.java)
+[`PeopleRegistry`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/person/PeopleRegistry.java)
 keeps all roles in one global creation order and returns immutable snapshots. Successful additions append a
 record and advance only its role's allocation counter; rejected additions change neither. If the last Student
 allocation was `S2`, deleting it keeps the counter at `2`, so the next Student receives `S3`. Counters are never reconstructed
@@ -1127,7 +1127,7 @@ Supplied optional values must be nonblank. Unknown/repeated prefixes, student-on
 preambles, line breaks and controls are rejected. Unicode whitespace is accepted at prefix/value boundaries,
 while interior contact characters still follow the shared validators.
 
-[`PersonAdditionCandidate`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/PersonAdditionCandidate.java)
+[`PersonAdditionCandidate`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/PersonAdditionCandidate.java)
 prepares a complete proposed `PonHubDataState` using a temporary registry. It applies duplicate/allocation rules
 and appends the new person while preserving lessons, rosters, attendance and lesson allocation history.
 Preparation changes no live state or counter; an abandoned candidate reserves no identity. The transaction
@@ -1209,7 +1209,7 @@ packaged save/restart/failure and platform evidence using the procedures below.
 
 ### Canonical people view and cards
 
-[`PeopleView`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/PeopleView.java)
+[`PeopleView`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PeopleView.java)
 derives the people projection from one supplied `PonHubData` root and owns the selected role filter. It retains
 one unmodifiable observable
 list for both command selection and `PersonRecordListPanel`, preserving global relative order. The people projection's owner explicitly refreshes after committed replacement or rollback, on the JavaFX
@@ -1234,7 +1234,7 @@ actual application/platform display evidence belongs to [manual testing](#planne
 
 ### Representative canonical people samples
 
-[`PeopleSampleDataUtil`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/util/PeopleSampleDataUtil.java)
+[`PeopleSampleDataUtil`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/util/PeopleSampleDataUtil.java)
 creates a fresh independent registry in deterministic order `T1, S1, P1, S2, T2, S3`, using normal addition rules.
 It supports representative acceptance work without duplicating validation or allocation logic.
 
@@ -1250,7 +1250,7 @@ fixture recipes and tracks full-product samples and acceptance after runtime int
 
 ### Search criteria parsing foundation
 
-[`SearchCriteriaParser`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/parser/SearchCriteriaParser.java)
+[`SearchCriteriaParser`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/parser/SearchCriteriaParser.java)
 parses the arguments
 after `search` into immutable `SearchCriteria`. It produces a value object, not a `Command`; the canonical session
 routes validated criteria to people or lesson retrieval. `SearchField` owns category compatibility and field matching, while
@@ -1384,9 +1384,9 @@ wrapping context labels for multiple matching roster Students without duplicate 
 
 ### Dated attendance records
 
-[`Attendance`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/attendance/Attendance.java)
+[`Attendance`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/attendance/Attendance.java)
 is an immutable dated record stored separately from Students, Lessons and current membership. Its
-[`AttendanceKey`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/attendance/AttendanceKey.java)
+[`AttendanceKey`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/attendance/AttendanceKey.java)
 is exactly one Student ID, one Lesson ID and one `LocalDate`; whole-root validation permits at most one record for
 that key. The only stored statuses are `present` and `absent`. No key means **unrecorded**, not absent, so there is no
 stored `unrecorded` status.
@@ -1397,7 +1397,7 @@ corrected with `mark`, and can be removed with `unmark`. Correcting to the store
 are no-ops; unmark never changes membership. A retained key continues to guard both its Student and Lesson from
 deletion until explicitly removed. Exact value-object and mutation behavior is defined by the linked sources and
 the canonical
-[`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/PonHubData.java)
+[`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PonHubData.java)
 API; selectors and cross-component invariants remain in the [shared contract](#shared-lesson-target-contract).
 The active `history` route reads retained entries without changing operational data.
 
@@ -1833,10 +1833,10 @@ Students 1 and 2 are enrolled in `L1`. Record Monday attendance for both Student
 #### Lesson edit owner verification record (#269)
 
 Yang Shuo ran the source-level owner checks on 20 October 2026 from team-master baseline `d1a2b9b5`, using
-macOS 26.6.2 on arm64 and Azul Zulu OpenJDK 25.0.3. The focused command was
-`./gradlew test --tests seedu.address.logic.CanonicalLessonEditIntegrationTest --no-daemon`; Gradle reported
-`BUILD SUCCESSFUL`. The complete `./gradlew check --no-daemon` repository verification also reported
-`BUILD SUCCESSFUL` after recording these results.
+macOS 26.6.2 on arm64 and Azul Zulu OpenJDK 25.0.3. The focused
+`CanonicalLessonEditIntegrationTest` run and complete `./gradlew check --no-daemon` repository verification
+both reported `BUILD SUCCESSFUL`. To repeat the focused check after the namespace move, run
+`./gradlew test --tests ponhub.logic.CanonicalLessonEditIntegrationTest --no-daemon`.
 
 | Result | Case and recorded observation |
 | --- | --- |
@@ -2186,11 +2186,11 @@ The following is one end-to-end procedure for the delivered normal session. `add
 
    ```bash
    ./gradlew test \
-       --tests "seedu.address.logic.CanonicalLessonMembershipIntegrationTest.execute_enrolSaveFailureRestoresAllStateAndRetryCommitsOnce" \
-       --tests "seedu.address.logic.CanonicalAttendanceIntegrationTest.execute_markSaveFailureRestoresStateViewsAndRetryCommits" \
-       --tests "seedu.address.logic.CanonicalAttendanceIntegrationTest.execute_unmarkSaveFailureRestoresStateViewsAndRetryCommits" \
-       --tests "seedu.address.logic.CanonicalDeleteLessonIntegrationTest.execute_failedSavePreservesStateCountersAndViewsBeforeSuccessfulRetry" \
-       --tests "seedu.address.logic.CanonicalLessonRetrievalIntegrationTest.addLesson_saveFailureThenCommitAndReload_refreshOnlyMatchingSelectedResults"
+       --tests "ponhub.logic.CanonicalLessonMembershipIntegrationTest.execute_enrolSaveFailureRestoresAllStateAndRetryCommitsOnce" \
+       --tests "ponhub.logic.CanonicalAttendanceIntegrationTest.execute_markSaveFailureRestoresStateViewsAndRetryCommits" \
+       --tests "ponhub.logic.CanonicalAttendanceIntegrationTest.execute_unmarkSaveFailureRestoresStateViewsAndRetryCommits" \
+       --tests "ponhub.logic.CanonicalDeleteLessonIntegrationTest.execute_failedSavePreservesStateCountersAndViewsBeforeSuccessfulRetry" \
+       --tests "ponhub.logic.CanonicalLessonRetrievalIntegrationTest.addLesson_saveFailureThenCommitAndReload_refreshOnlyMatchingSelectedResults"
    ```
 
    Expect all targeted tests to pass. They inject failed writes and verify no staged state, counter or view is
