@@ -376,7 +376,7 @@ permission failures through the real session's writer seam, then retry and reloa
 
 ### Architecture
 
-<img src="images/ArchitectureDiagram.png" width="280" />
+![Current component responsibilities and dependencies](images/ArchitectureDiagram.png)
 
 `Main` launches JavaFX; [`MainApp`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/MainApp.java)
 checks application paths, constructs the canonical session and separate preferences, then connects
@@ -390,16 +390,31 @@ checks application paths, constructs the canonical session and separate preferen
 | [Storage](#storage-component) | Validate/load local files and persist complete operational snapshots safely. |
 | [Commons](#common-classes) | Supply shared value helpers, exceptions, logging and settings. |
 
-Components depend on interfaces rather than manager implementations, keeping UI, command and file
-handling independently testable:
+UI depends on the `Logic` interface. The canonical session owns the model/query collaborators and
+injects a complete-snapshot writer into the executor. These seams let tests exercise command and
+file failures without a second writable model. The arrows above show calls and type dependencies,
+not separate copies of the data. Commons helpers are omitted.
 
-<img src="images/ComponentManagers.png" width="300" />
+#### Canonical command collaboration
 
-The inherited diagrams record historical manager types and the broad `delete 1` flow. Active canonical
-mutations, including guarded person and lesson deletion, save staged state before publication; failure leaves the live
-state unchanged. See [Command transactions](#command-transactions) for that boundary.
+The sequence below traces `edit 1 n/Jamie Tan` in a normal session where people-list position 1
+exists and the replacement is valid. `MainWindow` sends the command through `Logic.execute`;
+`CanonicalLogicManager` delegates to `CanonicalPeopleSession`.
 
-<img src="images/ArchitectureSequenceDiagram.png" width="574" />
+![Canonical edit command: stage, save, then publish](images/ArchitectureSequenceDiagram.png)
+
+The session checks startup protection before parsing mutation arguments. A parse or domain failure
+returns without saving or publishing. A valid command prepares a result on isolated transaction
+copies; preparing that result is not user-visible success. If operational data changed, the executor
+must save the complete validated snapshot before `commit()` publishes it. Permission or I/O failure
+discards the staged transaction, retaining live data, allocation counters and the people view. A no-op
+skips the write; view-only commands can still commit a filter change.
+
+`editlesson` enters the same executor through `LessonEditParser` and `CanonicalEditLessonCommand`.
+The [editing contract](#v14-editing-contract) owns field and scheduling rules; the
+[transaction contract](#command-transactions) owns durability and recovery details. The figure shows
+coordination rather than duplicating either contract. Command source references are listed in the
+[Logic component](#logic-component).
 
 ### UI component
 
@@ -438,38 +453,35 @@ any current result. Navigation introduces no parser grammar, stored state or alt
 
 **API:** [`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/Logic.java).
 
-Historical AB3 Logic class diagram, including the removed `AddCommand` and `DeleteCommand` examples:
+![Active command-boundary collaborators](images/LogicClassDiagram.png)
 
-<img src="images/LogicClassDiagram.png" width="550"/>
+`CanonicalLogicManager` implements `Logic` over one `CanonicalPeopleSession`. The session resolves a
+`CanonicalCommandDefinition` and dispatches through its exhaustive switch. Definitions also supply
+`CanonicalCommandCatalog` guidance and protected-session eligibility; protection is checked before
+mutation parsing. Typed parsers return canonical inputs, without a shared legacy `Parser` interface
+or AB3 tokenizer. For example, `PersonEditParser.Input` supplies `CanonicalEditCommand`, while
+`LessonEditParser` supplies `CanonicalEditLessonCommand`.
 
-`CanonicalLogicManager` delegates to the single `CanonicalPeopleSession`. The session's `execute()`
-dispatches commands through its switch, using `CanonicalCommandCatalog` for available command words
-and guidance. Canonical mutations use `CanonicalCommandExecutor`, which saves a changed candidate before
-publishing its root and view and returning `CommandResult`. Read-only lesson routes select derived results
-through `LessonRetrieval` without changing the people view.
-Parse, domain or save failure preserves
-live records, allocation counters, filter and selection. Read-only commands/no-ops skip operational
-saving. List clears search criteria and optionally sets a role; own-contact search replaces the people filter,
-while lesson creation and membership changes preserve it. See [Storage](#command-transactions).
+`CanonicalCommandExecutor` obtains a transaction from `PeopleView.beginTransaction()` and calls the
+`StagedCommand` on isolated data/view copies. Its injected `SnapshotWriter` is connected to
+`ProtectedPonHubDataStorage.saveData` in the application session. The executor commits only after a
+changed operational snapshot is saved. `CanonicalTransaction.commit()` publishes the root before
+copying the staged people filter, so subscribed projections refresh from committed data. The
+[command sequence](#canonical-command-collaboration) shows success, no-op and failed-save paths.
 
-The three diagrams in this section provide historical AB3 context. Their add/delete commands and parsers
-have been removed; the legacy Logic manager, catalogue, parser interface and help/list/exit commands are
-retired. Active application wiring and its transaction boundary are described above.
+`list` uses the executor to change the staged people filter without an operational write. People
+search changes its derived filter directly; lesson/search/detail/history routes use the session's
+retrieval coordinators. `help` and `exit` return guidance/control results without operational writes.
+These routes do not create a second root. The [retrieval contract](#read-only-retrieval-api-contract-113)
+and [search explanation](#supported-criteria) own result ordering, selection and matching behavior.
+Commands use the [shared selector contract](#shared-lesson-target-contract) for displayed positions
+versus stable IDs.
 
-![Historical interactions inside Logic for retired deletion](images/DeleteSequenceDiagram.png)
-
-The historical deletion sequence illustrates the removed `DeleteCommandParser` and `DeleteCommand` path.
-Its per-call parser construction predates the registered catalogue and omits the current transaction boundary.
-The legacy `Parser` interface is also retired; active parsers return typed canonical inputs. This
-parser-class diagram is historical: its add/delete examples and the
-`ArgumentTokenizer`/`ArgumentMultimap`/`Prefix`/`CliSyntax` toolkit have been removed.
-Active canonical parsers keep their own strict unknown/repeated/blank-prefix validation and share
-`ParserUtil`'s Unicode-boundary helper where needed; they do not use the retired tokenizer.
-
-<img src="images/ParserClasses.png" width="600"/>
-
-Canonical commands follow the [shared selector contract](#shared-lesson-target-contract) and execute
-through the same session/executor when integrated; documented foundations do not activate routes.
+Trace the implementation through
+[`CanonicalPeopleSession.execute`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/CanonicalPeopleSession.java),
+[`CanonicalEditCommand`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/commands/CanonicalEditCommand.java),
+[`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/logic/CanonicalCommandExecutor.java)
+and [`CanonicalTransaction`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/model/CanonicalTransaction.java).
 
 #### Read-only retrieval API contract (#113)
 

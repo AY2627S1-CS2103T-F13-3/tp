@@ -1,33 +1,24 @@
 @startuml
-!include <office/Concepts/globe_internet>
-!include <office/Concepts/documents>
-!include <office/Users/user>
-!include style.puml
-
-Package " "<<Rectangle>>{
-    Class UI UI_COLOR
-    Class Logic LOGIC_COLOR
-    Class Storage STORAGE_COLOR
-    Class Model MODEL_COLOR
-    Class Main #grey
-    Class Commons LOGIC_COLOR_T2
-}
-
-Class "<$user>" as User MODEL_COLOR_T2
-Class "<$documents>" as File UI_COLOR_T1
-
-
-UI -[#green]> Logic
-UI -right[#green]-> Model
-Logic -[#blue]-> Storage
-Logic -down[#blue]-> Model
-Main -[#grey]-> UI
-Main -[#grey]-> Logic
-Main -[#grey]-> Storage
-Main -up[#grey]-> Model
-Main -down[hidden]-> Commons
-
-Storage -up[STORAGE_COLOR].> Model
-Storage .right[STORAGE_COLOR].>File
-User ..> UI
+' Updated by Ernest Chua with OpenAI Codex assistance (#220).
+!pragma layout smetana
+skinparam componentStyle rectangle
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam shadowing false
+component "UI\nCommands, observable views, feedback" as UI #E1F2DC
+component "Logic\nRouting and transaction coordination" as Logic #E5E5FA
+component "Model\nCanonical records, invariants, projections" as Model #FBE3E6
+component "Storage\nProtected loading and snapshot persistence" as Storage #FFF0BD
+component "MainApp\nStartup wiring and separate preferences" as Main #EEEEEE
+Main ..> UI : wires
+Main ..> Logic : wires
+UI --> Logic : Logic API
+Logic --> Model : stage / query / publish
+Logic --> Storage : load / save snapshot
+Storage ..> Model : canonical snapshot types
+legend bottom
+  Solid arrow: runtime call dependency
+  Dashed arrow: wiring or type dependency
+  Shared Commons helpers omitted for clarity.
+endlegend
 @enduml

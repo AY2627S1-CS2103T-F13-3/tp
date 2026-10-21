@@ -1,39 +1,62 @@
 @startuml
-!include style.puml
-skinparam ArrowFontStyle plain
-
-Actor User as user USER_COLOR
-Participant ":UI" as ui UI_COLOR
-Participant ":Logic" as logic LOGIC_COLOR
-Participant ":Model" as model MODEL_COLOR
-Participant ":Storage" as storage STORAGE_COLOR
-
-user -[USER_COLOR]> ui : "delete 1"
-activate ui UI_COLOR
-
-ui -[UI_COLOR]> logic : execute("delete 1")
-activate logic LOGIC_COLOR
-
-logic -[LOGIC_COLOR]> model : deletePerson(p)
-activate model MODEL_COLOR
-
-model -[MODEL_COLOR]-> logic
-deactivate model
-
-logic -[LOGIC_COLOR]> storage : saveAddressBook(addressBook)
-activate storage STORAGE_COLOR
-
-storage -[STORAGE_COLOR]> storage : Save to file
-activate storage STORAGE_COLOR_T1
-storage --[STORAGE_COLOR]> storage
-deactivate storage
-
-storage --[STORAGE_COLOR]> logic
-deactivate storage
-
-logic --[LOGIC_COLOR]> ui
-deactivate logic
-
-ui--[UI_COLOR]> user
-deactivate ui
+' Updated by Ernest Chua with OpenAI Codex assistance (#220).
+hide footbox
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 220
+participant "session:\nCanonicalPeopleSession" as Session #E5E5FA
+participant "executor:\nCanonicalCommandExecutor" as Executor #E5E5FA
+participant "tx:\nCanonicalTransaction" as Tx #FBE3E6
+participant "writer:\nSnapshotWriter" as Writer #FFF0BD
+[-> Session : execute(commandText)
+activate Session
+Session -> Session : resolve definition, check protection,\nparse arguments and create command
+Session -> Executor : execute(command)
+activate Executor
+Executor -> Executor : view.beginTransaction()
+note over Executor, Tx
+  PeopleView creates tx with isolated model and filter copies.
+  staged / stagedView are obtained from tx.
+end note
+ref over Executor, Tx
+  command.execute(staged, stagedView)
+  Resolve index; validate and stage the edit.
+  Return a prepared CommandResult.
+end ref
+Executor -> Tx : hasOperationalChanges()
+Tx --> Executor : changed
+alt changed operational snapshot
+  Executor -> Writer : save(staged.exportState())
+  activate Writer
+  note over Tx, Writer
+    Runtime writer: ProtectedPonHubDataStorage.saveData
+  end note
+  alt save succeeds
+    Writer --> Executor : saved
+  else permission / I/O failure
+    Writer --> Executor : IOException
+    break reject command; do not commit
+      Executor --> Session : CommandException
+      [<-- Session : failure feedback
+    end
+  end
+  deactivate Writer
+else no operational change
+  note over Executor, Tx : Skip save; a view-only change may still commit.
+end
+Executor -> Tx : commit()
+activate Tx
+Tx -> Tx : publish changed root, then people filter;\nrefresh subscribed views
+Tx --> Executor
+deactivate Tx
+Executor --> Session : CommandResult
+deactivate Executor
+[<-- Session : success feedback
+deactivate Session
+legend bottom
+  Solid arrow: call; dashed arrow: return or exception
+  Parse/domain failures also return before save and publication.
+endlegend
 @enduml
