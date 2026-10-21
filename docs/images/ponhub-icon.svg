@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>PonHub people and lessons icon</title>
+  <desc>Original artwork by Ernest Chua with OpenAI Codex assistance, 2026.</desc>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#101010"/>
+  <g fill="#ff9900">
+    <circle cx="22" cy="20" r="6"/>
+    <circle cx="42" cy="20" r="6"/>
+    <path d="M12 34 Q22 28 32 35 Q42 28 52 34 V51 Q42 45 32 52 Q22 45 12 51 Z"/>
+  </g>
+  <path d="M32 35 V51" fill="none" stroke="#101010" stroke-width="3"/>
+</svg>

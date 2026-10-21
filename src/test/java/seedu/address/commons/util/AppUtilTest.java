@@ -1,15 +1,21 @@
 package seedu.address.commons.util;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
+import javafx.scene.image.Image;
+
 public class AppUtilTest {
 
     @Test
-    public void getImage_exitingImage() {
-        assertNotNull(AppUtil.getImage("/images/address_book_32.png"));
+    public void getImage_existingApplicationIcon_decodesImage() {
+        Image icon = AppUtil.getImage("/images/ponhub_icon.png");
+        assertFalse(icon.isError());
+        assertEquals(64, icon.getWidth());
+        assertEquals(64, icon.getHeight());
     }
 
     @Test
