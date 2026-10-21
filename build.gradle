@@ -7,14 +7,14 @@ plugins {
 }
 
 application {
-    mainClass = 'seedu.address.Main'
+    mainClass = 'ponhub.Main'
 }
 
 run {
     enableAssertions = true
 }
 
-version = '1.3'
+version = '1.4'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_25

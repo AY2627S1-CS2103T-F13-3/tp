@@ -26,7 +26,7 @@ Use the checked-in Gradle wrapper, which selects the Gradle distribution in
 [`gradle-wrapper.properties`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/gradle/wrapper/gradle-wrapper.properties).
 The product version is separate: [`build.gradle`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/build.gradle)
 sets `version` for the JAR's `Implementation-Version` manifest attribute;
-[`MainApp.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/seedu/address/MainApp.java)
+[`MainApp.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java)
 sets `MainApp.VERSION` for the version reported in the startup log. Update both for a release, preserving their
 existing convention (`1.3` and `v1.3`, for example). These values do not select the Gradle version.
 See [Making a release](#making-a-release) for candidate, package and publication checks.
@@ -129,12 +129,15 @@ Building a JAR or passing Java CI alone does not establish these packaged outcom
 For hosted Linux verification, manually dispatch **Verify Linux release package** in GitHub Actions using
 the [workflow](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/.github/workflows/linux-package.yml).
 Set both `candidate_ref` to the reviewed **team source SHA** and `expected_sha256` to the intended JAR's
-**matching SHA-256**. Its current defaults and push/PR fallbacks are frozen v1.3 values; a run using them
-does not verify a later candidate. The v1.4 candidate owner tracks final package verification in
+**matching SHA-256**. Manual dispatch deliberately has no remembered candidate defaults. Push and pull-request
+runs exercise the event SHA and its freshly calculated checksum, so they check the verification tooling but do
+not establish the independently identified release handoff. The v1.4 candidate owner tracks final verification in
 [#271](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/271).
 
 The hosted Ubuntu job rebuilds that source, rejects a different checksum and drives the real JAR's command
-box on a virtual display through attendance, correction, retained history and restart. Check the
+box on a virtual display through person and Lesson edits, rejected conflicting edits, attendance correction,
+retained history and restart. It also checks the distribution filename, size, manifest version and entry point,
+and confirms that the runtime startup version matches. Check the
 [verification script](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/.github/scripts/verify_linux_package.py)
 for its actual coverage; arrange additional checks for new features it does not exercise. Download
 `linux-package-evidence` promptly (the workflow retains it for 30 days): it contains the exact JAR, runtime,

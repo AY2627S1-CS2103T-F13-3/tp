@@ -1,0 +1,21 @@
+{
+  "audited_product_sha": "f62590fe27fdd0104fa6efea0584e22ab8104ffb",
+  "results": [
+    {
+      "probe": "missing-directory",
+      "exit_status": 1,
+      "failures": [
+        "DeveloperGuide.md:991: missing source tree target src/main/java/ponhub/model/missing-guide-audit-probe"
+      ]
+    },
+    {
+      "probe": "file-as-directory",
+      "exit_status": 1,
+      "failures": [
+        "DeveloperGuide.md:991: missing source tree target src/main/java/ponhub/model/lesson/Lesson.java"
+      ]
+    }
+  ],
+  "restored_exact_source": true,
+  "limits": "Temporary target-type probes; original guide and baseline reports restored byte-for-byte."
+}

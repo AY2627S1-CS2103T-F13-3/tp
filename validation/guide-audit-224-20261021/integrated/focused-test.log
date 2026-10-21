@@ -1,0 +1,20 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build
+> Task :compileJava
+> Task :processResources
+> Task :classes
+
+> Task :compileTestJava
+Note: /private/tmp/ernest-guide-audit-224/src/test/java/ponhub/ui/UiPartTest.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :processTestResources
+> Task :testClasses
+> Task :test
+> Task :jacocoTestReport
+
+[Incubating] Problems report is available at: file:///private/tmp/ernest-guide-audit-224/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 5s
+6 actionable tasks: 6 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.1/userguide/configuration_cache_enabling.html

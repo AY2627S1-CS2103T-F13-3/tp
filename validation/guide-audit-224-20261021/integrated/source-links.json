@@ -1,0 +1,376 @@
+{
+  "audited_product_sha": "f62590fe27fdd0104fa6efea0584e22ab8104ffb",
+  "source_references": 52,
+  "file_references": 51,
+  "directory_references": 1,
+  "unique_targets": 42,
+  "namespace_references": 47,
+  "old_namespace_references": 0,
+  "references": [
+    {
+      "guide": "docs/DevOps.md",
+      "line": 26,
+      "kind": "blob",
+      "target": "gradle/wrapper/gradle-wrapper.properties",
+      "exists": true
+    },
+    {
+      "guide": "docs/DevOps.md",
+      "line": 27,
+      "kind": "blob",
+      "target": "build.gradle",
+      "exists": true
+    },
+    {
+      "guide": "docs/DevOps.md",
+      "line": 29,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/MainApp.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DevOps.md",
+      "line": 49,
+      "kind": "blob",
+      "target": ".github/workflows/gradle.yml",
+      "exists": true
+    },
+    {
+      "guide": "docs/DevOps.md",
+      "line": 130,
+      "kind": "blob",
+      "target": ".github/workflows/linux-package.yml",
+      "exists": true
+    },
+    {
+      "guide": "docs/DevOps.md",
+      "line": 138,
+      "kind": "blob",
+      "target": ".github/scripts/verify_linux_package.py",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 25,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/logic/CanonicalPeopleSession.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 26,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/logic/commands/CanonicalAddCommand.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 28,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/logic/CanonicalCommandExecutor.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 29,
+      "kind": "blob",
+      "target": "src/test/java/ponhub/logic/CanonicalPeopleSessionTest.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 31,
+      "kind": "blob",
+      "target": "src/test/java/ponhub/logic/commands/CanonicalPeopleCommandIntegrationTest.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 381,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/MainApp.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 421,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/ui/Ui.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 454,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/logic/Logic.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 481,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/logic/CanonicalPeopleSession.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 482,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/logic/commands/CanonicalEditCommand.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 483,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/logic/CanonicalCommandExecutor.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 484,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/CanonicalTransaction.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 488,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/logic/Logic.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 489,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/query/LessonQuerySource.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 490,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/query/LessonQueries.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 497,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/query/LessonView.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 498,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/query/StudentView.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 500,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/query/AttendanceHistoryEntry.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 553,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/PonHubData.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 586,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/PonHubData.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 592,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/PonHubDataState.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 672,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/logic/LessonRetrieval.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 711,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/logic/CanonicalCommandExecutor.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 728,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/query/LessonQuerySource.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 730,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/query/LessonQueries.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 738,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/search/PersonRelationshipSearch.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 740,
+      "kind": "blob",
+      "target": "src/test/java/ponhub/model/query/LessonQueriesTest.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 742,
+      "kind": "blob",
+      "target": "src/test/java/ponhub/logic/CanonicalLessonRetrievalIntegrationTest.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 991,
+      "kind": "tree",
+      "target": "src/main/java/ponhub/model/lesson",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 1003,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/logic/CanonicalCommandCatalog.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 1010,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/lesson/Lesson.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 1067,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/person/PeopleRegistry.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 1130,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/logic/PersonAdditionCandidate.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 1212,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/PeopleView.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 1237,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/util/PeopleSampleDataUtil.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 1253,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/logic/parser/SearchCriteriaParser.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 1387,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/attendance/Attendance.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 1389,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/attendance/AttendanceKey.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/DeveloperGuide.md",
+      "line": 1400,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/model/PonHubData.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/Logging.md",
+      "line": 23,
+      "kind": "blob",
+      "target": "src/main/java/ponhub/commons/core/LogsCenter.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/Logging.md",
+      "line": 55,
+      "kind": "blob",
+      "target": "src/test/java/ponhub/commons/core/LogsCenterTest.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/Logging.md",
+      "line": 57,
+      "kind": "blob",
+      "target": "src/test/java/ponhub/ProtectedStartupTest.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/Testing.md",
+      "line": 75,
+      "kind": "blob",
+      "target": "src/test/java/ponhub/logic/PersonIndexResolverTest.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/Testing.md",
+      "line": 76,
+      "kind": "blob",
+      "target": "src/test/java/ponhub/logic/commands/CanonicalPeopleCommandIntegrationTest.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/Testing.md",
+      "line": 77,
+      "kind": "blob",
+      "target": "src/test/java/ponhub/storage/JsonPonHubDataStorageTest.java",
+      "exists": true
+    },
+    {
+      "guide": "docs/Testing.md",
+      "line": 78,
+      "kind": "blob",
+      "target": "src/test/java/ponhub/logic/CanonicalLogicManagerTest.java",
+      "exists": true
+    }
+  ],
+  "failures": []
+}

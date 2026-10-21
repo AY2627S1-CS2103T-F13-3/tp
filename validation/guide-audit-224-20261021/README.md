@@ -1,5 +1,10 @@
 # Round 1 guide audit — #224
 
+Current reconciliation: [integrated guide audit](integrated/README.md), against
+team master `f62590fe27fdd0104fa6efea0584e22ab8104ffb` after #357/#349.
+The remaining sections preserve the original dated preparation and handoffs;
+its baseline pending-action text is superseded by that integrated record.
+
 Prepared by Ernest Chua with OpenAI Codex assistance on 21 October 2026 (SGT).
 Audited team master: `9a2f8cd905ae6d51857e5d84661e0e91f8e7e265`.
 Scope: independent Round 1 preparation for [#224](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/224).

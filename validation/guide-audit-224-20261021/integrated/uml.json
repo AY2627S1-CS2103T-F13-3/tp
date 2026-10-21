@@ -1,0 +1,97 @@
+{
+  "audited_product_sha": "f62590fe27fdd0104fa6efea0584e22ab8104ffb",
+  "results": [
+    {
+      "source": "docs/diagrams/ArchitectureDiagram.puml",
+      "render": "docs/images/ArchitectureDiagram.png",
+      "embedded_source_matches": true,
+      "source_sha256": "50541382bdcce6c1a85e9f6e930520be7e357904c20f139d55c1854da0ab899c",
+      "render_sha256": "653a9f99e62d3a41f27cfdb0930f2fc0e4fd38100556a182e2766afb5dc993f0"
+    },
+    {
+      "source": "docs/diagrams/ArchitectureSequenceDiagram.puml",
+      "render": "docs/images/ArchitectureSequenceDiagram.png",
+      "embedded_source_matches": true,
+      "source_sha256": "426320f4a5517ee686d46b7ec767615773b3137e161a01f68c4e645f3f840661",
+      "render_sha256": "e448973aaf3e066885ca38baf3ef5c7d4b2bb495022fd5225e07ae50d5a59b6d"
+    },
+    {
+      "source": "docs/diagrams/AttendanceClassDiagram.puml",
+      "render": "docs/images/AttendanceClassDiagram.png",
+      "embedded_source_matches": true,
+      "source_sha256": "a6be4451b0913c55365bfc86e7540a141baa4a8212a96115fc107643f0c41f01",
+      "render_sha256": "a1f893c9d4be20018df4e722fa3028db24fde6f6fa5035fa40b8ecacc2a62f5a"
+    },
+    {
+      "source": "docs/diagrams/CanonicalStorageClassDiagram.puml",
+      "render": "docs/images/CanonicalStorageClassDiagram.png",
+      "embedded_source_matches": true,
+      "source_sha256": "93899a386f3ccc50051fd9565c891cd81236939ca5d971d2b0bb7b0c7c5fa01a",
+      "render_sha256": "fba1e948e39949de5c44a1703f7443f8ed7c02b26de323d50f3a3c88633cb7e0"
+    },
+    {
+      "source": "docs/diagrams/LessonAttendanceStateDiagram.puml",
+      "render": "docs/images/LessonAttendanceStateDiagram.png",
+      "embedded_source_matches": true,
+      "source_sha256": "6a1d81b579f18bcc0895982824e572347e76ac6d4ad479049cf39a1bea358efc",
+      "render_sha256": "9c00d2773d93804c74c36964541ce6b6b735b1a2b027574ced961f9b6a68d78f"
+    },
+    {
+      "source": "docs/diagrams/LessonMembershipClassDiagram.puml",
+      "render": "docs/images/LessonMembershipClassDiagram.png",
+      "embedded_source_matches": true,
+      "source_sha256": "e21f60011a36951d8f49abbbb95648810e3f822b0678693a19e380abc3c7abfe",
+      "render_sha256": "de393b140cb5bb57814ee4433289db8ffd080987c2a24e91e5203ab3c1ab2631"
+    },
+    {
+      "source": "docs/diagrams/LessonQueryRefresh.puml",
+      "render": "docs/images/LessonQueryRefresh.png",
+      "embedded_source_matches": true,
+      "source_sha256": "3710e077fe1a44e839945e58259cf584453eace3ea33364db72d460cc4ae587f",
+      "render_sha256": "0266e2ae72edf40f54bf0fe8c613a5f3b8f6f3f391940747e00ddac4b4cd51e4"
+    },
+    {
+      "source": "docs/diagrams/LessonRetrieval.puml",
+      "render": "docs/images/LessonRetrieval.png",
+      "embedded_source_matches": true,
+      "source_sha256": "127a3348411ea59a5011a70c32003a45518df69b13c6f2288151d123f544e088",
+      "render_sha256": "24acce0284ffa7e2b9524ea8e4542c12e60de3768c01f5aff7c77aec5bce6964"
+    },
+    {
+      "source": "docs/diagrams/LogicClassDiagram.puml",
+      "render": "docs/images/LogicClassDiagram.png",
+      "embedded_source_matches": true,
+      "source_sha256": "65621564085446729aa005fd833e0bab79e53a7cea6afaa6a7b25b956f766c8e",
+      "render_sha256": "7ac8616c050ac5ec60bd75a5297a400cfedb473d1182a0f85df9559bf4715fc0"
+    },
+    {
+      "source": "docs/diagrams/PeopleSelectionClassDiagram.puml",
+      "render": "docs/images/PeopleSelectionClassDiagram.png",
+      "embedded_source_matches": true,
+      "source_sha256": "c60120a248bf07a378db49883222eb271775e3c400585c6b979083a691f103f3",
+      "render_sha256": "e18c890540c450be5e5c7ede86f287335d581fb76bfe0248b526dbb19c80b2fc"
+    },
+    {
+      "source": "docs/diagrams/PersonRecordClassDiagram.puml",
+      "render": "docs/images/PersonRecordClassDiagram.png",
+      "embedded_source_matches": true,
+      "source_sha256": "9264e033a9cfadb87977b68a1a077d032be1673c8a73425d5e87392fece032a3",
+      "render_sha256": "db29e7c365f01683b4f3f094a54b3f7bd6df57761af40461a2944a757e218c30"
+    },
+    {
+      "source": "docs/diagrams/StorageClassDiagram.puml",
+      "render": "docs/images/StorageClassDiagram.png",
+      "embedded_source_matches": true,
+      "source_sha256": "e2fd424c8cf766ea0ac6ca8403e24a596b663dbdecff9db37251a9dfff22be6c",
+      "render_sha256": "ef2fa472b20bb76701ec79160845065adfcb51dad5a95bf02d4a50f62f2573fe"
+    },
+    {
+      "source": "docs/diagrams/UiClassDiagram.puml",
+      "render": "docs/images/UiClassDiagram.png",
+      "embedded_source_matches": true,
+      "source_sha256": "df8d200bd25a44ae8782bf57d1af4cc78982a786a2484c3c64305de54b11f4fc",
+      "render_sha256": "f91ed32e299a73031d85fd3181ee4b15ef815af2d98c760950c43b2acca6f2f1"
+    }
+  ],
+  "limits": "PNG embedded PlantUML source inspection; this pass does not freshly render figures. The namespace commit leaves diagram source/render bytes unchanged."
+}

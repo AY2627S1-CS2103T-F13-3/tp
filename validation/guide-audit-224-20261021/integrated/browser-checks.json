@@ -1,0 +1,229 @@
+{
+  "audited_product_sha": "f62590fe27fdd0104fa6efea0584e22ab8104ffb",
+  "observer": "Coordinating agent, connected browser, 21 October 2026 SGT",
+  "base_url": "http://127.0.0.1:8776/tp/",
+  "viewports": [
+    "1470x800",
+    "390x844"
+  ],
+  "results": [
+    {
+      "brokenImages": [],
+      "hash": "#lesson-scheduling-value-contracts",
+      "scrollWidth": 1470,
+      "sourceLinks": [
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalPeopleSession.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/commands/CanonicalAddCommand.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandExecutor.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/CanonicalPeopleSessionTest.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/commands/CanonicalPeopleCommandIntegrationTest.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/Ui.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/Logic.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalPeopleSession.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/commands/CanonicalEditCommand.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandExecutor.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/CanonicalTransaction.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/Logic.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQuerySource.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQueries.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonView.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/StudentView.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/AttendanceHistoryEntry.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PonHubData.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PonHubData.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PonHubDataState.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/LessonRetrieval.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandExecutor.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQuerySource.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQueries.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/search/PersonRelationshipSearch.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/model/query/LessonQueriesTest.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/CanonicalLessonRetrievalIntegrationTest.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/tree/master/src/main/java/ponhub/model/lesson",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandCatalog.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/lesson/Lesson.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/person/PeopleRegistry.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/PersonAdditionCandidate.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PeopleView.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/util/PeopleSampleDataUtil.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/parser/SearchCriteriaParser.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/attendance/Attendance.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/attendance/AttendanceKey.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PonHubData.java"
+      ],
+      "text": "Lesson scheduling value contracts",
+      "title": "Developer Guide | PonHub",
+      "width": 1470
+    },
+    {
+      "brokenImages": [],
+      "hash": "#setting-up-the-project-on-your-computer",
+      "scrollWidth": 1470,
+      "sourceLinks": [],
+      "text": "Setting up the project on your computer",
+      "title": "Setting up and getting started | PonHub",
+      "width": 1470
+    },
+    {
+      "brokenImages": [],
+      "hash": "#selecting-tests-during-development",
+      "scrollWidth": 1470,
+      "sourceLinks": [
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/PersonIndexResolverTest.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/commands/CanonicalPeopleCommandIntegrationTest.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/storage/JsonPonHubDataStorageTest.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/CanonicalLogicManagerTest.java"
+      ],
+      "text": "Selecting tests during development",
+      "title": "Testing guide | PonHub",
+      "width": 1470
+    },
+    {
+      "brokenImages": [],
+      "hash": "#finding-startup-diagnostics",
+      "scrollWidth": 1470,
+      "sourceLinks": [
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/commons/core/LogsCenter.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/commons/core/LogsCenterTest.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/ProtectedStartupTest.java"
+      ],
+      "text": "Finding startup diagnostics",
+      "title": "Logging guide | PonHub",
+      "width": 1470
+    },
+    {
+      "brokenImages": [],
+      "hash": "#verify-the-packaged-application",
+      "scrollWidth": 1470,
+      "sourceLinks": [
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/gradle/wrapper/gradle-wrapper.properties",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/build.gradle",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/.github/workflows/gradle.yml",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/.github/workflows/linux-package.yml",
+        "https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/.github/scripts/verify_linux_package.py"
+      ],
+      "text": "Verify the packaged application",
+      "title": "DevOps guide | PonHub",
+      "width": 1470
+    },
+    {
+      "brokenImages": [],
+      "code": [
+        {
+          "client": 358,
+          "scroll": 693
+        },
+        {
+          "client": 358,
+          "scroll": 566
+        },
+        {
+          "client": 358,
+          "scroll": 811
+        },
+        {
+          "client": 358,
+          "scroll": 358
+        },
+        {
+          "client": 358,
+          "scroll": 701
+        },
+        {
+          "client": 328,
+          "scroll": 380
+        },
+        {
+          "client": 328,
+          "scroll": 642
+        },
+        {
+          "client": 328,
+          "scroll": 329
+        },
+        {
+          "client": 328,
+          "scroll": 329
+        },
+        {
+          "client": 328,
+          "scroll": 329
+        },
+        {
+          "client": 328,
+          "scroll": 591
+        },
+        {
+          "client": 328,
+          "scroll": 1226
+        }
+      ],
+      "hash": "#lesson-scheduling-value-contracts",
+      "scrollWidth": 390,
+      "title": "Developer Guide | PonHub",
+      "width": 390
+    },
+    {
+      "brokenImages": [],
+      "code": [
+        {
+          "client": 328,
+          "scroll": 328
+        }
+      ],
+      "hash": "#setting-up-the-project-on-your-computer",
+      "scrollWidth": 390,
+      "title": "Setting up and getting started | PonHub",
+      "width": 390
+    },
+    {
+      "brokenImages": [],
+      "code": [
+        {
+          "client": 358,
+          "scroll": 358
+        },
+        {
+          "client": 358,
+          "scroll": 447
+        },
+        {
+          "client": 358,
+          "scroll": 358
+        },
+        {
+          "client": 358,
+          "scroll": 540
+        }
+      ],
+      "hash": "#selecting-tests-during-development",
+      "scrollWidth": 390,
+      "title": "Testing guide | PonHub",
+      "width": 390
+    },
+    {
+      "brokenImages": [],
+      "code": [],
+      "hash": "#finding-startup-diagnostics",
+      "scrollWidth": 390,
+      "title": "Logging guide | PonHub",
+      "width": 390
+    },
+    {
+      "brokenImages": [],
+      "code": [],
+      "hash": "#verify-the-packaged-application",
+      "scrollWidth": 390,
+      "title": "DevOps guide | PonHub",
+      "width": 390
+    }
+  ],
+  "visual_inspection": "All ten affected-page screenshots inspected by coordinating agent; no observed page overflow or broken local image. Intended anchors and ponhub hrefs checked. Narrow Testing command scrolls inside its block (358px client, 540px content). Viewport restored.",
+  "retained_screenshots": [
+    "DevOps-desktop.png",
+    "DevOps-narrow.png"
+  ],
+  "public_pages": "Coordinating agent opened deployed UG/DG: DG CanonicalPeopleSession source href uses ponhub; UG current-command-summary heading visible. This is representative deployed-reader evidence, not final release/media/download verification."
+}
