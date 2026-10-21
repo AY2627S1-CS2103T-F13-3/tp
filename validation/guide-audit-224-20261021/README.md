@@ -1,5 +1,10 @@
 # Round 1 guide audit — #224
 
+**Historical preparation record.** The completed integrated-source follow-up is
+in [the final audit](../guide-audit-224-final-20261022/README.md). Its current
+results supersede the pending-owner/source wording below; the original evidence
+and attribution remain dated to their stated sources.
+
 Prepared by Ernest Chua with OpenAI Codex assistance on 21 October 2026 (SGT).
 Audited team master: `9a2f8cd905ae6d51857e5d84661e0e91f8e7e265`.
 Scope: independent Round 1 preparation for [#224](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/224).
