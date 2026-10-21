@@ -1,14 +1,16 @@
 {
-  "source_sha": "9a2f8cd905ae6d51857e5d84661e0e91f8e7e265",
+  "source_sha": "3b7dd8f81e4375f7de1c37d312c51764139626ab",
   "baseurl": "/tp",
   "rendered_pages": 9,
   "local_targets": 412,
   "image_references": 30,
   "tables": 26,
   "readme_local_targets": 5,
-  "source_references": 51,
-  "unique_source_paths": 41,
-  "namespace_link_occurrences": 46,
+  "source_references": 52,
+  "source_file_references": 51,
+  "source_directory_references": 1,
+  "unique_source_paths": 42,
+  "namespace_link_occurrences": 47,
   "diagram_pairs": [
     {
       "source": "ArchitectureDiagram.puml",

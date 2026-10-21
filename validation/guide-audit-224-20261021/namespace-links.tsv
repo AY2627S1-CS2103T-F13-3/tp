@@ -27,6 +27,7 @@ docs/DeveloperGuide.md	730	src/main/java/seedu/address/model/query/LessonQueries
 docs/DeveloperGuide.md	738	src/main/java/seedu/address/model/search/PersonRelationshipSearch.java
 docs/DeveloperGuide.md	740	src/test/java/seedu/address/model/query/LessonQueriesTest.java
 docs/DeveloperGuide.md	742	src/test/java/seedu/address/logic/CanonicalLessonRetrievalIntegrationTest.java
+docs/DeveloperGuide.md	991	src/main/java/seedu/address/model/lesson
 docs/DeveloperGuide.md	1003	src/main/java/seedu/address/logic/CanonicalCommandCatalog.java
 docs/DeveloperGuide.md	1010	src/main/java/seedu/address/model/lesson/Lesson.java
 docs/DeveloperGuide.md	1067	src/main/java/seedu/address/model/person/PeopleRegistry.java

@@ -74,14 +74,17 @@ for path, page in pages.items():
         if not table or len(set(table)) != 1:
             failures.append(f"{path.name}: inconsistent columns in table {i}: {table}")
 
-source_refs, namespace_refs, readme_count = [], [], 0
+source_refs, source_kinds, namespace_refs, readme_count = [], [], [], 0
 for path in [ROOT / "README.md", *sorted((ROOT / "docs").glob("*.md"))]:
     for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        for target in re.findall(r"https://github\.com/AY2627S1-CS2103T-F13-3/tp/blob/master/([^\s)\"#]+)", line):
+        for kind, target in re.findall(
+                r"https://github\.com/AY2627S1-CS2103T-F13-3/tp/(blob|tree)/master/([^\s)\"#]+)", line):
             source_refs.append(target)
-            if not (ROOT / unquote(target)).is_file():
-                failures.append(f"{path.name}:{number}: missing source {target}")
-            if "seedu/address" in target:
+            source_kinds.append(kind)
+            source = ROOT / unquote(target)
+            if not (source.is_file() if kind == "blob" else source.is_dir()):
+                failures.append(f"{path.name}:{number}: missing source {kind} target {target}")
+            if "seedu/address" in target or "/ponhub/" in target:
                 namespace_refs.append(f"{path.relative_to(ROOT).as_posix()}\t{number}\t{target}")
         if path.name != "README.md":
             continue
@@ -118,6 +121,8 @@ report = {
     "tables": sum(len(p.tables) for p in pages.values()),
     "readme_local_targets": readme_count,
     "source_references": len(source_refs),
+    "source_file_references": source_kinds.count("blob"),
+    "source_directory_references": source_kinds.count("tree"),
     "unique_source_paths": len(set(source_refs)),
     "namespace_link_occurrences": len(namespace_refs),
     "diagram_pairs": diagram_pairs,

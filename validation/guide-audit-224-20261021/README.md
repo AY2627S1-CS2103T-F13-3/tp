@@ -84,7 +84,8 @@ not tests rerun here. Independent teammate review of this audit remains outstand
   Gemfile/lockfile were unchanged. Non-blocking Faraday retry notice only.
 - **Local links/tables/source paths: PASS.** `python validation/guide-audit-224-20261021/check_links.py`:
   nine HTML pages, 412 local targets, 30 image-target references, 26 tables,
-  five README targets and 51 source-link occurrences (41 unique paths).
+  five README targets and 52 source-link occurrences (42 unique paths):
+  51 `blob/master` file references and one `tree/master` directory reference.
   No missing file/fragment or inconsistent table columns. See `links.json`.
   Source references resolve against the audited checkout; this is not a remote
   HTTP check of every GitHub blob URL or a Java semantic proof.
@@ -137,7 +138,7 @@ This exercises production routing/storage without launching JavaFX or a JAR.
 ## Residual findings and handoff
 
 1. **Final source references — Zhi Yu #238, then Ernest #224.**
-   `namespace-links.tsv` lists all 46 guide source-link occurrences containing
+   `namespace-links.tsv` lists all 47 guide source-link occurrences containing
    `seedu/address`; they are valid now. Also update plain class names in
    SettingUp's Application configuration, DG assertion/test commands and
    Testing's `--tests` filter when the namespace actually moves. Preserve
@@ -184,3 +185,27 @@ availability. Wall-clock completion remains dependent on those inputs and
 non-author review. Keep #224 open; hand its final evidence to #239/#271 only
 after the remaining gates pass. #317/#321 and later #270/#272 acceptance remain
 separate workstreams.
+
+## Round 1 inventory correction — 21 October 2026
+
+Addressed [the non-author directory-link finding](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/358#discussion_r4338085605).
+The first inventory counted 51 blob links / 46 namespace occurrences but omitted
+the DG `model.lesson` directory URL. The helper now collects both `blob/master`
+and `tree/master`, requires files/directories respectively, and records both
+old `seedu/address` and future `ponhub` Java paths. The regenerated inventory has
+**52 source references, 42 unique paths and 47 namespace occurrences**, including
+`src/main/java/seedu/address/model/lesson`. The product/guide source remains the
+audited `9a2f8cd9`; `links.json` identifies the report commit used for this rerun.
+
+The locked Jekyll build and complete local link/table/target pass were repeated.
+Two temporary negative probes correctly rejected a missing directory and a file
+used as a tree target; the DG bytes were restored exactly before the final pass.
+This corrects audit coverage; it does not implement or accept #357's namespace move.
+
+Connected Chrome inspected the rebuilt DG `#lesson-scheduling-value-contracts`
+section and its actual `model.lesson` href at **2052x986** and **390x844**.
+Screenshots show readable prose/code/link wrapping; no page-level horizontal
+overflow or broken local images was observed. The narrow anchor was activated
+with Enter and reached the intended heading. Temporary viewport override was reset.
+These follow-up checks apply to unchanged guide content at `3b7dd8f8` (product
+baseline `9a2f8cd9`), not a rendered post-#357 acceptance.
