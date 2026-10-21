@@ -1,0 +1,34 @@
+{
+  "document_id": "1B47n0kNPYl-F-5dwM7dXYSN4ukbJ3SCnR2uNC0wkuAo",
+  "exports": [
+    {
+      "tab": "Meeting Notes",
+      "tab_id": "t.0",
+      "export_sha256": "bef0022f4f0d4fa4c4f79d75b840a7e9865137ca1a3bfb801fbe58550069efef",
+      "bytes": 80453
+    },
+    {
+      "tab": "PonHub Feature Specification",
+      "tab_id": "t.jjia1q9gvtk9",
+      "export_sha256": "3a58f97741302ae111df50b1da03934988573a719256ad0967c0e50aa0347645",
+      "bytes": 59428
+    },
+    {
+      "tab": "Copy of PonHub Feature Specification",
+      "tab_id": "t.5ag24r8ilwns",
+      "export_sha256": "8ca4eb6c28caa5c633b79de157d642ac944726fb1db0cb597461352353833c6e",
+      "bytes": 55042
+    },
+    {
+      "tab": "AB3 Extensions",
+      "tab_id": "t.b2avl3ewwmgv",
+      "export_sha256": "99c8252abff29f5eaae556a64cb55c1cea3d096a2d286ee580523a87e17512e8",
+      "bytes": 6258
+    }
+  ],
+  "observed_empty_tabs": [
+    "Useful Links",
+    "Readme Draft"
+  ],
+  "limits": "Text export and tab UI inspection; no shared-document edits; embedded object contents not audited."
+}

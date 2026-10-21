@@ -1,0 +1,187 @@
+[
+  {
+    "url": "https://AY2627S1-CS2103T-F13-3.github.io/tp/",
+    "status": 200,
+    "final_url": "https://AY2627S1-CS2103T-F13-3.github.io/tp/"
+  },
+  {
+    "url": "https://developers.google.com/style",
+    "status": 200,
+    "final_url": "https://developers.google.com/style"
+  },
+  {
+    "url": "https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/testing-your-github-pages-site-locally-with-jekyll",
+    "status": 200,
+    "final_url": "https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/testing-your-github-pages-site-locally-with-jekyll"
+  },
+  {
+    "url": "https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository",
+    "status": 200,
+    "final_url": "https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository"
+  },
+  {
+    "url": "https://github.com/AY2627S1-CS2103T-F13-3/tp",
+    "status": 200,
+    "final_url": "https://github.com/AY2627S1-CS2103T-F13-3/tp"
+  },
+  {
+    "url": "https://github.com/AY2627S1-CS2103T-F13-3/tp/actions/workflows/gradle.yml",
+    "status": 200,
+    "final_url": "https://github.com/AY2627S1-CS2103T-F13-3/tp/actions/workflows/gradle.yml"
+  },
+  {
+    "url": "https://github.com/AY2627S1-CS2103T-F13-3/tp/issues",
+    "status": 200,
+    "final_url": "https://github.com/AY2627S1-CS2103T-F13-3/tp/issues"
+  },
+  {
+    "url": "https://github.com/AY2627S1-CS2103T-F13-3/tp/releases",
+    "status": 200,
+    "final_url": "https://github.com/AY2627S1-CS2103T-F13-3/tp/releases"
+  },
+  {
+    "url": "https://github.com/ErnestChuaa",
+    "status": 200,
+    "final_url": "https://github.com/ErnestChuaa"
+  },
+  {
+    "url": "https://github.com/FasterXML/jackson",
+    "status": 200,
+    "final_url": "https://github.com/FasterXML/jackson"
+  },
+  {
+    "url": "https://github.com/ben58882",
+    "status": 200,
+    "final_url": "https://github.com/ben58882"
+  },
+  {
+    "url": "https://github.com/gugrusaurus",
+    "status": 200,
+    "final_url": "https://github.com/gugrusaurus"
+  },
+  {
+    "url": "https://github.com/se-edu/addressbook-level3",
+    "status": 200,
+    "final_url": "https://github.com/se-edu/addressbook-level3"
+  },
+  {
+    "url": "https://github.com/ultramanarm",
+    "status": 200,
+    "final_url": "https://github.com/ultramanarm"
+  },
+  {
+    "url": "https://github.com/ys000009",
+    "status": 200,
+    "final_url": "https://github.com/ys000009"
+  },
+  {
+    "url": "https://junit.org/junit5/",
+    "status": 200,
+    "final_url": "https://junit.org/"
+  },
+  {
+    "url": "https://nus-cs2103-ay2627-s1.github.io/website/admin/programmingLanguages.html",
+    "status": 200,
+    "final_url": "https://nus-cs2103-ay2627-s1.github.io/website/admin/programmingLanguages.html"
+  },
+  {
+    "url": "https://nus-cs2103-ay2627-s1.github.io/website/schedule/week9/topics.html#w9-8-writing-developer-documents",
+    "status": 200,
+    "final_url": "https://nus-cs2103-ay2627-s1.github.io/website/schedule/week9/topics.html#w9-8-writing-developer-documents"
+  },
+  {
+    "url": "https://openjfx.io/",
+    "status": 200,
+    "final_url": "https://openjfx.io/"
+  },
+  {
+    "url": "https://se-education.org",
+    "status": 200,
+    "final_url": "https://se-education.org"
+  },
+  {
+    "url": "https://se-education.org/guides/conventions/java/logging.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/conventions/java/logging.html"
+  },
+  {
+    "url": "https://se-education.org/guides/conventions/markdown.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/conventions/markdown.html"
+  },
+  {
+    "url": "https://se-education.org/guides/tutorials/ab3AddRemark.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/tutorials/ab3AddRemark.html"
+  },
+  {
+    "url": "https://se-education.org/guides/tutorials/ab3RemovingFields.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/tutorials/ab3RemovingFields.html"
+  },
+  {
+    "url": "https://se-education.org/guides/tutorials/ab3TracingCode.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/tutorials/ab3TracingCode.html"
+  },
+  {
+    "url": "https://se-education.org/guides/tutorials/checkstyle.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/tutorials/checkstyle.html"
+  },
+  {
+    "url": "https://se-education.org/guides/tutorials/codecov.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/tutorials/codecov.html"
+  },
+  {
+    "url": "https://se-education.org/guides/tutorials/gradle.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/tutorials/gradle.html"
+  },
+  {
+    "url": "https://se-education.org/guides/tutorials/intellijCodeStyle.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/tutorials/intellijCodeStyle.html"
+  },
+  {
+    "url": "https://se-education.org/guides/tutorials/intellijImportGradleProject.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/tutorials/intellijImportGradleProject.html"
+  },
+  {
+    "url": "https://se-education.org/guides/tutorials/intellijJdk.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/tutorials/intellijJdk.html"
+  },
+  {
+    "url": "https://se-education.org/guides/tutorials/intellijUsefulSettings.html#enabling-soft-wrapping",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/tutorials/intellijUsefulSettings.html#enabling-soft-wrapping"
+  },
+  {
+    "url": "https://se-education.org/guides/tutorials/javaInstallationMac.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/tutorials/javaInstallationMac.html"
+  },
+  {
+    "url": "https://se-education.org/guides/tutorials/jekyll.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/tutorials/jekyll.html"
+  },
+  {
+    "url": "https://se-education.org/guides/tutorials/plantUml.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/tutorials/plantUml.html"
+  },
+  {
+    "url": "https://se-education.org/guides/tutorials/savingPdf.html",
+    "status": 200,
+    "final_url": "https://se-education.org/guides/tutorials/savingPdf.html"
+  },
+  {
+    "url": "https://www.comp.nus.edu.sg",
+    "status": 200,
+    "final_url": "https://www.comp.nus.edu.sg"
+  }
+]
