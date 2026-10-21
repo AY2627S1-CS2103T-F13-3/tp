@@ -1,7 +1,9 @@
 # PonHub application icon — issue #236
 
 Prepared by Ernest Chua with OpenAI Codex assistance on 21 October 2026.
-Base: team master `b9cfd2d92ae603ce0e79ab17f64695ba2b86afb7`, including #350.
+Original base: team master `b9cfd2d9`, including #350. Current integrated
+production tree: `846c4cad`, including the normal master merge after #354
+landed at `93a907ea`.
 The 19 October 2026, 20:00 SGT deadline remains overdue and unchanged.
 
 ## Asset and scope
@@ -26,7 +28,7 @@ Final screenshot/public-page changes stay with #102/#152/#223 and #239.
 ## Automated verification
 
 - Windows 11 Pro x64 build 26200, Oracle JDK 25.0.4, project JavaFX 17.0.7.
-- Full `gradlew.bat check coverage shadowJar`: 896 tests, zero failures/errors,
+- Full `gradlew.bat check coverage shadowJar`: 897 tests, zero failures/errors,
   20 platform-assumption skips. Checkstyle, coverage and packaging pass.
 - Existing AppUtilTest now checks successful icon decoding and actual dimensions.
   Existing real-stage CanonicalMainWindowTest covers production initialization,
@@ -34,11 +36,11 @@ Final screenshot/public-page changes stay with #102/#152/#223 and #239.
 - Packaged PNG equals the source PNG byte-for-byte; the packaged FXML references
   the new path, and the old PNG is absent. Source audit finds no stale resource
   reference outside the historical issue evidence and accurate deletion record.
-- Tested JAR: 12,658,434 bytes, SHA-256
-  `a4fb3c9164f4ca4e68330a9e357fb12bb2aff24d1999850c96a575af26c294c3`.
+- Tested JAR: 12,658,507 bytes, SHA-256
+  `eeadd456a55bc1ed241b4bf9c77e18a593db72195ac0fc6d8abf82aeff8d249b`.
   This is this increment's development package, not the final v1.4 candidate.
 - Repository formatting scripts and `git diff --check` pass. Locked Bundler
-  2.5.11/Jekyll 3.10.0 builds the documentation tree; 410 local targets, 35
+  2.5.11/Jekyll 3.10.0 builds the documentation tree; 412 local targets, 32
   image references, 16 DG tables and ten shared anchors pass. Connected Chrome
   at 2052x986 inspects the exact runtime PNG at 16/32/64/128 CSS pixels on light
   and dark surfaces. All eight images load and the intended people/book cue
@@ -51,8 +53,11 @@ built-in native-control switch was unavailable. This supersedes the previous
 NOT RUN status. It is actual automated Windows UI evidence inspected by Codex,
 not an additional independent human acceptance run.
 
-Tested production source/resources: `8a753d6f`, identical to implementation
-`0ad936ee`; the intervening master integration changes documentation only.
+Tested production source/resources: `846c4cad`, after integrating the
+independently reviewed #354 preferred-height correction. Full checks and the
+native icon trial were repeated on that integrated tree. The icon implementation
+remains `0ad936ee`; the earlier `8a753d6f` native trial is preserved in commit
+`dad61563`. The captures below describe the latest integrated JAR.
 The tested JAR's byte size and SHA-256 are recorded above. Java 25.0.4 was
 confirmed from the launch installation. Display: 2560x1440 pixels; native windows
 report DPI 120 (125%). Main window bounds: 925x750 pixels; error dialog: 525x247.
@@ -95,8 +100,10 @@ covered by the native captures above.
 
 Implementation, full automated checks, rendered asset review and bounded native
 window verification are complete. Zhu Zhi Yu's non-author source/asset review
-found no actionable defect at `8a753d6f`; this evidence increment changes no
-production code/resources. Fresh current-head CI and evidence reconciliation
+found no actionable defect at `8a753d6f`; the icon implementation is unchanged.
+The imported preferred-height correction has its own independent #354 review.
+This final evidence increment changes no production code/resources. Fresh
+current-head CI and evidence reconciliation
 remain required before eligible merge. The author can now remove draft status.
 Forecast: ready for first-available review/merge pickup once current gates pass;
 no teammate availability or merge time is assumed. #236 stays open until merged.

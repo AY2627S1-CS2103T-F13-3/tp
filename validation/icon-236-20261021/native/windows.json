@@ -1,7 +1,7 @@
 {
-  "JarSha256": "A4FB3C9164F4CA4E68330A9E357FB12BB2AFF24D1999850C96A575AF26C294C3",
+  "JarSha256": "EEADD456A55BC1ED241B4BF9C77E18A593DB72195AC0FC6D8ABF82AEFF8D249B",
   "MainWindow": {
-    "Handle": 395778,
+    "Handle": 2099762,
     "Title": "PonHub",
     "Left": 818,
     "Top": 345,
@@ -10,7 +10,7 @@
     "Dpi": 120
   },
   "ErrorDialog": {
-    "Handle": 1245220,
+    "Handle": 592414,
     "Title": "PonHub icon check",
     "Left": 1018,
     "Top": 616,

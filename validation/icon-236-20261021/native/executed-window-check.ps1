@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$probeRoot = 'C:\Users\ernes\tp\_temp\icon236-native-20261021\verified'
+$probeRoot = 'C:\Users\ernes\tp\_temp\icon236-native-20261021\integrated'
 $javaBin = 'C:\Program Files\Java\jdk-25.0.4\bin\java.exe'
 $outputDirectory = Join-Path $probeRoot 'results'
 New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
