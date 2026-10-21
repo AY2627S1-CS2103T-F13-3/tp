@@ -44,7 +44,7 @@
     },
     {
       "guide": "docs/DevOps.md",
-      "line": 138,
+      "line": 141,
       "kind": "blob",
       "target": ".github/scripts/verify_linux_package.py",
       "exists": true
