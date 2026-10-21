@@ -39,8 +39,9 @@
           </MenuBar>
         </HBox>
 
+        <!-- Let the workspace grow into available space without inheriting a scrolling roster's preferred height. -->
         <SplitPane fx:id="resultSplitPane" orientation="VERTICAL" dividerPositions="0.32"
-                   minHeight="210" VBox.vgrow="ALWAYS">
+                   minHeight="210" prefHeight="210" VBox.vgrow="ALWAYS">
           <VBox fx:id="feedbackSection" minHeight="80" prefHeight="160">
             <FlowPane fx:id="viewNavigation" hgap="6" vgap="4" styleClass="view-navigation" VBox.vgrow="NEVER">
               <Button fx:id="lessonsButton" text="Lessons" onAction="#handleLessons" />

@@ -9,7 +9,10 @@ import static seedu.address.testutil.FxTestUtil.runOnFxThread;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -35,7 +38,14 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import seedu.address.logic.CanonicalLogicManager;
 import seedu.address.logic.CanonicalPeopleSession;
+import seedu.address.model.PonHubDataState;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.ContactDetails;
+import seedu.address.model.person.EducationLevel;
+import seedu.address.model.person.Name;
+import seedu.address.model.person.PeopleRegistry;
+import seedu.address.model.person.PersonId;
+import seedu.address.model.person.Phone;
 import seedu.address.storage.JsonPonHubDataStorage;
 import seedu.address.testutil.LessonQueryTestData;
 
@@ -43,6 +53,60 @@ import seedu.address.testutil.LessonQueryTestData;
 public class MainWindowResultResizeTest {
     @TempDir
     public Path directory;
+
+    @Test
+    public void rosterAndHistoryCommands_preserveWorkspaceFooterAndChosenSplit() throws Exception {
+        Fixture fixture = callOnFxThread(() -> createFixture(largeRosterData()));
+        for (int[] size : new int[][] {{1200, 772}, {853, 600}, {450, 360}}) {
+            runOnFxThread(() -> {
+                fixture.resize(size[0], size[1]);
+                fixture.enter("help");
+                fixture.split().setDividerPositions(0.5);
+                fixture.layout();
+                double splitHeight = fixture.split().getHeight();
+                double resultHeight = fixture.resultPane().getHeight();
+                Region footer = (Region) fixture.root().lookup("#statusbarPlaceholder");
+                double footerHeight = footer.getHeight();
+                double inputY = fixture.input().localToScene(0, 0).getY();
+                double position = fixture.split().getDividerPositions()[0];
+                for (int cycle = 0; cycle < 3; cycle++) {
+                    for (String command : List.of("help", "showlesson lid/L1 d/2026-10-19", "history 1", "help")) {
+                        fixture.enter(command);
+                        String context = command + " at " + size[0] + "x" + size[1];
+                        if (command.startsWith("showlesson")) {
+                            ScrollPane detail = (ScrollPane) fixture.root().lookup("#lessonDetailScroll");
+                            assertTrue(detail.isManaged(), context);
+                            assertTrue(detail.getContent().prefHeight(-1) > detail.getHeight(),
+                                    "The roster must exceed its scrolling viewport.");
+                        } else if (command.startsWith("history")) {
+                            assertTrue(fixture.root().lookup("#historyListView").getParent().isManaged(), context);
+                        }
+                        assertEquals(splitHeight, fixture.split().getHeight(), 0.01, context);
+                        assertEquals(resultHeight, fixture.resultPane().getHeight(), 0.01, context);
+                        assertEquals(footerHeight, footer.getHeight(), 0.01, context);
+                        assertEquals(inputY, fixture.input().localToScene(0, 0).getY(), 0.01, context);
+                        assertEquals(position, fixture.split().getDividerPositions()[0], 0.000001, context);
+                    }
+                }
+            });
+        }
+        assertEquals(fixture.originalData(), Files.readString(fixture.dataPath()));
+    }
+
+    private static PonHubDataState largeRosterData() {
+        PeopleRegistry people = new PeopleRegistry();
+        Set<PersonId> students = new HashSet<>();
+        for (int index = 0; index < 30; index++) {
+            String name = "Student " + (char) ('A' + index / 26) + (char) ('A' + index % 26);
+            students.add(people.addStudent(new ContactDetails(new Name(name),
+                    Optional.empty(), Optional.empty(), Optional.empty()),
+                    new EducationLevel("P3"), new Phone("12345678")).getId());
+        }
+        PersonId tutor = people.addTutor(new ContactDetails(new Name("Roster Tutor"),
+                Optional.of(new Phone("12345678")), Optional.empty(), Optional.empty())).getId();
+        return new PonHubDataState(people.exportState(), List.of(LessonQueryTestData.lesson(
+                "L1", tutor, "Mon", "0800", "0900", "Math", "R1", students)), List.of(), 1);
+    }
 
     @Test
     public void divider_expandsAndShrinksFeedbackAndKeepsBothAreasReachable() throws Exception {
@@ -158,8 +222,12 @@ public class MainWindowResultResizeTest {
     }
 
     private Fixture createFixture() throws Exception {
+        return createFixture(LessonQueryTestData.createData().exportState());
+    }
+
+    private Fixture createFixture(PonHubDataState data) throws Exception {
         Path dataPath = directory.resolve("canonical.json");
-        new JsonPonHubDataStorage(dataPath).saveData(LessonQueryTestData.createData().exportState());
+        new JsonPonHubDataStorage(dataPath).saveData(data);
         var logic = new CanonicalLogicManager(new CanonicalPeopleSession(dataPath), new UserPrefs());
         MainWindow window = new MainWindow(new Stage(), logic, dataPath);
         window.fillInnerParts();
