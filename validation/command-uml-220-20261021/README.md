@@ -4,6 +4,18 @@ Prepared by Ernest Chua with OpenAI Codex assistance on 21 October 2026.
 Baseline: team master `a828eef7366d3d2b7eff3000c1d8f324396603f5`.
 The original 19 October 2026, 23:00 SGT deadline remains overdue and unchanged.
 
+## Current integrated result
+
+#350 merged into team master as `b9cfd2d9` during this task. A normal merge
+integrated it into this branch at `1ff33856`. Full `check coverage shadowJar`
+then passed: 896 tests, zero failures/errors, 20 platform-assumption skips,
+both Checkstyle tasks, coverage and packaging. The earlier failure below is
+historical and resolved. No exception or threshold change was used.
+
+Jekyll was rebuilt after integration, all three figures loaded, and connected
+Chrome rechecked the sequence and Logic guidance at 2052x1042 without overflow.
+The guide sources/assets are identical to the previously inspected 800x900 tree.
+
 ## Source reconciliation
 
 - Replaced ArchitectureDiagram, ArchitectureSequenceDiagram and LogicClassDiagram
