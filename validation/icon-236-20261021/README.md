@@ -37,6 +37,12 @@ Final screenshot/public-page changes stay with #102/#152/#223 and #239.
 - Tested JAR: 12,658,434 bytes, SHA-256
   `a4fb3c9164f4ca4e68330a9e357fb12bb2aff24d1999850c96a575af26c294c3`.
   This is this increment's development package, not the final v1.4 candidate.
+- Repository formatting scripts and `git diff --check` pass. Locked Bundler
+  2.5.11/Jekyll 3.10.0 builds the documentation tree; 410 local targets, 35
+  image references, 16 DG tables and ten shared anchors pass. Connected Chrome
+  at 2052x986 inspects the exact runtime PNG at 16/32/64/128 CSS pixels on light
+  and dark surfaces. All eight images load and the intended people/book cue
+  remains visible at the small sizes. This is asset review, not native evidence.
 
 ## Native gate and recovery forecast
 
