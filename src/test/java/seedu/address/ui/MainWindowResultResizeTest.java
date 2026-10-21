@@ -56,7 +56,7 @@ public class MainWindowResultResizeTest {
 
     @Test
     public void rosterAndHistoryCommands_preserveWorkspaceFooterAndChosenSplit() throws Exception {
-        Fixture fixture = callOnFxThread(() -> createFixture(largeRosterData()));
+        Fixture fixture = callOnFxThread(() -> createFixture(createLargeRosterData()));
         for (int[] size : new int[][] {{1200, 772}, {853, 600}, {450, 360}}) {
             runOnFxThread(() -> {
                 fixture.resize(size[0], size[1]);
@@ -93,7 +93,7 @@ public class MainWindowResultResizeTest {
         assertEquals(fixture.originalData(), Files.readString(fixture.dataPath()));
     }
 
-    private static PonHubDataState largeRosterData() {
+    private static PonHubDataState createLargeRosterData() {
         PeopleRegistry people = new PeopleRegistry();
         Set<PersonId> students = new HashSet<>();
         for (int index = 0; index < 30; index++) {
