@@ -1,0 +1,281 @@
+package ponhub.ui;
+
+import java.nio.file.Path;
+import java.util.logging.Logger;
+
+import javafx.css.PseudoClass;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.control.Button;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextInputControl;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
+import ponhub.commons.core.GuiSettings;
+import ponhub.commons.core.LogsCenter;
+import ponhub.logic.Logic;
+import ponhub.logic.commands.CommandResult;
+import ponhub.logic.commands.exceptions.CommandException;
+import ponhub.logic.parser.exceptions.ParseException;
+import ponhub.model.person.PersonRole;
+
+/**
+ * The Main Window. Provides the basic application layout containing
+ * a menu bar and space where other JavaFX elements can be placed.
+ */
+public class MainWindow extends UiPart<Stage> {
+
+    private static final String FXML = "MainWindow.fxml";
+
+    private final Logger logger = LogsCenter.getLogger(getClass());
+
+    private Stage primaryStage;
+    private Logic logic;
+    private Path dataFilePath;
+
+    // Independent Ui parts residing in this Ui container
+    private PersonRecordListPanel personListPanel;
+    private ResultDisplay resultDisplay;
+
+    @FXML
+    private Button lessonsButton;
+
+    @FXML
+    private Button attendanceButton;
+
+    @FXML
+    private StackPane commandBoxPlaceholder;
+
+    @FXML
+    private MenuItem helpMenuItem;
+
+    @FXML
+    private StackPane personListPanelPlaceholder;
+
+    @FXML
+    private StackPane lessonListPanelPlaceholder;
+
+    @FXML
+    private StackPane resultDisplayPlaceholder;
+
+    @FXML
+    private StackPane statusbarPlaceholder;
+
+    /**
+     * Creates a {@code MainWindow} with the given {@code Stage}, {@code Logic},
+     * and the data file path to show in the status bar.
+     */
+    public MainWindow(Stage primaryStage, Logic logic, Path dataFilePath) {
+        super(FXML, primaryStage);
+
+        // Set dependencies
+        this.primaryStage = primaryStage;
+        this.logic = logic;
+        this.dataFilePath = dataFilePath;
+
+        // Configure the UI
+        setWindowDefaultSize(logic.getGuiSettings());
+
+        setAccelerators();
+
+    }
+
+    public Stage getPrimaryStage() {
+        return primaryStage;
+    }
+
+    private void setAccelerators() {
+        setAccelerator(helpMenuItem, KeyCombination.valueOf("F1"));
+    }
+
+    /**
+     * Sets the accelerator of a MenuItem.
+     *
+     * @param menuItem The menu item to activate.
+     * @param keyCombination The key combination of the accelerator.
+     */
+    private void setAccelerator(MenuItem menuItem, KeyCombination keyCombination) {
+        menuItem.setAccelerator(keyCombination);
+
+        /*
+         * TODO: the code below can be removed once the bug reported here
+         * https://bugs.openjdk.java.net/browse/JDK-8131666
+         * is fixed in a later version of the SDK.
+         *
+         * According to the bug report, TextInputControl (TextField, TextArea) will
+         * consume function-key events. Because CommandBox contains a TextField and
+         * ResultDisplay contains a TextArea, some accelerators (e.g., F1) will
+         * not work when the focus is in them because the key event is consumed by
+         * the TextInputControl(s).
+         *
+         * For now, we add the following event filter to capture such key events and open
+         * inline help so as to support accelerators even when focus is
+         * in CommandBox or ResultDisplay.
+         */
+        getRoot().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getTarget() instanceof TextInputControl && keyCombination.match(event)) {
+                menuItem.getOnAction().handle(new ActionEvent());
+                event.consume();
+            }
+        });
+    }
+
+    /**
+     * Fills up all the placeholders of this window.
+     */
+    void fillInnerParts() {
+        personListPanel = new PersonRecordListPanel(logic.getPersonRecords(), logic.personSearchContextProperty());
+        personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
+
+        LessonListPanel lessonListPanel = new LessonListPanel(logic.getDisplayedLessons(),
+                logic.lessonResultContextProperty());
+        HistoryListPanel historyListPanel = new HistoryListPanel(logic.getDisplayedHistory(),
+                logic.historyResultContextProperty());
+        Region lessonRoot = lessonListPanel.getRoot();
+        Region historyRoot = historyListPanel.getRoot();
+        lessonRoot.visibleProperty().bind(logic.historyViewActiveProperty().not());
+        lessonRoot.managedProperty().bind(lessonRoot.visibleProperty());
+        historyRoot.visibleProperty().bind(logic.historyViewActiveProperty());
+        historyRoot.managedProperty().bind(historyRoot.visibleProperty());
+        lessonListPanelPlaceholder.getChildren().addAll(lessonRoot, historyRoot);
+        logic.historyViewActiveProperty().addListener((observable, previous, current) -> updateNavigation());
+        updateNavigation();
+
+        resultDisplay = new ResultDisplay();
+        resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
+
+        StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath);
+        statusbarPlaceholder.getChildren().add(statusBarFooter.getRoot());
+
+        CommandBox commandBox = new CommandBox(this::executeCommand);
+        commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
+        commandBox.requestFocus();
+    }
+
+    private void updateNavigation() {
+        boolean isHistoryActive = logic.historyViewActiveProperty().get();
+        PseudoClass active = PseudoClass.getPseudoClass("active");
+        lessonsButton.pseudoClassStateChanged(active, !isHistoryActive);
+        attendanceButton.pseudoClassStateChanged(active, isHistoryActive);
+    }
+
+    @FXML
+    private void handleLessons() {
+        executeViewingCommand("lessons");
+    }
+
+    @FXML
+    private void handleStudentLessons() {
+        executeStudentViewingCommand("lessons si/");
+    }
+
+    @FXML
+    private void handleAttendance() {
+        executeStudentViewingCommand("history ");
+    }
+
+    /** Resolves the selected identity against current displayed positions immediately before execution. */
+    private void executeStudentViewingCommand(String commandPrefix) {
+        var selectedId = personListPanel.getSelectedPersonId();
+        var people = logic.getPersonRecords();
+        for (int index = 0; index < people.size(); index++) {
+            var person = people.get(index);
+            if (selectedId.filter(person.getId()::equals).isPresent()) {
+                if (person.getId().getRole() != PersonRole.STUDENT) {
+                    resultDisplay.setFeedbackToUser("Select a Student card for this view, or enter "
+                            + "lessons si/STUDENT_INDEX or history STUDENT_INDEX.");
+                    return;
+                }
+                executeViewingCommand(commandPrefix + (index + 1));
+                return;
+            }
+        }
+        resultDisplay.setFeedbackToUser("No current Student card is selected. Select a Student card, or enter "
+                + "lessons si/STUDENT_INDEX or history STUDENT_INDEX using the current people list.");
+    }
+
+    /** Runs optional viewing controls through the same validation and feedback route as typed commands. */
+    private void executeViewingCommand(String command) {
+        try {
+            executeCommand(command);
+        } catch (CommandException | ParseException e) {
+            logger.info("Viewing request rejected: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Restores preferences within the available desktop work area.
+     */
+    private void setWindowDefaultSize(GuiSettings guiSettings) {
+        Rectangle2D bounds = WindowPlacement.fit(guiSettings,
+                Screen.getScreens().stream().map(Screen::getVisualBounds).toList(),
+                Screen.getPrimary().getVisualBounds());
+        primaryStage.setMinWidth(Math.min(WindowPlacement.MINIMUM_WIDTH, bounds.getWidth()));
+        primaryStage.setMinHeight(Math.min(WindowPlacement.MINIMUM_HEIGHT, bounds.getHeight()));
+        primaryStage.setWidth(bounds.getWidth());
+        primaryStage.setHeight(bounds.getHeight());
+        primaryStage.setX(bounds.getMinX());
+        primaryStage.setY(bounds.getMinY());
+    }
+
+    /**
+     * Displays the same inline guidance as the help command without changing command-box input.
+     */
+    @FXML
+    public void handleHelp() {
+        try {
+            executeCommand("help");
+        } catch (CommandException | ParseException e) {
+            logger.warning("Unable to display help: " + e.getMessage());
+        }
+    }
+
+    void show() {
+        primaryStage.show();
+    }
+
+    /**
+     * Closes the application.
+     */
+    @FXML
+    private void handleExit() {
+        GuiSettings guiSettings = new GuiSettings(primaryStage.getWidth(), primaryStage.getHeight(),
+                (int) primaryStage.getX(), (int) primaryStage.getY());
+        logic.setGuiSettings(guiSettings);
+        primaryStage.hide();
+    }
+
+    public PersonRecordListPanel getPersonListPanel() {
+        return personListPanel;
+    }
+
+    /**
+     * Executes the command and returns the result.
+     *
+     * @see ponhub.logic.Logic#execute(String)
+     */
+    private CommandResult executeCommand(String commandText) throws CommandException, ParseException {
+        try {
+            var selectedPerson = personListPanel.getSelectedPersonId();
+            CommandResult commandResult = logic.execute(commandText);
+            selectedPerson.ifPresent(personListPanel::restoreSelection);
+            logger.info("Result: " + commandResult.getFeedbackToUser());
+            resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
+
+            if (commandResult.isExit()) {
+                handleExit();
+            }
+
+            return commandResult;
+        } catch (CommandException | ParseException e) {
+            logger.info("An error occurred while executing command: " + commandText);
+            resultDisplay.setFeedbackToUser(e.getMessage());
+            throw e;
+        }
+    }
+}

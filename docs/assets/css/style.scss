@@ -10,3 +10,9 @@
     height: 21px;
     width: 21px
 }
+
+@media print {
+  .team-member-name {
+    break-after: avoid;
+  }
+}

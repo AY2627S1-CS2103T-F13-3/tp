@@ -8,8 +8,9 @@ We are a team based in the [School of Computing, National University of Singapor
 ## Project team
 
 ### Zhu Zhi Yu
+{: .team-member-name}
 
-<img src="images/ultramanarm.png" width="200px">
+<img src="images/ultramanarm.png" width="200px" alt="Zhu Zhi Yu">
 
 [[github](https://github.com/ultramanarm)]
 
@@ -20,8 +21,9 @@ We are a team based in the [School of Computing, National University of Singapor
   * Maintain the Developer Guide's target user profile, value proposition, and prioritised user stories.
 
 ### Vincent Lin
+{: .team-member-name}
 
-<img src="images/gugrusaurus.png" width="200px">
+<img src="images/gugrusaurus.png" width="200px" alt="Vincent Lin">
 
 [[github](https://github.com/gugrusaurus)]
 
@@ -29,11 +31,12 @@ We are a team based in the [School of Computing, National University of Singapor
 * Responsibilities:
   * Implement saving, validated loading, rollback and retained attendance-history persistence.
   * Coordinate deliverables, deadlines and milestone closeout; maintain README and quick-start material.
-  * Coordinate v1.3 release notes and final integrated UI screenshot/demo capture for #102/#152.
+  * Coordinate release notes and integrated application screenshots/demos.
 
 ### Benjamin Ng
+{: .team-member-name}
 
-<img src="images/ben58882.png" width="200px">
+<img src="images/ben58882.png" width="200px" alt="Benjamin Ng">
 
 [[github](https://github.com/ben58882)]
 
@@ -44,21 +47,23 @@ We are a team based in the [School of Computing, National University of Singapor
   * Maintain retrieval/view feature documentation and Developer Guide use cases.
 
 ### Ernest Chua
+{: .team-member-name}
 
-<img src="images/ernestchuaa.png" width="200px">
+<img src="images/ernestchuaa.png" width="200px" alt="Ernest Chua">
 
 [[github](https://github.com/ErnestChuaa)]
 
 * Role: Developer (Help), Code Quality, Documentation Coordination
 * Responsibilities:
   * Implement and maintain the help command and command assistance.
-  * Deliver person-edit command activation, tests and UG/DG/manual checks for #263, reassigned on 20 October 2026; Benjamin retains authorship of the merged #261 model support.
+  * Maintain person-edit commands, tests and guidance; Benjamin retains authorship of the underlying person-edit model support.
   * Coordinate code quality and the integration of project documentation.
   * Maintain help documentation, shared command conventions and the command summary; reconcile each owner's own UG/DG feature contributions.
 
 ### Yang Shuo
+{: .team-member-name}
 
-<img src="images/ys000009.png" width="200px">
+<img src="images/ys000009.png" width="200px" alt="Yang Shuo">
 
 [[github](https://github.com/ys000009)]
 
@@ -69,5 +74,3 @@ We are a team based in the [School of Computing, National University of Singapor
   * Coordinate DevOps and packaged application verification.
 
 These responsibilities follow the [agreed shared-lesson contracts](DeveloperGuide.html#shared-lesson-target-contract). Each feature owner writes their own UG/DG sections, tests and applicable AI/reuse attribution as behavior is delivered; Ernest coordinates shared conventions and consistency. Documentation ownership does not imply that a planned feature is already active.
-
-Vincent owns the final integrated UI screenshot/demo capture for #102/#152 against the accepted release candidate. Ben retains authorship of his existing retrieval media and search-feature handoff. Reuse matching media with credit and refresh the guide/README image references consistently after final verification.

@@ -35,13 +35,14 @@ CanonicalPeopleSession *--> PeopleView
 CanonicalPeopleSession *--> PonHubData
 LessonRetrieval --> PeopleView : resolve visible\nstudent once
 LessonRetrieval --> LessonQueries : select / observe\nresult source
+LessonRetrieval --> PonHubData : selected detail\non publication
 LessonQueries --> PonHubData : committed\nstate
 PeopleView --> PonHubData : committed\npeople
 
 note bottom of LessonRetrieval
   One stable read-only displayed list.
-  Read-only context identifies student / filters.
-  Switch catalogue / student / search source.
+  Context identifies Student / filters / Lesson and date.
+  Select catalogue / Student / search / detail source.
   No writes; people indices stay unchanged.
 end note
 note bottom of PonHubData

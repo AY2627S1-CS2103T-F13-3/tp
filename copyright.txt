@@ -1,9 +1,7 @@
 ﻿Some code adapted from http://code.makery.ch/library/javafx-8-tutorial/ by Marco Jakob
 
-Copyright by Susumu Yoshida - http://www.mcdodesign.com/
-- address_book_32.png
-- AddressApp.ico
+Original PonHub artwork by Ernest Chua with OpenAI Codex assistance (2026)
+- ponhub_icon.png (editable source: docs/images/ponhub-icon.svg)
 
 Copyright by Jan Jan Kovařík - http://glyphicons.com/
 - calendar.png
-- edit.png
