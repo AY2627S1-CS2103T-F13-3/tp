@@ -9,7 +9,8 @@ Its **20 October 2026, 15:00 SGT** completion deadline remains overdue and uncha
 the residual owner actions below, and substantive non-author review.** This is
 preparatory evidence, not an issue closeout, merge, release publication or final-candidate approval.
 The application, guide text, author contributions and shared Google document were
-not changed by this audit.
+not changed by the original audit. The Round 1 follow-up below records Ernest's
+later targeted Help correction in the shared working specification.
 
 ## Course and completion checklist
 
@@ -209,3 +210,40 @@ overflow or broken local images was observed. The narrow anchor was activated
 with Enter and reached the intended heading. Temporary viewport override was reset.
 These follow-up checks apply to unchanged guide content at `3b7dd8f8` (product
 baseline `9a2f8cd9`), not a rendered post-#357 acceptance.
+
+## Round 1 owner handoff — 21 October 2026
+
+**#317 is reconciled and closed.** Its current issue body maps all five criteria
+to Vincent's immutable Windows matrix at `440d4385`, the earlier non-author Mac
+checks/affected #354 rerun, and Ernest's independent Windows regression review.
+Ten selected Settings/application captures were SHA-256 verified and visually
+inspected here. The tested source is `93a907ea`; the later `9a2f8cd9` production
+delta only replaces the icon and its resource paths, with unchanged help layout,
+routing and UG. Windows checks remain author-executed; this is evidence inspection,
+not another native run. Actual JAR/runtime identities, 150% confirmation and
+copy/geometry limits are retained in [#317](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/317).
+Vincent has the final disposition for #319 item 3. Final candidate #270/#271/#272
+acceptance is separate; no earlier local PonHub 1.3 JAR certifies v1.4.
+
+**Ernest's shared Help correction is saved.** In the named working-spec tab
+`t.jjia1q9gvtk9`, the COMMAND acceptable-values sentence now includes `edit` and
+`editlesson`. The browser showed Saved to Drive; the actual text was inspected
+in a screenshot and re-exported. After normalizing Markdown inline-code/escape
+serialization differences, the exported text differs only by that intended
+sentence replacement. `shared-draft.json` records the current export identity
+without copying shared contact or meeting-note contents. The original export
+hashes above remain historical; no other tab/feature-owner text was edited.
+
+The remaining working-draft handoff is bounded: original owners reconcile the
+duplicate-spec historical pointer and direct repository UG/DG links; Yang keeps
+shared Lesson/enrolment/dated attendance and active Lesson-edit wording; Zhi Yu
+keeps the earlier conditional editing-status note. The baseline findings above
+remain dated evidence, with Ernest's missing Help topics now resolved. Request
+the actual updated tab/section and concise result on #224 so final acceptance can
+consume it. Owners, original authorship, estimates and overdue dates are retained.
+
+**#224/#358 remain open/draft.** Final namespace/source/runtime/link/render and
+affected-example acceptance follows reviewed/merged #357 and those owner results.
+Vincent's separate legacy Storage disposition and #349 DevOps runbook handoffs
+remain with #239/#271. The existing 30–45 minute focused-audit recovery estimate
+starts after the dependencies arrive; it is not a new completion deadline.

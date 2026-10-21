@@ -30,5 +30,21 @@
     "Useful Links",
     "Readme Draft"
   ],
-  "limits": "Text export and tab UI inspection; no shared-document edits; embedded object contents not audited."
+  "limits": "Text export and tab UI inspection; no shared-document edits; embedded object contents not audited.",
+  "round1_followup": {
+    "date_sgt": "2026-10-21",
+    "editor": "Ernest Chua (ErnestChuaa), with OpenAI Codex assistance",
+    "tab": "PonHub Feature Specification",
+    "tab_id": "t.jjia1q9gvtk9",
+    "change": "Add active edit and editlesson to the Help COMMAND acceptable-values sentence in the current tab only.",
+    "post_export_sha256": "ca9adbc6b99a380d97a87e953e0ea7bfb2794e330eacadc49c5ec24c7038110f",
+    "post_export_bytes": 59227,
+    "verification": "Saved to Drive observed; screenshot inspected; before/after exported text matches only the intended sentence after normalizing Markdown inline-code/escape serialization differences.",
+    "remaining_owner_corrections": [
+      "Original owners: mark competing Copy of spec historical and add direct authoritative repository UG/DG pointers.",
+      "Yang Shuo: shared Lesson IDs, empty-roster creation, explicit enrol/unenrol, dated current/former attendance and active Lesson editing.",
+      "Zhi Yu: replace conditional editing-status wording with the merged active routes while preserving feature authorship."
+    ],
+    "limits": "No meeting-note/contact contents copied; no other feature-owner text or duplicate/historical tab edited. #224 final namespace/render/source acceptance remains pending #357 integration and owner results."
+  }
 }
