@@ -71,8 +71,18 @@ class PackageSession:
         # The stage is mapped before UiManager finishes filling its controls.
         time.sleep(0.5)
         run("xdotool", "windowfocus", "--sync", self.window)
-        # CommandBox is directly below the menu, in client-window coordinates.
-        run("xdotool", "mousemove", "--window", self.window, "200", "45", "click", "1")
+        geometry = run("xdotool", "getwindowgeometry", "--shell", self.window,
+                       capture_output=True).stdout
+        bounds = dict(line.split("=", 1) for line in geometry.splitlines() if "=" in line)
+        width, height = int(bounds["WIDTH"]), int(bounds["HEIGHT"])
+        require(width >= 100 and height >= 100, "PonHub window is too small to focus its command dock")
+        # The full-width input sits above the 30-pixel status footer on this X11 display.
+        # Locate it relative to the actual client height, not the former top input position.
+        run("xdotool", "mousemove", "--window", self.window,
+            str(width // 2), str(height - 50), "click", "1")
+        # Prove focus through a harmless real command before any mutation, including after restart.
+        self.command("help", "PonHub commands available in this build:")
+        self.screenshot(f"{self.name}-command-ready")
 
     def command(self, text, expected_feedback=None):
         offset = self.log.stat().st_size
