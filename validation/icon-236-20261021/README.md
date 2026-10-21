@@ -44,21 +44,60 @@ Final screenshot/public-page changes stay with #102/#152/#223 and #239.
   and dark surfaces. All eight images load and the intended people/book cue
   remains visible at the small sizes. This is asset review, not native evidence.
 
-## Native gate and recovery forecast
+## Native window verification — PASS
 
-NOT RUN — native window/error-dialog icon inspection. CUA's initial inventory
-exposes connected Chrome and no native apps; native control is disabled in this
-session. Automated Stage/FXML checks and image inspection do not establish
-visible OS title-bar/taskbar or dialog acceptance.
+The user explicitly authorized PowerShell for these PonHub checks after the
+built-in native-control switch was unavailable. This supersedes the previous
+NOT RUN status. It is actual automated Windows UI evidence inspected by Codex,
+not an additional independent human acceptance run.
 
-A local manual runner is prepared at `_temp/check-icon236-native.ps1`. It launches
-the exact JAR from an isolated empty writable folder with `java -jar`, then a
-disposable probe invoking the real packaged UiManager main-window/error-dialog
-methods. It uses no production data. The user has been asked for the observed
-result while independent work continues. No manual pass is claimed yet.
+Tested production source/resources: `8a753d6f`, identical to implementation
+`0ad936ee`; the intervening master integration changes documentation only.
+The tested JAR's byte size and SHA-256 are recorded above. Java 25.0.4 was
+confirmed from the launch installation. Display: 2560x1440 pixels; native windows
+report DPI 120 (125%). Main window bounds: 925x750 pixels; error dialog: 525x247.
 
-Implementation and automated checks are complete. Native inspection is a short
-remaining check, followed by first-available non-author review, head CI and merge.
-Forecast: ready for native check/review pickup immediately; integration timing
-depends on that evidence and teammate availability. Keep #236 open until the
-gates pass. No deadline, scope or acceptance requirement is waived.
+- Launched the packaged JAR with `java -jar ponhub.jar` from a fresh writable
+  folder containing only that JAR. The main window opens with an empty data
+  view and the new orange/black people/book icon in its native title bar.
+- A disposable Java probe compiled against the same packaged JAR invokes the
+  actual UiManager initialization and `showAlertDialogAndWait(..., ERROR, ...)`.
+  The owned production error dialog shows the same icon in its native title bar.
+- Win32 PrintWindow captured each visible test window directly. Both native
+  small icons were independently extracted with WM_GETICON and match each other
+  byte-for-byte. The retained images were visually inspected: the intended cue
+  appears, with no inherited contact-book icon or missing-resource exception.
+- Both created test processes closed normally using their own window-close
+  messages. No operational data file was created by the empty normal session.
+  Existing user data and other application windows were not operated on.
+
+![Native main-window title bar](native/main-window-titlebar.png)
+
+![Native production error dialog](native/error-dialog.png)
+
+Full captures, extracted icons, native bounds/DPI metadata, launch logs, the
+executed PowerShell helper and Java probe source are retained in `native/`.
+The helper's paths describe this local verification environment; reproduction
+requires matching/updating those paths and compiling the supplied Java source
+against the JAR into the dialog folder's `classes` directory. Launch/capture
+logic is separate from production code and no new application dependency exists.
+
+The first helper attempts stopped before capture because hidden-launch windows
+were excluded and foreground focus was unavailable. Including the test process's
+hidden window, restoring it, confirming visibility and using targeted PrintWindow
+resolved that tooling problem. Those attempts are not product failures or passes.
+The final evidence uses a newly created clean trial folder. No taskbar screenshot,
+native keyboard/mouse workflow, full scaling matrix or final-candidate acceptance
+is claimed; #236's initial/main-window and application-error-dialog icon check is
+covered by the native captures above.
+
+## Readiness and recovery forecast
+
+Implementation, full automated checks, rendered asset review and bounded native
+window verification are complete. Zhu Zhi Yu's non-author source/asset review
+found no actionable defect at `8a753d6f`; this evidence increment changes no
+production code/resources. Fresh current-head CI and evidence reconciliation
+remain required before eligible merge. The author can now remove draft status.
+Forecast: ready for first-available review/merge pickup once current gates pass;
+no teammate availability or merge time is assumed. #236 stays open until merged.
+The original overdue deadline, scope and final-screenshot ownership are unchanged.

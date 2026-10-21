@@ -1,0 +1,25 @@
+{
+  "JarSha256": "A4FB3C9164F4CA4E68330A9E357FB12BB2AFF24D1999850C96A575AF26C294C3",
+  "MainWindow": {
+    "Handle": 395778,
+    "Title": "PonHub",
+    "Left": 818,
+    "Top": 345,
+    "Width": 925,
+    "Height": 750,
+    "Dpi": 120
+  },
+  "ErrorDialog": {
+    "Handle": 1245220,
+    "Title": "PonHub icon check",
+    "Left": 1018,
+    "Top": 616,
+    "Width": 525,
+    "Height": 247,
+    "Dpi": 120
+  },
+  "Screens": [
+    "{X=0,Y=0,Width=2560,Height=1440}"
+  ],
+  "Note": "Visible native windows captured with Win32 PrintWindow; WM_GETICON extracts the actual small icons. No taskbar capture or native keyboard/mouse acceptance is claimed."
+}
