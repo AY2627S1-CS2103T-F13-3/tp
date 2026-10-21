@@ -1,0 +1,128 @@
+package ponhub.logic;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static ponhub.testutil.Assert.assertThrows;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
+
+import ponhub.commons.core.index.Index;
+import ponhub.logic.commands.exceptions.CommandException;
+import ponhub.model.person.ContactDetails;
+import ponhub.model.person.EducationLevel;
+import ponhub.model.person.Name;
+import ponhub.model.person.Parent;
+import ponhub.model.person.PersonId;
+import ponhub.model.person.PersonRecord;
+import ponhub.model.person.Phone;
+import ponhub.model.person.Student;
+import ponhub.model.person.Tutor;
+
+public class PersonIndexResolverTest {
+
+    private final Tutor tutor = new Tutor(new PersonId("T7"), createDetails("Mei Lim"));
+    private final Student firstStudent = createStudent("S9", "Alex Tan");
+    private final Parent parent = new Parent(new PersonId("P2"), createDetails("Pat Tan"));
+    private final Student secondStudent = createStudent("S3", "Jamie Tan");
+    private final List<PersonRecord> mixedPeople = List.of(tutor, firstStudent, parent, secondStudent);
+
+    @Test
+    public void resolve_mixedView_returnsActualRecordsWithoutMutatingView() throws Exception {
+        List<PersonRecord> visiblePeople = new ArrayList<>(mixedPeople);
+        for (int i = 0; i < mixedPeople.size(); i++) {
+            assertSame(mixedPeople.get(i), PersonIndexResolver.resolve(Index.fromOneBased(i + 1), visiblePeople));
+        }
+        assertEquals(mixedPeople, visiblePeople);
+        assertEquals(new PersonId("S9"), PersonIndexResolver.resolve(Index.fromOneBased(2), visiblePeople).getId());
+    }
+
+    @Test
+    public void resolve_filteredProjection_usesCurrentPositionsRatherThanUnfilteredOrderOrIdSuffix() throws Exception {
+        List<PersonRecord> visibleStudents = List.of(firstStudent, secondStudent);
+
+        assertSame(firstStudent, PersonIndexResolver.resolve(Index.fromOneBased(1), visibleStudents));
+        assertSame(secondStudent, PersonIndexResolver.resolve(Index.fromOneBased(2), visibleStudents));
+        assertSame(secondStudent, PersonIndexResolver.resolveStudent(Index.fromOneBased(2), visibleStudents));
+        assertEquals(List.of(new PersonId("S9"), new PersonId("S3")),
+                visibleStudents.stream().map(PersonRecord::getId).toList());
+    }
+
+    @Test
+    public void resolve_emptyAndOutOfRangeViews_throwsCheckedErrorWithoutChangingView() {
+        List<PersonRecord> emptyPeople = List.of();
+        assertThrows(CommandException.class, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, () ->
+                PersonIndexResolver.resolve(Index.fromOneBased(1), emptyPeople));
+        assertThrows(CommandException.class, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, () ->
+                PersonIndexResolver.resolveStudent(Index.fromOneBased(1), emptyPeople));
+
+        List<PersonRecord> visiblePeople = new ArrayList<>(mixedPeople);
+        for (Index index : new Index[]{Index.fromOneBased(5), Index.fromOneBased(Integer.MAX_VALUE),
+            Index.fromZeroBased(Integer.MAX_VALUE - 1)}) {
+            assertThrows(CommandException.class, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, () ->
+                    PersonIndexResolver.resolve(index, visiblePeople));
+            assertThrows(CommandException.class, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX, () ->
+                    PersonIndexResolver.resolveStudent(index, visiblePeople));
+        }
+        assertEquals(mixedPeople, visiblePeople);
+    }
+
+    @Test
+    public void resolveStudent_mixedView_keepsPeopleListPositions() throws Exception {
+        assertSame(firstStudent, PersonIndexResolver.resolveStudent(Index.fromOneBased(2), mixedPeople));
+        assertSame(secondStudent, PersonIndexResolver.resolveStudent(Index.fromOneBased(4), mixedPeople));
+    }
+
+    @Test
+    public void resolveStudent_tutorAndParentPositions_rejectsWithoutHiddenStudentFiltering() {
+        List<PersonRecord> visiblePeople = new ArrayList<>(mixedPeople);
+        for (int position : new int[]{1, 3}) {
+            assertThrows(CommandException.class, PersonIndexResolver.MESSAGE_NOT_STUDENT, () ->
+                    PersonIndexResolver.resolveStudent(Index.fromOneBased(position), visiblePeople));
+        }
+        assertEquals(mixedPeople, visiblePeople);
+    }
+
+    @Test
+    public void resolve_nullArgumentsOrSelectedRecord_throwsNullPointerException() {
+        Index firstIndex = Index.fromOneBased(1);
+        assertThrows(NullPointerException.class, () -> PersonIndexResolver.resolve(null, mixedPeople));
+        assertThrows(NullPointerException.class, () -> PersonIndexResolver.resolve(firstIndex, null));
+        assertThrows(NullPointerException.class, () -> PersonIndexResolver.resolveStudent(null, mixedPeople));
+        assertThrows(NullPointerException.class, () -> PersonIndexResolver.resolveStudent(firstIndex, null));
+
+        List<PersonRecord> peopleWithNull = new ArrayList<>(mixedPeople);
+        peopleWithNull.set(0, null);
+        assertThrows(NullPointerException.class, () -> PersonIndexResolver.resolve(firstIndex, peopleWithNull));
+        assertThrows(NullPointerException.class, () -> PersonIndexResolver.resolveStudent(firstIndex, peopleWithNull));
+    }
+
+    @Test
+    public void resolveStudent_viewRefresh_preservesCapturedRecordAndStableIdentity() throws Exception {
+        List<PersonRecord> visiblePeople = new ArrayList<>(mixedPeople);
+        Index selectedIndex = Index.fromOneBased(2);
+        Student selectedStudent = PersonIndexResolver.resolveStudent(selectedIndex, visiblePeople);
+
+        visiblePeople.clear();
+        visiblePeople.addAll(List.of(secondStudent, parent));
+
+        assertSame(firstStudent, selectedStudent);
+        assertEquals(new PersonId("S9"), selectedStudent.getId());
+        assertSame(parent, PersonIndexResolver.resolve(selectedIndex, visiblePeople));
+        assertThrows(CommandException.class, PersonIndexResolver.MESSAGE_NOT_STUDENT, () ->
+                PersonIndexResolver.resolveStudent(selectedIndex, visiblePeople));
+    }
+
+    private static Student createStudent(String id, String name) {
+        return new Student(new PersonId(id), new ContactDetails(new Name(name)),
+                new EducationLevel("S2"), new Phone("00123456"));
+    }
+
+    private static ContactDetails createDetails(String name) {
+        return new ContactDetails(new Name(name), Optional.of(new Phone("00123456")),
+                Optional.empty(), Optional.empty());
+    }
+}

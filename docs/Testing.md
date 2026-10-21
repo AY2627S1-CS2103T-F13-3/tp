@@ -53,7 +53,7 @@ a Windows/Linux pass, and CI build/test success does not establish packaged GUI 
 For a focused check, filter by a real test class. This example checks people-list index validation:
 
 ```sh
-./gradlew test --tests 'seedu.address.logic.PersonIndexResolverTest'
+./gradlew test --tests 'ponhub.logic.PersonIndexResolverTest'
 ```
 
 Repeat `--tests` to select more classes, or select one method with `package.Class.method`.
@@ -72,10 +72,10 @@ instead of the inherited AddressBook command path:
 
 | Test | What it checks |
 | --- | --- |
-| [People index resolver](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/seedu/address/logic/PersonIndexResolverTest.java) | Unit checks for people-list index resolution, range and role validation. |
-| [Canonical people commands](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/seedu/address/logic/commands/CanonicalPeopleCommandIntegrationTest.java) | People commands with model changes, saving/reloading and failed-save preservation. |
-| [Canonical JSON storage](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/seedu/address/storage/JsonPonHubDataStorageTest.java) | Canonical JSON round trips and rejection of invalid persisted state. |
-| [Canonical Logic manager](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/seedu/address/logic/CanonicalLogicManagerTest.java) | Mixed boundary checks for routing, shared views, preferences and persistence. |
+| [People index resolver](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/PersonIndexResolverTest.java) | Unit checks for people-list index resolution, range and role validation. |
+| [Canonical people commands](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/commands/CanonicalPeopleCommandIntegrationTest.java) | People commands with model changes, saving/reloading and failed-save preservation. |
+| [Canonical JSON storage](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/storage/JsonPonHubDataStorageTest.java) | Canonical JSON round trips and rejection of invalid persisted state. |
+| [Canonical Logic manager](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/CanonicalLogicManagerTest.java) | Mixed boundary checks for routing, shared views, preferences and persistence. |
 
 The suite also covers lessons, enrolment, search and attendance. Follow the DG's
 [maintainer reading path](DeveloperGuide.html#maintainer-reading-path) and the affected feature's source/tests
