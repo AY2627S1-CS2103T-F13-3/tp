@@ -213,8 +213,9 @@ baseline `9a2f8cd9`), not a rendered post-#357 acceptance.
 
 ## Round 1 owner handoff — 21 October 2026
 
-**#317 is reconciled and closed.** Its current issue body maps all five criteria
-to Vincent's immutable Windows matrix at `440d4385`, the earlier non-author Mac
+**#317 is reconciled and closed.** Its [final owner comment](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/317#issuecomment-6319053962)
+contains five checked criteria and maps them to Vincent's immutable Windows
+matrix at `440d4385`, the earlier non-author Mac
 checks/affected #354 rerun, and Ernest's independent Windows regression review.
 Ten selected Settings/application captures were SHA-256 verified and visually
 inspected here. The tested source is `93a907ea`; the later `9a2f8cd9` production
@@ -222,7 +223,7 @@ delta only replaces the icon and its resource paths, with unchanged help layout,
 routing and UG. Windows checks remain author-executed; this is evidence inspection,
 not another native run. Actual JAR/runtime identities, 150% confirmation and
 copy/geometry limits are retained in [#317](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/317).
-Vincent has the final disposition for #319 item 3. Final candidate #270/#271/#272
+Vincent consumed the final disposition and closed #319. Final candidate #270/#271/#272
 acceptance is separate; no earlier local PonHub 1.3 JAR certifies v1.4.
 
 **Ernest's shared Help correction is saved.** In the named working-spec tab
@@ -247,3 +248,21 @@ affected-example acceptance follows reviewed/merged #357 and those owner results
 Vincent's separate legacy Storage disposition and #349 DevOps runbook handoffs
 remain with #239/#271. The existing 30–45 minute focused-audit recovery estimate
 starts after the dependencies arrive; it is not a new completion deadline.
+
+### Administrative description synchronization
+
+Final API readback caught an access limitation: repository metadata reports
+Ernest's access as `triage`, with `push`, `maintain` and `admin` false. Closure and
+comments save, but another author's issue body remains unchanged after connector
+and direct API attempts. Therefore #317's original description still contains
+stale NOT RUN/unchecked material; the final owner comment above is the completed
+reconciliation and supplies a ready replacement/checklist sync for a write-access
+teammate. No permission was broadened and no unperformed acceptance was waived.
+
+The [#224 coordination comment](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/224#issuecomment-6318967807)
+is also the saved current handoff; the attempted #224 summary-body update did not
+persist. The [#276 completion update](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/276#issuecomment-6319077803)
+records the actual nine remaining v1.4 task issues after #317/#319 closure and
+requests bounded description/count synchronization. Original owners, milestone
+and overdue dates are retained. PR #358's own description and all fork commits
+save normally; final source-specific evidence is published in the linked comments.
