@@ -1,0 +1,486 @@
+[
+  {
+    "command": "help add",
+    "expected": "add r/",
+    "passed": false,
+    "state": "There has been no change in the accessibility tree for Window: \"PonHub\".\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "note": "AX setValue did not change JavaFX input; no command submission occurred. Retried successfully using native paste."
+  },
+  {
+    "command": "help add",
+    "expected": "add r/",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Usage: add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]\n       add r/tutor|parent n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]\nRoles and education levels are case-insensitive. Supply each lowercase prefix at most once.\nOptional values must be nonblank; l/ and pp/ are only allowed for students.\nExamples:\nadd r/student n/Alex Tan l/P1 pp/91234567\nadd r/tutor n/Mei Lim p/92345678 e/mei@example.com\nadd r/parent n/Sam Tan p/91234567 a/10 Main Road\n+\t\t\t35 text Usage: add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]\n       add r/tutor|parent n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]\nRoles and education levels are case-insensitive. Supply each lowercase prefix at most once.\nOptional values must be nonblank; l/ and pp/ are only allowed for students.\nExamples:\nadd r/student n/Alex Tan l/P1 pp/91234567\nadd r/tutor n/Mei Lim p/92345678 e/mei@example.com\nadd r/parent n/Sam Tan p/91234567 a/10 Main Road\n+\t\t\t36 scroll bar 0\n+\t\t\t\t37 value indicator 0\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "list",
+    "expected": "Showing 0 person(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 36-37\n~\t13 text entry area Showing 0 person(s).\n~\t\t\t35 text Showing 0 person(s).\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "add r/tutor n/Mei Lim p/92345678 e/mei@example.com",
+    "expected": "New tutor added: Mei Lim (T1).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 18-19\n~\t13 text entry area New tutor added: Mei Lim (T1).\n~\t\t\t35 text New tutor added: Mei Lim (T1).\n~\t15 text Showing 1 person(s).\n~\t\t16 text Showing 1 person(s).\n+\t\t36 row (selectable)\n+\t\t\t37 text 1. Mei Lim\n+\t\t\t\t38 text 1. Mei Lim\n+\t\t\t39 text Tutor · T1\n+\t\t\t\t40 text Tutor · T1\n+\t\t\t41 text Phone: 92345678\n+\t\t\t\t42 text Phone: 92345678\n+\t\t\t43 text Email: mei@example.com\n+\t\t\t\t44 text Email: mei@example.com\n+\t\t\t45 text Address: Not provided\n+\t\t\t\t46 text Address: Not provided\n+\t\t47 row (selectable)\n+\t\t48 row (selectable)\n+\t\t49 row (selectable)\n+\t\t50 row (selectable)\n+\t\t51 row (selectable)\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1",
+    "expected": "L1",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 22-23, 37-46\n~\t13 text entry area New lesson added: L1.\n~\t\t\t35 text New lesson added: L1.\n+\t\t\t52 text 1. Mei Lim\n+\t\t\t\t53 text 1. Mei Lim\n+\t\t\t54 text Tutor · T1\n+\t\t\t\t55 text Tutor · T1\n+\t\t\t56 text Phone: 92345678\n+\t\t\t\t57 text Phone: 92345678\n+\t\t\t58 text Email: mei@example.com\n+\t\t\t\t59 text Email: mei@example.com\n+\t\t\t60 text Address: Not provided\n+\t\t\t\t61 text Address: Not provided\n~\t20 text All lessons Showing 1 lesson(s).\n+\t\t62 row (selectable)\n+\t\t\t63 text Math\n+\t\t\t\t64 text Math\n+\t\t\t65 text Lesson L1 · Mon 1600-1730\n+\t\t\t\t66 text Lesson L1 · Mon 1600-1730\n+\t\t\t67 text Tutor: Mei Lim (T1)\n+\t\t\t\t68 text Tutor: Mei Lim (T1)\n+\t\t\t69 text Room: R1\n+\t\t\t\t70 text Room: R1\n+\t\t\t71 text Students enrolled: 0\n+\t\t\t\t72 text Students enrolled: 0\n+\t\t73 row (selectable)\n+\t\t74 row (selectable)\n+\t\t75 row (selectable)\n+\t\t76 row (selectable)\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "add r/student n/Alex Tan l/S2 pp/91234567",
+    "expected": "New student added: Alex Tan (S1).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 48-61, 63-72\n~\t13 text entry area New student added: Alex Tan (S1).\n~\t\t\t35 text New student added: Alex Tan (S1).\n~\t15 text Showing 2 person(s).\n~\t\t16 text Showing 2 person(s).\n+\t\t\t77 text 1. Mei Lim\n+\t\t\t\t78 text 1. Mei Lim\n+\t\t\t79 text Tutor · T1\n+\t\t\t\t80 text Tutor · T1\n+\t\t\t81 text Phone: 92345678\n+\t\t\t\t82 text Phone: 92345678\n+\t\t\t83 text Email: mei@example.com\n+\t\t\t\t84 text Email: mei@example.com\n+\t\t\t85 text Address: Not provided\n+\t\t\t\t86 text Address: Not provided\n+\t\t\t87 text 2. Alex Tan\n+\t\t\t\t88 text 2. Alex Tan\n+\t\t\t89 text Student · S1\n+\t\t\t\t90 text Student · S1\n+\t\t\t91 text Level: S2\n+\t\t\t\t92 text Level: S2\n+\t\t\t93 text Parent phone: 91234567\n+\t\t\t\t94 text Parent phone: 91234567\n+\t\t\t95 text Own phone: Not provided\n+\t\t\t\t96 text Own phone: Not provided\n+\t\t\t97 text Email: Not provided\n+\t\t\t\t98 text Email: Not provided\n+\t\t\t99 text Address: Not provided\n+\t\t\t\t100 text Address: Not provided\n+\t\t101 scroll bar 0\n+\t\t\t102 value indicator 0\n+\t\t\t103 text Math\n+\t\t\t\t104 text Math\n+\t\t\t105 text Lesson L1 · Mon 1600-1730\n+\t\t\t\t106 text Lesson L1 · Mon 1600-1730\n+\t\t\t107 text Tutor: Mei Lim (T1)\n+\t\t\t\t108 text Tutor: Mei Lim (T1)\n+\t\t\t109 text Room: R1\n+\t\t\t\t110 text Room: R1\n+\t\t\t111 text Students enrolled: 0\n+\t\t\t\t112 text Students enrolled: 0\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "add r/student n/Jamie Tan l/P1 pp/91234567",
+    "expected": "New student added: Jamie Tan (S2).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 77-100, 103-112\n~\t13 text entry area New student added: Jamie Tan (S2).\n~\t\t\t35 text New student added: Jamie Tan (S2).\n~\t15 text Showing 3 person(s).\n~\t\t16 text Showing 3 person(s).\n+\t\t\t103 text 1. Mei Lim\n+\t\t\t\t104 text 1. Mei Lim\n+\t\t\t105 text Tutor · T1\n+\t\t\t\t106 text Tutor · T1\n+\t\t\t107 text Phone: 92345678\n+\t\t\t\t108 text Phone: 92345678\n+\t\t\t109 text Email: mei@example.com\n+\t\t\t\t110 text Email: mei@example.com\n+\t\t\t111 text Address: Not provided\n+\t\t\t\t112 text Address: Not provided\n+\t\t\t113 text 2. Alex Tan\n+\t\t\t\t114 text 2. Alex Tan\n+\t\t\t115 text Student · S1\n+\t\t\t\t116 text Student · S1\n+\t\t\t117 text Level: S2\n+\t\t\t\t118 text Level: S2\n+\t\t\t119 text Parent phone: 91234567\n+\t\t\t\t120 text Parent phone: 91234567\n+\t\t\t121 text Own phone: Not provided\n+\t\t\t\t122 text Own phone: Not provided\n+\t\t\t123 text Email: Not provided\n+\t\t\t\t124 text Email: Not provided\n+\t\t\t125 text Address: Not provided\n+\t\t\t\t126 text Address: Not provided\n+\t\t\t127 text Math\n+\t\t\t\t128 text Math\n+\t\t\t129 text Lesson L1 · Mon 1600-1730\n+\t\t\t\t130 text Lesson L1 · Mon 1600-1730\n+\t\t\t131 text Tutor: Mei Lim (T1)\n+\t\t\t\t132 text Tutor: Mei Lim (T1)\n+\t\t\t133 text Room: R1\n+\t\t\t\t134 text Room: R1\n+\t\t\t135 text Students enrolled: 0\n+\t\t\t\t136 text Students enrolled: 0\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "add r/parent n/Pat Tan p/91234567",
+    "expected": "New parent added: Pat Tan (P1).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area New parent added: Pat Tan (P1).\n~\t\t\t35 text New parent added: Pat Tan (P1).\n~\t15 text Showing 4 person(s).\n~\t\t16 text Showing 4 person(s).\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "list r/student",
+    "expected": "Showing 2 student(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 103-126\n~\t13 text entry area Showing 2 student(s).\n~\t\t\t35 text Showing 2 student(s).\n~\t15 text Showing 2 person(s).\n~\t\t16 text Showing 2 person(s).\n+\t\t\t137 text 1. Alex Tan\n+\t\t\t\t138 text 1. Alex Tan\n+\t\t\t139 text Student · S1\n+\t\t\t\t140 text Student · S1\n+\t\t\t141 text Level: S2\n+\t\t\t\t142 text Level: S2\n+\t\t\t143 text Parent phone: 91234567\n+\t\t\t\t144 text Parent phone: 91234567\n+\t\t\t145 text Own phone: Not provided\n+\t\t\t\t146 text Own phone: Not provided\n+\t\t\t147 text Email: Not provided\n+\t\t\t\t148 text Email: Not provided\n+\t\t\t149 text Address: Not provided\n+\t\t\t\t150 text Address: Not provided\n+\t\t\t151 text 2. Jamie Tan\n+\t\t\t\t152 text 2. Jamie Tan\n+\t\t\t153 text Student · S2\n+\t\t\t\t154 text Student · S2\n+\t\t\t155 text Level: P1\n+\t\t\t\t156 text Level: P1\n+\t\t\t157 text Parent phone: 91234567\n+\t\t\t\t158 text Parent phone: 91234567\n+\t\t\t159 text Own phone: Not provided\n+\t\t\t\t160 text Own phone: Not provided\n+\t\t\t161 text Email: Not provided\n+\t\t\t\t162 text Email: Not provided\n+\t\t\t163 text Address: Not provided\n+\t\t\t\t164 text Address: Not provided\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "enrol 1 lid/L1",
+    "expected": "L1",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 127-130, 137-164\n~\t13 text entry area Student S1 enrolled in lesson L1.\n~\t\t\t35 text Student S1 enrolled in lesson L1.\n+\t\t\t103 text 1. Alex Tan\n+\t\t\t\t104 text 1. Alex Tan\n+\t\t\t105 text Student · S1\n+\t\t\t\t106 text Student · S1\n+\t\t\t107 text Level: S2\n+\t\t\t\t108 text Level: S2\n+\t\t\t109 text Parent phone: 91234567\n+\t\t\t\t110 text Parent phone: 91234567\n+\t\t\t111 text Own phone: Not provided\n+\t\t\t\t112 text Own phone: Not provided\n+\t\t\t113 text Email: Not provided\n+\t\t\t\t114 text Email: Not provided\n+\t\t\t115 text Address: Not provided\n+\t\t\t\t116 text Address: Not provided\n+\t\t\t117 text 2. Jamie Tan\n+\t\t\t\t118 text 2. Jamie Tan\n+\t\t\t119 text Student · S2\n+\t\t\t\t120 text Student · S2\n+\t\t\t121 text Level: P1\n+\t\t\t\t122 text Level: P1\n+\t\t\t123 text Parent phone: 91234567\n+\t\t\t\t124 text Parent phone: 91234567\n+\t\t\t125 text Own phone: Not provided\n+\t\t\t\t126 text Own phone: Not provided\n+\t\t\t127 text Email: Not provided\n+\t\t\t\t128 text Email: Not provided\n+\t\t\t129 text Address: Not provided\n+\t\t\t\t130 text Address: Not provided\n~\t\t\t131 text Math\n~\t\t\t\t132 text Math\n~\t\t\t133 text Lesson L1 · Mon 1600-1730\n~\t\t\t\t134 text Lesson L1 · Mon 1600-1730\n~\t\t\t135 text Tutor: Mei Lim (T1)\n~\t\t\t\t136 text Tutor: Mei Lim (T1)\n+\t\t\t137 text Room: R1\n+\t\t\t\t138 text Room: R1\n+\t\t\t139 text Students enrolled: 1\n+\t\t\t\t140 text Students enrolled: 1\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "enrol 2 lid/L1",
+    "expected": "L1",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Student S2 enrolled in lesson L1.\n~\t\t\t35 text Student S2 enrolled in lesson L1.\n~\t\t\t139 text Students enrolled: 2\n~\t\t\t\t140 text Students enrolled: 2\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "mark 1 lid/L1 d/2026-10-05 s/present",
+    "expected": "present",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Attendance for Student S1 in lesson L1 on 2026-10-05 marked present.\n~\t\t\t35 text Attendance for Student S1 in lesson L1 on 2026-10-05 marked present.\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "mark 2 lid/L1 d/2026-10-05 s/absent",
+    "expected": "absent",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Attendance for Student S2 in lesson L1 on 2026-10-05 marked absent.\n~\t\t\t35 text Attendance for Student S2 in lesson L1 on 2026-10-05 marked absent.\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "showlesson lid/L1 d/2026-10-05",
+    "expected": "Alex Tan",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 21, 62, 73-76, 131-140\n~\t13 text entry area Showing lesson L1 for 2026-10-05.\n~\t\t\t35 text Showing lesson L1 for 2026-10-05.\n~\t20 text Lesson L1 · 2026-10-05 · current roster and retained attendance Showing lesson details.\n+\t131 scroll area\n+\t\t132 text Math\n+\t\t\t133 text Math\n+\t\t134 text Lesson L1 · Mon 1600-1730\n+\t\t\t135 text Lesson L1 · Mon 1600-1730\n+\t\t136 text Tutor: Mei Lim (T1)\n+\t\t\t137 text Tutor: Mei Lim (T1)\n+\t\t138 text Room: R1\n+\t\t\t139 text Room: R1\n+\t\t140 text Students enrolled: 2\n+\t\t\t141 text Students enrolled: 2\n+\t\t142 text Current roster:\n+\t\t\t143 text Current roster:\n+\t\t144 text S1 · Alex Tan — present\n+\t\t\t145 text S1 · Alex Tan — present\n+\t\t146 text S2 · Jamie Tan — absent\n+\t\t\t147 text S2 · Jamie Tan — absent\n+\t\t148 text Former members' retained attendance:\n+\t\t\t149 text Former members' retained attendance:\n+\t\t150 text No retained attendance for former members.\n+\t\t\t151 text No retained attendance for former members.\n+\t\t152 scroll bar 0\n+\t\t\t153 value indicator 0\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "mark 1 lid/L1 d/2026-10-05 s/absent",
+    "expected": "marked absent",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 103-130, 132-151\n~\t13 text entry area Attendance for Student S1 in lesson L1 on 2026-10-05 marked absent.\n~\t\t\t35 text Attendance for Student S1 in lesson L1 on 2026-10-05 marked absent.\n+\t\t\t154 text 1. Alex Tan\n+\t\t\t\t155 text 1. Alex Tan\n+\t\t\t156 text Student · S1\n+\t\t\t\t157 text Student · S1\n+\t\t\t158 text Level: S2\n+\t\t\t\t159 text Level: S2\n+\t\t\t160 text Parent phone: 91234567\n+\t\t\t\t161 text Parent phone: 91234567\n+\t\t\t162 text Own phone: Not provided\n+\t\t\t\t163 text Own phone: Not provided\n+\t\t\t164 text Email: Not provided\n+\t\t\t\t165 text Email: Not provided\n+\t\t\t166 text Address: Not provided\n+\t\t\t\t167 text Address: Not provided\n+\t\t\t168 text 2. Jamie Tan\n+\t\t\t\t169 text 2. Jamie Tan\n+\t\t\t170 text Student · S2\n+\t\t\t\t171 text Student · S2\n+\t\t\t172 text Level: P1\n+\t\t\t\t173 text Level: P1\n+\t\t\t174 text Parent phone: 91234567\n+\t\t\t\t175 text Parent phone: 91234567\n+\t\t\t176 text Own phone: Not provided\n+\t\t\t\t177 text Own phone: Not provided\n+\t\t\t178 text Email: Not provided\n+\t\t\t\t179 text Email: Not provided\n+\t\t\t180 text Address: Not provided\n+\t\t\t\t181 text Address: Not provided\n+\t\t182 text Math\n+\t\t\t183 text Math\n+\t\t184 text Lesson L1 · Mon 1600-1730\n+\t\t\t185 text Lesson L1 · Mon 1600-1730\n+\t\t186 text Tutor: Mei Lim (T1)\n+\t\t\t187 text Tutor: Mei Lim (T1)\n+\t\t188 text Room: R1\n+\t\t\t189 text Room: R1\n+\t\t190 text Students enrolled: 2\n+\t\t\t191 text Students enrolled: 2\n+\t\t192 text Current roster:\n+\t\t\t193 text Current roster:\n+\t\t194 text S1 · Alex Tan — absent\n+\t\t\t195 text S1 · Alex Tan — absent\n+\t\t196 text S2 · Jamie Tan — absent\n+\t\t\t197 text S2 · Jamie Tan — absent\n+\t\t198 text Former members' retained attendance:\n+\t\t\t199 text Former members' retained attendance:\n+\t\t200 text No retained attendance for former members.\n+\t\t\t201 text No retained attendance for former members.\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "edit 1 l/P2 e/",
+    "expected": "Edited student",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Edited student: Alex Tan (S1).\n~\t\t\t35 text Edited student: Alex Tan (S1).\n~\t\t\t158 text Level: P2\n~\t\t\t\t159 text Level: P2\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "editlesson lid/L1 st/1630 s/Advanced Math",
+    "expected": "Edited lesson",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Edited lesson: L1.\n~\t\t\t35 text Edited lesson: L1.\n~\t\t182 text Advanced Math\n~\t\t\t183 text Advanced Math\n~\t\t184 text Lesson L1 · Mon 1630-1730\n~\t\t\t185 text Lesson L1 · Mon 1630-1730\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "search c/parent sn/Alex",
+    "expected": "Found 1 parent(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 101-102, 154-181\n~\t13 text entry area Found 1 parent(s).\n~\t\t\t35 text Found 1 parent(s).\n~\t15 text Showing 1 person(s).\n~\t\t16 text Showing 1 person(s).\n+\t\t202 row (selectable)\n+\t\t203 row (selectable)\n+\t\t204 row (selectable)\n+\t\t\t205 text 1. Pat Tan\n+\t\t\t\t206 text 1. Pat Tan\n+\t\t\t207 text Parent · P1\n+\t\t\t\t208 text Parent · P1\n+\t\t\t209 text Phone: 91234567\n+\t\t\t\t210 text Phone: 91234567\n+\t\t\t211 text Email: Not provided\n+\t\t\t\t212 text Email: Not provided\n+\t\t\t213 text Address: Not provided\n+\t\t\t\t214 text Address: Not provided\n+\t\t\t215 text Student: Alex Tan (S1)\n+\t\t\t\t216 text Student: Alex Tan (S1)\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "edit 1 p/90000000",
+    "expected": "Edited parent",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 36, 47, 182-216\n~\t13 text entry area Edited parent: Pat Tan (P1).\n~\t\t\t35 text Edited parent: Pat Tan (P1).\n~\t15 text Showing 0 person(s).\n~\t\t16 text Showing 0 person(s).\n+\t\t154 text No persons to display.\n+\t\t\t155 text No persons to display.\n+\t\t156 text Advanced Math\n+\t\t\t157 text Advanced Math\n+\t\t158 text Lesson L1 · Mon 1630-1730\n+\t\t\t159 text Lesson L1 · Mon 1630-1730\n+\t\t160 text Tutor: Mei Lim (T1)\n+\t\t\t161 text Tutor: Mei Lim (T1)\n+\t\t162 text Room: R1\n+\t\t\t163 text Room: R1\n+\t\t164 text Students enrolled: 2\n+\t\t\t165 text Students enrolled: 2\n+\t\t166 text Current roster:\n+\t\t\t167 text Current roster:\n+\t\t168 text S1 · Alex Tan — absent\n+\t\t\t169 text S1 · Alex Tan — absent\n+\t\t170 text S2 · Jamie Tan — absent\n+\t\t\t171 text S2 · Jamie Tan — absent\n+\t\t172 text Former members' retained attendance:\n+\t\t\t173 text Former members' retained attendance:\n+\t\t174 text No retained attendance for former members.\n+\t\t\t175 text No retained attendance for former members.\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "list r/student",
+    "expected": "Showing 2 student(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 154-155\n~\t13 text entry area Showing 2 student(s).\n~\t\t\t35 text Showing 2 student(s).\n~\t15 text Showing 2 person(s).\n~\t\t16 text Showing 2 person(s).\n+\t\t176 row (selectable)\n+\t\t\t177 text 1. Alex Tan\n+\t\t\t\t178 text 1. Alex Tan\n+\t\t\t179 text Student · S1\n+\t\t\t\t180 text Student · S1\n+\t\t\t181 text Level: P2\n+\t\t\t\t182 text Level: P2\n+\t\t\t183 text Parent phone: 91234567\n+\t\t\t\t184 text Parent phone: 91234567\n+\t\t\t185 text Own phone: Not provided\n+\t\t\t\t186 text Own phone: Not provided\n+\t\t\t187 text Email: Not provided\n+\t\t\t\t188 text Email: Not provided\n+\t\t\t189 text Address: Not provided\n+\t\t\t\t190 text Address: Not provided\n+\t\t191 row (selectable)\n+\t\t\t192 text 2. Jamie Tan\n+\t\t\t\t193 text 2. Jamie Tan\n+\t\t\t194 text Student · S2\n+\t\t\t\t195 text Student · S2\n+\t\t\t196 text Level: P1\n+\t\t\t\t197 text Level: P1\n+\t\t\t198 text Parent phone: 91234567\n+\t\t\t\t199 text Parent phone: 91234567\n+\t\t\t200 text Own phone: Not provided\n+\t\t\t\t201 text Own phone: Not provided\n+\t\t\t202 text Email: Not provided\n+\t\t\t\t203 text Email: Not provided\n+\t\t\t204 text Address: Not provided\n+\t\t\t\t205 text Address: Not provided\n+\t\t206 scroll bar 0\n+\t\t\t207 value indicator 0\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "edit 1 pp/90000000",
+    "expected": "Edited student",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 156-175, 177-190, 192-205\n~\t13 text entry area Edited student: Alex Tan (S1).\n~\t\t\t35 text Edited student: Alex Tan (S1).\n+\t\t\t208 text 1. Alex Tan\n+\t\t\t\t209 text 1. Alex Tan\n+\t\t\t210 text Student · S1\n+\t\t\t\t211 text Student · S1\n+\t\t\t212 text Level: P2\n+\t\t\t\t213 text Level: P2\n+\t\t\t214 text Parent phone: 90000000\n+\t\t\t\t215 text Parent phone: 90000000\n+\t\t\t216 text Own phone: Not provided\n+\t\t\t\t217 text Own phone: Not provided\n+\t\t\t218 text Email: Not provided\n+\t\t\t\t219 text Email: Not provided\n+\t\t\t220 text Address: Not provided\n+\t\t\t\t221 text Address: Not provided\n+\t\t\t222 text 2. Jamie Tan\n+\t\t\t\t223 text 2. Jamie Tan\n+\t\t\t224 text Student · S2\n+\t\t\t\t225 text Student · S2\n+\t\t\t226 text Level: P1\n+\t\t\t\t227 text Level: P1\n+\t\t\t228 text Parent phone: 91234567\n+\t\t\t\t229 text Parent phone: 91234567\n+\t\t\t230 text Own phone: Not provided\n+\t\t\t\t231 text Own phone: Not provided\n+\t\t\t232 text Email: Not provided\n+\t\t\t\t233 text Email: Not provided\n+\t\t\t234 text Address: Not provided\n+\t\t\t\t235 text Address: Not provided\n+\t\t236 text Advanced Math\n+\t\t\t237 text Advanced Math\n+\t\t238 text Lesson L1 · Mon 1630-1730\n+\t\t\t239 text Lesson L1 · Mon 1630-1730\n+\t\t240 text Tutor: Mei Lim (T1)\n+\t\t\t241 text Tutor: Mei Lim (T1)\n+\t\t242 text Room: R1\n+\t\t\t243 text Room: R1\n+\t\t244 text Students enrolled: 2\n+\t\t\t245 text Students enrolled: 2\n+\t\t246 text Current roster:\n+\t\t\t247 text Current roster:\n+\t\t248 text S1 · Alex Tan — absent\n+\t\t\t249 text S1 · Alex Tan — absent\n+\t\t250 text S2 · Jamie Tan — absent\n+\t\t\t251 text S2 · Jamie Tan — absent\n+\t\t252 text Former members' retained attendance:\n+\t\t\t253 text Former members' retained attendance:\n+\t\t254 text No retained attendance for former members.\n+\t\t\t255 text No retained attendance for former members.\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "search c/parent sn/Alex",
+    "expected": "Found 1 parent(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 206-235\n~\t13 text entry area Found 1 parent(s).\n~\t\t\t35 text Found 1 parent(s).\n~\t15 text Showing 1 person(s).\n~\t\t16 text Showing 1 person(s).\n+\t\t256 row (selectable)\n+\t\t257 row (selectable)\n+\t\t258 row (selectable)\n+\t\t\t259 text 1. Pat Tan\n+\t\t\t\t260 text 1. Pat Tan\n+\t\t\t261 text Parent · P1\n+\t\t\t\t262 text Parent · P1\n+\t\t\t263 text Phone: 90000000\n+\t\t\t\t264 text Phone: 90000000\n+\t\t\t265 text Email: Not provided\n+\t\t\t\t266 text Email: Not provided\n+\t\t\t267 text Address: Not provided\n+\t\t\t\t268 text Address: Not provided\n+\t\t\t269 text Student: Alex Tan (S1)\n+\t\t\t\t270 text Student: Alex Tan (S1)\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "search c/lesson s/Advanced",
+    "expected": "Found 1 lesson(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 131, 152-153, 236-255\n~\t13 text entry area Found 1 lesson(s).\n~\t\t\t35 text Found 1 lesson(s).\n~\t20 text Lesson search: s/advanced Showing 1 lesson(s).\n+\t271 list\n+\t\t272 row (selectable)\n+\t\t\t273 text Advanced Math\n+\t\t\t\t274 text Advanced Math\n+\t\t\t275 text Lesson L1 · Mon 1630-1730\n+\t\t\t\t276 text Lesson L1 · Mon 1630-1730\n+\t\t\t277 text Tutor: Mei Lim (T1)\n+\t\t\t\t278 text Tutor: Mei Lim (T1)\n+\t\t\t279 text Room: R1\n+\t\t\t\t280 text Room: R1\n+\t\t\t281 text Students enrolled: 2\n+\t\t\t\t282 text Students enrolled: 2\n+\t\t283 row (selectable)\n+\t\t284 row (selectable)\n+\t\t285 row (selectable)\n+\t\t286 row (selectable)\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "list r/student",
+    "expected": "Showing 2 student(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 176, 191, 256, 259-270\n~\t13 text entry area Showing 2 student(s).\n~\t\t\t35 text Showing 2 student(s).\n~\t15 text Showing 2 person(s).\n~\t\t16 text Showing 2 person(s).\n+\t\t\t287 text 1. Alex Tan\n+\t\t\t\t288 text 1. Alex Tan\n+\t\t\t289 text Student · S1\n+\t\t\t\t290 text Student · S1\n+\t\t\t291 text Level: P2\n+\t\t\t\t292 text Level: P2\n+\t\t\t293 text Parent phone: 90000000\n+\t\t\t\t294 text Parent phone: 90000000\n+\t\t\t295 text Own phone: Not provided\n+\t\t\t\t296 text Own phone: Not provided\n+\t\t\t297 text Email: Not provided\n+\t\t\t\t298 text Email: Not provided\n+\t\t\t299 text Address: Not provided\n+\t\t\t\t300 text Address: Not provided\n+\t\t\t301 text 2. Jamie Tan\n+\t\t\t\t302 text 2. Jamie Tan\n+\t\t\t303 text Student · S2\n+\t\t\t\t304 text Student · S2\n+\t\t\t305 text Level: P1\n+\t\t\t\t306 text Level: P1\n+\t\t\t307 text Parent phone: 91234567\n+\t\t\t\t308 text Parent phone: 91234567\n+\t\t\t309 text Own phone: Not provided\n+\t\t\t\t310 text Own phone: Not provided\n+\t\t\t311 text Email: Not provided\n+\t\t\t\t312 text Email: Not provided\n+\t\t\t313 text Address: Not provided\n+\t\t\t\t314 text Address: Not provided\n+\t\t315 scroll bar 0\n+\t\t\t316 value indicator 0\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "edit 1 n/Alex  Tan",
+    "expected": "No changes to student",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area No changes to student: Alex Tan (S1).\n~\t\t\t35 text No changes to student: Alex Tan (S1).\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "editlesson lid/L1 st/1630 s/Advanced Math",
+    "expected": "No changes to lesson",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area No changes to lesson: L1.\n~\t\t\t35 text No changes to lesson: L1.\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "edit 0 n/Bad",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 25\n~\t13 text entry area Index must be a positive integer.\n~\t\t\t35 text Index must be a positive integer.\n~\t24 text field (settable) edit 0 n/Bad\n+\t\t317 text edit 0 n/Bad\nThe focused UI element is 24 text field (settable) edit 0 n/Bad",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "edit 1 p/abc",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Phone numbers must contain 3 to 15 digits, without spaces or punctuation.\n~\t\t\t35 text Phone numbers must contain 3 to 15 digits, without spaces or punctuation.\n~\t24 text field (settable) edit 1 p/abc\n~\t\t317 text edit 1 p/abc\nThe focused UI element is 24 text field (settable) edit 1 p/abc",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "editlesson lid/L1 d/Tue",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Cannot change lesson L1 to Tue because retained attendance on 2026-10-05 must match its weekday. Keep the current weekday or unmark the incompatible attendance record first.\n~\t\t\t35 text Cannot change lesson L1 to Tue because retained attendance on 2026-10-05 must match its weekday. Keep the current weekday or unmark the incompatible attendance record first.\n~\t24 text field (settable) editlesson lid/L1 d/Tue\n~\t\t317 text editlesson lid/L1 d/Tue\nThe focused UI element is 24 text field (settable) editlesson lid/L1 d/Tue",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "mark 1 lid/L1 d/2026-10-06 s/present",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Attendance date 2026-10-06 does not match lesson L1's Mon schedule.\n~\t\t\t35 text Attendance date 2026-10-06 does not match lesson L1's Mon schedule.\n~\t24 text field (settable) mark 1 lid/L1 d/2026-10-06 s/present\n~\t\t317 text mark 1 lid/L1 d/2026-10-06 s/present\nThe focused UI element is 24 text field (settable) mark 1 lid/L1 d/2026-10-06 s/present",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "deletelesson lid/L1",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Lesson L1 cannot be deleted while its roster contains these Student IDs: S1, S2. Unenrol all Students first.\n~\t\t\t35 text Lesson L1 cannot be deleted while its roster contains these Student IDs: S1, S2. Unenrol all Students first.\n~\t24 text field (settable) deletelesson lid/L1\n~\t\t317 text deletelesson lid/L1\nThe focused UI element is 24 text field (settable) deletelesson lid/L1",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "addlesson d/Mon st/1700 et/1800 s/Conflict tu/Mei Lim rm/R2",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Tutor schedule overlap between L1 and L2.\n~\t\t\t35 text Tutor schedule overlap between L1 and L2.\n~\t24 text field (settable) addlesson d/Mon st/1700 et/1800 s/Conflict tu/Mei Lim rm/R2\n~\t\t317 text addlesson d/Mon st/1700 et/1800 s/Conflict tu/Mei Lim rm/R2\nThe focused UI element is 24 text field (settable) addlesson d/Mon st/1700 et/1800 s/Conflict tu/Mei Lim rm/R2",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "unenrol 1 lid/L1",
+    "expected": "unenrolled",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 273-282, 287-314, 317\n~\t13 text entry area Student S1 unenrolled from lesson L1.\n~\t\t\t35 text Student S1 unenrolled from lesson L1.\n+\t\t\t317 text 1. Alex Tan\n+\t\t\t\t318 text 1. Alex Tan\n+\t\t\t319 text Student · S1\n+\t\t\t\t320 text Student · S1\n+\t\t\t321 text Level: P2\n+\t\t\t\t322 text Level: P2\n+\t\t\t323 text Parent phone: 90000000\n+\t\t\t\t324 text Parent phone: 90000000\n+\t\t\t325 text Own phone: Not provided\n+\t\t\t\t326 text Own phone: Not provided\n+\t\t\t327 text Email: Not provided\n+\t\t\t\t328 text Email: Not provided\n+\t\t\t329 text Address: Not provided\n+\t\t\t\t330 text Address: Not provided\n+\t\t\t331 text 2. Jamie Tan\n+\t\t\t\t332 text 2. Jamie Tan\n+\t\t\t333 text Student · S2\n+\t\t\t\t334 text Student · S2\n+\t\t\t335 text Level: P1\n+\t\t\t\t336 text Level: P1\n+\t\t\t337 text Parent phone: 91234567\n+\t\t\t\t338 text Parent phone: 91234567\n+\t\t\t339 text Own phone: Not provided\n+\t\t\t\t340 text Own phone: Not provided\n+\t\t\t341 text Email: Not provided\n+\t\t\t\t342 text Email: Not provided\n+\t\t\t343 text Address: Not provided\n+\t\t\t\t344 text Address: Not provided\n+\t\t\t345 text Advanced Math\n+\t\t\t\t346 text Advanced Math\n+\t\t\t347 text Lesson L1 · Mon 1630-1730\n+\t\t\t\t348 text Lesson L1 · Mon 1630-1730\n+\t\t\t349 text Tutor: Mei Lim (T1)\n+\t\t\t\t350 text Tutor: Mei Lim (T1)\n+\t\t\t351 text Room: R1\n+\t\t\t\t352 text Room: R1\n+\t\t\t353 text Students enrolled: 1\n+\t\t\t\t354 text Students enrolled: 1\n~\t24 text field (settable) Enter command here...\n+\t\t355 text Enter command here...\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "history 1 lid/L1",
+    "expected": "former",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 20, 271-272, 283-286, 345-354\n~\t13 text entry area Showing 1 attendance record(s).\n~\t\t\t35 text Showing 1 attendance record(s).\n+\t356 text Student S1 · attendance history · L1 Showing 1 attendance record(s).\n+\t357 list\n+\t\t358 row (selectable) 2026-10-05 · L1 · absent · former enrolment\n+\t\t\t359 text 2026-10-05 · L1 · absent · former enrolment\n+\t\t360 row (selectable)\n+\t\t361 row (selectable)\n+\t\t362 row (selectable)\n+\t\t363 row (selectable)\n+\t\t364 row (selectable)\n+\t\t365 row (selectable)\n+\t\t366 row (selectable)\n+\t\t367 row (selectable)\n+\t\t368 row (selectable)\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "mark 1 lid/L1 d/2026-10-05 s/present",
+    "expected": "marked present",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 317-344\n~\t13 text entry area Attendance for Student S1 in lesson L1 on 2026-10-05 marked present.\n~\t\t\t35 text Attendance for Student S1 in lesson L1 on 2026-10-05 marked present.\n+\t\t\t369 text 1. Alex Tan\n+\t\t\t\t370 text 1. Alex Tan\n+\t\t\t371 text Student · S1\n+\t\t\t\t372 text Student · S1\n+\t\t\t373 text Level: P2\n+\t\t\t\t374 text Level: P2\n+\t\t\t375 text Parent phone: 90000000\n+\t\t\t\t376 text Parent phone: 90000000\n+\t\t\t377 text Own phone: Not provided\n+\t\t\t\t378 text Own phone: Not provided\n+\t\t\t379 text Email: Not provided\n+\t\t\t\t380 text Email: Not provided\n+\t\t\t381 text Address: Not provided\n+\t\t\t\t382 text Address: Not provided\n+\t\t\t383 text 2. Jamie Tan\n+\t\t\t\t384 text 2. Jamie Tan\n+\t\t\t385 text Student · S2\n+\t\t\t\t386 text Student · S2\n+\t\t\t387 text Level: P1\n+\t\t\t\t388 text Level: P1\n+\t\t\t389 text Parent phone: 91234567\n+\t\t\t\t390 text Parent phone: 91234567\n+\t\t\t391 text Own phone: Not provided\n+\t\t\t\t392 text Own phone: Not provided\n+\t\t\t393 text Email: Not provided\n+\t\t\t\t394 text Email: Not provided\n+\t\t\t395 text Address: Not provided\n+\t\t\t\t396 text Address: Not provided\n~\t\t358 row (selectable) 2026-10-05 · L1 · present · former enrolment\n~\t\t\t359 text 2026-10-05 · L1 · present · former enrolment\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "mark 1 lid/L1 d/2026-10-12 s/present",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 355\n~\t13 text entry area Student S1 must be enrolled in lesson L1 before new attendance can be recorded.\n~\t\t\t35 text Student S1 must be enrolled in lesson L1 before new attendance can be recorded.\n~\t24 text field (settable) mark 1 lid/L1 d/2026-10-12 s/present\n+\t\t397 text mark 1 lid/L1 d/2026-10-12 s/present\nThe focused UI element is 24 text field (settable) mark 1 lid/L1 d/2026-10-12 s/present",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "delete 1",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Student S1 cannot be deleted while retained attendance exists for lesson L1 on 2026-10-05.\n~\t\t\t35 text Student S1 cannot be deleted while retained attendance exists for lesson L1 on 2026-10-05.\n~\t24 text field (settable) delete 1\n~\t\t397 text delete 1\nThe focused UI element is 24 text field (settable) delete 1",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "showlesson lid/L1 d/2026-10-12",
+    "expected": "unrecorded",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 356-368, 397\n~\t13 text entry area Showing lesson L1 for 2026-10-12.\n~\t\t\t35 text Showing lesson L1 for 2026-10-12.\n+\t397 text Lesson L1 · 2026-10-12 · current roster and retained attendance Showing lesson details.\n+\t398 scroll area\n+\t\t399 text Advanced Math\n+\t\t\t400 text Advanced Math\n+\t\t401 text Lesson L1 · Mon 1630-1730\n+\t\t\t402 text Lesson L1 · Mon 1630-1730\n+\t\t403 text Tutor: Mei Lim (T1)\n+\t\t\t404 text Tutor: Mei Lim (T1)\n+\t\t405 text Room: R1\n+\t\t\t406 text Room: R1\n+\t\t407 text Students enrolled: 1\n+\t\t\t408 text Students enrolled: 1\n+\t\t409 text Current roster:\n+\t\t\t410 text Current roster:\n+\t\t411 text S2 · Jamie Tan — unrecorded\n+\t\t\t412 text S2 · Jamie Tan — unrecorded\n+\t\t413 text Former members' retained attendance:\n+\t\t\t414 text Former members' retained attendance:\n+\t\t415 text No retained attendance for former members.\n+\t\t\t416 text No retained attendance for former members.\n+\t\t417 scroll bar 0\n+\t\t\t418 value indicator 0\n~\t24 text field (settable) Enter command here...\n+\t\t419 text Enter command here...\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "search c/student n/Nobody",
+    "expected": "Found 0 student(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 257-258, 315-316, 369-396\n~\t13 text entry area Found 0 student(s).\n~\t\t\t35 text Found 0 student(s).\n~\t15 text Showing 0 person(s).\n~\t\t16 text Showing 0 person(s).\n+\t\t420 text No persons to display.\n+\t\t\t421 text No persons to display.\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "list r/student",
+    "expected": "Showing 2 student(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Showing 2 student(s).\n~\t\t\t35 text Showing 2 student(s).\n~\t15 text Showing 2 person(s).\n~\t\t16 text Showing 2 person(s).\n~\t\t420 row (selectable)\n~\t\t\t421 text 2. Jamie Tan\n+\t\t\t\t422 text 2. Jamie Tan\n+\t\t\t423 text Student · S2\n+\t\t\t\t424 text Student · S2\n+\t\t\t425 text Level: P1\n+\t\t\t\t426 text Level: P1\n+\t\t\t427 text Parent phone: 91234567\n+\t\t\t\t428 text Parent phone: 91234567\n+\t\t\t429 text Own phone: Not provided\n+\t\t\t\t430 text Own phone: Not provided\n+\t\t\t431 text Email: Not provided\n+\t\t\t\t432 text Email: Not provided\n+\t\t\t433 text Address: Not provided\n+\t\t\t\t434 text Address: Not provided\n+\t\t435 row (selectable)\n+\t\t\t436 text 1. Alex Tan\n+\t\t\t\t437 text 1. Alex Tan\n+\t\t\t438 text Student · S1\n+\t\t\t\t439 text Student · S1\n+\t\t\t440 text Level: P2\n+\t\t\t\t441 text Level: P2\n+\t\t\t442 text Parent phone: 90000000\n+\t\t\t\t443 text Parent phone: 90000000\n+\t\t\t444 text Own phone: Not provided\n+\t\t\t\t445 text Own phone: Not provided\n+\t\t\t446 text Email: Not provided\n+\t\t\t\t447 text Email: Not provided\n+\t\t\t448 text Address: Not provided\n+\t\t\t\t449 text Address: Not provided\n+\t\t450 scroll bar 0\n+\t\t\t451 value indicator 0\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "help search",
+    "expected": "Usage:",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Usage: search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS]\n       [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]\n       search c/parent [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]\n       [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]\n       search c/tutor [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]\n       [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [rm/ROOM]\n       search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]\nCategory values ignore case. Supply each lowercase prefix at most once, with a nonblank value.\nAll filters must match the same person. Name, email and address match text fragments ignoring case;\nname/address spaces are normalized. Level and phones match exactly; phone leading zeros matter.\nCategory-only searches include unlinked people. Missing optional contacts do not match filters.\nPeople results replace the people view and renumber current positions without saving.\nLesson results use a separate panel and preserve people filters and positions.\nAll lesson filters must match one lesson; sn/ matches its current roster. Text ignores case;\ntu/ matches tutor names. Day and HHMM times match exactly. When both times are given, end > start.\nEmpty lessons are included unless sn/ is supplied. Zero matches display an empty lesson panel.\nStudent lesson filters match one current enrolment and show its context below the student card.\nParent links use exact phone equality; sn/ and every lesson condition must match the same child.\nTutor conditions must match one assigned lesson and its current roster. Use n/ for tutor names.\nUse list or lessons to restore each view.\nExamples: search c/student n/Alex l/P1 pp/91234567, search c/lesson tu/mei d/Mon s/Math\n~\t\t\t35 text Usage: search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS]\n       [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]\n       search c/parent [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]\n       [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]\n       search c/tutor [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]\n       [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [rm/ROOM]\n       search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/\n+\t\t\t452 scroll bar 0\n+\t\t\t\t453 value indicator 0\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "add r/student n/Alexandria Catherine Montgomery Robinson l/P3 pp/94567890 e/alexandria.montgomery@example.com a/123 Long Avenue Block 456 Unit 07-890 Singapore",
+    "expected": "New student added",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 436-449, 454, 457-466\n~\t13 text entry area New student added: Alexandria Catherine Montgomery Robinson (S3).\n~\t\t\t35 text New student added: Alexandria Catherine Montgomery Robinson (S3).\n~\t15 text Showing 5 person(s).\n~\t\t16 text Showing 5 person(s).\n+\t\t\t475 text 1. Mei Lim\n+\t\t\t\t476 text 1. Mei Lim\n+\t\t\t477 text Tutor · T1\n+\t\t\t\t478 text Tutor · T1\n+\t\t\t479 text Phone: 92345678\n+\t\t\t\t480 text Phone: 92345678\n+\t\t\t481 text Email: mei@example.com\n+\t\t\t\t482 text Email: mei@example.com\n+\t\t\t483 text Address: Not provided\n+\t\t\t\t484 text Address: Not provided\n+\t\t\t485 text Advanced Math\n+\t\t\t\t486 text Advanced Math\n+\t\t\t487 text Lesson L1 · Mon 1630-1730\n+\t\t\t\t488 text Lesson L1 · Mon 1630-1730\n+\t\t\t489 text Tutor: Mei Lim (T1)\n+\t\t\t\t490 text Tutor: Mei Lim (T1)\n+\t\t\t491 text Room: R1\n+\t\t\t\t492 text Room: R1\n+\t\t\t493 text Students enrolled: 1\n+\t\t\t\t494 text Students enrolled: 1\n~\t24 text field (settable) Enter command here...\n+\t\t495 text Enter command here...\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "list r/student",
+    "expected": "Showing 3 student(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 471-472, 475-484\n~\t13 text entry area Showing 3 student(s).\n~\t\t\t35 text Showing 3 student(s).\n~\t15 text Showing 3 person(s).\n~\t\t16 text Showing 3 person(s).\n+\t\t\t496 text 1. Alex Tan\n+\t\t\t\t497 text 1. Alex Tan\n+\t\t\t498 text Student · S1\n+\t\t\t\t499 text Student · S1\n+\t\t\t500 text Level: P2\n+\t\t\t\t501 text Level: P2\n+\t\t\t502 text Parent phone: 90000000\n+\t\t\t\t503 text Parent phone: 90000000\n+\t\t\t504 text Own phone: Not provided\n+\t\t\t\t505 text Own phone: Not provided\n+\t\t\t506 text Email: Not provided\n+\t\t\t\t507 text Email: Not provided\n+\t\t\t508 text Address: Not provided\n+\t\t\t\t509 text Address: Not provided\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "edit 1 l/P3",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 495\n~\t13 text entry area Could not save data due to the following error: /private/tmp/ponhub-366-native/package/data\n~\t\t\t35 text Could not save data due to the following error: /private/tmp/ponhub-366-native/package/data\n+\t\t\t540 scroll bar 0\n+\t\t\t\t541 value indicator 0\n~\t24 text field (settable) edit 1 l/P3\n+\t\t542 text edit 1 l/P3\nThe focused UI element is 24 text field (settable) edit 1 l/P3",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "edit 1 l/P3",
+    "expected": "Edited student",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 485-494, 540-542\n~\t13 text entry area Edited student: Alex Tan (S1).\n~\t\t\t35 text Edited student: Alex Tan (S1).\n+\t\t\t540 text Advanced Math\n+\t\t\t\t541 text Advanced Math\n+\t\t\t542 text Lesson L1 · Mon 1630-1730\n+\t\t\t\t543 text Lesson L1 · Mon 1630-1730\n+\t\t\t544 text Tutor: Mei Lim (T1)\n+\t\t\t\t545 text Tutor: Mei Lim (T1)\n+\t\t\t546 text Room: R1\n+\t\t\t\t547 text Room: R1\n+\t\t\t548 text Students enrolled: 1\n+\t\t\t\t549 text Students enrolled: 1\n~\t24 text field (settable) Enter command here...\n+\t\t550 text Enter command here...\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "list r/student",
+    "expected": "Showing 3 student(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Showing 3 student(s).\n~\t\t\t35 text Showing 3 student(s).\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "history 1 lid/L1",
+    "expected": "present",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 397, 455-456, 473-474, 540-549\n~\t13 text entry area Showing 1 attendance record(s).\n~\t\t\t35 text Showing 1 attendance record(s).\n+\t551 text Student S1 · attendance history · L1 Showing 1 attendance record(s).\n+\t552 list\n+\t\t553 row (selectable) 2026-10-05 · L1 · present · former enrolment\n+\t\t\t554 text 2026-10-05 · L1 · present · former enrolment\n+\t\t555 row (selectable)\n+\t\t556 row (selectable)\n+\t\t557 row (selectable)\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "exit",
+    "expected": "window closes; stopping log",
+    "passed": null,
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "list r/student",
+    "expected": "Showing 3 student(s).",
+    "passed": false,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 19-28\n~\t\t18 row (selected)\n+\t\t\t57 text 1. Mei Lim\n+\t\t\t\t58 text 1. Mei Lim\n+\t\t\t59 text Tutor · T1\n+\t\t\t\t60 text Tutor · T1\n+\t\t\t61 text Phone: 92345678\n+\t\t\t\t62 text Phone: 92345678\n+\t\t\t63 text Email: mei@example.com\n+\t\t\t\t64 text Email: mei@example.com\n+\t\t\t65 text Address: Not provided\n+\t\t\t\t66 text Address: Not provided\nThe focused UI element is 18 row (selected)",
+    "inputMethod": "native paste",
+    "note": "No command-box submission: screenshot changed the tool element mapping and click selected a row; re-focused by observed coordinate before retry."
+  },
+  {
+    "command": "list r/student",
+    "expected": "Showing 3 student(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 19-28\n~\t13 text entry area Showing 3 student(s).\n+\t\t\t57 text Showing 3 student(s).\n~\t15 text Showing 3 person(s).\n~\t\t16 text Showing 3 person(s).\n~\t\t18 row (selectable)\n+\t\t\t58 text 1. Alex Tan\n+\t\t\t\t59 text 1. Alex Tan\n+\t\t\t60 text Student · S1\n+\t\t\t\t61 text Student · S1\n+\t\t\t62 text Level: P3\n+\t\t\t\t63 text Level: P3\n+\t\t\t64 text Parent phone: 90000000\n+\t\t\t\t65 text Parent phone: 90000000\n+\t\t\t66 text Own phone: Not provided\n+\t\t\t\t67 text Own phone: Not provided\n+\t\t\t68 text Email: Not provided\n+\t\t\t\t69 text Email: Not provided\n+\t\t\t70 text Address: Not provided\n+\t\t\t\t71 text Address: Not provided\nThe focused UI element is 46 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "history 1 lid/L1",
+    "expected": "present",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 31-45\n~\t13 text entry area Showing 1 attendance record(s).\n~\t\t\t57 text Showing 1 attendance record(s).\n+\t72 text Student S1 · attendance history · L1 Showing 1 attendance record(s).\n+\t73 list\n+\t\t74 row (selectable) 2026-10-05 · L1 · present · former enrolment\n+\t\t\t75 text 2026-10-05 · L1 · present · former enrolment\n+\t\t76 row (selectable)\n+\t\t77 row (selectable)\n+\t\t78 row (selectable)\nThe focused UI element is 46 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "showlesson lid/L1 d/2026-10-05",
+    "expected": "Former members' retained attendance:",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 77\n~\t13 text entry area Showing lesson L1 for 2026-10-05.\n~\t\t\t57 text Showing lesson L1 for 2026-10-05.\n~\t72 text Lesson L1 · 2026-10-05 · current roster and retained attendance Showing lesson details.\n~\t73 scroll area\n~\t\t74 text Advanced Math\n~\t\t\t75 text Advanced Math\n~\t\t76 text Lesson L1 · Mon 1630-1730\n+\t\t\t77 text Lesson L1 · Mon 1630-1730\n~\t\t78 text Tutor: Mei Lim (T1)\n+\t\t\t79 text Tutor: Mei Lim (T1)\n+\t\t80 text Room: R1\n+\t\t\t81 text Room: R1\n+\t\t82 text Students enrolled: 1\n+\t\t\t83 text Students enrolled: 1\n+\t\t84 text Current roster:\n+\t\t\t85 text Current roster:\n+\t\t86 text S2 · Jamie Tan — absent\n+\t\t\t87 text S2 · Jamie Tan — absent\n+\t\t88 text Former members' retained attendance:\n+\t\t\t89 text Former members' retained attendance:\n+\t\t90 text 2026-10-05 · S1 · Alex Tan — present\n+\t\t\t91 text 2026-10-05 · S1 · Alex Tan — present\n+\t\t92 scroll bar 0\n+\t\t\t93 value indicator 0\nThe focused UI element is 46 text field (settable) Enter command here...",
+    "inputMethod": "native paste",
+    "note": "Corrected case-sensitive readback matcher; actual detail retained both Students and their statuses."
+  },
+  {
+    "command": "unmark 1 lid/L1 d/2026-10-05",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 58-71, 74-91\n~\t13 text entry area Attendance for Student S1 in lesson L1 on 2026-10-05 removed.\n~\t\t\t57 text Attendance for Student S1 in lesson L1 on 2026-10-05 removed.\n+\t\t\t94 scroll bar 0\n+\t\t\t\t95 value indicator 0\n+\t\t\t96 text 1. Alex Tan\n+\t\t\t\t97 text 1. Alex Tan\n+\t\t\t98 text Student · S1\n+\t\t\t\t99 text Student · S1\n+\t\t\t100 text Level: P3\n+\t\t\t\t101 text Level: P3\n+\t\t\t102 text Parent phone: 90000000\n+\t\t\t\t103 text Parent phone: 90000000\n+\t\t\t104 text Own phone: Not provided\n+\t\t\t\t105 text Own phone: Not provided\n+\t\t\t106 text Email: Not provided\n+\t\t\t\t107 text Email: Not provided\n+\t\t\t108 text Address: Not provided\n+\t\t\t\t109 text Address: Not provided\n+\t\t110 text Advanced Math\n+\t\t\t111 text Advanced Math\n+\t\t112 text Lesson L1 · Mon 1630-1730\n+\t\t\t113 text Lesson L1 · Mon 1630-1730\n+\t\t114 text Tutor: Mei Lim (T1)\n+\t\t\t115 text Tutor: Mei Lim (T1)\n+\t\t116 text Room: R1\n+\t\t\t117 text Room: R1\n+\t\t118 text Students enrolled: 1\n+\t\t\t119 text Students enrolled: 1\n+\t\t120 text Current roster:\n+\t\t\t121 text Current roster:\n+\t\t122 text S2 · Jamie Tan — absent\n+\t\t\t123 text S2 · Jamie Tan — absent\n+\t\t124 text Former members' retained attendance:\n+\t\t\t125 text Former members' retained attendance:\n+\t\t126 text No retained attendance for former members.\n+\t\t\t127 text No retained attendance for former members.\nThe focused UI element is 46 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "delete 1",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 94-95, 108-109, 126-127\n~\t13 text entry area Deleted student: Alex Tan (S1).\n~\t\t\t57 text Deleted student: Alex Tan (S1).\n~\t15 text Showing 2 person(s).\n~\t\t16 text Showing 2 person(s).\n+\t\t\t94 text 1. Jamie Tan\n+\t\t\t\t95 text 1. Jamie Tan\n~\t\t\t96 text Student · S2\n~\t\t\t\t97 text Student · S2\n~\t\t\t98 text Level: P1\n~\t\t\t\t99 text Level: P1\n~\t\t\t100 text Parent phone: 91234567\n~\t\t\t\t101 text Parent phone: 91234567\n~\t\t\t102 text Own phone: Not provided\n~\t\t\t\t103 text Own phone: Not provided\n~\t\t\t104 text Email: Not provided\n~\t\t\t\t105 text Email: Not provided\n~\t\t\t106 text Address: Not provided\n~\t\t\t\t107 text Address: Not provided\n+\t\t108 text Advanced Math\n+\t\t\t109 text Advanced Math\n~\t\t110 text Lesson L1 · Mon 1630-1730\n~\t\t\t111 text Lesson L1 · Mon 1630-1730\n~\t\t112 text Tutor: Mei Lim (T1)\n~\t\t\t113 text Tutor: Mei Lim (T1)\n~\t\t114 text Room: R1\n~\t\t\t115 text Room: R1\n~\t\t116 text Students enrolled: 1\n~\t\t\t117 text Students enrolled: 1\n~\t\t118 text Current roster:\n~\t\t\t119 text Current roster:\n~\t\t120 text S2 · Jamie Tan — absent\n~\t\t\t121 text S2 · Jamie Tan — absent\n~\t\t122 text Former members' retained attendance:\n~\t\t\t123 text Former members' retained attendance:\n~\t\t124 text No retained attendance for former members.\n~\t\t\t125 text No retained attendance for former members.\nThe focused UI element is 46 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "deletelesson lid/L1",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 47\n~\t13 text entry area Lesson L1 cannot be deleted while its roster contains these Student IDs: S2. Unenrol all Students first.\n~\t\t\t57 text Lesson L1 cannot be deleted while its roster contains these Student IDs: S2. Unenrol all Students first.\n+\t\t\t126 scroll bar 0\n+\t\t\t\t127 value indicator 0\n~\t46 text field (settable) deletelesson lid/L1\n+\t\t128 text deletelesson lid/L1\nThe focused UI element is 46 text field (settable) deletelesson lid/L1",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "unenrol 1 lid/L1",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 126-128\n~\t13 text entry area Student S2 unenrolled from lesson L1.\n~\t\t\t57 text Student S2 unenrolled from lesson L1.\n~\t\t116 text Students enrolled: 0\n~\t\t\t117 text Students enrolled: 0\n~\t\t120 text No students currently enrolled.\n~\t\t\t121 text No students currently enrolled.\n~\t\t124 text 2026-10-05 · S2 · Jamie Tan — absent\n~\t\t\t125 text 2026-10-05 · S2 · Jamie Tan — absent\n~\t46 text field (settable) Enter command here...\n+\t\t126 text Enter command here...\nThe focused UI element is 46 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "deletelesson lid/L1",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 126\n~\t13 text entry area Lesson L1 cannot be deleted while retained attendance exists for Student S2 on 2026-10-05. Unmark all attendance for this Lesson first.\n~\t\t\t57 text Lesson L1 cannot be deleted while retained attendance exists for Student S2 on 2026-10-05. Unmark all attendance for this Lesson first.\n+\t\t\t126 scroll bar 0\n+\t\t\t\t127 value indicator 0\n~\t46 text field (settable) deletelesson lid/L1\n+\t\t128 text deletelesson lid/L1\nThe focused UI element is 46 text field (settable) deletelesson lid/L1",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "unmark 1 lid/L1 d/2026-10-05",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 94-125, 128\n~\t13 text entry area Attendance for Student S2 in lesson L1 on 2026-10-05 removed.\n~\t\t\t57 text Attendance for Student S2 in lesson L1 on 2026-10-05 removed.\n+\t\t\t128 text 1. Jamie Tan\n+\t\t\t\t129 text 1. Jamie Tan\n+\t\t\t130 text Student · S2\n+\t\t\t\t131 text Student · S2\n+\t\t\t132 text Level: P1\n+\t\t\t\t133 text Level: P1\n+\t\t\t134 text Parent phone: 91234567\n+\t\t\t\t135 text Parent phone: 91234567\n+\t\t\t136 text Own phone: Not provided\n+\t\t\t\t137 text Own phone: Not provided\n+\t\t\t138 text Email: Not provided\n+\t\t\t\t139 text Email: Not provided\n+\t\t\t140 text Address: Not provided\n+\t\t\t\t141 text Address: Not provided\n+\t\t142 text Advanced Math\n+\t\t\t143 text Advanced Math\n+\t\t144 text Lesson L1 · Mon 1630-1730\n+\t\t\t145 text Lesson L1 · Mon 1630-1730\n+\t\t146 text Tutor: Mei Lim (T1)\n+\t\t\t147 text Tutor: Mei Lim (T1)\n+\t\t148 text Room: R1\n+\t\t\t149 text Room: R1\n+\t\t150 text Students enrolled: 0\n+\t\t\t151 text Students enrolled: 0\n+\t\t152 text Current roster:\n+\t\t\t153 text Current roster:\n+\t\t154 text No students currently enrolled.\n+\t\t\t155 text No students currently enrolled.\n+\t\t156 text Former members' retained attendance:\n+\t\t\t157 text Former members' retained attendance:\n+\t\t158 text No retained attendance for former members.\n+\t\t\t159 text No retained attendance for former members.\n~\t46 text field (settable) Enter command here...\n+\t\t160 text Enter command here...\nThe focused UI element is 46 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "deletelesson lid/L1",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 73, 92-93, 126-159\n~\t13 text entry area Deleted lesson: L1.\n~\t\t\t57 text Deleted lesson: L1.\n+\t\t\t161 text 1. Jamie Tan\n+\t\t\t\t162 text 1. Jamie Tan\n+\t\t\t163 text Student · S2\n+\t\t\t\t164 text Student · S2\n+\t\t\t165 text Level: P1\n+\t\t\t\t166 text Level: P1\n+\t\t\t167 text Parent phone: 91234567\n+\t\t\t\t168 text Parent phone: 91234567\n+\t\t\t169 text Own phone: Not provided\n+\t\t\t\t170 text Own phone: Not provided\n+\t\t\t171 text Email: Not provided\n+\t\t\t\t172 text Email: Not provided\n+\t\t\t173 text Address: Not provided\n+\t\t\t\t174 text Address: Not provided\n~\t72 text Lesson L1 is no longer available Showing 0 lesson(s).\n+\t175 list\n+\t\t176 text No lessons to display.\n+\t\t\t177 text No lessons to display.\nThe focused UI element is 46 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "addlesson d/Mon st/1630 et/1730 s/Advanced Math tu/Mei Lim rm/R1",
+    "expected": "L2",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 161-174\n~\t13 text entry area New lesson added: L2.\n~\t\t\t57 text New lesson added: L2.\n+\t\t\t178 text 1. Jamie Tan\n+\t\t\t\t179 text 1. Jamie Tan\n+\t\t\t180 text Student · S2\n+\t\t\t\t181 text Student · S2\n+\t\t\t182 text Level: P1\n+\t\t\t\t183 text Level: P1\n+\t\t\t184 text Parent phone: 91234567\n+\t\t\t\t185 text Parent phone: 91234567\n+\t\t\t186 text Own phone: Not provided\n+\t\t\t\t187 text Own phone: Not provided\n+\t\t\t188 text Email: Not provided\n+\t\t\t\t189 text Email: Not provided\n+\t\t\t190 text Address: Not provided\n+\t\t\t\t191 text Address: Not provided\nThe focused UI element is 46 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "edit 1 n/Blocked",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 41\n~\t29 text entry area Could not load canonical data at /private/tmp/ponhub-366-native/package/data/ponhub.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: MALFORMED_JSON\n+\t\t\t49 text Could not load canonical data at /private/tmp/ponhub-366-native/package/data/ponhub.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: M\n+\t\t\t50 scroll bar 0\n+\t\t\t\t51 value indicator 0\n~\t40 text field (settable) edit 1 n/Blocked\n+\t\t52 text edit 1 n/Blocked\nThe focused UI element is 40 text field (settable) edit 1 n/Blocked",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "help edit",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t29 text entry area Unknown command: 'edit'. Type 'help' to see available commands.\n~\t\t\t49 text Unknown command: 'edit'. Type 'help' to see available commands.\n~\t40 text field (settable) help edit\n~\t\t52 text help edit\nThe focused UI element is 40 text field (settable) help edit",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "list",
+    "expected": "Showing 0 person(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t29 text entry area Showing 0 person(s).\n\nCould not load canonical data at /private/tmp/ponhub-366-native/package/data/ponhub.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: MALFORMED_JSON\n~\t\t\t49 text Showing 0 person(s).\n\nCould not load canonical data at /private/tmp/ponhub-366-native/package/data/ponhub.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: \n~\t40 text field (settable) Enter command here...\n~\t\t52 text Enter command here...\nThe focused UI element is 40 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "add r/parent n/Blocked Parent p/99999999",
+    "passed": null,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t29 text entry area Could not load canonical data at /private/tmp/ponhub-366-native/package/data/ponhub.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: MALFORMED_JSON\n~\t\t\t49 text Could not load canonical data at /private/tmp/ponhub-366-native/package/data/ponhub.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: M\n~\t40 text field (settable) add r/parent n/Blocked Parent p/99999999\n~\t\t52 text add r/parent n/Blocked Parent p/99999999\nThe focused UI element is 40 text field (settable) add r/parent n/Blocked Parent p/99999999",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "exit",
+    "expected": "protected window closes; stopping log",
+    "passed": null,
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "list r/student",
+    "expected": "Showing 2 student(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 19-28\n~\t13 text entry area Showing 2 student(s).\n+\t\t\t57 text Showing 2 student(s).\n~\t15 text Showing 2 person(s).\n~\t\t16 text Showing 2 person(s).\n+\t\t\t58 text 1. Jamie Tan\n+\t\t\t\t59 text 1. Jamie Tan\n+\t\t\t60 text Student · S2\n+\t\t\t\t61 text Student · S2\n+\t\t\t62 text Level: P1\n+\t\t\t\t63 text Level: P1\n+\t\t\t64 text Parent phone: 91234567\n+\t\t\t\t65 text Parent phone: 91234567\n+\t\t\t66 text Own phone: Not provided\n+\t\t\t\t67 text Own phone: Not provided\n+\t\t\t68 text Email: Not provided\n+\t\t\t\t69 text Email: Not provided\n+\t\t\t70 text Address: Not provided\n+\t\t\t\t71 text Address: Not provided\nThe focused UI element is 46 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "lessons",
+    "expected": "Showing 1 lesson(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Showing 1 lesson(s).\n~\t\t\t57 text Showing 1 lesson(s).\nThe focused UI element is 46 text field (settable) Enter command here...",
+    "inputMethod": "native paste",
+    "note": "L2 was present in the initial full restart tree; unchanged Lesson card was omitted from this diff."
+  },
+  {
+    "command": "exit",
+    "expected": "recovered window closes; stopping log",
+    "passed": null,
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "help list",
+    "expected": "Use list",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Use list or list r/student|tutor|parent, with at most one role filter.\n+\t\t\t35 text Use list or list r/student|tutor|parent, with at most one role filter.\n+\t\t\t36 scroll bar 0\n+\t\t\t\t37 value indicator 0\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "list",
+    "expected": "Showing 0 person(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\nRemoved element IDs: 36-37\n~\t13 text entry area Showing 0 person(s).\n~\t\t\t35 text Showing 0 person(s).\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "lessons",
+    "expected": "Showing 0 lesson(s).",
+    "passed": true,
+    "state": "The following is a diff from the previous accessibility tree for Window: \"PonHub\" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.\n~\t13 text entry area Showing 0 lesson(s).\n~\t\t\t35 text Showing 0 lesson(s).\nThe focused UI element is 24 text field (settable) Enter command here...",
+    "inputMethod": "native paste"
+  },
+  {
+    "command": "exit",
+    "expected": "missing-store window closes; stopping log",
+    "passed": null,
+    "inputMethod": "native paste"
+  }
+]

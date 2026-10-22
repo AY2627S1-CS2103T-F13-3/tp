@@ -1,0 +1,78 @@
+{
+  "source_sha": "84f9a2cd4865b452e14fae5748896853febc8c32",
+  "baseurl": "/tp",
+  "rendered_pages": 9,
+  "local_targets": 412,
+  "image_references": 30,
+  "tables": 26,
+  "readme_local_targets": 5,
+  "source_references": 52,
+  "source_file_references": 51,
+  "source_directory_references": 1,
+  "unique_source_paths": 42,
+  "namespace_link_occurrences": 47,
+  "diagram_pairs": [
+    {
+      "source": "ArchitectureDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "ArchitectureSequenceDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "AttendanceClassDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "CanonicalStorageClassDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "LessonAttendanceStateDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "LessonMembershipClassDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "LessonQueryRefresh.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "LessonRetrieval.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "LogicClassDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "PeopleSelectionClassDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "PersonRecordClassDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "UiClassDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    }
+  ],
+  "failures": [],
+  "limits": "Local targets/source existence only; browser, external HTTP and runtime checks are separate."
+}

@@ -1,0 +1,83 @@
+{
+  "source_sha": "84f9a2cd4865b452e14fae5748896853febc8c32",
+  "baseurl": "/tp",
+  "rendered_pages": 9,
+  "local_targets": 414,
+  "image_references": 30,
+  "tables": 26,
+  "readme_local_targets": 5,
+  "source_references": 52,
+  "source_file_references": 51,
+  "source_directory_references": 1,
+  "unique_source_paths": 42,
+  "namespace_link_occurrences": 47,
+  "diagram_pairs": [
+    {
+      "source": "ArchitectureDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "ArchitectureSequenceDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "AttendanceClassDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "CanonicalStorageClassDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "LessonAttendanceStateDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "LessonMembershipClassDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "LessonQueryRefresh.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "LessonRetrieval.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "LogicClassDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "PeopleSelectionClassDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "PersonRecordClassDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    },
+    {
+      "source": "UiClassDiagram.puml",
+      "image_exists": true,
+      "embedded": true
+    }
+  ],
+  "failures": [],
+  "limits": "Local targets/source existence only; browser, external HTTP and runtime checks are separate.",
+  "render_mode": "fresh locked Jekyll 3.10.0 build, Ruby 3.3.8/Bundler 2.5.11, existing Lima Linux guest",
+  "site": "/private/tmp/ponhub366-site-preview/tp",
+  "testing_source_sha256": "1b963dc1666691c307433eb4011ed4b106a1a6c09de494109073f6f6d7f3dfd6",
+  "testing_html_sha256": "ed65d4ab2b72b17f0be1408482212980efe45930c8d45f8e5b19e1a9c005c252",
+  "new_section_heading_and_toc_present": true
+}

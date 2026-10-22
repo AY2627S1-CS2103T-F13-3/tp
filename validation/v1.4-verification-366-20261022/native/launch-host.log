@@ -1,0 +1,19 @@
+Oct 22, 2026 3:31:26 PM ponhub.Main main
+WARNING: The warnings about a 'restricted method in java.lang.System' and 'enabling native access' appearing below (if any) can be ignored.
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by com.sun.glass.utils.NativeLibLoader in module javafx.graphics (jrt:/javafx.graphics)
+WARNING: Use --enable-native-access=javafx.graphics to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+Oct 22, 2026 3:31:27 PM ponhub.MainApp init
+INFO: =============================[ Initializing PonHub ]===========================
+Oct 22, 2026 3:31:27 PM ponhub.MainApp initialize
+INFO: Using canonical data file : /private/tmp/ponhub-366-native/package/data/ponhub.json
+Oct 22, 2026 3:31:27 PM ponhub.MainApp initPrefs
+INFO: Using preference file : /private/tmp/ponhub-366-native/package/preferences.json
+Oct 22, 2026 3:31:27 PM ponhub.MainApp initPrefs
+INFO: Creating new preference file /private/tmp/ponhub-366-native/package/preferences.json
+Oct 22, 2026 3:31:27 PM ponhub.MainApp start
+INFO: Starting PonHub v1.4
+Oct 22, 2026 3:31:27 PM ponhub.ui.UiManager start
+INFO: Starting UI...

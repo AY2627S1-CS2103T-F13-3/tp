@@ -1,0 +1,19 @@
+{
+  "desktop": {
+    "brokenImages": 0,
+    "clientWidth": 1280,
+    "heading": "Recording workflow and package results",
+    "height": 800,
+    "scrollWidth": 1280,
+    "width": 1280
+  },
+  "narrow": {
+    "brokenImages": 0,
+    "clientWidth": 390,
+    "heading": "Recording workflow and package results",
+    "height": 844,
+    "scrollWidth": 390,
+    "width": 390
+  },
+  "observation": "Changed section readable with no page-level horizontal overflow or broken images at either viewport."
+}

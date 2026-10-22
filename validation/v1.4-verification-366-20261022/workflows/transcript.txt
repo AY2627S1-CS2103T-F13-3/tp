@@ -1,0 +1,202 @@
+
+GROUP 1: Missing-file startup and read-only commands
+help list => Use list or list r/student|tutor|parent, with at most one role filter.
+list => Showing 0 person(s).
+lessons => Showing 0 lesson(s).
+search c/student => Found 0 student(s).
+
+GROUP 2: All roles, distinct duplicate keys, leading-zero phones and ambiguous Tutor selection
+add r/tutor n/Mei Lim p/92345678 => New tutor added: Mei Lim (T1).
+add r/tutor n/Ravi Kumar p/93456789 => New tutor added: Ravi Kumar (T2).
+add r/tutor n/Mei Lim p/94567890 => New tutor added: Mei Lim (T3).
+add r/student n/Alex Tan l/S2 pp/00123456 p/98887777 => New student added: Alex Tan (S1).
+add r/student n/Jamie Tan l/P1 pp/00123456 => New student added: Jamie Tan (S2).
+add r/student n/Alex Tan l/P3 pp/00987654 => New student added: Alex Tan (S3).
+add r/parent n/Pat Tan p/00123456 => New parent added: Pat Tan (P1).
+add r/parent n/Other Parent p/0123456 => New parent added: Other Parent (P2).
+add r/student n/ALEX  TAN l/P4 pp/00123456 => REJECT: A student with the same name and parent phone already exists.
+addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1 => REJECT: More than one tutor is named 'Mei Lim'. Supply tp/TUTOR_PHONE to select one.
+addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim tp/92345678 rm/R1 => New lesson added: L1.
+addlesson d/Mon st/1700 et/1800 s/English tu/Mei Lim tp/92345678 rm/R9 => REJECT: Tutor schedule overlap between L1 and L2.
+addlesson d/Mon st/1700 et/1800 s/English tu/Ravi Kumar rm/R1 => REJECT: Room schedule overlap between L1 and L2.
+addlesson d/Tue st/1600 et/1730 s/Math tu/Mei Lim tp/92345678 rm/R1 => New lesson added: L2.
+addlesson d/Mon st/1800 et/1900 s/Science tu/Mei Lim tp/92345678 rm/R1 => New lesson added: L3.
+addlesson d/Mon st/1900 et/2000 s/Math tu/Mei Lim tp/92345678 rm/R2 => New lesson added: L4.
+list r/student => Showing 3 student(s).
+enrol 2 lid/L1 => Student S2 enrolled in lesson L1.
+enrol 1 lid/L2 => Student S1 enrolled in lesson L2.
+enrol 1 lid/L3 => Student S1 enrolled in lesson L3.
+enrol 2 lid/L1 => REJECT: Student S2 is already enrolled in lesson L1.
+
+GROUP 3: UG compound search matrix; same-Lesson/same-child matching and independent result panels
+search c/student n/alex l/s2 pp/00123456 => Found 1 student(s).
+search c/student d/Mon s/Math => Found 1 student(s).
+search c/parent sn/Alex d/Mon s/Math => Found 0 parent(s).
+search c/tutor n/mei sn/Alex d/Mon s/Math => Found 0 tutor(s).
+search c/lesson d/Mon s/Math => Found 2 lesson(s).
+search c/parent sn/Alex => Found 1 parent(s).
+search c/parent p/0123456 sn/Alex => Found 0 parent(s).
+list r/student => Showing 3 student(s).
+enrol 1 lid/L1 => Student S1 enrolled in lesson L1.
+search c/parent sn/Alex d/Mon s/Math => Found 1 parent(s).
+search c/tutor n/mei sn/Alex d/Mon s/Math => Found 1 tutor(s).
+search c/lesson d/Mon st/1600 s/Math tu/mei rm/r1 sn/a => Found 1 lesson(s).
+
+GROUP 4: Current displayed positions, rejected selectors and parser validation preserve state/views/bytes
+search c/student n/Jamie => Found 1 student(s).
+edit 1 l/P2 => Edited student: Jamie Tan (S2).
+edit S2 n/Wrong => REJECT: Index must be a positive integer.
+edit 0 n/Wrong => REJECT: Index must be a positive integer.
+edit 2 n/Wrong => REJECT: The person index provided is invalid.
+edit 1 => REJECT: Supply INDEX and at least one editable field, for example 1 n/Alex Tan. Type 'help edit' for syntax.
+edit 1 n/ => REJECT: A person's name cannot be cleared.
+edit 1 pp/ => REJECT: A Student's parent phone cannot be cleared.
+edit 1 p/abc => REJECT: Phone numbers must contain 3 to 15 digits, without spaces or punctuation.
+edit 1 r/tutor => REJECT: Unknown edit prefix 'r/'.
+edit 1 n/A n/B => REJECT: Repeated edit prefix 'n/'.
+edit 1 a/Block x/value => REJECT: Unknown edit prefix 'x/'.
+search c/student sn/Alex => REJECT: Search prefix 'sn/' is not supported for STUDENT.
+search c/tutor tu/Mei => REJECT: Search prefix 'tu/' is not supported for TUTOR.
+search c/student p/ => REJECT: Search prefix 'p/' requires a non-blank value.
+search c/student n/A n/B => REJECT: Repeated search prefix 'n/'.
+search c/lesson st/1800 et/1700 => REJECT: Search end time must be later than start time on the same day.
+showlesson lid/L999 => REJECT: The lesson does not exist: L999
+showlesson lid/L1 d/2026-10-06 => REJECT: Date 2026-10-06 must be a Mon for lesson L1.
+help add extra => REJECT: Invalid command format! Usage: help [COMMAND] Shows the commands available in this session, or syntax and an example for one command. COMMAND is optional and case-insensitive. Supply at most one command word. Examples: help, help list
+ADD => REJECT: Unknown command: 'ADD'. Type 'help' to see available commands.
+list\n => REJECT: Commands must be on one line.
+list r/tutor => Showing 3 tutor(s).
+enrol 1 lid/L1 => REJECT: The selected person is not a student. Use the current people-list index of a student.
+history 1 lid/L1 => REJECT: The selected person is not a student. Use the current people-list index of a student.
+edit 1 p/ => REJECT: Tutor records require their own phone number.
+edit 1 l/P2 => REJECT: Only Student edits accept an education level or parent phone number.
+edit 1 pp/00123456 => REJECT: Only Student edits accept an education level or parent phone number.
+list r/parent => Showing 2 parent(s).
+edit 1 p/ => REJECT: Parent records require their own phone number.
+edit 1 l/P2 => REJECT: Only Student edits accept an education level or parent phone number.
+
+GROUP 5: Person optional clears, normalized no-op, Tutor label and exact Parent relationship refresh
+list r/student => Showing 3 student(s).
+edit 1 e/alex@example.com a/10 Main Road => Edited student: Alex Tan (S1).
+edit 1 p/ e/ a/ => Edited student: Alex Tan (S1).
+edit 1 n/Alex  Tan => No changes to student: Alex Tan (S1).
+edit 1 n/Jamie Tan pp/00123456 => REJECT: Operation would result in duplicate persons
+list r/tutor => Showing 3 tutor(s).
+showlesson lid/L1 d/2026-10-05 => Showing lesson L1 for 2026-10-05.
+edit 1 n/Corrected Tutor => Edited tutor: Corrected Tutor (T1).
+search c/parent sn/Jamie => Found 1 parent(s).
+edit 1 p/90000000 => Edited parent: Pat Tan (P1).
+list r/student => Showing 3 student(s).
+edit 2 pp/90000000 => Edited student: Jamie Tan (S2).
+search c/parent sn/Jamie => Found 1 parent(s).
+
+GROUP 6: Lesson search refresh, partial endpoints, invalid/ambiguous replacements and retained identities
+search c/student d/Mon s/Math => Found 2 student(s).
+search c/lesson d/Mon st/1600 s/Math tu/corrected rm/r1 sn/a => Found 1 lesson(s).
+editlesson lid/L1 s/English => Edited lesson: L1.
+editlesson lid/L1 s/Math => Edited lesson: L1.
+editlesson lid/L1 st/1630 => Edited lesson: L1.
+editlesson lid/L1 et/1745 => Edited lesson: L1.
+editlesson lid/L1 s/ Math d/MON st/1630 et/1745 rm/r1 => No changes to lesson: L1.
+editlesson lid/L1 => REJECT: Supply lid/LESSON_ID and at least one editable field. Type 'help editlesson' for syntax.
+editlesson lid/L999 s/Math => REJECT: The lesson does not exist: L999
+editlesson lid/L1 st/1800 => REJECT: A lesson end time should be later than its start time on the same day
+editlesson lid/L1 et/1600 => REJECT: A lesson end time should be later than its start time on the same day
+editlesson lid/L1 s/ => REJECT: Editlesson prefix 's/' requires a non-blank value.
+editlesson lid/L1 tp/92345678 => REJECT: Prefix 'tp/' can only be used together with 'tu/' when editing a lesson tutor.
+editlesson lid/L1 tu/No Such Tutor => REJECT: No tutor found with the full name 'No Such Tutor'.
+editlesson lid/L1 tu/Mei Lim tp/92345678 => REJECT: No tutor named 'Mei Lim' has the exact phone '92345678'.
+editlesson lid/L1 d/Mon st/1830 et/1930 => REJECT: Tutor schedule overlap between L1 and L3.
+
+GROUP 7: Independent dated attendance, no-op, correction and current/unrecorded/former distinctions
+list r/student => Showing 3 student(s).
+mark 1 lid/L1 d/2026-10-05 s/present => Attendance for Student S1 in lesson L1 on 2026-10-05 marked present.
+mark 2 lid/L1 d/2026-10-05 s/absent => Attendance for Student S2 in lesson L1 on 2026-10-05 marked absent.
+mark 1 lid/L1 d/2026-10-05 s/present => Attendance for Student S1 in lesson L1 on 2026-10-05 is already marked present. No changes made.
+mark 1 lid/L1 d/2026-10-05 s/absent => Attendance for Student S1 in lesson L1 on 2026-10-05 marked absent.
+mark 1 lid/L1 d/2026-10-06 s/present => REJECT: Attendance date 2026-10-06 does not match lesson L1's Mon schedule.
+mark 1 lid/L1 d/2026-02-30 s/present => REJECT: Attendance dates must be real calendar dates in YYYY-MM-DD format.
+showlesson lid/L1 d/2026-10-12 => Showing lesson L1 for 2026-10-12.
+history 1 lid/L1 => Showing 1 attendance record(s).
+unenrol 1 lid/L1 => Student S1 unenrolled from lesson L1.
+mark 1 lid/L1 d/2026-10-05 s/present => Attendance for Student S1 in lesson L1 on 2026-10-05 marked present.
+mark 1 lid/L1 d/2026-10-12 s/present => REJECT: Student S1 must be enrolled in lesson L1 before new attendance can be recorded.
+editlesson lid/L1 d/Tue => REJECT: Cannot change lesson L1 to Tue because retained attendance on 2026-10-05 must match its weekday. Keep the current weekday or unmark the incompatible attendance record first.
+showlesson lid/L1 d/2026-10-05 => Showing lesson L1 for 2026-10-05.
+search c/lesson sn/Alex d/Mon s/Math => Found 0 lesson(s).
+delete 1 => REJECT: Student S1 cannot be deleted while enrolled in lesson L2. Unenrol the student first.
+deletelesson lid/L1 => REJECT: Lesson L1 cannot be deleted while its roster contains these Student IDs: S2. Unenrol all Students first.
+
+GROUP 8: Restart persistence, retained-history deletion guards and monotonic Lesson IDs
+list r/student => Showing 3 student(s).
+history 1 lid/L1 => Showing 1 attendance record(s).
+unmark 1 lid/L1 d/2026-10-05 => Attendance for Student S1 in lesson L1 on 2026-10-05 removed.
+unmark 1 lid/L1 d/2026-10-05 => No attendance record exists for Student S1 in lesson L1 on 2026-10-05. No changes made.
+unenrol 2 lid/L1 => Student S2 unenrolled from lesson L1.
+deletelesson lid/L1 => REJECT: Lesson L1 cannot be deleted while retained attendance exists for Student S2 on 2026-10-05. Unmark all attendance for this Lesson first.
+unmark 2 lid/L1 d/2026-10-05 => Attendance for Student S2 in lesson L1 on 2026-10-05 removed.
+showlesson lid/L1 d/2026-10-05 => Showing lesson L1 for 2026-10-05.
+editlesson lid/L1 d/Wed => Edited lesson: L1.
+deletelesson lid/L1 => Deleted lesson: L1.
+addlesson d/Mon st/1600 et/1730 s/Math tu/Corrected Tutor rm/R1 => New lesson added: L5.
+lessons => Showing 4 lesson(s).
+
+GROUP 9: Read-only restart byte stability and all-role index reset
+list r/tutor => Showing 3 tutor(s).
+lessons => Showing 4 lesson(s).
+search c/lesson s/Math => Found 3 lesson(s).
+help editlesson => Usage: editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM] Supply a stable Lesson ID and at least one field; omitted fields stay unchanged. Supplied values must be nonblank; Lesson fields cannot be cleared. Use tp/ only with tu/. Tutor matching uses normalized full name and optional exact phone. The complete edited slot must have start before end and must not clash for its tutor, room or Students. A weekday change cannot invalidate retained attendance; unmark incompatible records explicitly first. An identical edit makes no write. Example: editlesson lid/L1 st/1630 s/Advanced Math
+list r/student => Showing 3 student(s).
+lessons si/1 => Showing 2 lesson(s).
+history 1 => Showing 0 attendance record(s).
+showlesson lid/L5 d/2026-10-05 => Showing lesson L5 for 2026-10-05.
+list r/parent => Showing 2 parent(s).
+list => Showing 8 person(s).
+exit => shutdown requested
+
+GROUP 10: Corrupt, legacy and unsupported startup protection; same-session lock and recovery restart
+help => PonHub commands available in this build: help - Show help or one command's guidance Usage: help [COMMAND] Shows the commands available in this session, or syntax and an example for one command. COMMAND is optional and case-insensitive. Supply at most one command word. Examples: help, help list  list - Show all people or one role Use list or list r/student|tutor|parent, with at most one role filter.  exit - Close PonHub Usage: exit Closes PonHub. No parameters. Example: exit   Type help COMMAND for syntax and an example, e.g. help list.  Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-0.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: MALFORMED_JSON  Scroll this Result Display to read long guidance.
+list r/student => Showing 0 student(s).  Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-0.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: MALFORMED_JSON
+edit 1 n/Changed => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-0.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: MALFORMED_JSON
+editlesson lid/L1 s/Changed => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-0.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: MALFORMED_JSON
+add => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-0.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: MALFORMED_JSON
+enrol 1 lid/L1 => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-0.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: MALFORMED_JSON
+mark 1 lid/L1 d/2026-10-05 s/present => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-0.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: MALFORMED_JSON
+search c/student => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-0.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: MALFORMED_JSON
+help edit => REJECT: Unknown command: 'edit'. Type 'help' to see available commands.
+help editlesson => REJECT: Unknown command: 'editlesson'. Type 'help' to see available commands.
+edit 1 n/Changed => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-0.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: MALFORMED_JSON
+help => PonHub commands available in this build: help - Show help or one command's guidance Usage: help [COMMAND] Shows the commands available in this session, or syntax and an example for one command. COMMAND is optional and case-insensitive. Supply at most one command word. Examples: help, help list  list - Show all people or one role Use list or list r/student|tutor|parent, with at most one role filter.  exit - Close PonHub Usage: exit Closes PonHub. No parameters. Example: exit   Type help COMMAND for syntax and an example, e.g. help list.  Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-1.json (LEGACY). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Configure a separate, previously unused canonical data path and restart, then manually re-enter records with explicit roles. Automatic import is unavailable. Do not delete the original to bypass protection. Cause: Unversioned AB3 data requires manual re-entry.  Scroll this Result Display to read long guidance.
+list r/student => Showing 0 student(s).  Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-1.json (LEGACY). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Configure a separate, previously unused canonical data path and restart, then manually re-enter records with explicit roles. Automatic import is unavailable. Do not delete the original to bypass protection. Cause: Unversioned AB3 data requires manual re-entry.
+edit 1 n/Changed => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-1.json (LEGACY). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Configure a separate, previously unused canonical data path and restart, then manually re-enter records with explicit roles. Automatic import is unavailable. Do not delete the original to bypass protection. Cause: Unversioned AB3 data requires manual re-entry.
+editlesson lid/L1 s/Changed => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-1.json (LEGACY). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Configure a separate, previously unused canonical data path and restart, then manually re-enter records with explicit roles. Automatic import is unavailable. Do not delete the original to bypass protection. Cause: Unversioned AB3 data requires manual re-entry.
+add => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-1.json (LEGACY). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Configure a separate, previously unused canonical data path and restart, then manually re-enter records with explicit roles. Automatic import is unavailable. Do not delete the original to bypass protection. Cause: Unversioned AB3 data requires manual re-entry.
+enrol 1 lid/L1 => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-1.json (LEGACY). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Configure a separate, previously unused canonical data path and restart, then manually re-enter records with explicit roles. Automatic import is unavailable. Do not delete the original to bypass protection. Cause: Unversioned AB3 data requires manual re-entry.
+mark 1 lid/L1 d/2026-10-05 s/present => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-1.json (LEGACY). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Configure a separate, previously unused canonical data path and restart, then manually re-enter records with explicit roles. Automatic import is unavailable. Do not delete the original to bypass protection. Cause: Unversioned AB3 data requires manual re-entry.
+search c/student => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-1.json (LEGACY). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Configure a separate, previously unused canonical data path and restart, then manually re-enter records with explicit roles. Automatic import is unavailable. Do not delete the original to bypass protection. Cause: Unversioned AB3 data requires manual re-entry.
+help edit => REJECT: Unknown command: 'edit'. Type 'help' to see available commands.
+help editlesson => REJECT: Unknown command: 'editlesson'. Type 'help' to see available commands.
+edit 1 n/Changed => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-1.json (LEGACY). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Configure a separate, previously unused canonical data path and restart, then manually re-enter records with explicit roles. Automatic import is unavailable. Do not delete the original to bypass protection. Cause: Unversioned AB3 data requires manual re-entry.
+help => PonHub commands available in this build: help - Show help or one command's guidance Usage: help [COMMAND] Shows the commands available in this session, or syntax and an example for one command. COMMAND is optional and case-insensitive. Supply at most one command word. Examples: help, help list  list - Show all people or one role Use list or list r/student|tutor|parent, with at most one role filter.  exit - Close PonHub Usage: exit Closes PonHub. No parameters. Example: exit   Type help COMMAND for syntax and an example, e.g. help list.  Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-2.json (UNSUPPORTED_VERSION). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Unsupported schemaVersion.  Scroll this Result Display to read long guidance.
+list r/student => Showing 0 student(s).  Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-2.json (UNSUPPORTED_VERSION). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Unsupported schemaVersion.
+edit 1 n/Changed => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-2.json (UNSUPPORTED_VERSION). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Unsupported schemaVersion.
+editlesson lid/L1 s/Changed => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-2.json (UNSUPPORTED_VERSION). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Unsupported schemaVersion.
+add => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-2.json (UNSUPPORTED_VERSION). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Unsupported schemaVersion.
+enrol 1 lid/L1 => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-2.json (UNSUPPORTED_VERSION). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Unsupported schemaVersion.
+mark 1 lid/L1 d/2026-10-05 s/present => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-2.json (UNSUPPORTED_VERSION). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Unsupported schemaVersion.
+search c/student => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-2.json (UNSUPPORTED_VERSION). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Unsupported schemaVersion.
+help edit => REJECT: Unknown command: 'edit'. Type 'help' to see available commands.
+help editlesson => REJECT: Unknown command: 'editlesson'. Type 'help' to see available commands.
+edit 1 n/Changed => REJECT: Could not load canonical data at /private/tmp/ponhub-366-workflows/final-reviewed-names/protected-2.json (UNSUPPORTED_VERSION). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Unsupported schemaVersion.
+
+GROUP 11: Injected failed-save transactions, unchanged active results and one successful retry
+search c/student n/Alex => Found 2 student(s).
+search c/lesson s/Math => Found 3 lesson(s).
+edit 1 n/Alex Failed => REJECT: Could not save data due to the following error: Issue 366 injected write failure
+editlesson lid/L2 s/Failed => REJECT: Could not save data due to the following error: Issue 366 injected write failure
+add r/parent n/Failed Parent p/98765432 => REJECT: Could not save data due to the following error: Issue 366 injected write failure
+enrol 1 lid/L4 => REJECT: Could not save data due to the following error: Issue 366 injected write failure
+edit 1 n/Alex Retried => Edited student: Alex Retried (S1).
+edit 1 n/Alex  Retried => No changes to student: Alex Retried (S1).
+
+PASS: 11 scenario groups, 178 command submissions, 644 assertions. Source/session evidence only; no native-display claim.

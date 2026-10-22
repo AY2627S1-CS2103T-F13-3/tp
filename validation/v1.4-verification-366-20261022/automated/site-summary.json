@@ -1,0 +1,28 @@
+{
+  "result": "PASS",
+  "scope": "Fresh locked Jekyll build of the current documentation, including docs/Testing.md workflow/package evidence section.",
+  "runtime": {
+    "ruby": "3.3.8",
+    "bundler": "2.5.11",
+    "jekyll": "3.10.0",
+    "platform": "aarch64-linux-gnu; existing Lima default guest"
+  },
+  "dependency_setup": "BUNDLE_FROZEN=true BUNDLE_PATH=/tmp/ponhub366-bundle bundle _2.5.11_ install --jobs 4 --retry 1 in disposable docs copy; no global gems or lockfiles changed.",
+  "build_command": "BUNDLE_FROZEN=true BUNDLE_PATH=/tmp/ponhub366-bundle bundle _2.5.11_ exec jekyll build --baseurl /tp --destination /tmp/ponhub366-site/rendered",
+  "build_exit_code": 0,
+  "input_sha256": {
+    "docs/Gemfile": "f42dd1dc51c382cfaf98ac06dc1fd7104b50d4e9347c750b9c2bcdb3eb0f96e2",
+    "docs/Gemfile.lock": "349e8bcdca8e65603f3119d1a569b8536873af7442b52bd11ac92c89db1a8f01",
+    "docs/Testing.md": "1b963dc1666691c307433eb4011ed4b106a1a6c09de494109073f6f6d7f3dfd6"
+  },
+  "input_hashes_unchanged_during_build": true,
+  "rendered_testing_html_sha256": "ed65d4ab2b72b17f0be1408482212980efe45930c8d45f8e5b19e1a9c005c252",
+  "new_section_and_toc_anchor_present": true,
+  "host_preview_root": "/private/tmp/ponhub366-site-preview",
+  "preview_path": "/tp/Testing.html",
+  "warning": "Non-blocking existing Faraday retry middleware notice retained in site-build.log.",
+  "limits": [
+    "This build result alone does not establish browser layout acceptance.",
+    "Historical missing-runtime/dependency attempts remain recorded; successful fresh build supersedes their NOT RUN outcome."
+  ]
+}

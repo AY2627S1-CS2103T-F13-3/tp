@@ -1,0 +1,149 @@
+{
+  "source_sha": "84f9a2cd4865b452e14fae5748896853febc8c32",
+  "cached_render": "/private/tmp/ernest-guide-audit-224/docs/_site",
+  "new_jekyll_build": false,
+  "inputs": [
+    {
+      "path": "README.md",
+      "sha256": "6054aefca280b6db02eae4844f424113e9cccc6afd3e972d2cc4b42e544501f8",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/AboutUs.md",
+      "sha256": "7e4a46dd411a0a3bcaca37906213ca599e84bd552edc5bc7b820d867ac2929d7",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/DevOps.md",
+      "sha256": "12dc9217619460d4168a5951392e3a9b334f6ffa3e4d4546d0fc7095235ae383",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/DeveloperGuide.md",
+      "sha256": "8d97b72d64d42cd6da0025a596514e6e85fe4e6f7d899b3b851f24fc8e2047a3",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/Documentation.md",
+      "sha256": "e4de3e58560a9c5dcee138349348ffabb8017ade80f6391bf542eb479ca73ba5",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/Gemfile",
+      "sha256": "f42dd1dc51c382cfaf98ac06dc1fd7104b50d4e9347c750b9c2bcdb3eb0f96e2",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/Gemfile.lock",
+      "sha256": "349e8bcdca8e65603f3119d1a569b8536873af7442b52bd11ac92c89db1a8f01",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/Logging.md",
+      "sha256": "ef8f363145c4c04cec9e384221e4e58e814366457171c7bc2141b66663b0347d",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/SettingUp.md",
+      "sha256": "3c46c822f2eff63ed6fa447ada284a40252fd286b17c8cb83db25775d16f094f",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/Testing.md",
+      "sha256": "3a4277628137c1cd0d666e282e7cd01148cfe77c85ed40dbccbe99508157f153",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/UserGuide.md",
+      "sha256": "af871dd59ef04e8c6644d7295cb4e8b3ad2769d7107d93b536f52818fd7a77fd",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_config.yml",
+      "sha256": "dc130510edea6a2740cd2083b3f2ca51528548238d9c32db3fc755638cd1ec07",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_includes/custom-head.html",
+      "sha256": "17b5c17a0b8bd000e895a1ce44ef78bb308ec3f0fa98bf4fb744b4265aff3ee6",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_includes/head.html",
+      "sha256": "157cf7897a952c0d29859e9c47995a8f08bbd38a20d0ff6d20749c9a202cc2e9",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_includes/header.html",
+      "sha256": "d0b977a24bbe3e3b736d5d3cccc24e49db48332da63c495cfb6fee1ee22a98aa",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_layouts/alt-page.html",
+      "sha256": "2bc5b657c5eb765ae10918ad331d5bb3858503b719e7026df70de8bdc18405c2",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_layouts/default.html",
+      "sha256": "92493cbe04e31a7b5ec7cb40d98179108c2b5c885da32f1f7cee0b4101e39163",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_layouts/page.html",
+      "sha256": "44616a6c67089e440426485f3ae0ef25124a12d2f104c7d1dba13b970d5806ae",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_sass/minima/_base.scss",
+      "sha256": "214607f859c81b0fe5a4bea95b5e3504510f04102a28c8d755576642e93efd50",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_sass/minima/_layout.scss",
+      "sha256": "3577c97b71928f86a470eff21cc752f9f3b69ffe1ab162b165af19a2e24b792c",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_sass/minima/custom-mixins.scss",
+      "sha256": "d047fcffae74655cd41af3f0cbd7d3e17132594ca290867f4df511edff86f8bb",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_sass/minima/custom-styles.scss",
+      "sha256": "d99ab15b7c685ee0fcf178f80eae67c45767ea044cdace30fc5012a9fc3190f2",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_sass/minima/custom-variables.scss",
+      "sha256": "0f1bee0116c9b065164f86792db16cfc7153aeaa254e504ba5d5770c2e0e5d77",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_sass/minima/initialize.scss",
+      "sha256": "419779a4f882b2a9b34b76969fb74edf3cbd5b10774dceed3183d339c3159367",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_sass/minima/skins/classic.scss",
+      "sha256": "81bc959634b31332e2c9e47d28e8f8d8dec511fdc6b84448dd9f7b992576ef18",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_sass/minima/skins/solarized-dark.scss",
+      "sha256": "1d33e02118b143d26eaab674b78a629e66946216567512040da01c034849b3a2",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/_sass/minima/skins/solarized.scss",
+      "sha256": "78c23a41269cfab08f740de1f2ebe323185762ba8757aa45e951c0ea347d702b",
+      "same_as_cached_render_source": true
+    },
+    {
+      "path": "docs/index.md",
+      "sha256": "68ef8d6f495ed008181de0021c7784ba712c4f184c7d366479b0939ff52fa8a1",
+      "same_as_cached_render_source": true
+    }
+  ],
+  "all_compared_inputs_match": true,
+  "limits": "Source equality and local-target checks against retained Jekyll output. No new Jekyll build, browser inspection or deployed-site check."
+}

@@ -1,0 +1,696 @@
+Oct 22, 2026 3:33:22 PM ponhub.Main main
+WARNING: The warnings about a 'restricted method in java.lang.System' and 'enabling native access' appearing below (if any) can be ignored.
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by com.sun.glass.utils.NativeLibLoader in module javafx.graphics (jrt:/javafx.graphics)
+WARNING: Use --enable-native-access=javafx.graphics to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+Oct 22, 2026 3:33:22 PM ponhub.MainApp init
+INFO: =============================[ Initializing PonHub ]===========================
+Oct 22, 2026 3:33:22 PM ponhub.MainApp initialize
+INFO: Using canonical data file : /private/tmp/ponhub-366-native/package/data/ponhub.json
+Oct 22, 2026 3:33:22 PM ponhub.MainApp initPrefs
+INFO: Using preference file : /private/tmp/ponhub-366-native/package/preferences.json
+Oct 22, 2026 3:33:22 PM ponhub.commons.util.JsonUtil readJsonFile
+INFO: JSON file /private/tmp/ponhub-366-native/package/preferences.json found.
+Oct 22, 2026 3:33:22 PM ponhub.MainApp start
+INFO: Starting PonHub v1.4
+Oct 22, 2026 3:33:22 PM ponhub.ui.UiManager start
+INFO: Starting UI...
+Oct 22, 2026 3:34:52 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][help add]
+Oct 22, 2026 3:34:52 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Usage: add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]
+       add r/tutor|parent n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]
+Roles and education levels are case-insensitive. Supply each lowercase prefix at most once.
+Optional values must be nonblank; l/ and pp/ are only allowed for students.
+Examples:
+add r/student n/Alex Tan l/P1 pp/91234567
+add r/tutor n/Mei Lim p/92345678 e/mei@example.com
+add r/parent n/Sam Tan p/91234567 a/10 Main Road
+Oct 22, 2026 3:35:10 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][list]
+Oct 22, 2026 3:35:10 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 0 person(s).
+Oct 22, 2026 3:35:11 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][add r/tutor n/Mei Lim p/92345678 e/mei@example.com]
+Oct 22, 2026 3:35:11 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: New tutor added: Mei Lim (T1).
+Oct 22, 2026 3:35:26 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1]
+Oct 22, 2026 3:35:26 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: New lesson added: L1.
+Oct 22, 2026 3:35:26 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][add r/student n/Alex Tan l/S2 pp/91234567]
+Oct 22, 2026 3:35:26 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: New student added: Alex Tan (S1).
+Oct 22, 2026 3:35:27 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][add r/student n/Jamie Tan l/P1 pp/91234567]
+Oct 22, 2026 3:35:27 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: New student added: Jamie Tan (S2).
+Oct 22, 2026 3:35:28 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][add r/parent n/Pat Tan p/91234567]
+Oct 22, 2026 3:35:28 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: New parent added: Pat Tan (P1).
+Oct 22, 2026 3:35:29 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][list r/student]
+Oct 22, 2026 3:35:29 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 2 student(s).
+Oct 22, 2026 3:35:30 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][enrol 1 lid/L1]
+Oct 22, 2026 3:35:30 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Student S1 enrolled in lesson L1.
+Oct 22, 2026 3:35:31 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][enrol 2 lid/L1]
+Oct 22, 2026 3:35:31 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Student S2 enrolled in lesson L1.
+Oct 22, 2026 3:35:31 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][mark 1 lid/L1 d/2026-10-05 s/present]
+Oct 22, 2026 3:35:31 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Attendance for Student S1 in lesson L1 on 2026-10-05 marked present.
+Oct 22, 2026 3:35:32 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][mark 2 lid/L1 d/2026-10-05 s/absent]
+Oct 22, 2026 3:35:32 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Attendance for Student S2 in lesson L1 on 2026-10-05 marked absent.
+Oct 22, 2026 3:35:33 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][showlesson lid/L1 d/2026-10-05]
+Oct 22, 2026 3:35:33 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing lesson L1 for 2026-10-05.
+Oct 22, 2026 3:35:44 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][mark 1 lid/L1 d/2026-10-05 s/absent]
+Oct 22, 2026 3:35:44 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Attendance for Student S1 in lesson L1 on 2026-10-05 marked absent.
+Oct 22, 2026 3:35:45 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][edit 1 l/P2 e/]
+Oct 22, 2026 3:35:45 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Edited student: Alex Tan (S1).
+Oct 22, 2026 3:35:46 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][editlesson lid/L1 st/1630 s/Advanced Math]
+Oct 22, 2026 3:35:46 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Edited lesson: L1.
+Oct 22, 2026 3:35:47 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][search c/parent sn/Alex]
+Oct 22, 2026 3:35:47 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Found 1 parent(s).
+Oct 22, 2026 3:35:48 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][edit 1 p/90000000]
+Oct 22, 2026 3:35:48 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Edited parent: Pat Tan (P1).
+Oct 22, 2026 3:35:49 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][list r/student]
+Oct 22, 2026 3:35:49 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 2 student(s).
+Oct 22, 2026 3:35:49 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][edit 1 pp/90000000]
+Oct 22, 2026 3:35:49 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Edited student: Alex Tan (S1).
+Oct 22, 2026 3:35:50 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][search c/parent sn/Alex]
+Oct 22, 2026 3:35:50 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Found 1 parent(s).
+Oct 22, 2026 3:35:51 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][search c/lesson s/Advanced]
+Oct 22, 2026 3:35:51 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Found 1 lesson(s).
+Oct 22, 2026 3:35:52 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][list r/student]
+Oct 22, 2026 3:35:52 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 2 student(s).
+Oct 22, 2026 3:36:21 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][edit 1 n/Alex  Tan]
+Oct 22, 2026 3:36:21 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: No changes to student: Alex Tan (S1).
+Oct 22, 2026 3:36:21 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][editlesson lid/L1 st/1630 s/Advanced Math]
+Oct 22, 2026 3:36:21 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: No changes to lesson: L1.
+Oct 22, 2026 3:36:22 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][edit 0 n/Bad]
+Oct 22, 2026 3:36:22 PM ponhub.ui.MainWindow executeCommand
+INFO: An error occurred while executing command: edit 0 n/Bad
+Oct 22, 2026 3:36:23 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][edit 1 p/abc]
+Oct 22, 2026 3:36:23 PM ponhub.ui.MainWindow executeCommand
+INFO: An error occurred while executing command: edit 1 p/abc
+Oct 22, 2026 3:36:24 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][editlesson lid/L1 d/Tue]
+Oct 22, 2026 3:36:24 PM ponhub.ui.MainWindow executeCommand
+INFO: An error occurred while executing command: editlesson lid/L1 d/Tue
+Oct 22, 2026 3:36:24 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][mark 1 lid/L1 d/2026-10-06 s/present]
+Oct 22, 2026 3:36:24 PM ponhub.ui.MainWindow executeCommand
+INFO: An error occurred while executing command: mark 1 lid/L1 d/2026-10-06 s/present
+Oct 22, 2026 3:36:25 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][deletelesson lid/L1]
+Oct 22, 2026 3:36:25 PM ponhub.ui.MainWindow executeCommand
+INFO: An error occurred while executing command: deletelesson lid/L1
+Oct 22, 2026 3:36:26 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][addlesson d/Mon st/1700 et/1800 s/Conflict tu/Mei Lim rm/R2]
+Oct 22, 2026 3:36:26 PM ponhub.ui.MainWindow executeCommand
+INFO: An error occurred while executing command: addlesson d/Mon st/1700 et/1800 s/Conflict tu/Mei Lim rm/R2
+Oct 22, 2026 3:36:56 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][unenrol 1 lid/L1]
+Oct 22, 2026 3:36:56 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Student S1 unenrolled from lesson L1.
+Oct 22, 2026 3:36:57 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][history 1 lid/L1]
+Oct 22, 2026 3:36:57 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 1 attendance record(s).
+Oct 22, 2026 3:36:57 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][mark 1 lid/L1 d/2026-10-05 s/present]
+Oct 22, 2026 3:36:57 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Attendance for Student S1 in lesson L1 on 2026-10-05 marked present.
+Oct 22, 2026 3:36:58 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][mark 1 lid/L1 d/2026-10-12 s/present]
+Oct 22, 2026 3:36:58 PM ponhub.ui.MainWindow executeCommand
+INFO: An error occurred while executing command: mark 1 lid/L1 d/2026-10-12 s/present
+Oct 22, 2026 3:36:59 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][delete 1]
+Oct 22, 2026 3:36:59 PM ponhub.ui.MainWindow executeCommand
+INFO: An error occurred while executing command: delete 1
+Oct 22, 2026 3:37:00 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][showlesson lid/L1 d/2026-10-12]
+Oct 22, 2026 3:37:00 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing lesson L1 for 2026-10-12.
+Oct 22, 2026 3:37:01 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][search c/student n/Nobody]
+Oct 22, 2026 3:37:01 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Found 0 student(s).
+Oct 22, 2026 3:37:01 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][list r/student]
+Oct 22, 2026 3:37:01 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 2 student(s).
+Oct 22, 2026 3:37:02 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][help search]
+Oct 22, 2026 3:37:02 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Usage: search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS]
+       [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]
+       search c/parent [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]
+       [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]
+       search c/tutor [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]
+       [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [rm/ROOM]
+       search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]
+Category values ignore case. Supply each lowercase prefix at most once, with a nonblank value.
+All filters must match the same person. Name, email and address match text fragments ignoring case;
+name/address spaces are normalized. Level and phones match exactly; phone leading zeros matter.
+Category-only searches include unlinked people. Missing optional contacts do not match filters.
+People results replace the people view and renumber current positions without saving.
+Lesson results use a separate panel and preserve people filters and positions.
+All lesson filters must match one lesson; sn/ matches its current roster. Text ignores case;
+tu/ matches tutor names. Day and HHMM times match exactly. When both times are given, end > start.
+Empty lessons are included unless sn/ is supplied. Zero matches display an empty lesson panel.
+Student lesson filters match one current enrolment and show its context below the student card.
+Parent links use exact phone equality; sn/ and every lesson condition must match the same child.
+Tutor conditions must match one assigned lesson and its current roster. Use n/ for tutor names.
+Use list or lessons to restore each view.
+Examples: search c/student n/Alex l/P1 pp/91234567, search c/lesson tu/mei d/Mon s/Math
+Oct 22, 2026 3:37:21 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][help]
+Oct 22, 2026 3:37:21 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: PonHub commands available in this build:
+add - Add a student, tutor or parent
+Usage: add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]
+       add r/tutor|parent n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]
+Roles and education levels are case-insensitive. Supply each lowercase prefix at most once.
+Optional values must be nonblank; l/ and pp/ are only allowed for students.
+Examples:
+add r/student n/Alex Tan l/P1 pp/91234567
+add r/tutor n/Mei Lim p/92345678 e/mei@example.com
+add r/parent n/Sam Tan p/91234567 a/10 Main Road
+
+edit - Correct a person's details
+Usage: edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [l/LEVEL] [pp/PARENT_PHONE]
+Use the current displayed people position and at least one field; omitted fields stay unchanged.
+Only Students accept l/ and pp/. Blank e/ or a/ clears that value; blank p/ clears only a Student's phone.
+Names, Student levels/parent phones and Tutor/Parent phones cannot be cleared. Role and ID stay fixed.
+Filters are retained and search results refresh. Recheck displayed positions after editing.
+An identical edit makes no write. Example: list r/student, then edit 1 l/P2 e/
+
+addlesson - Create an empty-roster shared lesson
+Usage: addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM
+DAY is Mon-Sun; times use four-digit 24-hour HHMM and start before end.
+Tutor matching uses the normalized full name. Supply the exact phone to disambiguate.
+Example: addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1
+
+editlesson - Edit a shared lesson by stable ID
+Usage: editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM]
+Supply a stable Lesson ID and at least one field; omitted fields stay unchanged.
+Supplied values must be nonblank; Lesson fields cannot be cleared.
+Use tp/ only with tu/. Tutor matching uses normalized full name and optional exact phone.
+The complete edited slot must have start before end and must not clash for its tutor, room or Students.
+A weekday change cannot invalidate retained attendance; unmark incompatible records explicitly first.
+An identical edit makes no write. Example: editlesson lid/L1 st/1630 s/Advanced Math
+
+enrol - Enrol a Student in a shared lesson
+Usage: enrol STUDENT_INDEX lid/LESSON_ID
+STUDENT_INDEX is the current people-list position of a Student. LESSON_ID is stable.
+Example: enrol 1 lid/L1
+
+unenrol - Unenrol a Student from a shared lesson
+Usage: unenrol STUDENT_INDEX lid/LESSON_ID
+Removes current membership only; retained dated attendance is unchanged.
+Example: unenrol 1 lid/L1
+
+mark - Record or correct dated lesson attendance
+Usage: mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent
+The date must be real and match the lesson weekday. New records require current enrolment;
+existing history can be corrected after unenrolment.
+Example: mark 1 lid/L1 d/2026-10-05 s/present
+
+unmark - Remove one dated lesson attendance record
+Usage: unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD
+Removes only that dated attendance record, including retained history after unenrolment.
+Example: unmark 1 lid/L1 d/2026-10-05
+
+history - Show a Student's retained attendance
+Usage: history STUDENT_INDEX [lid/LESSON_ID]
+Shows retained dated attendance, newest first, then by stable Lesson ID.
+STUDENT_INDEX selects a Student in the current people list.
+An optional existing Lesson ID filters records.
+A missing record is unrecorded, not absent. Current and former membership are shown separately.
+The people list and operational data remain unchanged.
+Example: after list r/student, history 1 lid/L1
+
+delete - Delete an unreferenced person
+Usage: delete INDEX
+INDEX is the person's current position in the displayed people list.
+Students with enrolments or retained attendance and tutors with assigned lessons cannot be deleted.
+Deleting a separate parent preserves students' parent-phone values.
+Example: list r/parent, then delete 1
+
+deletelesson - Delete an unreferenced shared lesson
+Usage: deletelesson lid/LESSON_ID
+Deletes only an empty Lesson with no retained attendance. LESSON_ID is stable.
+Unenrol every Student and unmark every attendance record before deleting the Lesson.
+The Lesson ID is never reused. Example: deletelesson lid/L1
+
+list - Show all people or one role
+Use list or list r/student|tutor|parent, with at most one role filter.
+
+lessons - Show shared lessons or one student's enrolments
+Usage: lessons [si/STUDENT_INDEX]
+Shows each shared lesson once, in creation order, including empty rosters.
+si/ is an optional positive position in the current people list and must select a student.
+It shows only that student's current enrolments; past attendance does not imply membership.
+Lesson cards show stable IDs, schedule, tutor, room and roster size. Scroll to see more results.
+People filters and command positions are preserved. This command does not save data.
+Examples: lessons; after list r/student, lessons si/1 (if position 1 is the intended student)
+
+showlesson - Show one lesson's roster and dated attendance
+Usage: showlesson lid/LESSON_ID [d/YYYY-MM-DD]
+Shows one stable shared lesson, its tutor, schedule, room and current Student roster.
+The two prefixes may appear in either order when a date is supplied.
+A real date must match the lesson weekday; current members show present, absent or unrecorded.
+Former members' retained attendance appears separately. People positions are preserved.
+This read-only view refreshes after saved changes. Example: showlesson lid/L1 d/2026-10-05
+
+search - Find people or shared lessons
+Usage: search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS]
+       [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]
+       search c/parent [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]
+       [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]
+       search c/tutor [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]
+       [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [rm/ROOM]
+       search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]
+Category values ignore case. Supply each lowercase prefix at most once, with a nonblank value.
+All filters must match the same person. Name, email and address match text fragments ignoring case;
+name/address spaces are normalized. Level and phones match exactly; phone leading zeros matter.
+Category-only searches include unlinked people. Missing optional contacts do not match filters.
+People results replace the people view and renumber current positions without saving.
+Lesson results use a separate panel and preserve people filters and positions.
+All lesson filters must match one lesson; sn/ matches its current roster. Text ignores case;
+tu/ matches tutor names. Day and HHMM times match exactly. When both times are given, end > start.
+Empty lessons are included unless sn/ is supplied. Zero matches display an empty lesson panel.
+Student lesson filters match one current enrolment and show its context below the student card.
+Parent links use exact phone equality; sn/ and every lesson condition must match the same child.
+Tutor conditions must match one assigned lesson and its current roster. Use n/ for tutor names.
+Use list or lessons to restore each view.
+Examples: search c/student n/Alex l/P1 pp/91234567, search c/lesson tu/mei d/Mon s/Math
+
+help - Show help or one command's guidance
+Usage: help [COMMAND]
+Shows the commands available in this session, or syntax and an example for one command.
+COMMAND is optional and case-insensitive. Supply at most one command word.
+Examples: help, help list
+
+exit - Close PonHub
+Usage: exit
+Closes PonHub. No parameters.
+Example: exit
+
+
+Type help COMMAND for syntax and an example, e.g. help list.
+
+Scroll this Result Display to read long guidance.
+Oct 22, 2026 3:38:13 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][lessons]
+Oct 22, 2026 3:38:13 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 1 lesson(s).
+Oct 22, 2026 3:38:53 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][help]
+Oct 22, 2026 3:38:53 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: PonHub commands available in this build:
+add - Add a student, tutor or parent
+Usage: add r/student n/NAME l/LEVEL pp/PARENT_PHONE [p/PHONE] [e/EMAIL] [a/ADDRESS]
+       add r/tutor|parent n/NAME p/PHONE [e/EMAIL] [a/ADDRESS]
+Roles and education levels are case-insensitive. Supply each lowercase prefix at most once.
+Optional values must be nonblank; l/ and pp/ are only allowed for students.
+Examples:
+add r/student n/Alex Tan l/P1 pp/91234567
+add r/tutor n/Mei Lim p/92345678 e/mei@example.com
+add r/parent n/Sam Tan p/91234567 a/10 Main Road
+
+edit - Correct a person's details
+Usage: edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [l/LEVEL] [pp/PARENT_PHONE]
+Use the current displayed people position and at least one field; omitted fields stay unchanged.
+Only Students accept l/ and pp/. Blank e/ or a/ clears that value; blank p/ clears only a Student's phone.
+Names, Student levels/parent phones and Tutor/Parent phones cannot be cleared. Role and ID stay fixed.
+Filters are retained and search results refresh. Recheck displayed positions after editing.
+An identical edit makes no write. Example: list r/student, then edit 1 l/P2 e/
+
+addlesson - Create an empty-roster shared lesson
+Usage: addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM
+DAY is Mon-Sun; times use four-digit 24-hour HHMM and start before end.
+Tutor matching uses the normalized full name. Supply the exact phone to disambiguate.
+Example: addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1
+
+editlesson - Edit a shared lesson by stable ID
+Usage: editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM]
+Supply a stable Lesson ID and at least one field; omitted fields stay unchanged.
+Supplied values must be nonblank; Lesson fields cannot be cleared.
+Use tp/ only with tu/. Tutor matching uses normalized full name and optional exact phone.
+The complete edited slot must have start before end and must not clash for its tutor, room or Students.
+A weekday change cannot invalidate retained attendance; unmark incompatible records explicitly first.
+An identical edit makes no write. Example: editlesson lid/L1 st/1630 s/Advanced Math
+
+enrol - Enrol a Student in a shared lesson
+Usage: enrol STUDENT_INDEX lid/LESSON_ID
+STUDENT_INDEX is the current people-list position of a Student. LESSON_ID is stable.
+Example: enrol 1 lid/L1
+
+unenrol - Unenrol a Student from a shared lesson
+Usage: unenrol STUDENT_INDEX lid/LESSON_ID
+Removes current membership only; retained dated attendance is unchanged.
+Example: unenrol 1 lid/L1
+
+mark - Record or correct dated lesson attendance
+Usage: mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent
+The date must be real and match the lesson weekday. New records require current enrolment;
+existing history can be corrected after unenrolment.
+Example: mark 1 lid/L1 d/2026-10-05 s/present
+
+unmark - Remove one dated lesson attendance record
+Usage: unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD
+Removes only that dated attendance record, including retained history after unenrolment.
+Example: unmark 1 lid/L1 d/2026-10-05
+
+history - Show a Student's retained attendance
+Usage: history STUDENT_INDEX [lid/LESSON_ID]
+Shows retained dated attendance, newest first, then by stable Lesson ID.
+STUDENT_INDEX selects a Student in the current people list.
+An optional existing Lesson ID filters records.
+A missing record is unrecorded, not absent. Current and former membership are shown separately.
+The people list and operational data remain unchanged.
+Example: after list r/student, history 1 lid/L1
+
+delete - Delete an unreferenced person
+Usage: delete INDEX
+INDEX is the person's current position in the displayed people list.
+Students with enrolments or retained attendance and tutors with assigned lessons cannot be deleted.
+Deleting a separate parent preserves students' parent-phone values.
+Example: list r/parent, then delete 1
+
+deletelesson - Delete an unreferenced shared lesson
+Usage: deletelesson lid/LESSON_ID
+Deletes only an empty Lesson with no retained attendance. LESSON_ID is stable.
+Unenrol every Student and unmark every attendance record before deleting the Lesson.
+The Lesson ID is never reused. Example: deletelesson lid/L1
+
+list - Show all people or one role
+Use list or list r/student|tutor|parent, with at most one role filter.
+
+lessons - Show shared lessons or one student's enrolments
+Usage: lessons [si/STUDENT_INDEX]
+Shows each shared lesson once, in creation order, including empty rosters.
+si/ is an optional positive position in the current people list and must select a student.
+It shows only that student's current enrolments; past attendance does not imply membership.
+Lesson cards show stable IDs, schedule, tutor, room and roster size. Scroll to see more results.
+People filters and command positions are preserved. This command does not save data.
+Examples: lessons; after list r/student, lessons si/1 (if position 1 is the intended student)
+
+showlesson - Show one lesson's roster and dated attendance
+Usage: showlesson lid/LESSON_ID [d/YYYY-MM-DD]
+Shows one stable shared lesson, its tutor, schedule, room and current Student roster.
+The two prefixes may appear in either order when a date is supplied.
+A real date must match the lesson weekday; current members show present, absent or unrecorded.
+Former members' retained attendance appears separately. People positions are preserved.
+This read-only view refreshes after saved changes. Example: showlesson lid/L1 d/2026-10-05
+
+search - Find people or shared lessons
+Usage: search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS]
+       [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]
+       search c/parent [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]
+       [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]
+       search c/tutor [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]
+       [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [rm/ROOM]
+       search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]
+Category values ignore case. Supply each lowercase prefix at most once, with a nonblank value.
+All filters must match the same person. Name, email and address match text fragments ignoring case;
+name/address spaces are normalized. Level and phones match exactly; phone leading zeros matter.
+Category-only searches include unlinked people. Missing optional contacts do not match filters.
+People results replace the people view and renumber current positions without saving.
+Lesson results use a separate panel and preserve people filters and positions.
+All lesson filters must match one lesson; sn/ matches its current roster. Text ignores case;
+tu/ matches tutor names. Day and HHMM times match exactly. When both times are given, end > start.
+Empty lessons are included unless sn/ is supplied. Zero matches display an empty lesson panel.
+Student lesson filters match one current enrolment and show its context below the student card.
+Parent links use exact phone equality; sn/ and every lesson condition must match the same child.
+Tutor conditions must match one assigned lesson and its current roster. Use n/ for tutor names.
+Use list or lessons to restore each view.
+Examples: search c/student n/Alex l/P1 pp/91234567, search c/lesson tu/mei d/Mon s/Math
+
+help - Show help or one command's guidance
+Usage: help [COMMAND]
+Shows the commands available in this session, or syntax and an example for one command.
+COMMAND is optional and case-insensitive. Supply at most one command word.
+Examples: help, help list
+
+exit - Close PonHub
+Usage: exit
+Closes PonHub. No parameters.
+Example: exit
+
+
+Type help COMMAND for syntax and an example, e.g. help list.
+
+Scroll this Result Display to read long guidance.
+Oct 22, 2026 3:40:19 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][add r/student n/Alexandria Catherine Montgomery Robinson l/P3 pp/94567890 e/alexandria.montgomery@example.com a/123 Long Avenue Block 456 Unit 07-890 Singapore]
+Oct 22, 2026 3:40:19 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: New student added: Alexandria Catherine Montgomery Robinson (S3).
+Oct 22, 2026 3:40:20 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][list r/student]
+Oct 22, 2026 3:40:20 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 3 student(s).
+Oct 22, 2026 3:41:58 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][edit 1 l/P3]
+Oct 22, 2026 3:41:58 PM ponhub.ui.MainWindow executeCommand
+INFO: An error occurred while executing command: edit 1 l/P3
+Oct 22, 2026 3:41:59 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][edit 1 l/P3]
+Oct 22, 2026 3:41:59 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Edited student: Alex Tan (S1).
+Oct 22, 2026 3:42:45 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][list r/student]
+Oct 22, 2026 3:42:45 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 3 student(s).
+Oct 22, 2026 3:42:46 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][history 1 lid/L1]
+Oct 22, 2026 3:42:46 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 1 attendance record(s).
+Oct 22, 2026 3:42:47 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][exit]
+Oct 22, 2026 3:42:47 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Exiting PonHub as requested ...
+Oct 22, 2026 3:42:47 PM ponhub.MainApp stop
+INFO: ============================ [ Stopping PonHub ] =============================
+Oct 22, 2026 3:43:07 PM ponhub.Main main
+WARNING: The warnings about a 'restricted method in java.lang.System' and 'enabling native access' appearing below (if any) can be ignored.
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by com.sun.glass.utils.NativeLibLoader in module javafx.graphics (jrt:/javafx.graphics)
+WARNING: Use --enable-native-access=javafx.graphics to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+Oct 22, 2026 3:43:07 PM ponhub.MainApp init
+INFO: =============================[ Initializing PonHub ]===========================
+Oct 22, 2026 3:43:07 PM ponhub.MainApp initialize
+INFO: Using canonical data file : /private/tmp/ponhub-366-native/package/data/ponhub.json
+Oct 22, 2026 3:43:07 PM ponhub.MainApp initPrefs
+INFO: Using preference file : /private/tmp/ponhub-366-native/package/preferences.json
+Oct 22, 2026 3:43:07 PM ponhub.commons.util.JsonUtil readJsonFile
+INFO: JSON file /private/tmp/ponhub-366-native/package/preferences.json found.
+Oct 22, 2026 3:43:07 PM ponhub.MainApp start
+INFO: Starting PonHub v1.4
+Oct 22, 2026 3:43:07 PM ponhub.ui.UiManager start
+INFO: Starting UI...
+Oct 22, 2026 3:44:20 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][list r/student]
+Oct 22, 2026 3:44:20 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 3 student(s).
+Oct 22, 2026 3:44:21 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][history 1 lid/L1]
+Oct 22, 2026 3:44:21 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 1 attendance record(s).
+Oct 22, 2026 3:44:22 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][showlesson lid/L1 d/2026-10-05]
+Oct 22, 2026 3:44:22 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing lesson L1 for 2026-10-05.
+Oct 22, 2026 3:44:42 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][unmark 1 lid/L1 d/2026-10-05]
+Oct 22, 2026 3:44:42 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Attendance for Student S1 in lesson L1 on 2026-10-05 removed.
+Oct 22, 2026 3:44:43 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][delete 1]
+Oct 22, 2026 3:44:43 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Deleted student: Alex Tan (S1).
+Oct 22, 2026 3:44:43 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][deletelesson lid/L1]
+Oct 22, 2026 3:44:43 PM ponhub.ui.MainWindow executeCommand
+INFO: An error occurred while executing command: deletelesson lid/L1
+Oct 22, 2026 3:44:44 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][unenrol 1 lid/L1]
+Oct 22, 2026 3:44:44 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Student S2 unenrolled from lesson L1.
+Oct 22, 2026 3:44:45 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][deletelesson lid/L1]
+Oct 22, 2026 3:44:45 PM ponhub.ui.MainWindow executeCommand
+INFO: An error occurred while executing command: deletelesson lid/L1
+Oct 22, 2026 3:44:46 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][unmark 1 lid/L1 d/2026-10-05]
+Oct 22, 2026 3:44:46 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Attendance for Student S2 in lesson L1 on 2026-10-05 removed.
+Oct 22, 2026 3:44:47 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][deletelesson lid/L1]
+Oct 22, 2026 3:44:47 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Deleted lesson: L1.
+Oct 22, 2026 3:44:48 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][addlesson d/Mon st/1630 et/1730 s/Advanced Math tu/Mei Lim rm/R1]
+Oct 22, 2026 3:44:48 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: New lesson added: L2.
+Oct 22, 2026 3:45:04 PM ponhub.MainApp stop
+INFO: ============================ [ Stopping PonHub ] =============================
+Oct 22, 2026 3:45:32 PM ponhub.Main main
+WARNING: The warnings about a 'restricted method in java.lang.System' and 'enabling native access' appearing below (if any) can be ignored.
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by com.sun.glass.utils.NativeLibLoader in module javafx.graphics (jrt:/javafx.graphics)
+WARNING: Use --enable-native-access=javafx.graphics to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+Oct 22, 2026 3:45:32 PM ponhub.MainApp init
+INFO: =============================[ Initializing PonHub ]===========================
+Oct 22, 2026 3:45:32 PM ponhub.MainApp initialize
+INFO: Using canonical data file : /private/tmp/ponhub-366-native/package/data/ponhub.json
+Oct 22, 2026 3:45:32 PM java.util.Optional ifPresent
+WARNING: Could not load canonical data at /private/tmp/ponhub-366-native/package/data/ponhub.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: MALFORMED_JSON
+Oct 22, 2026 3:45:32 PM ponhub.MainApp initPrefs
+INFO: Using preference file : /private/tmp/ponhub-366-native/package/preferences.json
+Oct 22, 2026 3:45:32 PM ponhub.commons.util.JsonUtil readJsonFile
+INFO: JSON file /private/tmp/ponhub-366-native/package/preferences.json found.
+Oct 22, 2026 3:45:32 PM ponhub.MainApp start
+INFO: Starting PonHub v1.4
+Oct 22, 2026 3:45:32 PM ponhub.ui.UiManager start
+INFO: Starting UI...
+Oct 22, 2026 3:46:06 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][edit 1 n/Blocked]
+Oct 22, 2026 3:46:06 PM ponhub.ui.MainWindow executeCommand
+INFO: An error occurred while executing command: edit 1 n/Blocked
+Oct 22, 2026 3:46:06 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][help edit]
+Oct 22, 2026 3:46:06 PM ponhub.ui.MainWindow executeCommand
+INFO: An error occurred while executing command: help edit
+Oct 22, 2026 3:46:07 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][list]
+Oct 22, 2026 3:46:07 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 0 person(s).
+
+Could not load canonical data at /private/tmp/ponhub-366-native/package/data/ponhub.json (CORRUPT). The original file has not been changed. Operational writes are blocked for this session; only help, list and exit should be available. An empty view is not your saved data. Back up the original file. Restore a known-good supported file, correct its JSON/access permissions, or use a compatible build on a separate copy, then restart. Do not delete the original to bypass protection. Cause: Invalid JSON format: MALFORMED_JSON
+Oct 22, 2026 3:46:07 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][add r/parent n/Blocked Parent p/99999999]
+Oct 22, 2026 3:46:07 PM ponhub.ui.MainWindow executeCommand
+INFO: An error occurred while executing command: add r/parent n/Blocked Parent p/99999999
+Oct 22, 2026 3:46:08 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][exit]
+Oct 22, 2026 3:46:08 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Exiting PonHub as requested ...
+Oct 22, 2026 3:46:08 PM ponhub.MainApp stop
+INFO: ============================ [ Stopping PonHub ] =============================
+Oct 22, 2026 3:46:47 PM ponhub.Main main
+WARNING: The warnings about a 'restricted method in java.lang.System' and 'enabling native access' appearing below (if any) can be ignored.
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by com.sun.glass.utils.NativeLibLoader in module javafx.graphics (jrt:/javafx.graphics)
+WARNING: Use --enable-native-access=javafx.graphics to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+Oct 22, 2026 3:46:47 PM ponhub.MainApp init
+INFO: =============================[ Initializing PonHub ]===========================
+Oct 22, 2026 3:46:47 PM ponhub.MainApp initialize
+INFO: Using canonical data file : /private/tmp/ponhub-366-native/package/data/ponhub.json
+Oct 22, 2026 3:46:47 PM ponhub.MainApp initPrefs
+INFO: Using preference file : /private/tmp/ponhub-366-native/package/preferences.json
+Oct 22, 2026 3:46:47 PM ponhub.commons.util.JsonUtil readJsonFile
+INFO: JSON file /private/tmp/ponhub-366-native/package/preferences.json found.
+Oct 22, 2026 3:46:47 PM ponhub.MainApp start
+INFO: Starting PonHub v1.4
+Oct 22, 2026 3:46:47 PM ponhub.ui.UiManager start
+INFO: Starting UI...
+Oct 22, 2026 3:46:48 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][list r/student]
+Oct 22, 2026 3:46:48 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 2 student(s).
+Oct 22, 2026 3:46:49 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][lessons]
+Oct 22, 2026 3:46:49 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 1 lesson(s).
+Oct 22, 2026 3:47:00 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][exit]
+Oct 22, 2026 3:47:00 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Exiting PonHub as requested ...
+Oct 22, 2026 3:47:00 PM ponhub.MainApp stop
+INFO: ============================ [ Stopping PonHub ] =============================
+Oct 22, 2026 3:47:34 PM ponhub.Main main
+WARNING: The warnings about a 'restricted method in java.lang.System' and 'enabling native access' appearing below (if any) can be ignored.
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by com.sun.glass.utils.NativeLibLoader in module javafx.graphics (jrt:/javafx.graphics)
+WARNING: Use --enable-native-access=javafx.graphics to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+Oct 22, 2026 3:47:34 PM ponhub.MainApp init
+INFO: =============================[ Initializing PonHub ]===========================
+Oct 22, 2026 3:47:34 PM ponhub.MainApp initialize
+INFO: Using canonical data file : /private/tmp/ponhub-366-native/package/fresh/read-only.json
+Oct 22, 2026 3:47:34 PM ponhub.MainApp initPrefs
+INFO: Using preference file : /private/tmp/ponhub-366-native/package/preferences.json
+Oct 22, 2026 3:47:34 PM ponhub.commons.util.JsonUtil readJsonFile
+INFO: JSON file /private/tmp/ponhub-366-native/package/preferences.json found.
+Oct 22, 2026 3:47:34 PM ponhub.MainApp start
+INFO: Starting PonHub v1.4
+Oct 22, 2026 3:47:34 PM ponhub.ui.UiManager start
+INFO: Starting UI...
+Oct 22, 2026 3:47:35 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][help list]
+Oct 22, 2026 3:47:35 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Use list or list r/student|tutor|parent, with at most one role filter.
+Oct 22, 2026 3:47:36 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][list]
+Oct 22, 2026 3:47:36 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 0 person(s).
+Oct 22, 2026 3:47:36 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][lessons]
+Oct 22, 2026 3:47:36 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Showing 0 lesson(s).
+Oct 22, 2026 3:47:37 PM ponhub.logic.CanonicalLogicManager execute
+INFO: ----------------[USER COMMAND][exit]
+Oct 22, 2026 3:47:37 PM ponhub.ui.MainWindow executeCommand
+INFO: Result: Exiting PonHub as requested ...
+Oct 22, 2026 3:47:37 PM ponhub.MainApp stop
+INFO: ============================ [ Stopping PonHub ] =============================

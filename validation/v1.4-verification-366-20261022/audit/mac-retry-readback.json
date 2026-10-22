@@ -1,0 +1,13 @@
+{
+  "candidate_sha256": "5e24df511c9a5975c1c15e310ab03f2a852837e969359afe71fc8a37fa905456",
+  "normal_shutdown_cycles": 2,
+  "protected_and_recovered_shutdown_cycles": 2,
+  "shutdown_exception_reproduced": false,
+  "protected_restricted_help": "PASS",
+  "blocked_person_add_person_edit_lesson_edit": "PASS",
+  "corrupt_original_preserved": "PASS",
+  "session_long_lock_after_external_restore": "PASS",
+  "restart_recovery_and_edit_retry": "PASS",
+  "help_menu": "PASS: Vincent manual click; Codex screenshot/AX inspection",
+  "source": "ed32fe49901ea11070ff16086490d2d72adafcd1"
+}

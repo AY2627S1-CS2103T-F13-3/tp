@@ -1,0 +1,33 @@
+{
+  "issue": 366,
+  "date_sgt": "2026-10-22",
+  "source": "84f9a2cd4865b452e14fae5748896853febc8c32",
+  "application_candidate_source": "ed32fe49901ea11070ff16086490d2d72adafcd1",
+  "jar_sha256": "5e24df511c9a5975c1c15e310ab03f2a852837e969359afe71fc8a37fa905456",
+  "jar_size_bytes": 12654205,
+  "runtime": "Azul Zulu 25.0.3+9-LTS (25.0.3.fx-zulu), macOS arm64",
+  "operator": "OpenAI Codex for ben58882; assistant-operated source-session checks",
+  "result": "PASS",
+  "scenario_groups": 11,
+  "command_submissions": 178,
+  "assertions": 644,
+  "expected_rejections": 80,
+  "final_operational_sha256": "ca8451e898eb47a49bafe6f3cbc1b449b6512f14e448ad308e7795294dda40fc",
+  "native_display_used": false,
+  "production_changes": false,
+  "limits": [
+    "No native GUI or physical display acceptance inferred.",
+    "Failed saves injected through the existing SnapshotWriter seam, not OS permission failure.",
+    "Windows and Linux were not executed in this run.",
+    "No independent human pass or acceptance decision on behalf of an owner."
+  ],
+  "validation_java_checkstyle": {
+    "version": "14.1.0",
+    "config": "config/checkstyle/checkstyle.xml",
+    "exit_code": 0,
+    "violations": 0,
+    "manual_style_inspection": "PASS"
+  },
+  "independent_review": "Reviewed by automated_validation; helper verb names and multiline Javadoc corrected, then rerun",
+  "final_operational_artifact": "final-operational.json.gz; decompress to recover exact original bytes"
+}

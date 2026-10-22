@@ -100,3 +100,21 @@ Distinguish a product failure from a missing display/tool or unsupported local r
 checks after resolving the cause. Preserve actual failures and skips in the PR evidence. For manual checks,
 reuse the [DG procedure](DeveloperGuide.html#appendix-instructions-for-manual-testing) and record the exact artifact
 and environment tested rather than copying the procedure or repeating another owner's acceptance campaign.
+
+## Recording workflow and package results
+
+Keep dated acceptance results in the relevant issue or a `validation/` evidence directory. For each scenario,
+record **PASS**, **FAIL** or **NOT RUN**, the expected and observed behavior, and a link to its transcript,
+screenshot or automated report. Include rejected commands, no-ops, failed saves and restart checks where
+they affect the feature; record data-file hashes when claiming that operational bytes stayed unchanged.
+
+Identify the tested source commit, JAR size and SHA-256, OS/architecture, Java distribution/version and
+actual operator. State whether the result came from source tests, a packaged window, a hosted virtual
+display or human interaction. Preserve failures, skips and diagnostic logs even when a retry succeeds;
+a clean retry alone does not establish a root cause or a product fix.
+
+When reusing a platform run, retain its original source, artifact, operator and coverage limits. Compare
+application source/resources and build inputs before applying it to a later commit, and rerun affected
+checks if those inputs change. Documentation-only changes can reuse unchanged application evidence;
+their affected rendered pages and links still need their own checks. Follow the
+[release procedure](DevOps.html#making-a-release) for final candidate and public-download verification.

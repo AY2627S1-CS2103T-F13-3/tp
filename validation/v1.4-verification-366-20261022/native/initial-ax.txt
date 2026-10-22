@@ -1,0 +1,38 @@
+Window: "PonHub", App: PonHub366.
+0 standard window PonHub, URL: file:///private/tmp/ponhub-366-native/other-cwd/PonHub, Secondary Actions: Raise
+	1 text Pon Hub
+	2 menu bar
+		3 text File
+			4 text File
+		5 text Help
+			6 text Help
+	7 button (disabled) Lessons
+		8 text Lessons
+	9 button (disabled) Student lessons
+		10 text Student lessons
+	11 button (disabled) Attendance
+		12 text Attendance
+	13 text entry area
+		14 scroll area
+	15 text Showing 0 person(s).
+		16 text Showing 0 person(s).
+	17 list
+		18 text No persons to display.
+			19 text No persons to display.
+	20 text All lessons Showing 0 lesson(s).
+	21 list
+		22 text No lessons to display.
+			23 text No lessons to display.
+	24 text field (settable) Enter command here...
+		25 text Enter command here...
+	26 text /private/tmp/ponhub-366-native/package/data/ponhub.json
+		27 text /private/tmp/ponhub-366-native/package/data/ponhub.json
+	28 close button
+	29 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	30 minimize button
+	31 image (disabled) PonHub
+	32 text PonHub
+33 menu bar
+	34 PonHub366
+
+The focused UI element is 24 text field (settable) Enter command here...

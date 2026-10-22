@@ -1,0 +1,8 @@
+{
+  "corruptBefore": "7c2768748f01c00032dee6f54aa062060600e05bd62eec406439ce963925ac50",
+  "corruptAfterRejectedOperations": "7c2768748f01c00032dee6f54aa062060600e05bd62eec406439ce963925ac50",
+  "corruptBytesPreserved": true,
+  "repairedFileHash": "2720ac2844986213565fc313e7549a9fc17e8e511731f7779e5aa4c5cd18dfea",
+  "expectedGoodHash": "2720ac2844986213565fc313e7549a9fc17e8e511731f7779e5aa4c5cd18dfea",
+  "liveRepairRemainsProtected": true
+}

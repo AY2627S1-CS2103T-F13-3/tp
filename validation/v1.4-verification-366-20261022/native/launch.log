@@ -1,0 +1,28 @@
+Oct 22, 2026 3:31:02 PM ponhub.Main main
+WARNING: The warnings about a 'restricted method in java.lang.System' and 'enabling native access' appearing below (if any) can be ignored.
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by com.sun.glass.utils.NativeLibLoader in module javafx.graphics (jrt:/javafx.graphics)
+WARNING: Use --enable-native-access=javafx.graphics to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+RenderJob.run: internal exception
+java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
+	at java.base/java.util.Arrays$ArrayList.get(Arrays.java:4225)
+	at java.base/java.util.Collections$UnmodifiableList.get(Collections.java:1505)
+	at javafx.graphics/com.sun.glass.ui.Screen.getMainScreen(Screen.java:56)
+	at javafx.graphics/com.sun.prism.mtl.MTLPipeline.getDefaultResourceFactory(MTLPipeline.java:79)
+	at javafx.graphics/com.sun.prism.GraphicsPipeline.getDefaultResourceFactory(GraphicsPipeline.java:155)
+	at javafx.graphics/com.sun.javafx.tk.quantum.QuantumRenderer.lambda$createResourceFactory$1(QuantumRenderer.java:155)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:369)
+	at javafx.graphics/com.sun.javafx.tk.RenderJob.run(RenderJob.java:58)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at javafx.graphics/com.sun.javafx.tk.quantum.QuantumRenderer$PipelineRunnable.run(QuantumRenderer.java:122)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Exception in thread "Thread-4" java.lang.NullPointerException: Cannot invoke "com.sun.glass.ui.Timer.stop()" because "this.pulseTimer" is null
+	at javafx.graphics/com.sun.javafx.tk.quantum.QuantumToolkit.dispose(QuantumToolkit.java:861)
+	at javafx.graphics/com.sun.javafx.tk.quantum.QuantumToolkit$1.lambda$run$0(QuantumToolkit.java:248)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Exception in thread "Glass/Prism Shutdown Hook" java.lang.InternalError: dispose timed out
+	at javafx.graphics/com.sun.javafx.tk.quantum.QuantumToolkit$1.run(QuantumToolkit.java:256)

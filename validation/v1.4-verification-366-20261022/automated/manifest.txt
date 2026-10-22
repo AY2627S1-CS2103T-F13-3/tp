@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Implementation-Title: PonHub
+Implementation-Version: 1.4
+Main-Class: ponhub.Main

@@ -1,0 +1,17 @@
+ruby 3.3.8 (2025-04-09 revision b200bad6cd) [aarch64-linux-gnu]
+Bundler version 2.5.11
+f42dd1dc51c382cfaf98ac06dc1fd7104b50d4e9347c750b9c2bcdb3eb0f96e2  Gemfile
+349e8bcdca8e65603f3119d1a569b8536873af7442b52bd11ac92c89db1a8f01  Gemfile.lock
+1b963dc1666691c307433eb4011ed4b106a1a6c09de494109073f6f6d7f3dfd6  Testing.md
+Configuration file: /tmp/ponhub366-site/docs/_config.yml
+To use retry middleware with Faraday v2.0+, install `faraday-retry` gem
+            Source: /tmp/ponhub366-site/docs
+       Destination: /tmp/ponhub366-site/rendered
+ Incremental build: disabled. Enable with --incremental
+      Generating...
+       Jekyll Feed: Generating feed for posts
+                    done in 0.277 seconds.
+ Auto-regeneration: disabled. Use --watch to enable.
+f42dd1dc51c382cfaf98ac06dc1fd7104b50d4e9347c750b9c2bcdb3eb0f96e2  Gemfile
+349e8bcdca8e65603f3119d1a569b8536873af7442b52bd11ac92c89db1a8f01  Gemfile.lock
+1b963dc1666691c307433eb4011ed4b106a1a6c09de494109073f6f6d7f3dfd6  Testing.md
