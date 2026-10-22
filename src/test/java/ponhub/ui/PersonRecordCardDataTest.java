@@ -29,10 +29,10 @@ public class PersonRecordCardDataTest {
                 new EducationLevel("P1"), new Phone("00012345"));
         PersonRecordCardData data = new PersonRecordCardData(student, 2);
 
-        assertEquals("2. Alex Tan", data.getHeading());
-        assertEquals("Student · S8", data.getIdentity());
-        assertEquals(List.of("Level: P1", "Parent phone: 00012345", "Own phone: Not provided",
-                "Email: Not provided", "Address: Not provided"), data.getDetailLines());
+        assertEquals("Alex Tan", data.getHeading());
+        assertEquals("Student · ID: S8", data.getIdentity());
+        assertEquals(List.of("Level: P1", "Own phone: Not provided", "Email: Not provided",
+                "Parent phone: 00012345", "Address: Not provided"), detailLines(data));
     }
 
     @Test
@@ -42,11 +42,11 @@ public class PersonRecordCardDataTest {
                 new Phone("00987654"));
         PersonRecordCardData data = new PersonRecordCardData(student, 4);
 
-        assertEquals("4. " + contacts.getName().fullName, data.getHeading());
-        assertEquals("Student · S12", data.getIdentity());
-        assertEquals(List.of("Level: JC2", "Parent phone: 00987654", "Own phone: 00012345",
-                "Email: Alex.Tan@Example.com",
-                "Address: " + contacts.getAddress().orElseThrow().value), data.getDetailLines());
+        assertEquals(contacts.getName().fullName, data.getHeading());
+        assertEquals("Student · ID: S12", data.getIdentity());
+        assertEquals(List.of("Level: JC2", "Own phone: 00012345", "Email: Alex.Tan@Example.com",
+                "Parent phone: 00987654",
+                "Address: " + contacts.getAddress().orElseThrow().value), detailLines(data));
         assertEquals(contacts, student.getContactDetails());
         assertEquals(contacts.getName().fullName, student.getName().fullName);
         assertEquals("00987654", student.getParentPhone().value);
@@ -58,15 +58,15 @@ public class PersonRecordCardDataTest {
                 Optional.empty(), Optional.empty());
         List<PersonRecord> records = List.of(new Tutor(new PersonId("T41"), contacts),
                 new Parent(new PersonId("P11"), contacts));
-        List<String> identities = List.of("Tutor · T41", "Parent · P11");
+        List<String> identities = List.of("Tutor · ID: T41", "Parent · ID: P11");
 
         for (int i = 0; i < records.size(); i++) {
             PersonRecordCardData data = new PersonRecordCardData(records.get(i), 7);
 
-            assertEquals("7. Alex TAN", data.getHeading());
+            assertEquals("Alex TAN", data.getHeading());
             assertEquals(identities.get(i), data.getIdentity());
             assertEquals(List.of("Phone: 00012345", "Email: Not provided", "Address: Not provided"),
-                    data.getDetailLines());
+                    detailLines(data));
         }
     }
 
@@ -79,9 +79,9 @@ public class PersonRecordCardDataTest {
         for (PersonRecord record : records) {
             PersonRecordCardData data = new PersonRecordCardData(record, 1);
 
-            assertEquals("1. " + contacts.getName().fullName, data.getHeading());
+            assertEquals(contacts.getName().fullName, data.getHeading());
             assertEquals(List.of("Phone: 00012345", "Email: Alex.Tan@Example.com",
-                    "Address: " + contacts.getAddress().orElseThrow().value), data.getDetailLines());
+                    "Address: " + contacts.getAddress().orElseThrow().value), detailLines(data));
             assertEquals(contacts, record.getContactDetails());
         }
     }
@@ -93,27 +93,30 @@ public class PersonRecordCardDataTest {
         PersonRecordCardData firstPosition = new PersonRecordCardData(student, 1);
         PersonRecordCardData laterPosition = new PersonRecordCardData(student, 42);
 
-        assertEquals("1. Alex Tan", firstPosition.getHeading());
-        assertEquals("42. Alex Tan", laterPosition.getHeading());
-        assertEquals("Student · S9223372036854775807", firstPosition.getIdentity());
+        assertEquals("Alex Tan", firstPosition.getHeading());
+        assertEquals(firstPosition.getHeading(), laterPosition.getHeading());
+        assertEquals("Position: 1", firstPosition.getPosition());
+        assertEquals("Position: 42", laterPosition.getPosition());
+        assertEquals("Student · ID: S9223372036854775807", firstPosition.getIdentity());
         assertEquals(firstPosition.getIdentity(), laterPosition.getIdentity());
-        assertEquals(firstPosition.getDetailLines(), laterPosition.getDetailLines());
+        assertEquals(firstPosition.getDetailGroups(), laterPosition.getDetailGroups());
         assertEquals(Long.MAX_VALUE, student.getId().getSequence());
     }
 
     @Test
-    public void getDetailLines_attemptedMutation_preservesProjectionAndRecord() {
+    public void getDetailGroups_attemptedMutation_preservesProjectionAndRecord() {
         Student student = new Student(new PersonId("S1"), populatedContacts("Alex Tan"),
                 new EducationLevel("S2"), new Phone("00987654"));
         Student before = new Student(new PersonId("S1"), populatedContacts("Alex Tan"),
                 new EducationLevel("S2"), new Phone("00987654"));
         PersonRecordCardData data = new PersonRecordCardData(student, 3);
-        List<String> expectedLines = List.copyOf(data.getDetailLines());
+        List<String> expectedLines = List.copyOf(detailLines(data));
 
-        assertThrows(UnsupportedOperationException.class, () -> data.getDetailLines().clear());
+        assertThrows(UnsupportedOperationException.class, () -> data.getDetailGroups().clear());
         assertThrows(UnsupportedOperationException.class, () ->
-                data.getDetailLines().set(0, "Level: P1"));
-        assertEquals(expectedLines, data.getDetailLines());
+                data.getDetailGroups().get(0).clear());
+        assertEquals(expectedLines, detailLines(data));
+        assertEquals(List.of(1, 2, 1, 1), data.getDetailGroups().stream().map(List::size).toList());
         assertEquals(before, student);
         assertEquals(before.hashCode(), student.hashCode());
     }
@@ -127,9 +130,9 @@ public class PersonRecordCardDataTest {
         Tutor tutor = new Tutor(new PersonId("T1"), contacts);
         PersonRecordCardData data = new PersonRecordCardData(tutor, 1);
 
-        assertEquals("1. " + longName, data.getHeading());
+        assertEquals(longName, data.getHeading());
         assertEquals(List.of("Phone: 000123456789012", "Email: alex.long.contact@example.com",
-                "Address: " + longAddress), data.getDetailLines());
+                "Address: " + longAddress), detailLines(data));
         assertEquals(longAddress, tutor.getContactDetails().getAddress().orElseThrow().value);
     }
 
@@ -143,6 +146,11 @@ public class PersonRecordCardDataTest {
         }
         assertThrows(IllegalArgumentException.class, () ->
                 new PersonRecordCardData(new UnsupportedRecord(), 1));
+    }
+
+    private static List<String> detailLines(PersonRecordCardData data) {
+        return data.getDetailGroups().stream().flatMap(List::stream)
+                .map(detail -> detail.caption() + ": " + detail.value()).toList();
     }
 
     private static ContactDetails populatedContacts(String name) {
