@@ -1,0 +1,56 @@
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>setlocal EnableExtensions
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>set DIRNAME=C:\Users\ernes\tp\_temp\ernest-compact-feedback-363\
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>if "C:\Users\ernes\tp\_temp\ernest-compact-feedback-363\" == "" set DIRNAME=.
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>set APP_BASE_NAME=gradlew
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>set APP_HOME=C:\Users\ernes\tp\_temp\ernest-compact-feedback-363\
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>for %i in ("C:\Users\ernes\tp\_temp\ernest-compact-feedback-363\") do set APP_HOME=%~fi
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>set APP_HOME=C:\Users\ernes\tp\_temp\ernest-compact-feedback-363\
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>if defined JAVA_HOME goto findJavaFromJavaHome
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>set JAVA_HOME=C:\Users\ernes\tp\_temp\round1-reconcile-20261014\jdk\zulu25.36.205-ca-fx-jdk25.0.4.1-win_x64
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>set JAVA_EXE=C:\Users\ernes\tp\_temp\round1-reconcile-20261014\jdk\zulu25.36.205-ca-fx-jdk25.0.4.1-win_x64/bin/java.exe
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>if exist "C:\Users\ernes\tp\_temp\round1-reconcile-20261014\jdk\zulu25.36.205-ca-fx-jdk25.0.4.1-win_x64/bin/java.exe" goto execute
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>endlocal   & "C:\Users\ernes\tp\_temp\round1-reconcile-20261014\jdk\zulu25.36.205-ca-fx-jdk25.0.4.1-win_x64/bin/java.exe" "-Xmx64m" "-Xms64m"   "-Dorg.gradle.appname=gradlew" -jar "C:\Users\ernes\tp\_temp\ernest-compact-feedback-363\\gradle\wrapper\gradle-wrapper.jar" --offline --no-daemon check coverage shadowJar   & call :exitWithErrorLevel
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :checkstyleMain UP-TO-DATE
+> Task :compileTestJava UP-TO-DATE
+> Task :processTestResources UP-TO-DATE
+> Task :testClasses UP-TO-DATE
+> Task :checkstyleTest UP-TO-DATE
+> Task :shadowJar UP-TO-DATE
+> Task :test
+
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by com.sun.glass.utils.NativeLibLoader in module javafx.graphics (jrt:/javafx.graphics)
+WARNING: Use --enable-native-access=javafx.graphics to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+
+> Task :check
+> Task :jacocoTestReport
+> Task :coverage
+
+BUILD SUCCESSFUL in 1m 13s
+10 actionable tasks: 3 executed, 7 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.1/userguide/configuration_cache_enabling.html
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>"C:\WINDOWS\system32\cmd.exe" /c exit 0
+
+C:\Users\ernes\tp\_temp\ernest-compact-feedback-363>"C:\WINDOWS\system32\cmd.exe" /c exit 0

@@ -1,0 +1,23 @@
+Time=2026-10-22T09:58:57.252787100Z; Java=25.0.4.1+1-LTS; vendor=Azul Systems, Inc.; OS=Windows 11; arch=amd64
+Screen=Rectangle2D [minX=0.0, minY=0.0, maxX=2048.0, maxY=1152.0, width=2048.0, height=1152.0]; workArea=Rectangle2D [minX=0.0, minY=0.0, maxX=2048.0, maxY=1152.0, width=2048.0, height=1152.0]; outputScale=1.25
+fresh-startup: scene=725.5999755859375x562.4000244140625; feedback=80.0; records=360.0
+Command=add r/tutor n/Mei Lim p/92345678; feedbackHeight=80.0
+Command=add r/student n/Alex Tan l/S2 pp/91234567; feedbackHeight=80.0
+Command=addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1; feedbackHeight=80.0
+Command=list; feedbackHeight=80.0
+short-feedback: scene=725.5999755859375x562.4000244140625; feedback=80.0; records=360.0
+maximized: scene=2048.0x1128.800048828125; feedback=80.0; records=926.4
+Command=help search; feedbackHeight=80.0
+Complete search-help end reached; characters=1823
+Native drag fraction=0.55; feedbackHeight=555.2
+Command=list; feedbackHeight=555.2
+Command=help search; feedbackHeight=555.2
+Native drag fraction=0.01; feedbackHeight=80.0
+drag-shrunk: scene=2048.0x1128.800048828125; feedback=80.0; records=926.4
+compact-window: scene=436.0x322.3999938964844; feedback=80.0; records=120.8
+Command=help search; feedbackHeight=80.0
+Complete search-help end reached; characters=1823
+compact-F1-draft: scene=436.0x322.3999938964844; feedback=80.0; records=120.8
+Commands use the production CommandBox action handler. Divider drags and F1 use JavaFX Robot.
+Display settings observed only; other OS/scaling configurations remain NOT RUN.
+Packaged affected checks=PASS
