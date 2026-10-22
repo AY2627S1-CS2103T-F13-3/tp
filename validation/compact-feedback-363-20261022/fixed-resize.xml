@@ -1,0 +1,10 @@
+<testsuite name="ponhub.ui.MainWindowResultResizeTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-22T09:58:20.576Z" hostname="ERNEST-PC" time="0.728">
+  <properties />
+  <testcase name="longFeedback_scrollsToItsEndAfterResizingAndRepeatedUpdates()" classname="ponhub.ui.MainWindowResultResizeTest" time="0.053" />
+  <testcase name="commandsAndHelp_preserveSplitDraftSelectionAndOperationalFile()" classname="ponhub.ui.MainWindowResultResizeTest" time="0.066" />
+  <testcase name="longHelp_atCompactStartup_scrollsToTheCompleteEndWithoutMovingDivider()" classname="ponhub.ui.MainWindowResultResizeTest" time="0.061" />
+  <testcase name="divider_expandsAndShrinksFeedbackAndKeepsBothAreasReachable()" classname="ponhub.ui.MainWindowResultResizeTest" time="0.072" />
+  <testcase name="rosterAndHistoryCommands_preserveWorkspaceFooterAndChosenSplit()" classname="ponhub.ui.MainWindowResultResizeTest" time="0.226" />
+  <testcase name="startup_compactAndTallWindows_leaveSpaceForRecordsAndShortFeedback()" classname="ponhub.ui.MainWindowResultResizeTest" time="0.177" />
+  <testcase name="windowResize_preservesCompactOrUserExpandedFeedbackHeight()" classname="ponhub.ui.MainWindowResultResizeTest" time="0.072" />
+</testsuite>
