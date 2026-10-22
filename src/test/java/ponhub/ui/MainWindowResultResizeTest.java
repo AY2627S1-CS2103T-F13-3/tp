@@ -55,6 +55,81 @@ public class MainWindowResultResizeTest {
     public Path directory;
 
     @Test
+    public void startup_compactAndTallWindows_leaveSpaceForRecordsAndShortFeedback() throws Exception {
+        for (int[] size : new int[][] {{450, 330}, {853, 600}, {1920, 1020}, {1920, 1440}}) {
+            Fixture fixture = callOnFxThread(() -> createFixture(
+                    LessonQueryTestData.createData().exportState(), size[0], size[1]));
+            runOnFxThread(() -> {
+                double height = fixture.resultPane().getHeight();
+                assertTrue(height >= 80 && height <= 100,
+                        "Startup feedback must stay compact at " + size[0] + "x" + size[1]
+                                + "; actual height=" + height);
+                assertTrue(fixture.records().getHeight() >= 120);
+                fixture.enter("list");
+                assertEquals(height, fixture.resultPane().getHeight(), 1);
+                ScrollPane scroll = (ScrollPane) fixture.result().lookup(".scroll-pane");
+                assertTrue(scroll.getViewportBounds().getHeight() >= fixture.result().getFont().getSize() + 2,
+                        "Short feedback must have room for a complete line.");
+                for (String selector : List.of("#viewNavigation", "#commandTextField", "#resultDisplay",
+                        "#personListView", "#lessonListView", "#statusbarPlaceholder")) {
+                    Bounds bounds = fixture.root().lookup(selector).localToScene(
+                            fixture.root().lookup(selector).getBoundsInLocal());
+                    assertTrue(bounds.getWidth() > 0 && bounds.getHeight() > 0
+                                    && bounds.getMinY() >= 0 && bounds.getMaxY() <= size[1] + 1,
+                            selector + ": " + bounds);
+                }
+            });
+        }
+    }
+
+    @Test
+    public void windowResize_preservesCompactOrUserExpandedFeedbackHeight() throws Exception {
+        Fixture fixture = callOnFxThread(this::createFixture);
+        runOnFxThread(() -> {
+            for (boolean expanded : new boolean[] {false, true}) {
+                if (expanded) {
+                    fixture.split().setDividerPositions(0.5);
+                    fixture.layout();
+                }
+                double height = fixture.resultPane().getHeight();
+                for (int contentHeight : new int[] {1020, 1440, 600}) {
+                    fixture.resize(853, contentHeight);
+                    assertEquals(height, fixture.resultPane().getHeight(), 1,
+                            "Window resizing must leave feedback height under the user's control.");
+                    fixture.enter("help search");
+                    assertEquals(height, fixture.resultPane().getHeight(), 1);
+                }
+            }
+        });
+    }
+
+    @Test
+    public void longHelp_atCompactStartup_scrollsToTheCompleteEndWithoutMovingDivider() throws Exception {
+        Fixture fixture = callOnFxThread(this::createFixture);
+        double height = callOnFxThread(() -> fixture.resultPane().getHeight());
+        runOnFxThread(() -> fixture.enter("help search"));
+        runOnFxThread(fixture::layout);
+        runOnFxThread(() -> {
+            assertEquals(height, fixture.resultPane().getHeight(), 1);
+            ScrollBar vertical = fixture.result().lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
+                    .filter(bar -> bar.getOrientation() == Orientation.VERTICAL).findFirst().orElseThrow();
+            assertTrue(vertical.isVisible());
+            vertical.setValue(vertical.getMax());
+        });
+        runOnFxThread(() -> {
+            fixture.layout();
+            ScrollPane scroll = (ScrollPane) fixture.result().lookup(".scroll-pane");
+            Bounds viewport = scroll.lookup(".viewport").localToScene(
+                    scroll.lookup(".viewport").getBoundsInLocal());
+            Bounds content = scroll.getContent().localToScene(scroll.getContent().getBoundsInLocal());
+            assertTrue(fixture.result().getScrollTop() > 0);
+            assertTrue(content.getMaxY() >= viewport.getMinY() && content.getMaxY() <= viewport.getMaxY() + 2,
+                    "The complete search help must remain reachable from the compact startup height.");
+            assertEquals(height, fixture.resultPane().getHeight(), 1);
+        });
+    }
+
+    @Test
     public void rosterAndHistoryCommands_preserveWorkspaceFooterAndChosenSplit() throws Exception {
         Fixture fixture = callOnFxThread(() -> createFixture(createLargeRosterData()));
         for (int[] size : new int[][] {{1200, 772}, {853, 600}, {450, 360}}) {
@@ -226,6 +301,10 @@ public class MainWindowResultResizeTest {
     }
 
     private Fixture createFixture(PonHubDataState data) throws Exception {
+        return createFixture(data, 853, 600);
+    }
+
+    private Fixture createFixture(PonHubDataState data, double width, double height) throws Exception {
         Path dataPath = directory.resolve("canonical.json");
         new JsonPonHubDataStorage(dataPath).saveData(data);
         var logic = new CanonicalLogicManager(new CanonicalPeopleSession(dataPath), new UserPrefs());
@@ -235,10 +314,10 @@ public class MainWindowResultResizeTest {
         Region root = (Region) previous.getRoot();
         List<String> stylesheets = List.copyOf(previous.getStylesheets());
         previous.setRoot(new StackPane());
-        Scene scene = new Scene(root, 853, 600);
+        Scene scene = new Scene(root, width, height);
         scene.getStylesheets().setAll(stylesheets);
         Fixture fixture = new Fixture(root, dataPath, Files.readString(dataPath));
-        fixture.resize(853, 600);
+        fixture.resize(width, height);
         return fixture;
     }
 
