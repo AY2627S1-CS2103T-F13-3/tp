@@ -31,6 +31,7 @@ public class HistoryListPanel extends UiPart<Region> {
         historyContext.textProperty().bind(requireNonNull(context));
         historyListView.setItems(requireNonNull(history));
         historySummary.textProperty().bind(Bindings.size(history).asString("Showing %d attendance record(s)."));
+        ResultHeadingTooltip.install(historyContext, historySummary);
         historyListView.setPlaceholder(new Label("No recorded attendance. Missing dates are unrecorded."));
         historyListView.setCellFactory(list -> new HistoryCell());
     }

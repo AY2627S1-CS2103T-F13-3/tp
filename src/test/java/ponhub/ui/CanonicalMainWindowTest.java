@@ -855,6 +855,11 @@ public class CanonicalMainWindowTest {
             people().layout();
             lessons().layout();
             history().layout();
+            for (String id : List.of("lessonContext", "lessonSummary", "historyContext", "historySummary")) {
+                Label heading = (Label) root().lookup("#" + id);
+                assertNotNull(heading.getTooltip(), id);
+                assertEquals(heading.getText(), heading.getTooltip().getText(), id);
+            }
         }
 
         private TextField input() {

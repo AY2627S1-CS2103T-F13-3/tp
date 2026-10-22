@@ -1,0 +1,9 @@
+Java=25.0.4+7-LTS-189; JavaFX=17.0.7+2; OS=Windows 11
+lessonContext; panelWidth=198; headingHeight=17.6; popup=338.0x116.4000015258789; text=Lesson search: sn/Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex tu/Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei s/Math Math Math Math Math Math Math Math Math Math d/Mon st/0900 et/1000 rm/ROOM123456
+lessonSummary; panelWidth=198; headingHeight=17.6; popup=132.7889404296875x46.400001525878906; text=Showing 0 lesson(s).
+lessonContext; panelWidth=399; headingHeight=17.6; popup=338.0x116.4000015258789; text=Lesson search: sn/Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex Alex tu/Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei Mei s/Math Math Math Math Math Math Math Math Math Math d/Mon st/0900 et/1000 rm/ROOM123456
+lessonSummary; panelWidth=399; headingHeight=17.6; popup=132.7889404296875x46.400001525878906; text=Showing 0 lesson(s).
+historyContext; panelWidth=198; headingHeight=17.6; popup=338.0x60.400001525878906; text=Student S9223372036854775807 · attendance history · L9223372036854775807
+historySummary; panelWidth=198; headingHeight=17.6; popup=191.475830078125x46.400001525878906; text=Showing 0 attendance record(s).
+historyContext; panelWidth=399; headingHeight=17.6; popup=338.0x60.400001525878906; text=Student S9223372036854775807 · attendance history · L9223372036854775807
+historySummary; panelWidth=399; headingHeight=17.6; popup=191.475830078125x46.400001525878906; text=Showing 0 attendance record(s).

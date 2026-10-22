@@ -44,6 +44,7 @@ public class LessonListPanel extends UiPart<Region> {
     public LessonListPanel(ObservableList<LessonView> lessons, ObservableValue<String> context) {
         super(FXML);
         lessonContext.textProperty().bind(requireNonNull(context));
+        ResultHeadingTooltip.install(lessonContext, lessonSummary);
         lessonListView.setItems(requireNonNull(lessons));
         lessonListView.setCellFactory(list -> new LessonListCell());
         lessonListView.setPlaceholder(new Label("No lessons to display."));

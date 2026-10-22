@@ -2279,6 +2279,13 @@ startup exposes no `showlesson` route.
 
 ### Active Student attendance history checks (#100)
 
+For both result panels, `ResultHeadingTooltip` binds a wrapping, width-limited tooltip to each context
+and summary label. It follows the displayed text through query and committed-result changes without
+expanding the heading. At compact and normal sizes, hover over all four labels after long Lesson
+searches, Student/dated Lesson selection, history/count changes and `help`; verify complete current
+text and preserved list space and command drafts. Record native/scaling checks separately from the
+automated tooltip-skin and command-window regressions in `ResultHeadingTooltipTest` and `CanonicalMainWindowTest`.
+
 1. Keep a filtered people list where a Student's displayed position differs from their stable ID suffix. Run
    `history STUDENT_INDEX`, then add `lid/LESSON_ID` for an existing Lesson. Verify the same Student's retained
    entries, newest date first and then numeric Lesson ID, with stable IDs, status and current/former membership.
