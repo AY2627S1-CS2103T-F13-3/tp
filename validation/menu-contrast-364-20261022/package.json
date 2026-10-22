@@ -1,0 +1,10 @@
+{
+  "baseline_team_sha": "84f9a2cd4865b452e14fae5748896853febc8c32",
+  "status": "Local fix build; not final accepted release candidate",
+  "filename": "ponhub.jar",
+  "bytes": 12654259,
+  "sha256": "fb24845c2a3bc02f445c8a16ed34d8ddc040515e67d233e06fa8586b38bd18f7",
+  "version": "1.4",
+  "main": "ponhub.Main",
+  "runtime": "Mac arm64 Azul 25.0.3.fx-zulu"
+}

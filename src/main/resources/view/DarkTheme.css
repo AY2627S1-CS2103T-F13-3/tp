@@ -406,7 +406,8 @@
     -fx-background-color: #FF9900;
 }
 
-.menu-button:hover .label, .menu-button:showing .label, .menu-item:focused .label {
+/* Popup CSS inherits from its owner; only recolor the menu button's own label. */
+.menu-button:hover > .label, .menu-button:showing > .label, .menu-item:focused .label {
     -fx-text-fill: black;
 }
 
