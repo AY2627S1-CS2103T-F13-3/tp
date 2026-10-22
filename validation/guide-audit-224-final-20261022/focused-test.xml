@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ponhub.logic.PersonIndexResolverTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-21T16:01:16.221Z" hostname="Zhis-MacBook-Pro.local" time="0.027">
+  <properties/>
+  <testcase name="resolveStudent_viewRefresh_preservesCapturedRecordAndStableIdentity()" classname="ponhub.logic.PersonIndexResolverTest" time="0.011"/>
+  <testcase name="resolve_nullArgumentsOrSelectedRecord_throwsNullPointerException()" classname="ponhub.logic.PersonIndexResolverTest" time="0.001"/>
+  <testcase name="resolveStudent_mixedView_keepsPeopleListPositions()" classname="ponhub.logic.PersonIndexResolverTest" time="0.001"/>
+  <testcase name="resolve_filteredProjection_usesCurrentPositionsRatherThanUnfilteredOrderOrIdSuffix()" classname="ponhub.logic.PersonIndexResolverTest" time="0.001"/>
+  <testcase name="resolve_mixedView_returnsActualRecordsWithoutMutatingView()" classname="ponhub.logic.PersonIndexResolverTest" time="0.0"/>
+  <testcase name="resolve_emptyAndOutOfRangeViews_throwsCheckedErrorWithoutChangingView()" classname="ponhub.logic.PersonIndexResolverTest" time="0.001"/>
+  <testcase name="resolveStudent_tutorAndParentPositions_rejectsWithoutHiddenStudentFiltering()" classname="ponhub.logic.PersonIndexResolverTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
