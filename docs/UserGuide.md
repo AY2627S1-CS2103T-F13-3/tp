@@ -330,6 +330,9 @@ both panels as needed; invalid requests and failed saves leave the previous resu
 
 ### Moving between results
 
+Hover over a Lesson or attendance heading or its result count to read its complete current text in a
+wrapping tooltip. This also works after `help` replaces the command feedback.
+
 Enter `lessons`, `lessons si/STUDENT_INDEX`, `history STUDENT_INDEX`, `showlesson lid/LESSON_ID` or a `search`
 command from any current result. Successful commands display their results automatically. Typed commands use
 their supplied selectors and filters, regardless of which people card is selected; no preliminary button click
