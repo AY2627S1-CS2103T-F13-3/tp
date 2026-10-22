@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ponhub.ui.ThemeMenuContrastTest" tests="2" skipped="0" failures="1" errors="0" timestamp="2026-10-22T08:14:36.736Z" hostname="Gugrusauruss-MacBook-Air.local" time="1.133">
+  <properties/>
+  <testcase name="menuBar_showingMenus_keepPopupLabelsReadable()" classname="ponhub.ui.ThemeMenuContrastTest" time="0.999">
+    <failure message="org.opentest4j.AssertionFailedError: Exit has contrast 1.2322449066582624 after inherited opacity; expected at least 4.5:1 ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: Exit has contrast 1.2322449066582624 after inherited opacity; expected at least 4.5:1 ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:42)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:191)
+	at ponhub.ui.ThemeMenuContrastTest.assertReadable(ThemeMenuContrastTest.java:111)
+	at ponhub.ui.ThemeMenuContrastTest.lambda$menuBar_showingMenus_keepPopupLabelsReadable$0(ThemeMenuContrastTest.java:49)
+	at ponhub.testutil.FxTestUtil.lambda$runOnFxThread$0(FxTestUtil.java:51)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at javafx.graphics/com.sun.javafx.application.PlatformImpl.lambda$runLater$4(PlatformImpl.java:424)
+	at javafx.graphics/com.sun.glass.ui.InvokeLaterDispatcher$Future.run(InvokeLaterDispatcher.java:95)
+</failure>
+  </testcase>
+  <testcase name="popup_disabledAndFocusedItems_keepReadableText()" classname="ponhub.ui.ThemeMenuContrastTest" time="0.124"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

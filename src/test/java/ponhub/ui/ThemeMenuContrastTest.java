@@ -11,14 +11,76 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 public class ThemeMenuContrastTest {
+
+    @Test
+    public void menuBar_showingMenus_keepPopupLabelsReadable() throws Exception {
+        runOnFxThread(() -> {
+            MenuItem disabledFileItem = new MenuItem("Unavailable file action");
+            disabledFileItem.setDisable(true);
+            MenuItem disabledHelpItem = new MenuItem("Unavailable help action");
+            disabledHelpItem.setDisable(true);
+            Menu file = new Menu("File", null, new MenuItem("Exit"), disabledFileItem);
+            Menu help = new Menu("Help", null, new MenuItem("Help"), disabledHelpItem);
+            MenuBar bar = new MenuBar(file, help);
+            Scene scene = new Scene(new VBox(bar), 400, 200);
+            scene.getStylesheets().add(MainWindow.class.getResource("/view/DarkTheme.css").toExternalForm());
+            scene.getStylesheets().add(MainWindow.class.getResource("/view/Extensions.css").toExternalForm());
+            Stage stage = new Stage();
+            stage.setScene(scene);
+            try {
+                stage.show();
+                scene.getRoot().applyCss();
+                scene.getRoot().layout();
+                for (Menu menu : bar.getMenus()) {
+                    Node button = bar.lookupAll(".menu-button").stream()
+                            .filter(node -> node.lookup(".label") instanceof Label
+                                    && ((Label) node.lookup(".label")).getText().equals(menu.getText()))
+                            .findFirst().orElseThrow();
+                    assertReadable(button);
+                    button.pseudoClassStateChanged(PseudoClass.getPseudoClass("hover"), true);
+                    scene.getRoot().applyCss();
+                    assertReadable(button);
+                    menu.show();
+                    ContextMenu popup = Window.getWindows().stream()
+                            .filter(window -> window instanceof ContextMenu && window.isShowing())
+                            .map(window -> (ContextMenu) window).findFirst().orElseThrow();
+                    Region root = (Region) popup.getScene().getRoot();
+                    root.applyCss();
+                    root.layout();
+                    assertReadable(button);
+                    Node available = findItem(root, menu.getItems().getFirst().getText());
+                    Node unavailable = findItem(root, menu.getItems().getLast().getText());
+                    assertReadable(available);
+                    assertReadable(unavailable);
+                    available.pseudoClassStateChanged(PseudoClass.getPseudoClass("focused"), true);
+                    root.applyCss();
+                    assertReadable(available);
+                    unavailable.pseudoClassStateChanged(PseudoClass.getPseudoClass("focused"), true);
+                    root.applyCss();
+                    assertReadable(unavailable);
+                    menu.hide();
+                    button.pseudoClassStateChanged(PseudoClass.getPseudoClass("hover"), false);
+                    scene.getRoot().applyCss();
+                    assertReadable(button);
+                }
+            } finally {
+                file.hide();
+                help.hide();
+                stage.close();
+            }
+        });
+    }
 
     @Test
     public void popup_disabledAndFocusedItems_keepReadableText() throws Exception {
