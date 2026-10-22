@@ -9,7 +9,7 @@ PonHub v1.4 adds person and shared-Lesson editing and a refreshed Lesson board f
 - A Tutor rename updates current Lesson labels while preserving the Tutor assignment. Changing a Parent’s phone or a Student’s parent phone recomputes their exact-phone relationship; it does not rewrite another person’s phone.
 - The current people filter stays active. An edited person can leave a search result, so recheck displayed positions before the next indexed command.
 
-After the [Quick start fixture](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/ed32fe49901ea11070ff16086490d2d72adafcd1/docs/UserGuide.md#quick-start), these commands update Alex’s level and clear any optional email, then adjust the existing Lesson:
+After the [Quick start fixture](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/c92c689ee8802fb2cb3957832c25dd9407099dbf/docs/UserGuide.md#quick-start), these commands update Alex’s level and clear any optional email, then adjust the existing Lesson:
 
 ```text
 list r/student
@@ -18,7 +18,7 @@ editlesson lid/L1 st/1630 s/Advanced Math
 showlesson lid/L1 d/2026-10-05
 ```
 
-These example positions and `L1` assume that fresh fixture. With existing data, use the current people position and actual Lesson ID. See [person editing](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/ed32fe49901ea11070ff16086490d2d72adafcd1/docs/UserGuide.md#editing-a-person-edit) for the full format and restrictions.
+These example positions and `L1` assume that fresh fixture. With existing data, use the current people position and actual Lesson ID. See [person editing](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/c92c689ee8802fb2cb3957832c25dd9407099dbf/docs/UserGuide.md#editing-a-person-edit) for the full format and restrictions.
 
 ## Edit a shared Lesson while preserving its roster and history
 
@@ -27,7 +27,7 @@ These example positions and `L1` assume that fresh fixture. With existing data, 
 - Select a replacement Tutor with `tu/NAME`; add `tp/PHONE` alongside it when the normalized full name is ambiguous. A phone alone does not select a Tutor.
 - A weekday change is rejected if it would invalidate retained attendance, including records for former members. PonHub identifies an incompatible date and keeps the existing history. Remove individual records with `unmark` only if you intend to discard them before retrying.
 
-See [Lesson editing](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/ed32fe49901ea11070ff16086490d2d72adafcd1/docs/UserGuide.md#editing-a-shared-lesson-editlesson) for accepted fields and examples.
+See [Lesson editing](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/c92c689ee8802fb2cb3957832c25dd9407099dbf/docs/UserGuide.md#editing-a-shared-lesson-editlesson) for accepted fields and examples.
 
 ## Results follow committed changes
 
@@ -41,36 +41,24 @@ The orange and black interface now includes a compact PonHub wordmark and a new 
 
 Optional **Lessons**, **Student lessons** and **Attendance** buttons open the same results as their commands. Student shortcuts use a selected Student in the current people list and preserve unfinished command text. Typed commands continue to work directly from any result view.
 
-![Edited Student and Lesson with independent dated attendance](media/shared-attendance.png)
+The feedback area starts at a compact height and remains resizable. File and Help popup labels stay readable. Hover over shortened Lesson and attendance headings to inspect their complete live text.
 
-Alex Lee retains Student ID S1 after the name and level edit. Lesson L1 now shows Advanced Math,
-Monday 1630–1730 and room R3, with two Students still enrolled. On 2026-10-05, Alex is present
-and Jamie is absent.
-
-![Retained former-member attendance after restart](media/restarted-history.png)
-
-After correcting Alex to absent, unenrolling Alex and restarting, S1’s dated absence remains with
-former-enrolment context. The feedback is a later unchanged-mark confirmation for Jamie; the right
-panel remains Alex’s selected history.
-
-Both images are unmodified captures of the packaged JAR on a hosted Ubuntu Xvfb virtual display,
-not physical Mac or Windows evidence. See [capture provenance](media-provenance.md) for the exact
-source, JAR checksum, commands and credits.
+Earlier workflow screenshots are retained with their original source and checksum in [historical capture provenance](media-provenance.md). They show the earlier layout; they are not captures of this combined candidate.
 
 ## Updated guidance and maintenance
 
-The [User Guide](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/ed32fe49901ea11070ff16086490d2d72adafcd1/docs/UserGuide.md) includes both edit commands, selector rules, relationship refresh and recovery guidance. The [Developer Guide](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/ed32fe49901ea11070ff16086490d2d72adafcd1/docs/DeveloperGuide.md) describes the canonical runtime, edit/persistence boundaries, updated diagrams and manual checks. Public entry pages now describe delivered PonHub features, and obsolete sample content and unused inherited implementation paths have been removed.
+The [User Guide](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/c92c689ee8802fb2cb3957832c25dd9407099dbf/docs/UserGuide.md) includes both edit commands, selector rules, relationship refresh and recovery guidance. The [Developer Guide](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/c92c689ee8802fb2cb3957832c25dd9407099dbf/docs/DeveloperGuide.md) describes the canonical runtime, edit/persistence boundaries, updated diagrams and manual checks. Public entry pages now describe delivered PonHub features, and obsolete sample content and unused inherited implementation paths have been removed.
 
 ## Running this version and current limits
 
-Use Java 25 and launch the downloaded JAR from a stable writable folder. On macOS, use architecture-appropriate Azul JDK with JavaFX `25.0.3.fx-zulu`, following the [installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html). The default operational file remains `data/ponhub.json` beneath the JAR folder; see the [Quick start](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/ed32fe49901ea11070ff16086490d2d72adafcd1/docs/UserGuide.md#quick-start) and [data protection guidance](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/ed32fe49901ea11070ff16086490d2d72adafcd1/docs/UserGuide.md#data-protection-in-the-current-build).
+Use Java 25 and launch the downloaded JAR from a stable writable folder. On macOS, use architecture-appropriate Azul JDK with JavaFX `25.0.3.fx-zulu`, following the [installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html). The default operational file remains `data/ponhub.json` beneath the JAR folder; see the [Quick start](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/c92c689ee8802fb2cb3957832c25dd9407099dbf/docs/UserGuide.md#quick-start) and [data protection guidance](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/c92c689ee8802fb2cb3957832c25dd9407099dbf/docs/UserGuide.md#data-protection-in-the-current-build).
 
 Protected sessions continue to permit only `help`, `list` and `exit`. There is no automatic import of inherited AB3 data. Undo/redo, fees, capacity/waiting lists, make-ups, occurrence cancellation, exports, archives, saved/guided searches, OR/exclusion search and bulk or clickable attendance remain future scope. The inherited `clear` and `find` routes remain unavailable.
 
 ## Credits
 
-PonHub builds on AddressBook-Level3 from the SE-EDU initiative. Ernest Chua owns the person-edit commands and help, with Benjamin Ng credited for the underlying person-edit model support and retrieval/views. Yang Shuo owns Lesson editing, enrolment and attendance; Vincent Lin owns persistence and release-material coordination; Zhu Zhi Yu owns people commands and testing. Ernest created the new application artwork with OpenAI Codex assistance. Earlier retrieval and Lesson-board media retain Benjamin’s credit; Vincent’s earlier attendance media retains its original v1.3 provenance. The two images here were generated by the repository’s hosted package-verification workflow, dispatched by Zhu Zhi Yu with OpenAI Codex assistance; their scenario and tooling authors are credited in the capture provenance.
+PonHub builds on AddressBook-Level3 from the SE-EDU initiative. Ernest Chua owns the person-edit commands and help, with Benjamin Ng credited for the underlying person-edit model support and retrieval/views. Yang Shuo owns Lesson editing, enrolment and attendance; Vincent Lin owns persistence and release-material coordination; Zhu Zhi Yu owns people commands and testing. Ernest created the new application artwork with OpenAI Codex assistance and implemented compact startup feedback and live heading tooltips. Vincent corrected menu popup label styling. Earlier retrieval and Lesson-board media retain Benjamin’s credit; Vincent’s earlier attendance media retains its original v1.3 provenance. The two historical images retained in the provenance were generated by the repository’s hosted package-verification workflow, dispatched by Zhu Zhi Yu with OpenAI Codex assistance; their scenario and tooling authors are credited in the capture provenance.
 
-This release-copy preparation used OpenAI Codex assistance for Zhu Zhi Yu. The [team responsibilities](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/ed32fe49901ea11070ff16086490d2d72adafcd1/docs/AboutUs.md) and [acknowledgements](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/ed32fe49901ea11070ff16086490d2d72adafcd1/docs/DeveloperGuide.md#acknowledgements) retain implementation, documentation and reuse credits.
+Original release-copy preparation used OpenAI Codex assistance for Zhu Zhi Yu. Vincent Lin reconciled the combined candidate and current release copy with OpenAI Codex assistance. The [team responsibilities](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/c92c689ee8802fb2cb3957832c25dd9407099dbf/docs/AboutUs.md) and [acknowledgements](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/c92c689ee8802fb2cb3957832c25dd9407099dbf/docs/DeveloperGuide.md#acknowledgements) retain implementation, documentation and reuse credits.
 
-[Full source changes since v1.3](https://github.com/AY2627S1-CS2103T-F13-3/tp/compare/v1.3...ed32fe49901ea11070ff16086490d2d72adafcd1)
+[Full source changes since v1.3](https://github.com/AY2627S1-CS2103T-F13-3/tp/compare/v1.3...c92c689ee8802fb2cb3957832c25dd9407099dbf)

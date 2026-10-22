@@ -1,3 +1,17 @@
+# Combined candidate and historical media provenance
+
+Reconciled by Vincent Lin with OpenAI Codex assistance, 22 October 2026.
+
+Current application source: c92c689ee8802fb2cb3957832c25dd9407099dbf. Exact frozen ponhub.jar: 12,655,415 bytes; SHA-256 8fbd0e5414d91c006984489b71083445da41d22f76f37c2fbc49a681d79ac9d6; manifest PonHub / 1.4 / ponhub.Main. See [freeze and affected-check handoff](https://github.com/gugrusaurus/tp/blob/5abc52528bdfd608f001b2f0aa26fc60436123a7/validation/final-candidate-20261022/README.md).
+
+The current notes link to this source's guides and include menu readability, compact startup feedback and live heading tooltips. The two older screenshots remain unchanged below as historical workflow evidence. They have been removed from the proposed release body because the feedback layout changed. No old capture is relabelled as the new package. New affected-package media/results remain pending Ernest's bounded check; source/material review and final publication acceptance are separate.
+
+For publication, use source c92c689ee8802fb2cb3957832c25dd9407099dbf and the frozen checksum above; use the actual reviewed materials commit for document/media links. Older application-tag guidance in the historical record below is superseded. Original authorship, runtime limits and image checksums remain valid for those old captures.
+
+---
+
+## Historical record — original text retained
+
 # v1.4 release copy and hosted capture provenance
 
 Materials for [#273](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/273), prepared by Zhu Zhi Yu
