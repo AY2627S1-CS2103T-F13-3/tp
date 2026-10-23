@@ -298,9 +298,9 @@ use `n/` for the Tutor's own name in this category.
 * `search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]`
 
 The right-hand lesson panel initially shows the full catalogue. `lessons` restores it after a lesson search or
-student selection. Every shared lesson appears once in creation order, including empty rosters. Cards show its
-subject as the heading, followed by a line with its stable Lesson ID, weekday and time, then tutor name and ID,
-room and the number of currently enrolled students.
+student selection. Every shared lesson appears once in creation order, including empty rosters. Cards show the
+subject as the heading, followed by a separate identity line with the stable Lesson ID. Labelled fields show the
+schedule, tutor name and ID, room and the number of currently enrolled students.
 The lesson heading identifies the selected Student ID or active filters even after another command changes
 the feedback. Scroll either panel independently; drag the divider to give long values more room. Labels wrap within their cards.
 
