@@ -46,3 +46,8 @@ all returned apps=[], browsers=[]. No visual failure is inferred.
 These are author checks assisted by OpenAI Codex. Independent teammate review,
 non-author acceptance of Ernest's UI work, current PR CI and guide browser
 inspection remain separate gates. Other OS/scales were not exercised here.
+
+CI follow-up: the first PR run rejected trailing spaces in captured Windows
+command echoes and Jekyll output. Those two transcript copies have trailing
+whitespace normalized only; the original raw logs remain local. No product,
+test, diagnostic outcome or JAR byte changed. Repository scripts pass again.
