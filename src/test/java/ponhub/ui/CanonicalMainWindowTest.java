@@ -802,6 +802,49 @@ public class CanonicalMainWindowTest {
         });
     }
 
+    @Test
+    public void tab_normalAndProtectedWindows_useSessionRoutesWithoutExecuting() throws Exception {
+        Path path = directory.resolve("canonical.json");
+        for (boolean isProtected : List.of(false, true)) {
+            if (isProtected) {
+                Files.writeString(path, "{broken json");
+            }
+            callOnFxThread(() -> {
+                try (WindowFixture fixture = createWindow()) {
+                    String originalFeedback = fixture.feedback();
+                    for (String prefix : List.of("h", "li", "e", "sho")) {
+                        fixture.input().setText(prefix);
+                        fixture.input().end();
+                        Event.fireEvent(fixture.input(), new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.TAB,
+                                false, false, false, false));
+                        String expected = switch (prefix) {
+                            case "h" -> isProtected ? "help" : "history";
+                            case "li" -> "list";
+                            case "e" -> isProtected ? "exit" : "edit";
+                            default -> isProtected ? "sho" : "showlesson";
+                        };
+                        assertEquals(expected, fixture.input().getText());
+                        assertEquals(originalFeedback, fixture.feedback());
+                        assertTrue(fixture.people().getItems().isEmpty());
+                    }
+                    fixture.input().setText("he");
+                    fixture.input().end();
+                    Event.fireEvent(fixture.input(), new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.TAB,
+                            false, false, false, false));
+                    Event.fireEvent(fixture.input(), new ActionEvent());
+                    assertTrue(fixture.input().getText().isEmpty());
+                    assertTrue(fixture.feedback().contains("PonHub commands"));
+                }
+                return null;
+            });
+            if (isProtected) {
+                assertEquals("{broken json", Files.readString(path));
+            } else {
+                assertFalse(Files.exists(path));
+            }
+        }
+    }
+
     private void seedMixedPeople() throws Exception {
         ContactDetails tutorContacts = new ContactDetails(new Name("First Tutor"), Optional.of(new Phone("81234567")),
                 Optional.empty(), Optional.empty());
