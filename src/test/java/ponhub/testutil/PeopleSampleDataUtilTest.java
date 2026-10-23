@@ -1,4 +1,4 @@
-package ponhub.model.util;
+package ponhub.testutil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,7 +30,6 @@ import ponhub.model.person.PersonRole;
 import ponhub.model.person.Phone;
 import ponhub.model.person.Student;
 import ponhub.model.person.Tutor;
-import ponhub.testutil.PeopleSampleDataUtil;
 import ponhub.ui.PersonRecordCardData;
 
 public class PeopleSampleDataUtilTest {
