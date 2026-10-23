@@ -1,4 +1,4 @@
-package ponhub.model.util;
+package ponhub.testutil;
 
 import java.util.Optional;
 
@@ -11,7 +11,7 @@ import ponhub.model.person.PeopleRegistry;
 import ponhub.model.person.Phone;
 
 /**
- * Prepares representative canonical people for isolated development and testing.
+ * Prepares representative canonical people for isolated tests.
  * The samples contain no lessons or attendance and are not installed into the active application.
  */
 public final class PeopleSampleDataUtil {

@@ -2,6 +2,3 @@
 
 Original PonHub artwork by Ernest Chua with OpenAI Codex assistance (2026)
 - ponhub_icon.png (editable source: docs/images/ponhub-icon.svg)
-
-Copyright by Jan Jan Kovařík - http://glyphicons.com/
-- calendar.png

@@ -45,10 +45,6 @@ public final class LessonTime implements Comparable<LessonTime> {
         return hour < 24 && minute < MINUTES_PER_HOUR;
     }
 
-    public int getMinutesFromMidnight() {
-        return minutesFromMidnight;
-    }
-
     @Override
     public int compareTo(LessonTime other) {
         requireNonNull(other);

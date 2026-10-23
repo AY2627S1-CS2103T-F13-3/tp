@@ -23,7 +23,7 @@ import ponhub.logic.commands.exceptions.CommandException;
 import ponhub.model.PeopleView;
 import ponhub.model.PonHubData;
 import ponhub.model.PonHubDataState;
-import ponhub.model.util.PeopleSampleDataUtil;
+import ponhub.testutil.PeopleSampleDataUtil;
 
 public class ProtectedPonHubDataStorageTest {
     @TempDir
