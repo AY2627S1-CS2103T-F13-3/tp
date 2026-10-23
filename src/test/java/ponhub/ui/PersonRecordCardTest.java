@@ -47,8 +47,8 @@ import ponhub.model.person.PersonRole;
 import ponhub.model.person.Phone;
 import ponhub.model.person.Student;
 import ponhub.model.person.Tutor;
-import ponhub.model.util.PeopleSampleDataUtil;
 import ponhub.testutil.FxTestUtil;
+import ponhub.testutil.PeopleSampleDataUtil;
 
 public class PersonRecordCardTest {
 

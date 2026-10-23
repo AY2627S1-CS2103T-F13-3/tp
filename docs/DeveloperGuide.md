@@ -1234,7 +1234,7 @@ actual application/platform display evidence belongs to [manual testing](#planne
 
 ### Representative canonical people samples
 
-[`PeopleSampleDataUtil`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/util/PeopleSampleDataUtil.java)
+[`PeopleSampleDataUtil`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/testutil/PeopleSampleDataUtil.java)
 creates a fresh independent registry in deterministic order `T1, S1, P1, S2, T2, S3`, using normal addition rules.
 It supports representative acceptance work without duplicating validation or allocation logic.
 

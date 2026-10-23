@@ -18,7 +18,6 @@ import ponhub.model.person.Name;
 import ponhub.model.person.PeopleRegistry;
 import ponhub.model.person.PersonId;
 import ponhub.model.person.Phone;
-import ponhub.model.util.PeopleSampleDataUtil;
 
 /** Shared-query fixtures with duplicate names, mixed people order, shared and empty lessons. */
 public final class LessonQueryTestData {
