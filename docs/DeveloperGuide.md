@@ -1990,7 +1990,7 @@ instructions are preserved in [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp
    scaling and build. Logical preview sizes alone do not establish these results.
 3. Filter/refresh the list and repeat: current positions, count and empty placeholder update correctly;
    recycled cells show the correct person and stable ID. Select a person, run `list r/student` then `list`,
-   and verify selection restoration for a still-visible ID and clearing when hidden. Run `find r/student s/Math`
+   and verify selection restoration for a still-visible ID and clearing when hidden. Run `search c/student s/Math`
    on sample data and check that matching relationship context remains complete below the own fields.
    Coordinate whole-window checks with
    [#128](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/128).
