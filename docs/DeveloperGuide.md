@@ -329,7 +329,9 @@ live records. Model increments expose only the immutable replacement support nee
 commands; existing constructors and whole-root invariants remain authoritative. Both commands use
 the staged `CanonicalCommandExecutor`: validate, save the complete changed candidate, then publish.
 Protected sessions reject them before mutation parsing. Invalid input, duplicates, clashes and
-failed saves preserve file bytes, counters, live lists, filters, selection and the active right pane.
+failed saves publish no candidate, preserving counters, live lists, filters, selection and the active right pane.
+Invalid input, duplicates and clashes do not write. After a save failure, the stored-file outcome and recovery
+steps follow [Safe JSON saves](#safe-json-saves).
 Compare complete resulting canonical values for a no-op, not just duplicate keys: `Alex Tan` to
 `Alex  Tan` is unchanged after normalization; `Alex Tan` to `ALEX TAN` is a display change. An identical
 edit reports no change and does not save or publish operational data. Keep the existing JSON schema
@@ -546,8 +548,9 @@ attendance collection owns one key per Student for `2026-10-05`. Marking Alex pr
 two keys; marking Alex absent later replaces only Alex's status for the same key. Unenrolling Alex removes only
 `S1` from the roster, so Alex's absence remains as former-member history and Jamie's membership and absence remain
 unchanged. `unmark` can then remove Alex's retained key without changing `L1` or Jamie. Every changed step uses the
-shared [save-before-publication transaction](#command-transactions); a validation or save failure retains the
-preceding complete state and file. The editable diagram source is
+shared [save-before-publication transaction](#command-transactions). A validation failure leaves the preceding
+complete live state and file untouched. A save failure publishes no candidate; stored-file recovery follows
+[Safe JSON saves](#safe-json-saves). The editable diagram source is
 `docs/diagrams/LessonAttendanceStateDiagram.puml`.
 
 [`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PonHubData.java)
@@ -1540,7 +1543,8 @@ Person selectors in these target use cases are positive indices from the current
 * 1a. A required field is missing, invalid, repeated, or unsupported: PonHub explains the problem without changing data. The administrator may correct and resubmit the command at step 1.
 * 2a. An exact duplicate exists: PonHub rejects the addition without changing data, and the use case ends.
 * 2b. The administrator explicitly requests a planned guided preview: PonHub shows the normalized record and any possible duplicate matches before saving. The administrator cancels with no change, or confirms and resumes at step 3.
-* 3a. Saving fails: PonHub rolls back the addition, reports the failure, and the use case ends.
+* 3a. Saving fails: PonHub discards the staged addition before publication, reports the failure and recovery
+  guidance, and the use case ends.
 
 **Postconditions:** On success, one valid, non-duplicate person record is stored and visible. Existing records are unchanged.
 
@@ -1620,9 +1624,12 @@ requirements (US-27, US-28 and US-47). Lesson field and replacement-Tutor edits 
 * 1a. The administrator instead enters `unenrol STUDENT_INDEX lid/LESSON_ID`. PonHub resolves the Student once, requires current membership, removes only that membership and saves it. Dated attendance remains available; the shared lesson and student remain stored.
 * 2a. The people-list index is out of range, selects another role or the lesson does not exist: PonHub explains the problem and changes nothing.
 * 2b. Enrolment duplicates current membership or conflicts with the student's timetable, or unenrolment targets a non-member: PonHub rejects the change without modifying data.
-* 3a. Saving fails: PonHub restores the previous aggregate and active views, reports the failure and ends the use case.
+* 3a. Saving fails: PonHub discards the staged membership change before publication. The live aggregate and active
+  views remain unchanged; PonHub reports the failure and ends the use case.
 
-**Postconditions:** Current membership reflects the successful command; dated attendance and stable identities are unchanged. Tutor and room bookings are still owned by the one shared lesson and are not repeated per student. Failed operations preserve prior data and views.
+**Postconditions:** Current membership reflects the successful command; dated attendance and stable identities are
+unchanged. Tutor and room bookings are still owned by the one shared lesson and are not repeated per student. Failed
+operations preserve prior live data and views.
 
 **Future extensions:** Capacity limits, remaining places, waiting lists, swaps and one-off make-up reservations are outside this core membership flow (US-19, US-24, US-25 and US-48).
 
@@ -1673,7 +1680,8 @@ views; remaining attendance references still block student and lesson deletion.
 **Extensions**
 
 * 2a. The index is invalid or dependencies prevent deletion: PonHub identifies the problem and changes nothing. Linked records are never deleted automatically.
-* 3a. Saving fails: PonHub restores the prior aggregate and people view, reports the failure and ends the use case.
+* 3a. Saving fails: PonHub discards the staged deletion before publication. The live aggregate and people view
+  remain unchanged; PonHub reports the failure and ends the use case.
 
 **Postconditions:** One eligible record is deleted without broken references, or the previous state remains unchanged. Recheck displayed positions before selecting another person.
 
@@ -1722,7 +1730,11 @@ views; remaining attendance references still block student and lesson deletion.
 8.  The GUI should display correctly and without layout issues on screen resolutions of 1920×1080 and higher at 100% and 125% scale.
 9.  The GUI should remain usable (i.e. all functions remain accessible even if the layout is suboptimal) at screen resolutions of 1280×720 and higher at 150% scale.
 10. All operational data must be stored locally in a human-readable text file without using a database management system.
-11. All successful data changes must be saved automatically and reliably. Failed validation or saving must leave both the in-memory data and stored data file unchanged.
+11. All successful operational changes must be saved automatically before they are published to live memory. Failed
+    validation or saving must leave live in-memory data unchanged. If non-atomic fallback replacement of an existing
+    file fails, the previous complete data must remain either at the destination after automatic recovery or in the
+    recovery backup identified by the error. First-save recovery, concurrent external file changes, multiple
+    application instances and power loss remain limited as described in [Safe JSON saves](#safe-json-saves).
 12. All person, lesson, and attendance data must remain on the user's computer and must never be transmitted over the internet.
 13. The application should function offline without requiring an internet connection or a team-owned remote server.
 14. Invalid inputs must not crash the application or modify existing data. The application should display a specific error message explaining how the user can correct the input.
@@ -1751,7 +1763,8 @@ views; remaining attendance references still block student and lesson deletion.
 * **Parser**: The Logic component that converts raw command text into validated parameters and a command object
 * **Command**: An executable request representing one user operation in PonHub
 * **Referential integrity**: The rule that prevents a record from being removed while another lesson or attendance record still refers to it
-* **Atomic update**: An all-or-nothing change where either the complete operation is saved successfully or none of it is applied
+* **Atomic update**: A live-state change published only after its complete candidate is reported saved; if saving
+  fails, no candidate is published, while stored-file recovery follows [Safe JSON saves](#safe-json-saves)
 * **Rollback**: The restoration of the previous valid state after an operation cannot be completed or saved
 * **Human-readable data file**: The local text file used to store PonHub data in a form that can be inspected and edited without a database management system
 * **Tutor clash**: An overlap between lessons assigned to the same tutor on the same day and during an overlapping time range
