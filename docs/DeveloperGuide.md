@@ -218,13 +218,11 @@ Ownership and implementation coordination remain in [AboutUs](AboutUs.html#proje
 
 #### v1.4 editing contract
 
-**Person and Lesson editing are active.** The 16 October scope decision adds person and lesson editing
-([#258](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/258)); the earlier MVP deferral in
-[#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60) remains a historical decision.
-Ernest delivered the person command activation (#263), using Ben's person model increment (#261).
-Yang Shuo delivers Lesson editing (#264) using the merged model increment (#262); Vincent owns shared durability
-checks, Zhi Yu people stories, and Ernest shared contracts/help.
-Other deferred features retain their status.
+**Person and Lesson editing are active.** The [runtime summary](#current-increment-and-command-integration)
+lists supported routes; the [shared contract](#shared-lesson-target-contract) defines identity and relationships.
+The person command uses Ben's person-model support. Feature ownership remains in
+[AboutUs](AboutUs.html#project-team); the original scope decision and implementation handoffs remain in
+[#258](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/258).
 
 **Person grammar:**
 
@@ -264,10 +262,10 @@ record from duplicate matching while retaining all counters; Lessons, rosters an
 An equal replacement performs no state notification.
 
 <!-- @@author ErnestChuaa -->
-**Person command activation (#263).** `PersonEditParser.Input` holds a validated displayed `Index` and
+**Person command integration.** `PersonEditParser.Input` holds a validated displayed `Index` and
 `PersonEditInput`. `CanonicalEditCommand` resolves that position once against the staged current people
 view, prepares `PersonEditCandidate` from the fresh staged snapshot, and installs a changed candidate only
-in that staged root. The existing executor saves before publication and skips save/publication for a no-op.
+in that staged root, following the [transaction contract](#command-transactions).
 The session registers `edit` with matching `help edit` guidance; protected sessions reject it before parsing.
 No inherited AB3 command, schema change or new dependency is involved. `PersonEditParserTest` and
 `CanonicalEditIntegrationTest` cover parsing, optional clears, role guards, duplicates, stable identity,
@@ -334,18 +332,12 @@ clashes, current/former retained history, no-op writes, selected-detail refresh,
 permission failures, retry and reload.
 <!-- @@author -->
 
-**Execution and views.** Parsers prepare omitted/clear/set intent without allocating IDs or mutating
-live records. Model increments expose only the immutable replacement support needed by these
-commands; existing constructors and whole-root invariants remain authoritative. Both commands use
-the staged `CanonicalCommandExecutor`: validate, save the complete changed candidate, then publish.
-Protected sessions reject them before mutation parsing. Invalid input, duplicates, clashes and
-failed saves publish no candidate, preserving counters, live lists, filters, selection and the active right pane.
-Invalid input, duplicates and clashes do not write. After a save failure, the stored-file outcome and recovery
-steps follow [Safe JSON saves](#safe-json-saves).
+**Execution and views.** Both edits use the [transaction contract](#command-transactions) for isolated
+preparation, save-before-publication, no-op writes and failed-command state preservation. File recovery follows
+[Safe JSON saves](#safe-json-saves). Protected sessions reject both commands before parsing, including no-ops.
 Compare complete resulting canonical values for a no-op, not just duplicate keys: `Alex Tan` to
 `Alex  Tan` is unchanged after normalization; `Alex Tan` to `ALEX TAN` is a display change. An identical
-edit reports no change and does not save or publish operational data. Keep the existing JSON schema
-and dependencies.
+edit reports no change and does not save or publish operational data.
 
 After a successful edit, retain the people role/search filter and re-evaluate all predicates and
 relationship contexts against committed state, preserving global relative order and renumbering
@@ -357,29 +349,12 @@ detail whose date no longer matches a permitted weekday edit, retain the Lesson 
 filter and context date; do not label that old date as a new occurrence. History keys and statuses
 remain unchanged. Recheck displayed people positions before the next indexed command.
 
-The person cases below are covered by `CanonicalEditIntegrationTest` and the edit-specific
-`CanonicalMainWindowTest` regressions. Lesson cases are covered by `CanonicalLessonEditIntegrationTest`.
-Use a fixture where current Student position 1 is `S7` named Alex Tan, Parent `P2` shares its parent
-phone, and `L3` is Monday 1600–1700 with that Student enrolled. Isolate conflicting/no-history variants.
-
-| Case | Input and expected result | Verification owner |
-| --- | --- | --- |
-| Set and clear | `edit 1 l/P2 e/ a/ p/` changes only `S7`, clears optional contacts, retains position/ID/roster/history/counters. | Ernest |
-| Required/role fields | Reject `edit 1 pp/`; reject `l/P2` or blank `p/` when position 1 is a Tutor/Parent. | Ernest |
-| No-op/display spelling | `edit 1 n/Alex  Tan` makes no write; `edit 1 n/ALEX TAN` saves the changed display spelling, with no duplicate-self error. | Ernest |
-| True duplicate/link refresh | Reject a name/phone combination already held by another same-role record. A valid `pp/` change refreshes Parent results without editing `P2`. | Ernest, Zhi Yu |
-| Search/selection refresh | Under `search c/student n/Alex`, rename `S7` to Jamie Tan: keep the criteria, remove `S7` from results, clear its people selection, retain stable-Student history. | Ernest |
-| Lesson success/clash | `editlesson lid/L3 et/1730` retains roster/history if conflict-free; reject an overlapping Tutor/room/Student booking, allow a 1730-adjacent slot. | Yang Shuo |
-| Retained history/detail | Reject `editlesson lid/L3 d/Tue` with Monday attendance, even after unenrolment. Without attendance, permit it if clash-free and clear an incompatible selected detail date. | Yang Shuo, Ben |
-| Save/protection | Inject permission/IO failure for a valid edit: no publication or allocation change; one successful retry persists and reloads. Protected sessions reject edits, including no-ops. | Vincent, feature owner |
-
-Source baseline: `942dd019`. Field/duplicate rules are in `ContactDetails`, `Student`, `Tutor`,
-`Parent` and `PeopleRegistryState`; scheduling/history rules are in `PonHubDataState`.
-`CanonicalTransaction`/`CanonicalCommandExecutor`, `PeopleView`, `LessonQueries`, `LessonRetrieval`
-and `AttendanceRetrieval` provide the existing staging, refresh and stable-subscription boundaries.
-The person and Lesson routes, stable-ID selection handling and edit-specific date handling are active.
-Person tests additionally inject both IO and
-permission failures through the real session's writer seam, then retry and reload the persisted result.
+For executable acceptance steps, use [Person editing](#person-editing) and [Lesson editing](#lesson-editing).
+The corresponding regression seams are `CanonicalEditIntegrationTest`, the edit-specific
+`CanonicalMainWindowTest` cases and `CanonicalLessonEditIntegrationTest`. They cover field intent,
+role/duplicate guards, identity and view refresh, no-ops, protected startup, failed saves, retry and reload.
+Historical coordination and its original source qualifications are retained in
+[#388](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/388#issuecomment-6367776297).
 
 <div markdown="span" class="alert alert-primary">
 
