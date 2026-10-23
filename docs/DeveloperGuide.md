@@ -1868,9 +1868,10 @@ failed-save cases on the exact final candidate, reporting PASS, FAIL or NOT RUN 
 1. Launch the packaged JAR in a fresh writable folder. In the command box type `sho`, press Tab and
    expect `showlesson`, with focus retained and no feedback or data change. Replace it with `ad`, then
    press Tab three times: expect `add`, `addlesson`, `add`. Press Shift+Tab to move focus backwards.
-2. Type `  sho  lid/L1  `, put the caret after `sho`, and press Tab. Expect `  showlesson  lid/L1  `,
-   identical argument/whitespace and the caret after `showlesson`. Move away and back before pressing
-   Tab: a new cycle uses the current prefix. Edit back to `ad` and confirm the cycle restarts at `add`.
+2. Type `sho lid/L1`, adding two leading spaces, a second space between the words and two trailing
+   spaces. Put the caret after `sho`, and press Tab. Expect `showlesson lid/L1` with all original spaces
+   preserved and the caret after `showlesson`. Move away and back before pressing Tab: a new cycle uses
+   the current prefix. Edit back to `ad` and confirm the cycle restarts at `add`.
 3. Try blank input, `unknown`, a selection, and Tab after the argument in `help sho`. Expect unchanged
    text and ordinary focus traversal. Return to the box, complete `he`, then press Enter; only Enter
    submits `help`. Trigger a parse failure, correct its command word with Tab and check error recovery.
