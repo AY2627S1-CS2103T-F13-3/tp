@@ -335,9 +335,9 @@ permission failures, retry and reload.
 **Execution and views.** Both edits use the [transaction contract](#command-transactions) for isolated
 preparation, save-before-publication, no-op writes and failed-command state preservation. File recovery follows
 [Safe JSON saves](#safe-json-saves). Protected sessions reject both commands before parsing, including no-ops.
-Compare complete resulting canonical values for a no-op, not just duplicate keys: `Alex Tan` to
-`Alex  Tan` is unchanged after normalization; `Alex Tan` to `ALEX TAN` is a display change. An identical
-edit reports no change and does not save or publish operational data.
+Compare complete resulting canonical values for a no-op, not just duplicate keys. Adding extra spaces
+between `Alex` and `Tan` normalizes back to `Alex Tan`; changing it to `ALEX TAN` changes the display spelling.
+An identical edit reports no change and does not save or publish operational data.
 
 After a successful edit, retain the people role/search filter and re-evaluate all predicates and
 relationship contexts against committed state, preserving global relative order and renumbering
