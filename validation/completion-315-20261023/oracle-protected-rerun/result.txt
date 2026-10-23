@@ -1,0 +1,12 @@
+Time=2026-10-23T10:20:06.506352500Z; runtime=25.0.4+7-LTS-189; vendor=Oracle Corporation; OS=Windows 11; arch=amd64
+Screen=Rectangle2D [minX = 0.0, minY=0.0, maxX=2048.0, maxY=1152.0, width=2048.0, height=1152.0]; workArea=Rectangle2D [minX = 0.0, minY=0.0, maxX=2048.0, maxY=1152.0, width=2048.0, height=1152.0]; scale=1.25
+Scene=725.5999755859375x562.4000244140625
+Native result='help'; caret=4; focused=true
+Native result='list'; caret=4; focused=true
+Native result='exit'; caret=4; focused=true
+Native result='ad'; caret=0; focused=false
+Native result='sho'; caret=0; focused=false
+Protected completion routes and native unmatched traversal=PASS
+Only this Windows display/runtime combination was exercised; other platforms/scales NOT RUN.
+Author checks assisted by Codex; independent teammate acceptance remains separate.
+Packaged completion checks=PASS
