@@ -1890,7 +1890,7 @@ Help checks do not establish the
 [active shared-lesson and attendance workflow](#active-shared-lesson-and-attendance-workflow)
 or final guide/site acceptance ([#102](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/102)).
 
-### Lesson cards and result navigation (#320)
+### Lesson cards and result navigation (#320, #371)
 
 Use a disposable mixed-role store with two Students, a shared Lesson, an empty-roster Lesson and retained
 former-member attendance. The [active shared-lesson workflow](#active-shared-lesson-and-attendance-workflow)
@@ -1912,12 +1912,13 @@ are a manual checklist, not evidence that a display/scaling matrix has passed.
    **Student lessons** and **Attendance** in that empty people view and expect guidance that no current Student
    is selected. No button changes results or the draft, writes operational data or bypasses protection; unavailable
    records cannot be selected. `help`, `list` and `exit` remain usable.
-5. Inspect catalogue cards and both undated and dated `showlesson` details at narrow and wide widths. Expect the
-   subject once as heading, the stable Lesson ID and schedule on the next line, Tutor name/ID, room and current
-   enrolment count.
-   Current roster and former-member attendance are expanded without another click; dated missing records say
-   `unrecorded`. Check empty sections, long names and enough retained records to scroll to the last entry. Resize
-   both dividers and verify independent scrolling and reachable navigation, feedback and command entry.
+5. Inspect catalogue cards, attendance-history cards and both undated and dated `showlesson` details at narrow and
+   wide widths. Expect the subject or date as the heading, a distinct identity line, and labelled values for the
+   schedule, Tutor, room, enrolment count, attendance status and membership context. Current roster and
+   former-member attendance are distinct sections expanded without another click; dated missing records say
+   `unrecorded`. Check empty and large rosters, former members, long values and enough records to scroll to the last
+   entry. Resize both dividers and verify wrapping without horizontal overflow, independent vertical scrolling and
+   reachable navigation, feedback and command entry.
 
 ### Compact windows and active contact cards
 

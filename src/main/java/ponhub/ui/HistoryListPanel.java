@@ -38,19 +38,26 @@ public class HistoryListPanel extends UiPart<Region> {
 
     static class HistoryCell extends ListCell<AttendanceHistoryEntry> {
         HistoryCell() {
-            setWrapText(true);
             // Let VirtualFlow allocate the viewport breadth, including space for its vertical scrollbar.
-            // Measuring the unwrapped text as the preferred breadth would instead enable horizontal scrolling.
             setPrefWidth(0);
         }
 
         @Override
         protected void updateItem(AttendanceHistoryEntry entry, boolean empty) {
             super.updateItem(entry, empty);
-            setGraphic(null);
-            setText(empty || entry == null ? null : entry.getDate() + " · " + entry.getLessonId()
-                    + " · " + entry.getStatus().name().toLowerCase(java.util.Locale.ROOT)
-                    + " · " + (entry.isCurrentlyEnrolled() ? "currently enrolled" : "former enrolment"));
+            if (getGraphic() instanceof Region oldCard) {
+                oldCard.prefWidthProperty().unbind();
+            }
+            setText(null);
+            if (empty || entry == null) {
+                setGraphic(null);
+                return;
+            }
+            Region card = new AttendanceHistoryCard(entry).getRoot();
+            card.prefWidthProperty().bind(Bindings.createDoubleBinding(() ->
+                    Math.max(0, getWidth() - getInsets().getLeft() - getInsets().getRight()),
+                    widthProperty(), insetsProperty()));
+            setGraphic(card);
         }
     }
 }
