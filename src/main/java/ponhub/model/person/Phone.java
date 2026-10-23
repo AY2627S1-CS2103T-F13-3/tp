@@ -9,10 +9,12 @@ import static ponhub.commons.util.AppUtil.checkArgument;
  */
 public final class Phone {
 
-
+    public static final int MIN_LENGTH = 3;
+    public static final int MAX_LENGTH = 15;
     public static final String MESSAGE_CONSTRAINTS =
-            "Phone numbers must contain 3 to 15 digits, without spaces or punctuation.";
-    public static final String VALIDATION_REGEX = "[0-9]{3,15}";
+            "Phone numbers must contain " + MIN_LENGTH + " to " + MAX_LENGTH
+            + " digits, without spaces or punctuation.";
+    public static final String VALIDATION_REGEX = "[0-9]{" + MIN_LENGTH + "," + MAX_LENGTH + "}";
     public final String value;
 
     /**

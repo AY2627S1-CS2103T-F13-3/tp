@@ -16,6 +16,8 @@ import ponhub.model.person.Phone;
 public class ParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
+    public static final String MESSAGE_CONTACT_PHONE_CONSTRAINTS =
+            "Contact phone numbers must contain between " + Phone.MIN_LENGTH + " and " + Phone.MAX_LENGTH + " digits.";
 
     /**
      * Removes boundary code points for which {@link Character#isWhitespace(int)} or
@@ -98,6 +100,22 @@ public class ParserUtil {
             throw new ParseException(Phone.MESSAGE_CONSTRAINTS);
         }
         return new Phone(trimmedPhone);
+    }
+
+    /**
+     * Parses a person's own or parent contact phone, preserving the add/edit error for overlong raw values.
+     * The length error takes precedence over other invalid characters and trimming, as in those parsers.
+     * Phone defines the shared bounds and validates the number itself.
+     *
+     * @throws NullPointerException if the phone is null.
+     * @throws ParseException if the given phone is invalid.
+     */
+    public static Phone parseContactPhone(String phone) throws ParseException {
+        requireNonNull(phone);
+        if (phone.length() > Phone.MAX_LENGTH) {
+            throw new ParseException(MESSAGE_CONTACT_PHONE_CONSTRAINTS);
+        }
+        return parsePhone(phone);
     }
 
     /**

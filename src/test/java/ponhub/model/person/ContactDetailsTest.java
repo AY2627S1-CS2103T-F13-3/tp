@@ -44,7 +44,7 @@ public class ContactDetailsTest {
     }
 
     @Test
-    public void constructor_phoneBounds_preservesValidNumbersAndRejectsExcessLength() {
+    public void constructor_phoneBounds_preservesValidNumbers() {
         Name name = new Name("Alex Tan");
         ContactDetails shortest = new ContactDetails(name, Optional.of(new Phone("000")),
                 Optional.empty(), Optional.empty());
@@ -53,9 +53,6 @@ public class ContactDetailsTest {
 
         assertEquals("000", shortest.getPhone().orElseThrow().value);
         assertEquals("000123456789012", longest.getPhone().orElseThrow().value);
-        assertThrows(IllegalArgumentException.class, () ->
-                new ContactDetails(name, Optional.of(new Phone("1234567890123456")),
-                        Optional.empty(), Optional.empty()));
     }
 
     @Test

@@ -180,6 +180,28 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseContactPhone_validBounds_preservesNumbers() throws Exception {
+        for (String phone : List.of("001", "000123456789012")) {
+            assertEquals(new Phone(phone), ParserUtil.parseContactPhone(phone));
+        }
+        assertEquals(new Phone("001"), ParserUtil.parseContactPhone(" 001 "));
+    }
+
+    @Test
+    public void parseContactPhone_invalidValue_preservesErrorTextAndLengthPrecedence() {
+        String lengthMessage = "Contact phone numbers must contain between 3 and 15 digits.";
+        for (String phone : List.of("1234567890123456", "123456789012345x", " 123456789012345 ")) {
+            assertThrows(ParseException.class, lengthMessage, () -> ParserUtil.parseContactPhone(phone));
+        }
+        for (String phone : List.of("12", "+123", "123 456", "\uff11\uff12\uff13")) {
+            assertThrows(ParseException.class,
+                    "Phone numbers must contain 3 to 15 digits, without spaces or punctuation.", () ->
+                    ParserUtil.parseContactPhone(phone));
+        }
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseContactPhone(null));
+    }
+
+    @Test
     public void parseAddress_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parseAddress((String) null));
     }

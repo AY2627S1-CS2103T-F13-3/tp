@@ -62,7 +62,7 @@ public final class RoleAwareAddParser {
 
             Name name = ParserUtil.parseName(requireValue(values, "n/"));
             Optional<Phone> phone = values.containsKey("p/")
-                    ? Optional.of(parsePhone(values.get("p/"))) : Optional.empty();
+                    ? Optional.of(ParserUtil.parseContactPhone(values.get("p/"))) : Optional.empty();
             Optional<Email> email = values.containsKey("e/")
                     ? Optional.of(ParserUtil.parseEmail(values.get("e/"))) : Optional.empty();
             Optional<Address> address = values.containsKey("a/")
@@ -71,7 +71,7 @@ public final class RoleAwareAddParser {
             Optional<EducationLevel> level = role == PersonRole.STUDENT
                     ? Optional.of(new EducationLevel(requireValue(values, "l/"))) : Optional.empty();
             Optional<Phone> parentPhone = role == PersonRole.STUDENT
-                    ? Optional.of(parsePhone(requireValue(values, "pp/"))) : Optional.empty();
+                    ? Optional.of(ParserUtil.parseContactPhone(requireValue(values, "pp/"))) : Optional.empty();
             return new PersonAdditionInput(role, contacts, level, parentPhone);
         } catch (IllegalArgumentException exception) {
             throw new ParseException(exception.getMessage(), exception);
@@ -123,15 +123,5 @@ public final class RoleAwareAddParser {
             throw new ParseException("Missing required add prefix '" + prefix + "'.");
         }
         return value;
-    }
-
-    /**
-     * Parses either own or parent contact phone within the shared role-record length bound.
-     */
-    private static Phone parsePhone(String value) throws ParseException {
-        if (value.length() > ContactDetails.MAX_PHONE_LENGTH) {
-            throw new ParseException(ContactDetails.MESSAGE_PHONE_CONSTRAINTS);
-        }
-        return ParserUtil.parsePhone(value);
     }
 }
