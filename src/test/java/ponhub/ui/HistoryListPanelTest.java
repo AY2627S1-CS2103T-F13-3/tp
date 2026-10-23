@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
-import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -23,8 +22,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.layout.Region;
-import javafx.scene.shape.Shape;
-import javafx.scene.text.Text;
+import ponhub.MainApp;
 import ponhub.model.lesson.LessonId;
 import ponhub.model.query.AttendanceHistoryEntry;
 import ponhub.model.query.AttendanceHistoryEntryData;
@@ -42,7 +40,7 @@ public class HistoryListPanelTest {
                     index % 2 == 0)));
             Region panel = new HistoryListPanel(history, new SimpleStringProperty("Attendance history")).getRoot();
             Scene scene = new Scene(panel, 198, 220);
-            scene.getStylesheets().add(MainWindow.class.getResource("/view/DarkTheme.css").toExternalForm());
+            scene.getStylesheets().add(MainApp.class.getResource("/view/DarkTheme.css").toExternalForm());
             @SuppressWarnings("unchecked")
             ListView<AttendanceHistoryEntry> list = (ListView<AttendanceHistoryEntry>) panel.lookup("#historyListView");
             list.getSelectionModel().select(0);
@@ -54,10 +52,10 @@ public class HistoryListPanelTest {
                 assertTrue(scrollBar(list, Orientation.VERTICAL).isVisible());
                 assertFalse(scrollBar(list, Orientation.HORIZONTAL).isVisible(),
                         "History must wrap without horizontal scrolling at width " + width);
-                assertWrappedRow(list, history.getFirst());
+                assertWrappedCard(list, history.getFirst());
                 list.scrollTo(59);
                 layout(panel);
-                assertWrappedRow(list, history.getLast());
+                assertWrappedCard(list, history.getLast());
                 list.scrollTo(0);
                 layout(panel);
             }
@@ -67,18 +65,7 @@ public class HistoryListPanelTest {
                     AttendanceHistoryEntry.Status.ABSENT, false));
             list.scrollTo(0);
             layout(panel);
-            assertWrappedRow(list, history.getFirst());
-            // A glyph-based check must still reject actual text outside the viewport.
-            ListCell<?> refreshedCell = list.lookupAll(".list-cell").stream().map(ListCell.class::cast)
-                    .filter(candidate -> history.getFirst().equals(candidate.getItem())).findFirst().orElseThrow();
-            Text refreshedText = (Text) refreshedCell.lookup(".text");
-            double originalTranslation = refreshedText.getTranslateX();
-            try {
-                refreshedText.setTranslateX(list.getWidth());
-                assertThrows(AssertionError.class, () -> assertWrappedRow(list, history.getFirst()));
-            } finally {
-                refreshedText.setTranslateX(originalTranslation);
-            }
+            assertWrappedCard(list, history.getFirst());
             history.clear();
             layout(panel);
             assertTrue(list.lookupAll(".list-cell").stream().map(ListCell.class::cast)
@@ -99,36 +86,23 @@ public class HistoryListPanelTest {
                 .filter(bar -> bar.getOrientation() == orientation).findFirst().orElseThrow();
     }
 
-    private static void assertWrappedRow(ListView<?> list, AttendanceHistoryEntry entry) {
+    private static void assertWrappedCard(ListView<?> list, AttendanceHistoryEntry entry) {
         ListCell<?> cell = list.lookupAll(".list-cell").stream().map(ListCell.class::cast)
                 .filter(candidate -> entry.equals(candidate.getItem())).findFirst().orElseThrow();
-        String expected = entry.getDate() + " · " + entry.getLessonId() + " · "
-                + entry.getStatus().name().toLowerCase(java.util.Locale.ROOT) + " · "
-                + (entry.isCurrentlyEnrolled() ? "currently enrolled" : "former enrolment");
-        assertEquals(expected, cell.getText());
-        Text text = (Text) cell.lookup(".text");
-        assertEquals(expected, text.getText(), "The skin must render every field without ellipsis.");
-        Bounds textBounds = text.localToScene(text.getBoundsInLocal());
-        Bounds cellBounds = cell.localToScene(cell.getBoundsInLocal());
-        Bounds viewport = list.lookup(".clipped-container").localToScene(
-                list.lookup(".clipped-container").getBoundsInLocal());
-        // Logical text bounds include trailing spaces at wrapped line ends (e.g. Segoe UI on Windows).
-        // Union preserves the actual glyph outlines and maps them to this fixture's scene coordinates.
-        // Developed with OpenAI Codex assistance.
-        Bounds glyphBounds = Shape.union(text, text).getBoundsInLocal();
-        assertFalse(glyphBounds.isEmpty(), "The row must contain visible glyphs.");
-        assertTrue(glyphBounds.getMinX() >= viewport.getMinX() - 1
-                && glyphBounds.getMaxX() <= viewport.getMaxX() + 1,
-                "Visible text must fit the viewport: glyphs=" + glyphBounds + ", logical=" + textBounds
-                        + ", viewport=" + viewport + ", font=" + text.getFont()
-                        + ", wrappingWidth=" + text.getWrappingWidth());
-        assertTrue(textBounds.getHeight() <= cellBounds.getHeight() + 1,
-                "The row must grow to fit all wrapped lines.");
-        Text singleLine = new Text(expected);
-        singleLine.setFont(text.getFont());
-        if (singleLine.getLayoutBounds().getWidth() > cell.getWidth()) {
-            assertTrue(textBounds.getHeight() > singleLine.getLayoutBounds().getHeight() * 1.5,
-                    "Long rows must occupy multiple lines.");
+        assertNull(cell.getText());
+        Region card = (Region) cell.getGraphic();
+        assertEquals(entry.getDate().toString(), label(card, "attendanceDate").getText());
+        assertEquals("Student " + entry.getStudentId() + " · Lesson " + entry.getLessonId(),
+                label(card, "attendanceIdentity").getText());
+        assertEquals(entry.getStatus().name().toLowerCase(java.util.Locale.ROOT),
+                label(card, "attendanceStatus").getText());
+        assertEquals(entry.isCurrentlyEnrolled() ? "currently enrolled" : "former enrolment",
+                label(card, "attendanceMembership").getText());
+        for (var node : card.lookupAll(".label")) {
+            Label cardLabel = (Label) node;
+            assertTrue(cardLabel.isWrapText(), cardLabel.getText());
+            assertTrue(cardLabel.getWidth() > 0 && cardLabel.getWidth() <= list.getWidth(), cardLabel.getText());
+            assertTrue(cardLabel.getHeight() + 1 >= cardLabel.prefHeight(cardLabel.getWidth()), cardLabel.getText());
         }
     }
 
@@ -152,19 +126,34 @@ public class HistoryListPanelTest {
             assertEquals("Showing 1 attendance record(s).", ((Label) panel.lookup("#historySummary")).getText());
             assertEquals(context.get(), ((Label) panel.lookup("#historyContext")).getText());
             var cell = new HistoryListPanel.HistoryCell();
-            assertTrue(cell.isWrapText());
             cell.updateItem(entry, false);
-            assertEquals("2026-10-05 · L10 · present · currently enrolled", cell.getText());
-            cell.updateItem(new AttendanceHistoryEntryData(LessonQueryTestData.STUDENT_ONE,
+            Region previous = (Region) cell.getGraphic();
+            assertTrue(previous.prefWidthProperty().isBound());
+            assertEquals("2026-10-05", label(previous, "attendanceDate").getText());
+            assertEquals("Student S1 · Lesson L10", label(previous, "attendanceIdentity").getText());
+            assertEquals("present", label(previous, "attendanceStatus").getText());
+            assertEquals("currently enrolled", label(previous, "attendanceMembership").getText());
+            var former = new AttendanceHistoryEntryData(LessonQueryTestData.STUDENT_ONE,
                     LessonQueryTestData.SHARED_LESSON, LocalDate.of(2026, 10, 5),
-                    AttendanceHistoryEntry.Status.ABSENT, false), false);
-            assertEquals("2026-10-05 · L10 · absent · former enrolment", cell.getText());
+                    AttendanceHistoryEntry.Status.ABSENT, false);
+            cell.updateItem(former, false);
+            assertFalse(previous.prefWidthProperty().isBound());
+            Region replacement = (Region) cell.getGraphic();
+            assertEquals("absent", label(replacement, "attendanceStatus").getText());
+            assertEquals("former enrolment", label(replacement, "attendanceMembership").getText());
             cell.updateItem(null, false);
             assertNull(cell.getText());
+            assertNull(cell.getGraphic());
             cell.updateItem(null, true);
             assertNull(cell.getText());
+            assertNull(cell.getGraphic());
+            assertThrows(NullPointerException.class, () -> new AttendanceHistoryCard(null));
             assertThrows(NullPointerException.class, () -> new HistoryListPanel(null, context));
             assertThrows(NullPointerException.class, () -> new HistoryListPanel(history, null));
         });
+    }
+
+    private static Label label(Region root, String id) {
+        return (Label) root.lookup("#" + id);
     }
 }

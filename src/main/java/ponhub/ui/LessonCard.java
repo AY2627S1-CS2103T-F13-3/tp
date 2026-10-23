@@ -21,6 +21,8 @@ public class LessonCard extends UiPart<Region> {
     @FXML
     private Label lessonHeading;
     @FXML
+    private Label lessonIdentity;
+    @FXML
     private Label lessonSchedule;
     @FXML
     private Label lessonTutor;
@@ -40,10 +42,11 @@ public class LessonCard extends UiPart<Region> {
         super(FXML);
         requireNonNull(lesson);
         lessonHeading.setText(lesson.getSubject().toString());
-        lessonSchedule.setText("Lesson " + lesson.getLessonId() + " · " + lesson.getTimeSlot());
-        lessonTutor.setText("Tutor: " + lesson.getTutorName() + " (" + lesson.getTutorId() + ")");
-        lessonRoom.setText("Room: " + lesson.getRoom());
-        lessonRosterSize.setText("Students enrolled: " + lesson.getRosterSize());
+        lessonIdentity.setText("Lesson " + lesson.getLessonId());
+        lessonSchedule.setText(lesson.getTimeSlot().toString());
+        lessonTutor.setText(lesson.getTutorName() + " · " + lesson.getTutorId());
+        lessonRoom.setText(lesson.getRoom().toString());
+        lessonRosterSize.setText(Integer.toString(lesson.getRosterSize()));
         if (lesson instanceof LessonDetailView detail) {
             showDetails(detail);
         }
@@ -52,26 +55,28 @@ public class LessonCard extends UiPart<Region> {
     private void showDetails(LessonDetailView detail) {
         rosterDetails.setManaged(true);
         rosterDetails.setVisible(true);
-        rosterDetails.getChildren().add(label("Current roster:"));
+        rosterDetails.getChildren().add(label("Current roster", "card_section_heading"));
         if (detail.currentRoster().isEmpty()) {
-            rosterDetails.getChildren().add(label("No students currently enrolled."));
+            rosterDetails.getChildren().add(label("No students currently enrolled.", "card_empty_label"));
         }
         for (var entry : detail.currentRoster()) {
-            String status = detail.date().isEmpty() ? ""
-                    : " — " + entry.status().map(LessonCard::displayStatus).orElse("unrecorded");
-            rosterDetails.getChildren().add(label(entry.student().getId() + " · "
-                    + entry.student().getName().fullName + status));
+            String status = detail.date().isEmpty() ? null
+                    : "Attendance: " + entry.status().map(LessonCard::displayStatus).orElse("unrecorded");
+            rosterDetails.getChildren().add(detailEntry(entry.student().getId() + " · "
+                    + entry.student().getName().fullName, status));
         }
 
         formerDetails.setManaged(true);
         formerDetails.setVisible(true);
-        formerDetails.getChildren().add(label("Former members' retained attendance:"));
+        formerDetails.getChildren().add(label("Former members' retained attendance", "card_section_heading"));
         if (detail.formerAttendance().isEmpty()) {
-            formerDetails.getChildren().add(label("No retained attendance for former members."));
+            formerDetails.getChildren().add(label("No retained attendance for former members.",
+                    "card_empty_label"));
         }
         for (var record : detail.formerAttendance()) {
-            formerDetails.getChildren().add(label(record.date() + " · " + record.student().getId() + " · "
-                    + record.student().getName().fullName + " — " + displayStatus(record.status())));
+            formerDetails.getChildren().add(detailEntry(record.student().getId() + " · "
+                    + record.student().getName().fullName,
+                    "Date: " + record.date() + " · Status: " + displayStatus(record.status())));
         }
     }
 
@@ -79,12 +84,22 @@ public class LessonCard extends UiPart<Region> {
         return status.name().toLowerCase(Locale.ROOT);
     }
 
-    private static Label label(String text) {
+    private static VBox detailEntry(String primary, String secondary) {
+        VBox entry = new VBox(2);
+        entry.getStyleClass().add("card_entry");
+        entry.getChildren().add(label(primary, "card_entry_primary"));
+        if (secondary != null) {
+            entry.getChildren().add(label(secondary, "card_entry_secondary"));
+        }
+        return entry;
+    }
+
+    private static Label label(String text, String styleClass) {
         Label label = new Label(text);
         label.setWrapText(true);
         label.setMinWidth(0);
         label.setMaxWidth(Double.MAX_VALUE);
-        label.getStyleClass().add("cell_small_label");
+        label.getStyleClass().addAll("cell_small_label", styleClass);
         return label;
     }
 }

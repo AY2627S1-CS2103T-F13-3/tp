@@ -126,7 +126,7 @@ public class CanonicalMainWindowTest {
                 assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
                 assertArrayEquals(before, Files.readAllBytes(path));
                 assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
-                        .anyMatch(label -> label.getText().contains("Lesson: L10")));
+                        .anyMatch(label -> label.getText().contains("Student S2 · Lesson L10")));
                 fixture.enter("search c/student n/Jamie d/Invalid");
                 assertTrue(fixture.history().getParent().isVisible());
                 assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
@@ -144,6 +144,8 @@ public class CanonicalMainWindowTest {
                 fixture.enter("mark 1 lid/L10 d/2026-10-05 s/absent");
                 assertEquals(AttendanceHistoryEntry.Status.ABSENT, fixture.history().getItems().get(0).getStatus());
                 assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                captureRegion(fixture, "PONHUB_CAPTURE_ATTENDANCE_HISTORY", 1480, 1200, "jpg",
+                        (Region) fixture.history().getParent().getParent().getParent(), 230);
                 fixture.enter("showlesson lid/L99");
                 assertTrue(fixture.history().getParent().isVisible());
                 fixture.enter("showlesson lid/L10 d/2026-10-05");
@@ -316,7 +318,7 @@ public class CanonicalMainWindowTest {
                 fixture.enter("search c/lesson d/Mon s/Math sn/Alex");
                 assertEquals("Found 1 lesson(s).", fixture.feedback());
                 assertEquals(List.of("L10"), lessonIds(fixture));
-                assertEquals("Students enrolled: 2", ((Label) fixture.root()
+                assertEquals("2", ((Label) fixture.root()
                         .lookup("#lessonRosterSize")).getText());
                 assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
                 assertCard(fixture, "Student · ID: S2", "Jamie Tan", 1);
@@ -333,7 +335,7 @@ public class CanonicalMainWindowTest {
                 assertEquals(5, results.size());
                 assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
                 assertArrayEquals(bytes, Files.readAllBytes(path));
-                captureLessonWindow(fixture);
+                captureWindow(fixture, "PONHUB_CAPTURE_UI", 1000, 720, "png");
             }
             return null;
         });
@@ -362,11 +364,16 @@ public class CanonicalMainWindowTest {
                 assertFalse(fixture.lessons().isVisible());
                 assertEquals("Math", ((Label) detail.lookup("#lessonHeading")).getText());
                 assertTrue(detail.lookupAll(".label").stream().map(Label.class::cast)
-                        .anyMatch(label -> label.getText().contains("S1 · Alex Tan — present")));
+                        .anyMatch(label -> label.getText().contains("S1 · Alex Tan")));
                 assertTrue(detail.lookupAll(".label").stream().map(Label.class::cast)
-                        .anyMatch(label -> label.getText().contains("S2 · Jamie Tan — absent")));
+                        .anyMatch(label -> label.getText().contains("Attendance: present")));
+                assertTrue(detail.lookupAll(".label").stream().map(Label.class::cast)
+                        .anyMatch(label -> label.getText().contains("S2 · Jamie Tan")));
+                assertTrue(detail.lookupAll(".label").stream().map(Label.class::cast)
+                        .anyMatch(label -> label.getText().contains("Status: absent")));
                 assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
                 assertCard(fixture, "Student · ID: S2", "Jamie Tan", 1);
+                captureWindow(fixture, "PONHUB_CAPTURE_ATTENDANCE_DETAILS", 1480, 1200, "jpg");
                 fixture.enter("lessons si/1");
                 assertTrue(fixture.lessons().isVisible());
                 assertFalse(detail.isVisible());
@@ -385,7 +392,7 @@ public class CanonicalMainWindowTest {
                 fixture.enter("search c/lesson s/Math");
                 fixture.enter("addlesson d/Mon st/0900 et/1000 s/Math tu/Mei Lim rm/R1");
                 assertEquals(List.of("L1"), lessonIds(fixture));
-                assertEquals("Students enrolled: 0", ((Label) fixture.root()
+                assertEquals("0", ((Label) fixture.root()
                         .lookup("#lessonRosterSize")).getText());
                 fixture.enter("addlesson d/Tue st/0900 et/1000 s/Science tu/Mei Lim rm/R1");
                 assertEquals(List.of("L1"), lessonIds(fixture));
@@ -406,28 +413,41 @@ public class CanonicalMainWindowTest {
         return fixture.lessons().getItems().stream().map(LessonView::getLessonId).map(Object::toString).toList();
     }
 
-    /**
-     * Optionally captures the real FXML window for guide updates, using only the test's temporary saved fixture.
-     */
-    private static void captureLessonWindow(WindowFixture fixture) throws IOException {
-        String destination = System.getenv("PONHUB_CAPTURE_UI");
+    /** Optionally captures the real FXML window for guide updates, using only the test's temporary saved fixture. */
+    private static void captureWindow(WindowFixture fixture, String environmentVariable,
+            int width, int height, String format) throws IOException {
+        captureRegion(fixture, environmentVariable, width, height, format, fixture.root());
+    }
+
+    private static void captureRegion(WindowFixture fixture, String environmentVariable,
+            int width, int height, String format, Region content) throws IOException {
+        captureRegion(fixture, environmentVariable, width, height, format, content, Integer.MAX_VALUE);
+    }
+
+    private static void captureRegion(WindowFixture fixture, String environmentVariable,
+            int width, int height, String format, Region content, int maximumImageHeight) throws IOException {
+        String destination = System.getenv(environmentVariable);
         if (destination == null) {
             return;
         }
-        fixture.input().setText("lessons");
-        fixture.root().setPrefSize(1000, 720);
-        fixture.root().resize(1000, 720);
-        fixture.root().layout();
-        WritableImage snapshot = fixture.root().snapshot(null, null);
-        int width = (int) snapshot.getWidth();
-        int height = (int) snapshot.getHeight();
-        BufferedImage png = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                png.setRGB(x, y, snapshot.getPixelReader().getArgb(x, y));
+        fixture.root().setPrefSize(width, height);
+        fixture.root().resize(width, height);
+        for (int pass = 0; pass < 3; pass++) {
+            fixture.root().layout();
+            fixture.people().layout();
+            fixture.lessons().layout();
+            fixture.history().layout();
+        }
+        WritableImage snapshot = content.snapshot(null, null);
+        int imageWidth = (int) snapshot.getWidth();
+        int imageHeight = Math.min((int) snapshot.getHeight(), maximumImageHeight);
+        BufferedImage image = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_RGB);
+        for (int y = 0; y < imageHeight; y++) {
+            for (int x = 0; x < imageWidth; x++) {
+                image.setRGB(x, y, snapshot.getPixelReader().getArgb(x, y));
             }
         }
-        ImageIO.write(png, "png", Path.of(destination).toFile());
+        ImageIO.write(image, format, Path.of(destination).toFile());
     }
 
     @Test
@@ -665,7 +685,7 @@ public class CanonicalMainWindowTest {
                 fixture.enter("lessons");
                 assertSame(displayed, fixture.lessons().getItems());
                 assertEquals(List.of("L1"), lessonIds(fixture));
-                assertEquals("Students enrolled: 0", ((Label) fixture.root()
+                assertEquals("0", ((Label) fixture.root()
                         .lookup("#lessonRosterSize")).getText());
                 assertEquals(fixture.app.snapshot(),
                         new JsonPonHubDataStorage(fixture.dataPath).readData().orElseThrow());

@@ -26,11 +26,11 @@ package "Shared lessons" {
     class Room
 }
 
-PonHubDataState "1" *-- "0..*" Lesson : ordered catalogue
-Lesson "1" *-- "1" LessonId : id
-Lesson "1" *-- "1" LessonTimeSlot : timeSlot
-Lesson "1" *-- "1" Subject : subject
-Lesson "1" *-- "1" Room : room
+PonHubDataState "0..*" --> "0..*" Lesson : ordered catalogue
+Lesson "0..*" --> "1" LessonId : id
+Lesson "0..*" --> "1" LessonTimeSlot : timeSlot
+Lesson "0..*" --> "1" Subject : subject
+Lesson "0..*" --> "1" Room : room
 Lesson "0..*" --> "1" Tutor : tutorId (PersonId)
 Lesson "0..*" -- "0..*" Student : enrolledStudentIds (PersonId)
 
