@@ -8,7 +8,8 @@ import ponhub.commons.util.ToStringBuilder;
 
 /**
  * A Serializable class that contains the GUI settings.
- * Guarantees: immutable.
+ * Guarantees: immutable. Dimensions use Double value equality: signed zeros are distinct,
+ * and all NaN representations compare equal, consistently with hashing.
  */
 public class GuiSettings implements Serializable {
 
@@ -60,8 +61,8 @@ public class GuiSettings implements Serializable {
             return false;
         }
 
-        return windowWidth == otherGuiSettings.windowWidth
-                && windowHeight == otherGuiSettings.windowHeight
+        return Double.compare(windowWidth, otherGuiSettings.windowWidth) == 0
+                && Double.compare(windowHeight, otherGuiSettings.windowHeight) == 0
                 && Objects.equals(windowCoordinates, otherGuiSettings.windowCoordinates);
     }
 
