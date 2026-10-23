@@ -11,10 +11,8 @@ participant "executor:\nCanonicalCommandExecutor" as Executor #E5E5FA
 participant "tx:\nCanonicalTransaction" as Tx #FBE3E6
 participant "writer:\nSnapshotWriter" as Writer #FFF0BD
 [-> Session : execute(commandText)
-activate Session
 Session -> Session : resolve definition, check protection,\nparse arguments and create command
 Session -> Executor : execute(command)
-activate Executor
 Executor -> Executor : view.beginTransaction()
 note over Executor, Tx
   PeopleView creates tx with isolated model and filter copies.
@@ -29,7 +27,6 @@ Executor -> Tx : hasOperationalChanges()
 Tx --> Executor : changed
 alt changed operational snapshot
   Executor -> Writer : save(staged.exportState())
-  activate Writer
   note over Tx, Writer
     Runtime writer: ProtectedPonHubDataStorage.saveData
   end note
@@ -37,26 +34,23 @@ alt changed operational snapshot
     Writer --> Executor : saved
   else permission / I/O failure
     Writer --> Executor : IOException
-    break reject command; do not commit
-      Executor --> Session : CommandException
-      [<-- Session : failure feedback
-    end
   end
-  deactivate Writer
 else no operational change
   note over Executor, Tx : Skip save; a view-only change may still commit.
 end
-Executor -> Tx : commit()
-activate Tx
-Tx -> Tx : publish changed root, then people filter;\nrefresh subscribed views
-Tx --> Executor
-deactivate Tx
-Executor --> Session : CommandResult
-deactivate Executor
-[<-- Session : success feedback
-deactivate Session
+alt no operational change or save succeeded
+  Executor -> Tx : commit()
+  Tx -> Tx : publish changed root, then people filter;\nrefresh subscribed views
+  Tx --> Executor
+  Executor --> Session : CommandResult
+  [<-- Session : success feedback
+else save failed
+  Executor --> Session : CommandException
+  [<-- Session : failure feedback
+end
 legend bottom
   Solid arrow: call; dashed arrow: return or exception
   Parse/domain failures also return before save and publication.
+  Optional activation bars are omitted.
 endlegend
 @enduml
