@@ -421,6 +421,8 @@ copies; preparing that result is not user-visible success. If operational data c
 must save the complete validated snapshot before `commit()` publishes it. Permission or I/O failure
 discards the staged transaction, retaining live data, allocation counters and the people view. A no-op
 skips the write; view-only commands can still commit a filter change.
+The final alternatives are exclusive: a failed save returns failure feedback without entering
+the commit/success branch. Optional activation bars are omitted; the arrows retain the call/return boundary.
 
 `editlesson` enters the same executor through `LessonEditParser` and `CanonicalEditLessonCommand`.
 The [editing contract](#v14-editing-contract) owns field and scheduling rules; the
