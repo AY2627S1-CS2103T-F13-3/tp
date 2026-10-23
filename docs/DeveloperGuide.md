@@ -469,6 +469,9 @@ any current result. Navigation introduces no parser grammar, stored state or alt
 
 ![Active command-boundary collaborators](images/LogicClassDiagram.png)
 
+The diagram shows selected command-boundary operations. `Logic` also exposes the observable
+retrieval APIs used by the UI; the responsibilities below describe session routing and executor ordering.
+
 `CanonicalLogicManager` implements `Logic` over one `CanonicalPeopleSession`. The session resolves a
 `CanonicalCommandDefinition` and dispatches through its exhaustive switch. Definitions also supply
 `CanonicalCommandCatalog` guidance and protected-session eligibility; protection is checked before
