@@ -133,7 +133,9 @@ Addition allocates the ID; do not supply it as an add argument. Role values igno
 
 **Format:** `help [COMMAND]`
 
-`help` shows the current supported-command catalogue in Result Display. In a normal session, `help add`,
+`help` shows a concise catalogue in Result Display, with one short description per supported command.
+Use `help COMMAND`, for example `help list`, for that command's full syntax, rules and examples.
+In a normal session, `help add`,
 `help edit`, `help addlesson`, `help editlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark`, `help delete`, `help deletelesson`,
 `help list`, `help lessons`, `help showlesson`, `help history`, `help search`, `help help` and `help exit` show usage guidance.
 Topic names are case-insensitive, so `help ADD` is

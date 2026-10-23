@@ -1021,6 +1021,8 @@ remain responsibilities of the canonical aggregate and the [shared contract](#sh
 ### Inline help
 
 `CanonicalCommandCatalog` owns the active command descriptions, usage and runnable examples.
+Bare `help` lists one short description per supported command in catalogue order and points to
+`help COMMAND` for detailed syntax, rules and examples; it does not repeat each command's usage.
 `CanonicalPeopleSession` accepts zero or one help topic, normalizes with `Locale.ROOT`, rejects unknown
 topics/excess arguments and restricts guidance to the protected-session routes after rejected loading.
 Help preserves records and the people view without operational saves; preferences have a separate
@@ -1857,7 +1859,9 @@ failed-save cases on the exact final candidate, reporting PASS, FAIL or NOT RUN 
 
 Use the active catalogue in the tested build; these examples apply to canonical startup.
 
-1. In a fresh JAR folder, run `help`, then `help add`, `help edit`, `help addlesson`, `help editlesson`, `help enrol`, `help unenrol`, `help mark`,
+1. In a fresh JAR folder, run `help`. Expect one short description per supported command in catalogue order
+   and a `help COMMAND` instruction with an example, without repeated usage blocks.
+   Then run `help add`, `help edit`, `help addlesson`, `help editlesson`, `help enrol`, `help unenrol`, `help mark`,
    `help unmark`, `help history`, `help delete`, `help deletelesson`, `help list`, `help lessons`, `help showlesson`,
    `help search`, `help help` and
    `help exit`. Each topic matches its
