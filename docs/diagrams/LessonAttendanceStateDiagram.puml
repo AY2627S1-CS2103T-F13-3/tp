@@ -13,21 +13,18 @@ state "L1 roster: {S1, S2}\nS1 = absent, S2 = absent" as Corrected
 state "L1 roster: {S2}\nS1 = absent (former), S2 = absent" as Retained
 state "L1 roster: {S2}\nS2 = absent" as Removed
 
-[*] --> Unrecorded : add L1; enrol S1 and S2
+note as ExampleNotes
+  Worked example notes:
+  • Setup: add L1, then enrol S1 and S2.
+  • Each status uses its own Student ID + Lesson ID + date key.
+  • Unenrolment changes only L1's roster; S1's dated key remains.
+  • The example ends after unmark; later commands remain possible.
+end note
+
+[*] --> Unrecorded
 Unrecorded --> Recorded : mark each Student
 Recorded --> Corrected : mark S1 absent\n(same dated key)
 Corrected --> Retained : unenrol S1
 Retained --> Removed : unmark S1
-Removed --> [*]
-
-note right of Corrected
-  Each status is stored under its own
-  Student ID + Lesson ID + date key.
-end note
-
-note right of Retained
-  Unenrolment changes only L1's roster.
-  S1's dated key remains retained history.
-end note
 
 @enduml

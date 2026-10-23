@@ -164,7 +164,7 @@ the target; the [runtime summary](#current-increment-and-command-integration) id
 
 | Record or relationship | Authoritative representation |
 | --- | --- |
-| People | Immutable `Student`, `Tutor` and `Parent` implement `PersonRecord`. Student composes contact details, level and parent phone; it neither extends legacy `Person` nor owns lessons. |
+| People | Immutable `Student`, `Tutor` and `Parent` implement `PersonRecord`. Student references contact details, level and parent phone; it neither extends legacy `Person` nor owns lessons. |
 | Shared lessons | Each Lesson has a stable Lesson ID, Tutor ID, weekday/time, subject, room and `enrolledStudentIds`. Its roster owns membership; empty lessons remain valid. |
 | Derived views | Student lessons, rosters and tutor schedules resolve IDs from that root. They never form another writable membership graph or duplicate a shared lesson. |
 | Attendance | Student ID + Lesson ID + date identifies one `present` or `absent` record. No entry means unrecorded; history survives unenrolment. |
@@ -510,41 +510,51 @@ The right pane switches between lesson and history results without replacing the
 
 ### Model component
 
-**Person records and composition:**
+**Person records and shared immutable values:**
 
 ![Person record class diagram](images/PersonRecordClassDiagram.png)
 
 **Shared Lesson ownership and membership:**
 
-![Lesson membership class diagram](images/LessonMembershipClassDiagram.png)
+<img src="images/LessonMembershipClassDiagram.png" alt="Lesson membership class diagram" width="800" />
 
 **Dated Attendance, separate from current membership:**
 
-![Attendance class diagram](images/AttendanceClassDiagram.png)
+<img src="images/AttendanceClassDiagram.png" alt="Attendance class diagram" width="800" />
 
-The canonical model has one `PonHubDataState` aggregate. It owns one people-registry snapshot, an independent
-catalogue of shared `Lesson` records, and separate dated `Attendance` records. Each `PersonRecord` is exactly one
-`Student`, `Tutor`, or `Parent` and composes one stable `PersonId` and one `ContactDetails` value. Each Lesson has
-exactly one Tutor and owns zero or more stable Student IDs; this produces the Student-Lesson many-to-many
-membership without copying lesson data into Student records. Each Attendance record refers to exactly one Student
-and one Lesson through its dated `AttendanceKey`. Attendance is retained history, not current membership.
+The canonical model has one current `PonHubDataState` aggregate. Each state references one people-registry snapshot,
+an ordered catalogue of shared `Lesson` records, and separate dated `Attendance` records. Each `PersonRecord` is
+exactly one `Student`, `Tutor`, or `Parent` and references one stable `PersonId` and one `ContactDetails` value. Each
+Lesson has exactly one Tutor and is the sole source of its current roster of stable Student IDs; this produces the
+Student-Lesson many-to-many membership without copying lesson data into Student records. Each Attendance record
+refers to exactly one Student and one Lesson through its dated `AttendanceKey`. Attendance is retained history, not
+current membership.
+
+These implementation-facing class diagrams use ordinary navigable associations for stored references. Immutable
+states, records, IDs and value objects can be shared safely by replacement snapshots, copied records and staged
+containers, so their Java object lifetimes are not exclusive composition. Source-end `0..*` multiplicities make
+that sharing explicit; they do not introduce a second writable owner of lesson membership or attendance.
 
 **Example: one Lesson, two Students and independent dated attendance**
 
 ![Lesson and attendance state changes](images/LessonAttendanceStateDiagram.png)
 
-In this Monday `L1`, `S1` is Alex and `S2` is Jamie. The Lesson owns the roster `{S1, S2}` while the separate
-attendance collection owns one key per Student for `2026-10-05`. Marking Alex present and Jamie absent creates
-two keys; marking Alex absent later replaces only Alex's status for the same key. Unenrolling Alex removes only
-`S1` from the roster, so Alex's absence remains as former-member history and Jamie's membership and absence remain
-unchanged. `unmark` can then remove Alex's retained key without changing `L1` or Jamie. Every changed step uses the
-shared [save-before-publication transaction](#command-transactions). A validation failure leaves the preceding
-complete live state and file untouched. A save failure publishes no candidate; stored-file recovery follows
+In this Monday `L1`, `S1` is Alex and `S2` is Jamie. The Lesson is the sole source of the roster `{S1, S2}` while
+the separate attendance collection contains one key per Student for `2026-10-05`. Marking Alex present and Jamie
+absent creates two keys; marking Alex absent later replaces only Alex's status for the same key. Unenrolling Alex
+removes only `S1` from the roster, so Alex's absence remains as former-member history and Jamie's membership and
+absence remain unchanged. `unmark` can then remove Alex's retained key without changing `L1` or Jamie. Every changed
+step uses the shared [save-before-publication transaction](#command-transactions). A validation failure leaves the
+complete preceding live state and file untouched. A save failure publishes no candidate; stored-file recovery follows
 [Safe JSON saves](#safe-json-saves). The editable diagram source is
 `docs/diagrams/LessonAttendanceStateDiagram.puml`.
 
+The state diagram is one worked example. Its initial node assumes the displayed setup commands have completed, and
+the example stops after removing Alex's retained key. It does not terminate the Lesson or PonHub lifecycle; later
+enrolment, marking and other commands remain possible.
+
 [`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PonHubData.java)
-owns the immutable canonical records and relationships shown above. `PeopleView` derives one observable
+holds the current immutable canonical state and relationships shown above. `PeopleView` derives one observable
 role-filtered projection from that root. UI observes committed projections rather than maintaining writable
 copies. Preferences remain outside operational snapshots. The inherited AddressBook model and its exclusive
 regression fixtures are removed; shared `Name`, `Phone`, `Email`, `Address` and preferences remain.
@@ -557,7 +567,7 @@ Complete independent transaction snapshots preserve records, relationships and a
 
 #### Canonical data aggregate (#76)
 
-`PonHubData` owns one immutable `PonHubDataState`: ordered people and per-role allocation history,
+`PonHubData` holds one current immutable `PonHubDataState`: ordered people and per-role allocation history,
 shared lessons/rosters, dated attendance and the last allocated lesson sequence. Snapshots copy incoming
 lists and validate the entire candidate against the [shared/domain contracts](#shared-lesson-target-contract)
 before replacement: identities, roles, references, scheduling and attendance must all be consistent.
@@ -1037,7 +1047,7 @@ the catalogue includes the active history and relationship-search guidance.
 
 ### People records and identity
 
-Immutable `Student`, `Tutor` and `Parent` records implement `PersonRecord` and compose `ContactDetails` rather
+Immutable `Student`, `Tutor` and `Parent` records implement `PersonRecord` and reference `ContactDetails` rather
 than extending legacy `Person`. Constructors enforce the record's role and required fields; absent optional
 contacts remain absent. Students do not contain copied lessons or attendance. Relationship ownership and
 optional parent-record linking follow the [shared contract](#shared-lesson-target-contract).
@@ -1737,10 +1747,10 @@ views; remaining attendance references still block student and lesson deletion.
 
 * **Mainstream OS**: Windows, Linux, Unix, or macOS
 * **AddressBook-Level3 (AB3)**: The upstream SE-EDU desktop application that is incrementally evolved into PonHub
-* **Person record**: A stored Student, Tutor, or Parent record composed of one stable Person ID and one Contact Details value, plus fields required for that role
-* **Contact details**: One required name with optional phone, email, and address values composed into a Person record
+* **Person record**: A stored Student, Tutor, or Parent record referencing one stable Person ID and one Contact Details value, plus fields required for that role
+* **Contact details**: One required name with optional phone, email, and address values referenced by a Person record
 * **Role**: The `student`, `tutor`, or `parent` category assigned to a person record, which determines its required fields and applicable operations
-* **Lesson catalogue**: The ordered collection of independent shared Lesson records owned by the canonical data aggregate
+* **Lesson catalogue**: The ordered collection of independent shared Lesson records held by the canonical data aggregate
 * **Shared recurring lesson**: An independent weekly teaching slot with a stable Lesson ID, day, start/end time, subject, one Tutor ID, and room; its roster may contain zero or more Student IDs, and each Student may belong to zero or more Lessons
 * **Lesson occurrence**: One dated instance of a recurring lesson
 * **Attendance record**: A dated history record containing the attendance status of one Student for one Lesson occurrence, stored separately from current enrolment

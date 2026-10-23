@@ -15,7 +15,7 @@ package "Canonical aggregate" {
 
 package "People" {
     class PeopleRegistryState
-    interface PersonRecord
+    class PersonRecord <<interface>>
     class Student
     class Tutor
     class Parent
@@ -28,19 +28,19 @@ package "People" {
     class EducationLevel
 }
 
-PonHubDataState "1" *-- "1" PeopleRegistryState : people
-PeopleRegistryState "1" *-- "0..*" PersonRecord : ordered records
+PonHubDataState "0..*" --> "1" PeopleRegistryState : people
+PeopleRegistryState "0..*" --> "0..*" PersonRecord : ordered records
 
 PersonRecord <|.. Student
 PersonRecord <|.. Tutor
 PersonRecord <|.. Parent
-PersonRecord "1" *-- "1" PersonId : id
-PersonRecord "1" *-- "1" ContactDetails : contactDetails
-ContactDetails "1" *-- "1" Name : name
-ContactDetails "1" *-- "0..1" Phone : phone
-ContactDetails "1" *-- "0..1" Email : email
-ContactDetails "1" *-- "0..1" Address : address
-Student "1" *-- "1" EducationLevel : level
-Student "1" *-- "1" Phone : parentPhone
+PersonRecord "0..*" --> "1" PersonId : id
+PersonRecord "0..*" --> "1" ContactDetails : contactDetails
+ContactDetails "0..*" --> "1" Name : name
+ContactDetails "0..*" --> "0..1" Phone : phone
+ContactDetails "0..*" --> "0..1" Email : email
+ContactDetails "0..*" --> "0..1" Address : address
+Student "0..*" --> "1" EducationLevel : level
+Student "0..*" --> "1" Phone : parentPhone
 
 @enduml
