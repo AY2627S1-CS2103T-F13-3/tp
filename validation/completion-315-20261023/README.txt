@@ -39,13 +39,39 @@ _temp evidence, not as successful product evidence.
 Guides: frozen-lockfile Jekyll build using Ruby 3.3/Bundler 2.5.11 PASS.
 Changed UG/DG anchors and links checked against the render. Exact render is
 served locally at http://127.0.0.1:8878/tp/UserGuide.html and DeveloperGuide.html.
-Rendered browser inspection: NOT RUN — browser connection unavailable.
-Initial discovery, the user's Chrome-open retry, and post-render discovery
-all returned apps=[], browsers=[]. No visual failure is inferred.
+Rendered browser inspection: PASS — completed on 23 October 2026.
+Guide source commit: 29b500dc74b157fc8029f3db727b419e58aa054d.
+The earlier NOT RUN entry is superseded: browser discovery now lists Chrome
+and the in-app browser. The user-selected @Browser preview was inspected
+using the in-app browser at the exact localhost render above.
+
+Observed viewports: default 1230x947 CSS pixels (DPR 1.25), 768x947 and
+390x844 (override DPR approximately 1). Both guides have no page-level
+horizontal overflow: client/scroll widths 1215/1215, 753/753, 375/375.
+UG completion wording, command summary/table, Lesson board image and TOC;
+DG completion design, four manual checks, architecture diagram and table;
+DG-to-UG and manual-check links, TOC and compact navigation were inspected.
+All 4 UG and 15 DG images load; all 7 UG and 16 DG tables have consistent
+columns. At 390px the summary table scrolls within its own viewport; actual
+horizontal input reveals the Example column (scrollLeft 88.8), without
+widening the page. Temporary viewport overrides were reset.
+
+The first rendered check found Kramdown misparsing the space-padded command
+examples in manual step 2. Commit 29b500dc describes the extra spaces
+explicitly around ordinary code spans; the rebuilt desktop/narrow/compact
+views have six correct code spans and no stray backticks in that step.
+Before/after screenshots, DOM measurements, normalized build log and the
+served-byte/local-target verification script/results are in browser/.
+The local preview path is an existing junction to docs/_site, so rebuilding
+updates it directly. Build command (PowerShell, repository root):
+ docker run --rm -e BUNDLE_FROZEN=true -v "${PWD}/docs:/docs" -v ponhub-jekyll-gems:/usr/local/bundle -w /docs ruby:3.3 bundle _2.5.11_ exec jekyll build --baseurl /tp
+Then run: python validation/completion-315-20261023/browser/verify_render.py
 
 These are author checks assisted by OpenAI Codex. Independent teammate review,
-non-author acceptance of Ernest's UI work, current PR CI and guide browser
-inspection remain separate gates. Other OS/scales were not exercised here.
+non-author acceptance of Ernest's UI work and current PR CI remain separate
+gates. These browser checks do not extend the native application/OS/scaling
+coverage above. No product code, tests or packaged JAR changed in this
+guide-rendering follow-up, so native acceptance was not rerun.
 
 CI follow-up: the first PR run rejected trailing spaces in captured Windows
 command echoes and Jekyll output. Those two transcript copies have trailing
