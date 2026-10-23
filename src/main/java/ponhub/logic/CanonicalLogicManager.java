@@ -51,6 +51,11 @@ public final class CanonicalLogicManager implements Logic {
     }
 
     @Override
+    public List<String> getCommandWords() {
+        return CanonicalCommandCatalog.getCommandWords(session.getDataLoadError().isPresent());
+    }
+
+    @Override
     public ObservableList<PersonRecord> getPersonRecords() {
         return session.getPeople();
     }

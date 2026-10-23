@@ -12,31 +12,6 @@ public class FileUtil {
     private static final String CHARSET = "UTF-8";
 
     /**
-     * Creates a file if it does not exist along with its missing parent directories.
-     * @throws IOException if the file or directory cannot be created.
-     */
-    public static void createIfMissing(Path file) throws IOException {
-        if (Files.exists(file)) {
-            return;
-        }
-
-        createParentDirsOfFile(file);
-
-        Files.createFile(file);
-    }
-
-    /**
-     * Creates parent directories of file if it has a parent directory
-     */
-    private static void createParentDirsOfFile(Path file) throws IOException {
-        Path parentDir = file.getParent();
-
-        if (parentDir != null) {
-            Files.createDirectories(parentDir);
-        }
-    }
-
-    /**
      * Assumes file exists
      */
     public static String readFromFile(Path file) throws IOException {

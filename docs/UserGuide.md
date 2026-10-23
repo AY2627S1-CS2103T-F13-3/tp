@@ -93,6 +93,21 @@ The first successful mutation creates the data file. Keep the same JAR folder to
 
 For a separate store, launch with `java -jar FILENAME.jar --data=data/another-ponhub.json`. Quote an argument containing spaces, for example `java -jar FILENAME.jar --data="separate store/ponhub.json"`. Select a previously unused path when re-entering legacy records; see [Data protection](#data-protection-in-the-current-build).
 
+### Completing command names with Tab
+
+In the command box, type a lowercase command prefix and press **Tab**: `sho` becomes `showlesson`.
+Press Tab again to cycle through matches in catalogue order, for example `ad` → `add` → `addlesson` → `add`.
+Completion uses the prefix before the caret and replaces the whole command word, keeping surrounding
+spaces and arguments unchanged. The caret ends just after the completed word. Editing the draft, moving
+the caret or leaving the command box starts a new cycle. Only commands available in this session are offered;
+a protected session offers `help`, `list` and `exit`.
+
+Tab completes only when the caret is within or immediately after the command word, with a nonempty
+matching prefix and no selected text. Otherwise Tab moves focus normally, including on blank input,
+unmatched prefixes and arguments. **Shift+Tab** always moves focus backwards; use it to leave the box
+while a command name matches. Tab does not run a command; press **Enter** to submit the completed draft.
+Arguments and values are not completed.
+
 ## Current command summary
 
 The active routes use one saved aggregate with role-specific people, stable IDs and shared lessons whose rosters
@@ -214,7 +229,9 @@ The person list resets to show all roles, with the new record at the end. Rechec
 For example, a duplicate student is rejected with:
 `A student with the same name and parent phone already exists.`
 
-Validation, duplicate and save failures preserve the existing data, allocation counters, role filter and selected card. Success is reported only after saving; a failed addition consumes no ID.
+Validation and duplicate failures do not write. A save failure preserves the current session data, allocation
+counters, role filter and selected card; follow the [unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build)
+for the stored file. Success is reported only after saving; a failed addition consumes no ID.
 
 ### 2. Listing people: `list`
 
@@ -369,6 +386,10 @@ unsupported or legacy selected file produces a **Data file protected** warning. 
 unavailable saved data: it does **not** mean the original records were deleted. Only `help`, `list` and `exit` are
 available, and operational writes are blocked.
 
+A command save error does not publish its proposed change to the current session. The stored-file outcome depends
+on where writing failed; follow [Checking unsuccessful saves](#checking-unsuccessful-saves-in-the-current-build)
+before retrying or restarting.
+
 To recover:
 
 1. Note the selected file path and the reason in the warning. Close PonHub and back up the original file before making changes.
@@ -419,7 +440,8 @@ The role/search filter stays active and results are re-evaluated. A renamed pers
 name search; recheck positions before the next indexed command. Lessons, rosters, attendance and counters
 retain their identities. A tutor rename updates current lesson labels. Changing `pp/`, or a parent's `p/`,
 recomputes exact-phone relationships without changing anyone else's stored phone.
-Protected sessions reject edits. Invalid input and save errors preserve the previous data and view.
+Protected sessions reject edits. Invalid input does not write. Save errors preserve the previous live data and view;
+follow the [unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build) for the stored file.
 <!-- @@author -->
 
 <!-- @@author ys000009 -->
@@ -445,9 +467,10 @@ does not move or delete that history automatically: use `unmark STUDENT_INDEX li
 identified record only if removal is intended, then retry. If a selected dated detail has no attendance but its
 date no longer matches an allowed weekday change, PonHub keeps the Lesson selected and clears that obsolete date.
 
-Unknown, repeated, blank or missing fields, a missing Lesson, Tutor lookup failures, malformed resulting slots,
-schedule clashes and save failures preserve the saved and visible state. Protected sessions reject the command
-before parsing and omit `help editlesson`.
+Unknown, repeated, blank or missing fields, a missing Lesson, Tutor lookup failures, malformed resulting slots and
+schedule clashes are rejected without writing. A save failure preserves the live state and view; follow the
+[unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build) for the stored file. Protected
+sessions reject the command before parsing and omit `help editlesson`.
 <!-- @@author -->
 
 ### 3. Deleting a person: `delete`
@@ -489,7 +512,9 @@ Student deletion. Use `deletelesson lid/LESSON_ID` only after clearing the Lesso
 
 Successful deletion preserves the role or own-contact search filter and renumbers remaining positions. Surviving
 stable IDs, lesson/attendance records and Student parent-phone values are unchanged. Deleted IDs are never reused,
-including after restart. Invalid selectors, blocked deletions and failed saves preserve the saved file and current view.
+including after restart. Invalid selectors and blocked deletions do not write. Failed saves preserve the live state
+and current view; follow the [unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build)
+for the stored file.
 If the lesson panel shows the deleted student's current lessons, it stays empty and identifies that same Student ID
 until you run another `lessons` or lesson-search command. Deletion never switches it to a different student.
 Check the updated people list before deleting another person.
@@ -515,7 +540,9 @@ automatically.
 Once every Student has been unenrolled and every dated attendance record has been unmarked, deletion removes only
 that Lesson. Its tutor and room times become available again. Surviving Lesson IDs do not change, and a later
 `addlesson` receives a new higher ID rather than reusing the deleted ID. A missing Lesson, invalid command, blocked
-deletion or failed save preserves the saved file, schedule, allocation counter and current people/lesson views.
+deletion or failed save preserves the live schedule, allocation counter and current people/lesson views. Missing,
+invalid and blocked requests do not write; after a save failure, follow the
+[unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build) for the stored file.
 Use [`editlesson`](#editing-a-shared-lesson-editlesson) to change a shared Lesson's recurring details while
 preserving its stable ID, roster and retained attendance. Cancelling one occurrence remains future scope.
 
@@ -563,7 +590,9 @@ Run `list r/student` and recheck the student's position. If the intended student
 This removes current membership and retains dated attendance. It does not delete the lesson or Student. A Student
 who is not currently in that roster is rejected without change. Both commands preserve the current people filter,
 order and positions, and refresh derived roster/student-lesson results. Invalid input, validation failure and save
-failure leave the aggregate, saved file and active views unchanged.
+failure leave the live aggregate and active views unchanged. Invalid input and validation failure do not write; after
+a save failure, follow the [unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build) for
+the stored file.
 
 ### 6. Searching people and shared lessons
 
@@ -648,7 +677,7 @@ do not supply person-command positions. See [Selecting people and lessons](#sele
 
 Searches and other retrieval commands do not save operational data. A committed edit, membership change or
 attendance change refreshes the affected active results and relationship context. Until saving succeeds,
-prepared changes are not displayed; invalid commands and failed saves preserve the previous data, criteria
+prepared changes are not displayed; invalid commands and failed saves preserve the previous live data, criteria
 and cards. A retained history record never recreates current membership.
 
 #### Worked search example
@@ -759,11 +788,16 @@ After correcting Alex to absent and unenrolling Alex, history retains the dated 
 PonHub saves people, shared lessons/rosters, retained attendance and ID allocation state together in the selected file. `addlesson`, `editlesson`, `deletelesson`,
 `enrol` and `unenrol` use that protected transaction, as do changed `mark` and `unmark` operations. Invalid
 attendance commands,
-missing-record/identical-status no-ops and failed saves leave the saved file, aggregate and current people view unchanged.
+missing-record/identical-status no-ops do not write. Failed saves leave the live aggregate and current people view
+unchanged; follow the [unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build) for the
+stored file.
 Attendance history retrieval is active and read-only. See
 [Data protection in the current build](#data-protection-in-the-current-build) for actual paths and recovery.
 
-The supported JSON format remains human-editable. Close PonHub and keep a backup before editing. Preserve the supported schema and version, valid field values, stable IDs, relationships and ID allocation state. Correctly edited supported data loads after complete validation. Read-only commands do not save operational data; invalid commands and failed saves preserve the previous data and view. Future mutations must retain the same guarantees.
+The supported JSON format remains human-editable. Close PonHub and keep a backup before editing. Preserve the
+supported schema and version, valid field values, stable IDs, relationships and ID allocation state. Correctly
+edited supported data loads after complete validation. Read-only and invalid commands do not save operational data;
+failed saves preserve the previous live data and view. Future mutations must retain the same guarantees.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -801,9 +835,22 @@ from application edit commands.
 
 ### Checking unsuccessful saves in the current build
 
-If a command reports a save error, its change has not been applied to the current session. Check the
-reported file path and cause before retrying. If the error names a recovery backup, recover its contents
-before continuing. See [Data protection](#data-protection-in-the-current-build) for backup and recovery steps.
+If a command reports a save error, its proposed change has not been applied to the current session: the live
+records, allocation counters and views remain at their previous state. Do not assume that the selected data file is
+unchanged. Failures while preparing the temporary file or recovery backup occur before replacement and leave the
+previous file in place. On a filesystem that does not support atomic replacement, PonHub first retains the existing
+complete file in a sibling `.ponhub-backup-*.bak` file and tries an ordinary replacement. If that replacement fails,
+PonHub normally restores the previous file automatically.
+
+If automatic restoration also fails, the save error identifies the retained backup containing the previous complete
+data. Close PonHub, preserve both files, and restore the named backup to the reported data-file path before continuing
+or restarting. Keep the backup until the recovered records, relationships, attendance and allocation counters have
+been verified. A failed first save has no previous file or recovery backup; if its error warns of a partial file,
+close PonHub and inspect the reported path before retrying.
+
+These guarantees assume one PonHub instance and no concurrent external changes to the data file or its symbolic
+links. They do not cover abrupt power loss. See [Data protection](#data-protection-in-the-current-build) for the
+general backup and startup-recovery precautions.
 
 ### Canonical loading and recovery
 

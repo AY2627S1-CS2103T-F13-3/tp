@@ -152,7 +152,7 @@ public class MainWindow extends UiPart<Stage> {
         StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath);
         statusbarPlaceholder.getChildren().add(statusBarFooter.getRoot());
 
-        CommandBox commandBox = new CommandBox(this::executeCommand);
+        CommandBox commandBox = new CommandBox(this::executeCommand, logic.getCommandWords());
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
         commandBox.requestFocus();
     }
@@ -248,10 +248,6 @@ public class MainWindow extends UiPart<Stage> {
                 (int) primaryStage.getX(), (int) primaryStage.getY());
         logic.setGuiSettings(guiSettings);
         primaryStage.hide();
-    }
-
-    public PersonRecordListPanel getPersonListPanel() {
-        return personListPanel;
     }
 
     /**

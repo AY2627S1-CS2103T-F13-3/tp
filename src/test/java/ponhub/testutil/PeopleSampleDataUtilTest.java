@@ -1,4 +1,4 @@
-package ponhub.model.util;
+package ponhub.testutil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

@@ -139,6 +139,16 @@ shared feedback divider. The people sidebar starts at 32% of the records width a
 The existing vertical result split retains its separate pane minima and session divider behavior.
 After populating the window, startup explicitly focuses the command input. Result Display remains
 focusable for text selection and copying; menu/F1 help preserves an unfinished command draft.
+
+`Logic.getCommandWords()` supplies the canonical definitions in session catalogue order, including the
+protected-startup restriction. `MainWindow` passes this immutable list to `CommandBox`.
+Its Tab key filter uses `CommandWordCompleter` to replace only the first word from the prefix before
+the caret; repeated presses cycle the original matches. Text/caret/selection/focus changes reset that
+cycle, with an internal guard around completion's own text/caret updates. Only a successful completion
+consumes unmodified Tab. Shift+Tab and ineligible input retain normal traversal, while Enter retains
+the existing execution and failed-draft behavior. See the [UG keyboard guidance](UserGuide.html#completing-command-names-with-tab)
+and [manual checks](#command-name-completion).
+
 The [20 October shell validation record](https://github.com/gugrusaurus/tp/tree/draft-lesson-board-layout-319/validation/shell-319-20261020)
 contains user-executed native checks and screenshots for the tested build. A later custom-scaling
 follow-up completed the 1280×720/150% checks; the earlier NOT RUN entry remains historical. The report
@@ -329,7 +339,9 @@ live records. Model increments expose only the immutable replacement support nee
 commands; existing constructors and whole-root invariants remain authoritative. Both commands use
 the staged `CanonicalCommandExecutor`: validate, save the complete changed candidate, then publish.
 Protected sessions reject them before mutation parsing. Invalid input, duplicates, clashes and
-failed saves preserve file bytes, counters, live lists, filters, selection and the active right pane.
+failed saves publish no candidate, preserving counters, live lists, filters, selection and the active right pane.
+Invalid input, duplicates and clashes do not write. After a save failure, the stored-file outcome and recovery
+steps follow [Safe JSON saves](#safe-json-saves).
 Compare complete resulting canonical values for a no-op, not just duplicate keys: `Alex Tan` to
 `Alex  Tan` is unchanged after normalization; `Alex Tan` to `ALEX TAN` is a display change. An identical
 edit reports no change and does not save or publish operational data. Keep the existing JSON schema
@@ -546,8 +558,9 @@ attendance collection owns one key per Student for `2026-10-05`. Marking Alex pr
 two keys; marking Alex absent later replaces only Alex's status for the same key. Unenrolling Alex removes only
 `S1` from the roster, so Alex's absence remains as former-member history and Jamie's membership and absence remain
 unchanged. `unmark` can then remove Alex's retained key without changing `L1` or Jamie. Every changed step uses the
-shared [save-before-publication transaction](#command-transactions); a validation or save failure retains the
-preceding complete state and file. The editable diagram source is
+shared [save-before-publication transaction](#command-transactions). A validation failure leaves the preceding
+complete live state and file untouched. A save failure publishes no candidate; stored-file recovery follows
+[Safe JSON saves](#safe-json-saves). The editable diagram source is
 `docs/diagrams/LessonAttendanceStateDiagram.puml`.
 
 [`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PonHubData.java)
@@ -1154,6 +1167,8 @@ Tutor/Parent at that position without searching another list; range/role failure
 ![Current people selection class diagram](images/PeopleSelectionClassDiagram.png)
 
 The solid arrows show references; the dashed arrow shows the resolver's dependency on the returned record type.
+Reverse multiplicities are omitted: immutable snapshots and records can be shared across roots and successive
+snapshots. The unconnected note explains how command callers supply the selector's list.
 `PeopleView` derives an ordered, read-only list from its `PonHubData` source. Command callers pass that list to
 `PersonIndexResolver`; the resolver does not own a second people list. Filtering changes positions in this
 projection, while records retain their `PersonId`. The registry snapshot also retains allocation counters after
@@ -1237,7 +1252,7 @@ actual application/platform display evidence belongs to [manual testing](#planne
 
 ### Representative canonical people samples
 
-[`PeopleSampleDataUtil`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/util/PeopleSampleDataUtil.java)
+[`PeopleSampleDataUtil`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/testutil/PeopleSampleDataUtil.java)
 creates a fresh independent registry in deterministic order `T1, S1, P1, S2, T2, S3`, using normal addition rules.
 It supports representative acceptance work without duplicating validation or allocation logic.
 
@@ -1543,7 +1558,8 @@ Person selectors in these target use cases are positive indices from the current
 * 1a. A required field is missing, invalid, repeated, or unsupported: PonHub explains the problem without changing data. The administrator may correct and resubmit the command at step 1.
 * 2a. An exact duplicate exists: PonHub rejects the addition without changing data, and the use case ends.
 * 2b. The administrator explicitly requests a planned guided preview: PonHub shows the normalized record and any possible duplicate matches before saving. The administrator cancels with no change, or confirms and resumes at step 3.
-* 3a. Saving fails: PonHub rolls back the addition, reports the failure, and the use case ends.
+* 3a. Saving fails: PonHub discards the staged addition before publication, reports the failure and recovery
+  guidance, and the use case ends.
 
 **Postconditions:** On success, one valid, non-duplicate person record is stored and visible. Existing records are unchanged.
 
@@ -1623,9 +1639,12 @@ requirements (US-27, US-28 and US-47). Lesson field and replacement-Tutor edits 
 * 1a. The administrator instead enters `unenrol STUDENT_INDEX lid/LESSON_ID`. PonHub resolves the Student once, requires current membership, removes only that membership and saves it. Dated attendance remains available; the shared lesson and student remain stored.
 * 2a. The people-list index is out of range, selects another role or the lesson does not exist: PonHub explains the problem and changes nothing.
 * 2b. Enrolment duplicates current membership or conflicts with the student's timetable, or unenrolment targets a non-member: PonHub rejects the change without modifying data.
-* 3a. Saving fails: PonHub restores the previous aggregate and active views, reports the failure and ends the use case.
+* 3a. Saving fails: PonHub discards the staged membership change before publication. The live aggregate and active
+  views remain unchanged; PonHub reports the failure and ends the use case.
 
-**Postconditions:** Current membership reflects the successful command; dated attendance and stable identities are unchanged. Tutor and room bookings are still owned by the one shared lesson and are not repeated per student. Failed operations preserve prior data and views.
+**Postconditions:** Current membership reflects the successful command; dated attendance and stable identities are
+unchanged. Tutor and room bookings are still owned by the one shared lesson and are not repeated per student. Failed
+operations preserve prior live data and views.
 
 **Future extensions:** Capacity limits, remaining places, waiting lists, swaps and one-off make-up reservations are outside this core membership flow (US-19, US-24, US-25 and US-48).
 
@@ -1676,7 +1695,8 @@ views; remaining attendance references still block student and lesson deletion.
 **Extensions**
 
 * 2a. The index is invalid or dependencies prevent deletion: PonHub identifies the problem and changes nothing. Linked records are never deleted automatically.
-* 3a. Saving fails: PonHub restores the prior aggregate and people view, reports the failure and ends the use case.
+* 3a. Saving fails: PonHub discards the staged deletion before publication. The live aggregate and people view
+  remain unchanged; PonHub reports the failure and ends the use case.
 
 **Postconditions:** One eligible record is deleted without broken references, or the previous state remains unchanged. Recheck displayed positions before selecting another person.
 
@@ -1725,7 +1745,11 @@ views; remaining attendance references still block student and lesson deletion.
 8.  The GUI should display correctly and without layout issues on screen resolutions of 1920×1080 and higher at 100% and 125% scale.
 9.  The GUI should remain usable (i.e. all functions remain accessible even if the layout is suboptimal) at screen resolutions of 1280×720 and higher at 150% scale.
 10. All operational data must be stored locally in a human-readable text file without using a database management system.
-11. All successful data changes must be saved automatically and reliably. Failed validation or saving must leave both the in-memory data and stored data file unchanged.
+11. All successful operational changes must be saved automatically before they are published to live memory. Failed
+    validation or saving must leave live in-memory data unchanged. If non-atomic fallback replacement of an existing
+    file fails, the previous complete data must remain either at the destination after automatic recovery or in the
+    recovery backup identified by the error. First-save recovery, concurrent external file changes, multiple
+    application instances and power loss remain limited as described in [Safe JSON saves](#safe-json-saves).
 12. All person, lesson, and attendance data must remain on the user's computer and must never be transmitted over the internet.
 13. The application should function offline without requiring an internet connection or a team-owned remote server.
 14. Invalid inputs must not crash the application or modify existing data. The application should display a specific error message explaining how the user can correct the input.
@@ -1754,7 +1778,8 @@ views; remaining attendance references still block student and lesson deletion.
 * **Parser**: The Logic component that converts raw command text into validated parameters and a command object
 * **Command**: An executable request representing one user operation in PonHub
 * **Referential integrity**: The rule that prevents a record from being removed while another lesson or attendance record still refers to it
-* **Atomic update**: An all-or-nothing change where either the complete operation is saved successfully or none of it is applied
+* **Atomic update**: A live-state change published only after its complete candidate is reported saved; if saving
+  fails, no candidate is published, while stored-file recovery follows [Safe JSON saves](#safe-json-saves)
 * **Rollback**: The restoration of the previous valid state after an operation cannot be completed or saved
 * **Human-readable data file**: The local text file used to store PonHub data in a form that can be inspected and edited without a database management system
 * **Tutor clash**: An overlap between lessons assigned to the same tutor on the same day and during an overlapping time range
@@ -1855,6 +1880,22 @@ This is source-level owner evidence, not packaged/native or independent acceptan
 rerun the same empty/populated, conflict, roster/detail/history, no-op, invalid-selector, retained-weekday and
 failed-save cases on the exact final candidate, reporting PASS, FAIL or NOT RUN for each affected case.
 <!-- @@author -->
+
+### Command-name completion
+
+1. Launch the packaged JAR in a fresh writable folder. In the command box type `sho`, press Tab and
+   expect `showlesson`, with focus retained and no feedback or data change. Replace it with `ad`, then
+   press Tab three times: expect `add`, `addlesson`, `add`. Press Shift+Tab to move focus backwards.
+2. Type `sho lid/L1`, adding two leading spaces, a second space between the words and two trailing
+   spaces. Put the caret after `sho`, and press Tab. Expect `showlesson lid/L1` with all original spaces
+   preserved and the caret after `showlesson`. Move away and back before pressing Tab: a new cycle uses
+   the current prefix. Edit back to `ad` and confirm the cycle restarts at `add`.
+3. Try blank input, `unknown`, a selection, and Tab after the argument in `help sho`. Expect unchanged
+   text and ordinary focus traversal. Return to the box, complete `he`, then press Enter; only Enter
+   submits `help`. Trigger a parse failure, correct its command word with Tab and check error recovery.
+4. Retain an unfinished draft while using menu/F1 help. Expect draft, people filter and selection to
+   survive. Restart with malformed operational data: `h`, `li`, `e` complete to `help`, `list`, `exit`;
+   `ad` and `sho` do not complete. Preserve the rejected file and confirm only recovery commands run.
 
 ### Inline help and supported routes
 

@@ -53,9 +53,9 @@ import ponhub.model.person.Student;
 import ponhub.model.person.Tutor;
 import ponhub.model.query.LessonQueries;
 import ponhub.model.search.PersonSearchMatch;
-import ponhub.model.util.PeopleSampleDataUtil;
 import ponhub.testutil.FxTestUtil;
 import ponhub.testutil.LessonQueryTestData;
+import ponhub.testutil.PeopleSampleDataUtil;
 
 public class PersonRecordCardTest {
 
