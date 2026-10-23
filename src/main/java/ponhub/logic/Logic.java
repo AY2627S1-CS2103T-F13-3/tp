@@ -37,6 +37,11 @@ public interface Logic {
     CommandResult execute(String commandText) throws CommandException, ParseException;
 
     /**
+     * Returns immutable command words in catalogue order, restricted to this session's available routes.
+     */
+    List<String> getCommandWords();
+
+    /**
      * Returns the current canonical people view used by cards and displayed-index resolution.
      * The same unmodifiable observable list survives filtering and committed data changes.
      */

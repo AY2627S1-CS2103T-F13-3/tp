@@ -139,6 +139,16 @@ shared feedback divider. The people sidebar starts at 32% of the records width a
 The existing vertical result split retains its separate pane minima and session divider behavior.
 After populating the window, startup explicitly focuses the command input. Result Display remains
 focusable for text selection and copying; menu/F1 help preserves an unfinished command draft.
+
+`Logic.getCommandWords()` supplies the canonical definitions in session catalogue order, including the
+protected-startup restriction. `MainWindow` passes this immutable list to `CommandBox`.
+Its Tab key filter uses `CommandWordCompleter` to replace only the first word from the prefix before
+the caret; repeated presses cycle the original matches. Text/caret/selection/focus changes reset that
+cycle, with an internal guard around completion's own text/caret updates. Only a successful completion
+consumes unmodified Tab. Shift+Tab and ineligible input retain normal traversal, while Enter retains
+the existing execution and failed-draft behavior. See the [UG keyboard guidance](UserGuide.html#completing-command-names-with-tab)
+and [manual checks](#command-name-completion).
+
 The [20 October shell validation record](https://github.com/gugrusaurus/tp/tree/draft-lesson-board-layout-319/validation/shell-319-20261020)
 contains user-executed native checks and screenshots for the tested build. A later custom-scaling
 follow-up completed the 1280×720/150% checks; the earlier NOT RUN entry remains historical. The report
@@ -1852,6 +1862,21 @@ This is source-level owner evidence, not packaged/native or independent acceptan
 rerun the same empty/populated, conflict, roster/detail/history, no-op, invalid-selector, retained-weekday and
 failed-save cases on the exact final candidate, reporting PASS, FAIL or NOT RUN for each affected case.
 <!-- @@author -->
+
+### Command-name completion
+
+1. Launch the packaged JAR in a fresh writable folder. In the command box type `sho`, press Tab and
+   expect `showlesson`, with focus retained and no feedback or data change. Replace it with `ad`, then
+   press Tab three times: expect `add`, `addlesson`, `add`. Press Shift+Tab to move focus backwards.
+2. Type `  sho  lid/L1  `, put the caret after `sho`, and press Tab. Expect `  showlesson  lid/L1  `,
+   identical argument/whitespace and the caret after `showlesson`. Move away and back before pressing
+   Tab: a new cycle uses the current prefix. Edit back to `ad` and confirm the cycle restarts at `add`.
+3. Try blank input, `unknown`, a selection, and Tab after the argument in `help sho`. Expect unchanged
+   text and ordinary focus traversal. Return to the box, complete `he`, then press Enter; only Enter
+   submits `help`. Trigger a parse failure, correct its command word with Tab and check error recovery.
+4. Retain an unfinished draft while using menu/F1 help. Expect draft, people filter and selection to
+   survive. Restart with malformed operational data: `h`, `li`, `e` complete to `help`, `list`, `exit`;
+   `ad` and `sho` do not complete. Preserve the rejected file and confirm only recovery commands run.
 
 ### Inline help and supported routes
 

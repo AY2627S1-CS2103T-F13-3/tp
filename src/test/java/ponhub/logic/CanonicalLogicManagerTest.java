@@ -35,6 +35,21 @@ public class CanonicalLogicManagerTest {
     Path directory;
 
     @Test
+    public void getCommandWords_usesCanonicalDefinitionsAndStartupProtectionWithoutWriting() throws Exception {
+        Path path = directory.resolve("canonical.json");
+        Logic normal = new CanonicalLogicManager(new CanonicalPeopleSession(path), new UserPrefs());
+        assertEquals(CanonicalCommandDefinition.forSession(false).stream()
+                .map(CanonicalCommandDefinition::getWord).toList(), normal.getCommandWords());
+        assertThrows(UnsupportedOperationException.class, () -> normal.getCommandWords().clear());
+        assertFalse(Files.exists(path));
+
+        Files.writeString(path, "rejected data");
+        Logic protectedLogic = new CanonicalLogicManager(new CanonicalPeopleSession(path), new UserPrefs());
+        assertEquals(List.of("help", "list", "exit"), protectedLogic.getCommandWords());
+        assertEquals("rejected data", Files.readString(path));
+    }
+
+    @Test
     public void execute_usesOneCanonicalViewAndPersistsThroughItsSession() throws Exception {
         Path path = directory.resolve("canonical.json");
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);

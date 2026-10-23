@@ -93,6 +93,21 @@ The first successful mutation creates the data file. Keep the same JAR folder to
 
 For a separate store, launch with `java -jar FILENAME.jar --data=data/another-ponhub.json`. Quote an argument containing spaces, for example `java -jar FILENAME.jar --data="separate store/ponhub.json"`. Select a previously unused path when re-entering legacy records; see [Data protection](#data-protection-in-the-current-build).
 
+### Completing command names with Tab
+
+In the command box, type a lowercase command prefix and press **Tab**: `sho` becomes `showlesson`.
+Press Tab again to cycle through matches in catalogue order, for example `ad` → `add` → `addlesson` → `add`.
+Completion uses the prefix before the caret and replaces the whole command word, keeping surrounding
+spaces and arguments unchanged. The caret ends just after the completed word. Editing the draft, moving
+the caret or leaving the command box starts a new cycle. Only commands available in this session are offered;
+a protected session offers `help`, `list` and `exit`.
+
+Tab completes only when the caret is within or immediately after the command word, with a nonempty
+matching prefix and no selected text. Otherwise Tab moves focus normally, including on blank input,
+unmatched prefixes and arguments. **Shift+Tab** always moves focus backwards; use it to leave the box
+while a command name matches. Tab does not run a command; press **Enter** to submit the completed draft.
+Arguments and values are not completed.
+
 ## Current command summary
 
 The active routes use one saved aggregate with role-specific people, stable IDs and shared lessons whose rosters
