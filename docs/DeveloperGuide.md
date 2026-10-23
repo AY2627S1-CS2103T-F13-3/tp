@@ -1154,6 +1154,8 @@ Tutor/Parent at that position without searching another list; range/role failure
 ![Current people selection class diagram](images/PeopleSelectionClassDiagram.png)
 
 The solid arrows show references; the dashed arrow shows the resolver's dependency on the returned record type.
+Reverse multiplicities are omitted: immutable snapshots and records can be shared across roots and successive
+snapshots. The unconnected note explains how command callers supply the selector's list.
 `PeopleView` derives an ordered, read-only list from its `PonHubData` source. Command callers pass that list to
 `PersonIndexResolver`; the resolver does not own a second people list. Filtering changes positions in this
 projection, while records retain their `PersonId`. The registry snapshot also retains allocation counters after
