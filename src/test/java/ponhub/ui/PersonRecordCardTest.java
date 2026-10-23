@@ -14,11 +14,13 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.layout.Region;
@@ -325,6 +327,13 @@ public class PersonRecordCardTest {
                         list.layout();
                         var person = list.getItems().get(index);
                         Region card = findCard(list, new PersonRecordCardData(person, index + 1).getIdentity());
+                        ListCell<?> cell = list.lookupAll(".list-cell").stream().map(ListCell.class::cast)
+                                .filter(candidate -> candidate.getGraphic() == card).findFirst().orElseThrow();
+                        assertEquals(selected, cell.isSelected());
+                        assertEquals(selected,
+                                cell.getPseudoClassStates().contains(PseudoClass.getPseudoClass("selected")));
+                        assertEquals(selected ? Color.web("#FF9900") : Color.TRANSPARENT,
+                                cell.getBorder().getStrokes().get(0).getLeftStroke());
                         Label heading = (Label) card.lookup("#heading");
                         Label value = (Label) card.lookup(".person-value");
                         Label caption = (Label) card.lookup(".person-caption");
