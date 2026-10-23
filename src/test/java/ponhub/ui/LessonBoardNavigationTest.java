@@ -128,8 +128,9 @@ public class LessonBoardNavigationTest {
                 assertTrue(fixture.detail().isVisible());
                 assertEquals(List.of("L10"), fixture.lessonIds());
                 assertEquals("Math", ((Label) fixture.detail().lookup("#lessonHeading")).getText());
+                assertEquals("Lesson L10", ((Label) fixture.detail().lookup("#lessonIdentity")).getText());
                 Label schedule = (Label) fixture.detail().lookup("#lessonSchedule");
-                assertEquals("Lesson L10 · Mon 0900-1000", schedule.getText());
+                assertEquals("Mon 0900-1000", schedule.getText());
                 assertEquals(people, fixture.people().getItems());
                 assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
                 assertEquals(originalState, fixture.app().snapshot());
@@ -234,9 +235,13 @@ public class LessonBoardNavigationTest {
                 assertEquals(1, dated.formerAttendance().size());
                 assertEquals(AttendanceStatus.ABSENT, dated.formerAttendance().getFirst().status());
                 assertTrue(fixture.detailLabels().stream()
-                        .anyMatch(text -> text.contains("S1 · Alex Tan — unrecorded")));
+                        .anyMatch(text -> text.contains("S1 · Alex Tan")));
                 assertTrue(fixture.detailLabels().stream()
-                        .anyMatch(text -> text.contains("S2 · Jamie Tan — absent")));
+                        .anyMatch(text -> text.contains("Attendance: unrecorded")));
+                assertTrue(fixture.detailLabels().stream()
+                        .anyMatch(text -> text.contains("S2 · Jamie Tan")));
+                assertTrue(fixture.detailLabels().stream()
+                        .anyMatch(text -> text.contains("Status: absent")));
 
                 fixture.enter("showlesson lid/L10");
                 LessonDetailView undated = (LessonDetailView) fixture.lessons().getItems().getFirst();

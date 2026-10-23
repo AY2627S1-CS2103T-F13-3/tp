@@ -315,9 +315,9 @@ use `n/` for the Tutor's own name in this category.
 * `search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]`
 
 The right-hand lesson panel initially shows the full catalogue. `lessons` restores it after a lesson search or
-student selection. Every shared lesson appears once in creation order, including empty rosters. Cards show its
-subject as the heading, followed by a line with its stable Lesson ID, weekday and time, then tutor name and ID,
-room and the number of currently enrolled students.
+student selection. Every shared lesson appears once in creation order, including empty rosters. Cards show the
+subject as the heading, followed by a separate identity line with the stable Lesson ID. Labelled fields show the
+schedule, tutor name and ID, room and the number of currently enrolled students.
 The lesson heading identifies the selected Student ID or active filters even after another command changes
 the feedback. Scroll either panel independently; drag the divider to give long values more room. Labels wrap within their cards.
 
@@ -550,8 +550,9 @@ For catalogue and current Student enrolments, see
 
 **Details (active):** `showlesson lid/LESSON_ID [d/YYYY-MM-DD]`.
 
-For example, `showlesson lid/L1` displays the lesson's stable ID, subject, schedule, tutor name and ID, room and
-current roster, with each Student's stable ID and name. The lesson details use a separate scrolling panel; no
+For example, `showlesson lid/L1` displays the subject as the heading, followed by the stable Lesson ID and labelled
+schedule, tutor, room and enrolment count. The current roster lists each Student's stable ID and name. The lesson
+details use a separate scrolling panel; no
 extra click is needed to expand the roster or retained former-member attendance. Scroll to reach all entries;
 no roster row number is a person-command selector. `showlesson lid/L1 d/2026-10-05` also shows each current roster
 student's `present`, `absent` or `unrecorded` status for that real, matching-weekday date. `Unrecorded` means no
@@ -759,9 +760,9 @@ occurrence unrecorded, not absent. Success, no-op and failure preserve the curre
 
 Example: After `list r/student`, if the intended student appears at position 1, enter `history 1 lid/L1` to view their attendance for lesson `L1`.
 
-History shows recorded entries in a separate scrolling panel, newest date first, then by numeric Lesson ID. Each
-entry shows the stable Lesson ID, date, `present` or `absent`, and whether the Student is currently enrolled or a
-former member. An existing Student with no records, or no records for the selected existing Lesson, gets a successful
+History shows recorded entries as dated cards in a separate scrolling panel, newest date first, then by numeric
+Lesson ID. Each card shows the stable Student and Lesson IDs, labelled `present` or `absent` status, and whether the
+Student is currently enrolled or a former member. An existing Student with no records, or no records for the selected existing Lesson, gets a successful
 empty result. An unrecorded occurrence has no entry; it is never counted as absent. After `mark`, correction, `unmark` or
 unenrolment, an open history view refreshes from committed data. History retrieval does not save data or change the
 current people filter, order, selection or indices. Use the Student's current position in the people list, not a
@@ -776,7 +777,7 @@ Alex is present and Jamie is absent for the same Lesson occurrence.
 
 ![Retained attendance after unenrolment](images/AttendanceHistory.jpg)
 
-After correcting Alex to absent and unenrolling Alex, history retains the dated absence with former-enrolment context.
+After correcting Jamie to absent and unenrolling Jamie, history retains the dated absence with former-enrolment context.
 
 <a id="planned-failure-and-data-behavior"></a>
 

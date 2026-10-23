@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
@@ -33,11 +34,13 @@ import ponhub.model.PonHubData;
 import ponhub.model.PonHubDataState;
 import ponhub.model.attendance.AttendanceStatus;
 import ponhub.model.person.ContactDetails;
+import ponhub.model.person.EducationLevel;
 import ponhub.model.person.Name;
 import ponhub.model.person.PeopleRegistryState;
 import ponhub.model.person.PersonId;
 import ponhub.model.person.PersonRole;
 import ponhub.model.person.Phone;
+import ponhub.model.person.Student;
 import ponhub.model.person.Tutor;
 import ponhub.model.query.LessonDetailView;
 import ponhub.model.query.LessonQueries;
@@ -53,11 +56,15 @@ public class LessonListPanelTest {
             var lessons = new LessonQueries(createData()).getLessonList();
             Region card = new LessonCard(lessons.get(1)).getRoot();
             assertLabel(card, "lessonHeading", "Math");
-            assertLabel(card, "lessonSchedule", "Lesson L10 · Mon 0900-1000");
-            assertLabel(card, "lessonTutor", "Tutor: Mei Lim (T1)");
-            assertLabel(card, "lessonRoom", "Room: R1");
-            assertLabel(card, "lessonRosterSize", "Students enrolled: 2");
-            assertLabel(new LessonCard(lessons.get(2)).getRoot(), "lessonRosterSize", "Students enrolled: 0");
+            assertLabel(card, "lessonIdentity", "Lesson L10");
+            assertLabel(card, "lessonSchedule", "Mon 0900-1000");
+            assertLabel(card, "lessonTutor", "Mei Lim · T1");
+            assertLabel(card, "lessonRoom", "R1");
+            assertLabel(card, "lessonRosterSize", "2");
+            assertLabel(new LessonCard(lessons.get(2)).getRoot(), "lessonRosterSize", "0");
+            assertEquals(Set.of("Schedule", "Tutor", "Room", "Students enrolled"),
+                    card.lookupAll(".card_field_label").stream().map(Label.class::cast)
+                            .map(Label::getText).collect(Collectors.toSet()));
             PonHubData data = createData();
             var detailLesson = data.getLesson(new ponhub.model.lesson.LessonId("L10")).orElseThrow();
             var currentStudent = (ponhub.model.person.Student) data.getPerson(new PersonId("S1"))
@@ -65,14 +72,19 @@ public class LessonListPanelTest {
             var currentRoster = List.of(new LessonDetailView.RosterStatus(currentStudent, Optional.empty()));
             Region dated = new LessonCard(new LessonDetailView(detailLesson, "Mei Lim",
                     Optional.of(LocalDate.of(2026, 10, 5)), currentRoster, List.of())).getRoot();
-            assertTrue(dated.lookupAll(".label").stream().map(Label.class::cast)
-                    .anyMatch(label -> label.getText().equals("S1 · Alex Tan — unrecorded")));
+            assertTrue(dated.lookupAll(".card_entry_primary").stream().map(Label.class::cast)
+                    .anyMatch(label -> label.getText().equals("S1 · Alex Tan")));
+            assertTrue(dated.lookupAll(".card_entry_secondary").stream().map(Label.class::cast)
+                    .anyMatch(label -> label.getText().equals("Attendance: unrecorded")));
             assertTrue(dated.lookupAll(".label").stream().map(Label.class::cast)
                     .anyMatch(label -> label.getText().equals("No retained attendance for former members.")));
             Region undated = new LessonCard(new LessonDetailView(detailLesson, "Mei Lim",
                     Optional.empty(), currentRoster, List.of())).getRoot();
-            assertTrue(undated.lookupAll(".label").stream().map(Label.class::cast)
+            assertTrue(undated.lookupAll(".card_entry_primary").stream().map(Label.class::cast)
                     .anyMatch(label -> label.getText().equals("S1 · Alex Tan")));
+            assertEquals(Set.of("Current roster", "Former members' retained attendance"),
+                    undated.lookupAll(".card_section_heading").stream().map(Label.class::cast)
+                            .map(Label::getText).collect(Collectors.toSet()));
             assertThrows(NullPointerException.class, () -> new LessonCard(null));
             assertThrows(NullPointerException.class, () -> new LessonListPanel(null));
             assertThrows(NullPointerException.class, () -> new LessonListPanel(lessons, null));
@@ -129,7 +141,7 @@ public class LessonListPanelTest {
     }
 
     @Test
-    public void narrowPanel_wrapsLongValuesAndScrollsToCompleteLastCard() throws Exception {
+    public void narrowPanel_wrapsLongValuesAndScrollsToLastCardEnd() throws Exception {
         runOnFxThread(() -> {
             PersonId tutor = new PersonId("T1");
             var people = new PeopleRegistryState(List.of(new Tutor(tutor,
@@ -145,28 +157,47 @@ public class LessonListPanelTest {
                 Region panel = new LessonListPanel(new LessonQueries(data).getLessonList()).getRoot();
                 layout(panel, width, 480);
                 ListView<LessonView> view = list(panel);
+                assertFalse(view.lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
+                        .anyMatch(bar -> bar.getOrientation() == Orientation.HORIZONTAL && bar.isVisible()));
                 for (var node : view.lookupAll("#lessonCardPane")) {
                     for (var labelNode : node.lookupAll(".label")) {
                         Label label = (Label) labelNode;
                         assertTrue(label.isWrapText());
-                        assertTrue(label.getWidth() > 0 && label.getWidth() <= width);
+                        assertTrue(label.getWidth() > 0 && label.getWidth() <= width,
+                                label.getText() + " width=" + label.getWidth() + ", panel=" + width);
                         assertTrue(label.getHeight() + 1 >= label.prefHeight(label.getWidth()), label.getText());
                     }
                 }
                 view.scrollTo(1);
                 view.layout();
-                for (var node : view.lookupAll(".scroll-bar")) {
-                    if (node instanceof ScrollBar bar && bar.isVisible()
-                            && bar.getOrientation() == Orientation.VERTICAL) {
-                        bar.setValue(bar.getMax());
-                    }
+                Optional<ScrollBar> vertical = visibleScrollBar(view, Orientation.VERTICAL);
+                if (vertical.isPresent()) {
+                    ScrollBar bar = vertical.orElseThrow();
+                    double previousMaximum;
+                    int layoutPasses = 0;
+                    do {
+                        previousMaximum = bar.getMax();
+                        bar.setValue(previousMaximum);
+                        panel.applyCss();
+                        panel.layout();
+                        view.layout();
+                        layoutPasses++;
+                    } while (layoutPasses < 12 && (Math.abs(bar.getMax() - previousMaximum) > 0.01
+                            || Math.abs(bar.getValue() - bar.getMax()) > 0.01));
+                    bar.setValue(bar.getMax());
+                    panel.layout();
+                    view.layout();
+                    assertEquals(bar.getMax(), bar.getValue(), 0.01);
                 }
-                view.layout();
+                var viewportBounds = view.localToScene(view.getBoundsInLocal());
                 var last = view.lookupAll("#lessonCardPane").stream()
-                        .filter(node -> ((Label) node.lookup("#lessonSchedule")).getText().startsWith("Lesson L2 ·"))
+                        .filter(node -> ((Label) node.lookup("#lessonIdentity")).getText().equals("Lesson L2"))
                         .findFirst().orElseThrow();
                 var bounds = last.localToScene(last.getBoundsInLocal());
-                assertTrue(bounds.getMinY() >= 0 && bounds.getMaxY() <= panel.getHeight() + 1, bounds.toString());
+                assertTrue(bounds.getMaxY() >= viewportBounds.getMinY()
+                                && bounds.getMaxY() <= viewportBounds.getMaxY() + 1,
+                        "Scrolling to the final card must expose its end: " + bounds
+                                + "; viewport=" + viewportBounds);
             }
         });
     }
@@ -176,21 +207,36 @@ public class LessonListPanelTest {
         runOnFxThread(() -> {
             PonHubData data = createData();
             var lesson = data.getLesson(new ponhub.model.lesson.LessonId("L10")).orElseThrow();
-            var student = (ponhub.model.person.Student) data.getPerson(new PersonId("S3")).orElseThrow();
+            var currentRoster = new ArrayList<LessonDetailView.RosterStatus>();
+            for (int index = 1; index <= 30; index++) {
+                var student = new Student(new PersonId("S" + index),
+                        new ContactDetails(new Name("Alexandra Catherine Montgomery Wellington")),
+                        new EducationLevel("S2"), new Phone("91234567"));
+                currentRoster.add(new LessonDetailView.RosterStatus(student,
+                        Optional.of(index % 2 == 0 ? AttendanceStatus.PRESENT : AttendanceStatus.ABSENT)));
+            }
+            var formerStudent = new Student(new PersonId("S31"),
+                    new ContactDetails(new Name("Former Alexandra Catherine Montgomery Wellington")),
+                    new EducationLevel("S2"), new Phone("91234567"));
             var records = new ArrayList<LessonDetailView.FormerAttendance>();
             for (int week = 0; week < 30; week++) {
-                records.add(new LessonDetailView.FormerAttendance(student,
+                records.add(new LessonDetailView.FormerAttendance(formerStudent,
                         LocalDate.of(2026, 10, 5).plusWeeks(week), AttendanceStatus.ABSENT));
             }
-            var detail = new LessonDetailView(lesson, "Mei Lim", Optional.empty(), List.of(), records);
+            var detail = new LessonDetailView(lesson, "Mei Lim", Optional.of(LocalDate.of(2026, 10, 5)),
+                    currentRoster, records);
             var results = FXCollections.observableArrayList((LessonView) detail);
             Region panel = new LessonListPanel(results).getRoot();
-            layout(panel, 260, 320);
+            layout(panel, 210, 320);
             ScrollPane scroll = (ScrollPane) panel.lookup("#lessonDetailScroll");
             assertTrue(scroll.isVisible());
             assertTrue(scroll.getContent().prefHeight(220) > scroll.getViewportBounds().getHeight());
             assertTrue(scroll.lookupAll(".label").stream().map(Label.class::cast)
                     .anyMatch(label -> label.getText().contains(records.getLast().date().toString())));
+            assertTrue(scroll.lookupAll(".card_entry_primary").stream().map(Label.class::cast)
+                    .anyMatch(label -> label.getText().startsWith("S30 ·")));
+            assertFalse(scroll.lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
+                    .anyMatch(bar -> bar.getOrientation() == Orientation.HORIZONTAL && bar.isVisible()));
             scroll.setVvalue(1);
             scroll.layout();
             assertEquals(1, scroll.getVvalue());
@@ -210,6 +256,11 @@ public class LessonListPanelTest {
         panel.applyCss();
         panel.resize(width, height);
         panel.layout();
+    }
+
+    private static Optional<ScrollBar> visibleScrollBar(ListView<?> view, Orientation orientation) {
+        return view.lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
+                .filter(bar -> bar.getOrientation() == orientation && bar.isVisible()).findFirst();
     }
 
     @SuppressWarnings("unchecked")
