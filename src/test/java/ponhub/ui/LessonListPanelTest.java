@@ -170,19 +170,34 @@ public class LessonListPanelTest {
                 }
                 view.scrollTo(1);
                 view.layout();
-                for (var node : view.lookupAll(".scroll-bar")) {
-                    if (node instanceof ScrollBar bar && bar.isVisible()
-                            && bar.getOrientation() == Orientation.VERTICAL) {
-                        bar.setValue(bar.getMax());
-                    }
+                Optional<ScrollBar> vertical = visibleScrollBar(view, Orientation.VERTICAL);
+                if (vertical.isPresent()) {
+                    ScrollBar bar = vertical.orElseThrow();
+                    double previousMaximum;
+                    int layoutPasses = 0;
+                    do {
+                        previousMaximum = bar.getMax();
+                        bar.setValue(previousMaximum);
+                        panel.applyCss();
+                        panel.layout();
+                        view.layout();
+                        layoutPasses++;
+                    } while (layoutPasses < 12 && (Math.abs(bar.getMax() - previousMaximum) > 0.01
+                            || Math.abs(bar.getValue() - bar.getMax()) > 0.01));
+                    bar.setValue(bar.getMax());
+                    panel.layout();
+                    view.layout();
+                    assertEquals(bar.getMax(), bar.getValue(), 0.01);
                 }
-                view.layout();
+                var viewportBounds = view.localToScene(view.getBoundsInLocal());
                 var last = view.lookupAll("#lessonCardPane").stream()
                         .filter(node -> ((Label) node.lookup("#lessonIdentity")).getText().equals("Lesson L2"))
                         .findFirst().orElseThrow();
                 var bounds = last.localToScene(last.getBoundsInLocal());
-                assertTrue(bounds.getMaxY() > 0 && bounds.getMaxY() <= panel.getHeight() + 1,
-                        "Scrolling to the final card must expose its end: " + bounds);
+                assertTrue(bounds.getMaxY() >= viewportBounds.getMinY()
+                                && bounds.getMaxY() <= viewportBounds.getMaxY() + 1,
+                        "Scrolling to the final card must expose its end: " + bounds
+                                + "; viewport=" + viewportBounds);
             }
         });
     }
@@ -241,6 +256,11 @@ public class LessonListPanelTest {
         panel.applyCss();
         panel.resize(width, height);
         panel.layout();
+    }
+
+    private static Optional<ScrollBar> visibleScrollBar(ListView<?> view, Orientation orientation) {
+        return view.lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
+                .filter(bar -> bar.getOrientation() == orientation && bar.isVisible()).findFirst();
     }
 
     @SuppressWarnings("unchecked")
