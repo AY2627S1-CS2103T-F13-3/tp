@@ -1795,6 +1795,46 @@ views; remaining attendance references still block student and lesson deletion.
 Use Java 25 and the [runtime prerequisites](SettingUp.html#setting-up-the-project-on-your-computer) for these checks. On macOS, use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) for the Mac's architecture. Confirm the terminal used for `java -jar` selects that installation and record the OS, architecture and JDK distribution/version with the test results. Additional macOS trials with other distributions, including plain Oracle JDK, are optional portability checks.
 
 <!-- @@author ErnestChuaa -->
+### Common selector and failure journey
+
+Use this journey for shared selector, rejection and persistence checks; retain the feature-specific cases below.
+The [shared contract](#shared-lesson-target-contract) defines identity, while
+[command transactions](#command-transactions) and [safe JSON saves](#safe-json-saves) define publication and recovery.
+
+1. In a fresh disposable JAR folder, record source/tag, JAR size, SHA-256 and manifest, OS/architecture,
+   Java distribution/version and selected data path. Follow steps 1–3 of the
+   [active shared-lesson workflow](#active-shared-lesson-and-attendance-workflow): two Tutors, Alex `S1`,
+   Jamie `S2`, `L1`–`L3` and the stated enrolments. Do not reuse a populated store for these expected IDs.
+2. Run `list`. Alex and Jamie must occupy positions **3 and 4**, with stable IDs **S1 and S2**.
+   Run `lessons`, then `history 4 lid/L1`; both leave those people positions intact.
+   Lesson and history row numbers never supply person selectors.
+3. Run `list r/student`, then `search c/student n/Jamie`. Jamie `S2` is now position **1**.
+   Run `mark 1 lid/L1 d/2026-10-05 s/present`, then `history 1 lid/L1`.
+   The record belongs to **S2**, not S1. Run `lessons`, then `showlesson lid/L1 d/2026-10-05`;
+   the Jamie people search/order remains in place while the requested result view changes.
+4. Record the snapshot, saved bytes, people filter/order/selection and selected result context.
+   Reject `history 0`, `history 2` (outside this one-person view), `history S2`, `lessons sid/S2`,
+   `showlesson lid/L999` and `mark 1 lid/L1 d/2026-10-06 s/present` (Tuesday).
+   Each rejection preserves that state and context. Run `list r/tutor`, then reject `history 1`
+   to check a valid position with the wrong role. Restore `search c/student n/Jamie` before continuing.
+5. Retain the original data and follow the [UG unsuccessful-save procedure](UserGuide.html#checking-unsuccessful-saves-in-the-current-build)
+   in this disposable store. With the destination unwritable, attempt the otherwise valid correction
+   `mark 1 lid/L1 d/2026-10-05 s/absent`. Expect save-error feedback, no success and unchanged live
+   attendance, people view and result context. Restore access and retry once: exactly one S2/L1/date key
+   changes to `absent`. Preparation/backup failures preserve the old destination; replacement/restoration
+   failures require the named-backup recovery instructions. Do not assume saved bytes are unchanged for
+   every failure. An injected failing writer establishes developer-seam behavior, not native filesystem evidence.
+6. Restart the same JAR and verify equivalent saved operational state: stable IDs, memberships, attendance
+   and next-ID counters. Session filters/selection are not operational persistence requirements.
+   In a separate malformed disposable store, follow [canonical loading and recovery](#canonical-loading-and-recovery):
+   help/list/exit work, mutation/retrieval routes are blocked, rejected bytes remain intact, and recovery
+   requires correcting/restoring the file and restarting.
+
+All-role/empty-role ordering, add allocation/reset/retry, guarded deletion, role-specific fields and protected-load
+details remain in their [people procedures](#person-index-integration-checks) and
+[save checks](#canonical-people-commands-and-unsuccessful-saves). Keep same-child/same-lesson search semantics,
+observable query identity, former-member history and feature-specific edit cases in their respective sections.
+
 ### Person editing
 
 In a fresh disposable store, follow the [UG quick start](UserGuide.html#quick-start) through the first
@@ -1818,9 +1858,9 @@ named above do not certify native display/scaling acceptance.
 6. Run `list r/student`, `history 1 lid/L1`, then `search c/student n/Alex`. Select Alex and run
    `edit 1 n/Changed Student`. Expect Alex to leave the people search and selection to clear, while
    the right pane keeps Student S1's retained history. Recheck positions before another indexed command.
-7. Follow [unsuccessful-save checks](UserGuide.html#checking-unsuccessful-saves-in-the-current-build) with a
-   disposable store: a reported save failure preserves cards, selected ID, detail/history mode and allocations.
-   After correcting the reported cause, retry once and restart; verify the saved change and stable relationships.
+7. Repeat the save/retry/reload part of the [common journey](#common-selector-and-failure-journey) with a valid
+   Person edit. Also check cards, selected ID, detail/history mode and allocations before retrying;
+   verify the edited fields and stable relationships after restart.
 8. Start with rejected disposable data: `edit 1 n/Alex` is blocked before parsing, `help edit` is unavailable,
    and original bytes remain untouched. Recovery still requires correcting/restoring the file and restarting.
 <!-- @@author -->
