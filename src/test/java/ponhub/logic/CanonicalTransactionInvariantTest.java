@@ -27,7 +27,9 @@ import ponhub.model.search.SearchCategory;
 import ponhub.model.search.SearchCriteria;
 import ponhub.model.search.SearchField;
 
-/** Exercises production assertions in fresh JVMs rather than relying on the test worker's assertion flags. */
+/**
+ * Exercises production assertions in fresh JVMs rather than relying on the test worker's assertion flags.
+ */
 public class CanonicalTransactionInvariantTest {
     @TempDir
     Path directory;
@@ -69,7 +71,9 @@ public class CanonicalTransactionInvariantTest {
         }
     }
 
-    /** Child entry point uses explicit checks, which remain active under both -ea and -da. */
+    /**
+     * Child entry point uses explicit checks, which remain active under both -ea and -da.
+     */
     public static final class InvariantProbe {
         public static void main(String[] arguments) throws Exception {
             boolean enabled = Boolean.parseBoolean(arguments[0]);
