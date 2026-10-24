@@ -67,7 +67,9 @@ public final class CanonicalLogicManager implements Logic {
         }
     }
 
-    /** Records cause types only: exception messages and thrown objects can contain command or file payloads. */
+    /**
+     * Records cause types only: exception messages and thrown objects can contain command or file payloads.
+     */
     private void logRejection(String command, String outcome, Exception failure) {
         StringJoiner causes = new StringJoiner(">");
         Level level = Level.INFO;
