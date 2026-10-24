@@ -5,8 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,9 +48,15 @@ public class CanonicalTransactionInvariantTest {
         String executable = System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java";
         Path java = Path.of(System.getProperty("java.home"), "bin", executable);
         Path output = directory.resolve("assertions-" + enabled + ".txt");
-        Process process = new ProcessBuilder(java.toString(), enabled ? "-ea" : "-da", "-cp", classpath,
-                InvariantProbe.class.getName(), Boolean.toString(enabled))
-                .directory(directory.toFile()).redirectErrorStream(true).redirectOutput(output.toFile()).start();
+        List<String> command = new ArrayList<>(List.of(java.toString()));
+        // Keep the worker's working directory and coverage destination, as in LogsCenterTest's child checks.
+        ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
+                .filter(argument -> argument.matches("-javaagent:(?:.*[/\\\\])?jacocoagent\\.jar(?:=.*)?"))
+                .forEach(command::add);
+        command.addAll(List.of(enabled ? "-ea" : "-da", "-cp", classpath,
+                InvariantProbe.class.getName(), Boolean.toString(enabled)));
+        Process process = new ProcessBuilder(command)
+                .redirectErrorStream(true).redirectOutput(output.toFile()).start();
         try {
             assertTrue(process.waitFor(20, TimeUnit.SECONDS), "Invariant probe timed out");
             String text = Files.readString(output);
