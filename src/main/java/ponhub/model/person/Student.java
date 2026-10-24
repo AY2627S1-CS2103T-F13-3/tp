@@ -23,13 +23,11 @@ public final class Student implements PersonRecord {
     /**
      * Creates a student with a student ID and the fields needed for student administration.
      *
-     * @throws IllegalArgumentException if the ID is for another role or the parent phone exceeds 15 digits.
+     * @throws IllegalArgumentException if the ID is for another role.
      */
     public Student(PersonId id, ContactDetails contactDetails, EducationLevel level, Phone parentPhone) {
         requireAllNonNull(id, contactDetails, level, parentPhone);
         checkArgument(id.getRole() == PersonRole.STUDENT, MESSAGE_ID_CONSTRAINTS);
-        checkArgument(parentPhone.value.length() <= ContactDetails.MAX_PHONE_LENGTH,
-                ContactDetails.MESSAGE_PHONE_CONSTRAINTS);
         this.id = id;
         this.contactDetails = contactDetails;
         this.level = level;

@@ -25,15 +25,13 @@ public record PersonAdditionInput(PersonRole role, ContactDetails contactDetails
      *
      * @throws NullPointerException if any component is null.
      * @throws IllegalArgumentException if student fields are missing, supplied for another role,
-     *     the parent phone exceeds 15 digits, or a tutor/parent has no own phone.
+     *     or a tutor/parent has no own phone.
      */
     public PersonAdditionInput {
         requireAllNonNull(role, contactDetails, level, parentPhone);
         if (role == PersonRole.STUDENT) {
             checkArgument(level.isPresent(), "Student additions require an education level.");
             checkArgument(parentPhone.isPresent(), "Student additions require a parent phone number.");
-            checkArgument(parentPhone.orElseThrow().value.length() <= ContactDetails.MAX_PHONE_LENGTH,
-                    ContactDetails.MESSAGE_PHONE_CONSTRAINTS);
         } else {
             checkArgument(level.isEmpty() && parentPhone.isEmpty(),
                     "Only student additions accept an education level or parent phone number.");
