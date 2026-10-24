@@ -7,11 +7,14 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.logging.Level;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -26,6 +29,7 @@ import ponhub.storage.JsonPonHubDataStorage;
 import ponhub.storage.JsonUserPrefsStorage;
 import ponhub.storage.ProtectedPonHubDataStorage;
 import ponhub.testutil.LessonQueryTestData;
+import ponhub.testutil.LogCapture;
 
 /**
  * Verifies the application's Logic boundary shares the canonical session and independent preferences.
@@ -33,6 +37,70 @@ import ponhub.testutil.LessonQueryTestData;
 public class CanonicalLogicManagerTest {
     @TempDir
     Path directory;
+
+    @Test
+    public void execute_logsSafeCategoriesWithoutRetainingSuccessfulDeletedOrRejectedPayloads() throws Exception {
+        Logic logic = new CanonicalLogicManager(new CanonicalPeopleSession(directory.resolve("data.json")),
+                new UserPrefs());
+        String addition = "add r/tutor n/Privacy Canary p/99887766 e/privacy378@example.com a/378 Canary Avenue";
+        try (LogCapture capture = new LogCapture()) {
+            assertTrue(logic.execute(addition).getFeedbackToUser().contains("Privacy Canary"));
+            assertThrows(CommandException.class, () -> logic.execute(addition));
+            logic.execute("delete 1");
+            assertTrue(logic.getPersonRecords().isEmpty());
+            assertThrows(ParseException.class, () -> logic.execute(addition + "\nInjected378"));
+            assertThrows(ParseException.class, () -> logic.execute("privacy378@example.com a/378 Canary Avenue"));
+            assertThrows(ParseException.class, () -> logic.execute("add r/tutor n/Privacy Canary p/invalid378"));
+            assertThrows(ParseException.class, () -> logic.execute("   "));
+
+            assertEquals(List.of("Command type=add outcome=success",
+                    "Command type=add outcome=command_rejected cause=CommandException>DuplicatePersonException",
+                    "Command type=delete outcome=success",
+                    "Command type=add outcome=parse_rejected cause=ParseException",
+                    "Command type=unknown outcome=parse_rejected cause=ParseException",
+                    "Command type=add outcome=parse_rejected cause=ParseException",
+                    "Command type=unknown outcome=parse_rejected cause=ParseException"),
+                    capture.getRecords().stream().map(record -> record.getMessage()).toList());
+            for (String privateValue : List.of("Privacy Canary", "99887766", "privacy378@example.com",
+                    "378 Canary Avenue", "Injected378", "invalid378", "New tutor added")) {
+                assertFalse(capture.getFormattedText().contains(privateValue), privateValue);
+            }
+            assertTrue(capture.getRecords().stream().allMatch(record -> record.getThrown() == null
+                    && record.getParameters() == null));
+        }
+    }
+
+    @Test
+    public void execute_protectedSessionAndStorageCause_doNotLogExceptionPayloads() throws Exception {
+        Path path = directory.resolve("private378@example.com.json");
+        Files.writeString(path, "Rejected Privacy Canary data");
+        Logic protectedLogic = new CanonicalLogicManager(new CanonicalPeopleSession(path), new UserPrefs());
+        CanonicalPeopleSession failedSave = new CanonicalPeopleSession(
+                new ProtectedPonHubDataStorage(directory.resolve("save.json")), state -> {
+                    throw new IOException("privacy378@example.com", new AccessDeniedException("378 Canary Avenue"));
+                });
+        Logic savingLogic = new CanonicalLogicManager(failedSave, new UserPrefs());
+        try (LogCapture capture = new LogCapture()) {
+            assertThrows(CommandException.class, () -> protectedLogic.execute("add n/Privacy Canary"));
+            assertThrows(CommandException.class, () -> savingLogic.execute(
+                    "add r/tutor n/Privacy Canary p/99887766 e/privacy378@example.com a/378 Canary Avenue"));
+            assertEquals(2, capture.getRecords().size());
+            assertEquals("Command type=add outcome=command_rejected cause=CommandException",
+                    capture.getRecords().get(0).getMessage());
+            assertEquals("Command type=add outcome=command_rejected "
+                    + "cause=CommandException>IOException>AccessDeniedException",
+                    capture.getRecords().get(1).getMessage());
+            assertEquals(Level.WARNING, capture.getRecords().get(1).getLevel());
+            for (String privateValue : List.of("Privacy Canary", "privacy378@example.com", "378 Canary Avenue",
+                    "99887766", "Rejected Privacy Canary data")) {
+                assertFalse(capture.getFormattedText().contains(privateValue), privateValue);
+            }
+            assertTrue(capture.getRecords().stream().allMatch(record -> record.getThrown() == null
+                    && record.getParameters() == null));
+        }
+        assertEquals("Rejected Privacy Canary data", Files.readString(path));
+        assertTrue(savingLogic.getPersonRecords().isEmpty());
+    }
 
     @Test
     public void getCommandWords_usesCanonicalDefinitionsAndStartupProtectionWithoutWriting() throws Exception {

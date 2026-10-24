@@ -5,10 +5,12 @@ on:
     paths:
       - '.github/workflows/linux-package.yml'
       - '.github/scripts/verify_linux_package.py'
+      - '.github/scripts/test_verify_linux_package.py'
   pull_request:
     paths:
       - '.github/workflows/linux-package.yml'
       - '.github/scripts/verify_linux_package.py'
+      - '.github/scripts/test_verify_linux_package.py'
   workflow_dispatch:
     inputs:
       candidate_ref:
@@ -46,7 +48,9 @@ jobs:
       - name: Install virtual-display verification tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes xvfb xdotool imagemagick
+          sudo apt-get install --yes xvfb xdotool xclip imagemagick
+      - name: Check the verification tool's outcome handling
+        run: python3 -m unittest discover -s .github/scripts -p 'test_verify_linux_package.py'
       - name: Build the exact candidate
         working-directory: _temp/candidate
         shell: bash

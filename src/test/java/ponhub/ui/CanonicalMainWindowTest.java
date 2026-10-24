@@ -61,6 +61,7 @@ import ponhub.model.query.LessonView;
 import ponhub.storage.JsonPonHubDataStorage;
 import ponhub.storage.JsonUserPrefsStorage;
 import ponhub.testutil.LessonQueryTestData;
+import ponhub.testutil.LogCapture;
 
 /**
  * Exercises real application startup, command-box routing and canonical cards in the production window.
@@ -70,6 +71,30 @@ public class CanonicalMainWindowTest {
 
     @TempDir
     Path directory;
+
+    @Test
+    public void commandBox_logsOncePerOutcomeWithoutFeedbackOrRejectedDrafts() throws Exception {
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow(); LogCapture capture = new LogCapture()) {
+                fixture.enter("add r/tutor n/Privacy Canary p/99887766 e/privacy378@example.com a/378 Canary Avenue");
+                assertEquals("New tutor added: Privacy Canary (T1).", fixture.feedback());
+                fixture.enter("delete 1");
+                assertEquals("Deleted tutor: Privacy Canary (T1).", fixture.feedback());
+                String rejected = "privacy378@example.com a/378 Canary Avenue";
+                fixture.enter(rejected);
+                assertEquals(rejected, fixture.input().getText());
+                assertTrue(fixture.feedback().contains("privacy378@example.com"));
+                assertEquals(List.of("Command type=add outcome=success", "Command type=delete outcome=success",
+                        "Command type=unknown outcome=parse_rejected cause=ParseException"),
+                        capture.getRecords().stream().map(record -> record.getMessage()).toList());
+                for (String privateValue : List.of("Privacy Canary", "99887766", "privacy378@example.com",
+                        "378 Canary Avenue", "New tutor added", "Deleted tutor")) {
+                    assertFalse(capture.getFormattedText().contains(privateValue), privateValue);
+                }
+            }
+            return null;
+        });
+    }
 
     @Test
     public void initializeMainWindow_shownStage_focusesCommandInput() throws Exception {
