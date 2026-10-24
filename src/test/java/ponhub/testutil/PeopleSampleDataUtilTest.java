@@ -75,11 +75,12 @@ public class PeopleSampleDataUtilTest {
         assertEquals("Mei.Lim@example.com", tutor.getContactDetails().getEmail().orElseThrow().value);
         assertTrue(parent.getContactDetails().getAddress().isEmpty());
 
-        assertEquals(List.of("Level: P3", "Parent phone: 00987654", "Own phone: Not provided",
-                "Email: Not provided", "Address: Not provided"),
-                new PersonRecordCardData(alex, 2).getDetailLines());
-        assertEquals(List.of("Phone: 00999888", "Email: Not provided", "Address: Not provided"),
-                new PersonRecordCardData(getPerson(people, "T2"), 5).getDetailLines());
+        assertEquals(List.of("P3", "Not provided", "Not provided", "00987654", "Not provided"),
+                new PersonRecordCardData(alex, 2).getDetailGroups().stream()
+                        .flatMap(List::stream).map(PersonRecordCardData.Detail::value).toList());
+        assertEquals(List.of("00999888", "Not provided", "Not provided"),
+                new PersonRecordCardData(getPerson(people, "T2"), 5).getDetailGroups().stream()
+                        .flatMap(List::stream).map(PersonRecordCardData.Detail::value).toList());
     }
 
     @Test
@@ -161,8 +162,9 @@ public class PeopleSampleDataUtilTest {
                 assertSame(student, PersonIndexResolver.resolveStudent(Index.fromOneBased(i + 1), visiblePeople));
             }
             PersonRecordCardData card = new PersonRecordCardData(visiblePeople.get(i), i + 1);
-            assertEquals((i + 1) + ". " + person.getName().fullName, card.getHeading());
-            assertTrue(card.getIdentity().endsWith(" · " + expectedIds.get(i)));
+            assertEquals(person.getName().fullName, card.getHeading());
+            assertEquals("Position: " + (i + 1), card.getPosition());
+            assertTrue(card.getIdentity().endsWith(" · ID: " + expectedIds.get(i)));
         }
         assertSame(before, source.exportState().people());
         assertEquals(before, people.exportState());

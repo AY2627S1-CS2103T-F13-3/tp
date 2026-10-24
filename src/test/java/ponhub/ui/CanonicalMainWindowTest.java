@@ -211,11 +211,11 @@ public class CanonicalMainWindowTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("search c/tutor sn/Alex d/Mon s/Math");
-                assertCard(fixture, "Tutor · T1", "1. Mei Lim");
+                assertCard(fixture, "Tutor · ID: T1", "Mei Lim", 1);
                 assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("Student: Alex Tan (S1) · Lesson: L10")));
                 fixture.enter("search c/tutor d/Mon s/Science");
-                assertCard(fixture, "Tutor · T2", "1. Mei Lim");
+                assertCard(fixture, "Tutor · ID: T2", "Mei Lim", 1);
                 assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().startsWith("Lesson: L3")));
             }
@@ -230,7 +230,7 @@ public class CanonicalMainWindowTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("search c/parent n/Pat sn/Alex d/Mon s/Math");
-                assertCard(fixture, "Parent · P1", "1. Pat Tan");
+                assertCard(fixture, "Parent · ID: P1", "Pat Tan", 1);
                 assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("Student: Alex Tan (S1) · Lesson: L10")));
                 fixture.enter("search c/parent sn/Alex d/Wed s/中文");
@@ -251,7 +251,7 @@ public class CanonicalMainWindowTest {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("search c/student p/00012345 s/Math d/Mon");
                 assertEquals(1, fixture.people().getItems().size());
-                assertCard(fixture, "Student · S2", "1. Jamie Tan");
+                assertCard(fixture, "Student · ID: S2", "Jamie Tan", 1);
                 assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("Lesson: L10")));
                 fixture.enter("enrol 1 lid/L4");
@@ -295,7 +295,7 @@ public class CanonicalMainWindowTest {
                 assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
                 assertEquals("Lesson search: sn/jamie, s/math", ((Label) fixture.root()
                         .lookup("#lessonContext")).getText());
-                assertCard(fixture, "Student · S2", "1. Jamie Tan");
+                assertCard(fixture, "Student · ID: S2", "Jamie Tan", 1);
             }
             return null;
         });
@@ -321,7 +321,7 @@ public class CanonicalMainWindowTest {
                 assertEquals("2", ((Label) fixture.root()
                         .lookup("#lessonRosterSize")).getText());
                 assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
-                assertCard(fixture, "Student · S2", "1. Jamie Tan");
+                assertCard(fixture, "Student · ID: S2", "Jamie Tan", 1);
                 fixture.enter("lessons si/2");
                 assertEquals(List.of("L10"), lessonIds(fixture));
                 fixture.enter("search c/lesson s/Math s/Science");
@@ -372,7 +372,7 @@ public class CanonicalMainWindowTest {
                 assertTrue(detail.lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("Status: absent")));
                 assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
-                assertCard(fixture, "Student · S2", "1. Jamie Tan");
+                assertCard(fixture, "Student · ID: S2", "Jamie Tan", 1);
                 captureWindow(fixture, "PONHUB_CAPTURE_ATTENDANCE_DETAILS", 1480, 1200, "jpg");
                 fixture.enter("lessons si/1");
                 assertTrue(fixture.lessons().isVisible());
@@ -458,13 +458,13 @@ public class CanonicalMainWindowTest {
                 assertFalse(Files.exists(fixture.dataPath));
                 fixture.enter("add r/STUDENT n/Alex Tan l/p1 pp/91234567");
                 assertEquals("New student added: Alex Tan (S1).", fixture.feedback());
-                assertCard(fixture, "Student · S1", "1. Alex Tan");
+                assertCard(fixture, "Student · ID: S1", "Alex Tan", 1);
                 fixture.enter("add r/student n/Amelia Tan l/P2 pp/91234567 p/00012345"
                         + " e/amelia@example.com a/12 Main Road");
                 fixture.enter("add r/tutor n/Mei Lee p/81234567");
                 fixture.enter("list r/TUTOR");
                 assertEquals("Showing 1 tutor(s).", fixture.feedback());
-                assertCard(fixture, "Tutor · T1", "1. Mei Lee");
+                assertCard(fixture, "Tutor · ID: T1", "Mei Lee", 1);
                 fixture.enter("add r/parent n/Sam Tan p/91234567");
                 assertEquals("New parent added: Sam Tan (P1).", fixture.feedback());
                 assertEquals(4, fixture.people().getItems().size());
@@ -479,7 +479,7 @@ public class CanonicalMainWindowTest {
                     }
                 }
                 fixture.people().layout();
-                assertCard(fixture, "Parent · P1", "4. Sam Tan");
+                assertCard(fixture, "Parent · ID: P1", "Sam Tan", 4);
                 assertSame(fixture.app.getLogic().getPersonRecords(), fixture.people().getItems());
                 PonHubDataState saved = new JsonPonHubDataStorage(fixture.dataPath).readData().orElseThrow();
                 assertEquals(fixture.app.snapshot(), saved);
@@ -503,7 +503,7 @@ public class CanonicalMainWindowTest {
                 byte[] original = Files.readAllBytes(fixture.dataPath);
                 fixture.enter("search c/student n/Selected");
                 assertEquals("Found 1 student(s).", fixture.feedback());
-                assertCard(fixture, "Student · S3", "1. Selected Student");
+                assertCard(fixture, "Student · ID: S3", "Selected Student", 1);
                 assertSame(fixture.app.getLogic().getPersonRecords(), fixture.people().getItems());
                 fixture.people().getSelectionModel().select(0);
                 fixture.enter("help SEARCH");
@@ -511,7 +511,7 @@ public class CanonicalMainWindowTest {
                 fixture.enter("search c/tutor tu/First");
                 assertTrue(fixture.feedback().contains("not supported"));
                 assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
-                assertCard(fixture, "Student · S3", "1. Selected Student");
+                assertCard(fixture, "Student · ID: S3", "Selected Student", 1);
                 fixture.enter("search c/student n/No Match");
                 assertEquals("Found 0 student(s).", fixture.feedback());
                 assertTrue(fixture.people().getItems().isEmpty());
@@ -532,11 +532,11 @@ public class CanonicalMainWindowTest {
                 byte[] original = Files.readAllBytes(fixture.dataPath);
                 fixture.people().scrollTo(1);
                 fixture.layout();
-                assertCard(fixture, "Student · S9", "2. Older Student");
+                assertCard(fixture, "Student · ID: S9", "Older Student", 2);
                 fixture.enter("list r/student");
                 assertEquals(List.of(new PersonId("S9"), new PersonId("S3")),
                         fixture.people().getItems().stream().map(PersonRecord::getId).toList());
-                assertCard(fixture, "Student · S3", "2. Selected Student");
+                assertCard(fixture, "Student · ID: S3", "Selected Student", 2);
                 fixture.people().getSelectionModel().select(1);
                 PonHubDataState originalState = fixture.app.snapshot();
                 for (String command : List.of("list r/all", "list r/student r/tutor", "delete S3", "edit 2",
@@ -563,14 +563,14 @@ public class CanonicalMainWindowTest {
                 fixture.enter("edit 2 n/Corrected Student");
                 assertEquals("Edited student: Corrected Student (S3).", fixture.feedback());
                 assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
-                assertCard(fixture, "Student · S3", "2. Corrected Student");
+                assertCard(fixture, "Student · ID: S3", "Corrected Student", 2);
                 fixture.enter("search c/student n/Student");
                 fixture.people().getSelectionModel().select(0);
                 fixture.enter("edit 1 n/Changed Person");
                 assertEquals(List.of(new PersonId("S3")),
                         fixture.people().getItems().stream().map(PersonRecord::getId).toList());
                 assertTrue(fixture.people().getSelectionModel().isEmpty());
-                assertCard(fixture, "Student · S3", "1. Corrected Student");
+                assertCard(fixture, "Student · ID: S3", "Corrected Student", 1);
                 fixture.enter("help edit");
                 assertTrue(fixture.feedback().contains("Usage: edit INDEX"));
                 assertEquals(fixture.app.snapshot(),
@@ -631,7 +631,7 @@ public class CanonicalMainWindowTest {
                         visible.stream().map(PersonRecord::getId).toList());
                 assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.roleFilter());
                 fixture.layout();
-                assertCard(fixture, "Student · S3", "1. Selected Student");
+                assertCard(fixture, "Student · ID: S3", "Selected Student", 1);
                 assertEquals(fixture.app.snapshot(),
                         new JsonPonHubDataStorage(fixture.dataPath).readData().orElseThrow());
             }
@@ -676,7 +676,7 @@ public class CanonicalMainWindowTest {
                 Files.move(backup, fixture.dataPath);
                 fixture.enter("delete 1");
                 assertEquals("Deleted student: Older Student (S9).", fixture.feedback());
-                assertCard(fixture, "Student · S3", "1. Selected Student");
+                assertCard(fixture, "Student · ID: S3", "Selected Student", 1);
                 assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.roleFilter());
                 assertSame(displayed, fixture.lessons().getItems());
                 assertTrue(displayed.isEmpty());
@@ -713,7 +713,7 @@ public class CanonicalMainWindowTest {
                 assertEquals(1, fixture.people().getSelectionModel().getSelectedIndex());
                 assertEquals(2, fixture.people().getItems().size());
                 assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.roleFilter());
-                assertCard(fixture, "Student · S3", "2. Selected Student");
+                assertCard(fixture, "Student · ID: S3", "Selected Student", 2);
                 assertTrue(Files.isDirectory(fixture.dataPath));
                 Files.delete(fixture.dataPath);
                 Files.move(backup, fixture.dataPath);
@@ -723,7 +723,7 @@ public class CanonicalMainWindowTest {
                 assertEquals(5, fixture.people().getItems().size());
                 fixture.people().scrollTo(4);
                 fixture.layout();
-                assertCard(fixture, "Student · S10", "5. New Student");
+                assertCard(fixture, "Student · ID: S10", "New Student", 5);
                 assertEquals(fixture.app.snapshot(), new JsonPonHubDataStorage(fixture.dataPath)
                         .readData().orElseThrow());
             }
@@ -893,7 +893,7 @@ public class CanonicalMainWindowTest {
         return fixture;
     }
 
-    private static void assertCard(WindowFixture fixture, String identity, String heading) {
+    private static void assertCard(WindowFixture fixture, String identity, String heading, int position) {
         fixture.layout();
         Region card = fixture.root().lookupAll("#cardPane").stream()
                 .filter(node -> identity.equals(((Label) node.lookup("#identity")).getText()))
@@ -901,6 +901,7 @@ public class CanonicalMainWindowTest {
                         "Missing visible card " + identity + "; rendered=" + fixture.root().lookupAll("#identity")
                                 .stream().map(node -> ((Label) node).getText()).toList()));
         assertEquals(heading, ((Label) card.lookup("#heading")).getText());
+        assertEquals("Position: " + position, ((Label) card.lookup("#position")).getText());
         assertNotNull(card.lookup("#details"));
     }
 
