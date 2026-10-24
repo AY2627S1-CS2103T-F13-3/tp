@@ -24,6 +24,9 @@ import ponhub.commons.core.LogsCenter;
 public class Main {
     private static Logger logger = LogsCenter.getLogger(Main.class);
 
+    /**
+     * Launches the JavaFX application with the supplied command-line arguments.
+     */
     public static void main(String[] args) {
 
         logger.warning("The warnings about a 'restricted method in java.lang.System' "

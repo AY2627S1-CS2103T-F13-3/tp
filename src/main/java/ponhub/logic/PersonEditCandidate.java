@@ -20,7 +20,8 @@ import ponhub.model.person.exceptions.DuplicatePersonException;
 
 /**
  * An immutable complete candidate for editing one person without changing live state or allocating an ID.
- * Command activation and persistence belong to the following increment; preparation never saves or publishes.
+ * The staged edit command uses this candidate; its executor owns saving and publication.
+ * Preparation itself never saves or publishes.
  */
 public final class PersonEditCandidate {
 

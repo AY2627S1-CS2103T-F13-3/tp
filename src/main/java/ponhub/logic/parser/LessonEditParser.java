@@ -107,6 +107,9 @@ public final class LessonEditParser {
         }
     }
 
+    /**
+     * Converts one nonblank Lesson edit value to its validated domain type.
+     */
     @FunctionalInterface
     private interface ValueParser<T> {
         T parse(String value);
