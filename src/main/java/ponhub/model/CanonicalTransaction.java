@@ -1,5 +1,10 @@
 package ponhub.model;
 
+import java.util.Optional;
+
+import ponhub.model.person.PersonRole;
+import ponhub.model.search.SearchCriteria;
+
 /**
  * Stages a complete canonical aggregate and its people filter on the application's model thread.
  * Failed commands discard this object without touching the live observable list or its selection.
@@ -8,6 +13,8 @@ public final class CanonicalTransaction implements ModelTransaction<PonHubData> 
     private final PonHubData live;
     private final PeopleView liveView;
     private final PonHubDataState before;
+    private final Optional<PersonRole> beforeRoleFilter;
+    private final Optional<SearchCriteria> beforeSearchCriteria;
     private final PonHubData staged;
     private final PeopleView stagedView;
 
@@ -15,6 +22,8 @@ public final class CanonicalTransaction implements ModelTransaction<PonHubData> 
         this.live = live;
         this.liveView = liveView;
         before = live.exportState();
+        beforeRoleFilter = liveView.getRoleFilter();
+        beforeSearchCriteria = liveView.getSearchCriteria();
         staged = new PonHubData(before);
         stagedView = new PeopleView(staged);
         stagedView.copyFilterFrom(liveView);
@@ -36,6 +45,16 @@ public final class CanonicalTransaction implements ModelTransaction<PonHubData> 
     @Override
     public boolean hasOperationalChanges() {
         return !before.equals(staged.exportState());
+    }
+
+    /**
+     * Checks the staging contract without mutation or I/O. The executor uses this programmer invariant
+     * before saving: a callback must only change its staged root/view, never the live root or filters.
+     */
+    public boolean isLiveStateUnchanged() {
+        return before.equals(live.exportState())
+                && beforeRoleFilter.equals(liveView.getRoleFilter())
+                && beforeSearchCriteria.equals(liveView.getSearchCriteria());
     }
 
     /**
