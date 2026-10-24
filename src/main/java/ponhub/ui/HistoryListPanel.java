@@ -25,7 +25,9 @@ public class HistoryListPanel extends UiPart<Region> {
     @FXML
     private ListView<AttendanceHistoryEntry> historyListView;
 
-    /** Binds a stable observable result list and selector context to the history pane. */
+    /**
+     * Binds a stable observable result list and selector context to the history pane.
+     */
     public HistoryListPanel(ObservableList<AttendanceHistoryEntry> history, ObservableValue<String> context) {
         super(FXML);
         historyContext.textProperty().bind(requireNonNull(context));

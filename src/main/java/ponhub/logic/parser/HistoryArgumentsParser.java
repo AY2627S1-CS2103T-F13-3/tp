@@ -17,7 +17,9 @@ public final class HistoryArgumentsParser {
     public static final String MESSAGE_USAGE = "Format: history STUDENT_INDEX [lid/LESSON_ID]";
     private static final Pattern FORMAT = Pattern.compile("([0-9]+)(?: +lid/([^\\s]+))?");
 
-    /** Returns a positive current people index and optional validated Lesson ID. */
+    /**
+     * Returns a positive current people index and optional validated Lesson ID.
+     */
     public Input parse(String arguments) throws ParseException {
         requireNonNull(arguments);
         if (arguments.codePoints().anyMatch(Character::isISOControl)) {
@@ -36,7 +38,9 @@ public final class HistoryArgumentsParser {
         }
     }
 
-    /** Parsed command selectors, prior to current-view role and reference validation. */
+    /**
+     * Parsed command selectors, prior to current-view role and reference validation.
+     */
     public record Input(Index studentIndex, Optional<LessonId> lessonId) {
     }
 }

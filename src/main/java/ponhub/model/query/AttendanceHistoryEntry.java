@@ -12,22 +12,34 @@ import ponhub.model.person.PersonId;
  * Implementations expose non-null, immutable values and a student-role ID. Changes replace the whole entry.
  */
 public interface AttendanceHistoryEntry {
-    /** Returns the student's stable identity. */
+    /**
+     * Returns the student's stable identity.
+     */
     PersonId getStudentId();
 
-    /** Returns the lesson's stable identity. */
+    /**
+     * Returns the lesson's stable identity.
+     */
     LessonId getLessonId();
 
-    /** Returns the date of this recorded occurrence. */
+    /**
+     * Returns the date of this recorded occurrence.
+     */
     LocalDate getDate();
 
-    /** Returns the recorded attendance status. */
+    /**
+     * Returns the recorded attendance status.
+     */
     Status getStatus();
 
-    /** Returns whether the student is currently enrolled in this lesson. */
+    /**
+     * Returns whether the student is currently enrolled in this lesson.
+     */
     boolean isCurrentlyEnrolled();
 
-    /** The recorded statuses exposed by the history view. */
+    /**
+     * The recorded statuses exposed by the history view.
+     */
     enum Status {
         PRESENT,
         ABSENT

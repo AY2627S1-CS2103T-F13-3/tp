@@ -13,7 +13,9 @@ import ponhub.model.PonHubData;
 import ponhub.model.person.PersonRecord;
 import ponhub.model.person.exceptions.DuplicatePersonException;
 
-/** Edits one stable person solely within the executor's staged transaction. */
+/**
+ * Edits one stable person solely within the executor's staged transaction.
+ */
 public final class CanonicalEditCommand implements CanonicalCommandExecutor.StagedCommand {
     public static final String MESSAGE_SUCCESS = "Edited %s: %s (%s).";
     public static final String MESSAGE_NO_CHANGE = "No changes to %s: %s (%s).";

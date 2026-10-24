@@ -13,24 +13,38 @@ import ponhub.model.person.PersonId;
  * A changed lesson or tutor is represented by a replacement entry in observable lists.
  */
 public interface LessonView {
-    /** Returns the stable identity of this lesson. */
+    /**
+     * Returns the stable identity of this lesson.
+     */
     LessonId getLessonId();
 
-    /** Returns the stable identity of its assigned tutor. */
+    /**
+     * Returns the stable identity of its assigned tutor.
+     */
     PersonId getTutorId();
 
-    /** Returns the assigned tutor's current display name. */
+    /**
+     * Returns the assigned tutor's current display name.
+     */
     String getTutorName();
 
-    /** Returns the weekly day and time range. */
+    /**
+     * Returns the weekly day and time range.
+     */
     LessonTimeSlot getTimeSlot();
 
-    /** Returns the lesson's subject. */
+    /**
+     * Returns the lesson's subject.
+     */
     Subject getSubject();
 
-    /** Returns the lesson's room. */
+    /**
+     * Returns the lesson's room.
+     */
     Room getRoom();
 
-    /** Returns the number of currently enrolled students, including zero for an empty roster. */
+    /**
+     * Returns the number of currently enrolled students, including zero for an empty roster.
+     */
     int getRosterSize();
 }

@@ -11,14 +11,18 @@ import ponhub.logic.parser.exceptions.ParseException;
 import ponhub.model.attendance.Attendance;
 import ponhub.model.lesson.LessonId;
 
-/** Parses one stable lesson ID and an optional real occurrence date. */
+/**
+ * Parses one stable lesson ID and an optional real occurrence date.
+ */
 public final class ShowLessonParser {
     public static final String MESSAGE_USAGE = "Usage: showlesson lid/LESSON_ID [d/YYYY-MM-DD]";
 
     private static final Pattern ARGUMENTS = Pattern.compile(
             "(?:lid/(\\S+)(?: +d/(\\S+))?|d/(\\S+) +lid/(\\S+))");
 
-    /** Rejects missing, repeated or unknown fields before the selected view changes. */
+    /**
+     * Rejects missing, repeated or unknown fields before the selected view changes.
+     */
     public ShowLessonInput parse(String arguments) throws ParseException {
         requireNonNull(arguments);
         if (arguments.codePoints().anyMatch(Character::isISOControl)) {
