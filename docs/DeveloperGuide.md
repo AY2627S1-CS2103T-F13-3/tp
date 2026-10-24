@@ -810,6 +810,13 @@ commands. Changed operational snapshots are saved through the protected writer b
 success feedback. Parse, execution or save failure discards the staged change, retaining live records,
 allocation counters, filter, selection and subscribed query results.
 
+After the staged callback returns, a Java assertion checks that the live snapshot, role filter and search
+criteria still equal their starting values. This side-effect-free programmer invariant runs **before**
+the snapshot writer, so detected misuse does not save or publish the staged candidate. It diagnoses
+unexpected live changes; it cannot undo live changes already made by faulty callback code. Writers must
+still obey their isolation contract. The check is enabled in development (`-ea`) and is not input validation:
+user/file validation and save-failure handling continue to run with assertions disabled (`-da`).
+
 Read-only commands and operational no-ops skip saving. Successful publication retains observable-list
 identity; unchanged views avoid refresh, while a changed role filter can publish without an operational
 write. Publication performs no new validation or I/O. Preferences follow their separate lifecycle.
