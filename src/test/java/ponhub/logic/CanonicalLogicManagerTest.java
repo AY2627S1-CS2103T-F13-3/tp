@@ -39,6 +39,28 @@ public class CanonicalLogicManagerTest {
     Path directory;
 
     @Test
+    public void execute_cyclicSaveCause_boundsDiagnosticsWithoutRetainingExceptionMessages() throws Exception {
+        IOException first = new IOException("private378@example.com");
+        IOException second = new IOException("378 Canary Avenue");
+        first.initCause(second);
+        second.initCause(first);
+        CanonicalPeopleSession session = new CanonicalPeopleSession(
+                new ProtectedPonHubDataStorage(directory.resolve("data.json")), state -> {
+                    throw first;
+                });
+        Logic logic = new CanonicalLogicManager(session, new UserPrefs());
+        try (LogCapture capture = new LogCapture()) {
+            assertThrows(CommandException.class, () -> logic.execute("add r/tutor n/Privacy Canary p/99887766"));
+            assertEquals(1, capture.getRecords().size());
+            assertEquals("Command type=add outcome=command_rejected cause=CommandException"
+                    + ">IOException".repeat(7), capture.getRecords().getFirst().getMessage());
+            assertEquals(Level.WARNING, capture.getRecords().getFirst().getLevel());
+            assertFalse(capture.getFormattedText().contains("private378@example.com"));
+            assertFalse(capture.getFormattedText().contains("378 Canary Avenue"));
+        }
+    }
+
+    @Test
     public void execute_logsSafeCategoriesWithoutRetainingSuccessfulDeletedOrRejectedPayloads() throws Exception {
         Logic logic = new CanonicalLogicManager(new CanonicalPeopleSession(directory.resolve("data.json")),
                 new UserPrefs());
