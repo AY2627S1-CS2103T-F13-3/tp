@@ -96,6 +96,9 @@ public final class PersonEditParser {
         }
     }
 
+    /**
+     * Converts one supplied edit value, reporting invalid input as a parse failure.
+     */
     @FunctionalInterface
     private interface ValueParser<T> {
         T parse(String value) throws ParseException;

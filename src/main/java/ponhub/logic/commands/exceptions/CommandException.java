@@ -1,7 +1,7 @@
 package ponhub.logic.commands.exceptions;
 
 /**
- * Represents an error which occurs during execution of a {@link Command}.
+ * Represents an error during execution of a {@link ponhub.logic.CanonicalCommandExecutor.StagedCommand}.
  */
 public class CommandException extends Exception {
     public CommandException(String message) {

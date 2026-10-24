@@ -36,6 +36,9 @@ public class HistoryListPanel extends UiPart<Region> {
         historyListView.setCellFactory(list -> new HistoryCell());
     }
 
+    /**
+     * Reuses a history row while fitting its current card to the available viewport width.
+     */
     static class HistoryCell extends ListCell<AttendanceHistoryEntry> {
         HistoryCell() {
             // Let VirtualFlow allocate the viewport breadth, including space for its vertical scrollbar.

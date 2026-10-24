@@ -261,6 +261,9 @@ public final class LessonQueries implements LessonQuerySource {
                 .filter(entry -> entry.getLessonId().equals(key.lessonId())).toList();
     }
 
+    /**
+     * Identifies a retained-history subscription for one student and one shared Lesson.
+     */
     private record HistoryKey(PersonId studentId, LessonId lessonId) {
     }
 
