@@ -9,7 +9,9 @@ import ponhub.model.lesson.Room;
 import ponhub.model.lesson.Subject;
 import ponhub.model.person.PersonId;
 
-/** Immutable lesson projection capturing one validated record and its current tutor name. */
+/**
+ * Immutable lesson projection capturing one validated record and its current tutor name.
+ */
 final class LessonViewData implements LessonView {
     private final Lesson lesson;
     private final String tutorName;
