@@ -51,6 +51,21 @@ Follow the [SE-EDU logging-level conventions](https://se-education.org/guides/co
 Log useful context and exception causes without dumping contact records, complete data files or sensitive
 command arguments. Avoid duplicate messages at multiple layers for the same failure.
 
+The command boundary records one outcome per request, for example
+`Command type=edit outcome=command_rejected cause=CommandException>AccessDeniedException`.
+Only catalogue command words are recorded; unknown or malformed command words become `unknown`.
+Success, parse rejection and command rejection have distinct outcomes. Storage-related rejections use
+`WARNING`; ordinary rejections use `INFO`. Cause class names retain diagnostic categories without
+exception messages, stack traces, raw input or result bodies, which can contain contact values.
+Detailed feedback stays in the application. When investigating a save failure, inspect that feedback
+locally and check the selected data path and permissions; redact private values before sharing it.
+This change leaves existing log files untouched; older logs may still contain command payloads.
+
+The Linux package checker copies feedback from the visible result control using `xclip` on its disposable
+X11 display. Its retained command/feedback transcript contains only its explicit synthetic fixtures;
+it does not require personal data to be written to application logs. Use tooling from the matching source
+when verifying an older JAR whose log format differs.
+
 For focused regression checks, inspect
 [`LogsCenterTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/commons/core/LogsCenterTest.java)
 for file output, legacy preservation and console fallback, and
