@@ -36,7 +36,9 @@ public class UiManager implements Ui {
         this(logic, dataFilePath, Optional.empty());
     }
 
-    /** Creates a UI that also displays recovery guidance for a protected startup session. */
+    /**
+     * Creates a UI that also displays recovery guidance for a protected startup session.
+     */
     public UiManager(Logic logic, Path dataFilePath, Optional<String> dataLoadError) {
         this.logic = logic;
         this.dataFilePath = dataFilePath;

@@ -89,7 +89,9 @@ public final class PersonEditParser {
         return ParserUtil.parsePhone(value);
     }
 
-    /** Immutable edit request retaining the displayed selector until staged command execution. */
+    /**
+     * Immutable edit request retaining the displayed selector until staged command execution.
+     */
     public record Input(Index index, PersonEditInput edit) {
         public Input {
             requireAllNonNull(index, edit);

@@ -62,7 +62,9 @@ public final class LessonQueries implements LessonQuerySource {
     private final Map<HistoryKey, ResultList<AttendanceHistoryEntry>> lessonHistorySubscriptions = new HashMap<>();
     private SearchCriteria activeFilter = new SearchCriteria(SearchCategory.LESSON, Map.of());
 
-    /** Connects query results to the supplied canonical root's committed publication boundary. */
+    /**
+     * Connects query results to the supplied canonical root's committed publication boundary.
+     */
     public LessonQueries(PonHubData source) {
         requireNonNull(source);
         refresh(source.exportState());
@@ -122,7 +124,9 @@ public final class LessonQueries implements LessonQuerySource {
         }).readOnly;
     }
 
-    /** Returns the immutable criteria used by the active lesson result list. */
+    /**
+     * Returns the immutable criteria used by the active lesson result list.
+     */
     public SearchCriteria getLessonFilter() {
         return activeFilter;
     }
@@ -286,7 +290,9 @@ public final class LessonQueries implements LessonQuerySource {
                 entry.getValue().replace(index.getOrDefault(entry.getKey(), List.of())));
     }
 
-    /** Keeps the observable object held by callers stable while its immutable entries are replaced. */
+    /**
+     * Keeps the observable object held by callers stable while its immutable entries are replaced.
+     */
     private static final class ResultList<T> {
         private final ObservableList<T> values = FXCollections.observableArrayList();
         private final ObservableList<T> readOnly = FXCollections.unmodifiableObservableList(values);

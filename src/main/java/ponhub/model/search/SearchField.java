@@ -48,7 +48,9 @@ public enum SearchField {
         return prefix;
     }
 
-    /** Returns an immutable set of categories accepting this filter. */
+    /**
+     * Returns an immutable set of categories accepting this filter.
+     */
     public Set<SearchCategory> getSupportedCategories() {
         return supportedCategories;
     }

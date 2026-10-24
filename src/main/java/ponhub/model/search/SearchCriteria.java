@@ -47,12 +47,16 @@ public final class SearchCriteria {
         return category;
     }
 
-    /** Returns the immutable map of supplied filters and their normalized values. */
+    /**
+     * Returns the immutable map of supplied filters and their normalized values.
+     */
     public Map<SearchField, String> getFilters() {
         return filters;
     }
 
-    /** Returns a filter's normalized query value, if supplied. */
+    /**
+     * Returns a filter's normalized query value, if supplied.
+     */
     public Optional<String> getValue(SearchField field) {
         return Optional.ofNullable(filters.get(requireNonNull(field)));
     }

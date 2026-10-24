@@ -54,7 +54,9 @@ final class CommandWordCompleter {
         matches = List.of();
     }
 
-    /** A completed draft and the caret immediately after its command word. */
+    /**
+     * A completed draft and the caret immediately after its command word.
+     */
     record Completion(String text, int caret) {
     }
 }

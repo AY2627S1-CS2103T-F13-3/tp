@@ -16,7 +16,9 @@ import ponhub.model.person.PersonRole;
 public record AttendanceHistoryEntryData(PersonId studentId, LessonId lessonId, LocalDate date,
         Status status, boolean currentlyEnrolled) implements AttendanceHistoryEntry {
 
-    /** Validates the immutable public projection fields. */
+    /**
+     * Validates the immutable public projection fields.
+     */
     public AttendanceHistoryEntryData {
         requireAllNonNull(studentId, lessonId, date, status);
         if (studentId.getRole() != PersonRole.STUDENT) {
@@ -24,7 +26,9 @@ public record AttendanceHistoryEntryData(PersonId studentId, LessonId lessonId, 
         }
     }
 
-    /** Copies a stored record and adds membership from the current Lesson roster. */
+    /**
+     * Copies a stored record and adds membership from the current Lesson roster.
+     */
     public AttendanceHistoryEntryData(Attendance attendance, boolean currentlyEnrolled) {
         this(attendance.getStudentId(), attendance.getLessonId(), attendance.getDate(),
                 attendance.getStatus() == AttendanceStatus.PRESENT ? Status.PRESENT : Status.ABSENT,

@@ -64,12 +64,16 @@ public class PersonRecordListPanel extends UiPart<Region> {
         personListView.setPlaceholder(new Label("No persons to display."));
     }
 
-    /** Returns the selected stable identity before a command can replace immutable records. */
+    /**
+     * Returns the selected stable identity before a command can replace immutable records.
+     */
     public Optional<PersonId> getSelectedPersonId() {
         return Optional.ofNullable(personListView.getSelectionModel().getSelectedItem()).map(PersonRecord::getId);
     }
 
-    /** Retains selection by identity only while visible, clearing it if a filter removed that person. */
+    /**
+     * Retains selection by identity only while visible, clearing it if a filter removed that person.
+     */
     public void restoreSelection(PersonId id) {
         requireNonNull(id);
         var replacement = personListView.getItems().stream().filter(person -> person.getId().equals(id)).findFirst();

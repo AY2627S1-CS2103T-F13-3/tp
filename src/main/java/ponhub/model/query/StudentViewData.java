@@ -8,7 +8,9 @@ import ponhub.model.person.EducationLevel;
 import ponhub.model.person.PersonId;
 import ponhub.model.person.Student;
 
-/** Immutable roster projection capturing one current student record. */
+/**
+ * Immutable roster projection capturing one current student record.
+ */
 final class StudentViewData implements StudentView {
     private final Student student;
 
