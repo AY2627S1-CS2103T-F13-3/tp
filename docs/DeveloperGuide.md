@@ -1835,6 +1835,52 @@ details remain in their [people procedures](#person-index-integration-checks) an
 [save checks](#canonical-people-commands-and-unsuccessful-saves). Keep same-child/same-lesson search semantics,
 observable query identity, former-member history and feature-specific edit cases in their respective sections.
 
+### Common window and layout checks
+
+Copy this matrix into the test result, recording one outcome per actual display trial. It is an unexecuted
+template, not a report of current acceptance. Keep unavailable combinations **NOT RUN**, with the reason;
+record observed defects as **FAIL**. Logical viewport simulations and automated FXML bounds checks supplement
+physical display/scaling trials. They do not certify another platform or scale.
+
+| OS | Physical display | Scale | Result / evidence |
+| --- | --- | --- | --- |
+| Windows | 1280×720 | 150% | NOT RUN |
+| Windows | 1920×1080 | 100% | NOT RUN |
+| Windows | 1920×1080 | 125% | NOT RUN |
+| Linux | 1280×720 | 150% | NOT RUN |
+| Linux | 1920×1080 | 100% | NOT RUN |
+| Linux | 1920×1080 | 125% | NOT RUN |
+| macOS | 1280×720 | 150% | NOT RUN |
+| macOS | 1920×1080 | 100% | NOT RUN |
+| macOS | 1920×1080 | 125% | NOT RUN |
+
+For each executed row, retain the source/JAR identity from the [common journey](#common-selector-and-failure-journey),
+OS version/architecture, Java distribution/version, observed display/work-area dimensions, logical window
+dimensions and output scale, actual results and screenshot/transcript links. Record additional available
+configurations separately; do not relabel them as one of the rows above. Use only disposable fictitious fixtures.
+
+1. Launch inside the usable work area, resize to the minimum window, widen it, then narrow it again.
+   Menus, viewing controls, feedback, command entry and both lists remain reachable.
+   Drag each divider with the pointer; check wrapping and usable panel widths after each drag.
+2. Use all person roles, absent optional contacts, leading-zero phones and long valid names/email/addresses.
+   Use the long-contact example in [compact windows](#compact-windows-and-active-contact-cards).
+   Scroll the people list and result pane independently to the final record and the bottom of a tall card;
+   full values must remain reachable without card horizontal overflow. Run `help add` and reach its final example.
+3. Inspect empty and large Lesson rosters, dated detail, history and former-member records. Keep their
+   distinct field/membership/status checks in [Lesson cards](#lesson-cards-and-result-navigation-320-371)
+   and [attendance history](#active-student-attendance-history-checks-100).
+4. Select a visible person and refresh/filter the list. Verify current positions, counts and empty placeholders,
+   correct recycled-card content and selection by stable ID; hiding the selected person clears selection.
+   A deliberate people search/filter may change that view. Do not require it to preserve the old results.
+5. Type an unfinished draft, exercise each viewing control with valid/no/wrong-role selection, then open help
+   through the menu and F1. Verify the draft and the action's promised people filter/order/selection;
+   successful viewing selects its requested result, while a rejected viewing action preserves the prior result.
+   Follow [navigation cases](#lesson-cards-and-result-navigation-320-371) for exact feedback and protected-mode behavior.
+6. Hover over the live context and summary headings after changing results. Inspect the complete current tooltip
+   text and its wrapping, with no lost draft or inaccessible controls. Compare operational bytes before/after
+   these read-only actions. Retain [window placement/restart cases](#compact-windows-and-active-contact-cards),
+   [preference recovery](#preference-recovery-checks) and [completion cases](#command-name-completion) separately.
+
 ### Person editing
 
 In a fresh disposable store, follow the [UG quick start](UserGuide.html#quick-start) through the first
