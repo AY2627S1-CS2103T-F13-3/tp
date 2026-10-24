@@ -80,13 +80,18 @@ public final class PersonEditParser {
         return value.isEmpty() ? Field.clear() : Field.set(parser.parse(value));
     }
 
-    /** Immutable edit request retaining the displayed selector until staged command execution. */
+    /**
+     * Immutable edit request retaining the displayed selector until staged command execution.
+     */
     public record Input(Index index, PersonEditInput edit) {
         public Input {
             requireAllNonNull(index, edit);
         }
     }
 
+    /**
+     * Converts one supplied edit value, reporting invalid input as a parse failure.
+     */
     @FunctionalInterface
     private interface ValueParser<T> {
         T parse(String value) throws ParseException;

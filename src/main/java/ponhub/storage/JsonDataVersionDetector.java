@@ -21,7 +21,9 @@ public final class JsonDataVersionDetector {
     private JsonDataVersionDetector() {
     }
 
-    /** Describes the format boundary checked by {@link ProtectedPonHubDataStorage} before domain decoding. */
+    /**
+     * Describes the format boundary checked by {@link ProtectedPonHubDataStorage} before domain decoding.
+     */
     public enum Format {
         LEGACY_AB3,
         PONHUB_V1_CANDIDATE,

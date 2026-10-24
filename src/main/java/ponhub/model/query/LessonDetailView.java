@@ -15,10 +15,14 @@ import ponhub.model.lesson.Subject;
 import ponhub.model.person.PersonId;
 import ponhub.model.person.Student;
 
-/** One immutable shared-lesson detail snapshot with current roster and distinct retained former-member records. */
+/**
+ * One immutable shared-lesson detail snapshot with current roster and distinct retained former-member records.
+ */
 public record LessonDetailView(Lesson lesson, String tutorName, Optional<LocalDate> date,
         List<RosterStatus> currentRoster, List<FormerAttendance> formerAttendance) implements LessonView {
-    /** Copies the two context lists so a displayed detail never changes before canonical publication. */
+    /**
+     * Copies the two context lists so a displayed detail never changes before canonical publication.
+     */
     public LessonDetailView {
         requireAllNonNull(lesson, tutorName, date, currentRoster, formerAttendance);
         currentRoster = List.copyOf(currentRoster);
@@ -60,14 +64,18 @@ public record LessonDetailView(Lesson lesson, String tutorName, Optional<LocalDa
         return currentRoster.size();
     }
 
-    /** A current member has no recorded status when the selected date has no attendance entry. */
+    /**
+     * A current member has no recorded status when the selected date has no attendance entry.
+     */
     public record RosterStatus(Student student, Optional<AttendanceStatus> status) {
         public RosterStatus {
             requireAllNonNull(student, status);
         }
     }
 
-    /** A retained record for a student who is absent from the current roster. */
+    /**
+     * A retained record for a student who is absent from the current roster.
+     */
     public record FormerAttendance(Student student, LocalDate date, AttendanceStatus status) {
         public FormerAttendance {
             requireAllNonNull(student, date, status);

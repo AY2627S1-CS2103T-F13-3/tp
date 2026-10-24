@@ -9,7 +9,9 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import ponhub.model.query.AttendanceHistoryEntry;
 
-/** Displays one immutable dated attendance record with its stable identities and membership context. */
+/**
+ * Displays one immutable dated attendance record with its stable identities and membership context.
+ */
 public class AttendanceHistoryCard extends UiPart<Region> {
     private static final String FXML = "AttendanceHistoryCard.fxml";
 
@@ -22,7 +24,9 @@ public class AttendanceHistoryCard extends UiPart<Region> {
     @FXML
     private Label attendanceMembership;
 
-    /** Creates a read-only card for one recorded attendance entry. */
+    /**
+     * Creates a read-only card for one recorded attendance entry.
+     */
     public AttendanceHistoryCard(AttendanceHistoryEntry entry) {
         super(FXML);
         requireNonNull(entry);

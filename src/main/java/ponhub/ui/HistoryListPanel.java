@@ -25,7 +25,9 @@ public class HistoryListPanel extends UiPart<Region> {
     @FXML
     private ListView<AttendanceHistoryEntry> historyListView;
 
-    /** Binds a stable observable result list and selector context to the history pane. */
+    /**
+     * Binds a stable observable result list and selector context to the history pane.
+     */
     public HistoryListPanel(ObservableList<AttendanceHistoryEntry> history, ObservableValue<String> context) {
         super(FXML);
         historyContext.textProperty().bind(requireNonNull(context));
@@ -36,6 +38,9 @@ public class HistoryListPanel extends UiPart<Region> {
         historyListView.setCellFactory(list -> new HistoryCell());
     }
 
+    /**
+     * Reuses a history row while fitting its current card to the available viewport width.
+     */
     static class HistoryCell extends ListCell<AttendanceHistoryEntry> {
         HistoryCell() {
             // Let VirtualFlow allocate the viewport breadth, including space for its vertical scrollbar.

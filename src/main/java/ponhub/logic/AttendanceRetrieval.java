@@ -57,7 +57,9 @@ public final class AttendanceRetrieval {
         return active.getReadOnlyProperty();
     }
 
-    /** Resolves the current people index once and selects a stable-ID query. */
+    /**
+     * Resolves the current people index once and selects a stable-ID query.
+     */
     public ObservableList<AttendanceHistoryEntry> show(Input input) throws CommandException {
         requireNonNull(input);
         var student = PersonIndexResolver.resolveStudent(input.studentIndex(), peopleView.getPeople());
@@ -86,7 +88,9 @@ public final class AttendanceRetrieval {
         return readOnlyDisplayed;
     }
 
-    /** Lesson retrieval restores the independent lesson view. */
+    /**
+     * Lesson retrieval restores the independent lesson view.
+     */
     public void hide() {
         active.set(false);
     }
