@@ -17,14 +17,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Orientation;
@@ -725,23 +722,8 @@ public class CanonicalMainWindowTest {
     @Test
     public void commandBox_failedSave_preservesCardsSelectionCountersAndSuccessfulRetry() throws Exception {
         seedMixedPeople();
-        WindowFixture fixture = callOnFxThread(this::createWindow);
-        CountDownLatch layoutReady = new CountDownLatch(1);
-        Runnable afterLayout = () -> {
-            boolean isCardReady = fixture.root().lookupAll("#identity").stream()
-                    .map(Label.class::cast).anyMatch(label -> label.getText().equals("Student · ID: S10"));
-            if (isCardReady) {
-                layoutReady.countDown();
-            } else {
-                // Virtualized cells can need another pulse after their measured heights change.
-                fixture.people().scrollTo(4);
-                fixture.root().requestLayout();
-                Platform.requestNextPulse();
-            }
-        };
-        try {
-            callOnFxThread(() -> {
-                fixture.window.show();
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
                 fixture.enter("list r/student");
                 fixture.people().getSelectionModel().select(1);
                 PonHubDataState original = fixture.app.snapshot();
@@ -764,26 +746,22 @@ public class CanonicalMainWindowTest {
                 assertEquals("New student added: New Student (S10).", fixture.feedback());
                 assertEquals(Optional.empty(), fixture.app.roleFilter());
                 assertEquals(5, fixture.people().getItems().size());
-                fixture.window.getPrimaryStage().getScene().addPostLayoutPulseListener(afterLayout);
                 fixture.people().scrollTo(4);
-                fixture.root().requestLayout();
-                Platform.requestNextPulse();
-                return null;
-            });
-            assertTrue(layoutReady.await(5, TimeUnit.SECONDS), "New Student card must be realized after layout");
-            callOnFxThread(() -> {
+                fixture.layout();
+                // Drive the actual scrollbar after layout measures the variable-height cards.
+                for (var node : fixture.people().lookupAll(".scroll-bar")) {
+                    if (node instanceof ScrollBar bar && bar.isVisible()
+                            && bar.getOrientation() == Orientation.VERTICAL) {
+                        bar.setValue(bar.getMax());
+                    }
+                }
+                fixture.people().layout();
                 assertCard(fixture, "Student · ID: S10", "New Student", 5);
                 assertEquals(fixture.app.snapshot(), new JsonPonHubDataStorage(fixture.dataPath)
                         .readData().orElseThrow());
-                return null;
-            });
-        } finally {
-            callOnFxThread(() -> {
-                fixture.window.getPrimaryStage().getScene().removePostLayoutPulseListener(afterLayout);
-                fixture.close();
-                return null;
-            });
-        }
+            }
+            return null;
+        });
     }
 
     @Test
