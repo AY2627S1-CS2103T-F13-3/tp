@@ -753,7 +753,9 @@ repeating them here.
 snapshots and `JsonPonHubDataStorage` performs file access. Preferences use `JsonUserPrefsStorage`
 separately. [Application startup](#canonical-application-startup-85) selects and checks paths.
 
-<img src="images/CanonicalStorageClassDiagram.png" alt="Active canonical storage and separate preference storage sharing the safe file writer" width="800" />
+<a href="images/CanonicalStorageClassDiagram.png"><img src="images/CanonicalStorageClassDiagram.png" alt="Active canonical storage and separate preference storage sharing the safe file writer" width="800" /></a>
+
+Select the diagram to view it at full size. The two unconnected UML notes name the classes they describe.
 
 The diagram shows the active storage classes; solid arrows show a held reference and dashed arrows show
 dependencies. The protected loader reads and classifies operational JSON before decoding the complete
