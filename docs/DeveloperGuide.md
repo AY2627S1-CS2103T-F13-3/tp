@@ -1068,8 +1068,10 @@ optional parent-record linking follow the [shared contract](#shared-lesson-targe
 role-prefixed positive `long` identity, such as `S1`, with no leading zeros; trimmed constructor input is
 case-normalized. It survives contact and view changes. Value equality includes the ID and all stored fields.
 Business duplicate matching instead compares **role + normalized name + identifying phone**: parent phone
-for a student, own phone for a tutor or parent. Name case and repeated spaces do not distinguish duplicates;
-different IDs, optional contacts or student levels cannot bypass this rule. Different-role records are distinct.
+for a student, own phone for a tutor or parent. Name case, repeated spaces and canonical Unicode spelling
+differences do not distinguish duplicates. Keys use `Locale.ROOT` lowercase without transliteration or accent
+removal, so `José` differs from `Jose`. Different IDs, optional contacts or student levels cannot bypass this rule.
+Different-role records are distinct.
 
 <a id="registry-apis"></a>
 <a id="allocation-and-state-validation"></a>
@@ -1101,14 +1103,19 @@ and saved files from admitting different formats.
 
 | Value | Contract |
 | --- | --- |
-| Name | 1–100 characters after trimming/collapsing ASCII spaces; English letters, spaces, apostrophes, hyphens and periods, with at least one letter. Display case is preserved. |
+| Name | 1–100 Unicode code points after trimming Unicode boundary spaces, collapsing ASCII spaces and NFC normalization. Letters, attached combining marks, ASCII spaces, apostrophes (`'`, `’`), hyphens and periods; at least one letter. Display case is preserved. Digits, emoji, slash, unattached marks and internal non-ASCII whitespace are rejected. |
 | Phone | 3–15 ASCII digits, stored as text to retain leading zeros. |
 | Email | At most 254 characters; local part allows letters, digits, `.`, `_`, `%`, `+`, `-`, without leading/trailing/consecutive periods. Domain has at least two letter/digit/internal-hyphen labels, ending in 2–63 English letters. Spelling/case are preserved. |
 | Address | 1–200 printable ASCII characters after trimming/collapsing spaces; `/`, tabs, line breaks and controls are rejected. |
 
 Name/address normalization occurs once in the value type, before equality and hashing; case remains significant
-for value equality. Name/address parser boundaries preserve controls for rejection; role-aware add rejects
-controls before extraction.
+for value equality. `Name` rejects ISO controls, format characters, line/paragraph separators and lone surrogates
+before trimming, so JSON cannot hide invalid characters at a boundary. It shares the parser's Unicode-boundary
+trimming utility. After NFC normalization, a code-point scan enforces the length and mark-attachment rules.
+Existing duplicate keys and `TutorResolver` consume these canonical `Name` values; both lesson creation and
+editing therefore match canonical equivalents while retaining ambiguity and exact-phone checks. No schema
+change is needed: the loader constructs the same value and the writer saves its normalized display form.
+Name/address parser boundaries preserve controls for rejection; role-aware add rejects controls before extraction.
 Space normalization scans linearly; email rejects excessive length before a linear, constant-stack format scan,
 avoiding stack overflow on hostile repeated input. Phone/email parsing retains surrounding-whitespace trimming.
 
@@ -1116,6 +1123,10 @@ The active `RoleAwareAddParser` and canonical loader use this policy. Previously
 normalization-created duplicates, enter [protected startup](#current-protected-startup); Storage describes
 rejected-file preservation and recovery. This contact policy performs no legacy migration. Role-aware
 add/list are active as described below.
+
+This first #383 increment leaves prefix/slash parsing and search normalization unchanged. Legal-name
+`s/o` / `d/o` markers and numeric slash addresses remain outstanding; search can use a displayed-name fragment
+such as `n/Jos`, but does not promise canonical Unicode equivalence or full internationalization.
 
 <a id="role-aware-addition-parsing-foundation"></a>
 <a id="staged-person-addition-candidate"></a>
@@ -2125,6 +2136,25 @@ Given below are instructions to test the app manually.
 testers are expected to do more *exploratory* testing.
 
 </div>
+
+### Unicode person-name checks (#383 first increment)
+
+In a disposable data folder, add `add r/tutor n/José Santos p/00123456`,
+`add r/student n/李明 l/P1 pp/91234567` and `add r/parent n/தமிழ் p/91234567`.
+Expect the displayed spellings and IDs `T1`, `S1`, `P1`; restart and check all three persist.
+Create `addlesson d/Mon st/0900 et/1000 s/Math tu/JOSÉ SANTOS rm/R1` and check it resolves `T1`.
+With the Tutor list selected, `edit 1 n/Anne-Marie O’Neill` must preserve `T1` and the lesson link.
+Restore the Tutor to `José Santos`, then edit again with `José` entered as `Jose` plus combining acute accent:
+the edit must report no change and the saved name must remain `José Santos`.
+A same-role/same-identifying-phone addition using that equivalent spelling must fail.
+`Jose` without an accent remains distinct. An extra Tutor with the same name but another phone must
+require `tp/` for lesson selection; an incorrect supplied phone must fail.
+
+`CanonicalUnicodeNameIntegrationTest` checks command/JSON reload, no-op/duplicate byte preservation,
+allocation counters, existing ASCII data, lesson/roster/attendance stability and invalid-prefix regressions.
+`NameTest` checks normalized code-point limits, supplementary letters and unattached marks;
+`JsonPonHubDataStorageTest` checks human-edited Unicode and protected malformed/duplicate reloads.
+Search and slash grammar retain the limitations described in the contact-validation section above.
 
 ### Launch and shutdown
 
