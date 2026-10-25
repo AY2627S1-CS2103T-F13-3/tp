@@ -1232,9 +1232,12 @@ changing it. A successful addition's reset to all roles belongs to the transacti
 role names, and rejects malformed arguments without
 changing any view.
 
-`PersonRecordCardData` separates the numbered name heading from the role/stable-ID line and renders the
-required/optional fields in the role table above; absent contacts show `Not provided`. Display case and phone
-zeros are retained. `PersonRecordCard` loads wrapping labels from FXML with no fixed card height.
+`PersonRecordCardData` separates the name, explicitly labelled command position and role/stable ID. Its
+immutable caption/value groups order Student fields as education, own contacts, parent phone and address;
+Tutor/Parent cards omit the Student-specific groups. Absent contacts show `Not provided`; display case and phone
+zeros are retained. `PersonRecordCard` renders each group with each caption above its wrapping value, with matching relationship
+context below the own fields. FXML imposes no fixed card height. The `.person-record-card` CSS scope distinguishes
+names, metadata, captions and values without changing Lesson/history styling or the list selection behavior.
 `PersonRecordListPanel` fits cards to cell width, updates positions when cells are reused, and supplies count,
 empty placeholder and vertical scrolling for tall cards. Neither projection nor panel owns writable records.
 
@@ -2103,13 +2106,17 @@ Perform these checks in the active application and record the platform, build an
 instructions are preserved in [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77).
 
 1. Use all roles, absent/present optional contacts, leading-zero phones and long names/email/addresses.
-   Verify index and stable ID are separate, role-required fields remain readable, and absent contacts
-   show `Not provided`.
+   Verify the prominent name, separate `Position` and `ID` labels, and distinguishable captions/values.
+   Students show level, own phone/email, parent phone and address in that order; Tutors/Parents show their
+   own contacts and address. Check leading zeros and `Not provided` indicators in selected and unselected cards.
 2. On 1280×720 at 150% and 1920×1080 at 100%/125%, resize and scroll through an entire tall card to the
    last record. Complete values must wrap without overlap or hidden content; record the actual platform,
    scaling and build. Logical preview sizes alone do not establish these results.
 3. Filter/refresh the list and repeat: current positions, count and empty placeholder update correctly;
-   recycled cells show the correct person. Coordinate whole-window checks with
+   recycled cells show the correct person and stable ID. Select a person, run `list r/student` then `list`,
+   and verify selection restoration for a still-visible ID and clearing when hidden. Run `search c/student s/Math`
+   on sample data and check that matching relationship context remains complete below the own fields.
+   Coordinate whole-window checks with
    [#128](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/128).
 
 Given below are instructions to test the app manually.

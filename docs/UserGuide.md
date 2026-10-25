@@ -260,7 +260,10 @@ Displays all people or only people with a specified role, including each current
 
 #### Expected result
 
-People appear in creation order, numbered from 1 within the displayed result. Each card labels its role and stable ID separately from its current position. Use positions according to the [shared selector rules](#reading-the-command-formats).
+People appear in creation order, numbered from 1 within the displayed result. Each card shows the name prominently, followed by its role, stable `ID` and current command `Position`.
+Attribute captions appear above their values. Student details are grouped as education level, own phone/email,
+parent phone, then address; Tutor and Parent cards show their own contacts and address. Missing optional contacts
+show `Not provided`. Long values wrap; scroll vertically to read the full card. Use positions according to the [shared selector rules](#reading-the-command-formats).
 
 Example feedback:
 `Showing 3 student(s).`
