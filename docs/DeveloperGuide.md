@@ -1462,31 +1462,28 @@ examples do not describe an implemented PonHub feature.
 
 **Value proposition**: For tuition centre administrative staff who need to keep people, lessons and attendance organised, PonHub provides a single place to manage and search these records, with scheduling checks and attendance tracking to support reliable daily administration.
 
-Compared with maintaining separate contact lists, timetables and attendance records, PonHub connects the information needed for routine tasks and checks conflicting or invalid changes. The active v1.4 person and Lesson edits support correcting records while retaining their identities and history. Make-up booking remains a future proposal.
+Compared with maintaining separate contact lists, timetables and attendance records, PonHub connects the information needed for routine tasks and checks conflicting or invalid changes. Person and Lesson edits support correcting records while retaining their identities and history.
 
-**Shared-lesson MVP target:** Lessons are created independently of student enrolment, including lessons with empty rosters. Each shared `Lesson` owns its currently enrolled student IDs; student lessons, rosters, and tutor schedules are retrieved from that canonical membership rather than copied into each student. Attendance is a separate dated record for one student and one lesson. Unenrolment removes current membership and retains attendance history; an existing historical entry can still be corrected or removed. A missing attendance entry means unrecorded, distinct from present and absent.
+**Shared lessons and attendance:** Lessons are created independently of student enrolment, including lessons with empty rosters. Each shared `Lesson` owns its currently enrolled student IDs; student lessons, rosters, and tutor schedules are retrieved from that canonical membership rather than copied into each student. Attendance is a separate dated record for one student and one lesson. Unenrolment removes current membership and retains attendance history; an existing historical entry can still be corrected or removed. A missing attendance entry means unrecorded, distinct from present and absent.
 
-**Intended v1.4 scope:** The [alpha plan (#276)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/276) retains the shared-Lesson product and adds person editing (US-55) and Lesson editing (US-37). [Person editing (#263)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/263) and [Lesson editing (#264)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/264) are active in this increment. Their [editing contract](#planned-v14-editing-contract) preserves stable identities, shared rosters and retained attendance.
-
-**Delivered versus planned:** The [student foundation (#57)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/57), [tutor and parent foundations (#62)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/62), [ordered people registry (#70)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/70), [person-card components (#119)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/119), [role-filtered listing components (#122)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/122), [search criteria foundation (#64)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/64), and [lesson scheduling values (#63)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/63) provide independently tested APIs. The registry, canonical cards and role-filtered listing are now connected to the active people session. [Inline help (#68)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/68) and [safe file replacement (#66)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/66) are connected to the active canonical people runtime.
-
-Canonical people activation and the remaining shared-lesson integration are tracked in
-[#76](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/76),
-[#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77),
-[#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85), and their dependent command, storage and retrieval
-issues. The requirements below describe the intended product; role-aware add/list, empty-roster shared-lesson
-creation, enrolment/unenrolment, dated attendance marking, guarded person deletion, own-contact people search,
-guarded Lesson deletion, lesson listing, lesson search, lesson details and dated attendance removal are active.
-Student, Parent and Tutor relationship search and attendance history are active.
+The [shared-lesson contract](#shared-lesson-target-contract) explains the current ownership and selector rules;
+the [editing contract](#v14-editing-contract) explains identity and history preservation during changes.
+Use the [UG command summary](UserGuide.html#current-command-summary) for the supported operations and syntax.
+The stories below retain future needs, including capacity, make-up booking and waiting lists, alongside
+implemented requirements.
 
 ### User stories
 
-These stories distinguish the shared-lesson product and intended v1.4 additions from future proposals. A priority states the intended scope, not implementation status.
+These stories describe user goals. **High** prioritises the core shared-lesson product, **Medium** useful
+extensions, and **Low** longer-term consideration. Priority does not establish implementation status.
 
-Priorities: **High** (core shared-lesson product and intended v1.4 additions), **Medium** (future extensions), **Low** (future consideration).
-The target includes shared rosters, regular enrolment and active person/Lesson edits (US-55 and US-37). Capacity, make-up reservations and waiting lists are future work, as are export, saved searches, archive/restore, richer attendance and percentages, fees and guided workflows. Medium and Low priorities remain proposals beyond the agreed release scope.
-
-Shared lessons, current membership, and retained dated attendance are separate concepts in these stories. The stories specify user goals; command selectors and the complete planned search-filter matrix are confirmed in the [shared-lesson target contract](#shared-lesson-target-contract) and [#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60). Implementation proceeds in working increments, and only the [active command routes](#current-increment-and-command-integration) are available today.
+The High-priority workflows are available through the [current commands](UserGuide.html#current-command-summary).
+Most Medium and Low stories remain future proposals. US-33 is partly delivered:
+[Tab completes command names](UserGuide.html#completing-command-names-with-tab), while argument/value completion,
+inline input guidance and spelling suggestions remain future work. Existing `help` guidance is covered by US-13.
+Combined goals such as name sorting plus level filtering (US-22) are not fully delivered merely because one part
+is available. Shared lessons, current membership and retained dated attendance remain separate concepts, as
+defined in the [shared-lesson contract](#shared-lesson-target-contract).
 
 | ID | Priority | As a … | I want to … | So that I can … |
 | --- | --- | --- | --- | --- |
