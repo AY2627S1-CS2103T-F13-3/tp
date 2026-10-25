@@ -482,8 +482,11 @@ lesson cards, searches and selected details, and survives restart without changi
 The complete replacement is checked against every other Lesson. Tutor, room and enrolled-Student overlaps are
 rejected; the Lesson being edited is not treated as its own conflict, and adjacent slots remain valid. A weekday
 change is rejected while any current or former Student has retained attendance on an incompatible date. PonHub
-does not move or delete that history automatically: use `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` for each
-identified record only if removal is intended, then retry. If a selected dated detail has no attendance but its
+does not move or delete that history automatically. Use `showlesson lid/LESSON_ID d/YYYY-MM-DD` with the Lesson
+and date from the rejection to identify the retained records, including former members. Run `list r/student`
+and match the intended Student's name/stable ID to their current position. Use
+`unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` only if removal is intended, then retry the edit. Recheck positions
+before each indexed command. If a selected dated detail has no attendance but its
 date no longer matches an allowed weekday change, PonHub keeps the Lesson selected and clears that obsolete date.
 
 Unknown, repeated, blank or missing fields, a missing Lesson, Tutor lookup failures, malformed resulting slots and
@@ -608,8 +611,12 @@ reports both stable IDs, for example `Student S3 enrolled in lesson L1.`
 Run `list r/student` and recheck the student's position. If the intended student appears at position 1, enter `unenrol 1 lid/L1` for lesson `L1`.
 
 This removes current membership and retains dated attendance. It does not delete the lesson or Student. A Student
-who is not currently in that roster is rejected without change. Both commands preserve the current people filter,
-order and positions, and refresh derived roster/student-lesson results. Invalid input, validation failure and save
+who is not currently in that roster is rejected without change. Both commands retain the active people filter
+and the relative order of surviving matches, and refresh derived roster/student-lesson results. Membership changes
+re-evaluate relationship searches, so matching people and displayed positions can change. Recheck the people list
+before the next indexed command. For example, if Alex and Jamie match `search c/student d/Mon s/Math` at positions
+1 and 2, unenrolling Alex from their only matching Lesson removes Alex from the results; Jamie then occupies
+position 1. Invalid input, validation failure and save
 failure leave the live aggregate and active views unchanged. Invalid input and validation failure do not write; after
 a save failure, follow the [unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build) for
 the stored file.

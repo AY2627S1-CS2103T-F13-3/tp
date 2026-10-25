@@ -2450,9 +2450,13 @@ unrecorded, then mark the second absent. Unenrol that Student and verify the dat
 former-member section while the current roster shrinks. Correct or remove the retained entry through active
 `mark` and `unmark` commands and verify immediate refresh; repeat after restart. Reject malformed IDs/dates, a Tuesday
 date for a Monday Lesson, and an unknown ID while preserving the prior detail and operational bytes. Inspect an
-empty roster and many retained records at narrow window widths and scroll to the last row. Keep a filtered people
-view selected throughout; the next person command must still resolve its original one-based position. Protected
-startup exposes no `showlesson` route.
+empty roster and many retained records at narrow window widths and scroll to the last row. Read-only detail
+retrieval preserves the current people results and positions, while membership changes re-evaluate relationship
+criteria. For example, with Alex and Jamie at positions 1 and 2 in
+`search c/student d/Mon s/Math`, unenrolling Alex from their only matching Lesson leaves Jamie at position 1.
+To correct or remove Alex's retained attendance when Alex no longer matches that search, run `list r/student`
+or search by Alex's own name again. Recheck the displayed list before the next person command; it must resolve
+the current position to the intended stable Student ID. Protected startup exposes no `showlesson` route.
 
 ### Active Student attendance history checks (#100)
 
