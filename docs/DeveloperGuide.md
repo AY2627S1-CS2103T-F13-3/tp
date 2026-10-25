@@ -2122,24 +2122,24 @@ testers are expected to do more *exploratory* testing.
 
 ### Launch and shutdown
 
-Record the source commit, JAR SHA-256, OS/architecture and Java distribution/version for every trial.
-Run `java -version` in the launch terminal and confirm the [prescribed Java 25 runtime](SettingUp.html#setting-up-the-project-on-your-computer).
-Use that same terminal/runtime when reopening the JAR; substitute its actual filename if different.
+Use the artifact/runtime record and disposable-folder setup from the
+[common journey](#common-selector-and-failure-journey), substituting the actual JAR filename below.
+For geometry, resizing and physical scaling, use the [common layout matrix](#common-window-and-layout-checks)
+and retain its per-trial results and unavailable combinations. The cases here check storage locations and lifecycle.
 
 1. Build or obtain the matching `ponhub.jar`, copy it to a disposable empty JAR folder, and launch
    from that folder's terminal with Java 25: `java -jar ponhub.jar`. Expect the canonical GUI and an empty
    people view, with the initial window inside the current desktop work area. Run help/list/exit;
    `data/ponhub.json` remains absent, and preferences may save separately.
-2. Relaunch, add all roles with the active examples in the UG, then exit. Expect supported JSON only after
-   a successful add. Restart the same JAR and verify people, stable IDs and global creation order.
-3. Resize and move the window, close it and relaunch the same JAR. Expect retained geometry from
-   `preferences.json` when it fits a current screen; oversized or offscreen preferences are adjusted
-   into an available desktop work area. Select a different missing path with `--data=data/another-ponhub.json`; expect an
+2. For successful mutation and reload, use the [common journey](#common-selector-and-failure-journey).
+   Verify that the complete snapshot and allocation counters use the selected operational file;
+   preferences remain independent of that snapshot.
+3. Check saved window placement through [compact windows](#compact-windows-and-active-contact-cards)
+   and [preference recovery](#preference-recovery-checks). Select a different missing path with
+   `--data=data/another-ponhub.json`; expect an
    empty dataset and the same preference location in the JAR folder, without touching the previous
    operational file. Launch the JAR from another working directory and confirm data/preferences/logs
-   still remain in the JAR folder. Repeat the actual resolution/scaling changes in
-   [#128](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/128), recording the tested build,
-   each setting and outcome, including settings unavailable on the test platform.
+   still remain in the JAR folder.
 4. Repeat with `java -jar ponhub.jar --data="separate store/ponhub.json"`. Confirm the status footer and
    subsequent successful save/reload use that selected path. Keep a legacy `data/addressbook.json` in the
    JAR folder and verify default startup/add/exit leaves its bytes unchanged. Reject blank `--data=`,
@@ -2152,23 +2152,29 @@ Historical verification details are preserved in [#84](https://github.com/AY2627
 
 ### Canonical people commands and unsuccessful saves
 
-1. Add a Tutor, Student and Parent, omitting optional Student contacts. Add a second student with the
-   same parent phone and a different name. Expect distinct stable IDs, readable role-specific cards and
-   the global creation order after restart. Run `list r/student`, `list r/TUTOR` and `list r/parent`;
+Start with the fixture and selector checks in the [common journey](#common-selector-and-failure-journey).
+Use [command transactions](#command-transactions) for publication/no-op rules and
+[safe JSON saves](#safe-json-saves) for stored-file recovery; retain these add-specific differences.
+
+1. Using that fixture, run `add r/parent n/Pat Tan p/91234567`; retain the two Students' shared parent phone
+   and omitted optional contacts. Expect distinct stable IDs and the global creation order.
+   Run `list r/student`, `list r/TUTOR` and `list r/parent`;
    positions renumber from one while stored IDs and relative order remain unchanged.
 2. Select a Student card after role filtering. Try a duplicate Student with the same normalized name
    and parent phone, a missing required field, unknown/repeated prefixes, and a Tutor with `l/`. Expect
    rejection and unchanged file bytes, records, counters, filter and selection. Reject `list r/all`,
    `list r/` and two role prefixes without changing the previous view. A valid empty role result succeeds.
-3. Use a disposable save-failure setup: retain the pre-command file and make the operational location
-   unwritable for the app account, or use the automated failing-writer seam. Attempt a valid addition;
-   expect no success message, publication or ID consumption. Restore access and retry. The successful
-   record uses the next unconsumed ID and appears last in the all-role view; restart verifies persistence.
-4. With a selected card, request help from the menu/F1 and through the command box. Expect preserved
-   records/filter/selection; menu/F1 additionally retain unfinished text. Run malformed `delete S1` and
-   `lessons sid/S1` commands; expect invalid-index or usage feedback respectively. These failures
-   preserve data, filter and selection. Valid Student, Parent and Tutor relationship searches replace
-   the people view with matching people and Student/Lesson context.
+3. Repeat the common journey's save/retry/reload procedure with a valid addition while a people filter
+   and card selection are active. Record the next ID before the attempt: failure must not consume it,
+   publish the candidate or reset the view. After restoring access, one successful retry uses that ID,
+   adds one record last in the all-role view, and persists the complete snapshot/counters after restart.
+   Preparation/backup failure preserves the old destination. If fallback replacement and restoration both
+   fail, recover the named retained backup before continuing or restarting; do not assume unchanged file
+   bytes for every save failure. An injected writer verifies the developer seam, not a native filesystem trial.
+4. Use the [common layout checks](#common-window-and-layout-checks) for help/draft/selection preservation
+   and the [common journey](#common-selector-and-failure-journey) for invalid-selector isolation.
+   Also reject `delete S1` without changing data, filter or selection. Valid Student, Parent and Tutor
+   relationship searches deliberately replace the people view with matching people and Student/Lesson context.
 
 ### Active own-contact search checks
 
@@ -2436,11 +2442,12 @@ automated tooltip-skin and command-window regressions in `ResultHeadingTooltipTe
 
 ### Canonical loading and recovery
 
-Use disposable copies; keep originals and backups outside every configured operational path. Record
-build/platform evidence as in [Launch and shutdown](#launch-and-shutdown).
+Use the artifact/runtime record from the [common journey](#common-selector-and-failure-journey) and the
+path cases in [Launch and shutdown](#launch-and-shutdown). Keep originals and backups outside every
+configured operational path; use a separate disposable copy for each rejected-file case below.
 
-1. Launch with a missing operational file. Help/list/exit must leave it absent; a successful addition
-   creates supported data that reloads on restart. Never use a rejected or legacy file as the new store.
+1. Follow the missing-file lifecycle in [Launch and shutdown](#launch-and-shutdown), then the common
+   journey's successful save/reload. Never use a rejected or legacy file as the new store.
 2. Close the app and edit a supported copy: correct a contact, preserve IDs/counters, and include valid
    lessons, rosters and attendance for a former member. Restart and verify the complete edited snapshot.
 3. Test separate copies with malformed JSON, null roots/records, wrong shapes, duplicate IDs or normalized
