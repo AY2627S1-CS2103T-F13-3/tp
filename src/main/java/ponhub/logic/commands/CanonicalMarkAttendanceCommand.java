@@ -34,13 +34,6 @@ public final class CanonicalMarkAttendanceCommand implements CanonicalCommandExe
     private final Clock clock;
 
     /**
-     * Creates a staged attendance command from validated selectors and values.
-     */
-    public CanonicalMarkAttendanceCommand(AttendanceMarkInput input) {
-        this(input, Clock.systemDefaultZone());
-    }
-
-    /**
      * Creates a staged attendance command using the supplied clock for future-date safeguards.
      */
     public CanonicalMarkAttendanceCommand(AttendanceMarkInput input, Clock clock) {
