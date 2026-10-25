@@ -545,7 +545,11 @@ Check the updated people list before deleting another person.
 
 **Create (active):** `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
 
-Example: `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1`.
+Example: `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/B-01`.
+
+A room identifier contains 1 to 10 letters or digits, with optional single hyphens between non-empty parts.
+PonHub displays it in upper case, so `b-01` becomes `B-01`. Case variants therefore identify the same room and
+cannot bypass room-clash checks. Spaces and leading, trailing or repeated hyphens are rejected.
 
 The tutor must already exist. `tu/` matches the tutor's complete name, ignoring letter case and repeated spaces. If several tutors share that name, supply their exact phone number, for example `tu/Mei Lim tp/92345678`. An ambiguous name without `tp/` is rejected. A supplied phone must match the named tutor exactly, even when the name is unique; an unmatched name or phone is rejected.
 

@@ -1016,8 +1016,9 @@ The immutable types in
 [`model.lesson`](https://github.com/AY2627S1-CS2103T-F13-3/tp/tree/master/src/main/java/ponhub/model/lesson)
 define the exhaustive parsing, normalization and equality rules used by commands, aggregate validation and storage.
 `LessonId` is an `L`-prefixed positive `long`; `LessonDay` stores `Mon`–`Sun`; `LessonTime` stores four-digit 24-hour
-time; and `Subject` and `Room` enforce their length and character contracts. Room case is normalized so it cannot
-bypass clash detection.
+time; and `Subject` and `Room` enforce their length and character contracts. A `Room` contains 1 to 10 letters or
+digits, with optional single hyphens separating non-empty parts. It is normalized to upper case while retaining
+hyphens, so `b-01` and `B-01` have the same equality and hash values and cannot bypass clash detection.
 
 `LessonTimeSlot` requires its end to be later than its start and models `[start, end)`. Therefore `1600–1700` and
 `1700–1800` are adjacent rather than overlapping; equal clock times on different weekdays also do not overlap.
