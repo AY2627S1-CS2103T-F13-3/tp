@@ -255,8 +255,43 @@ public class RoleAwareAddParserTest {
                 assertThrows(ParseException.class, () -> parser.parse("r/" + role + " n/Mei Lim p/" + phone));
             }
         }
-        assertThrows(ParseException.class, ContactDetails.MESSAGE_PHONE_CONSTRAINTS, () ->
+        assertThrows(ParseException.class, ParserUtil.MESSAGE_CONTACT_PHONE_CONSTRAINTS, () ->
                 parser.parse("r/student n/Alex Tan l/S2 pp/0001234567890123"));
+    }
+
+    @Test
+    public void parse_invalidPhoneValues_preservesOwnAndParentErrorText() {
+        String lengthMessage = "Contact phone numbers must contain between 3 and 15 digits.";
+        String phoneMessage = "Phone numbers must contain 3 to 15 digits, without spaces or punctuation.";
+        String[][] cases = {
+            {"1234567890123456", lengthMessage}, {"123456789012345x", lengthMessage},
+            {"12", phoneMessage}, {"+123", phoneMessage}, {"\uff11\uff12\uff13", phoneMessage}
+        };
+        for (String[] testCase : cases) {
+            String phone = testCase[0];
+            String message = testCase[1];
+            assertThrows(ParseException.class, message, () ->
+                    parser.parse("r/student n/Alex Tan l/S2 pp/" + phone));
+            assertThrows(ParseException.class, message, () -> parser.parse(STUDENT_ARGUMENTS + " p/" + phone));
+            for (String role : new String[]{"tutor", "parent"}) {
+                assertThrows(ParseException.class, message, () -> parser.parse("r/" + role + " n/Mei Lim p/" + phone));
+            }
+        }
+    }
+
+    @Test
+    public void parse_phoneAndOtherInvalidFields_preservesValidationOrder() {
+        String longPhone = "1234567890123456";
+        assertThrows(ParseException.class, Name.MESSAGE_CONSTRAINTS, () ->
+                parser.parse("r/student n/@Alex l/P7 pp/" + longPhone + " p/" + longPhone));
+        assertThrows(ParseException.class, "Contact phone numbers must contain between 3 and 15 digits.", () ->
+                parser.parse("r/student n/Alex Tan l/P7 e/invalid pp/12 p/" + longPhone));
+        assertThrows(ParseException.class, Email.MESSAGE_CONSTRAINTS, () ->
+                parser.parse("r/student n/Alex Tan l/P7 e/invalid pp/" + longPhone));
+        assertThrows(ParseException.class, EducationLevel.MESSAGE_CONSTRAINTS, () ->
+                parser.parse("r/student n/Alex Tan l/P7 pp/" + longPhone));
+        assertThrows(ParseException.class, "Add prefix 'pp/' is only allowed for students.", () ->
+                parser.parse("r/tutor n/Mei Lim p/" + longPhone + " pp/12"));
     }
 
     @Test

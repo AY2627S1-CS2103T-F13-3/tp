@@ -165,6 +165,39 @@
     -fx-text-fill: #B8B8B8;
 }
 
+/* Person cards keep their hierarchy local to avoid changing lesson/history cards. */
+.person-record-card .person-name {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #F2F2F2;
+}
+
+.person-record-card .person-identity {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #F2F2F2;
+}
+
+.person-record-card .person-position,
+.person-record-card .person-caption {
+    -fx-font-size: 12px;
+    -fx-text-fill: #B8B8B8;
+}
+
+.person-record-card .person-caption {
+    -fx-font-weight: bold;
+}
+
+.person-record-card .person-value {
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+    -fx-text-fill: #F2F2F2;
+}
+
+.person-record-card .person-detail-group {
+    -fx-spacing: 4;
+}
+
 .stack-pane {
      -fx-background-color: #101010;
 }

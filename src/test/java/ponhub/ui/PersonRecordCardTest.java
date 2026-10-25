@@ -14,15 +14,19 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
 import ponhub.MainApp;
 import ponhub.commons.core.index.Index;
 import ponhub.logic.CanonicalCommandExecutor;
@@ -47,7 +51,10 @@ import ponhub.model.person.PersonRole;
 import ponhub.model.person.Phone;
 import ponhub.model.person.Student;
 import ponhub.model.person.Tutor;
+import ponhub.model.query.LessonQueries;
+import ponhub.model.search.PersonSearchMatch;
 import ponhub.testutil.FxTestUtil;
+import ponhub.testutil.LessonQueryTestData;
 import ponhub.testutil.PeopleSampleDataUtil;
 
 public class PersonRecordCardTest {
@@ -66,9 +73,9 @@ public class PersonRecordCardTest {
             Region root = new PersonRecordCard(student, 2).getRoot();
             layoutScene(root, 600, 480);
 
-            assertCardText(root, "2. Casey Tan", "Student · S9223372036854775807",
-                    List.of("Level: JC2", "Parent phone: 00987654", "Own phone: Not provided",
-                            "Email: Not provided", "Address: Not provided"));
+            assertCardText(root, "Casey Tan", "Student · ID: S9223372036854775807", 2,
+                    List.of("Level: JC2", "Own phone: Not provided", "Email: Not provided",
+                            "Parent phone: 00987654", "Address: Not provided"));
         });
     }
 
@@ -82,9 +89,9 @@ public class PersonRecordCardTest {
             Region root = new PersonRecordCard(student, 4).getRoot();
             layoutScene(root, 600, 480);
 
-            assertCardText(root, "4. " + contacts.getName().fullName, "Student · S12",
-                    List.of("Level: S2", "Parent phone: 00987654", "Own phone: 00012345",
-                            "Email: Alex.Tan@Example.com",
+            assertCardText(root, contacts.getName().fullName, "Student · ID: S12", 4,
+                    List.of("Level: S2", "Own phone: 00012345", "Email: Alex.Tan@Example.com",
+                            "Parent phone: 00987654",
                             "Address: " + contacts.getAddress().orElseThrow().value));
         });
     }
@@ -98,7 +105,7 @@ public class PersonRecordCardTest {
             Region root = new PersonRecordCard(tutor, 7).getRoot();
             layoutScene(root, 600, 480);
 
-            assertCardText(root, "7. " + contacts.getName().fullName, "Tutor · T41",
+            assertCardText(root, contacts.getName().fullName, "Tutor · ID: T41", 7,
                     List.of("Phone: 00012345", "Email: Alex.Tan@Example.com",
                             "Address: " + contacts.getAddress().orElseThrow().value));
         });
@@ -113,7 +120,7 @@ public class PersonRecordCardTest {
             Region root = new PersonRecordCard(parent, 3).getRoot();
             layoutScene(root, 600, 480);
 
-            assertCardText(root, "3. Beatrice Tan", "Parent · P11",
+            assertCardText(root, "Beatrice Tan", "Parent · ID: P11", 3,
                     List.of("Phone: 00987654", "Email: Not provided", "Address: Not provided"));
         });
     }
@@ -128,7 +135,7 @@ public class PersonRecordCardTest {
                 view.scrollTo(1);
                 view.layout();
 
-                Region tutorCard = findCard(view, "Tutor · T1");
+                Region tutorCard = findCard(view, "Tutor · ID: T1");
                 long longLines = 0;
                 for (var node : tutorCard.lookupAll(".label")) {
                     Label label = (Label) node;
@@ -154,12 +161,12 @@ public class PersonRecordCardTest {
                     }
                 }
                 view.layout();
-                Region parentCard = findCard(view, "Parent · P1");
+                Region parentCard = findCard(view, "Parent · ID: P1");
                 Bounds parentBounds = parentCard.localToScene(parentCard.getBoundsInLocal());
                 assertTrue(parentBounds.getMinY() >= 0 && parentBounds.getMaxY() <= panel.getHeight() + 1,
                         "Scrolling must expose the complete last card: " + parentBounds
                                 + "; viewport height=" + view.getHeight());
-                assertCardText(parentCard, "3. Beatrice Tan", "Parent · P1",
+                assertCardText(parentCard, "Beatrice Tan", "Parent · ID: P1", 3,
                         List.of("Phone: 00987654", "Email: Not provided", "Address: Not provided"));
             }
         });
@@ -189,15 +196,17 @@ public class PersonRecordCardTest {
             ListView<PersonRecord> list = getRecordList(panel);
             assertTrue(list.getItems() == peopleView.getPeople());
             assertEquals("Showing 3 person(s).", ((Label) panel.lookup("#summary")).getText());
-            Region studentCard = findCard(list, "Student · S1");
-            assertEquals("1. Alex Tan", ((Label) studentCard.lookup("#heading")).getText());
+            Region studentCard = findCard(list, "Student · ID: S1");
+            assertEquals("Alex Tan", ((Label) studentCard.lookup("#heading")).getText());
+            assertEquals("Position: 1", ((Label) studentCard.lookup("#position")).getText());
 
             peopleView.setRoleFilter(Optional.empty());
             panel.layout();
             list.scrollTo(1);
             list.layout();
-            studentCard = findCard(list, "Student · S1");
-            assertEquals("2. Alex Tan", ((Label) studentCard.lookup("#heading")).getText());
+            studentCard = findCard(list, "Student · ID: S1");
+            assertEquals("Alex Tan", ((Label) studentCard.lookup("#heading")).getText());
+            assertEquals("Position: 2", ((Label) studentCard.lookup("#position")).getText());
             assertEquals(6, list.getItems().size());
             assertEquals("Showing 6 person(s).", ((Label) panel.lookup("#summary")).getText());
             assertTrue(list.getItems() == peopleView.getPeople());
@@ -232,7 +241,7 @@ public class PersonRecordCardTest {
             assertEquals(0, list.getSelectionModel().getSelectedIndex());
             assertEquals(Optional.of(PersonRole.STUDENT), view.getRoleFilter());
             assertEquals(List.of(student), list.getItems());
-            assertNotNull(findCard(list, "Student · S7"));
+            assertNotNull(findCard(list, "Student · ID: S7"));
         });
     }
 
@@ -247,7 +256,7 @@ public class PersonRecordCardTest {
             Region panel = new PersonRecordListPanel(peopleView).getRoot();
             layoutScene(panel, 853, 480);
             ListView<PersonRecord> list = getRecordList(panel);
-            assertNotNull(findCard(list, "Parent · P1"));
+            assertNotNull(findCard(list, "Parent · ID: P1"));
 
             registry.remove(new PersonId("P1"), person -> false);
             data.resetData(peopleData(registry.exportState()).exportState());
@@ -273,7 +282,7 @@ public class PersonRecordCardTest {
                 ListView<PersonRecord> list = getRecordList(panel);
                 list.scrollTo(1);
                 list.layout();
-                Region tutorCard = findCard(list, "Tutor · T1");
+                Region tutorCard = findCard(list, "Tutor · ID: T1");
                 for (Node node : tutorCard.lookupAll(".label")) {
                     Label label = (Label) node;
                     assertTrue(label.isWrapText(), label.getText());
@@ -290,12 +299,95 @@ public class PersonRecordCardTest {
                     }
                 }
                 list.layout();
-                Region parentCard = findCard(list, "Parent · P1");
+                Region parentCard = findCard(list, "Parent · ID: P1");
                 Bounds bounds = parentCard.localToScene(parentCard.getBoundsInLocal());
                 assertTrue(bounds.getMinY() >= 0 && bounds.getMaxY() <= panel.getHeight() + 1,
                         "The production host must expose the complete last card: " + bounds);
             }
         });
+    }
+
+    @Test
+    public void panel_selectedAndUnselectedRoles_preservesHierarchyWithoutHorizontalOverflow() throws Exception {
+        runOnFxThread(() -> {
+            for (int width : new int[] {320, 853}) {
+                Region panel = PersonRecordCardPreview.createPeopleView();
+                layoutScene(panel, width, 480);
+                ListView<PersonRecord> list = getRecordList(panel);
+                for (int index = 0; index < list.getItems().size(); index++) {
+                    for (boolean selected : new boolean[] {false, true}) {
+                        list.getSelectionModel().clearSelection();
+                        if (selected) {
+                            list.getSelectionModel().select(index);
+                        }
+                        list.scrollTo(index);
+                        list.applyCss();
+                        list.layout();
+                        list.applyCss();
+                        list.layout();
+                        var person = list.getItems().get(index);
+                        Region card = findCard(list, new PersonRecordCardData(person, index + 1).getIdentity());
+                        ListCell<?> cell = list.lookupAll(".list-cell").stream().map(ListCell.class::cast)
+                                .filter(candidate -> candidate.getGraphic() == card).findFirst().orElseThrow();
+                        assertEquals(selected, cell.isSelected());
+                        assertEquals(selected,
+                                cell.getPseudoClassStates().contains(PseudoClass.getPseudoClass("selected")));
+                        assertEquals(selected ? Color.web("#FF9900") : Color.TRANSPARENT,
+                                cell.getBorder().getStrokes().get(0).getLeftStroke());
+                        Label heading = (Label) card.lookup("#heading");
+                        Label value = (Label) card.lookup(".person-value");
+                        Label caption = (Label) card.lookup(".person-caption");
+                        assertTrue(heading.getFont().getSize() > value.getFont().getSize());
+                        assertTrue(heading.getFont().getStyle().contains("Bold"));
+                        assertTrue(caption.getFont().getStyle().contains("Bold"));
+                        assertEquals(Color.web("#B8B8B8"), caption.getTextFill());
+                        assertEquals(Color.web("#F2F2F2"), value.getTextFill());
+                        assertEquals("Position: " + (index + 1), ((Label) card.lookup("#position")).getText());
+                        assertCompleteLabels(card);
+                        assertTrue(list.lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
+                                .noneMatch(bar -> bar.getOrientation() == Orientation.HORIZONTAL && bar.isVisible()));
+                    }
+                }
+            }
+        });
+    }
+
+    @Test
+    public void constructor_relationshipContext_wrapsCompleteMatchesBelowOwnDetails() throws Exception {
+        var data = LessonQueryTestData.createData();
+        var student = (Student) data.getPerson(new PersonId("S1")).orElseThrow();
+        var lesson = new LessonQueries(data).getLessonList().get(1);
+        var matches = List.of(new PersonSearchMatch(Optional.of(student), Optional.of(lesson)),
+                new PersonSearchMatch(Optional.empty(), Optional.of(lesson)));
+        runOnFxThread(() -> {
+            Region card = new PersonRecordCard(student, 3, matches).getRoot();
+            layoutScene(card, 260, 900);
+            VBox context = (VBox) card.lookup("#context");
+            VBox details = (VBox) card.lookup("#details");
+            assertTrue(context.isVisible() && context.isManaged());
+            assertTrue(context.getLayoutY() >= details.getLayoutY() + details.getHeight());
+            assertEquals(matches.stream().map(PersonSearchContextFormatter::format).toList(),
+                    context.getChildren().stream().skip(1).map(Label.class::cast).map(Label::getText).toList());
+            assertCompleteLabels(card);
+
+            Region plainCard = new PersonRecordCard(student, 3).getRoot();
+            VBox plainContext = (VBox) plainCard.lookup("#context");
+            assertTrue(!plainContext.isVisible() && !plainContext.isManaged());
+        });
+    }
+
+    private static void assertCompleteLabels(Region card) {
+        for (Node node : card.lookupAll(".label")) {
+            Label label = (Label) node;
+            Bounds bounds = label.localToScene(label.getBoundsInLocal());
+            Bounds cardBounds = card.localToScene(card.getBoundsInLocal());
+            assertTrue(label.isWrapText() && label.getWidth() > 0, label.getText());
+            assertTrue(bounds.getMinX() >= cardBounds.getMinX()
+                    && bounds.getMaxX() <= cardBounds.getMaxX() + 1, label.getText());
+            assertTrue(label.getHeight() + 1 >= label.prefHeight(label.getWidth()), label.getText());
+            assertEquals(label.getText(), ((Text) label.lookup(".text")).getText(),
+                    "Complete text must wrap without an ellipsis.");
+        }
     }
 
     private static PonHubData peopleData(PeopleRegistryState people) {
@@ -321,7 +413,8 @@ public class PersonRecordCardTest {
     /**
      * Verifies the actual FXML heading, identity, and complete ordered detail labels.
      */
-    private static void assertCardText(Region root, String heading, String identity, List<String> details) {
+    private static void assertCardText(Region root, String heading, String identity, int position,
+            List<String> details) {
         Label headingLabel = (Label) root.lookup("#heading");
         Label identityLabel = (Label) root.lookup("#identity");
         VBox detailBox = (VBox) root.lookup("#details");
@@ -330,7 +423,11 @@ public class PersonRecordCardTest {
         assertNotNull(detailBox);
         assertEquals(heading, headingLabel.getText());
         assertEquals(identity, identityLabel.getText());
-        assertEquals(details, detailBox.getChildren().stream().map(node -> ((Label) node).getText()).toList());
+        assertEquals("Position: " + position, ((Label) root.lookup("#position")).getText());
+        assertEquals(details, detailBox.getChildren().stream().map(VBox.class::cast)
+                .flatMap(group -> group.getChildren().stream()).map(VBox.class::cast)
+                .map(field -> ((Label) field.getChildren().get(0)).getText() + ": "
+                        + ((Label) field.getChildren().get(1)).getText()).toList());
     }
 
     /**

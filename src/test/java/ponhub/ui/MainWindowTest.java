@@ -66,7 +66,7 @@ public class MainWindowTest {
                     Optional.of(new Email("longcontact".repeat(20) + "@example.com")),
                     Optional.of(new Address("12 " + "A long residential road ".repeat(8).strip()))),
             new EducationLevel("P1"), new Phone("009876543210123"));
-    private static final String LONG_PERSON_IDENTITY = "Student · S1";
+    private static final String LONG_PERSON_IDENTITY = "Student · ID: S1";
     private static final List<ContactDetails> TUTOR_CONTACTS = List.of(
             contacts("Alice Pauline", "94351253", "alice@example.com", "123, Jurong West Ave 6, #08-111"),
             contacts("Benson Meier", "98765432", "johnd@example.com", "311, Clementi Ave 2, #02-25"),
@@ -232,10 +232,10 @@ public class MainWindowTest {
                     root.layout();
                 }
 
-                Region lastCard = findCard(people, "Tutor · T7");
+                Region lastCard = findCard(people, "Tutor · ID: T7");
                 Node lastField = lastCard.lookupAll(".label").stream()
-                        .filter(node -> ((Label) node).getText().equals("Address: "
-                                + TUTOR_CONTACTS.getLast().getAddress().orElseThrow().value))
+                        .filter(node -> ((Label) node).getText().equals(
+                                TUTOR_CONTACTS.getLast().getAddress().orElseThrow().value))
                         .findFirst().orElseThrow();
                 Bounds lastFieldBounds = lastField.localToScene(lastField.getBoundsInLocal());
                 Bounds viewport = people.localToScene(people.getBoundsInLocal());
@@ -416,12 +416,12 @@ public class MainWindowTest {
      */
     private static void assertLongFieldEndsReachable(ListView<?> people) {
         ContactDetails contacts = LONG_PERSON.getContactDetails();
-        Set<String> unseenValues = new HashSet<>(List.of("1. " + LONG_PERSON.getName().fullName,
-                LONG_PERSON_IDENTITY, "Level: " + LONG_PERSON.getLevel(),
-                "Parent phone: " + LONG_PERSON.getParentPhone().value,
-                "Own phone: " + contacts.getPhone().orElseThrow().value,
-                "Email: " + contacts.getEmail().orElseThrow().value,
-                "Address: " + contacts.getAddress().orElseThrow().value));
+        Set<String> unseenValues = new HashSet<>(List.of(LONG_PERSON.getName().fullName,
+                LONG_PERSON_IDENTITY, LONG_PERSON.getLevel().toString(),
+                LONG_PERSON.getParentPhone().value,
+                contacts.getPhone().orElseThrow().value,
+                contacts.getEmail().orElseThrow().value,
+                contacts.getAddress().orElseThrow().value));
         ScrollBar bar = verticalScrollBar(people);
         Bounds viewport = people.localToScene(people.getBoundsInLocal());
         for (int step = 0; step <= 100 && !unseenValues.isEmpty(); step++) {

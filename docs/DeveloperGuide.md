@@ -1232,9 +1232,12 @@ changing it. A successful addition's reset to all roles belongs to the transacti
 role names, and rejects malformed arguments without
 changing any view.
 
-`PersonRecordCardData` separates the numbered name heading from the role/stable-ID line and renders the
-required/optional fields in the role table above; absent contacts show `Not provided`. Display case and phone
-zeros are retained. `PersonRecordCard` loads wrapping labels from FXML with no fixed card height.
+`PersonRecordCardData` separates the name, explicitly labelled command position and role/stable ID. Its
+immutable caption/value groups order Student fields as education, own contacts, parent phone and address;
+Tutor/Parent cards omit the Student-specific groups. Absent contacts show `Not provided`; display case and phone
+zeros are retained. `PersonRecordCard` renders each group with each caption above its wrapping value, with matching relationship
+context below the own fields. FXML imposes no fixed card height. The `.person-record-card` CSS scope distinguishes
+names, metadata, captions and values without changing Lesson/history styling or the list selection behavior.
 `PersonRecordListPanel` fits cards to cell width, updates positions when cells are reused, and supplies count,
 empty placeholder and vertical scrolling for tall cards. Neither projection nor panel owns writable records.
 
@@ -2075,24 +2078,23 @@ Use a disposable application folder containing the packaged JAR and a copied sup
 
 ### Person-index integration checks
 
-Role-filtered listing, membership selectors, guarded person deletion, lesson results and add/failure checks
-are active; follow the [shared selector contract](#shared-lesson-target-contract).
+Complete the [common selector and failure journey](#common-selector-and-failure-journey) for current-position
+versus stable-ID selection, index/range/wrong-role rejection and restart identity/counter checks. Then check
+these people-specific differences against the [shared selector contract](#shared-lesson-target-contract).
 
 1. On a mixed-role dataset, run `list`, `list r/student`, `list r/TUTOR` and `list r/parent`.
    Verify global relative order and counts; repeat with no matching records for a successful empty role.
    Reject `list r/`, `list r/all`
    and `list r/student r/parent` without changing the previous view or data.
-2. Filter to Students whose stable IDs differ from positions, such as `S2`/`S5` at `1`/`2`. Exercise active
-   `enrol`/`unenrol` against those current positions; position `2` must not become stable ID `S2`. Student-only
-   commands reject a Tutor/Parent at a valid position and zero, negative or out-of-range indices. Apply the same current-view index/range checks to guarded
-   `delete`, which supports every person role.
-3. Subscribe to lesson/roster results, then use an active membership command. Verify the same people list object,
-   filter/order/indices and subscribed query objects remain, with their contents refreshed. Active `lessons si/1`
-   follows the same current Student card and rejects superseded `sid/S2` input. Lesson references use `lid/`.
-4. Add a person successfully: expect new record last, all-role view and refreshed positions. Trigger
-   validation/save failure: expect unchanged records, allocation counters and previous people view,
-   including its role filter and selected card.
-   Restart with compatible data: surviving stable IDs and stored references remain intact.
+2. Restore `search c/student n/Jamie` from the common journey: Jamie `S2` is position **1**.
+   Subscribe to lesson/roster results, then run `unenrol 1 lid/L1` and `enrol 1 lid/L1`.
+   Both act on S2, never S1. Verify the same people list object, filter/order/indices and subscribed query
+   objects remain, with their contents refreshed. `lessons si/1` follows Jamie's current card and rejects
+   superseded `sid/S2` input. Lesson references use `lid/`.
+3. Follow the [add/save checks](#canonical-people-commands-and-unsuccessful-saves) for successful-add view reset
+   and rejected-add preservation/retry. Apply the current-view selector checks to `delete` for every role;
+   retain the linked-record, retained-history and counter cases in
+   [guarded person deletion](#active-guarded-person-deletion-91).
 
 <a id="dormant-person-card-developer-preview"></a>
 
@@ -2104,13 +2106,17 @@ Perform these checks in the active application and record the platform, build an
 instructions are preserved in [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77).
 
 1. Use all roles, absent/present optional contacts, leading-zero phones and long names/email/addresses.
-   Verify index and stable ID are separate, role-required fields remain readable, and absent contacts
-   show `Not provided`.
+   Verify the prominent name, separate `Position` and `ID` labels, and distinguishable captions/values.
+   Students show level, own phone/email, parent phone and address in that order; Tutors/Parents show their
+   own contacts and address. Check leading zeros and `Not provided` indicators in selected and unselected cards.
 2. On 1280×720 at 150% and 1920×1080 at 100%/125%, resize and scroll through an entire tall card to the
    last record. Complete values must wrap without overlap or hidden content; record the actual platform,
    scaling and build. Logical preview sizes alone do not establish these results.
 3. Filter/refresh the list and repeat: current positions, count and empty placeholder update correctly;
-   recycled cells show the correct person. Coordinate whole-window checks with
+   recycled cells show the correct person and stable ID. Select a person, run `list r/student` then `list`,
+   and verify selection restoration for a still-visible ID and clearing when hidden. Run `search c/student s/Math`
+   on sample data and check that matching relationship context remains complete below the own fields.
+   Coordinate whole-window checks with
    [#128](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/128).
 
 Given below are instructions to test the app manually.
@@ -2152,29 +2158,43 @@ Historical verification details are preserved in [#84](https://github.com/AY2627
 
 ### Canonical people commands and unsuccessful saves
 
-Start with the fixture and selector checks in the [common journey](#common-selector-and-failure-journey).
+Start with the fixture, artifact/runtime record and selector checks in the
+[common journey](#common-selector-and-failure-journey). Check the
+[role-specific required/optional prefixes](#canonical-people-commands) and
+[contact-validation cases](#contact-validation-in-the-current-increment) alongside these add-specific cases.
 Use [command transactions](#command-transactions) for publication/no-op rules and
-[safe JSON saves](#safe-json-saves) for stored-file recovery; retain these add-specific differences.
+[safe JSON saves](#safe-json-saves) for stored-file recovery.
 
-1. Using that fixture, run `add r/parent n/Pat Tan p/91234567`; retain the two Students' shared parent phone
-   and omitted optional contacts. Expect distinct stable IDs and the global creation order.
-   Run `list r/student`, `list r/TUTOR` and `list r/parent`;
+1. Using that fresh fixture, run `add r/parent n/Pat Tan p/91234567`; retain the two Students' shared
+   parent phone and omitted optional contacts. Expect distinct stable IDs, readable role-specific cards
+   and global creation order. Run `list r/student`, `list r/TUTOR` and `list r/parent`;
    positions renumber from one while stored IDs and relative order remain unchanged.
+   Use [Person-index checks](#person-index-integration-checks) for all-role/empty-role ordering and counts,
+   and common journey step 6 for restart identity/counters.
 2. Select a Student card after role filtering. Try a duplicate Student with the same normalized name
    and parent phone, a missing required field, unknown/repeated prefixes, and a Tutor with `l/`. Expect
-   rejection and unchanged file bytes, records, counters, filter and selection. Reject `list r/all`,
-   `list r/` and two role prefixes without changing the previous view. A valid empty role result succeeds.
-3. Repeat the common journey's save/retry/reload procedure with a valid addition while a people filter
-   and card selection are active. Record the next ID before the attempt: failure must not consume it,
-   publish the candidate or reset the view. After restoring access, one successful retry uses that ID,
-   adds one record last in the all-role view, and persists the complete snapshot/counters after restart.
+   rejection and unchanged file bytes, records, counters, filter and selection. For Tutor/Parent duplicates,
+   use the same normalized name and own `p/` phone instead of the Student's identifying `pp/` phone.
+   Reject `list r/all`, `list r/` and two role prefixes without changing the previous view.
+   A valid empty role result succeeds.
+3. Follow common journey step 5 for the disposable save-failure setup, substituting a valid addition
+   for the attendance correction while a people filter and card selection are active. Record the next ID
+   before the attempt: failure must not consume it, publish the candidate or reset the view. Records,
+   counters, filter and selected card remain unchanged, and no success message is shown.
+   After restoring access, retry once: the new record uses that next ID, appears last and resets the people
+   view to all roles with refreshed positions. Restart as in step 6 to verify the complete snapshot/counters.
    Preparation/backup failure preserves the old destination. If fallback replacement and restoration both
-   fail, recover the named retained backup before continuing or restarting; do not assume unchanged file
-   bytes for every save failure. An injected writer verifies the developer seam, not a native filesystem trial.
-4. Use the [common layout checks](#common-window-and-layout-checks) for help/draft/selection preservation
-   and the [common journey](#common-selector-and-failure-journey) for invalid-selector isolation.
-   Also reject `delete S1` without changing data, filter or selection. Valid Student, Parent and Tutor
-   relationship searches deliberately replace the people view with matching people and Student/Lesson context.
+   fail, recover the named retained backup before continuing or restarting; unchanged live state does not
+   imply unchanged destination bytes after every save failure. An injected writer verifies the developer
+   seam, not a native filesystem trial.
+4. With a selected card, request help from the menu/F1 and through the command box. Expect preserved
+   records/filter/selection; menu/F1 additionally retain unfinished text. Use the
+   [common layout checks](#common-window-and-layout-checks) for help/draft/selection preservation and the
+   [common journey](#common-selector-and-failure-journey) and
+   [guarded-delete cases](#active-guarded-person-deletion-91) for malformed selectors.
+   Also reject `delete S1` without changing data, filter or selection. Check valid Student, Parent and Tutor
+   relationship searches with the [search procedure](#active-own-contact-search-checks):
+   they deliberately replace the people view with matching people and Student/Lesson context.
 
 ### Active own-contact search checks
 

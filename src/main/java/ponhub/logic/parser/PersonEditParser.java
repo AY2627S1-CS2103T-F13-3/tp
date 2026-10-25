@@ -12,9 +12,7 @@ import java.util.regex.Pattern;
 import ponhub.commons.core.index.Index;
 import ponhub.logic.parser.PersonEditInput.Field;
 import ponhub.logic.parser.exceptions.ParseException;
-import ponhub.model.person.ContactDetails;
 import ponhub.model.person.EducationLevel;
-import ponhub.model.person.Phone;
 
 /**
  * Parses a displayed people position and partial field operations without accessing the model.
@@ -65,9 +63,9 @@ public final class PersonEditParser {
         } while (hasNext);
         try {
             return new Input(index, new PersonEditInput(field(values, "n/", ParserUtil::parseName),
-                    field(values, "p/", PersonEditParser::parsePhone), field(values, "e/", ParserUtil::parseEmail),
+                    field(values, "p/", ParserUtil::parseContactPhone), field(values, "e/", ParserUtil::parseEmail),
                     field(values, "a/", ParserUtil::parseAddress), field(values, "l/", EducationLevel::new),
-                    field(values, "pp/", PersonEditParser::parsePhone)));
+                    field(values, "pp/", ParserUtil::parseContactPhone)));
         } catch (IllegalArgumentException failure) {
             throw new ParseException(failure.getMessage(), failure);
         }
@@ -80,13 +78,6 @@ public final class PersonEditParser {
         }
         String value = values.get(prefix);
         return value.isEmpty() ? Field.clear() : Field.set(parser.parse(value));
-    }
-
-    private static Phone parsePhone(String value) throws ParseException {
-        if (value.length() > ContactDetails.MAX_PHONE_LENGTH) {
-            throw new ParseException(ContactDetails.MESSAGE_PHONE_CONSTRAINTS);
-        }
-        return ParserUtil.parsePhone(value);
     }
 
     /**

@@ -66,9 +66,12 @@ public class PersonAdditionInputTest {
     }
 
     @Test
-    public void constructor_studentParentPhoneTooLong_throwsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> new PersonAdditionInput(PersonRole.STUDENT, NAME_ONLY,
-                Optional.of(LEVEL), Optional.of(new Phone("0001234567890123"))));
+    public void constructor_studentParentPhoneBounds_preservesValidNumbers() {
+        for (String phone : new String[]{"001", "000123456789012"}) {
+            PersonAdditionInput input = new PersonAdditionInput(PersonRole.STUDENT, NAME_ONLY,
+                    Optional.of(LEVEL), Optional.of(new Phone(phone)));
+            assertEquals(Optional.of(new Phone(phone)), input.parentPhone());
+        }
     }
 
     @Test

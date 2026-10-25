@@ -1,7 +1,6 @@
 package ponhub.ui;
 
 import java.nio.file.Path;
-import java.util.logging.Logger;
 
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
@@ -17,7 +16,6 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import ponhub.commons.core.GuiSettings;
-import ponhub.commons.core.LogsCenter;
 import ponhub.logic.Logic;
 import ponhub.logic.commands.CommandResult;
 import ponhub.logic.commands.exceptions.CommandException;
@@ -31,8 +29,6 @@ import ponhub.model.person.PersonRole;
 public class MainWindow extends UiPart<Stage> {
 
     private static final String FXML = "MainWindow.fxml";
-
-    private final Logger logger = LogsCenter.getLogger(getClass());
 
     private Stage primaryStage;
     private Logic logic;
@@ -208,7 +204,7 @@ public class MainWindow extends UiPart<Stage> {
         try {
             executeCommand(command);
         } catch (CommandException | ParseException e) {
-            logger.info("Viewing request rejected: " + e.getMessage());
+            // executeCommand has displayed the error; the logic boundary records its safe category.
         }
     }
 
@@ -235,7 +231,7 @@ public class MainWindow extends UiPart<Stage> {
         try {
             executeCommand("help");
         } catch (CommandException | ParseException e) {
-            logger.warning("Unable to display help: " + e.getMessage());
+            // executeCommand has displayed the error; the logic boundary records its safe category.
         }
     }
 
@@ -264,7 +260,6 @@ public class MainWindow extends UiPart<Stage> {
             var selectedPerson = personListPanel.getSelectedPersonId();
             CommandResult commandResult = logic.execute(commandText);
             selectedPerson.ifPresent(personListPanel::restoreSelection);
-            logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
 
             if (commandResult.isExit()) {
@@ -273,7 +268,6 @@ public class MainWindow extends UiPart<Stage> {
 
             return commandResult;
         } catch (CommandException | ParseException e) {
-            logger.info("An error occurred while executing command: " + commandText);
             resultDisplay.setFeedbackToUser(e.getMessage());
             throw e;
         }

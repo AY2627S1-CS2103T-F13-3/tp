@@ -19,8 +19,9 @@ import ponhub.model.person.Tutor;
 public final class PersonRecordCardData {
 
     private final String heading;
+    private final String position;
     private final String identity;
-    private final List<String> detailLines;
+    private final List<List<Detail>> detailGroups;
 
     /**
      * Creates display text for a student, tutor, or parent at a positive current-view position.
@@ -34,14 +35,15 @@ public final class PersonRecordCardData {
         checkArgument(displayedIndex > 0, "Displayed person indices must be positive.");
         checkArgument(person instanceof Student || person instanceof Tutor || person instanceof Parent,
                 "Person cards support student, tutor, and parent records.");
-        heading = displayedIndex + ". " + person.getName().fullName;
+        heading = person.getName().fullName;
+        position = "Position: " + displayedIndex;
         String role = switch (person.getRole()) {
             case STUDENT -> "Student";
             case TUTOR -> "Tutor";
             case PARENT -> "Parent";
         };
-        identity = role + " · " + person.getId();
-        detailLines = createDetailLines(person);
+        identity = role + " · ID: " + person.getId();
+        detailGroups = createDetailGroups(person);
     }
 
     public String getHeading() {
@@ -52,27 +54,41 @@ public final class PersonRecordCardData {
         return identity;
     }
 
+    public String getPosition() {
+        return position;
+    }
+
     /**
-     * Returns immutable detail lines, explicitly labeling absent optional contacts as not provided.
+     * Returns immutable groups in reading order: education, own contacts, parent contact, then address.
+     * Tutors and parents omit the student-specific groups. Absent contacts remain explicit.
      */
-    public List<String> getDetailLines() {
-        return detailLines;
+    public List<List<Detail>> getDetailGroups() {
+        return detailGroups;
     }
 
     /**
      * Formats required role fields and optional contacts without changing their supplied display values.
      */
-    private static List<String> createDetailLines(PersonRecord person) {
-        List<String> lines = new ArrayList<>();
+    private static List<List<Detail>> createDetailGroups(PersonRecord person) {
+        List<List<Detail>> groups = new ArrayList<>();
         if (person instanceof Student student) {
-            lines.add("Level: " + student.getLevel());
-            lines.add("Parent phone: " + student.getParentPhone().value);
+            groups.add(List.of(new Detail("Level", student.getLevel().toString())));
         }
         ContactDetails contacts = person.getContactDetails();
-        String phoneLabel = person instanceof Student ? "Own phone: " : "Phone: ";
-        lines.add(phoneLabel + contacts.getPhone().map(phone -> phone.value).orElse("Not provided"));
-        lines.add("Email: " + contacts.getEmail().map(email -> email.value).orElse("Not provided"));
-        lines.add("Address: " + contacts.getAddress().map(address -> address.value).orElse("Not provided"));
-        return List.copyOf(lines);
+        String phoneLabel = person instanceof Student ? "Own phone" : "Phone";
+        groups.add(List.of(
+                new Detail(phoneLabel, contacts.getPhone().map(phone -> phone.value).orElse("Not provided")),
+                new Detail("Email", contacts.getEmail().map(email -> email.value).orElse("Not provided"))));
+        if (person instanceof Student student) {
+            groups.add(List.of(new Detail("Parent phone", student.getParentPhone().value)));
+        }
+        groups.add(List.of(new Detail("Address",
+                contacts.getAddress().map(address -> address.value).orElse("Not provided"))));
+        return List.copyOf(groups);
     }
+
+    /**
+     * A caption and its unchanged display value, styled separately by the card.
+     */
+    public record Detail(String caption, String value) { }
 }

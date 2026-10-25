@@ -78,11 +78,35 @@ class PackageSession:
         require(width >= 100 and height >= 100, "PonHub window is too small to focus its command dock")
         # The full-width input sits above the 30-pixel status footer on this X11 display.
         # Locate it relative to the actual client height, not the former top input position.
-        run("xdotool", "mousemove", "--window", self.window,
-            str(width // 2), str(height - 50), "click", "1")
+        self.command_position = (width // 2, height - 50)
+        # This check owns a fresh default-layout window: feedback follows the header/navigation row.
+        self.feedback_position = (width // 2, 100)
+        self.focus_command()
         # Prove focus through a harmless real command before any mutation, including after restart.
         self.command("help", "PonHub commands available in this build:")
         self.screenshot(f"{self.name}-command-ready")
+
+    def focus_command(self):
+        run("xdotool", "mousemove", "--window", self.window,
+            *(str(value) for value in self.command_position), "click", "1")
+
+    def read_feedback(self):
+        """Copy the actual read-only feedback control; production logs deliberately omit its text."""
+        sentinel = "Waiting for synthetic package-test feedback"
+        run("xclip", "-selection", "clipboard", input=sentinel, stdout=subprocess.DEVNULL)
+        run("xdotool", "mousemove", "--window", self.window,
+            *(str(value) for value in self.feedback_position), "click", "1")
+        run("xdotool", "key", "--clearmodifiers", "ctrl+a", "ctrl+c")
+
+        def copied():
+            result = subprocess.run(["xclip", "-selection", "clipboard", "-out"],
+                                    capture_output=True, text=True, timeout=5)
+            return result.stdout if result.returncode == 0 and result.stdout != sentinel else None
+
+        try:
+            return self.wait(copied, "feedback copied from the visible result control")
+        finally:
+            self.focus_command()
 
     def command(self, text, expected_feedback=None):
         offset = self.log.stat().st_size
@@ -94,17 +118,19 @@ class PackageSession:
             with self.log.open() as log:
                 log.seek(offset)
                 output = log.read()
-            require("An error occurred while executing command:" not in output,
+            require(" outcome=parse_rejected" not in output and " outcome=command_rejected" not in output,
                     f"Command rejected: {text}\n{output}")
             require("SEVERE:" not in output, f"Fatal application error: {output}")
-            return output if "Result: " in output else None
+            return output if " outcome=success" in output else None
 
         output = self.wait(completed, f"successful command {text!r}")
-        self.transcript.append({"session": self.name, "command": text, "output": output})
+        time.sleep(0.2)  # The logic outcome precedes the UI's resulting display pulse.
+        feedback = None if text == "exit" else self.read_feedback()
+        self.transcript.append({"session": self.name, "command": text, "output": output,
+                                "feedback_from_ui": feedback})
         if expected_feedback is not None:
-            require(f"Result: {expected_feedback}" in output,
-                    f"Unexpected result for {text!r}: {output}")
-        time.sleep(0.2)  # Allow the resulting control updates to reach the next display pulse.
+            require(feedback.startswith(expected_feedback),
+                    f"Unexpected visible result for {text!r}: {feedback}")
 
     def reject(self, text):
         offset = self.log.stat().st_size
@@ -117,12 +143,13 @@ class PackageSession:
                 log.seek(offset)
                 output = log.read()
             require("SEVERE:" not in output, f"Fatal application error: {output}")
-            marker = f"An error occurred while executing command: {text}"
-            return output if marker in output else None
+            require(" outcome=success" not in output, f"Command unexpectedly succeeded: {text}\n{output}")
+            return output if " outcome=parse_rejected" in output or " outcome=command_rejected" in output else None
 
         output = self.wait(completed, f"rejected command {text!r}")
-        self.transcript.append({"session": self.name, "command": text, "rejected": True, "output": output})
         time.sleep(0.2)
+        self.transcript.append({"session": self.name, "command": text, "rejected": True, "output": output,
+                                "feedback_from_ui": self.read_feedback()})
 
     def screenshot(self, name):
         run("import", "-window", self.window, str(self.evidence / f"{name}.png"))

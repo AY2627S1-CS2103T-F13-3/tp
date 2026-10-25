@@ -3,7 +3,6 @@ package ponhub.ui;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -25,7 +24,11 @@ public class PersonRecordCard extends UiPart<Region> {
     @FXML
     private Label identity;
     @FXML
+    private Label position;
+    @FXML
     private VBox details;
+    @FXML
+    private VBox context;
 
     /**
      * Creates a card showing a record and its positive current-view position separately from its stable ID.
@@ -46,14 +49,34 @@ public class PersonRecordCard extends UiPart<Region> {
         super(FXML);
         heading.setText(data.getHeading());
         identity.setText(data.getIdentity());
-        for (String line : Stream.concat(data.getDetailLines().stream(),
-                matches.stream().map(PersonSearchContextFormatter::format)).toList()) {
-            Label label = new Label(line);
-            label.getStyleClass().add("cell_small_label");
-            label.setWrapText(true);
-            label.setMinWidth(0);
-            label.setMaxWidth(Double.MAX_VALUE);
-            details.getChildren().add(label);
+        position.setText(data.getPosition());
+        for (List<PersonRecordCardData.Detail> group : data.getDetailGroups()) {
+            VBox groupBox = new VBox();
+            groupBox.getStyleClass().add("person-detail-group");
+            for (PersonRecordCardData.Detail detail : group) {
+                VBox field = new VBox(2, createLabel(detail.caption(), "person-caption"),
+                        createLabel(detail.value(), "person-value"));
+                field.setMinWidth(0);
+                groupBox.getChildren().add(field);
+            }
+            details.getChildren().add(groupBox);
         }
+        context.setVisible(!matches.isEmpty());
+        context.setManaged(!matches.isEmpty());
+        if (!matches.isEmpty()) {
+            context.getChildren().add(createLabel("Matching relationships", "person-caption"));
+            for (PersonSearchMatch match : matches) {
+                context.getChildren().add(createLabel(PersonSearchContextFormatter.format(match), "person-value"));
+            }
+        }
+    }
+
+    private static Label createLabel(String text, String styleClass) {
+        Label label = new Label(text);
+        label.getStyleClass().add(styleClass);
+        label.setWrapText(true);
+        label.setMinWidth(0);
+        label.setMaxWidth(Double.MAX_VALUE);
+        return label;
     }
 }
