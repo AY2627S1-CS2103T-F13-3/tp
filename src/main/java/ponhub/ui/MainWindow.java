@@ -41,7 +41,7 @@ public class MainWindow extends UiPart<Stage> {
     private Stage primaryStage;
     private Logic logic;
     private Path dataFilePath;
-    private final LogoSoundPlayer logoSound = new LogoSoundPlayer();
+    private final LogoSoundPlayer logoSound;
 
     // Independent Ui parts residing in this Ui container
     private PersonRecordListPanel personListPanel;
@@ -79,7 +79,12 @@ public class MainWindow extends UiPart<Stage> {
      * and the data file path to show in the status bar.
      */
     public MainWindow(Stage primaryStage, Logic logic, Path dataFilePath) {
+        this(primaryStage, logic, dataFilePath, new LogoSoundPlayer());
+    }
+
+    MainWindow(Stage primaryStage, Logic logic, Path dataFilePath, LogoSoundPlayer logoSound) {
         super(FXML, primaryStage);
+        this.logoSound = logoSound;
 
         // Set dependencies
         this.primaryStage = primaryStage;

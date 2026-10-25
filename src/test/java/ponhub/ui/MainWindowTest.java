@@ -2,7 +2,9 @@ package ponhub.ui;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static ponhub.testutil.FxTestUtil.callOnFxThread;
 import static ponhub.testutil.FxTestUtil.runOnFxThread;
@@ -23,6 +25,7 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -36,10 +39,13 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import ponhub.logic.CanonicalCommandCatalog;
 import ponhub.logic.CanonicalLogicManager;
 import ponhub.logic.CanonicalPeopleSession;
@@ -82,6 +88,54 @@ public class MainWindowTest {
     @BeforeAll
     public static void startToolkit() throws Exception {
         FxTestUtil.initializeToolkit();
+    }
+
+    @Test
+    public void logoClick_routesOnlyPrimaryClick_preservesCommandAndClosesAudioOnHide() throws Exception {
+        callOnFxThread(() -> {
+            LogoSoundPlayerTest.TestWorker worker = new LogoSoundPlayerTest.TestWorker();
+            LogoSoundPlayerTest.TestClip clip = new LogoSoundPlayerTest.TestClip();
+            LogoSoundPlayer sound = new LogoSoundPlayer(worker,
+                    LogoSoundPlayer.class.getResource("/audio/logo-drum.wav"), () -> clip.line);
+            MainWindow window = createWindow(sound);
+            try {
+                Region root = layoutWindow(window, 1000, 700);
+                Node logo = root.lookup("#ponhubWordmark");
+                TextField command = (TextField) root.lookup("#commandTextField");
+                command.setText("unfinished draft");
+                command.requestFocus();
+                command.selectRange(2, 7);
+                Node focus = root.getScene().getFocusOwner();
+                assertSame(command, focus);
+                assertFalse(logo.isMouseTransparent());
+                assertEquals(Cursor.HAND, logo.getCursor());
+                logo.getOnMouseClicked().handle(logoClick(MouseButton.SECONDARY));
+                assertEquals(0, worker.taskCount());
+                MouseEvent primary = logoClick(MouseButton.PRIMARY);
+                logo.getOnMouseClicked().handle(primary);
+                assertTrue(primary.isConsumed());
+                assertEquals(1, worker.taskCount());
+                worker.runAll();
+                assertEquals("unfinished draft", command.getText());
+                assertEquals(2, command.getSelection().getStart());
+                assertEquals(7, command.getSelection().getEnd());
+                assertSame(focus, root.getScene().getFocusOwner());
+                Event.fireEvent(window.getPrimaryStage(),
+                        new WindowEvent(window.getPrimaryStage(), WindowEvent.WINDOW_HIDDEN));
+                assertTrue(worker.isShutdown());
+                worker.runAll();
+                assertTrue(worker.isTerminated());
+            } finally {
+                sound.close();
+                worker.runAll();
+            }
+            return null;
+        });
+    }
+
+    private static MouseEvent logoClick(MouseButton button) {
+        return new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, 0, 0, button, 1,
+                false, false, false, false, false, false, false, false, false, true, null);
     }
 
     @Test
@@ -325,6 +379,10 @@ public class MainWindowTest {
      * Builds the active window with canonical logic and immutable records stored only in the test directory.
      */
     private MainWindow createWindow() throws IOException {
+        return createWindow(new LogoSoundPlayer());
+    }
+
+    private MainWindow createWindow(LogoSoundPlayer sound) throws IOException {
         PeopleRegistry people = new PeopleRegistry();
         people.addStudent(LONG_PERSON.getContactDetails(), LONG_PERSON.getLevel(), LONG_PERSON.getParentPhone());
         for (ContactDetails contacts : TUTOR_CONTACTS) {
@@ -334,7 +392,7 @@ public class MainWindowTest {
         new JsonPonHubDataStorage(dataPath).saveData(
                 new PonHubDataState(people.exportState(), List.of(), List.of(), 0));
         CanonicalLogicManager logic = new CanonicalLogicManager(new CanonicalPeopleSession(dataPath), new UserPrefs());
-        MainWindow window = new MainWindow(new Stage(), logic, dataPath);
+        MainWindow window = new MainWindow(new Stage(), logic, dataPath, sound);
         window.fillInnerParts();
         return window;
     }

@@ -22,12 +22,28 @@ final class LogoSoundPlayer implements AutoCloseable {
     private static final Logger logger = LogsCenter.getLogger(LogoSoundPlayer.class);
     private static final String RESOURCE = "/audio/logo-drum.wav";
 
-    private final ExecutorService worker = Executors.newSingleThreadExecutor(
-            Thread.ofPlatform().daemon().name("ponhub-logo-audio").factory());
+    private final ExecutorService worker;
+    private final URL resource;
+    private final ClipFactory clipFactory;
     private final AtomicBoolean pending = new AtomicBoolean();
     private Clip clip;
     private boolean unavailable;
     private volatile boolean closed;
+
+    LogoSoundPlayer() {
+        this(Executors.newSingleThreadExecutor(
+                Thread.ofPlatform().daemon().name("ponhub-logo-audio").factory()),
+                LogoSoundPlayer.class.getResource(RESOURCE), AudioSystem::getClip);
+    }
+
+    /**
+     * Supplies the audio device and worker independently for deterministic, silent tests.
+     */
+    LogoSoundPlayer(ExecutorService worker, URL resource, ClipFactory clipFactory) {
+        this.worker = worker;
+        this.resource = resource;
+        this.clipFactory = clipFactory;
+    }
 
     /**
      * Requests one playback; extra requests during loading or playback are ignored.
@@ -63,13 +79,12 @@ final class LogoSoundPlayer implements AutoCloseable {
      * Loads the bundled PCM recording only after an explicit click.
      */
     private Clip openClip() throws IOException, UnsupportedAudioFileException, LineUnavailableException {
-        URL resource = LogoSoundPlayer.class.getResource(RESOURCE);
         if (resource == null) {
             throw new IOException("Bundled logo audio is missing");
         }
         Clip opened = null;
         try (AudioInputStream audio = AudioSystem.getAudioInputStream(resource)) {
-            opened = AudioSystem.getClip();
+            opened = clipFactory.create();
             opened.open(audio);
         } catch (IOException | UnsupportedAudioFileException | LineUnavailableException
                 | IllegalArgumentException | SecurityException failure) {
@@ -102,5 +117,11 @@ final class LogoSoundPlayer implements AutoCloseable {
             worker.execute(this::releaseClip);
             worker.shutdown();
         }
+    }
+
+    /** Creates a sound line without requiring tests to access an installed audio device. */
+    @FunctionalInterface
+    interface ClipFactory {
+        Clip create() throws LineUnavailableException;
     }
 }
