@@ -7,7 +7,9 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-/** Captures application records, including throwable/parameter formatting, after application logger setup. */
+/**
+ * Captures application records, including throwable/parameter formatting, after application logger setup.
+ */
 public final class LogCapture implements AutoCloseable {
     private final Logger logger = Logger.getLogger("ponhub");
     private final List<LogRecord> records = new ArrayList<>();
