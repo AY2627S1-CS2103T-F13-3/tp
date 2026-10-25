@@ -204,7 +204,7 @@ Creates a student, tutor or parent record.
 | `e/EMAIL` | Optional. Use an email address such as `mei@example.com`, with no spaces and at most 254 characters. |
 | `a/ADDRESS` | Optional. Between 1 and 200 printable ASCII characters. Slashes, tabs and line breaks are not allowed. Surrounding spaces are removed and repeated spaces are reduced to one before measuring length. |
 
-For email addresses, the local part before `@` may contain English letters, digits, periods, underscores, `%`, `+` and `-`. It must not begin or end with a period or contain consecutive periods. Domain labels may contain English letters, digits and hyphens. The domain must contain at least two dot-separated labels, with no leading or trailing hyphens in a label. Its final label must contain 2–63 English letters. Email spelling and letter case are preserved.
+For email addresses, the local part before `@` may contain English letters, digits, periods, underscores, ASCII apostrophes (`'`), `%`, `+` and `-`, for example `sean.o'connor@example.com`. It must not begin or end with a period or contain consecutive periods. Domain labels may contain English letters, digits and hyphens. The domain must contain at least two dot-separated labels, with no leading or trailing hyphens in a label. Its final label must contain 2–63 English letters. Email spelling and letter case are preserved.
 
 **Current behavior:** The role-specific formats and contact rules above are active. Unknown, repeated, missing or blank fields are rejected. `l/` and `pp/` are student-only. Tags and the inherited contact-only add format are unavailable. Saved records must satisfy the same validation rules when loaded.
 

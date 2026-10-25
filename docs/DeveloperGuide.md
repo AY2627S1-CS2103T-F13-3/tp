@@ -1118,7 +1118,7 @@ and saved files from admitting different formats.
 | --- | --- |
 | Name | 1–100 characters after trimming/collapsing ASCII spaces; English letters, spaces, apostrophes, hyphens and periods, with at least one letter. Display case is preserved. |
 | Phone | 3–15 ASCII digits, stored as text to retain leading zeros. |
-| Email | At most 254 characters; local part allows letters, digits, `.`, `_`, `%`, `+`, `-`, without leading/trailing/consecutive periods. Domain has at least two letter/digit/internal-hyphen labels, ending in 2–63 English letters. Spelling/case are preserved. |
+| Email | At most 254 characters; local part allows English letters, digits, `.`, `_`, ASCII apostrophes (`'`), `%`, `+`, `-`, without leading/trailing/consecutive periods. Domain has at least two letter/digit/internal-hyphen labels, ending in 2–63 English letters. Spelling/case are preserved. |
 | Address | 1–200 printable ASCII characters after trimming/collapsing spaces; `/`, tabs, line breaks and controls are rejected. |
 
 Name/address normalization occurs once in the value type, before equality and hashing; case remains significant
@@ -2378,9 +2378,11 @@ The following is one end-to-end procedure for the delivered normal session. `add
 
 Use role-aware commands in a disposable selected data file.
 
-1. Enter `add r/tutor n/  Anne-Marie   O'Neil  p/00123456 e/anne%school@example.com a/  Blk 10,   #01-02  `.
+1. Enter `add r/tutor n/  Anne-Marie   O'Neil  p/00123456 e/anne.o'neil%school@example.com a/  Blk 10,   #01-02  `.
    Expect normalized name `Anne-Marie O'Neil` and address `Blk 10, #01-02`, retaining punctuation,
    email and phone zeros. Restart: the saved values remain intact.
+   Run `list r/tutor`, then use the tutor's displayed index in `edit INDEX e/Anne.O'Neil@Example.COM`.
+   Expect the edited email with its apostrophe and letter case intact after restarting again.
 2. Try `add r/tutor n/Test User p/1234567890123456 e/test@example.com a/Blk 10`, then
    `add r/tutor n/Test User p/123 e/test@localhost a/Blk 10`. Expect the relevant phone/email constraints
    and no addition. Likewise reject `n/Test2 User` and `a/Blk 10/Unit 2` in otherwise valid role-aware input.

@@ -12,12 +12,13 @@ public final class Email {
     public static final int MAX_LENGTH = 254;
     public static final String MESSAGE_CONSTRAINTS =
             "Emails must use local-part@domain with at most 254 characters and no spaces. "
-            + "The local part may contain English letters, digits, periods, underscores, %, + and -, "
+            + "The local part may contain English letters, digits, periods, underscores, "
+            + "ASCII apostrophes, %, + and -, "
             + "but no leading, trailing or consecutive periods. "
             + "The domain must have at least two dot-separated labels containing English letters, digits or hyphens, "
             + "with no leading or trailing hyphens. The final label must contain 2 to 63 English letters.";
     public static final String VALIDATION_REGEX =
-            "[A-Za-z0-9_%+-]+(?:\\.[A-Za-z0-9_%+-]+)*@"
+            "[A-Za-z0-9_'%+-]+(?:\\.[A-Za-z0-9_'%+-]+)*@"
             + "(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\\.)+[A-Za-z]{2,63}";
 
     public final String value;
@@ -53,7 +54,7 @@ public final class Email {
                 if (wasPeriod) {
                     return false;
                 }
-            } else if (!isAsciiAlphanumeric(character) && "_%+-".indexOf(character) < 0) {
+            } else if (!isAsciiAlphanumeric(character) && "_'%+-".indexOf(character) < 0) {
                 return false;
             }
             wasPeriod = character == '.';
