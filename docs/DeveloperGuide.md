@@ -714,8 +714,10 @@ The sequence separates the staged candidate from the live root; the user sees no
 
 [![A saved Lesson edit refreshes the held query result](images/LessonQueryRefresh.png)](images/LessonQueryRefresh.png)
 
-The lifelines name the executor, transaction, snapshot writer, live `PonHubData` root, `LessonQueries`
-and `LessonRetrieval` selector. Select either diagram to view it at full size.
+The lifelines show component roles: executor, transaction, snapshot writer, live `PonHubData` root,
+`LessonQueries` and `LessonRetrieval` selector. Informal message labels omit JavaFX listener plumbing;
+the query refresh stays active until the displayed entries have been replaced and the callback returns.
+Select either diagram to view it at full size.
 
 | Boundary | Candidate / saved state | Live queries and displayed result |
 | --- | --- | --- |
