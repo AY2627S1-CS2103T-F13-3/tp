@@ -17,11 +17,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Orientation;
@@ -722,8 +725,23 @@ public class CanonicalMainWindowTest {
     @Test
     public void commandBox_failedSave_preservesCardsSelectionCountersAndSuccessfulRetry() throws Exception {
         seedMixedPeople();
-        callOnFxThread(() -> {
-            try (WindowFixture fixture = createWindow()) {
+        WindowFixture fixture = callOnFxThread(this::createWindow);
+        CountDownLatch layoutReady = new CountDownLatch(1);
+        Runnable afterLayout = () -> {
+            boolean isCardReady = fixture.root().lookupAll("#identity").stream()
+                    .map(Label.class::cast).anyMatch(label -> label.getText().equals("Student · ID: S10"));
+            if (isCardReady) {
+                layoutReady.countDown();
+            } else {
+                // Virtualized cells can need another pulse after their measured heights change.
+                fixture.people().scrollTo(4);
+                fixture.root().requestLayout();
+                Platform.requestNextPulse();
+            }
+        };
+        try {
+            callOnFxThread(() -> {
+                fixture.window.show();
                 fixture.enter("list r/student");
                 fixture.people().getSelectionModel().select(1);
                 PonHubDataState original = fixture.app.snapshot();
@@ -746,17 +764,26 @@ public class CanonicalMainWindowTest {
                 assertEquals("New student added: New Student (S10).", fixture.feedback());
                 assertEquals(Optional.empty(), fixture.app.roleFilter());
                 assertEquals(5, fixture.people().getItems().size());
+                fixture.window.getPrimaryStage().getScene().addPostLayoutPulseListener(afterLayout);
                 fixture.people().scrollTo(4);
-                fixture.layout();
-                // Realized variable-height cards can change the scroll estimate on Windows.
-                fixture.people().scrollTo(4);
-                fixture.layout();
+                fixture.root().requestLayout();
+                Platform.requestNextPulse();
+                return null;
+            });
+            assertTrue(layoutReady.await(5, TimeUnit.SECONDS), "New Student card must be realized after layout");
+            callOnFxThread(() -> {
                 assertCard(fixture, "Student · ID: S10", "New Student", 5);
                 assertEquals(fixture.app.snapshot(), new JsonPonHubDataStorage(fixture.dataPath)
                         .readData().orElseThrow());
-            }
-            return null;
-        });
+                return null;
+            });
+        } finally {
+            callOnFxThread(() -> {
+                fixture.window.getPrimaryStage().getScene().removePostLayoutPulseListener(afterLayout);
+                fixture.close();
+                return null;
+            });
+        }
     }
 
     @Test
