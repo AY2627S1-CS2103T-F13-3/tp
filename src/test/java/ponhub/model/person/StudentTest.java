@@ -63,8 +63,6 @@ public class StudentTest {
         assertEquals("000", createStudent("S1", "Alex Tan", "P1", "000").getParentPhone().value);
         assertEquals("123456789012345",
                 createStudent("S1", "Alex Tan", "JC2", "123456789012345").getParentPhone().value);
-        assertThrows(IllegalArgumentException.class, () ->
-                createStudent("S1", "Alex Tan", "S2", "1234567890123456"));
     }
 
     @Test

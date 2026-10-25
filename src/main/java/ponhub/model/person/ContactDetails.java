@@ -1,6 +1,5 @@
 package ponhub.model.person;
 
-import static ponhub.commons.util.AppUtil.checkArgument;
 import static ponhub.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Locale;
@@ -14,10 +13,6 @@ import ponhub.commons.util.ToStringBuilder;
  * A name is required; phone, email, and address may be omitted.
  */
 public final class ContactDetails {
-
-    public static final int MAX_PHONE_LENGTH = 15;
-    public static final String MESSAGE_PHONE_CONSTRAINTS =
-            "Contact phone numbers must contain between 3 and 15 digits.";
 
     private final Name name;
     private final Optional<Phone> phone;
@@ -33,12 +28,9 @@ public final class ContactDetails {
 
     /**
      * Creates contact details from validated values and explicitly optional fields.
-     *
-     * @throws IllegalArgumentException if the phone contains more than 15 digits.
      */
     public ContactDetails(Name name, Optional<Phone> phone, Optional<Email> email, Optional<Address> address) {
         requireAllNonNull(name, phone, email, address);
-        phone.ifPresent(value -> checkArgument(value.value.length() <= MAX_PHONE_LENGTH, MESSAGE_PHONE_CONSTRAINTS));
         this.name = name;
         this.phone = phone;
         this.email = email;

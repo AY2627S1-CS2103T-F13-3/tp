@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import ponhub.logic.parser.PersonEditInput.Field;
 import ponhub.logic.parser.exceptions.ParseException;
+import ponhub.model.person.Email;
 import ponhub.model.person.Name;
 import ponhub.model.person.Phone;
 
@@ -67,5 +68,44 @@ public class PersonEditParserTest {
         for (String phone : List.of("001", "000123456789012")) {
             assertEquals(Field.set(new Phone(phone)), parser.parse("1 pp/" + phone).edit().parentPhone());
         }
+    }
+
+    @Test
+    public void parse_phoneBounds_preservesOwnAndParentNumbers() throws Exception {
+        for (String phone : List.of("001", "000123456789012")) {
+            var parsed = parser.parse("1 p/" + phone + " pp/" + phone);
+            assertEquals(Field.set(new Phone(phone)), parsed.edit().phone());
+            assertEquals(Field.set(new Phone(phone)), parsed.edit().parentPhone());
+        }
+    }
+
+    @Test
+    public void parse_invalidPhoneValues_preservesOwnAndParentErrorText() {
+        String lengthMessage = "Contact phone numbers must contain between 3 and 15 digits.";
+        String phoneMessage = "Phone numbers must contain 3 to 15 digits, without spaces or punctuation.";
+        String[][] cases = {
+            {"1234567890123456", lengthMessage}, {"123456789012345x", lengthMessage},
+            {"12", phoneMessage}, {"+123", phoneMessage}, {"\uff11\uff12\uff13", phoneMessage}
+        };
+        for (String[] testCase : cases) {
+            for (String prefix : List.of("p/", "pp/")) {
+                assertEquals(testCase[1], assertThrows(ParseException.class, () ->
+                        parser.parse("1 " + prefix + testCase[0])).getMessage());
+            }
+        }
+    }
+
+    @Test
+    public void parse_phoneAndOtherInvalidFields_preservesValidationOrder() {
+        String longPhone = "1234567890123456";
+        assertEquals(Name.MESSAGE_CONSTRAINTS, assertThrows(ParseException.class, () ->
+                parser.parse("1 pp/" + longPhone + " p/" + longPhone + " n/@Alex")).getMessage());
+        assertEquals("Contact phone numbers must contain between 3 and 15 digits.",
+                assertThrows(ParseException.class, () ->
+                        parser.parse("1 pp/12 e/invalid p/" + longPhone)).getMessage());
+        assertEquals(Email.MESSAGE_CONSTRAINTS, assertThrows(ParseException.class, () ->
+                parser.parse("1 pp/" + longPhone + " e/invalid")).getMessage());
+        assertEquals("Repeated edit prefix 'p/'.", assertThrows(ParseException.class, () ->
+                parser.parse("1 p/" + longPhone + " p/001")).getMessage());
     }
 }
