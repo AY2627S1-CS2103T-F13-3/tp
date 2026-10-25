@@ -7,16 +7,19 @@ dated attendance through a keyboard-focused desktop interface.
 
 ![PonHub Lesson board with a filtered Student list, shared Lesson results, navigation buttons and bottom command box](docs/images/LessonBoardNavigation.png)
 
-The Lesson board above uses fictitious records. The current source build supports creating, editing and
+The Lesson board above uses fictitious records. Released v1.4 supports creating, editing and
 searching people and shared lessons, enrolment/unenrolment, attendance marking/removal and guarded deletion.
 Roster and attendance-history views retain dated records after unenrolment. Person and Lesson edits retain
 stable IDs and linked records, with validation and schedule checks protecting changes.
 
-For published JARs and version-specific instructions, visit [Releases](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases).
-The v1.3 release predates person/Lesson editing and this Lesson board. To use the features described here,
-[build the current source](docs/DevOps.md#build-automation) and follow the [Quick start](docs/UserGuide.md#quick-start).
+Download **`ponhub.jar`** from the latest published release,
+[v1.4](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.4), and follow its
+[version-matched User Guide](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/v1.4/docs/UserGuide.md#quick-start).
+Use Java 25 and launch it with `java -jar ponhub.jar` in a writable application folder.
+Contributors can [build the current source](docs/DevOps.md#build-automation) to preview unreleased changes;
+the current source guides may describe features absent from the published JAR.
 
-* [User Guide and command summary](docs/UserGuide.md#current-command-summary) — supported commands and examples;
+* [Current source User Guide and command summary](docs/UserGuide.md#current-command-summary) — commands and examples;
   use `help` or `help COMMAND` in the app for inline guidance.
 * [Developer Guide](docs/DeveloperGuide.md)
 * [Project website](https://ay2627s1-cs2103t-f13-3.github.io/tp/)

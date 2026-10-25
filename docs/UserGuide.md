@@ -53,14 +53,22 @@ positions. To create a lesson, use the [tutor lookup rules](#4-creating-shared-l
 
 ## Quick start
 
+The latest published release is [v1.4](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.4).
+This current-source guide can include unreleased changes; use the
+[v1.4 User Guide](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/v1.4/docs/UserGuide.md#quick-start)
+for the commands available in that downloaded JAR.
+
 1. Ensure that Java `25` is installed on your computer.<br>
    **Mac users:** Install Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) as prescribed by the [course's Mac advisory](https://nus-cs2103-ay2627-s1.github.io/website/admin/programmingLanguages.html) and [Mac installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html). Use this installation in the terminal that launches PonHub.
 
-1. Use the JAR built from this increment, or download a matching PonHub build from the [project's Releases page](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases) after publication. Contributors can build `build/libs/ponhub.jar` with `./gradlew shadowJar`; see [DevOps](DevOps.html#build-automation). An older released JAR may have different commands.
+1. Download **`ponhub.jar`** from the [v1.4 release](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.4).
+   To preview unreleased changes described in this guide, contributors can instead build
+   `build/libs/ponhub.jar` with `./gradlew shadowJar`; see [DevOps](DevOps.html#build-automation).
 
 1. Put the JAR file in the folder you want to use for PonHub. Keep this folder when moving or backing up your data.
 
-1. Open a terminal in that folder, confirm `java -version` reports Java 25, and run `java -jar FILENAME.jar`, replacing `FILENAME.jar` with the downloaded file's name. The PonHub window should open.
+1. Open a terminal in that folder, confirm `java -version` reports Java 25, and run `java -jar ponhub.jar`.
+   The PonHub window should open.
 
 1. A missing `data/ponhub.json` starts an empty people list. Enter a command in the command box and press Enter. Start with `help`, then `help add`:
 
