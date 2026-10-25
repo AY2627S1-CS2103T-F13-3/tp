@@ -17,8 +17,8 @@ public class SubjectTest {
 
     @Test
     public void constructor_invalidSubject_throwsIllegalArgumentException() {
-        String[] invalidSubjects = {"", "   ", "Math!", "Math/Science", "Math\tScience",
-            "A".repeat(51)};
+        String[] invalidSubjects = {"", "   ", "-Math", "Math-", "A--Math", "A - Math", "Math!",
+            "Math/Science", "Math\tScience", "A".repeat(51)};
 
         for (String invalidSubject : invalidSubjects) {
             assertThrows(IllegalArgumentException.class, () -> new Subject(invalidSubject));
@@ -35,10 +35,15 @@ public class SubjectTest {
         assertThrows(NullPointerException.class, () -> Subject.isValidSubject(null));
 
         assertFalse(Subject.isValidSubject(""));
+        assertFalse(Subject.isValidSubject("-Math"));
+        assertFalse(Subject.isValidSubject("Math-"));
+        assertFalse(Subject.isValidSubject("A--Math"));
         assertFalse(Subject.isValidSubject("Math!"));
         assertFalse(Subject.isValidSubject("A".repeat(51)));
 
         assertTrue(Subject.isValidSubject("Math"));
+        assertTrue(Subject.isValidSubject("A-Math"));
+        assertTrue(Subject.isValidSubject("H2-Math 1"));
         assertTrue(Subject.isValidSubject("Primary 5 Math"));
         assertTrue(Subject.isValidSubject("A".repeat(50)));
     }
