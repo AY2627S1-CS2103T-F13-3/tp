@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static ponhub.testutil.FxTestUtil.callOnFxThread;
 
 import java.io.IOException;
+import java.lang.reflect.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -28,10 +29,13 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import ponhub.MainApp;
 import ponhub.logic.Logic;
+import ponhub.logic.commands.exceptions.CommandException;
 import ponhub.model.PonHubData;
 import ponhub.model.PonHubDataState;
 import ponhub.model.attendance.Attendance;
@@ -44,11 +48,31 @@ import ponhub.model.query.LessonView;
 import ponhub.storage.JsonPonHubDataStorage;
 import ponhub.testutil.LessonQueryTestData;
 
-/** Exercises lesson-board routes against the real command pipeline and canonical saved data. */
+/**
+ * Exercises lesson-board routes against the real command pipeline and canonical saved data.
+ */
 public class LessonBoardNavigationTest {
 
     @TempDir
     Path directory;
+
+    @Test
+    public void initialCatalogue_explainsSelectionAndNamesAllThreeViewingShortcuts() throws Exception {
+        seedRecordedData();
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.assertLessonPane("lessonsButton");
+                assertEquals("All lessons", ((Button) fixture.root().lookup("#lessonsButton")).getText());
+                assertEquals("Student lessons", ((Button) fixture.root().lookup("#studentLessonsButton")).getText());
+                assertEquals("Attendance history", ((Button) fixture.root().lookup("#attendanceButton")).getText());
+                Label guidance = (Label) fixture.root().lookup("#studentSelectionGuidance");
+                assertEquals("Select a Student card for Student lessons or Attendance history.", guidance.getText());
+                assertTrue(guidance.isWrapText());
+                assertWithinScene(guidance, fixture.root().getWidth(), fixture.root().getHeight());
+            }
+            return null;
+        });
+    }
 
     @Test
     public void shownWindow_minimumStageSize_keepsNavigationCommandStatusAndBothViewportsAccessible() throws Exception {
@@ -78,7 +102,8 @@ public class LessonBoardNavigationTest {
                 assertTrue(contentWidth <= stage.getWidth());
                 assertTrue(contentHeight <= stage.getHeight());
                 for (String id : List.of("lessonsButton", "studentLessonsButton", "attendanceButton",
-                        "commandTextField", "statusbarPlaceholder", "personListView", "lessonListView")) {
+                        "studentSelectionGuidance", "commandTextField", "statusbarPlaceholder",
+                        "personListView", "lessonListView")) {
                     assertWithinScene(fixture.root().lookup("#" + id), contentWidth, contentHeight);
                 }
                 for (ListView<?> list : List.of(fixture.people(), fixture.lessons())) {
@@ -112,19 +137,19 @@ public class LessonBoardNavigationTest {
                 fixture.enter("history 4");
                 fixture.assertHistoryPane();
                 fixture.enter("lessons si/2");
-                fixture.assertLessonPane();
+                fixture.assertLessonPane("studentLessonsButton");
                 assertEquals(List.of("L2", "L10"), fixture.lessonIds());
                 assertEquals("Student S1 · current lessons", fixture.label("lessonContext"));
 
                 fixture.enter("history 4");
                 fixture.enter("search c/lesson s/Science");
-                fixture.assertLessonPane();
+                fixture.assertLessonPane("");
                 assertEquals(List.of("L2", "L3"), fixture.lessonIds());
                 assertEquals("Lesson search: s/science", fixture.label("lessonContext"));
 
                 fixture.enter("history 4");
                 fixture.enter("showlesson lid/L10 d/2026-10-12");
-                fixture.assertLessonPane();
+                fixture.assertLessonPane("");
                 assertTrue(fixture.detail().isVisible());
                 assertEquals(List.of("L10"), fixture.lessonIds());
                 assertEquals("Math", ((Label) fixture.detail().lookup("#lessonHeading")).getText());
@@ -186,7 +211,7 @@ public class LessonBoardNavigationTest {
                 PersonRecord selected = fixture.people().getSelectionModel().getSelectedItem();
                 fixture.enter("history 2");
                 fixture.enter("lessons si/3");
-                fixture.assertLessonPane();
+                fixture.assertLessonPane("studentLessonsButton");
                 assertTrue(fixture.lessons().getItems().isEmpty());
                 assertEquals("Student S3 · current lessons", fixture.label("lessonContext"));
                 assertEquals("No lessons to display.", ((Label) fixture.lessons().getPlaceholder()).getText());
@@ -199,7 +224,7 @@ public class LessonBoardNavigationTest {
                 assertEquals("No recorded attendance. Missing dates are unrecorded.",
                         placeholder.getText());
                 fixture.enter("search c/lesson s/Nonexistent");
-                fixture.assertLessonPane();
+                fixture.assertLessonPane("");
                 assertTrue(fixture.lessons().getItems().isEmpty());
                 assertEquals("Lesson search: s/nonexistent", fixture.label("lessonContext"));
                 assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
@@ -227,7 +252,7 @@ public class LessonBoardNavigationTest {
                 byte[] original = Files.readAllBytes(fixture.dataPath());
                 fixture.enter("history 4 lid/L10");
                 fixture.enter("showlesson lid/L10 d/2026-10-05");
-                fixture.assertLessonPane();
+                fixture.assertLessonPane("");
                 LessonDetailView dated = (LessonDetailView) fixture.lessons().getItems().getFirst();
                 assertEquals(1, dated.currentRoster().size());
                 assertEquals(LessonQueryTestData.STUDENT_ONE, dated.currentRoster().getFirst().student().getId());
@@ -260,7 +285,7 @@ public class LessonBoardNavigationTest {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("search c/lesson s/Math");
                 fixture.enter("editlesson lid/L4 s/Geometry");
-                fixture.assertLessonPane();
+                fixture.assertLessonPane("");
                 assertEquals(List.of("L10"), fixture.lessonIds());
                 assertEquals("Lesson search: s/math", fixture.label("lessonContext"));
 
@@ -272,7 +297,7 @@ public class LessonBoardNavigationTest {
                 fixture.enter("list r/student");
                 fixture.people().getSelectionModel().select(0);
                 fixture.enter("edit 1 n/Alex Updated");
-                fixture.assertLessonPane();
+                fixture.assertLessonPane("");
                 LessonDetailView detail = (LessonDetailView) fixture.lessons().getItems().getFirst();
                 assertEquals(LessonQueryTestData.SHARED_LESSON, detail.getLessonId());
                 assertEquals("Mei Updated", detail.getTutorName());
@@ -306,7 +331,7 @@ public class LessonBoardNavigationTest {
                 fixture.enter("history 4");
                 fixture.draft();
                 fixture.click("studentLessonsButton");
-                fixture.assertLessonPane();
+                fixture.assertLessonPane("studentLessonsButton");
                 assertEquals(expectedLessons, fixture.lessonIds());
                 assertEquals(studentContext, fixture.label("lessonContext"));
                 assertEquals(studentFeedback, fixture.feedback());
@@ -331,7 +356,7 @@ public class LessonBoardNavigationTest {
                 fixture.enter("history 4");
                 fixture.draft();
                 fixture.click("lessonsButton");
-                fixture.assertLessonPane();
+                fixture.assertLessonPane("lessonsButton");
                 assertEquals(allLessons, fixture.lessonIds());
                 assertEquals("All lessons", fixture.label("lessonContext"));
                 assertEquals(allFeedback, fixture.feedback());
@@ -341,8 +366,10 @@ public class LessonBoardNavigationTest {
                 fixture.enter("search c/student n/Jamie");
                 fixture.people().getSelectionModel().select(0);
                 fixture.click("studentLessonsButton");
+                fixture.assertLessonPane("studentLessonsButton");
                 assertEquals(expectedLessons, fixture.lessonIds());
                 fixture.click("attendanceButton");
+                fixture.assertHistoryPane();
                 assertEquals(expectedHistory, fixture.historyKeys());
                 assertArrayEquals(original, Files.readAllBytes(fixture.dataPath()));
             }
@@ -399,22 +426,204 @@ public class LessonBoardNavigationTest {
         byte[] original = Files.readAllBytes(dataPath());
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
+                fixture.assertLessonPane("lessonsButton");
                 fixture.enter("lessons");
+                fixture.assertLessonPane("lessonsButton");
                 String protectedFeedback = fixture.feedback();
                 assertTrue(protectedFeedback.contains("Operational writes are blocked"));
                 fixture.draft();
                 fixture.click("lessonsButton");
                 assertEquals(protectedFeedback, fixture.feedback());
+                fixture.assertLessonPane("lessonsButton");
                 fixture.assertDraft();
                 for (String button : List.of("studentLessonsButton", "attendanceButton")) {
                     fixture.click(button);
                     assertFalse(fixture.feedback().isBlank());
+                    fixture.assertLessonPane("lessonsButton");
                     fixture.assertDraft();
                 }
                 assertTrue(fixture.people().getItems().isEmpty());
                 assertTrue(fixture.lessons().getItems().isEmpty());
                 assertTrue(fixture.history().getItems().isEmpty());
                 assertArrayEquals(original, Files.readAllBytes(fixture.dataPath()));
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void selectionFilteringAndHelp_keepDisplayedStudentIdentityUntilExplicitShortcut() throws Exception {
+        seedRecordedData();
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                byte[] original = Files.readAllBytes(fixture.dataPath());
+                fixture.people().getSelectionModel().select(3);
+                fixture.assertLessonPane("lessonsButton");
+                fixture.enter("lessons si/2");
+                List<String> lessons = fixture.lessonIds();
+                fixture.assertLessonPane("studentLessonsButton");
+                assertEquals("Student S1 · current lessons", fixture.label("lessonContext"));
+
+                fixture.people().getSelectionModel().select(5);
+                fixture.people().getSelectionModel().clearSelection();
+                fixture.enter("list r/tutor");
+                fixture.people().getSelectionModel().select(0);
+                fixture.enter("help");
+                fixture.assertLessonPane("studentLessonsButton");
+                assertEquals(lessons, fixture.lessonIds());
+                assertEquals("Student S1 · current lessons", fixture.label("lessonContext"));
+
+                fixture.enter("search c/student n/Jamie");
+                fixture.people().getSelectionModel().select(0);
+                fixture.assertLessonPane("studentLessonsButton");
+                assertEquals(lessons, fixture.lessonIds());
+                fixture.draft();
+                fixture.click("studentLessonsButton");
+                fixture.assertLessonPane("studentLessonsButton");
+                assertEquals(List.of("L10", "L11"), fixture.lessonIds());
+                assertEquals("Student S2 · current lessons", fixture.label("lessonContext"));
+                assertEquals(List.of("S2"), fixture.peopleIds());
+                fixture.assertDraft();
+                assertArrayEquals(original, Files.readAllBytes(fixture.dataPath()));
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void rejectedTypedRoutes_preserveEveryResultKindContextAndIndicator() throws Exception {
+        seedRecordedData();
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                byte[] original = Files.readAllBytes(fixture.dataPath());
+                fixture.people().getSelectionModel().select(3);
+                PersonRecord selected = fixture.people().getSelectionModel().getSelectedItem();
+                List<String> routes = List.of("lessons", "lessons si/4", "search c/lesson",
+                        "search c/lesson s/Math", "showlesson lid/L3", "history 4 lid/L10");
+                List<String> activeButtons = List.of("lessonsButton", "studentLessonsButton", "", "", "",
+                        "attendanceButton");
+                for (int route = 0; route < routes.size(); route++) {
+                    fixture.enter(routes.get(route));
+                    String activeButton = activeButtons.get(route);
+                    fixture.assertActiveOnly(activeButton);
+                    List<String> lessons = fixture.lessonIds();
+                    List<String> history = fixture.historyKeys();
+                    String lessonContext = fixture.label("lessonContext");
+                    String historyContext = fixture.label("historyContext");
+                    for (String command : List.of("lessons si/1", "lessons si/3", "lessons si/99", "lessons si/x",
+                            "search c/lesson bad", "showlesson lid/L99", "showlesson lid/L10 d/2026-10-06",
+                            "history 1", "history 3", "history 99", "history 4 lid/L99")) {
+                        fixture.enter(command);
+                        fixture.assertActiveOnly(activeButton);
+                        assertEquals(lessons, fixture.lessonIds());
+                        assertEquals(history, fixture.historyKeys());
+                        assertEquals(lessonContext, fixture.label("lessonContext"));
+                        assertEquals(historyContext, fixture.label("historyContext"));
+                        assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                    }
+                    fixture.enter("help");
+                    fixture.assertActiveOnly(activeButton);
+                }
+                assertArrayEquals(original, Files.readAllBytes(fixture.dataPath()));
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void committedStudentRefresh_retainsStudentIndicatorWhenResultBecomesNonempty() throws Exception {
+        new JsonPonHubDataStorage(dataPath()).saveData(LessonQueryTestData.createData().exportState());
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("list r/student");
+                fixture.enter("lessons si/3");
+                fixture.assertLessonPane("studentLessonsButton");
+                assertTrue(fixture.lessonIds().isEmpty());
+                fixture.enter("enrol 3 lid/L3");
+                fixture.assertLessonPane("studentLessonsButton");
+                assertEquals(List.of("L3"), fixture.lessonIds());
+                assertEquals("Student S3 · current lessons", fixture.label("lessonContext"));
+                fixture.enter("unenrol 3 lid/L3");
+                fixture.assertLessonPane("studentLessonsButton");
+                assertTrue(fixture.lessonIds().isEmpty());
+                fixture.enter("delete 3");
+                fixture.assertLessonPane("studentLessonsButton");
+                assertTrue(fixture.lessonIds().isEmpty());
+                assertEquals("Student S3 · current lessons", fixture.label("lessonContext"));
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void historyInvalidation_restoresRetainedLessonScopeIncludingUnavailableDetail() throws Exception {
+        callOnFxThread(() -> {
+            List<String> routes = List.of("lessons", "lessons si/6", "search c/lesson", "showlesson lid/L3");
+            List<String> activeButtons = List.of("lessonsButton", "studentLessonsButton", "", "");
+            for (int route = 0; route < routes.size(); route++) {
+                new JsonPonHubDataStorage(dataPath()).saveData(LessonQueryTestData.createData().exportState());
+                try (WindowFixture fixture = createWindow()) {
+                    fixture.enter(routes.get(route));
+                    String lessonContext = fixture.label("lessonContext");
+                    fixture.enter("history 6");
+                    fixture.assertHistoryPane();
+                    fixture.enter("delete 6");
+                    fixture.assertLessonPane(activeButtons.get(route));
+                    assertEquals(lessonContext, fixture.label("lessonContext"));
+                    assertEquals("Attendance history", fixture.label("historyContext"));
+                    assertTrue(fixture.historyKeys().isEmpty());
+                }
+            }
+            new JsonPonHubDataStorage(dataPath()).saveData(LessonQueryTestData.createData().exportState());
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("showlesson lid/L3");
+                fixture.enter("history 6 lid/L3");
+                fixture.assertHistoryPane();
+                fixture.enter("deletelesson lid/L3");
+                fixture.assertLessonPane("");
+                assertTrue(fixture.lessonIds().isEmpty());
+                assertEquals("Lesson L3 is no longer available", fixture.label("lessonContext"));
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void helpFailureAndUnrelatedKey_preserveStudentResultsAndUnfinishedDraft() throws Exception {
+        seedRecordedData();
+        callOnFxThread(() -> {
+            AppHarness app = new AppHarness();
+            app.initializePaths(dataPath(), directory.resolve("help-failure-preferences.json"));
+            Logic actual = app.getLogic();
+            Logic rejectingHelp = (Logic) Proxy.newProxyInstance(Logic.class.getClassLoader(),
+                    new Class<?>[] {Logic.class}, (proxy, method, arguments) -> {
+                        if (method.getName().equals("execute") && arguments[0].equals("help")) {
+                            throw new CommandException("Help is temporarily unavailable");
+                        }
+                        return method.invoke(actual, arguments);
+                    });
+            MainWindow window = new MainWindow(new Stage(), rejectingHelp, dataPath());
+            window.fillInnerParts();
+            try (WindowFixture fixture = new WindowFixture(app, window, dataPath())) {
+                fixture.layout();
+                fixture.enter("lessons si/2");
+                List<String> lessons = fixture.lessonIds();
+                String context = fixture.label("lessonContext");
+                fixture.draft();
+                window.handleHelp();
+                assertEquals("Help is temporarily unavailable", fixture.feedback());
+                fixture.assertLessonPane("studentLessonsButton");
+                fixture.assertDraft();
+                fixture.input().setText("Unrelated key draft");
+                for (Node target : List.of(fixture.input(), fixture.root())) {
+                    Event.fireEvent(target, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F2,
+                            false, false, false, false));
+                }
+                assertEquals("Unrelated key draft", fixture.input().getText());
+                assertEquals("Help is temporarily unavailable", fixture.feedback());
+                fixture.assertLessonPane("studentLessonsButton");
+                assertEquals(lessons, fixture.lessonIds());
+                assertEquals(context, fixture.label("lessonContext"));
             }
             return null;
         });
@@ -550,22 +759,23 @@ public class LessonBoardNavigationTest {
             assertEquals(8, input().getCaretPosition());
         }
 
-        private void assertLessonPane() {
+        private void assertLessonPane(String activeButton) {
             assertTrue(lessons().getParent().isVisible());
             assertFalse(history().getParent().isVisible());
-            assertTrue(root().lookup("#lessonsButton").getPseudoClassStates()
-                    .contains(PseudoClass.getPseudoClass("active")));
-            assertFalse(root().lookup("#attendanceButton").getPseudoClassStates()
-                    .contains(PseudoClass.getPseudoClass("active")));
+            assertActiveOnly(activeButton);
         }
 
         private void assertHistoryPane() {
             assertTrue(history().getParent().isVisible());
             assertFalse(lessons().getParent().isVisible());
-            assertFalse(root().lookup("#lessonsButton").getPseudoClassStates()
-                    .contains(PseudoClass.getPseudoClass("active")));
-            assertTrue(root().lookup("#attendanceButton").getPseudoClassStates()
-                    .contains(PseudoClass.getPseudoClass("active")));
+            assertActiveOnly("attendanceButton");
+        }
+
+        private void assertActiveOnly(String activeButton) {
+            for (String id : List.of("lessonsButton", "studentLessonsButton", "attendanceButton")) {
+                assertEquals(id.equals(activeButton), root().lookup("#" + id).getPseudoClassStates()
+                        .contains(PseudoClass.getPseudoClass("active")), id);
+            }
         }
 
         @Override
@@ -575,7 +785,9 @@ public class LessonBoardNavigationTest {
         }
     }
 
-    /** Exposes the application's canonical initialization and snapshot boundary. */
+    /**
+     * Exposes the application's canonical initialization and snapshot boundary.
+     */
     private static class AppHarness extends MainApp {
         private void initializePaths(Path dataPath, Path prefsPath) throws IOException {
             initialize(dataPath, prefsPath);

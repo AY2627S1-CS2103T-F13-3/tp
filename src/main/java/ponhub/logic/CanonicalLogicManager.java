@@ -120,6 +120,11 @@ public final class CanonicalLogicManager implements Logic {
     }
 
     @Override
+    public ReadOnlyObjectProperty<LessonRetrieval.ResultKind> lessonResultKindProperty() {
+        return session.lessonResultKindProperty();
+    }
+
+    @Override
     public Optional<LessonView> findLessonById(LessonId lessonId) {
         return session.getLessonQueries().findLessonById(lessonId);
     }

@@ -748,6 +748,14 @@ public class CanonicalMainWindowTest {
                 assertEquals(5, fixture.people().getItems().size());
                 fixture.people().scrollTo(4);
                 fixture.layout();
+                // Drive the actual scrollbar after layout measures the variable-height cards.
+                for (var node : fixture.people().lookupAll(".scroll-bar")) {
+                    if (node instanceof ScrollBar bar && bar.isVisible()
+                            && bar.getOrientation() == Orientation.VERTICAL) {
+                        bar.setValue(bar.getMax());
+                    }
+                }
+                fixture.people().layout();
                 assertCard(fixture, "Student · ID: S10", "New Student", 5);
                 assertEquals(fixture.app.snapshot(), new JsonPonHubDataStorage(fixture.dataPath)
                         .readData().orElseThrow());

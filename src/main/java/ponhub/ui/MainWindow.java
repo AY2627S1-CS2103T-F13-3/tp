@@ -20,6 +20,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import ponhub.commons.core.GuiSettings;
+import ponhub.logic.LessonRetrieval.ResultKind;
 import ponhub.logic.Logic;
 import ponhub.logic.commands.CommandResult;
 import ponhub.logic.commands.exceptions.CommandException;
@@ -48,6 +49,9 @@ public class MainWindow extends UiPart<Stage> {
 
     @FXML
     private Button lessonsButton;
+
+    @FXML
+    private Button studentLessonsButton;
 
     @FXML
     private Button attendanceButton;
@@ -169,6 +173,7 @@ public class MainWindow extends UiPart<Stage> {
         historyRoot.managedProperty().bind(historyRoot.visibleProperty());
         lessonListPanelPlaceholder.getChildren().addAll(lessonRoot, historyRoot);
         logic.historyViewActiveProperty().addListener((observable, previous, current) -> updateNavigation());
+        logic.lessonResultKindProperty().addListener((observable, previous, current) -> updateNavigation());
         updateNavigation();
 
         resultDisplay = new ResultDisplay();
@@ -184,8 +189,10 @@ public class MainWindow extends UiPart<Stage> {
 
     private void updateNavigation() {
         boolean isHistoryActive = logic.historyViewActiveProperty().get();
+        ResultKind visibleLessonKind = isHistoryActive ? null : logic.lessonResultKindProperty().get();
         PseudoClass active = PseudoClass.getPseudoClass("active");
-        lessonsButton.pseudoClassStateChanged(active, !isHistoryActive);
+        lessonsButton.pseudoClassStateChanged(active, visibleLessonKind == ResultKind.ALL_LESSONS);
+        studentLessonsButton.pseudoClassStateChanged(active, visibleLessonKind == ResultKind.STUDENT_LESSONS);
         attendanceButton.pseudoClassStateChanged(active, isHistoryActive);
     }
 

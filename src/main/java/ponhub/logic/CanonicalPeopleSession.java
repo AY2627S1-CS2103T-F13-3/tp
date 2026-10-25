@@ -155,6 +155,13 @@ public final class CanonicalPeopleSession {
         return lessonRetrieval.contextProperty();
     }
 
+    /**
+     * Returns the selected lesson source independently of people selection and the visible history pane.
+     */
+    public ReadOnlyObjectProperty<LessonRetrieval.ResultKind> lessonResultKindProperty() {
+        return lessonRetrieval.resultKindProperty();
+    }
+
     public ObservableList<AttendanceHistoryEntry> getDisplayedHistory() {
         return attendanceRetrieval.getDisplayedHistory();
     }
