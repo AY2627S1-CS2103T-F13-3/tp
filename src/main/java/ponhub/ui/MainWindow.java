@@ -7,15 +7,19 @@ import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import ponhub.commons.core.GuiSettings;
 import ponhub.commons.core.LogsCenter;
 import ponhub.logic.Logic;
@@ -37,10 +41,14 @@ public class MainWindow extends UiPart<Stage> {
     private Stage primaryStage;
     private Logic logic;
     private Path dataFilePath;
+    private final LogoSoundPlayer logoSound = new LogoSoundPlayer();
 
     // Independent Ui parts residing in this Ui container
     private PersonRecordListPanel personListPanel;
     private ResultDisplay resultDisplay;
+
+    @FXML
+    private HBox ponhubWordmark;
 
     @FXML
     private Button lessonsButton;
@@ -82,7 +90,23 @@ public class MainWindow extends UiPart<Stage> {
         setWindowDefaultSize(logic.getGuiSettings());
 
         setAccelerators();
+        configureLogoSound();
 
+    }
+
+    /**
+     * Makes the existing wordmark clickable without focusing or changing the command field.
+     */
+    private void configureLogoSound() {
+        ponhubWordmark.setMouseTransparent(false);
+        ponhubWordmark.setCursor(Cursor.HAND);
+        ponhubWordmark.setOnMouseClicked(event -> {
+            if (event.getButton() == MouseButton.PRIMARY) {
+                logoSound.play();
+                event.consume();
+            }
+        });
+        primaryStage.addEventHandler(WindowEvent.WINDOW_HIDDEN, event -> logoSound.close());
     }
 
     public Stage getPrimaryStage() {
