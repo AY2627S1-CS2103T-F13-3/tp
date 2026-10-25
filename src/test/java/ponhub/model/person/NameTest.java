@@ -68,6 +68,18 @@ public class NameTest {
     }
 
     @Test
+    public void constructor_enclosingMark_requiresAttachedLetter() {
+        String attachedMark = "A\u20dd";
+        assertTrue(Name.isValidName(attachedMark));
+        assertEquals(attachedMark, new Name(attachedMark).fullName);
+
+        for (String unattachedMark : new String[] {"\u20ddA", "A \u20dd", "A-\u20dd"}) {
+            assertFalse(Name.isValidName(unattachedMark));
+            assertThrows(IllegalArgumentException.class, Name.MESSAGE_CONSTRAINTS, () -> new Name(unattachedMark));
+        }
+    }
+
+    @Test
     public void constructor_normalizedCodePointLimit_countsCompositionAndSupplementaryLetters() {
         assertEquals("é".repeat(100), new Name("e\u0301".repeat(100)).fullName);
         assertFalse(Name.isValidName("\uD801\uDC00".repeat(101)));
