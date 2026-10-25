@@ -10,12 +10,13 @@ import ponhub.commons.core.index.Index;
 import ponhub.logic.parser.exceptions.ParseException;
 
 /**
- * Parses the {@code lessons [si/STUDENT_INDEX]} argument format.
+ * Parses the {@code lessons [STUDENT_INDEX]} argument format and its legacy {@code si/} selector alias.
  */
 public final class LessonsArgumentsParser {
-    public static final String MESSAGE_USAGE = "Format: lessons [si/STUDENT_INDEX]";
+    public static final String MESSAGE_USAGE =
+            "Format: lessons [STUDENT_INDEX] (legacy alias: lessons si/STUDENT_INDEX)";
 
-    private static final Pattern STUDENT_INDEX_FORMAT = Pattern.compile("si/([0-9]+)");
+    private static final Pattern STUDENT_INDEX_FORMAT = Pattern.compile("(?:si/)?([0-9]+)");
     private static final Pattern LINE_BREAK = Pattern.compile("\\R");
 
     /**

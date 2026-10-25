@@ -38,7 +38,7 @@ public class CanonicalLessonRetrievalIntegrationTest {
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         var people = session.getPeople();
         var displayed = session.getDisplayedLessons();
-        session.execute("lessons si/4"); // Mixed position 4 resolves S2 once.
+        session.execute("lessons 4"); // Mixed position 4 resolves S2 once.
         assertIds(session, "L10", "L11");
         assertEquals("Student S2 · current lessons", session.lessonResultContextProperty().get());
         session.execute("list r/tutor");
@@ -68,7 +68,7 @@ public class CanonicalLessonRetrievalIntegrationTest {
         reloaded.execute("search c/lesson sn/Jamie s/Math");
         assertIds(reloaded, "L10");
         reloaded.execute("search c/student n/Jamie");
-        reloaded.execute("lessons si/1");
+        reloaded.execute("lessons 1");
         assertIds(reloaded, "L10", "L11");
     }
 
@@ -200,7 +200,7 @@ public class CanonicalLessonRetrievalIntegrationTest {
         session.execute("search c/lesson s/Math");
         var people = List.copyOf(session.getPeople());
         for (String arguments : List.of("si/", "si/0", "si/-1", "si/+1", "si/1.0", "si/2147483648",
-                "si/999999999999999999999999999999", "si/S1", "si/１", "1", "sid/S1", "si/2 si/4",
+                "si/999999999999999999999999999999", "si/S1", "si/１", "sid/S1", "si/2 si/4",
                 "si/2 x/no", "si/2\n", "si/2\u2028", "si/2\r", "si/2\u0000")) {
             assertThrows(ParseException.class, () -> session.execute("lessons " + arguments), arguments);
             assertIds(session, "L10", "L4");
@@ -214,7 +214,7 @@ public class CanonicalLessonRetrievalIntegrationTest {
             assertIds(session, "L10", "L4");
             assertEquals(ResultKind.SEARCH, session.lessonResultKindProperty().get());
         }
-        for (String arguments : List.of("si/1", "si/3", "si/8")) {
+        for (String arguments : List.of("1", "si/1", "3", "si/3", "8", "si/8")) {
             assertThrows(CommandException.class, () -> session.execute("lessons " + arguments), arguments);
             assertIds(session, "L10", "L4");
             assertEquals(ResultKind.SEARCH, session.lessonResultKindProperty().get());
@@ -278,7 +278,9 @@ public class CanonicalLessonRetrievalIntegrationTest {
     public void helpAndProtectedStartup_advertiseOnlyPermittedRoutes() throws Exception {
         CanonicalPeopleSession session = readOnlySession(saveFixture());
         assertTrue(session.execute("help").getFeedbackToUser().contains("lessons -"));
-        assertTrue(session.execute("help LESSONS").getFeedbackToUser().contains("si/STUDENT_INDEX"));
+        String lessonsHelp = session.execute("help LESSONS").getFeedbackToUser();
+        assertTrue(lessonsHelp.contains("Usage: lessons [STUDENT_INDEX]"));
+        assertTrue(lessonsHelp.contains("si/STUDENT_INDEX form remains accepted for compatibility"));
         assertTrue(session.execute("help search").getFeedbackToUser().contains("sn/STUDENT_NAME"));
         Path path = directory.resolve("rejected.json");
         Files.writeString(path, "{rejected");

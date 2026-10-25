@@ -203,7 +203,7 @@ public class MainWindow extends UiPart<Stage> {
 
     @FXML
     private void handleStudentLessons() {
-        executeStudentViewingCommand("lessons si/");
+        executeStudentViewingCommand("lessons ");
     }
 
     @FXML
@@ -222,7 +222,7 @@ public class MainWindow extends UiPart<Stage> {
             if (selectedId.filter(person.getId()::equals).isPresent()) {
                 if (person.getId().getRole() != PersonRole.STUDENT) {
                     resultDisplay.setFeedbackToUser("Select a Student card for this view, or enter "
-                            + "lessons si/STUDENT_INDEX or history STUDENT_INDEX.");
+                            + "lessons STUDENT_INDEX or history STUDENT_INDEX.");
                     return;
                 }
                 executeViewingCommand(commandPrefix + (index + 1));
@@ -230,7 +230,7 @@ public class MainWindow extends UiPart<Stage> {
             }
         }
         resultDisplay.setFeedbackToUser("No current Student card is selected. Select a Student card, or enter "
-                + "lessons si/STUDENT_INDEX or history STUDENT_INDEX using the current people list.");
+                + "lessons STUDENT_INDEX or history STUDENT_INDEX using the current people list.");
     }
 
     /**

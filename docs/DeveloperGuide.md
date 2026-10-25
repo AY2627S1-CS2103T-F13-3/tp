@@ -179,8 +179,9 @@ filtered **people list**. Check range and required role, then resolve once to st
 the whole operation. Filtering renumbers positions without changing stored IDs (`S1`, `T1`, `P1`);
 cards distinguish both. Lesson, roster and history results preserve the people filter/order/indices;
 their row positions are never person selectors. Existing lessons use stable `lid/LESSON_ID` (`lid/L1`).
-`lessons [si/STUDENT_INDEX]` resolves its optional Student selector by the same rule. Stored
-relationships and internal query APIs use stable IDs, never displayed positions.
+`lessons [STUDENT_INDEX]` resolves its optional Student selector by the same rule; the former
+`lessons si/STUDENT_INDEX` syntax remains a compatibility alias. Stored relationships and internal query APIs
+use stable IDs, never displayed positions.
 
 **Tutor lookup.** `addlesson` matches `tu/TUTOR_NAME` by normalized full name, ignoring case and
 repeated spaces. If supplied, `tp/TUTOR_PHONE` must also match exactly; never ignore it. Reject zero
@@ -435,7 +436,7 @@ at the top of `feedbackSection`, the upper child of `resultSplitPane`, spanning 
 label explains that selecting a Student card chooses the target of the Student shortcuts. Navigation, guidance
 and feedback share this resizable section, with a 50-pixel minimum for the feedback placeholder. The shared
 divider resizes this section; command entry stays fixed below both record columns. The buttons route through
-`MainWindow` to the same `Logic.execute` boundary as the command box, using `lessons`, `lessons si/CURRENT_INDEX` and
+`MainWindow` to the same `Logic.execute` boundary as the command box, using `lessons`, `lessons CURRENT_INDEX` and
 `history CURRENT_INDEX` respectively. Student shortcuts resolve the selected stable Person ID against the current
 people list and require a Student before creating the indexed command. Missing or stale selection and Tutor/Parent
 selection produce feedback without replacing either result source. Buttons preserve the command-box draft and
@@ -698,7 +699,7 @@ navigation capture rather than presenting this running dataset as a screenshot.
 | Path | Important difference |
 | --- | --- |
 | People search | Replaces the people criteria and context; evaluates own fields first, then the same-child/same-Lesson relationships. It does not change the lesson filter or selected lesson/history source. |
-| `lessons si/INDEX` | Resolves the current visible person once, requires a Student, then subscribes by stable Student ID. Later people filtering cannot retarget that subscription. |
+| `lessons INDEX` | Resolves the current visible person once, requires a Student, then subscribes by stable Student ID. `si/INDEX` remains an input alias; later people filtering cannot retarget either form. |
 | Lesson search | Searches the complete catalogue, including empty rosters unless `sn/` is supplied. It changes only the lesson filter and selected lesson source. |
 | `showlesson lid/ID [d/DATE]` | Looks up the complete catalogue by stable Lesson ID, independently of filters. A dated detail separates unrecorded current members from present/absent records and retained former-member attendance. |
 | `history INDEX [lid/ID]` | Resolves a visible Student once and selects a separate history list, newest date first then Lesson ID. It includes former enrolments and switches the right panel to history. Successful lesson retrieval switches that panel back. |
@@ -1591,7 +1592,7 @@ Person selectors in these target use cases are positive indices from the current
 
 **Extensions**
 
-* 1a. The administrator runs `lessons si/STUDENT_INDEX`: PonHub resolves the current people-list index once to a Student ID and shows that student's current lessons. An invalid index or wrong role is rejected without altering records or the people view.
+* 1a. The administrator runs `lessons STUDENT_INDEX`: PonHub resolves the current people-list index once to a Student ID and shows that student's current lessons. An invalid index or wrong role is rejected without altering records or the people view.
 * 2a. A condition is invalid, unavailable in this slice or incompatible with the category: PonHub explains the supported syntax without changing data. The administrator may resubmit at step 1.
 * 3a. No record matches: PonHub displays a successful empty result, and the use case ends. Unfiltered catalogue retrieval includes shared lessons with empty rosters.
 * 4a. A history Student index is invalid or selects another role, or the optional Lesson does not exist: PonHub reports the error without changing data, the people list or the previous result. The detail view also rejects an invalid date.
@@ -2039,13 +2040,13 @@ former-member attendance. The [active shared-lesson workflow](#active-shared-les
 supplies the commands. Record the tested commit, OS, Java version, window size and actual outcomes; these steps
 are a manual checklist, not evidence that a display/scaling matrix has passed.
 
-1. From history, enter `lessons`, `lessons si/STUDENT_INDEX`, a Lesson search, an undated `showlesson` and a dated
+1. From history, enter `lessons`, `lessons STUDENT_INDEX`, a Lesson search, an undated `showlesson` and a dated
    `showlesson` in turn, using valid current indices and IDs. Repeat with a different Student card selected.
    Each typed command selects its own results without a button click or reliance on the selected card. Run a
    people search from Lesson details and verify its matching people/context, then `history STUDENT_INDEX` to
    display that specified Student's history. People positions and stable IDs remain distinct.
 2. Select one Student card, type an unfinished command and select part of its text, then click **Student lessons**,
-   **Attendance history** and **All lessons**. Expect the same results as `lessons si/CURRENT_INDEX`,
+   **Attendance history** and **All lessons**. Expect the same results as `lessons CURRENT_INDEX`,
    `history CURRENT_INDEX` and `lessons`.
    Each click retains the draft, cursor/text selection and people filter/order/selection; **All lessons** needs
    no selection. The visible guidance explains the purpose of selecting a Student card.
@@ -2064,7 +2065,7 @@ are a manual checklist, not evidence that a display/scaling matrix has passed.
    entry. Resize both dividers and verify wrapping without horizontal overflow, independent vertical scrolling and
    reachable navigation, selection guidance, feedback and command entry at normal and minimum window sizes.
 6. Check all three active indicators for typed commands and shortcut clicks. Initial catalogue and `lessons`
-   activate **All lessons**; `lessons si/STUDENT_INDEX` activates **Student lessons**; `history STUDENT_INDEX`
+   activate **All lessons**; `lessons STUDENT_INDEX` activates **Student lessons**; `history STUDENT_INDEX`
    activates **Attendance history**, including empty results. Lesson search, with or without filters, and
    Lesson details activate none. Switch between two Students in the same result mode. Selecting a conflicting
    card, filtering the result Student out of the people list, opening help and committed edits retain the
@@ -2115,7 +2116,7 @@ these people-specific differences against the [shared selector contract](#shared
 2. Restore `search c/student n/Jamie` from the common journey: Jamie `S2` is position **1**.
    Subscribe to lesson/roster results, then run `unenrol 1 lid/L1` and `enrol 1 lid/L1`.
    Both act on S2, never S1. Verify the same people list object, filter/order/indices and subscribed query
-   objects remain, with their contents refreshed. `lessons si/1` follows Jamie's current card and rejects
+   objects remain, with their contents refreshed. `lessons 1` follows Jamie's current card and rejects
    superseded `sid/S2` input. Lesson references use `lid/`.
 3. Follow the [add/save checks](#canonical-people-commands-and-unsuccessful-saves) for successful-add view reset
    and rejected-add preservation/retry. Apply the current-view selector checks to `delete` for every role;
@@ -2286,7 +2287,7 @@ The following is one end-to-end procedure for the delivered normal session. `add
    enrol 1 lid/L2
    enrol 1 lid/L3
    lessons
-   lessons si/1
+   lessons 1
    search c/lesson sn/Alex d/Mon s/Math
    search c/lesson sn/Nobody
    ```
@@ -2310,7 +2311,7 @@ The following is one end-to-end procedure for the delivered normal session. `add
 
 5. Remove Alex from both current rosters. Correcting Alex's existing `L1` key still succeeds, while creating the
    new `2026-10-12` key fails because Alex is no longer enrolled in `L1`. The dated detail moves Alex's corrected
-   result to the former-member section, `lessons si/1` excludes `L1` and `L3`, and `delete 1` remains blocked by
+   result to the former-member section, `lessons 1` excludes `L1` and `L3`, and `delete 1` remains blocked by
    retained `L1` attendance. Exit, inspect the closed file, restart with the same `--data` path, and continue with
    step 6 to verify that membership and retained history both reload.
 
@@ -2321,7 +2322,7 @@ The following is one end-to-end procedure for the delivered normal session. `add
    mark 1 lid/L1 d/2026-10-05 s/present
    mark 1 lid/L1 d/2026-10-12 s/present
    showlesson lid/L1 d/2026-10-05
-   lessons si/1
+   lessons 1
    delete 1
    exit
    ```
@@ -2332,13 +2333,13 @@ The following is one end-to-end procedure for the delivered normal session. `add
    blocked by Jamie's attendance. Removing that final key makes deletion succeed. Recreating the same slot must
    receive `L4`, not the deleted `L1`. After exiting, hash the closed operational file as described in step 7.
    Restart once more, run `list r/student` to restore the Student positions, and verify that the catalogue contains
-   `L2`, `L3` and empty-roster `L4` in creation order. `search c/lesson s/Math` returns `L4`, and `lessons si/1`
+   `L2`, `L3` and empty-roster `L4` in creation order. `search c/lesson s/Math` returns `L4`, and `lessons 1`
    remains empty.
 
    ```text
    list r/student
    showlesson lid/L1 d/2026-10-05
-   lessons si/1
+   lessons 1
    delete 1
    unmark 1 lid/L1 d/2026-10-05
    unmark 1 lid/L1 d/2026-10-05
@@ -2352,7 +2353,7 @@ The following is one end-to-end procedure for the delivered normal session. `add
    ```
 
 7. Keep that final restarted, Student-filtered session open. To confirm that retrieval is read-only, run `lessons`,
-   `lessons si/1`, `search c/lesson s/Math`, `showlesson lid/L4 d/2026-10-05`, `help lessons` and
+   `lessons 1`, `search c/lesson s/Math`, `showlesson lid/L4 d/2026-10-05`, `help lessons` and
    `help showlesson`, exit, and compare the closed operational file's hash with the value captured before this
    restart. Preferences are a separate file; the operational bytes must match. From the JAR folder, macOS/Linux
    users can run
