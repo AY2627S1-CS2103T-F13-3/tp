@@ -48,6 +48,7 @@ public final class CanonicalCommandExecutor {
         CanonicalTransaction transaction = view.beginTransaction();
         CommandResult result = command.execute(transaction.getStagedModel(), transaction.getStagedPeopleView());
         requireAllNonNull(result);
+        assert transaction.isLiveStateUnchanged() : "Staged commands must leave live data and filters unchanged";
         if (transaction.hasOperationalChanges()) {
             Optional<String> error = loadError.get();
             if (error.isPresent()) {

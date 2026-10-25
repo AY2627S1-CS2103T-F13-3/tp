@@ -17,7 +17,9 @@ import ponhub.model.lesson.Lesson;
 import ponhub.model.lesson.LessonDay;
 import ponhub.model.person.PersonId;
 
-/** Edits one stable Lesson solely within the executor's staged transaction. */
+/**
+ * Edits one stable Lesson solely within the executor's staged transaction.
+ */
 public final class CanonicalEditLessonCommand implements CanonicalCommandExecutor.StagedCommand {
     public static final String MESSAGE_SUCCESS = "Edited lesson: %s.";
     public static final String MESSAGE_NO_CHANGE = "No changes to lesson: %s.";

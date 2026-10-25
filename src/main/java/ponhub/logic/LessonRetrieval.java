@@ -129,7 +129,9 @@ public final class LessonRetrieval {
         return snapshot;
     }
 
-    /** A committed replacement updates only the selected detail; a failed save publishes nothing. */
+    /**
+     * A committed replacement updates only the selected detail; a failed save publishes nothing.
+     */
     private void refreshDetail() {
         if (selected != detail) {
             return;

@@ -152,7 +152,7 @@ public class MainWindow extends UiPart<Stage> {
         StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath);
         statusbarPlaceholder.getChildren().add(statusBarFooter.getRoot());
 
-        CommandBox commandBox = new CommandBox(this::executeCommand);
+        CommandBox commandBox = new CommandBox(this::executeCommand, logic.getCommandWords());
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
         commandBox.requestFocus();
     }
@@ -179,7 +179,9 @@ public class MainWindow extends UiPart<Stage> {
         executeStudentViewingCommand("history ");
     }
 
-    /** Resolves the selected identity against current displayed positions immediately before execution. */
+    /**
+     * Resolves the selected identity against current displayed positions immediately before execution.
+     */
     private void executeStudentViewingCommand(String commandPrefix) {
         var selectedId = personListPanel.getSelectedPersonId();
         var people = logic.getPersonRecords();
@@ -199,7 +201,9 @@ public class MainWindow extends UiPart<Stage> {
                 + "lessons si/STUDENT_INDEX or history STUDENT_INDEX using the current people list.");
     }
 
-    /** Runs optional viewing controls through the same validation and feedback route as typed commands. */
+    /**
+     * Runs optional viewing controls through the same validation and feedback route as typed commands.
+     */
     private void executeViewingCommand(String command) {
         try {
             executeCommand(command);
@@ -248,10 +252,6 @@ public class MainWindow extends UiPart<Stage> {
                 (int) primaryStage.getX(), (int) primaryStage.getY());
         logic.setGuiSettings(guiSettings);
         primaryStage.hide();
-    }
-
-    public PersonRecordListPanel getPersonListPanel() {
-        return personListPanel;
     }
 
     /**

@@ -12,7 +12,9 @@ import ponhub.model.person.Name;
 import ponhub.model.person.Phone;
 import ponhub.model.person.Tutor;
 
-/** Resolves a Tutor using the shared normalized-full-name and optional exact-phone rules. */
+/**
+ * Resolves a Tutor using the shared normalized-full-name and optional exact-phone rules.
+ */
 final class TutorResolver {
     static final String MESSAGE_TUTOR_NOT_FOUND = "No tutor found with the full name '%s'.";
     static final String MESSAGE_TUTOR_PHONE_NOT_FOUND = "No tutor named '%s' has the exact phone '%s'.";
@@ -22,7 +24,9 @@ final class TutorResolver {
     private TutorResolver() {
     }
 
-    /** Resolves exactly one tutor, without falling back when an exact phone is supplied. */
+    /**
+     * Resolves exactly one tutor, without falling back when an exact phone is supplied.
+     */
     static Tutor resolve(PonHubData data, Name name, Optional<Phone> phone) throws CommandException {
         requireAllNonNull(data, name, phone);
         String normalizedName = name.fullName.toLowerCase(Locale.ROOT);

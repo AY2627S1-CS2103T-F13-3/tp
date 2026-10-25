@@ -19,7 +19,9 @@ import ponhub.model.lesson.Subject;
 import ponhub.model.person.Name;
 import ponhub.model.person.Phone;
 
-/** Parses a stable Lesson selector and partial replacement fields without accessing model state. */
+/**
+ * Parses a stable Lesson selector and partial replacement fields without accessing model state.
+ */
 public final class LessonEditParser {
     public static final String MESSAGE_ARGUMENTS =
             "Supply lid/LESSON_ID and at least one editable field. Type 'help editlesson' for syntax.";
@@ -94,7 +96,9 @@ public final class LessonEditParser {
         return values.containsKey(prefix) ? Optional.of(parser.parse(values.get(prefix))) : Optional.empty();
     }
 
-    /** Immutable request retaining tutor lookup values until staged command execution. */
+    /**
+     * Immutable request retaining tutor lookup values until staged command execution.
+     */
     public record Input(LessonId lessonId, Optional<LessonDay> day, Optional<LessonTime> startTime,
             Optional<LessonTime> endTime, Optional<Subject> subject, Optional<Name> tutorName,
             Optional<Phone> tutorPhone, Optional<Room> room) {
@@ -103,6 +107,9 @@ public final class LessonEditParser {
         }
     }
 
+    /**
+     * Converts one nonblank Lesson edit value to its validated domain type.
+     */
     @FunctionalInterface
     private interface ValueParser<T> {
         T parse(String value);

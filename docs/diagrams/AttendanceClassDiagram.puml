@@ -24,23 +24,20 @@ package "Shared lessons" {
 package "Dated attendance" {
     class Attendance
     class AttendanceKey
-    enum AttendanceStatus
+    class AttendanceStatus <<enumeration>>
 }
 
-PonHubDataState "1" *-- "0..*" Attendance : ordered records
-Attendance "1" *-- "1" AttendanceKey : key
-Attendance "1" *-- "1" AttendanceStatus : status
+PonHubDataState "0..*" --> "0..*" Attendance : ordered records
+Attendance "0..*" --> "1" AttendanceKey : key
+Attendance "0..*" --> "1" AttendanceStatus : status
 Attendance "0..*" --> "1" Student : studentId (PersonId)
 Attendance "0..*" --> "1" Lesson : lessonId (LessonId)
 
-note right of AttendanceKey
-  Unique key:
-  Student ID + Lesson ID + LocalDate
-end note
-
-note bottom of Attendance
-  Attendance is dated history, separate from current membership.
-  It remains valid after a Student is unenrolled from a Lesson.
+note as AttendanceNotes
+  Attendance notes:
+  • Unique key: Student ID + Lesson ID + LocalDate.
+  • Attendance is dated history, separate from current membership.
+  • It remains valid after a Student is unenrolled from a Lesson.
 end note
 
 @enduml

@@ -13,10 +13,14 @@ import ponhub.model.person.PersonId;
 public interface LessonQuerySource {
     String MESSAGE_UNAVAILABLE = "Shared-lesson retrieval is not implemented yet";
 
-    /** Returns every shared lesson once in creation order, including empty rosters. */
+    /**
+     * Returns every shared lesson once in creation order, including empty rosters.
+     */
     ObservableList<LessonView> getLessonList();
 
-    /** Returns the active lesson-filter results in catalogue order without changing the people view. */
+    /**
+     * Returns the active lesson-filter results in catalogue order without changing the people view.
+     */
     ObservableList<LessonView> getFilteredLessonList();
 
     /**
@@ -51,9 +55,13 @@ public interface LessonQuerySource {
      */
     ObservableList<LessonView> getTutorSchedule(PersonId tutorId);
 
-    /** Returns retained dated records, newest first, then by Lesson ID. A missing record is unrecorded. */
+    /**
+     * Returns retained dated records, newest first, then by Lesson ID. A missing record is unrecorded.
+     */
     ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId);
 
-    /** Returns retained dated records for one existing lesson, including former membership. */
+    /**
+     * Returns retained dated records for one existing lesson, including former membership.
+     */
     ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId, LessonId lessonId);
 }

@@ -37,6 +37,11 @@ public interface Logic {
     CommandResult execute(String commandText) throws CommandException, ParseException;
 
     /**
+     * Returns immutable command words in catalogue order, restricted to this session's available routes.
+     */
+    List<String> getCommandWords();
+
+    /**
      * Returns the current canonical people view used by cards and displayed-index resolution.
      * The same unmodifiable observable list survives filtering and committed data changes.
      */
@@ -125,13 +130,19 @@ public interface Logic {
      */
     ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId, LessonId lessonId);
 
-    /** Returns the active attendance result list in the canonical UI. */
+    /**
+     * Returns the active attendance result list in the canonical UI.
+     */
     ObservableList<AttendanceHistoryEntry> getDisplayedHistory();
 
-    /** Describes the active attendance selector. */
+    /**
+     * Describes the active attendance selector.
+     */
     ReadOnlyStringProperty historyResultContextProperty();
 
-    /** Indicates whether the right result pane shows attendance history. */
+    /**
+     * Indicates whether the right result pane shows attendance history.
+     */
     javafx.beans.property.ReadOnlyBooleanProperty historyViewActiveProperty();
 
     /**

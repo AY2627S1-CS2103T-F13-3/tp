@@ -13,7 +13,7 @@ import ponhub.model.person.Student;
 
 /**
  * Read-only own-contact matching over canonical person records in their supplied order.
- * Relationship filters require the later relationship-search integration.
+ * PersonRelationshipSearch handles relationship filters; this helper accepts only own-contact fields.
  */
 public final class PersonContactSearch {
     static final Set<SearchField> OWN_FIELDS = Set.of(SearchField.NAME, SearchField.LEVEL,
@@ -24,7 +24,7 @@ public final class PersonContactSearch {
 
     /**
      * Returns one immutable snapshot of matching people without changing the supplied records or view.
-     * A caller can use this result to update the current people view when the search command is activated.
+     * The staged search command uses this result for own-contact criteria without changing canonical data.
      *
      * @throws IllegalArgumentException if the category is not a person role or a relationship filter is supplied
      */

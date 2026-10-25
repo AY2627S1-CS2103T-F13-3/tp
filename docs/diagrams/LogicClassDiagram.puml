@@ -1,25 +1,23 @@
 @startuml
 ' Updated by Ernest Chua with OpenAI Codex assistance (#220).
 !pragma layout smetana
+hide circle
 hide empty members
 skinparam defaultFontName Arial
 skinparam defaultFontSize 14
 skinparam shadowing false
 skinparam classAttributeIconSize 0
-interface Logic #E1F2DC {
+interface Logic <<interface>> #E1F2DC {
   execute(commandText)
-  observable retrieval API
 }
 class CanonicalLogicManager #E5E5FA
 class CanonicalPeopleSession #E5E5FA {
   execute(commandText)
-  protection, parsing and dispatch
 }
 class CanonicalCommandExecutor #E5E5FA {
   execute(command)
-  save changed snapshot before commit
 }
-interface "CanonicalCommandExecutor.\nStagedCommand" as StagedCommand #E5E5FA {
+interface "CanonicalCommandExecutor.\nStagedCommand" as StagedCommand <<interface>> #E5E5FA {
   execute(staged, stagedView)
 }
 class CanonicalTransaction #FBE3E6 {
@@ -28,7 +26,7 @@ class CanonicalTransaction #FBE3E6 {
   hasOperationalChanges()
   commit()
 }
-interface "CanonicalCommandExecutor.\nSnapshotWriter" as Writer #FFF0BD {
+interface "CanonicalCommandExecutor.\nSnapshotWriter" as Writer <<interface>> #FFF0BD {
   save(state)
 }
 CanonicalLogicManager ..|> Logic
