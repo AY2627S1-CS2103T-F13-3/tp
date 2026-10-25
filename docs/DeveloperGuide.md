@@ -426,9 +426,10 @@ never replace the people list. `HistoryListPanel` shares the right pane for date
 membership labels and refreshes after committed changes. See the
 [shared selector contract](#shared-lesson-target-contract).
 
-The optional **Lessons**, **Student lessons** and **Attendance** buttons share a wrapping `FlowPane` at the top
-of `feedbackSection`, the upper child of `resultSplitPane`, spanning both record columns. Navigation and feedback
-share that section's 80-pixel minimum height, with a 50-pixel minimum for the feedback placeholder. The shared
+The optional **All lessons**, **Student lessons** and **Attendance history** buttons share a wrapping `FlowPane`
+at the top of `feedbackSection`, the upper child of `resultSplitPane`, spanning both record columns. A wrapping
+label explains that selecting a Student card chooses the target of the Student shortcuts. Navigation, guidance
+and feedback share this resizable section, with a 50-pixel minimum for the feedback placeholder. The shared
 divider resizes this section; command entry stays fixed below both record columns. The buttons route through
 `MainWindow` to the same `Logic.execute` boundary as the command box, using `lessons`, `lessons si/CURRENT_INDEX` and
 `history CURRENT_INDEX` respectively. Student shortcuts resolve the selected stable Person ID against the current
@@ -437,6 +438,14 @@ selection produce feedback without replacing either result source. Buttons prese
 use the normal command guards, including protected-session rejection. Typed retrieval and search commands require
 no GUI selection; their supplied arguments select the appropriate people, Lesson/detail or history results from
 any current result. Navigation introduces no parser grammar, stored state or alternate query implementation.
+
+`LessonRetrieval.ResultKind` distinguishes `ALL_LESSONS`, `STUDENT_LESSONS`, `SEARCH` and `DETAIL`. Its read-only
+`resultKindProperty()` reaches `MainWindow` through the session and `Logic.lessonResultKindProperty()`. Together
+with `historyViewActiveProperty()`, it drives all three button indicators: history takes precedence; catalogue
+and Student results activate their own shortcut; search and detail activate none. Validation precedes source
+and kind changes. People selection/filtering, help and committed refresh do not retarget the retained source.
+History invalidation reveals the retained Lesson kind; a removed selected detail remains an unavailable detail.
+Display context text supplies headings, never navigation state.
 
 ### Logic component
 
@@ -2029,15 +2038,17 @@ are a manual checklist, not evidence that a display/scaling matrix has passed.
    Each typed command selects its own results without a button click or reliance on the selected card. Run a
    people search from Lesson details and verify its matching people/context, then `history STUDENT_INDEX` to
    display that specified Student's history. People positions and stable IDs remain distinct.
-2. Select one Student card, type an unfinished command, then click **Student lessons**, **Attendance** and
-   **Lessons**. Expect the same results as `lessons si/CURRENT_INDEX`, `history CURRENT_INDEX` and `lessons`.
-   Each click retains the draft and people filter/order/selection; the unfiltered Lesson button needs no selection.
+2. Select one Student card, type an unfinished command and select part of its text, then click **Student lessons**,
+   **Attendance history** and **All lessons**. Expect the same results as `lessons si/CURRENT_INDEX`,
+   `history CURRENT_INDEX` and `lessons`.
+   Each click retains the draft, cursor/text selection and people filter/order/selection; **All lessons** needs
+   no selection. The visible guidance explains the purpose of selecting a Student card.
 3. Clear selection and click each Student shortcut. Repeat with a Tutor and Parent selected, and after a people
    filter or deletion removes the previously selected Student. Expect explanatory feedback, unchanged prior
    results and draft, and no fallback to another person at the old position. Select a visible Student and retry.
-4. In a protected session, click **Lessons** and expect the normal protected-command rejection. Click
-   **Student lessons** and **Attendance** in that empty people view and expect guidance that no current Student
-   is selected. No button changes results or the draft, writes operational data or bypasses protection; unavailable
+4. In a protected session, click **All lessons** and expect the normal protected-command rejection. Click
+   **Student lessons** and **Attendance history** in that empty people view and expect guidance that no current
+   Student is selected. No button changes results or the draft, writes operational data or bypasses protection; unavailable
    records cannot be selected. `help`, `list` and `exit` remain usable.
 5. Inspect catalogue cards, attendance-history cards and both undated and dated `showlesson` details at narrow and
    wide widths. Expect the subject or date as the heading, a distinct identity line, and labelled values for the
@@ -2045,7 +2056,16 @@ are a manual checklist, not evidence that a display/scaling matrix has passed.
    former-member attendance are distinct sections expanded without another click; dated missing records say
    `unrecorded`. Check empty and large rosters, former members, long values and enough records to scroll to the last
    entry. Resize both dividers and verify wrapping without horizontal overflow, independent vertical scrolling and
-   reachable navigation, feedback and command entry.
+   reachable navigation, selection guidance, feedback and command entry at normal and minimum window sizes.
+6. Check all three active indicators for typed commands and shortcut clicks. Initial catalogue and `lessons`
+   activate **All lessons**; `lessons si/STUDENT_INDEX` activates **Student lessons**; `history STUDENT_INDEX`
+   activates **Attendance history**, including empty results. Lesson search, with or without filters, and
+   Lesson details activate none. Switch between two Students in the same result mode. Selecting a conflicting
+   card, filtering the result Student out of the people list, opening help and committed edits retain the
+   displayed result's scope and indicator. Invalid selectors, dates, protected rejection and failed saves retain
+   the previous result and indicator. Delete the target of active history and verify the retained Lesson result
+   and its indicator return; delete a selected empty Lesson detail and verify it stays an unavailable detail
+   with no active shortcut. Compare operational bytes before/after read-only routes: unchanged.
 
 ### Compact windows and active contact cards
 

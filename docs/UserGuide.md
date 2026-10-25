@@ -11,8 +11,8 @@ person/lesson deletion, dated attendance removal and attendance history are acti
 The people list is on the left, with Lesson or attendance results on the right. Enter commands in the
 full-width box below both lists and press Enter. The shared feedback/help area above the lists remains
 resizable; drag its divider to adjust reading space, and scroll either list independently.
-The optional **Lessons**, **Student lessons** and **Attendance** buttons above the results provide shortcuts
-to the same commands; see [moving between results](#moving-between-results).
+The optional **All lessons**, **Student lessons** and **Attendance history** buttons above the results provide
+shortcuts to the same commands; see [moving between results](#moving-between-results).
 
 The [Lesson board example](#listing-and-searching-shared-lessons) shows a filtered people list beside
 independent Lesson results.
@@ -370,15 +370,26 @@ If you prefer a shortcut, use the buttons above the results:
 
 | Button | Equivalent command | Selection needed |
 | --- | --- | --- |
-| **Lessons** | `lessons` | None |
+| **All lessons** | `lessons` | None |
 | **Student lessons** | `lessons si/STUDENT_INDEX` | A Student card in the current people list |
-| **Attendance** | `history STUDENT_INDEX` | A Student card in the current people list |
+| **Attendance history** | `history STUDENT_INDEX` | A Student card in the current people list |
 
-The Student shortcuts use the selected card's current displayed position. Select a Student again if filtering
-or a data change removes that selection. With no current Student selected, including a selected Tutor or Parent,
+The guidance below the buttons explains card selection: select a Student card to choose the target of
+**Student lessons** or **Attendance history**. Selecting a card does not replace either panel's results. The Student
+shortcuts use that card's current displayed position. Select a Student again if filtering or a data change
+removes that selection. With no current Student selected, including a selected Tutor or Parent,
 the buttons explain what to select and keep the previous results. Clicking a shortcut preserves any unfinished
-command text. The shortcuts follow the same validation and protected-session restrictions as typed commands.
-For dated Lesson details, Lesson-specific history or search filters, enter the full command directly.
+command text, cursor and text selection. The shortcuts follow the same validation and protected-session
+restrictions as typed commands. For dated Lesson details, Lesson-specific history or search filters, enter
+the full command directly.
+
+An orange button identifies the displayed result: **All lessons** for the complete catalogue, **Student
+lessons** for one Student's current lessons, or **Attendance history** for recorded attendance, including empty
+results. Lesson search and Lesson details leave all three buttons inactive. The indicator follows typed
+commands too. Selecting another card, changing the people filter or opening help keeps the current result
+and indicator; the heading still identifies the Student or query being displayed. Invalid commands and failed
+saves also retain them. If deleting the target of active history clears it, the retained Lesson result returns
+with its corresponding indicator.
 
 ## Data protection in the current build
 

@@ -12,11 +12,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import ponhub.logic.LessonRetrieval.ResultKind;
 import ponhub.logic.commands.exceptions.CommandException;
 import ponhub.logic.parser.exceptions.ParseException;
 import ponhub.model.query.LessonView;
@@ -88,11 +90,13 @@ public class CanonicalLessonRetrievalIntegrationTest {
             var beforePeople = List.copyOf(session.getPeople());
             var before = session.getDataSnapshot();
             String context = session.lessonResultContextProperty().get();
+            ResultKind kind = session.lessonResultKindProperty().get();
             byte[] bytes = Files.readAllBytes(path);
             assertThrows(CommandException.class, () -> session.execute("enrol 1 lid/L4"));
             assertEquals(before, session.getDataSnapshot());
             assertEquals(beforeResults, displayed);
             assertEquals(context, session.lessonResultContextProperty().get());
+            assertEquals(kind, session.lessonResultKindProperty().get());
             assertEquals(beforePeople, session.getPeople());
             assertArrayEquals(bytes, Files.readAllBytes(path));
             rejectWrites.set(false);
@@ -110,6 +114,7 @@ public class CanonicalLessonRetrievalIntegrationTest {
             assertThrows(CommandException.class, () -> session.execute("unenrol 1 lid/L4"));
             assertEquals(enrolled, session.getDataSnapshot());
             assertEquals(enrolledResults, displayed);
+            assertEquals(kind, session.lessonResultKindProperty().get());
             assertEquals(beforePeople, session.getPeople());
             assertArrayEquals(bytes, Files.readAllBytes(path));
             rejectWrites.set(false);
@@ -199,6 +204,7 @@ public class CanonicalLessonRetrievalIntegrationTest {
                 "si/2 x/no", "si/2\n", "si/2\u2028", "si/2\r", "si/2\u0000")) {
             assertThrows(ParseException.class, () -> session.execute("lessons " + arguments), arguments);
             assertIds(session, "L10", "L4");
+            assertEquals(ResultKind.SEARCH, session.lessonResultKindProperty().get());
         }
         for (String arguments : List.of("n/Mei", "pp/12345678", "sn/", "s/   ", "rm/", "d/Funday",
                 "d/Monday", "st/900", "st/2400", "et/1260", "st/-100", "st/0900 et/0900",
@@ -206,10 +212,12 @@ public class CanonicalLessonRetrievalIntegrationTest {
                 "s/a/b", "s/Math\n", "rm/\t")) {
             assertThrows(ParseException.class, () -> session.execute("search c/lesson " + arguments), arguments);
             assertIds(session, "L10", "L4");
+            assertEquals(ResultKind.SEARCH, session.lessonResultKindProperty().get());
         }
         for (String arguments : List.of("si/1", "si/3", "si/8")) {
             assertThrows(CommandException.class, () -> session.execute("lessons " + arguments), arguments);
             assertIds(session, "L10", "L4");
+            assertEquals(ResultKind.SEARCH, session.lessonResultKindProperty().get());
         }
         assertEquals(people, session.getPeople());
         assertArrayEquals(bytes, Files.readAllBytes(path));
@@ -219,12 +227,17 @@ public class CanonicalLessonRetrievalIntegrationTest {
     public void emptyCatalogueAndStudentWithoutLessons_reportZeroAndNeverCreateFile() throws Exception {
         Path path = directory.resolve("missing/data.json");
         CanonicalPeopleSession empty = new CanonicalPeopleSession(path);
+        assertEquals(ResultKind.ALL_LESSONS, empty.lessonResultKindProperty().get());
         assertEquals("Showing 0 lesson(s).", empty.execute("lessons").getFeedbackToUser());
+        assertEquals(ResultKind.ALL_LESSONS, empty.lessonResultKindProperty().get());
         assertEquals("Found 0 lesson(s).", empty.execute("search c/lesson").getFeedbackToUser());
+        assertEquals(ResultKind.SEARCH, empty.lessonResultKindProperty().get());
         assertThrows(CommandException.class, () -> empty.execute("lessons si/1"));
+        assertEquals(ResultKind.SEARCH, empty.lessonResultKindProperty().get());
         assertFalse(Files.exists(path.getParent()));
         CanonicalPeopleSession session = readOnlySession(saveFixture());
         assertEquals("Showing 0 lesson(s).", session.execute("lessons si/6").getFeedbackToUser());
+        assertEquals(ResultKind.STUDENT_LESSONS, session.lessonResultKindProperty().get());
         assertIds(session);
     }
 
@@ -272,10 +285,125 @@ public class CanonicalLessonRetrievalIntegrationTest {
         CanonicalPeopleSession protectedSession = new CanonicalPeopleSession(path);
         for (String command : List.of("lessons", "lessons si/0", "search c/lesson")) {
             assertThrows(CommandException.class, () -> protectedSession.execute(command));
+            assertEquals(ResultKind.ALL_LESSONS, protectedSession.lessonResultKindProperty().get());
+            assertFalse(protectedSession.historyViewActiveProperty().get());
         }
         assertThrows(ParseException.class, () -> protectedSession.execute("help lessons"));
         assertFalse(protectedSession.execute("help").getFeedbackToUser().contains("lessons -"));
         assertEquals("{rejected", Files.readString(path));
+    }
+
+    @Test
+    public void resultKinds_helpPeopleChangesAndFailedReadRoutesRetainAuthoritativeScope() throws Exception {
+        for (var route : resultRoutes().entrySet()) {
+            Path path = saveFixture();
+            CanonicalPeopleSession session = readOnlySession(path);
+            byte[] bytes = Files.readAllBytes(path);
+            var kind = session.lessonResultKindProperty();
+            assertSame(kind, session.lessonResultKindProperty());
+            session.execute(route.getKey());
+            assertEquals(route.getValue(), kind.get());
+            String context = session.lessonResultContextProperty().get();
+            var results = List.copyOf(session.getDisplayedLessons());
+            for (String command : List.of("help", "list r/tutor", "search c/parent")) {
+                session.execute(command);
+                assertEquals(route.getValue(), kind.get());
+                assertEquals(context, session.lessonResultContextProperty().get());
+                assertEquals(results, session.getDisplayedLessons());
+                assertFalse(session.historyViewActiveProperty().get());
+            }
+            // Parent position 1 cannot be borrowed as a Student position after filtering.
+            for (String command : List.of("lessons si/1", "lessons si/99", "history 1",
+                    "showlesson lid/L99", "showlesson lid/L10 d/2026-10-06")) {
+                assertThrows(CommandException.class, () -> session.execute(command), command);
+                assertEquals(route.getValue(), kind.get());
+                assertEquals(context, session.lessonResultContextProperty().get());
+                assertEquals(results, session.getDisplayedLessons());
+                assertFalse(session.historyViewActiveProperty().get());
+            }
+            for (String command : List.of("lessons si/0", "search c/lesson d/Funday", "history 0",
+                    "showlesson lid/L3 d/invalid")) {
+                assertThrows(ParseException.class, () -> session.execute(command), command);
+                assertEquals(route.getValue(), kind.get());
+            }
+            session.execute("list r/student");
+            session.execute("history 3 lid/L3");
+            assertTrue(session.getDisplayedHistory().isEmpty());
+            assertTrue(session.historyViewActiveProperty().get());
+            assertEquals(route.getValue(), kind.get());
+            String historyContext = session.historyResultContextProperty().get();
+            assertThrows(CommandException.class, () -> session.execute("lessons si/99"));
+            assertThrows(ParseException.class, () -> session.execute("search c/lesson s/"));
+            assertTrue(session.historyViewActiveProperty().get());
+            assertEquals(historyContext, session.historyResultContextProperty().get());
+            assertEquals(route.getValue(), kind.get());
+            assertArrayEquals(bytes, Files.readAllBytes(path));
+        }
+    }
+
+    @Test
+    public void historyInvalidation_restoresEachRetainedLessonKindAfterCommittedDeletion() throws Exception {
+        for (var route : resultRoutes().entrySet()) {
+            CanonicalPeopleSession session = new CanonicalPeopleSession(saveFixture());
+            session.execute(route.getKey());
+            session.execute("list r/student");
+            session.execute("history 3");
+            assertTrue(session.historyViewActiveProperty().get());
+            session.execute("delete 3");
+            assertFalse(session.historyViewActiveProperty().get());
+            assertEquals(route.getValue(), session.lessonResultKindProperty().get());
+        }
+        CanonicalPeopleSession session = new CanonicalPeopleSession(saveFixture());
+        session.execute("showlesson lid/L3");
+        session.execute("history 6 lid/L3");
+        session.execute("deletelesson lid/L3");
+        assertFalse(session.historyViewActiveProperty().get());
+        assertEquals(ResultKind.DETAIL, session.lessonResultKindProperty().get());
+        assertTrue(session.getDisplayedLessons().isEmpty());
+        assertEquals("Lesson L3 is no longer available", session.lessonResultContextProperty().get());
+    }
+
+    @Test
+    public void failedSaveAndCommittedRefresh_preserveEveryResultKindAndHistoryContext() throws Exception {
+        for (var route : resultRoutes().entrySet()) {
+            Path path = saveFixture();
+            AtomicBoolean rejectWrites = new AtomicBoolean(true);
+            CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+                if (rejectWrites.get()) {
+                    throw new IOException("Injected result-state save failure");
+                }
+                new JsonPonHubDataStorage(path).saveData(state);
+            });
+            session.execute(route.getKey());
+            session.execute("history 6");
+            var before = session.getDataSnapshot();
+            var results = List.copyOf(session.getDisplayedLessons());
+            String context = session.lessonResultContextProperty().get();
+            String historyContext = session.historyResultContextProperty().get();
+            byte[] bytes = Files.readAllBytes(path);
+            String edit = "editlesson lid/L3 s/Updated";
+            assertThrows(CommandException.class, () -> session.execute(edit));
+            assertSame(before, session.getDataSnapshot());
+            assertEquals(results, session.getDisplayedLessons());
+            assertEquals(context, session.lessonResultContextProperty().get());
+            assertEquals(route.getValue(), session.lessonResultKindProperty().get());
+            assertTrue(session.historyViewActiveProperty().get());
+            assertEquals(historyContext, session.historyResultContextProperty().get());
+            assertArrayEquals(bytes, Files.readAllBytes(path));
+            rejectWrites.set(false);
+            session.execute(edit);
+            assertEquals(route.getValue(), session.lessonResultKindProperty().get());
+            assertTrue(session.historyViewActiveProperty().get());
+            assertEquals(historyContext, session.historyResultContextProperty().get());
+            session.execute("delete 6");
+            assertFalse(session.historyViewActiveProperty().get());
+            assertEquals(route.getValue(), session.lessonResultKindProperty().get());
+        }
+    }
+
+    private static Map<String, ResultKind> resultRoutes() {
+        return Map.of("lessons", ResultKind.ALL_LESSONS, "lessons si/4", ResultKind.STUDENT_LESSONS,
+                "search c/lesson", ResultKind.SEARCH, "showlesson lid/L3", ResultKind.DETAIL);
     }
 
     private Path saveFixture() throws Exception {

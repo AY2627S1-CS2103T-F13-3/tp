@@ -217,6 +217,8 @@ public class CanonicalLogicManagerTest {
 
         assertSame(session.getDisplayedLessons(), logic.getDisplayedLessons());
         assertSame(session.lessonResultContextProperty(), logic.lessonResultContextProperty());
+        assertSame(session.lessonResultKindProperty(), logic.lessonResultKindProperty());
+        assertEquals(LessonRetrieval.ResultKind.ALL_LESSONS, logic.lessonResultKindProperty().get());
         assertEquals(queries.getLessonList(), logic.getDisplayedLessons());
         assertSame(queries.getLessonList(), logic.getLessonList());
         assertSame(queries.getFilteredLessonList(), logic.getFilteredLessonList());

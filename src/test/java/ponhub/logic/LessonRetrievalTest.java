@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import javafx.collections.ObservableList;
 import ponhub.commons.core.index.Index;
+import ponhub.logic.LessonRetrieval.ResultKind;
 import ponhub.logic.commands.exceptions.CommandException;
 import ponhub.logic.parser.SearchCriteriaParser;
 import ponhub.logic.parser.ShowLessonInput;
@@ -137,6 +138,64 @@ public class LessonRetrievalTest {
     }
 
     @Test
+    public void resultKind_identifiesSuccessfulSourcesIncludingEmptyAndRepeatedSelections() throws Exception {
+        var kind = retrieval.resultKindProperty();
+        assertSame(kind, retrieval.resultKindProperty());
+        assertEquals(ResultKind.ALL_LESSONS, kind.get());
+        retrieval.list(Optional.empty());
+        retrieval.list(Optional.empty());
+        assertEquals(ResultKind.ALL_LESSONS, kind.get());
+
+        retrieval.list(Optional.of(Index.fromOneBased(6)));
+        assertTrue(retrieval.getDisplayedLessons().isEmpty());
+        assertEquals(ResultKind.STUDENT_LESSONS, kind.get());
+        retrieval.list(Optional.of(Index.fromOneBased(2)));
+        retrieval.list(Optional.of(Index.fromOneBased(2)));
+        assertEquals(ResultKind.STUDENT_LESSONS, kind.get());
+
+        SearchCriteria emptySearch = new SearchCriteriaParser().parse("c/lesson s/Missing");
+        retrieval.search(emptySearch);
+        retrieval.search(emptySearch);
+        assertTrue(retrieval.getDisplayedLessons().isEmpty());
+        assertEquals(ResultKind.SEARCH, kind.get());
+        retrieval.search(new SearchCriteriaParser().parse("c/lesson"));
+        assertEquals(ResultKind.SEARCH, kind.get());
+
+        ShowLessonInput detail = new ShowLessonInput(new LessonId("L3"), Optional.empty());
+        retrieval.show(detail);
+        retrieval.show(detail);
+        assertEquals(ResultKind.DETAIL, kind.get());
+        retrieval.show(new ShowLessonInput(new LessonId("L10"), Optional.of(LocalDate.of(2026, 10, 5))));
+        assertEquals(ResultKind.DETAIL, kind.get());
+        retrieval.list(Optional.empty());
+        assertEquals(ResultKind.ALL_LESSONS, kind.get());
+    }
+
+    @Test
+    public void resultKind_invalidSelectorsFiltersAndDatesPreservePreviousSource() throws Exception {
+        retrieval.list(Optional.of(Index.fromOneBased(4)));
+        var displayed = List.copyOf(retrieval.getDisplayedLessons());
+        String context = retrieval.contextProperty().get();
+        for (int index : List.of(1, 3, 8)) {
+            assertThrows(CommandException.class, () -> retrieval.list(Optional.of(Index.fromOneBased(index))));
+            assertEquals(ResultKind.STUDENT_LESSONS, retrieval.resultKindProperty().get());
+        }
+        assertThrows(NullPointerException.class, () -> retrieval.list(null));
+        assertThrows(NullPointerException.class, () -> retrieval.search(null));
+        assertThrows(IllegalArgumentException.class, () -> retrieval.search(
+                new SearchCriteria(SearchCategory.STUDENT, Map.of())));
+        assertThrows(NullPointerException.class, () -> retrieval.show(null));
+        assertThrows(CommandException.class, () -> retrieval.show(new ShowLessonInput(new LessonId("L99"),
+                Optional.empty())));
+        assertThrows(CommandException.class, () -> retrieval.show(new ShowLessonInput(new LessonId("L10"),
+                Optional.of(LocalDate.of(2026, 10, 6)))));
+        peopleView.setRoleFilter(Optional.of(PersonRole.TUTOR));
+        assertEquals(ResultKind.STUDENT_LESSONS, retrieval.resultKindProperty().get());
+        assertEquals(context, retrieval.contextProperty().get());
+        assertEquals(displayed, retrieval.getDisplayedLessons());
+    }
+
+    @Test
     public void context_identifiesSelectedStudentOrFiltersAndInvalidRequestsPreserveIt() throws Exception {
         var context = retrieval.contextProperty();
         assertEquals("All lessons", context.get());
@@ -172,6 +231,7 @@ public class LessonRetrievalTest {
         retrieval.list(Optional.empty());
         queries.setLessonFilter(math);
         assertIds(displayed, "L2", "L10", "L3", "L4", "L11");
+        assertEquals(ResultKind.ALL_LESSONS, retrieval.resultKindProperty().get());
         assertSame(displayed, retrieval.getDisplayedLessons());
     }
 
@@ -186,12 +246,14 @@ public class LessonRetrievalTest {
         Attendance historical = Attendance.fromStrings(student, new LessonId("L10"), "2026-10-05", "present");
         data.resetData(new PonHubDataState(original.people(), withoutStudent, List.of(historical), 11));
         assertTrue(displayed.isEmpty()); // Former attendance must never become current membership.
+        assertEquals(ResultKind.STUDENT_LESSONS, retrieval.resultKindProperty().get());
         retrieval.search(new SearchCriteriaParser().parse("c/lesson sn/Alex"));
         assertTrue(displayed.isEmpty());
         var enrolled = withoutStudent.stream().map(lesson -> lesson.getId().equals(new LessonId("L3"))
                 ? lesson.withEnrolledStudent(student) : lesson).toList();
         data.resetData(new PonHubDataState(original.people(), enrolled, List.of(historical), 11));
         assertIds(displayed, "L3");
+        assertEquals(ResultKind.SEARCH, retrieval.resultKindProperty().get());
         assertEquals(1, displayed.getFirst().getRosterSize());
         data.resetData(new PonHubDataState(original.people(), enrolled, List.of(), 11)); // Unmark.
         assertIds(displayed, "L3");
@@ -200,6 +262,7 @@ public class LessonRetrievalTest {
         assertTrue(displayed.isEmpty());
         data.resetData(original); // Restore the complete prior state.
         assertIds(displayed, "L2", "L10", "L3", "L4", "L11");
+        assertEquals(ResultKind.ALL_LESSONS, retrieval.resultKindProperty().get());
         assertSame(displayed, retrieval.getDisplayedLessons());
     }
 
@@ -283,6 +346,7 @@ public class LessonRetrievalTest {
                 .filter(lesson -> !lesson.getId().equals(new LessonId("L3"))).toList();
         data.resetData(new PonHubDataState(original.people(), withoutEmptyLesson, List.of(older, newer), 11));
         assertTrue(displayed.isEmpty());
+        assertEquals(ResultKind.DETAIL, retrieval.resultKindProperty().get());
         assertTrue(retrieval.contextProperty().get().contains("no longer available"));
         retrieval.list(Optional.empty());
         assertIds(displayed, "L2", "L10", "L4", "L11");

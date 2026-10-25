@@ -77,6 +77,11 @@ public interface Logic {
     ReadOnlyStringProperty lessonResultContextProperty();
 
     /**
+     * Returns the authoritative selected lesson source, retained while attendance history is visible.
+     */
+    ReadOnlyObjectProperty<LessonRetrieval.ResultKind> lessonResultKindProperty();
+
+    /**
      * Looks up a lesson in the complete catalogue, independently of the active lesson filter.
      * The returned projection is a snapshot of the lesson at lookup time.
      * @param lessonId stable lesson identity
