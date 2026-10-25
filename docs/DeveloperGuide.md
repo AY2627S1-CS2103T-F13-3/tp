@@ -526,8 +526,12 @@ Student-Lesson many-to-many membership without copying lesson data into Student 
 refers to exactly one Student and one Lesson through its dated `AttendanceKey`. Attendance is retained history, not
 current membership.
 
-These implementation-facing class diagrams use ordinary navigable associations for stored references. Immutable
-states, records, IDs and value objects can be shared safely by replacement snapshots, copied records and staged
+The diagrams show both stored Java references and domain relationships resolved through stable IDs.
+`Lesson` retains `tutorId` and `enrolledStudentIds`; `AttendanceKey` retains Student and Lesson IDs,
+resolved through the canonical aggregate. ID-labelled associations express those domain links,
+not additional object fields.
+
+Immutable states, records, IDs and value objects can be shared safely by replacement snapshots, copied records and staged
 containers, so their Java object lifetimes are not exclusive composition. Source-end `0..*` multiplicities make
 that sharing explicit; they do not introduce a second writable owner of lesson membership or attendance.
 
