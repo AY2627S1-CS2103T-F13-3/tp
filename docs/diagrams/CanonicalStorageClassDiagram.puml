@@ -38,7 +38,8 @@ package "Shared file writing" {
     end note
 }
 
-ProtectedPonHubDataStorage --> "1" JsonPonHubDataStorage : owns
+' The label-only line break separates the multiplicity from the horizontal arrowhead.
+ProtectedPonHubDataStorage -right-> "\n1" JsonPonHubDataStorage : owns
 ProtectedPonHubDataStorage ..> JsonDataVersionDetector : classify load
 ProtectedPonHubDataStorage ..> JsonPonHubDataCodec : validate/decode load
 JsonPonHubDataStorage ..> JsonPonHubDataCodec : encode/decode
