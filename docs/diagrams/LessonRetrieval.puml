@@ -2,51 +2,56 @@
 !pragma layout smetana
 !include style.puml
 skinparam classBackgroundColor LOGIC_COLOR
-skinparam nodesep 75
-skinparam ranksep 75
+skinparam nodesep 30
+skinparam ranksep 40
 
-package UI {
+package UI as UiPackage {
     class MainWindow UI_COLOR
     class PersonRecordListPanel UI_COLOR
     class LessonListPanel UI_COLOR
     class LessonCard UI_COLOR
 }
-package Logic {
-    interface Logic
+package Logic as LogicPackage {
+    class "<<interface>>\nLogic" as LogicApi
     class CanonicalLogicManager
     class CanonicalPeopleSession
     class LessonRetrieval
+    note as SelectorNote
+      <b>LessonRetrieval</b>
+      One stable read-only displayed list.
+      Context: Student / filters / Lesson and date.
+      Source: catalogue / Student / search / detail.
+      No writes; people indices stay unchanged.
+    end note
 }
-package Model {
+package Model as ModelPackage {
     class PeopleView MODEL_COLOR
+    class "<<interface>>\nLessonQuerySource" as LessonQuerySource MODEL_COLOR
     class LessonQueries MODEL_COLOR
     class PonHubData MODEL_COLOR
+    note as PublicationNote
+      <b>PonHubData</b>
+      Lesson-owned rosters are authoritative.
+      Staged writes do not publish.
+    end note
 }
 
-MainWindow *--> PersonRecordListPanel
-MainWindow *--> LessonListPanel
-LessonListPanel --> LessonCard : immutable\nLessonView
-MainWindow --> Logic : commands /\nobservable lists
-CanonicalLogicManager ..|> Logic
+MainWindow --> PersonRecordListPanel
+MainWindow ..> LessonListPanel : creates
+LessonListPanel ..> LessonCard : creates
+MainWindow -down-> LogicApi
+CanonicalLogicManager ..|> LogicApi
 CanonicalLogicManager --> CanonicalPeopleSession
-CanonicalPeopleSession *--> LessonRetrieval
-CanonicalPeopleSession *--> LessonQueries
-CanonicalPeopleSession *--> PeopleView
-CanonicalPeopleSession *--> PonHubData
-LessonRetrieval --> PeopleView : resolve visible\nstudent once
-LessonRetrieval --> LessonQueries : select / observe\nresult source
-LessonRetrieval --> PonHubData : selected detail\non publication
-LessonQueries --> PonHubData : committed\nstate
-PeopleView --> PonHubData : committed\npeople
+CanonicalPeopleSession --> LessonRetrieval
+CanonicalPeopleSession --> LessonQuerySource
+LessonQueries ..|> LessonQuerySource
+CanonicalPeopleSession --> PeopleView
+CanonicalPeopleSession --> PonHubData
+LessonRetrieval --> PeopleView : resolves student
+LessonRetrieval --> LessonQueries : selects source
+LessonRetrieval --> PonHubData : reads detail
+LessonQueries ..> PonHubData : reads / subscribes
+PeopleView --> PonHubData
+PeopleView --> LessonQueries
 
-note bottom of LessonRetrieval
-  One stable read-only displayed list.
-  Context identifies Student / filters / Lesson and date.
-  Select catalogue / Student / search / detail source.
-  No writes; people indices stay unchanged.
-end note
-note bottom of PonHubData
-  Lesson-owned rosters are authoritative.
-  Staged writes do not publish.
-end note
 @enduml
