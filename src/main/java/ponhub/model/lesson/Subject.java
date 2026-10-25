@@ -10,8 +10,8 @@ import static ponhub.commons.util.AppUtil.checkArgument;
 public final class Subject {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Subjects should contain 1 to 50 letters, digits or spaces";
-    public static final String VALIDATION_REGEX = "[\\p{L}\\p{N} ]{1,50}";
+            "Subjects should contain 1 to 50 letters or digits, separated by single spaces or hyphens";
+    public static final String VALIDATION_REGEX = "[\\p{L}\\p{N}]+(?:[ -][\\p{L}\\p{N}]+)*";
 
     private final String value;
 
@@ -38,7 +38,7 @@ public final class Subject {
     }
 
     private static boolean isNormalizedSubjectValid(String subject) {
-        return subject.matches(VALIDATION_REGEX);
+        return subject.length() <= 50 && subject.matches(VALIDATION_REGEX);
     }
 
     public String getValue() {
