@@ -57,6 +57,7 @@ public class CanonicalCommandCatalogTest {
                     .map(line -> line.substring(0, line.indexOf(" - "))).toList());
             assertFalse(overview.contains("Usage:"));
             assertTrue(overview.contains("Type help COMMAND for syntax and an example, e.g. help list."));
+            assertTrue(overview.endsWith("Scroll the Result Display if needed."));
             error.ifPresent(guidance -> assertTrue(overview.contains(guidance)));
             assertTrue(CanonicalCommandCatalog.getUsage("clear", isProtected).isEmpty());
             assertTrue(CanonicalCommandCatalog.getUsage("EXIT", isProtected).isEmpty());
