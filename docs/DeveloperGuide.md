@@ -1995,6 +1995,26 @@ failed-save cases on the exact final candidate, reporting PASS, FAIL or NOT RUN 
    survive. Restart with malformed operational data: `h`, `li`, `e` complete to `help`, `list`, `exit`;
    `ad` and `sho` do not complete. Preserve the rejected file and confirm only recovery commands run.
 
+### Optional logo sound
+
+Use the packaged JAR and a disposable store. When testing audible playback, enable a working sound output;
+record unavailable or muted output separately rather than claiming that sound was heard.
+
+1. Launch PonHub and verify that no cue plays automatically. Enter `help`, then leave `add r/student n/Alex`
+   unfinished in the command box, with part of the draft selected. Note its caret/selection, feedback and views.
+2. Primary-click the PonHub wordmark. With functioning audio, expect one short percussion cue. Check that focus,
+   the draft and selection, feedback, people/results and operational data remain unchanged. A secondary click
+   does not request playback.
+3. Click repeatedly during the cue: playback must not layer. Click again after it finishes to replay it, then
+   run `help` to check that command entry remains responsive. If audio is unavailable, silence must not prevent
+   normal commands; do not require users to install an audio device to use PonHub.
+4. Start the cue and close the main window. Expect a clean exit with no continuing playback or extra window.
+
+The [audio resource note](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/resources/audio/README.md)
+records the original procedural cue's provenance. Keep actual platform/audio observations in the test result.
+Automated `LogoSoundPlayerTest` and `MainWindowTest` use controlled audio seams; they do not establish audible
+playback on a physical device.
+
 ### Inline help and supported routes
 
 Use the active catalogue in the tested build; these examples apply to canonical startup.
