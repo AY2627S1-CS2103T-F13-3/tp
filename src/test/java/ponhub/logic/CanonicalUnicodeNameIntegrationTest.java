@@ -19,7 +19,9 @@ import ponhub.model.person.PersonId;
 import ponhub.model.person.PersonRole;
 import ponhub.storage.JsonPonHubDataStorage;
 
-/** Exercises the shared Unicode name contract through commands, relationships and real JSON persistence. */
+/**
+ * Exercises the shared Unicode name contract through commands, relationships and real JSON persistence.
+ */
 public class CanonicalUnicodeNameIntegrationTest {
     @TempDir
     Path directory;
