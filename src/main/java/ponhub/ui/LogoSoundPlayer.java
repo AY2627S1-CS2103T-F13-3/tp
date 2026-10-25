@@ -119,7 +119,9 @@ final class LogoSoundPlayer implements AutoCloseable {
         }
     }
 
-    /** Creates a sound line without requiring tests to access an installed audio device. */
+    /**
+     * Creates a sound line without requiring tests to access an installed audio device.
+     */
     @FunctionalInterface
     interface ClipFactory {
         Clip create() throws LineUnavailableException;

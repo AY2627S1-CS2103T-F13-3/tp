@@ -28,7 +28,9 @@ import javax.sound.sampled.LineUnavailableException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Tests the real loading/playback lifecycle without requiring an audio device or audible output. */
+/**
+ * Tests the real loading/playback lifecycle without requiring an audio device or audible output.
+ */
 public class LogoSoundPlayerTest {
     private static final URL AUDIO = LogoSoundPlayer.class.getResource("/audio/logo-drum.wav");
 
@@ -266,7 +268,9 @@ public class LogoSoundPlayerTest {
         assertTrue(worker.isTerminated());
     }
 
-    /** Explicit task advancement makes loading, queued clicks and shutdown deterministic. */
+    /**
+     * Explicit task advancement makes loading, queued clicks and shutdown deterministic.
+     */
     static class TestWorker extends AbstractExecutorService {
         private final Queue<Runnable> tasks = new ArrayDeque<>();
         private boolean shutdown;
@@ -318,7 +322,9 @@ public class LogoSoundPlayerTest {
         }
     }
 
-    /** Records sound-line calls while the production loader still decodes the bundled WAV. */
+    /**
+     * Records sound-line calls while the production loader still decodes the bundled WAV.
+     */
     static class TestClip {
         final Clip line = (Clip) Proxy.newProxyInstance(Clip.class.getClassLoader(),
                 new Class<?>[] {Clip.class}, this::invoke);
