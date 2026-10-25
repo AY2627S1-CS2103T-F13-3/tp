@@ -48,10 +48,10 @@ remain available through the table of contents when a change needs them.
   [SE-EDU initiative](https://se-education.org); existing licences and reuse credits are retained.
 * Existing libraries: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson),
   and [JUnit 5](https://junit.org/junit5/).
-* The optional logo-click sound is the unchanged `Voicy_Pornhub intro.wav` supplied by Vincent.
-  Its external asset provenance and checksum are recorded in
-  [the audio resource note](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/resources/audio/README.md);
-  no original audio authorship is claimed by PonHub or Codex.
+* The optional logo-click percussion cue was synthesized for PonHub at Vincent's direction
+  with OpenAI Codex assistance, using oscillators and seeded noise without third-party audio samples.
+  The generator, checksum, replacement history and MIT reuse notice are recorded in
+  [the audio resource note](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/resources/audio/README.md).
 * OpenAI Codex was used by Ernest Chua (`ErnestChuaa`), Benjamin Ng (`ben58882`),
   Yang Shuo (`ys000009`), Vincent Lin (`gugrusaurus`) and Zhu Zhi Yu (`ultramanarm`)
   across implementation and refactoring, test development, documentation, review support,
