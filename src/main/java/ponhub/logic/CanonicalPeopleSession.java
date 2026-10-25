@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static ponhub.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.nio.file.Path;
+import java.time.Clock;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -93,6 +94,7 @@ public final class CanonicalPeopleSession {
     private final LessonRetrieval lessonRetrieval;
     private final AttendanceRetrieval attendanceRetrieval;
     private final CanonicalCommandExecutor executor;
+    private final Clock clock;
 
     /**
      * Loads the configured canonical path once and connects its protected snapshot writer.
@@ -111,8 +113,17 @@ public final class CanonicalPeopleSession {
      * The writer must persist the complete snapshot or throw, without mutating or reentering this session.
      */
     CanonicalPeopleSession(ProtectedPonHubDataStorage storage, CanonicalCommandExecutor.SnapshotWriter writer) {
-        requireAllNonNull(storage, writer);
+        this(storage, writer, Clock.systemDefaultZone());
+    }
+
+    /**
+     * Connects a snapshot writer and clock seam for deterministic command integration tests.
+     */
+    CanonicalPeopleSession(ProtectedPonHubDataStorage storage, CanonicalCommandExecutor.SnapshotWriter writer,
+            Clock clock) {
+        requireAllNonNull(storage, writer, clock);
         this.storage = storage;
+        this.clock = clock;
         data = new PonHubData();
         try {
             data.resetData(storage.load());
@@ -230,7 +241,7 @@ public final class CanonicalPeopleSession {
             case UNENROL -> executor.execute(new CanonicalUnenrolCommand(
                     new LessonMembershipParser().parse(arguments)));
             case MARK -> executor.execute(new CanonicalMarkAttendanceCommand(new AttendanceMarkParser().parse(
-                    arguments)));
+                    arguments), clock));
             case UNMARK -> executor.execute(new CanonicalUnmarkAttendanceCommand(new AttendanceUnmarkParser().parse(
                     arguments)));
             case HISTORY -> new CommandResult(String.format("Showing %d attendance record(s).",

@@ -9,7 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -117,6 +120,43 @@ public class CanonicalAttendanceIntegrationTest {
         assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), visibleIds(session));
         assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
         assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
+    }
+
+    @Test
+    public void execute_futurePresentRequiresAcknowledgementButFutureAbsentRemainsAvailable() throws Exception {
+        Path path = directory.resolve("future-safeguard.json");
+        JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
+        PonHubDataState before = attendanceState(Set.of(STUDENT_TWO), List.of());
+        storage.saveData(before);
+        byte[] original = Files.readAllBytes(path);
+        int[] writes = {0};
+        Clock clock = Clock.fixed(Instant.parse("2026-10-25T12:00:00Z"), ZoneOffset.UTC);
+        CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+            writes[0]++;
+            storage.saveData(state);
+        }, clock);
+        session.execute("list r/student");
+
+        CommandException warning = assertThrows(CommandException.class, () ->
+                session.execute("mark 2 lid/L10 d/2036-10-06 s/present"));
+        assertEquals("Attendance date 2036-10-06 is after today (2026-10-25). To confirm a future present "
+                + "outcome, repeat the command with ack/future. No attendance was saved.", warning.getMessage());
+        assertEquals(before, session.getDataSnapshot());
+        assertArrayEquals(original, Files.readAllBytes(path));
+        assertEquals(0, writes[0]);
+
+        assertEquals("Attendance for Student S3 in lesson L10 on 2036-10-06 marked absent.",
+                session.execute("mark 2 lid/L10 d/2036-10-06 s/absent").getFeedbackToUser());
+        CommandException correctionWarning = assertThrows(CommandException.class, () ->
+                session.execute("mark 2 lid/L10 d/2036-10-06 s/present"));
+        assertEquals(warning.getMessage(), correctionWarning.getMessage());
+        assertEquals(AttendanceStatus.ABSENT, session.getDataSnapshot().attendance().getFirst().getStatus());
+        assertEquals(1, writes[0]);
+
+        assertEquals("Attendance for Student S3 in lesson L10 on 2036-10-06 marked present.",
+                session.execute("mark 2 lid/L10 d/2036-10-06 s/present ack/future").getFeedbackToUser());
+        assertEquals(AttendanceStatus.PRESENT, session.getDataSnapshot().attendance().getFirst().getStatus());
+        assertEquals(2, writes[0]);
     }
 
     @Test

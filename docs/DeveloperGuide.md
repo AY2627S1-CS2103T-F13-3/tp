@@ -1671,7 +1671,8 @@ validation/correction extensions are active.
 
 **Main success scenario**
 
-1. The administrator enters `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/STATUS`, using `present` or `absent` and the student's current filtered people-list index.
+1. The administrator enters `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/STATUS [ack/future]`, using `present`
+   or `absent` and the student's current filtered people-list index.
 2. PonHub resolves the index once to a Student ID, checks the role and validates the lesson, real date, weekday and status. A new attendance key requires current enrolment; an existing key can be corrected after unenrolment.
 3. PonHub creates or updates the one record keyed by Student ID, Lesson ID and date, saves the complete change,
    publishes committed query refreshes and reports success. A missing record is unrecorded, not absent.
@@ -1682,6 +1683,9 @@ validation/correction extensions are active.
 * 1a1. No entry exists for the specified key: PonHub reports that there is nothing to unmark and changes nothing.
 * 1b. In the active retrieval route, the administrator enters `history STUDENT_INDEX [lid/LESSON_ID]`. PonHub resolves the Student once and displays their retained dated attendance, optionally filtered by an existing shared Lesson. History includes former enrolments and preserves the people list. A valid empty result distinguishes unrecorded from absent. This read-only request does not save operational data.
 * 2a. The index, role, lesson, date, weekday or status is invalid, or a new mark has no current membership: PonHub rejects the command and explains the problem without changing data.
+* 2b. The date is after the current local date and the status is `present`, but `ack/future` is absent: PonHub
+  reports the suspicious future outcome and changes nothing. Repeating the valid command with `ack/future` records
+  it; a future `absent` outcome needs no acknowledgement. The acknowledgement bypasses no other validation.
 * 3a. The same status already exists: PonHub reports no change and performs no operational save.
 * 3b. A different status exists: PonHub corrects that key instead of adding a duplicate, including after unenrolment.
 * 3c. Saving a mark or unmark fails: PonHub restores the previous aggregate and active views, reports the failure and ends the use case.

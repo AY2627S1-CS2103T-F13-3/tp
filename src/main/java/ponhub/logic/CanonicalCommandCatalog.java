@@ -96,9 +96,10 @@ public final class CanonicalCommandCatalog {
             + "Removes current membership only; retained dated attendance is unchanged.\n"
             + "Example: unenrol 1 lid/L1";
     public static final String MESSAGE_MARK_USAGE =
-            "Usage: mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent\n"
+            "Usage: mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent [ack/future]\n"
                     + "The date must be real and match the lesson weekday. New records require current enrolment;\n"
                     + "existing history can be corrected after unenrolment.\n"
+                    + "Future absent outcomes are allowed; a future present outcome requires ack/future.\n"
                     + "Example: mark 1 lid/L1 d/2026-10-05 s/present";
     public static final String MESSAGE_UNMARK_USAGE =
             "Usage: unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD\n"
