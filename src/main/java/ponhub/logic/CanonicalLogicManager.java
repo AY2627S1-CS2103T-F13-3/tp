@@ -5,7 +5,10 @@ import static ponhub.commons.util.CollectionUtil.requireAllNonNull;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.StringJoiner;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -30,6 +33,7 @@ import ponhub.model.search.PersonSearchMatch;
  * Commands, person cards, lesson retrieval and attendance history share the session's canonical data root.
  */
 public final class CanonicalLogicManager implements Logic {
+    private static final Pattern COMMAND_WORD = Pattern.compile("(?<word>\\S+).*", Pattern.DOTALL);
     private final Logger logger = LogsCenter.getLogger(CanonicalLogicManager.class);
 
     private final CanonicalPeopleSession session;
@@ -46,8 +50,38 @@ public final class CanonicalLogicManager implements Logic {
 
     @Override
     public CommandResult execute(String commandText) throws CommandException, ParseException {
-        logger.info("----------------[USER COMMAND][" + commandText + "]");
-        return session.execute(commandText);
+        requireAllNonNull(commandText);
+        var matcher = COMMAND_WORD.matcher(commandText.stripLeading());
+        String command = matcher.matches() ? CanonicalCommandDefinition.fromWord(matcher.group("word"))
+                .map(CanonicalCommandDefinition::getWord).orElse("unknown") : "unknown";
+        try {
+            CommandResult result = session.execute(commandText);
+            logger.info("Command type=" + command + " outcome=success");
+            return result;
+        } catch (ParseException failure) {
+            logRejection(command, "parse_rejected", failure);
+            throw failure;
+        } catch (CommandException failure) {
+            logRejection(command, "command_rejected", failure);
+            throw failure;
+        }
+    }
+
+    /**
+     * Records cause types only: exception messages and thrown objects can contain command or file payloads.
+     */
+    private void logRejection(String command, String outcome, Exception failure) {
+        StringJoiner causes = new StringJoiner(">");
+        Level level = Level.INFO;
+        Throwable cause = failure;
+        // Bound traversal even if a programmer has accidentally constructed a cyclic cause chain.
+        for (int depth = 0; cause != null && depth < 8; depth++, cause = cause.getCause()) {
+            causes.add(cause.getClass().getSimpleName());
+            if (cause instanceof java.io.IOException) {
+                level = Level.WARNING;
+            }
+        }
+        logger.log(level, "Command type=" + command + " outcome=" + outcome + " cause=" + causes);
     }
 
     @Override
