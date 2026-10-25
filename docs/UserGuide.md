@@ -4,9 +4,8 @@ title: User Guide
 ---
 
 PonHub is a desktop app for tuition centre administrators to manage student, tutor and parent records and create
-shared recurring lessons. Its command box lets you work quickly from the keyboard while the graphical interface
-shows separate people and shared-lesson results. Shared-lesson enrolment, dated attendance marking and guarded
-person/lesson deletion, dated attendance removal and attendance history are active.
+shared recurring lessons and track attendance. Its command box lets you work quickly from the keyboard while
+the graphical interface shows separate people and shared-lesson results.
 
 The people list is on the left, with Lesson or attendance results on the right. Enter commands in the
 full-width box below both lists and press Enter. The shared feedback/help area above the lists remains
@@ -118,13 +117,9 @@ Arguments and values are not completed.
 
 ## Current command summary
 
-The active routes use one saved aggregate with role-specific people, stable IDs and shared lessons whose rosters
-can be changed with `enrol` and `unenrol`. Own-contact people search, attendance marking, guarded person and Lesson
-deletion, lesson listing, lesson search, lesson details, attendance removal and attendance history are active,
-alongside Student, Parent and Tutor relationship search. Use this single summary to find a command's syntax and example; the linked action names lead to its details.
+Use this summary to find a command's syntax and example; the linked action names lead to its details.
 The [shared conventions](#reading-the-command-formats) explain the notation and selectors. Type `help` for your
-session's catalogue. A protected session permits only `help`, `list` and `exit`. Person and Lesson editing are active;
-`clear` and `find` are unavailable.
+session's catalogue. A protected session permits only `help`, `list` and `exit`; `clear` and `find` are unavailable.
 
 | Action | Format | Example |
 | --- | --- | --- |
@@ -182,7 +177,8 @@ Long guidance wraps within Result Display. Scroll vertically to read the rest; e
   and `help search`
   are unavailable.
 
-### 1. Adding a person: `add`
+### Adding a person: `add`
+{: id="1-adding-a-person-add"}
 
 Creates a student, tutor or parent record.
 
@@ -241,7 +237,8 @@ Validation and duplicate failures do not write. A save failure preserves the cur
 counters, role filter and selected card; follow the [unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build)
 for the stored file. Success is reported only after saving; a failed addition consumes no ID.
 
-### 2. Listing people: `list`
+### Listing people: `list`
+{: id="2-listing-people-list"}
 
 Displays all people or only people with a specified role, including each current command index and separately labelled stable ID.
 
@@ -492,7 +489,8 @@ schedule clashes are rejected without writing. A save failure preserves the live
 sessions reject the command before parsing and omit `help editlesson`.
 <!-- @@author -->
 
-### 3. Deleting a person: `delete`
+### Deleting a person: `delete`
+{: id="3-deleting-a-person-delete"}
 
 **Active.** Removes one unreferenced person selected by their current displayed index in the people list.
 
@@ -538,7 +536,8 @@ If the lesson panel shows the deleted student's current lessons, it stays empty 
 until you run another `lessons` or lesson-search command. Deletion never switches it to a different student.
 Check the updated people list before deleting another person.
 
-### 4. Creating shared lessons and other lesson operations
+### Creating shared lessons and other lesson operations
+{: id="4-creating-shared-lessons-and-other-lesson-operations"}
 
 **Create (active):** `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
 
@@ -589,7 +588,8 @@ Deleting the selected unreferenced Lesson clears its detail and identifies the u
 the displayed detail unchanged. `lessons` or lesson search restores the catalogue
 view. `showlesson` preserves the current people filter, selection and command positions and does not save data.
 
-### 5. Enrolling and unenrolling students
+### Enrolling and unenrolling students
+{: id="5-enrolling-and-unenrolling-students"}
 
 Both commands are active.
 
@@ -614,7 +614,8 @@ failure leave the live aggregate and active views unchanged. Invalid input and v
 a save failure, follow the [unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build) for
 the stored file.
 
-### 6. Searching people and shared lessons
+### Searching people and shared lessons
+{: id="6-searching-people-and-shared-lessons"}
 
 **Format:** `search c/CATEGORY [FILTER_PREFIX/VALUE]...`
 
@@ -747,7 +748,8 @@ the recorded presence and refreshes its label to former member. `lessons si/1` t
 current-roster status as unrecorded and Alex's retained presence separately. See [Lesson details](#lesson-details)
 and [attendance history](#attendance-history) for their complete behavior.
 
-### 7. Recording attendance and retrieving history
+### Recording attendance and retrieving history
+{: id="7-recording-attendance-and-retrieving-history"}
 
 **Mark (active):** `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent`
 
