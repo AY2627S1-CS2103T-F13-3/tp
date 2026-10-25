@@ -2,6 +2,15 @@
 
 Owner: Vincent (`gugrusaurus`), #152 / #102. Publisher: Yang (`ys000009`), #153. Zhi Yu handles merges and #101 acceptance.
 
+## Historical image paths retained by #384
+
+The three historical Mac captures referred to below as `docs/images/Ui.png`,
+`AttendanceDetails.jpg` and `AttendanceHistory.jpg` are preserved byte-for-byte in
+[`docs/images/archive`](../../docs/images/README.md#historical-images).
+The v1.3 notes now link those archived files. The current filenames contain newer
+development-build captures; none of the historical source/runtime claims below
+is reassigned to them. Existing versioned v1.3/v1.4 media is retained.
+
 ## Source and readiness
 
 **Current reconciliation:** [candidate-handoff.md](candidate-handoff.md) checks the notes against v1.3 application source `b513d313d1ba219df662d401bc0949e5afb49309`, records the exact candidate hash, platform-qualified evidence, supplementary Windows stills and Yang's publication handoff. It supersedes the historical readiness text below. Vincent confirms #103 is closed; publication-context link checks remain #153 work. The original captures retain their source identity.

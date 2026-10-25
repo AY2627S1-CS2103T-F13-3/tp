@@ -15,7 +15,9 @@ The optional **All lessons**, **Student lessons** and **Attendance history** but
 shortcuts to the same commands; see [moving between results](#moving-between-results).
 
 The [Lesson board example](#listing-and-searching-shared-lessons) shows a filtered people list beside
-independent Lesson results.
+independent Lesson results. View the [application overview](images/Ui.png) for the full layout.
+Screenshots show the current development build, including changes after public v1.4;
+[the capture record](images/README.html) identifies the package and fictitious fixture.
 
 * Table of Contents
 {:toc}
@@ -344,10 +346,11 @@ For Lesson search, use `search c/lesson` with the filters in the
 than narrowing the previously displayed results. `lessons` reports `Showing N lesson(s).`; Lesson search
 reports `Found N lesson(s).`. An empty result is valid and shows `No lessons to display.`.
 
-![PonHub Lesson board with optional navigation and separate people and Lesson results](images/LessonBoardNavigation.png)
+![Development preview: Alex selected, Student lessons active and Student S1 current lessons shown](images/LessonBoardNavigation.png)
 
-This Lesson board example uses fictitious records to show a filtered Student list beside the full
-Lesson catalogue. Its records are separate from the [worked search example](#worked-search-example) below.
+This development-build example shows Alex selected in a filtered Student list, with **Student lessons**
+active and the right heading identifying Student S1's current lessons. Math L1 has two enrolled Students.
+Its fictitious records are separate from the [worked search example](#worked-search-example) below.
 The heading above each panel identifies its active results. Drag the divider to adjust their widths;
 long values wrap, and either list scrolls independently. The command box remains below both lists.
 
@@ -793,13 +796,16 @@ roster/history row or stable ID suffix. `lessons`, `showlesson` or a lesson sear
 Deleting the selected Student or the selected Lesson successfully clears that history selection and returns the
 right panel to lesson results. Unrelated deletions and failed deletions preserve a valid history selection.
 
-![Independent dated attendance for two Students](images/AttendanceDetails.jpg)
+![Development preview, Lesson detail panel crop: Alex present and Jamie absent, both in the current roster](images/AttendanceDetails.jpg)
 
-Alex is present and Jamie is absent for the same Lesson occurrence.
+In this development-build panel crop, Alex is present and Jamie is absent for L1 on 5 October 2026;
+both are still enrolled. The crop keeps the dated heading, roster and statuses readable.
 
-![Retained attendance after unenrolment](images/AttendanceHistory.jpg)
+![Development preview, history panel crop: Student S2 absence retained as former enrolment](images/AttendanceHistory.jpg)
 
-After correcting Jamie to absent and unenrolling Jamie, history retains the dated absence with former-enrolment context.
+After `unenrol 2 lid/L1`, `history 2 lid/L1` retains Jamie's existing absence with former-enrolment context.
+No attendance correction occurs between these two captures; the absent record is the same in both.
+See [capture provenance](images/README.html) for the exact package, commands and crop bounds.
 
 <a id="planned-failure-and-data-behavior"></a>
 
