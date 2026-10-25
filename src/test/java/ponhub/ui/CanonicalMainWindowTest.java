@@ -748,6 +748,9 @@ public class CanonicalMainWindowTest {
                 assertEquals(5, fixture.people().getItems().size());
                 fixture.people().scrollTo(4);
                 fixture.layout();
+                // Realized variable-height cards can change the scroll estimate on Windows.
+                fixture.people().scrollTo(4);
+                fixture.layout();
                 assertCard(fixture, "Student · ID: S10", "New Student", 5);
                 assertEquals(fixture.app.snapshot(), new JsonPonHubDataStorage(fixture.dataPath)
                         .readData().orElseThrow());
