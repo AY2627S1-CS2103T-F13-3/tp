@@ -8,6 +8,7 @@ skinparam classFontName Arial
 skinparam classBorderColor #FFFFFF
 skinparam packageBackgroundColor #FFFFFF
 hide empty members
+hide circle
 top to bottom direction
 
 package "Operational storage" {
@@ -15,6 +16,11 @@ package "Operational storage" {
     class JsonDataVersionDetector
     class JsonPonHubDataCodec
     class JsonPonHubDataStorage
+    note as LoadProtection
+      ProtectedPonHubDataStorage:
+      One load attempt per session.
+      Rejected data keeps writes locked.
+    end note
 }
 
 package "Preferences (separate file)" {
@@ -25,6 +31,11 @@ package "Preferences (separate file)" {
 package "Shared file writing" {
     class FileUtil
     class AtomicFileWriter
+    note as SaveFallback
+      AtomicFileWriter:
+      Temporary sibling, then replacement.
+      Backup/recovery fallback is not atomic.
+    end note
 }
 
 ProtectedPonHubDataStorage --> "1" JsonPonHubDataStorage : owns
@@ -37,13 +48,4 @@ JsonUtil ..> FileUtil : save JSON
 FileUtil ..> AtomicFileWriter : create writer
 JsonPonHubDataCodec -[hidden]down-> FileUtil
 
-note top of ProtectedPonHubDataStorage
-  One load attempt per session.
-  Rejected data keeps writes locked.
-end note
-
-note bottom of AtomicFileWriter
-  Temporary sibling, then replacement.
-  Backup/recovery fallback is not atomic.
-end note
 @enduml
