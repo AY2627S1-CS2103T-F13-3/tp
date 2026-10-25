@@ -48,6 +48,23 @@ public class ApplicationStartupTest {
     Path directory;
 
     @Test
+    public void init_excessiveNesting_opensProtectedStageAndRecoversAfterRestart() throws Exception {
+        for (String value : List.of("[".repeat(50_000) + "0" + "]".repeat(50_000),
+                "{\"schemaVersion\":1,\"people\":" + "[".repeat(50_000)
+                        + "0" + "]".repeat(50_000) + "}")) {
+            Path folder = Files.createTempDirectory(directory, "deep-startup-");
+            Path selected = folder.resolve("object-nested.json");
+            Files.writeString(selected, value);
+            byte[] original = Files.readAllBytes(selected);
+            runBootstrap(folder, LoadStatus.CORRUPT, 0, false, "--data=object-nested.json");
+            assertArrayEquals(original, Files.readAllBytes(selected));
+            Files.writeString(selected, VALID_DATA);
+            runBootstrap(folder, LoadStatus.LOADED, 1, true, "--data=object-nested.json");
+            assertEquals(VALID_DATA, Files.readString(selected));
+        }
+    }
+
+    @Test
     public void init_missingData_keepsReadsUnwrittenAndRestoresPreferences() throws Exception {
         Path folder = Files.createDirectory(directory.resolve("fresh application folder with spaces"));
         Path legacy = folder.resolve("data/addressbook.json");

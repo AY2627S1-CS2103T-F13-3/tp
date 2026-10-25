@@ -16,6 +16,43 @@ import org.junit.jupiter.api.Test;
 
 public class JsonDataVersionDetectorTest {
     @Test
+    public void detect_nestingBoundary_countsContainersIncludingRoot() {
+        int limit = JsonDataVersionDetector.MAX_NESTING_DEPTH;
+        String atLimit = "{\"schemaVersion\":1,\"extra\":" + "[".repeat(limit - 1)
+                + "0" + "]".repeat(limit - 1) + "}";
+        assertEquals(PONHUB_V1_CANDIDATE, JsonDataVersionDetector.detect(atLimit));
+        String aboveLimit = "{\"schemaVersion\":1,\"extra\":" + "[".repeat(limit)
+                + "0" + "]".repeat(limit) + "}";
+        assertEquals(MALFORMED_JSON, JsonDataVersionDetector.detect(aboveLimit));
+        assertEquals(UNRECOGNIZED_FORMAT, JsonDataVersionDetector.detect("[".repeat(limit)
+                + "0" + "]".repeat(limit)));
+        assertEquals(MALFORMED_JSON, JsonDataVersionDetector.detect("[".repeat(limit + 1)
+                + "0" + "]".repeat(limit + 1)));
+    }
+
+    @Test
+    public void detect_excessivelyNestedContainers_rejectsWithoutRecursiveTreeConstruction() {
+        for (String value : new String[]{"[".repeat(50_000) + "0" + "]".repeat(50_000),
+            "{\"child\":".repeat(50_000) + "0" + "}".repeat(50_000),
+            "[{\"child\":".repeat(25_000) + "0" + "}]".repeat(25_000)}) {
+            assertEquals(MALFORMED_JSON, JsonDataVersionDetector.detect(value));
+            assertEquals(MALFORMED_JSON, JsonDataVersionDetector.detect(
+                    "{\"schemaVersion\":1,\"people\":" + value + "}"));
+            assertEquals(MALFORMED_JSON, JsonDataVersionDetector.detect(
+                    "{\"schemaVersion\":99,\"extra\":" + value + "}"));
+        }
+    }
+
+    @Test
+    public void detect_containerCharactersInStringsAndWideArrays_doNotCountAsNesting() {
+        String text = "[{}]".repeat(50_000) + "\\\"[\\\\]";
+        assertEquals(LEGACY_AB3, JsonDataVersionDetector.detect(
+                "{\"persons\":[],\"_comment\":\"" + text + "\"}"));
+        assertEquals(LEGACY_AB3, JsonDataVersionDetector.detect(
+                "{\"persons\":[" + "0,".repeat(10_000) + "0]}"));
+    }
+
+    @Test
     public void detect_existingLegacyFixture_identifiesLegacy() throws Exception {
         Path fixture = Path.of("src", "test", "data", "JsonDataVersionDetectorTest", "legacyAddressBook.json");
         assertEquals(LEGACY_AB3, JsonDataVersionDetector.detect(Files.readString(fixture)));

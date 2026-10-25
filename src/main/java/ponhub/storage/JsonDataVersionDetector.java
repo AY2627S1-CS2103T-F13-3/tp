@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.io.IOException;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -14,6 +15,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public final class JsonDataVersionDetector {
     public static final String VERSION_FIELD = "schemaVersion";
     public static final int CURRENT_VERSION = 1;
+    // Container depth, including the root; the supported schema needs at most four levels.
+    static final int MAX_NESTING_DEPTH = 64;
 
     private static final ObjectMapper mapper = new ObjectMapper()
             .enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
@@ -38,6 +41,7 @@ public final class JsonDataVersionDetector {
      * A versioned candidate still needs complete envelope and domain validation by {@link JsonPonHubDataCodec}.
      * A legacy classification identifies only the root shape, not the validity of individual contacts.
      * File absence and read failures must be handled separately by the caller, never as empty JSON.
+     * Documents exceeding the container nesting limit are malformed, including unrecognized fields.
      *
      * @param json non-null file contents
      * @return explicit format or rejection reason
@@ -46,6 +50,9 @@ public final class JsonDataVersionDetector {
         requireNonNull(json);
         JsonNode root;
         try (JsonParser parser = mapper.getFactory().createParser(json)) {
+            if (!hasBoundedNesting(json)) {
+                return Format.MALFORMED_JSON;
+            }
             root = mapper.readTree(parser);
             if (root == null || parser.nextToken() != null) {
                 return Format.MALFORMED_JSON;
@@ -72,5 +79,27 @@ public final class JsonDataVersionDetector {
             return Format.LEGACY_AB3;
         }
         return Format.UNRECOGNIZED_FORMAT;
+    }
+
+    /**
+     * Scans tokens iteratively before recursive tree construction, counting objects and arrays rather than text.
+     * Uses the same parser settings so duplicate fields and invalid syntax still fail closed.
+     */
+    private static boolean hasBoundedNesting(String json) throws IOException {
+        try (JsonParser parser = mapper.getFactory().createParser(json)) {
+            int depth = 0;
+            JsonToken token;
+            while ((token = parser.nextToken()) != null) {
+                if (token == JsonToken.START_OBJECT || token == JsonToken.START_ARRAY) {
+                    depth++;
+                    if (depth > MAX_NESTING_DEPTH) {
+                        return false;
+                    }
+                } else if (token == JsonToken.END_OBJECT || token == JsonToken.END_ARRAY) {
+                    depth--;
+                }
+            }
+            return true;
+        }
     }
 }
