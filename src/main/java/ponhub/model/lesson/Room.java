@@ -12,7 +12,8 @@ import java.util.Locale;
 public final class Room {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Rooms should contain 1 to 10 letters or digits, optionally separated by single hyphens";
+            "Rooms should contain 1 to 10 characters in total, including any hyphens, "
+                    + "using letters or digits optionally separated by single hyphens";
     public static final String VALIDATION_REGEX = "[A-Z0-9]+(?:-[A-Z0-9]+)*";
 
     private final String value;

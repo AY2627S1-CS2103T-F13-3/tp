@@ -17,7 +17,9 @@ public class RoomTest {
 
     @Test
     public void constructor_invalidRoom_throwsIllegalArgumentException() {
-        String[] invalidRooms = {"", "   ", "Room 1", "-R1", "R1-", "R--1", "R_1", "12345678901"};
+        String[] invalidRooms = {
+            "", "   ", "Room 1", "-R1", "R1-", "R--1", "R_1", "12345678901", "B-012345678"
+        };
 
         for (String invalidRoom : invalidRooms) {
             assertThrows(IllegalArgumentException.class, () -> new Room(invalidRoom));
@@ -39,11 +41,13 @@ public class RoomTest {
         assertFalse(Room.isValidRoom("R1-"));
         assertFalse(Room.isValidRoom("R--1"));
         assertFalse(Room.isValidRoom("12345678901"));
+        assertFalse(Room.isValidRoom("B-012345678"));
 
         assertTrue(Room.isValidRoom("R1"));
         assertTrue(Room.isValidRoom("B-01"));
         assertTrue(Room.isValidRoom("lab1"));
         assertTrue(Room.isValidRoom("1234567890"));
+        assertTrue(Room.isValidRoom("B-01234567"));
     }
 
     @Test
