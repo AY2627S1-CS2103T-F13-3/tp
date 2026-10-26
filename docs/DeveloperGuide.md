@@ -14,26 +14,12 @@ the [requirements appendix](#product-scope) records the target audience, value p
 
 ### Maintainer reading path
 
-1. **Understand the structure.** Start with [Architecture](#architecture) and its component responsibilities,
-   then the [shared-lesson contract](#shared-lesson-target-contract) for the relationships and identity rules
-   that those components preserve.
-2. **Trace one active command.** Follow [Canonical people commands](#canonical-people-commands) with
-   `add r/student n/Alex Tan l/P1 pp/91234567` in a normal session. Read
-   [Command transactions](#command-transactions) to see why addition prepares a candidate, saves it, then
-   publishes the data and people view. A failed save must leave the live state unchanged.
-3. **Find the code and checks.** Follow routing in
-   [`CanonicalPeopleSession`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalPeopleSession.java),
-   staging in [`CanonicalAddCommand`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/commands/CanonicalAddCommand.java)
-   and save/publication ordering in
-   [`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandExecutor.java).
-   [`CanonicalPeopleSessionTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/CanonicalPeopleSessionTest.java)
-   covers routing and protected loading;
-   [`CanonicalPeopleCommandIntegrationTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/commands/CanonicalPeopleCommandIntegrationTest.java)
-   covers addition, save/reload and failed-save preservation.
-
-Use [Setting up](SettingUp.html) to prepare a development environment and the
-[Testing guide](Testing.html#running-tests) to run the relevant checks. Startup, window and storage details
-remain available through the table of contents when a change needs them.
+- **Understand the system:** start with [Architecture](#architecture), then the
+  [shared-lesson contract](#shared-lesson-target-contract) for identity and relationship rules.
+- **Trace a command:** follow [Canonical people commands](#canonical-people-commands) and
+  [Command transactions](#command-transactions) for preparation, saving and publication.
+- **Develop and verify:** use [Setting up](SettingUp.html), the
+  [Testing guide](Testing.html#running-tests) and [manual testing](#appendix-instructions-for-manual-testing).
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -80,20 +66,65 @@ See the [Testing guide](Testing.html#running-tests) for regression checks.
 
 ## **Design**
 
-### Current increment and command integration
+<div markdown="span" class="alert alert-primary">
 
-`MainApp` connects one canonical session/root to Logic, cards and protected storage. Normal sessions
-support role-aware `add`, partial person `edit`, empty-roster `addlesson`, partial `editlesson`, `enrol`, `unenrol`, `mark`, `unmark`, guarded `delete` and
-`deletelesson`, `list`, `lessons`, `showlesson`, `history`, own-contact people search, all seven lesson-search fields,
-`help` and `exit`; protected sessions allow only help/list/exit.
-Student, Parent and Tutor relationship search and attendance history are active.
-Inherited AB3 edit/clear/find implementations are unavailable, and their command/parser implementations and edit-descriptor
-test helpers have been removed. The retired `find` name matcher and its isolated tests are also removed;
-canonical search uses the role-aware query matchers. Canonical boundary tests verify rejected commands preserve
-the saved aggregate, filtered people view and preferences; help and exit remain usable. The inherited
-AddressBook model, person/tag types, add/delete commands, parsers and their exclusive tests/builders
-are removed. Shared contact values, preferences and canonical transaction support remain. `mark` creates or
-corrects attendance; `unmark` removes one dated key.
+:bulb: **Tip:** The `.puml` files used to create diagrams are in `docs/diagrams`. Refer to the [_PlantUML Tutorial_ at se-edu/guides](https://se-education.org/guides/tutorials/plantUml.html) to learn how to create and edit diagrams.
+</div>
+
+### Architecture
+
+![Current component responsibilities and dependencies](images/ArchitectureDiagram.png)
+
+`Main` launches JavaFX; [`MainApp`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java)
+checks application paths, constructs the canonical session and separate preferences, then connects
+`CanonicalLogicManager` and UI. It saves preferences separately at shutdown.
+
+| Component | Responsibility |
+| --- | --- |
+| [UI](#ui-component) | Render observable views, accept commands and show feedback. |
+| [Logic](#logic-component) | Parse/dispatch commands and coordinate execution, persistence and publication. |
+| [Model](#model-component) | Own canonical records, invariants and derived views; keep preferences separate. |
+| [Storage](#storage-component) | Validate/load local files and persist complete operational snapshots safely. |
+| [Commons](#common-classes) | Supply shared value helpers, exceptions, logging and settings. |
+
+UI depends on the `Logic` interface. The canonical session owns the model/query collaborators and
+injects a complete-snapshot writer into the executor. These seams let tests exercise command and
+file failures without a second writable model. The arrows above show calls and type dependencies,
+not separate copies of the data. Commons helpers are omitted.
+
+#### Canonical command collaboration
+
+The sequence below traces `edit 1 n/Jamie Tan` in a normal session where people-list position 1
+exists and the replacement is valid. `MainWindow` sends the command through `Logic.execute`;
+`CanonicalLogicManager` delegates to `CanonicalPeopleSession`.
+
+![Canonical edit command: stage, save, then publish](images/ArchitectureSequenceDiagram.png)
+
+The session checks startup protection before parsing mutation arguments. A parse or domain failure
+returns without saving or publishing. A valid command prepares a result on isolated transaction
+copies; preparing that result is not user-visible success. If operational data changed, the executor
+must save the complete validated snapshot before `commit()` publishes it. Permission or I/O failure
+discards the staged transaction, retaining live data, allocation counters and the people view. A no-op
+skips the write; view-only commands can still commit a filter change.
+The final alternatives are exclusive: a failed save returns failure feedback without entering
+the commit/success branch. Optional activation bars are omitted; the arrows retain the call/return boundary.
+
+`editlesson` enters the same executor through `LessonEditParser` and `CanonicalEditLessonCommand`.
+The [editing contract](#v14-editing-contract) owns field and scheduling rules; the
+[transaction contract](#command-transactions) owns durability and recovery details. The figure shows
+coordination rather than duplicating either contract. Command source references are listed in the
+[Logic component](#logic-component).
+
+### Command integration
+{: id="current-increment-and-command-integration"}
+
+`MainApp` connects one canonical session/root to Logic, cards and protected storage.
+The [User Guide command summary](UserGuide.html#current-command-summary) lists the supported
+people, lesson, enrolment, attendance and search commands with syntax and examples.
+Protected sessions permit only `help`, `list` and `exit`. Canonical commands replace the inherited
+AB3 model, command and storage paths; `clear` and `find` are unavailable. Shared contact values,
+preferences and canonical transaction support remain. Canonical boundary tests verify that rejected
+commands preserve the saved aggregate, filtered people view and preferences.
 
 `CanonicalCommandDefinition` defines each command word, guidance and protected-session eligibility;
 declaration order supplies normal help order, while recovery order preserves `help`, `list`, `exit`.
@@ -102,11 +133,11 @@ resolves the word once and dispatches through an exhaustive enum switch without 
 definition requires a route before compilation succeeds. Protection precedes argument parsing.
 Register or withdraw a definition with matching parser/usage, catalogue and routing tests, and UG/manual
 checks, using this same root/view and compatible persistence.
-The legacy model, command execution and storage paths are retired.
 See [startup](#canonical-application-startup-85), [Storage](#storage-component) and the
 [UG](UserGuide.html#current-command-summary) for loading, transactions and supported syntax.
 
-### Canonical application startup (#85)
+### Canonical application startup
+{: id="canonical-application-startup-85"}
 
 `MainApp` selects `data/ponhub.json` by default or the launch argument `--data=PATH`, then constructs one
 `CanonicalPeopleSession` and its `CanonicalLogicManager`. Packaged application home is the folder containing the JAR, independently of the terminal working
@@ -163,8 +194,7 @@ The [20 October shell validation record](https://github.com/gugrusaurus/tp/tree/
 contains user-executed native checks and screenshots for the tested build. A later custom-scaling
 follow-up completed the 1280×720/150% checks; the earlier NOT RUN entry remains historical. The report
 records the remaining matrix and content-coverage limits separately.
-`addlesson`, `editlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `lessons`, lesson search and
-`showlesson` and `history` are active through the command box.
+The command box exposes the routes described in [command integration](#current-increment-and-command-integration).
 
 ### Shared-lesson target contract
 
@@ -227,7 +257,8 @@ Ownership and implementation coordination remain in [AboutUs](AboutUs.html#proje
 
 <a id="planned-v14-editing-contract"></a>
 
-#### v1.4 editing contract
+#### Editing contract
+{: id="v14-editing-contract"}
 
 **Person and Lesson editing are active.** The [runtime summary](#current-increment-and-command-integration)
 lists supported routes; the [shared contract](#shared-lesson-target-contract) defines identity and relationships.
@@ -367,55 +398,6 @@ role/duplicate guards, identity and view refresh, no-ops, protected startup, fai
 Historical coordination and its original source qualifications are retained in
 [#388](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/388#issuecomment-6367776297).
 
-<div markdown="span" class="alert alert-primary">
-
-:bulb: **Tip:** The `.puml` files used to create diagrams are in `docs/diagrams`. Refer to the [_PlantUML Tutorial_ at se-edu/guides](https://se-education.org/guides/tutorials/plantUml.html) to learn how to create and edit diagrams.
-</div>
-
-### Architecture
-
-![Current component responsibilities and dependencies](images/ArchitectureDiagram.png)
-
-`Main` launches JavaFX; [`MainApp`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java)
-checks application paths, constructs the canonical session and separate preferences, then connects
-`CanonicalLogicManager` and UI. It saves preferences separately at shutdown.
-
-| Component | Responsibility |
-| --- | --- |
-| [UI](#ui-component) | Render observable views, accept commands and show feedback. |
-| [Logic](#logic-component) | Parse/dispatch commands and coordinate execution, persistence and publication. |
-| [Model](#model-component) | Own canonical records, invariants and derived views; keep preferences separate. |
-| [Storage](#storage-component) | Validate/load local files and persist complete operational snapshots safely. |
-| [Commons](#common-classes) | Supply shared value helpers, exceptions, logging and settings. |
-
-UI depends on the `Logic` interface. The canonical session owns the model/query collaborators and
-injects a complete-snapshot writer into the executor. These seams let tests exercise command and
-file failures without a second writable model. The arrows above show calls and type dependencies,
-not separate copies of the data. Commons helpers are omitted.
-
-#### Canonical command collaboration
-
-The sequence below traces `edit 1 n/Jamie Tan` in a normal session where people-list position 1
-exists and the replacement is valid. `MainWindow` sends the command through `Logic.execute`;
-`CanonicalLogicManager` delegates to `CanonicalPeopleSession`.
-
-![Canonical edit command: stage, save, then publish](images/ArchitectureSequenceDiagram.png)
-
-The session checks startup protection before parsing mutation arguments. A parse or domain failure
-returns without saving or publishing. A valid command prepares a result on isolated transaction
-copies; preparing that result is not user-visible success. If operational data changed, the executor
-must save the complete validated snapshot before `commit()` publishes it. Permission or I/O failure
-discards the staged transaction, retaining live data, allocation counters and the people view. A no-op
-skips the write; view-only commands can still commit a filter change.
-The final alternatives are exclusive: a failed save returns failure feedback without entering
-the commit/success branch. Optional activation bars are omitted; the arrows retain the call/return boundary.
-
-`editlesson` enters the same executor through `LessonEditParser` and `CanonicalEditLessonCommand`.
-The [editing contract](#v14-editing-contract) owns field and scheduling rules; the
-[transaction contract](#command-transactions) owns durability and recovery details. The figure shows
-coordination rather than duplicating either contract. Command source references are listed in the
-[Logic component](#logic-component).
-
 ### UI component
 
 The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/Ui.java)
@@ -495,7 +477,8 @@ Trace the implementation through
 [`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandExecutor.java)
 and [`CanonicalTransaction`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/CanonicalTransaction.java).
 
-#### Read-only retrieval API contract (#113)
+#### Read-only retrieval API contract
+{: id="read-only-retrieval-api-contract-113"}
 
 [`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/Logic.java)
 declares the UI-facing retrieval methods; [`LessonQuerySource`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQuerySource.java)
@@ -550,8 +533,12 @@ Student-Lesson many-to-many membership without copying lesson data into Student 
 refers to exactly one Student and one Lesson through its dated `AttendanceKey`. Attendance is retained history, not
 current membership.
 
-These implementation-facing class diagrams use ordinary navigable associations for stored references. Immutable
-states, records, IDs and value objects can be shared safely by replacement snapshots, copied records and staged
+The diagrams show both stored Java references and domain relationships resolved through stable IDs.
+`Lesson` retains `tutorId` and `enrolledStudentIds`; `AttendanceKey` retains Student and Lesson IDs,
+resolved through the canonical aggregate. ID-labelled associations express those domain links,
+not additional object fields.
+
+Immutable states, records, IDs and value objects can be shared safely by replacement snapshots, copied records and staged
 containers, so their Java object lifetimes are not exclusive composition. Source-end `0..*` multiplicities make
 that sharing explicit; they do not introduce a second writable owner of lesson membership or attendance.
 
@@ -585,7 +572,8 @@ Canonical state changes continue through validated `PonHubData` snapshots and sa
 The aggregate below implements the [shared ownership and identity contract](#shared-lesson-target-contract).
 Complete independent transaction snapshots preserve records, relationships and allocation state.
 
-#### Canonical data aggregate (#76)
+#### Canonical data aggregate
+{: id="canonical-data-aggregate-76"}
 
 `PonHubData` holds one current immutable `PonHubDataState`: ordered people and per-role allocation history,
 shared lessons/rosters, dated attendance and the last allocated lesson sequence. Snapshots copy incoming
@@ -604,7 +592,8 @@ validated state. UI filters, selection and preferences remain outside it. Comman
 staged containers and publish only after saving through the [transaction boundary](#command-transactions),
 so failed commands leave the live root and subscribed results unchanged.
 
-#### Shared lesson scheduling model APIs (#78)
+#### Shared lesson scheduling model APIs
+{: id="shared-lesson-scheduling-model-apis-78"}
 
 [`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PonHubData.java)
 is the lesson mutation and allocation boundary. `addLesson(...)` resolves an existing Tutor ID, derives the next
@@ -626,7 +615,8 @@ parent-link, identity and cross-component rules remain authoritative in the
 [shared contract](#shared-lesson-target-contract); [Storage](#storage-component) owns schema, recovery and
 save-before-publication details.
 
-#### Shared lesson creation command (#86)
+#### Shared lesson creation command
+{: id="shared-lesson-creation-command-86"}
 
 `AddLessonParser` converts the seven lowercase fields into a `LessonCreationInput` without reading operational
 state or allocating an ID. It rejects preambles, control characters, unknown/repeated/missing/blank prefixes and
@@ -645,7 +635,8 @@ before publishing it. Parse, tutor-selection, clash, allocation and save failure
 the live catalogue, allocation counter, people filter and subscribed lesson-query lists. Success reports the new
 stable Lesson ID and the saved lesson is immediately available through the lifetime `LessonQueries` component.
 
-#### Indexed lesson query projections (#80)
+#### Indexed lesson query projections
+{: id="indexed-lesson-query-projections-80"}
 
 `LessonQueries` derives read-only lessons, rosters and history from one canonical `PonHubData` root.
 A Lesson's roster is the only source of current membership; retained attendance never enrols a Student.
@@ -900,7 +891,8 @@ requires a compatible corrected copy and a restart, as described under
 [protected startup](#protected-canonical-loading-84). Read-only commands and operational
 no-ops skip saving; changing only a view filter may publish that filter without writing operational data.
 
-#### JSON version detection foundation
+#### JSON version detection
+{: id="json-version-detection-foundation"}
 
 `JsonDataVersionDetector.detect(String)` classifies file contents using the existing Jackson dependency,
 without constructing Model objects or writing files. The current loader uses this gate before decoding. The supported
@@ -943,7 +935,8 @@ Follow [legacy re-entry](#planned-protected-loading-and-legacy-upgrade) for unve
 
 <a id="people-only-canonical-json-storage-79"></a>
 
-#### Canonical JSON schema (#79, #81, #83)
+#### Canonical JSON schema
+{: id="canonical-json-schema-79-81-83"}
 
 `JsonPonHubDataCodec` reads and writes one UTF-8 version-1 document for the complete snapshot:
 
@@ -1235,10 +1228,8 @@ deletion, so a position can be reused but an allocated ID cannot. The
 The diagram omits contact fields, lesson/attendance references and transaction staging; their existing contracts
 above still apply. This is the current add/list/delete runtime.
 
-The [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85) cutover activates these commands through
-one session and people panel. The inherited delete route remains retired; #91 activates guarded canonical deletion.
-Canonical storage supports lessons, rosters and retained attendance. `addlesson`, `editlesson`, `enrol`, `unenrol`, `mark`,
-`unmark`, guarded `delete`/`deletelesson`, `lessons`, `showlesson`, `history` and all lesson-search fields are active.
+See [command integration](#current-increment-and-command-integration) for the active runtime and
+[application startup](#canonical-application-startup-85) for how it connects to the people panel.
 
 <a id="prepared-canonical-people-session"></a>
 
@@ -1250,12 +1241,8 @@ share that root. Callers receive immutable data snapshots and the same unmodifia
 the session does not expose writable operational data. Execute on the single model thread, or the JavaFX
 application thread once controls are attached.
 
-The session's `execute()` dispatches active `add`, `edit`, `addlesson`, `editlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`,
-`deletelesson`, `list`, `lessons`, `showlesson`, `history`, `search`, `help` and
-`exit` commands through its switch. `CanonicalCommandCatalog` defines the permitted command words and guidance
-for normal and protected sessions. The session parses role-aware additions and edits, shared-lesson creation and
-editing, membership changes, guarded Lesson deletion, attendance marks/removals, listings and own-contact searches before
-staged execution. Changed data is saved through the
+The session parses and dispatches commands through the
+[shared routing definitions](#current-increment-and-command-integration) before staged execution. Changed data is saved through the
 protected writer before publication, stable-ID success feedback or person-view changes. Parse, domain and save
 failures leave
 the original data, allocation counters and complete visible filter/list unchanged.
@@ -1333,7 +1320,8 @@ Phone zeros and email case are preserved. These samples are dormant and contain 
 attendance or file format. [#101](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101) preserves the developer
 fixture recipes and tracks full-product samples and acceptance after runtime integration.
 
-### Search criteria parsing foundation
+### Search criteria parsing
+{: id="search-criteria-parsing-foundation"}
 
 [`SearchCriteriaParser`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/parser/SearchCriteriaParser.java)
 parses the arguments
@@ -1415,7 +1403,8 @@ people, the existing exact bucket bounds lesson candidates to `B`, current roste
 counts emitted people/context entries. Index construction occurs on root publication, not per read-only query.
 A scan testing every lesson separately for every student would repeat those checks across the people catalogue.
 
-#### Student relationship search checks (#94)
+#### Student relationship search checks
+{: id="student-relationship-search-checks-94"}
 
 Use two enrolled lessons with opposite subject/day combinations and a third Student without enrolments.
 `search c/student d/Mon s/Math` must reject a Student whose Math is Tuesday and Science is Monday. Combine all
@@ -1427,7 +1416,8 @@ operational bytes/counters for every search, and that lesson-result filters/sele
 The backend tests compare 1,000 seeded conjunctions with an independent scan of raw records; command-box tests
 verify context additions/removals even when the matching person list is unchanged.
 
-#### Parent relationship search (#95)
+#### Parent relationship search
+{: id="parent-relationship-search-95"}
 
 `LessonQueries` builds an exact parent-phone bucket of immutable Students alongside its other indexes on root
 publication. `getStudentsByParentPhone(Phone)` returns a read-only snapshot in people creation order; leading zeros
@@ -1451,7 +1441,8 @@ with a raw nested Student/Lesson scan. Exercise failed publication and successfu
 projection active; for real enrol/unenrol, switch to Student listing first and repeat the Parent query afterwards.
 Verify read-only bytes, invalid-prefix preservation and matching results/context after reload.
 
-#### Tutor relationship search (#96)
+#### Tutor relationship search
+{: id="tutor-relationship-search-96"}
 
 Tutor own fields are filtered first. One indexed lesson query applies `sn/d/st/et/s/rm` to each candidate before
 matching the lesson's stable Tutor ID against eligible Tutors. `sn/` is tested in that lesson's current roster;
