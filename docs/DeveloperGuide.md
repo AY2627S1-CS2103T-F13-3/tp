@@ -14,26 +14,12 @@ the [requirements appendix](#product-scope) records the target audience, value p
 
 ### Maintainer reading path
 
-1. **Understand the structure.** Start with [Architecture](#architecture) and its component responsibilities,
-   then the [shared-lesson contract](#shared-lesson-target-contract) for the relationships and identity rules
-   that those components preserve.
-2. **Trace one active command.** Follow [Canonical people commands](#canonical-people-commands) with
-   `add r/student n/Alex Tan l/P1 pp/91234567` in a normal session. Read
-   [Command transactions](#command-transactions) to see why addition prepares a candidate, saves it, then
-   publishes the data and people view. A failed save must leave the live state unchanged.
-3. **Find the code and checks.** Follow routing in
-   [`CanonicalPeopleSession`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalPeopleSession.java),
-   staging in [`CanonicalAddCommand`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/commands/CanonicalAddCommand.java)
-   and save/publication ordering in
-   [`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandExecutor.java).
-   [`CanonicalPeopleSessionTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/CanonicalPeopleSessionTest.java)
-   covers routing and protected loading;
-   [`CanonicalPeopleCommandIntegrationTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/commands/CanonicalPeopleCommandIntegrationTest.java)
-   covers addition, save/reload and failed-save preservation.
-
-Use [Setting up](SettingUp.html) to prepare a development environment and the
-[Testing guide](Testing.html#running-tests) to run the relevant checks. Startup, window and storage details
-remain available through the table of contents when a change needs them.
+- **Understand the system:** start with [Architecture](#architecture), then the
+  [shared-lesson contract](#shared-lesson-target-contract) for identity and relationship rules.
+- **Trace a command:** follow [Canonical people commands](#canonical-people-commands) and
+  [Command transactions](#command-transactions) for preparation, saving and publication.
+- **Develop and verify:** use [Setting up](SettingUp.html), the
+  [Testing guide](Testing.html#running-tests) and [manual testing](#appendix-instructions-for-manual-testing).
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -80,20 +66,65 @@ See the [Testing guide](Testing.html#running-tests) for regression checks.
 
 ## **Design**
 
-### Current increment and command integration
+<div markdown="span" class="alert alert-primary">
 
-`MainApp` connects one canonical session/root to Logic, cards and protected storage. Normal sessions
-support role-aware `add`, partial person `edit`, empty-roster `addlesson`, partial `editlesson`, `enrol`, `unenrol`, `mark`, `unmark`, guarded `delete` and
-`deletelesson`, `list`, `lessons`, `showlesson`, `history`, own-contact people search, all seven lesson-search fields,
-`help` and `exit`; protected sessions allow only help/list/exit.
-Student, Parent and Tutor relationship search and attendance history are active.
-Inherited AB3 edit/clear/find implementations are unavailable, and their command/parser implementations and edit-descriptor
-test helpers have been removed. The retired `find` name matcher and its isolated tests are also removed;
-canonical search uses the role-aware query matchers. Canonical boundary tests verify rejected commands preserve
-the saved aggregate, filtered people view and preferences; help and exit remain usable. The inherited
-AddressBook model, person/tag types, add/delete commands, parsers and their exclusive tests/builders
-are removed. Shared contact values, preferences and canonical transaction support remain. `mark` creates or
-corrects attendance; `unmark` removes one dated key.
+:bulb: **Tip:** The `.puml` files used to create diagrams are in `docs/diagrams`. Refer to the [_PlantUML Tutorial_ at se-edu/guides](https://se-education.org/guides/tutorials/plantUml.html) to learn how to create and edit diagrams.
+</div>
+
+### Architecture
+
+![Current component responsibilities and dependencies](images/ArchitectureDiagram.png)
+
+`Main` launches JavaFX; [`MainApp`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java)
+checks application paths, constructs the canonical session and separate preferences, then connects
+`CanonicalLogicManager` and UI. It saves preferences separately at shutdown.
+
+| Component | Responsibility |
+| --- | --- |
+| [UI](#ui-component) | Render observable views, accept commands and show feedback. |
+| [Logic](#logic-component) | Parse/dispatch commands and coordinate execution, persistence and publication. |
+| [Model](#model-component) | Own canonical records, invariants and derived views; keep preferences separate. |
+| [Storage](#storage-component) | Validate/load local files and persist complete operational snapshots safely. |
+| [Commons](#common-classes) | Supply shared value helpers, exceptions, logging and settings. |
+
+UI depends on the `Logic` interface. The canonical session owns the model/query collaborators and
+injects a complete-snapshot writer into the executor. These seams let tests exercise command and
+file failures without a second writable model. The arrows above show calls and type dependencies,
+not separate copies of the data. Commons helpers are omitted.
+
+#### Canonical command collaboration
+
+The sequence below traces `edit 1 n/Jamie Tan` in a normal session where people-list position 1
+exists and the replacement is valid. `MainWindow` sends the command through `Logic.execute`;
+`CanonicalLogicManager` delegates to `CanonicalPeopleSession`.
+
+![Canonical edit command: stage, save, then publish](images/ArchitectureSequenceDiagram.png)
+
+The session checks startup protection before parsing mutation arguments. A parse or domain failure
+returns without saving or publishing. A valid command prepares a result on isolated transaction
+copies; preparing that result is not user-visible success. If operational data changed, the executor
+must save the complete validated snapshot before `commit()` publishes it. Permission or I/O failure
+discards the staged transaction, retaining live data, allocation counters and the people view. A no-op
+skips the write; view-only commands can still commit a filter change.
+The final alternatives are exclusive: a failed save returns failure feedback without entering
+the commit/success branch. Optional activation bars are omitted; the arrows retain the call/return boundary.
+
+`editlesson` enters the same executor through `LessonEditParser` and `CanonicalEditLessonCommand`.
+The [editing contract](#v14-editing-contract) owns field and scheduling rules; the
+[transaction contract](#command-transactions) owns durability and recovery details. The figure shows
+coordination rather than duplicating either contract. Command source references are listed in the
+[Logic component](#logic-component).
+
+### Command integration
+{: id="current-increment-and-command-integration"}
+
+`MainApp` connects one canonical session/root to Logic, cards and protected storage.
+The [User Guide command summary](UserGuide.html#current-command-summary) lists the supported
+people, lesson, enrolment, attendance and search commands with syntax and examples.
+Protected sessions permit only `help`, `list` and `exit`. Canonical commands replace the inherited
+AB3 model, command and storage paths; `clear` and `find` are unavailable. Shared contact values,
+preferences and canonical transaction support remain. Canonical boundary tests verify that rejected
+commands preserve the saved aggregate, filtered people view and preferences.
 
 `CanonicalCommandDefinition` defines each command word, guidance and protected-session eligibility;
 declaration order supplies normal help order, while recovery order preserves `help`, `list`, `exit`.
@@ -102,11 +133,11 @@ resolves the word once and dispatches through an exhaustive enum switch without 
 definition requires a route before compilation succeeds. Protection precedes argument parsing.
 Register or withdraw a definition with matching parser/usage, catalogue and routing tests, and UG/manual
 checks, using this same root/view and compatible persistence.
-The legacy model, command execution and storage paths are retired.
 See [startup](#canonical-application-startup-85), [Storage](#storage-component) and the
 [UG](UserGuide.html#current-command-summary) for loading, transactions and supported syntax.
 
-### Canonical application startup (#85)
+### Canonical application startup
+{: id="canonical-application-startup-85"}
 
 `MainApp` selects `data/ponhub.json` by default or the launch argument `--data=PATH`, then constructs one
 `CanonicalPeopleSession` and its `CanonicalLogicManager`. Packaged application home is the folder containing the JAR, independently of the terminal working
@@ -153,12 +184,17 @@ consumes unmodified Tab. Shift+Tab and ineligible input retain normal traversal,
 the existing execution and failed-draft behavior. See the [UG keyboard guidance](UserGuide.html#completing-command-names-with-tab)
 and [manual checks](#command-name-completion).
 
+`CommandBox` also retains at most 50 nonblank submitted command strings in memory, including failures.
+Unmodified Up/Down browse these without invoking Logic. The first Up saves the current draft's text,
+anchor and caret; Down beyond the newest submission restores them. A guarded text/selection update
+preserves browsing, while a user edit or Tab replacement starts a new draft. Submitting resets browsing;
+closing the window discards the history. This UI recall is unrelated to persisted attendance history.
+
 The [20 October shell validation record](https://github.com/gugrusaurus/tp/tree/draft-lesson-board-layout-319/validation/shell-319-20261020)
 contains user-executed native checks and screenshots for the tested build. A later custom-scaling
 follow-up completed the 1280×720/150% checks; the earlier NOT RUN entry remains historical. The report
 records the remaining matrix and content-coverage limits separately.
-`addlesson`, `editlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`, `lessons`, lesson search and
-`showlesson` and `history` are active through the command box.
+The command box exposes the routes described in [command integration](#current-increment-and-command-integration).
 
 ### Shared-lesson target contract
 
@@ -221,7 +257,8 @@ Ownership and implementation coordination remain in [AboutUs](AboutUs.html#proje
 
 <a id="planned-v14-editing-contract"></a>
 
-#### v1.4 editing contract
+#### Editing contract
+{: id="v14-editing-contract"}
 
 **Person and Lesson editing are active.** The [runtime summary](#current-increment-and-command-integration)
 lists supported routes; the [shared contract](#shared-lesson-target-contract) defines identity and relationships.
@@ -361,55 +398,6 @@ role/duplicate guards, identity and view refresh, no-ops, protected startup, fai
 Historical coordination and its original source qualifications are retained in
 [#388](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/388#issuecomment-6367776297).
 
-<div markdown="span" class="alert alert-primary">
-
-:bulb: **Tip:** The `.puml` files used to create diagrams are in `docs/diagrams`. Refer to the [_PlantUML Tutorial_ at se-edu/guides](https://se-education.org/guides/tutorials/plantUml.html) to learn how to create and edit diagrams.
-</div>
-
-### Architecture
-
-![Current component responsibilities and dependencies](images/ArchitectureDiagram.png)
-
-`Main` launches JavaFX; [`MainApp`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java)
-checks application paths, constructs the canonical session and separate preferences, then connects
-`CanonicalLogicManager` and UI. It saves preferences separately at shutdown.
-
-| Component | Responsibility |
-| --- | --- |
-| [UI](#ui-component) | Render observable views, accept commands and show feedback. |
-| [Logic](#logic-component) | Parse/dispatch commands and coordinate execution, persistence and publication. |
-| [Model](#model-component) | Own canonical records, invariants and derived views; keep preferences separate. |
-| [Storage](#storage-component) | Validate/load local files and persist complete operational snapshots safely. |
-| [Commons](#common-classes) | Supply shared value helpers, exceptions, logging and settings. |
-
-UI depends on the `Logic` interface. The canonical session owns the model/query collaborators and
-injects a complete-snapshot writer into the executor. These seams let tests exercise command and
-file failures without a second writable model. The arrows above show calls and type dependencies,
-not separate copies of the data. Commons helpers are omitted.
-
-#### Canonical command collaboration
-
-The sequence below traces `edit 1 n/Jamie Tan` in a normal session where people-list position 1
-exists and the replacement is valid. `MainWindow` sends the command through `Logic.execute`;
-`CanonicalLogicManager` delegates to `CanonicalPeopleSession`.
-
-![Canonical edit command: stage, save, then publish](images/ArchitectureSequenceDiagram.png)
-
-The session checks startup protection before parsing mutation arguments. A parse or domain failure
-returns without saving or publishing. A valid command prepares a result on isolated transaction
-copies; preparing that result is not user-visible success. If operational data changed, the executor
-must save the complete validated snapshot before `commit()` publishes it. Permission or I/O failure
-discards the staged transaction, retaining live data, allocation counters and the people view. A no-op
-skips the write; view-only commands can still commit a filter change.
-The final alternatives are exclusive: a failed save returns failure feedback without entering
-the commit/success branch. Optional activation bars are omitted; the arrows retain the call/return boundary.
-
-`editlesson` enters the same executor through `LessonEditParser` and `CanonicalEditLessonCommand`.
-The [editing contract](#v14-editing-contract) owns field and scheduling rules; the
-[transaction contract](#command-transactions) owns durability and recovery details. The figure shows
-coordination rather than duplicating either contract. Command source references are listed in the
-[Logic component](#logic-component).
-
 ### UI component
 
 The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/Ui.java)
@@ -489,7 +477,8 @@ Trace the implementation through
 [`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandExecutor.java)
 and [`CanonicalTransaction`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/CanonicalTransaction.java).
 
-#### Read-only retrieval API contract (#113)
+#### Read-only retrieval API contract
+{: id="read-only-retrieval-api-contract-113"}
 
 [`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/Logic.java)
 declares the UI-facing retrieval methods; [`LessonQuerySource`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQuerySource.java)
@@ -544,8 +533,12 @@ Student-Lesson many-to-many membership without copying lesson data into Student 
 refers to exactly one Student and one Lesson through its dated `AttendanceKey`. Attendance is retained history, not
 current membership.
 
-These implementation-facing class diagrams use ordinary navigable associations for stored references. Immutable
-states, records, IDs and value objects can be shared safely by replacement snapshots, copied records and staged
+The diagrams show both stored Java references and domain relationships resolved through stable IDs.
+`Lesson` retains `tutorId` and `enrolledStudentIds`; `AttendanceKey` retains Student and Lesson IDs,
+resolved through the canonical aggregate. ID-labelled associations express those domain links,
+not additional object fields.
+
+Immutable states, records, IDs and value objects can be shared safely by replacement snapshots, copied records and staged
 containers, so their Java object lifetimes are not exclusive composition. Source-end `0..*` multiplicities make
 that sharing explicit; they do not introduce a second writable owner of lesson membership or attendance.
 
@@ -579,7 +572,8 @@ Canonical state changes continue through validated `PonHubData` snapshots and sa
 The aggregate below implements the [shared ownership and identity contract](#shared-lesson-target-contract).
 Complete independent transaction snapshots preserve records, relationships and allocation state.
 
-#### Canonical data aggregate (#76)
+#### Canonical data aggregate
+{: id="canonical-data-aggregate-76"}
 
 `PonHubData` holds one current immutable `PonHubDataState`: ordered people and per-role allocation history,
 shared lessons/rosters, dated attendance and the last allocated lesson sequence. Snapshots copy incoming
@@ -598,7 +592,8 @@ validated state. UI filters, selection and preferences remain outside it. Comman
 staged containers and publish only after saving through the [transaction boundary](#command-transactions),
 so failed commands leave the live root and subscribed results unchanged.
 
-#### Shared lesson scheduling model APIs (#78)
+#### Shared lesson scheduling model APIs
+{: id="shared-lesson-scheduling-model-apis-78"}
 
 [`PonHubData`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/PonHubData.java)
 is the lesson mutation and allocation boundary. `addLesson(...)` resolves an existing Tutor ID, derives the next
@@ -620,7 +615,8 @@ parent-link, identity and cross-component rules remain authoritative in the
 [shared contract](#shared-lesson-target-contract); [Storage](#storage-component) owns schema, recovery and
 save-before-publication details.
 
-#### Shared lesson creation command (#86)
+#### Shared lesson creation command
+{: id="shared-lesson-creation-command-86"}
 
 `AddLessonParser` converts the seven lowercase fields into a `LessonCreationInput` without reading operational
 state or allocating an ID. It rejects preambles, control characters, unknown/repeated/missing/blank prefixes and
@@ -639,7 +635,8 @@ before publishing it. Parse, tutor-selection, clash, allocation and save failure
 the live catalogue, allocation counter, people filter and subscribed lesson-query lists. Success reports the new
 stable Lesson ID and the saved lesson is immediately available through the lifetime `LessonQueries` component.
 
-#### Indexed lesson query projections (#80)
+#### Indexed lesson query projections
+{: id="indexed-lesson-query-projections-80"}
 
 `LessonQueries` derives read-only lessons, rosters and history from one canonical `PonHubData` root.
 A Lesson's roster is the only source of current membership; retained attendance never enrols a Student.
@@ -894,7 +891,8 @@ requires a compatible corrected copy and a restart, as described under
 [protected startup](#protected-canonical-loading-84). Read-only commands and operational
 no-ops skip saving; changing only a view filter may publish that filter without writing operational data.
 
-#### JSON version detection foundation
+#### JSON version detection
+{: id="json-version-detection-foundation"}
 
 `JsonDataVersionDetector.detect(String)` classifies file contents using the existing Jackson dependency,
 without constructing Model objects or writing files. The current loader uses this gate before decoding. The supported
@@ -937,7 +935,8 @@ Follow [legacy re-entry](#planned-protected-loading-and-legacy-upgrade) for unve
 
 <a id="people-only-canonical-json-storage-79"></a>
 
-#### Canonical JSON schema (#79, #81, #83)
+#### Canonical JSON schema
+{: id="canonical-json-schema-79-81-83"}
 
 `JsonPonHubDataCodec` reads and writes one UTF-8 version-1 document for the complete snapshot:
 
@@ -1018,8 +1017,8 @@ folder or copy the JAR into a separate empty folder. Re-enter records with expli
 required fields using `add`; verify the new store before retiring the old working folder. Never infer
 roles, drop invalid records or convert the original in place. There is no import, export or recover command.
 
-Contact validation can reject formerly accepted numeric-only names, long phones or slash-containing
-addresses, or reveal duplicates after normalization. Inspect JSON read-only, or use an older build on an
+Contact validation can reject formerly accepted numeric-only names, long phones or addresses with nonnumeric
+slash components, or reveal duplicates after normalization. Inspect JSON read-only, or use an older build on an
 additional working copy. The administrator supplies corrections and missing role information. Valid
 human edits to the supported schema must load; invalid edits follow [startup protection](#current-protected-startup).
 
@@ -1073,6 +1072,8 @@ remain responsibilities of the canonical aggregate and the [shared contract](#sh
 ### Inline help
 
 `CanonicalCommandCatalog` owns the active command descriptions, usage and runnable examples.
+Bare `help` lists one short description per supported command in catalogue order and points to
+`help COMMAND` for detailed syntax, rules and examples; it does not repeat each command's usage.
 `CanonicalPeopleSession` accepts zero or one help topic, normalizes with `Locale.ROOT`, rejects unknown
 topics/excess arguments and restricts guidance to the protected-session routes after rejected loading.
 Help preserves records and the people view without operational saves; preferences have a separate
@@ -1145,15 +1146,16 @@ and saved files from admitting different formats.
 
 | Value | Contract |
 | --- | --- |
-| Name | 1–100 Unicode code points after trimming Unicode boundary spaces, collapsing ASCII spaces and NFC normalization. Letters, attached combining marks, ASCII spaces, apostrophes (`'`, `’`), hyphens and periods; at least one letter. Display case is preserved. Digits, emoji, slash, unattached marks and internal non-ASCII whitespace are rejected. |
+| Name | 1–100 Unicode code points after trimming Unicode boundary spaces, collapsing ASCII spaces and NFC normalization. Letters, attached combining marks, ASCII spaces, apostrophes (`'`, `’`), hyphens and periods; at least one letter. Standalone lowercase `s/o` and `d/o` may separate letter-bearing name text. Display case is preserved. Digits, emoji, other slashes, unattached marks and internal non-ASCII whitespace are rejected. |
 | Phone | 3–15 ASCII digits, stored as text to retain leading zeros. |
 | Email | At most 254 characters; local part allows English letters, digits, `.`, `_`, ASCII apostrophes (`'`), `%`, `+`, `-`, without leading/trailing/consecutive periods. Domain has at least two letter/digit/internal-hyphen labels, ending in 2–63 English letters. Spelling/case are preserved. |
-| Address | 1–200 printable ASCII characters after trimming/collapsing spaces; `/`, tabs, line breaks and controls are rejected. |
+| Address | 1–200 printable ASCII characters after trimming Unicode boundary spaces and collapsing ASCII spaces. Each `/` must have ASCII digits immediately on both sides; tabs, line breaks and controls are rejected. |
 
 Name/address normalization occurs once in the value type, before equality and hashing; case remains significant
-for value equality. `Name` rejects ISO controls, format characters, line/paragraph separators and lone surrogates
-before trimming, so JSON cannot hide invalid characters at a boundary. It shares the parser's Unicode-boundary
-trimming utility. After NFC normalization, a code-point scan enforces the length and mark-attachment rules.
+for value equality. Both reject ISO controls, format characters, line/paragraph separators and lone surrogates
+before trimming, so JSON cannot hide invalid characters at a boundary. They share the parser's Unicode-boundary
+trimming utility. After NFC normalization, a code-point scan enforces name length, mark attachment and
+letter-bearing text on either side of each standalone marker. Address validation checks every slash's neighbors.
 Existing duplicate keys and `TutorResolver` consume these canonical `Name` values; both lesson creation and
 editing therefore match canonical equivalents while retaining ambiguity and exact-phone checks. No schema
 change is needed: the loader constructs the same value and the writer saves its normalized display form.
@@ -1166,9 +1168,12 @@ normalization-created duplicates, enter [protected startup](#current-protected-s
 rejected-file preservation and recovery. This contact policy performs no legacy migration. Role-aware
 add/list are active as described below.
 
-This first #383 increment leaves prefix/slash parsing and search normalization unchanged. Legal-name
-`s/o` / `d/o` markers and numeric slash addresses remain outstanding; search can use a displayed-name fragment
-such as `n/Jos`, but does not promise canonical Unicode equivalence or full internationalization.
+The four add/edit parsers use `FieldValueTokenizer` only when advancing through a field's value. It skips
+complete lowercase `s/o` / `d/o` tokens inside `n/` or `tu/`, and digit-surrounded slash components inside `a/`.
+All other prefix-shaped tokens still reach the existing unknown/repeated-prefix checks; value types reject
+malformed literals. This preserves prefix order, error precedence and edit keep/clear operations without a
+quoting grammar. Search retains its own slash restriction and normalization: use fragments such as `n/Ravi`,
+`a/#01` or `n/Jos`, rather than a full slash value or a promise of canonical Unicode search equivalence.
 
 <a id="role-aware-addition-parsing-foundation"></a>
 <a id="staged-person-addition-candidate"></a>
@@ -1227,10 +1232,8 @@ deletion, so a position can be reused but an allocated ID cannot. The
 The diagram omits contact fields, lesson/attendance references and transaction staging; their existing contracts
 above still apply. This is the current add/list/delete runtime.
 
-The [#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85) cutover activates these commands through
-one session and people panel. The inherited delete route remains retired; #91 activates guarded canonical deletion.
-Canonical storage supports lessons, rosters and retained attendance. `addlesson`, `editlesson`, `enrol`, `unenrol`, `mark`,
-`unmark`, guarded `delete`/`deletelesson`, `lessons`, `showlesson`, `history` and all lesson-search fields are active.
+See [command integration](#current-increment-and-command-integration) for the active runtime and
+[application startup](#canonical-application-startup-85) for how it connects to the people panel.
 
 <a id="prepared-canonical-people-session"></a>
 
@@ -1242,12 +1245,8 @@ share that root. Callers receive immutable data snapshots and the same unmodifia
 the session does not expose writable operational data. Execute on the single model thread, or the JavaFX
 application thread once controls are attached.
 
-The session's `execute()` dispatches active `add`, `edit`, `addlesson`, `editlesson`, `enrol`, `unenrol`, `mark`, `unmark`, `delete`,
-`deletelesson`, `list`, `lessons`, `showlesson`, `history`, `search`, `help` and
-`exit` commands through its switch. `CanonicalCommandCatalog` defines the permitted command words and guidance
-for normal and protected sessions. The session parses role-aware additions and edits, shared-lesson creation and
-editing, membership changes, guarded Lesson deletion, attendance marks/removals, listings and own-contact searches before
-staged execution. Changed data is saved through the
+The session parses and dispatches commands through the
+[shared routing definitions](#current-increment-and-command-integration) before staged execution. Changed data is saved through the
 protected writer before publication, stable-ID success feedback or person-view changes. Parse, domain and save
 failures leave
 the original data, allocation counters and complete visible filter/list unchanged.
@@ -1325,7 +1324,8 @@ Phone zeros and email case are preserved. These samples are dormant and contain 
 attendance or file format. [#101](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101) preserves the developer
 fixture recipes and tracks full-product samples and acceptance after runtime integration.
 
-### Search criteria parsing foundation
+### Search criteria parsing
+{: id="search-criteria-parsing-foundation"}
 
 [`SearchCriteriaParser`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/parser/SearchCriteriaParser.java)
 parses the arguments
@@ -1407,7 +1407,8 @@ people, the existing exact bucket bounds lesson candidates to `B`, current roste
 counts emitted people/context entries. Index construction occurs on root publication, not per read-only query.
 A scan testing every lesson separately for every student would repeat those checks across the people catalogue.
 
-#### Student relationship search checks (#94)
+#### Student relationship search checks
+{: id="student-relationship-search-checks-94"}
 
 Use two enrolled lessons with opposite subject/day combinations and a third Student without enrolments.
 `search c/student d/Mon s/Math` must reject a Student whose Math is Tuesday and Science is Monday. Combine all
@@ -1419,7 +1420,8 @@ operational bytes/counters for every search, and that lesson-result filters/sele
 The backend tests compare 1,000 seeded conjunctions with an independent scan of raw records; command-box tests
 verify context additions/removals even when the matching person list is unchanged.
 
-#### Parent relationship search (#95)
+#### Parent relationship search
+{: id="parent-relationship-search-95"}
 
 `LessonQueries` builds an exact parent-phone bucket of immutable Students alongside its other indexes on root
 publication. `getStudentsByParentPhone(Phone)` returns a read-only snapshot in people creation order; leading zeros
@@ -1443,7 +1445,8 @@ with a raw nested Student/Lesson scan. Exercise failed publication and successfu
 projection active; for real enrol/unenrol, switch to Student listing first and repeat the Parent query afterwards.
 Verify read-only bytes, invalid-prefix preservation and matching results/context after reload.
 
-#### Tutor relationship search (#96)
+#### Tutor relationship search
+{: id="tutor-relationship-search-96"}
 
 Tutor own fields are filtered first. One indexed lesson query applies `sn/d/st/et/s/rm` to each candidate before
 matching the lesson's stable Tutor ID against eligible Tutors. `sn/` is tested in that lesson's current roster;
@@ -1509,31 +1512,28 @@ examples do not describe an implemented PonHub feature.
 
 **Value proposition**: For tuition centre administrative staff who need to keep people, lessons and attendance organised, PonHub provides a single place to manage and search these records, with scheduling checks and attendance tracking to support reliable daily administration.
 
-Compared with maintaining separate contact lists, timetables and attendance records, PonHub connects the information needed for routine tasks and checks conflicting or invalid changes. The active v1.4 person and Lesson edits support correcting records while retaining their identities and history. Make-up booking remains a future proposal.
+Compared with maintaining separate contact lists, timetables and attendance records, PonHub connects the information needed for routine tasks and checks conflicting or invalid changes. Person and Lesson edits support correcting records while retaining their identities and history.
 
-**Shared-lesson MVP target:** Lessons are created independently of student enrolment, including lessons with empty rosters. Each shared `Lesson` owns its currently enrolled student IDs; student lessons, rosters, and tutor schedules are retrieved from that canonical membership rather than copied into each student. Attendance is a separate dated record for one student and one lesson. Unenrolment removes current membership and retains attendance history; an existing historical entry can still be corrected or removed. A missing attendance entry means unrecorded, distinct from present and absent.
+**Shared lessons and attendance:** Lessons are created independently of student enrolment, including lessons with empty rosters. Each shared `Lesson` owns its currently enrolled student IDs; student lessons, rosters, and tutor schedules are retrieved from that canonical membership rather than copied into each student. Attendance is a separate dated record for one student and one lesson. Unenrolment removes current membership and retains attendance history; an existing historical entry can still be corrected or removed. A missing attendance entry means unrecorded, distinct from present and absent.
 
-**Intended v1.4 scope:** The [alpha plan (#276)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/276) retains the shared-Lesson product and adds person editing (US-55) and Lesson editing (US-37). [Person editing (#263)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/263) and [Lesson editing (#264)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/264) are active in this increment. Their [editing contract](#planned-v14-editing-contract) preserves stable identities, shared rosters and retained attendance.
-
-**Delivered versus planned:** The [student foundation (#57)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/57), [tutor and parent foundations (#62)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/62), [ordered people registry (#70)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/70), [person-card components (#119)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/119), [role-filtered listing components (#122)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/122), [search criteria foundation (#64)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/64), and [lesson scheduling values (#63)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/63) provide independently tested APIs. The registry, canonical cards and role-filtered listing are now connected to the active people session. [Inline help (#68)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/68) and [safe file replacement (#66)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/66) are connected to the active canonical people runtime.
-
-Canonical people activation and the remaining shared-lesson integration are tracked in
-[#76](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/76),
-[#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77),
-[#85](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/85), and their dependent command, storage and retrieval
-issues. The requirements below describe the intended product; role-aware add/list, empty-roster shared-lesson
-creation, enrolment/unenrolment, dated attendance marking, guarded person deletion, own-contact people search,
-guarded Lesson deletion, lesson listing, lesson search, lesson details and dated attendance removal are active.
-Student, Parent and Tutor relationship search and attendance history are active.
+The [shared-lesson contract](#shared-lesson-target-contract) explains the current ownership and selector rules;
+the [editing contract](#v14-editing-contract) explains identity and history preservation during changes.
+Use the [UG command summary](UserGuide.html#current-command-summary) for the supported operations and syntax.
+The stories below retain future needs, including capacity, make-up booking and waiting lists, alongside
+implemented requirements.
 
 ### User stories
 
-These stories distinguish the shared-lesson product and intended v1.4 additions from future proposals. A priority states the intended scope, not implementation status.
+These stories describe user goals. **High** prioritises the core shared-lesson product, **Medium** useful
+extensions, and **Low** longer-term consideration. Priority does not establish implementation status.
 
-Priorities: **High** (core shared-lesson product and intended v1.4 additions), **Medium** (future extensions), **Low** (future consideration).
-The target includes shared rosters, regular enrolment and active person/Lesson edits (US-55 and US-37). Capacity, make-up reservations and waiting lists are future work, as are export, saved searches, archive/restore, richer attendance and percentages, fees and guided workflows. Medium and Low priorities remain proposals beyond the agreed release scope.
-
-Shared lessons, current membership, and retained dated attendance are separate concepts in these stories. The stories specify user goals; command selectors and the complete planned search-filter matrix are confirmed in the [shared-lesson target contract](#shared-lesson-target-contract) and [#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60). Implementation proceeds in working increments, and only the [active command routes](#current-increment-and-command-integration) are available today.
+The High-priority workflows are available through the [current commands](UserGuide.html#current-command-summary).
+Most Medium and Low stories remain future proposals. US-33 is partly delivered:
+[Tab completes command names](UserGuide.html#completing-command-names-with-tab), while argument/value completion,
+inline input guidance and spelling suggestions remain future work. Existing `help` guidance is covered by US-13.
+Combined goals such as name sorting plus level filtering (US-22) are not fully delivered merely because one part
+is available. Shared lessons, current membership and retained dated attendance remain separate concepts, as
+defined in the [shared-lesson contract](#shared-lesson-target-contract).
 
 | ID | Priority | As a … | I want to … | So that I can … |
 | --- | --- | --- | --- | --- |
@@ -2065,7 +2065,9 @@ playback on a physical device.
 
 Use the active catalogue in the tested build; these examples apply to canonical startup.
 
-1. In a fresh JAR folder, run `help`, then `help add`, `help edit`, `help addlesson`, `help editlesson`, `help enrol`, `help unenrol`, `help mark`,
+1. In a fresh JAR folder, run `help`. Expect one short description per supported command in catalogue order
+   and a `help COMMAND` instruction with an example, without repeated usage blocks.
+   Then run `help add`, `help edit`, `help addlesson`, `help editlesson`, `help enrol`, `help unenrol`, `help mark`,
    `help unmark`, `help history`, `help delete`, `help deletelesson`, `help list`, `help lessons`, `help showlesson`,
    `help search`, `help help` and
    `help exit`. Each topic matches its
@@ -2230,7 +2232,21 @@ testers are expected to do more *exploratory* testing.
 
 </div>
 
-### Unicode person-name checks (#383 first increment)
+### Command recall
+
+1. In a fresh window press Up: expect unchanged empty input. Submit `help`, then `list r/student`.
+   Type an unfinished draft and select part of it. Up recalls `list r/student`, then `help`; Down returns
+   through the commands and restores the exact draft and selection. Neither arrow executes or saves.
+2. Recall a command, edit it and verify Enter executes the edited text once. A failed submission remains
+   editable and is also recallable. With a restored `sho` draft, Tab must still complete `showlesson`.
+   Modified arrows retain text editing, and navigation keeps focus in the command box.
+3. Close and reopen: Up must not recall the previous window's submissions. `CommandBoxTest` covers
+   the 50-entry eviction boundary separately. Recheck displayed people positions before rerunning mutations.
+
+
+<a id="unicode-person-name-checks-383-first-increment"></a>
+
+### Unicode and slash contact checks
 
 In a disposable data folder, add `add r/tutor n/José Santos p/00123456`,
 `add r/student n/李明 l/P1 pp/91234567` and `add r/parent n/தமிழ் p/91234567`.
@@ -2247,7 +2263,13 @@ require `tp/` for lesson selection; an incorrect supplied phone must fail.
 allocation counters, existing ASCII data, lesson/roster/attendance stability and invalid-prefix regressions.
 `NameTest` checks normalized code-point limits, supplementary letters and unattached marks;
 `JsonPonHubDataStorageTest` checks human-edited Unicode and protected malformed/duplicate reloads.
-Search and slash grammar retain the limitations described in the contact-validation section above.
+For slash values, add `add r/student n/Ravi s/o Kumar l/P1 pp/91234567 a/Blk 10, #01/02` in a fresh
+working copy. Edit that Student to `n/Anita d/o Kumar a/Block A12/34B`, then restart and check the stable ID,
+normalized values and links. Create a Tutor named `Ravi s/o Kumar`; use `tu/Ravi s/o Kumar` in both
+`addlesson` and `editlesson`, retaining the normal `tp/` disambiguation rules. Reject `n/s/o`,
+`n/Ravi s/other Kumar`, `a/A/B`, `a/#01//02` and unknown/repeated prefixes without changing the snapshot.
+Search with `n/Anita a/A12`, rather than a full slash value. `CanonicalSlashContactIntegrationTest` covers
+these command/JSON, duplicate/no-op, relationship and unchanged-search boundaries.
 
 ### Launch and shutdown
 
@@ -2595,9 +2617,13 @@ unrecorded, then mark the second absent. Unenrol that Student and verify the dat
 former-member section while the current roster shrinks. Correct or remove the retained entry through active
 `mark` and `unmark` commands and verify immediate refresh; repeat after restart. Reject malformed IDs/dates, a Tuesday
 date for a Monday Lesson, and an unknown ID while preserving the prior detail and operational bytes. Inspect an
-empty roster and many retained records at narrow window widths and scroll to the last row. Keep a filtered people
-view selected throughout; the next person command must still resolve its original one-based position. Protected
-startup exposes no `showlesson` route.
+empty roster and many retained records at narrow window widths and scroll to the last row. Read-only detail
+retrieval preserves the current people results and positions, while membership changes re-evaluate relationship
+criteria. For example, with Alex and Jamie at positions 1 and 2 in
+`search c/student d/Mon s/Math`, unenrolling Alex from their only matching Lesson leaves Jamie at position 1.
+To correct or remove Alex's retained attendance when Alex no longer matches that search, run `list r/student`
+or search by Alex's own name again. Recheck the displayed list before the next person command; it must resolve
+the current position to the intended stable Student ID. Protected startup exposes no `showlesson` route.
 
 ### Active Student attendance history checks (#100)
 

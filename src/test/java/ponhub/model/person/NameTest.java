@@ -88,6 +88,24 @@ public class NameTest {
     }
 
     @Test
+    public void constructor_legalNameMarkers_requiresSeparateLetterBearingText() {
+        for (String name : new String[] {"Ravi s/o Kumar", "Anita d/o Kumar", "José s/o 李明",
+            "A s/o B d/o C", "  Ravi   s/o   Kumar  "}) {
+            assertTrue(Name.isValidName(name));
+            assertDoesNotThrow(() -> new Name(name));
+        }
+        assertEquals("Ravi s/o Kumar", new Name("  Ravi   s/o   Kumar  ").fullName);
+        for (String name : new String[] {"s/o", "d/o Kumar", "Ravi s/o", "Ravi s/o .", ". d/o Kumar",
+            "Ravi s/o d/o Kumar", "Ravi s/other Kumar", "Ravi S/o Kumar", "Ravi s/O Kumar",
+            "Ravis/o Kumar", "Ravi s/oKumar", "Ravi / Kumar", "A s/o \u0301B"}) {
+            assertFalse(Name.isValidName(name), name);
+            assertThrows(IllegalArgumentException.class, Name.MESSAGE_CONSTRAINTS, () -> new Name(name));
+        }
+        assertTrue(Name.isValidName("A".repeat(94) + " s/o B"));
+        assertFalse(Name.isValidName("A".repeat(95) + " s/o B"));
+    }
+
+    @Test
     public void equals() {
         Name name = new Name("Valid Name");
 

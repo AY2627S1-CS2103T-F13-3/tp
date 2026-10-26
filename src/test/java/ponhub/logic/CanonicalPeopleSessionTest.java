@@ -434,6 +434,8 @@ public class CanonicalPeopleSessionTest {
         CanonicalPeopleSession session = new CanonicalPeopleSession(directory.resolve("canonical.json"));
         String overview = session.execute("help").getFeedbackToUser();
 
+        assertFalse(overview.contains("Usage:"));
+        assertTrue(overview.contains("Type help COMMAND for syntax and an example, e.g. help list."));
         assertTrue(overview.contains("add"));
         assertTrue(overview.contains("addlesson"));
         assertTrue(overview.contains("enrol"));

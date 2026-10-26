@@ -37,6 +37,7 @@ public final class CanonicalCommandCatalog {
     public static final String MESSAGE_HELP_USAGE = "Usage: help [COMMAND]\n"
             + "Shows the commands available in this session, or syntax and an example for one command.\n"
             + "COMMAND is optional and case-insensitive. Supply at most one command word.\n"
+            + "Command box: Up/Down recall recent submissions without executing; Enter submits the draft.\n"
             + "Person cards: use Copy beside an available contact. Tab to Copy, then Space or Ctrl+C "
                     + "(Cmd+C on macOS).\n"
             + "Examples: help, help list";
@@ -159,10 +160,10 @@ public final class CanonicalCommandCatalog {
         StringBuilder overview = new StringBuilder("PonHub commands available in this build:\n");
         CanonicalCommandDefinition.forSession(loadError.isPresent()).forEach(definition ->
                 overview.append(definition.getWord()).append(" - ").append(definition.getDescription())
-                        .append('\n').append(definition.getUsage()).append("\n\n"));
+                        .append('\n'));
         overview.append("\nType help COMMAND for syntax and an example, e.g. help list.\n\n");
         loadError.ifPresent(error -> overview.append(error).append("\n\n"));
-        return overview.append("Scroll this Result Display to read long guidance.").toString();
+        return overview.append("Scroll the Result Display if needed.").toString();
     }
 
 }
