@@ -48,7 +48,7 @@ final class CreditsDialog extends Dialog<Void> {
         this.openProfile = openProfile;
         initOwner(owner);
         initModality(Modality.WINDOW_MODAL);
-        setTitle("PonHub — Meet the developers");
+        setTitle("HOT SINGLES IN YOUR AREA!!!!");
         setResizable(true);
         getDialogPane().getStyleClass().add("credits-dialog");
         getDialogPane().getStylesheets().add(CreditsDialog.class.getResource("/view/Credits.css").toExternalForm());
@@ -59,10 +59,15 @@ final class CreditsDialog extends Dialog<Void> {
         close.setWrapText(false);
         ButtonBar.setButtonUniformSize(close, false);
 
-        Label heading = new Label("Hot singles in your area");
+        Label ribbon = new Label("!!! 100% REAL DEVELOPERS !!!");
+        ribbon.getStyleClass().add("credits-ribbon");
+        ribbon.setAlignment(Pos.CENTER);
+        ribbon.setMaxWidth(Double.MAX_VALUE);
+        ribbon.setWrapText(true);
+        Label heading = new Label("HOT SINGLES IN YOUR AREA!!!!");
         heading.getStyleClass().add("credits-heading");
         heading.setWrapText(true);
-        Label subtitle = new Label("Single-threaded developers. Questionable sleep schedules.");
+        Label subtitle = new Label("Single-threaded. Ready to commit. Waiting for YOUR pull request.");
         subtitle.setWrapText(true);
         subtitle.getStyleClass().add("credits-subtitle");
         VBox team = new VBox(10,
@@ -77,8 +82,11 @@ final class CreditsDialog extends Dialog<Void> {
         roster.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         roster.setPrefViewportHeight(310);
         roster.getStyleClass().add("credits-roster");
-        VBox content = new VBox(12, heading, subtitle, roster);
-        content.setPrefWidth(500);
+        Label finePrint = new Label("NO CREDIT CARD. NO SUBSCRIPTION. JUST GITHUB.");
+        finePrint.getStyleClass().add("credits-fine-print");
+        finePrint.setWrapText(true);
+        VBox content = new VBox(12, ribbon, heading, subtitle, roster, finePrint);
+        content.setPrefWidth(560);
         confetti.setMouseTransparent(true);
         Rectangle clip = new Rectangle();
         clip.widthProperty().bind(confetti.widthProperty());

@@ -131,7 +131,7 @@ public class MainWindowTest {
                         .findFirst().orElseThrow().getScene().getRoot();
                 assertTrue(credits.getStyleClass().contains("credits-dialog"));
                 Label heading = (Label) credits.lookup(".credits-heading");
-                assertEquals("Hot singles in your area", heading.getText());
+                assertEquals("HOT SINGLES IN YOUR AREA!!!!", heading.getText());
                 assertEquals(5, credits.lookupAll(".credits-card").size());
                 Pane confetti = (Pane) credits.lookup(".credits-confetti");
                 assertTrue(confetti.isMouseTransparent());

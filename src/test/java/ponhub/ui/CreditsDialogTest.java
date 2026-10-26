@@ -27,6 +27,7 @@ public class CreditsDialogTest {
             CreditsDialog dialog = new CreditsDialog(owner, opened::add);
             try {
                 dialog.show();
+                assertEquals("HOT SINGLES IN YOUR AREA!!!!", dialog.getTitle());
                 var pane = dialog.getDialogPane();
                 pane.applyCss();
                 pane.layout();
