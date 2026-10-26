@@ -6,16 +6,21 @@ import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import ponhub.commons.core.GuiSettings;
+import ponhub.logic.LessonRetrieval.ResultKind;
 import ponhub.logic.Logic;
 import ponhub.logic.commands.CommandResult;
 import ponhub.logic.commands.exceptions.CommandException;
@@ -33,13 +38,20 @@ public class MainWindow extends UiPart<Stage> {
     private Stage primaryStage;
     private Logic logic;
     private Path dataFilePath;
+    private final LogoSoundPlayer logoSound;
 
     // Independent Ui parts residing in this Ui container
     private PersonRecordListPanel personListPanel;
     private ResultDisplay resultDisplay;
 
     @FXML
+    private HBox ponhubWordmark;
+
+    @FXML
     private Button lessonsButton;
+
+    @FXML
+    private Button studentLessonsButton;
 
     @FXML
     private Button attendanceButton;
@@ -67,7 +79,12 @@ public class MainWindow extends UiPart<Stage> {
      * and the data file path to show in the status bar.
      */
     public MainWindow(Stage primaryStage, Logic logic, Path dataFilePath) {
+        this(primaryStage, logic, dataFilePath, new LogoSoundPlayer());
+    }
+
+    MainWindow(Stage primaryStage, Logic logic, Path dataFilePath, LogoSoundPlayer logoSound) {
         super(FXML, primaryStage);
+        this.logoSound = logoSound;
 
         // Set dependencies
         this.primaryStage = primaryStage;
@@ -78,7 +95,23 @@ public class MainWindow extends UiPart<Stage> {
         setWindowDefaultSize(logic.getGuiSettings());
 
         setAccelerators();
+        configureLogoSound();
 
+    }
+
+    /**
+     * Makes the existing wordmark clickable without focusing or changing the command field.
+     */
+    private void configureLogoSound() {
+        ponhubWordmark.setMouseTransparent(false);
+        ponhubWordmark.setCursor(Cursor.HAND);
+        ponhubWordmark.setOnMouseClicked(event -> {
+            if (event.getButton() == MouseButton.PRIMARY) {
+                logoSound.play();
+                event.consume();
+            }
+        });
+        primaryStage.addEventHandler(WindowEvent.WINDOW_HIDDEN, event -> logoSound.close());
     }
 
     public Stage getPrimaryStage() {
@@ -140,6 +173,7 @@ public class MainWindow extends UiPart<Stage> {
         historyRoot.managedProperty().bind(historyRoot.visibleProperty());
         lessonListPanelPlaceholder.getChildren().addAll(lessonRoot, historyRoot);
         logic.historyViewActiveProperty().addListener((observable, previous, current) -> updateNavigation());
+        logic.lessonResultKindProperty().addListener((observable, previous, current) -> updateNavigation());
         updateNavigation();
 
         resultDisplay = new ResultDisplay();
@@ -155,8 +189,10 @@ public class MainWindow extends UiPart<Stage> {
 
     private void updateNavigation() {
         boolean isHistoryActive = logic.historyViewActiveProperty().get();
+        ResultKind visibleLessonKind = isHistoryActive ? null : logic.lessonResultKindProperty().get();
         PseudoClass active = PseudoClass.getPseudoClass("active");
-        lessonsButton.pseudoClassStateChanged(active, !isHistoryActive);
+        lessonsButton.pseudoClassStateChanged(active, visibleLessonKind == ResultKind.ALL_LESSONS);
+        studentLessonsButton.pseudoClassStateChanged(active, visibleLessonKind == ResultKind.STUDENT_LESSONS);
         attendanceButton.pseudoClassStateChanged(active, isHistoryActive);
     }
 
@@ -167,7 +203,7 @@ public class MainWindow extends UiPart<Stage> {
 
     @FXML
     private void handleStudentLessons() {
-        executeStudentViewingCommand("lessons si/");
+        executeStudentViewingCommand("lessons ");
     }
 
     @FXML
@@ -186,7 +222,7 @@ public class MainWindow extends UiPart<Stage> {
             if (selectedId.filter(person.getId()::equals).isPresent()) {
                 if (person.getId().getRole() != PersonRole.STUDENT) {
                     resultDisplay.setFeedbackToUser("Select a Student card for this view, or enter "
-                            + "lessons si/STUDENT_INDEX or history STUDENT_INDEX.");
+                            + "lessons STUDENT_INDEX or history STUDENT_INDEX.");
                     return;
                 }
                 executeViewingCommand(commandPrefix + (index + 1));
@@ -194,7 +230,7 @@ public class MainWindow extends UiPart<Stage> {
             }
         }
         resultDisplay.setFeedbackToUser("No current Student card is selected. Select a Student card, or enter "
-                + "lessons si/STUDENT_INDEX or history STUDENT_INDEX using the current people list.");
+                + "lessons STUDENT_INDEX or history STUDENT_INDEX using the current people list.");
     }
 
     /**

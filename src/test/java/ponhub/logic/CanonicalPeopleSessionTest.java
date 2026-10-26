@@ -52,6 +52,35 @@ public class CanonicalPeopleSessionTest {
     Path directory;
 
     @Test
+    public void execute_secondWindowCannotOverwrite_preservesLiveStateAndRestartsWithWinner() throws Exception {
+        Path path = directory.resolve("concurrent-test.json");
+        CanonicalPeopleSession first = new CanonicalPeopleSession(path);
+        CanonicalPeopleSession second = new CanonicalPeopleSession(path);
+        PonHubDataState before = second.getDataSnapshot();
+        var displayed = second.getPeople();
+        first.execute("add r/student n/Alex Tan l/S2 pp/91234567");
+        byte[] saved = Files.readAllBytes(path);
+
+        CommandException failure = assertThrows(CommandException.class, () -> second.execute(
+                "add r/student n/Jamie Tan l/P1 pp/91234568"));
+        assertTrue(failure.getMessage().contains("restart"));
+        assertSame(before, second.getDataSnapshot());
+        assertSame(displayed, second.getPeople());
+        assertTrue(displayed.isEmpty());
+        assertArrayEquals(saved, Files.readAllBytes(path));
+        assertFalse(second.execute("list").isExit());
+        assertFalse(second.execute("help").isExit());
+        assertTrue(second.execute("exit").isExit());
+        assertArrayEquals(saved, Files.readAllBytes(path));
+
+        CanonicalPeopleSession restarted = new CanonicalPeopleSession(path);
+        assertEquals(first.getDataSnapshot(), restarted.getDataSnapshot());
+        assertEquals("New student added: Jamie Tan (S2).", restarted.execute(
+                "add r/student n/Jamie Tan l/P1 pp/91234568").getFeedbackToUser());
+        assertEquals(2, new CanonicalPeopleSession(path).getPeople().size());
+    }
+
+    @Test
     public void execute_unicodeFieldBoundaries_preservesCommandFeedbackAndPersistence() throws Exception {
         Path path = directory.resolve("unicode-boundaries.json");
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
@@ -405,6 +434,8 @@ public class CanonicalPeopleSessionTest {
         CanonicalPeopleSession session = new CanonicalPeopleSession(directory.resolve("canonical.json"));
         String overview = session.execute("help").getFeedbackToUser();
 
+        assertFalse(overview.contains("Usage:"));
+        assertTrue(overview.contains("Type help COMMAND for syntax and an example, e.g. help list."));
         assertTrue(overview.contains("add"));
         assertTrue(overview.contains("addlesson"));
         assertTrue(overview.contains("enrol"));

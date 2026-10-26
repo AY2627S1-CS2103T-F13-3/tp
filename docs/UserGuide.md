@@ -4,18 +4,19 @@ title: User Guide
 ---
 
 PonHub is a desktop app for tuition centre administrators to manage student, tutor and parent records and create
-shared recurring lessons. Its command box lets you work quickly from the keyboard while the graphical interface
-shows separate people and shared-lesson results. Shared-lesson enrolment, dated attendance marking and guarded
-person/lesson deletion, dated attendance removal and attendance history are active.
+shared recurring lessons and track attendance. Its command box lets you work quickly from the keyboard while
+the graphical interface shows separate people and shared-lesson results.
 
 The people list is on the left, with Lesson or attendance results on the right. Enter commands in the
 full-width box below both lists and press Enter. The shared feedback/help area above the lists remains
 resizable; drag its divider to adjust reading space, and scroll either list independently.
-The optional **Lessons**, **Student lessons** and **Attendance** buttons above the results provide shortcuts
-to the same commands; see [moving between results](#moving-between-results).
+The optional **All lessons**, **Student lessons** and **Attendance history** buttons above the results provide
+shortcuts to the same commands; see [moving between results](#moving-between-results).
 
 The [Lesson board example](#listing-and-searching-shared-lessons) shows a filtered people list beside
-independent Lesson results.
+independent Lesson results. View the [application overview](images/Ui.png) for the full layout.
+Screenshots show the current development build, including changes after public v1.4;
+[the capture record](images/README.html) identifies the package and fictitious fixture.
 
 * Table of Contents
 {:toc}
@@ -78,14 +79,14 @@ for the commands available in that downloaded JAR.
    * `add r/student n/Jamie Tan l/P1 pp/91234567` adds a second student.
    * `list r/student` shows Alex at position 1 and Jamie at position 2 in this fresh dataset.
    * `enrol 1 lid/L1`, then `enrol 2 lid/L1`, enrols both students in the same lesson.
-   * `lessons` shows lesson `L1` once with a roster size of 2; `lessons si/1` shows Alex's current lessons.
+   * `lessons` shows lesson `L1` once with a roster size of 2; `lessons 1` shows Alex's current lessons.
    * `mark 1 lid/L1 d/2026-10-05 s/present`, then `mark 2 lid/L1 d/2026-10-05 s/absent`,
      records independent attendance for the same Monday occurrence.
      `showlesson lid/L1 d/2026-10-05` displays Alex as present and Jamie as absent.
    * `mark 1 lid/L1 d/2026-10-05 s/absent` corrects only Alex's record.
      Run `showlesson lid/L1 d/2026-10-05` again to see both students recorded as absent.
    * `unenrol 1 lid/L1` removes Alex's membership while keeping both attendance records.
-     `lessons si/1` now shows no current lessons; `lessons` still shows `L1` with Jamie enrolled.
+     `lessons 1` now shows no current lessons; `lessons` still shows `L1` with Jamie enrolled.
    * `history 1 lid/L1` shows Alex's retained absence with former-member context after unenrolment.
    * `unmark 1 lid/L1 d/2026-10-05` removes Alex's retained record after unenrolment, keeping Jamie's record and membership.
      Repeating it reports no change.
@@ -116,15 +117,24 @@ unmatched prefixes and arguments. **Shift+Tab** always moves focus backwards; us
 while a command name matches. Tab does not run a command; press **Enter** to submit the completed draft.
 Arguments and values are not completed.
 
+### Recalling submitted commands with Up and Down
+
+With focus in the command box, press **Up** for an older submitted command and **Down** for a newer one.
+Recall does not execute a command; edit it if needed and press **Enter** to submit it. Down past the newest
+entry restores your unfinished draft, including its caret and selection. Typing or using Tab completion on
+a recalled command makes the edited text your new draft. Shift/Ctrl/Alt/Command with an arrow keeps its
+normal editing behavior.
+
+The last 50 nonblank submissions, including unsuccessful commands, are kept only for the current window
+session and are cleared when it closes. Check current people positions and Lesson IDs before reusing an
+old command: its original target may have moved or been removed. This recall is separate from the
+attendance `history` command.
+
 ## Current command summary
 
-The active routes use one saved aggregate with role-specific people, stable IDs and shared lessons whose rosters
-can be changed with `enrol` and `unenrol`. Own-contact people search, attendance marking, guarded person and Lesson
-deletion, lesson listing, lesson search, lesson details, attendance removal and attendance history are active,
-alongside Student, Parent and Tutor relationship search. Use this single summary to find a command's syntax and example; the linked action names lead to its details.
+Use this summary to find a command's syntax and example; the linked action names lead to its details.
 The [shared conventions](#reading-the-command-formats) explain the notation and selectors. Type `help` for your
-session's catalogue. A protected session permits only `help`, `list` and `exit`. Person and Lesson editing are active;
-`clear` and `find` are unavailable.
+session's catalogue. A protected session permits only `help`, `list` and `exit`; `clear` and `find` are unavailable.
 
 | Action | Format | Example |
 | --- | --- | --- |
@@ -137,11 +147,11 @@ session's catalogue. A protected session permits only `help`, `list` and `exit`.
 | [Unenrol student](#5-enrolling-and-unenrolling-students) | `unenrol STUDENT_INDEX lid/LESSON_ID` | `unenrol 1 lid/L1` |
 | [Mark attendance](#7-recording-attendance-and-retrieving-history) | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent</code> | `mark 1 lid/L1 d/2026-10-05 s/present` |
 | [Unmark attendance](#7-recording-attendance-and-retrieving-history) | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` | `unmark 1 lid/L1 d/2026-10-05` |
-| [Delete person](#3-deleting-a-person-delete) | `delete INDEX` | `delete 1` |
+| [Delete person](#3-deleting-a-person-delete) | `delete INDEX`, then `delete confirm` or `delete cancel` | `delete 1`, then `delete confirm` |
 | [Delete shared lesson](#4-creating-shared-lessons-and-other-lesson-operations) | `deletelesson lid/LESSON_ID` | `deletelesson lid/L1` |
 | [List people](#2-listing-people-list) | `list [r/ROLE]` | `list r/student` |
 | [Search people](#searching-people-search) | `search c/CATEGORY [FILTER/VALUE]...` | `search c/student n/Alex d/Mon s/Math` |
-| [List shared lessons](#listing-and-searching-shared-lessons) | `lessons [si/STUDENT_INDEX]` | `lessons` |
+| [List shared lessons](#listing-and-searching-shared-lessons) | `lessons [STUDENT_INDEX]` | `lessons` |
 | [Attendance history](#7-recording-attendance-and-retrieving-history) | `history STUDENT_INDEX [lid/LESSON_ID]` | `history 1 lid/L1` |
 | [Show lesson details](#listing-and-searching-shared-lessons) | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` | `showlesson lid/L1 d/2026-10-05` |
 | [Search shared lessons](#listing-and-searching-shared-lessons) | `search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]` | `search c/lesson tu/mei d/Mon` |
@@ -156,7 +166,9 @@ Addition allocates the ID; do not supply it as an add argument. Role values igno
 
 **Format:** `help [COMMAND]`
 
-`help` shows the current supported-command catalogue in Result Display. In a normal session, `help add`,
+`help` shows a concise catalogue in Result Display, with one short description per supported command.
+Use `help COMMAND`, for example `help list`, for that command's full syntax, rules and examples.
+In a normal session, `help add`,
 `help edit`, `help addlesson`, `help editlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark`, `help delete`, `help deletelesson`,
 `help list`, `help lessons`, `help showlesson`, `help history`, `help search`, `help help` and `help exit` show usage guidance.
 Topic names are case-insensitive, so `help ADD` is
@@ -182,7 +194,8 @@ Long guidance wraps within Result Display. Scroll vertically to read the rest; e
   and `help search`
   are unavailable.
 
-### 1. Adding a person: `add`
+### Adding a person: `add`
+{: id="1-adding-a-person-add"}
 
 Creates a student, tutor or parent record.
 
@@ -197,12 +210,23 @@ Creates a student, tutor or parent record.
 | Parameter | Description and accepted values |
 |-----------|---------------------------------|
 | `r/ROLE` | Required. Use `student`, `tutor` or `parent`. Values are case-insensitive. |
-| `n/NAME` | Required. Between 1 and 100 characters using English letters (`A`–`Z`, `a`–`z`), spaces, apostrophes, hyphens or periods, with at least one letter. Surrounding spaces are removed and repeated spaces are reduced to one before measuring length. Letter case is preserved. Tabs and line breaks are not allowed. |
+| `n/NAME` | Required. Between 1 and 100 Unicode code points after normalization. Use letters, attached combining marks, ordinary spaces, apostrophes (`'` or `’`), hyphens or periods, with at least one letter. See the name rules below. |
 | `l/LEVEL` | Required for students; not allowed for tutors or parents. Use `P1`–`P6`, `S1`–`S5`, `JC1` or `JC2`. Values are case-insensitive and displayed in uppercase. |
 | `pp/PARENT_PHONE` | Required for students; not allowed for tutors or parents. Use 3–15 digits without spaces or punctuation. |
 | `p/PHONE` | Required for tutors and parents; optional for students. Use 3–15 digits without spaces or punctuation. Leading zeros are retained. |
 | `e/EMAIL` | Optional. Use an email address such as `mei@example.com`, with no spaces and at most 254 characters. |
-| `a/ADDRESS` | Optional. Between 1 and 200 printable ASCII characters. Slashes, tabs and line breaks are not allowed. Surrounding spaces are removed and repeated spaces are reduced to one before measuring length. |
+| `a/ADDRESS` | Optional. Between 1 and 200 printable ASCII characters. A slash is allowed only with a digit immediately on each side, as in `#01/02`. Tabs and line breaks are rejected. Surrounding Unicode spaces are removed and repeated ordinary spaces collapse before measuring length. |
+
+For names, surrounding Unicode spaces are removed, repeated ordinary spaces collapse, and canonically
+equivalent spellings are stored in NFC form. Letter case is preserved. Standalone lowercase `s/o` and `d/o`
+are accepted between letter-bearing name text, as in `Ravi s/o Kumar` and `Anita d/o Kumar`.
+Other slashes, digits, emoji, controls, invisible format characters and internal non-ASCII spaces are rejected.
+Addresses accept `Blk 10, #01/02`, `Blk 12/34` and `Block A12/34B`; `A/B`, `/` and `#01//02` are rejected.
+These literals apply to `n/` and `a/` in add/edit, and to Tutor `tu/` in lesson creation/editing.
+Unknown, uppercase and repeated prefixes still cause errors; general quoting or escaping is unavailable.
+
+For example, `add r/student n/Ravi s/o Kumar l/P1 pp/91234567 a/Blk 10, #01/02` stores both values.
+The same name and address rules apply when editing a person and when loading saved data.
 
 For email addresses, the local part before `@` may contain English letters, digits, periods, underscores, `%`, `+` and `-`. It must not begin or end with a period or contain consecutive periods. Domain labels may contain English letters, digits and hyphens. The domain must contain at least two dot-separated labels, with no leading or trailing hyphens in a label. Its final label must contain 2–63 English letters. Email spelling and letter case are preserved.
 
@@ -218,6 +242,9 @@ For email addresses, the local part before `@` may contain English letters, digi
   Adds Mei Lim as a tutor with a phone number and email address.
 * `add r/parent n/Pat Tan p/91234567`<br>
   Adds Pat Tan as a parent.
+* `add r/student n/José Santos l/P1 pp/91234567`<br>
+  Accented names, `李明`, `தமிழ்` and `Anne-Marie O’Neill` are also accepted. A combining mark must
+  follow a letter or another attached mark; names cannot begin with a combining mark.
 
 #### Expected result
 
@@ -230,7 +257,9 @@ The person list resets to show all roles, with the new record at the end. Rechec
 
 * A separate parent record is optional. You can add a student using their parent's phone number before creating a parent record.
 * A duplicate has the same role, normalized name and contact number. For students, the contact number used for this check is `pp/`; for tutors and parents, it is `p/`.
-* Duplicate name comparisons ignore letter case and repeated spaces.
+* Duplicate name comparisons ignore letter case, repeated spaces and canonical Unicode spelling differences
+  (for example, `é` typed as one code point or as `e` plus an accent). Accents remain significant:
+  `José` and `Jose` are different names.
 * Siblings with different names may share the same parent phone number.
 * Changing an optional email, address or student phone number does not make an otherwise duplicate record unique.
 
@@ -241,7 +270,8 @@ Validation and duplicate failures do not write. A save failure preserves the cur
 counters, role filter and selected card; follow the [unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build)
 for the stored file. Success is reported only after saving; a failed addition consumes no ID.
 
-### 2. Listing people: `list`
+### Listing people: `list`
+{: id="2-listing-people-list"}
 
 Displays all people or only people with a specified role, including each current command index and separately labelled stable ID.
 
@@ -270,6 +300,18 @@ Example feedback:
 
 An empty result is valid. PonHub reports a count of zero and the people panel shows `No persons to display.`
 
+#### Copying contact values
+
+Click **Copy** beside an available phone, email or address to put the full value on your system clipboard,
+without its caption. For example, **Copy** beside Alex's parent phone copies `91234567`.
+Phone numbers retain their displayed leading zeros. Missing values marked `Not provided` have no Copy button.
+
+For keyboard access, use Tab or Shift+Tab to focus the desired **Copy** button, then press Space or
+Ctrl+C (Cmd+C on macOS). The button's accessible name identifies the contact and person.
+Copying leaves records, the people filter/order, selected card and unfinished command text unchanged.
+Mouse copying also keeps command focus, cursor and text selection. It replaces the clipboard's previous
+contents. Ctrl+C or Cmd+C in the command box or feedback area continues to copy that area's selected text.
+
 <a id="people-positions-and-stable-ids"></a>
 
 #### Example: positions change, IDs stay fixed
@@ -282,10 +324,12 @@ In a fresh, empty dataset, run these commands in order. The result column abbrev
 | `add r/student n/Alex Tan l/S2 pp/91234567` | **1:** Mei Lim (`T1`); **2:** Alex Tan (`S1`) |
 | `add r/student n/Jamie Tan l/S2 pp/91234567` | **1:** Mei Lim (`T1`); **2:** Alex Tan (`S1`); **3:** Jamie Tan (`S2`) |
 | `list r/student` | **1:** Alex Tan (`S1`); **2:** Jamie Tan (`S2`) |
-| `delete 1` | **1:** Jamie Tan (`S2`) |
+| `delete 1` | **1:** Alex Tan (`S1`); **2:** Jamie Tan (`S2`); asks for confirmation |
+| `delete confirm` | **1:** Jamie Tan (`S2`) |
 | `add r/student n/Robin Tan l/S2 pp/91234567` | **1:** Mei Lim (`T1`); **2:** Jamie Tan (`S2`); **3:** Robin Tan (`S3`) |
 
-`delete 1` removes Alex, who has no lesson or attendance references in this example. Jamie keeps `S2` throughout;
+`delete 1` previews Alex, who has no lesson or attendance references in this example; `delete confirm` removes him.
+Jamie keeps `S2` throughout;
 Robin receives `S3` because deleted IDs are never reused. Addition shows all roles again, so Jamie moves to
 position 2. Check the current people cards before the next person command. With existing data, use your actual
 positions and IDs rather than this example's numbers.
@@ -322,7 +366,7 @@ use `n/` for the Tutor's own name in this category.
 
 **Formats:**
 
-* `lessons [si/STUDENT_INDEX]`
+* `lessons [STUDENT_INDEX]`
 * `search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]`
 
 The right-hand lesson panel initially shows the full catalogue. `lessons` restores it after a lesson search or
@@ -333,21 +377,23 @@ The lesson heading identifies the selected Student ID or active filters even aft
 the feedback. Scroll either panel independently; drag the divider to give long values more room. Labels wrap within their cards.
 
 To show one student's current lessons, find their position in the **current people panel**, then enter
-`lessons si/POSITION`. For example, after `list r/student`, use `lessons si/1` only if the intended student is
-at position 1. This selects the visible person once. A stable ID such as `S1`, a lesson ID, zero, negative or
-out-of-range position, repeated `si/`, or a position occupied by a tutor/parent is rejected. Changing the people
-filter later does not change which student's lessons are being shown. Attendance retained after unenrolment
-does not make a lesson part of that student's current enrolments; use `history` to inspect retained records.
+`lessons POSITION`. For example, after `list r/student`, use `lessons 1` only if the intended Student is at
+position 1. The older `lessons si/POSITION` form remains accepted for compatibility. Either form selects the
+visible person once. A stable ID such as `S1`, a lesson ID, zero, negative or out-of-range position, a repeated
+or combined selector, or a position occupied by a Tutor/Parent is rejected. Changing the people filter later
+does not change which Student's lessons are being shown. Attendance retained after unenrolment does not make a
+lesson part of that Student's current enrolments; use `history` to inspect retained records.
 
 For Lesson search, use `search c/lesson` with the filters in the
 [search matrix](#6-searching-people-and-shared-lessons). A search starts from the complete catalogue rather
 than narrowing the previously displayed results. `lessons` reports `Showing N lesson(s).`; Lesson search
 reports `Found N lesson(s).`. An empty result is valid and shows `No lessons to display.`.
 
-![PonHub Lesson board with optional navigation and separate people and Lesson results](images/LessonBoardNavigation.png)
+![Development preview: Alex selected, Student lessons active and Student S1 current lessons shown](images/LessonBoardNavigation.png)
 
-This Lesson board example uses fictitious records to show a filtered Student list beside the full
-Lesson catalogue. Its records are separate from the [worked search example](#worked-search-example) below.
+This development-build example shows Alex selected in a filtered Student list, with **Student lessons**
+active and the right heading identifying Student S1's current lessons. Math L1 has two enrolled Students.
+Its fictitious records are separate from the [worked search example](#worked-search-example) below.
 The heading above each panel identifies its active results. Drag the divider to adjust their widths;
 long values wrap, and either list scrolls independently. The command box remains below both lists.
 
@@ -361,7 +407,7 @@ both panels as needed; invalid requests and failed saves leave the previous resu
 Hover over a Lesson or attendance heading or its result count to read its complete current text in a
 wrapping tooltip. This also works after `help` replaces the command feedback.
 
-Enter `lessons`, `lessons si/STUDENT_INDEX`, `history STUDENT_INDEX`, `showlesson lid/LESSON_ID` or a `search`
+Enter `lessons`, `lessons STUDENT_INDEX`, `history STUDENT_INDEX`, `showlesson lid/LESSON_ID` or a `search`
 command from any current result. Successful commands display their results automatically. Typed commands use
 their supplied selectors and filters, regardless of which people card is selected; no preliminary button click
 is needed. Check the current people-list position before supplying a Student index.
@@ -370,15 +416,26 @@ If you prefer a shortcut, use the buttons above the results:
 
 | Button | Equivalent command | Selection needed |
 | --- | --- | --- |
-| **Lessons** | `lessons` | None |
-| **Student lessons** | `lessons si/STUDENT_INDEX` | A Student card in the current people list |
-| **Attendance** | `history STUDENT_INDEX` | A Student card in the current people list |
+| **All lessons** | `lessons` | None |
+| **Student lessons** | `lessons STUDENT_INDEX` | A Student card in the current people list |
+| **Attendance history** | `history STUDENT_INDEX` | A Student card in the current people list |
 
-The Student shortcuts use the selected card's current displayed position. Select a Student again if filtering
-or a data change removes that selection. With no current Student selected, including a selected Tutor or Parent,
+The guidance below the buttons explains card selection: select a Student card to choose the target of
+**Student lessons** or **Attendance history**. Selecting a card does not replace either panel's results. The Student
+shortcuts use that card's current displayed position. Select a Student again if filtering or a data change
+removes that selection. With no current Student selected, including a selected Tutor or Parent,
 the buttons explain what to select and keep the previous results. Clicking a shortcut preserves any unfinished
-command text. The shortcuts follow the same validation and protected-session restrictions as typed commands.
-For dated Lesson details, Lesson-specific history or search filters, enter the full command directly.
+command text, cursor and text selection. The shortcuts follow the same validation and protected-session
+restrictions as typed commands. For dated Lesson details, Lesson-specific history or search filters, enter
+the full command directly.
+
+An orange button identifies the displayed result: **All lessons** for the complete catalogue, **Student
+lessons** for one Student's current lessons, or **Attendance history** for recorded attendance, including empty
+results. Lesson search and Lesson details leave all three buttons inactive. The indicator follows typed
+commands too. Selecting another card, changing the people filter or opening help keeps the current result
+and indicator; the heading still identifies the Student or query being displayed. Invalid commands and failed
+saves also retain them. If deleting the target of active history clears it, the retained Lesson result returns
+with its corresponding indicator.
 
 ## Data protection in the current build
 
@@ -440,6 +497,11 @@ Only students accept `l/` and `pp/`. Blank `e/` or `a/` clears that optional val
 student's own phone. Names, student levels/parent phones and tutor/parent phones cannot be cleared.
 Role/ID changes, repeated or unknown prefixes, invalid values and duplicates of another person are rejected.
 
+A duplicate error identifies the fields to correct: students use the normalized name and parent phone
+(`pp/`); tutors and parents use the normalized name and own phone (`p/`). Change `n/` or that identifying
+phone to a unique combination. A student's different level or own phone does not resolve a duplicate.
+The rejected edit leaves the existing records unchanged and stays in the command box for correction.
+
 For example, after the quick-start data, `list r/student` then `edit 1 l/P2 e/` updates Alex's level and
 clears their email. `edit 1 n/Alex  Tan` reports no change after space normalization and does not save;
 `edit 1 n/ALEX TAN` saves the corrected display capitalization. Successful changes survive restart.
@@ -464,15 +526,18 @@ unchanged, so either time endpoint can be edited by itself when the complete res
 before its end. Values follow the same day, time, subject, Tutor and room rules as `addlesson`. Use `tp/` only
 together with `tu/`; the optional phone selects one exact Tutor when normalized full names are shared.
 
-For example, `editlesson lid/L1 st/1630 s/Advanced Math` keeps `L1`'s weekday, end time, Tutor, room and roster.
+For example, `editlesson lid/L1 st/1630 s/A-Math` keeps `L1`'s weekday, end time, Tutor, room and roster.
 An identical edit reports `No changes to lesson: L1.` and does not save. A successful change updates current
 lesson cards, searches and selected details, and survives restart without changing IDs or allocation counters.
 
 The complete replacement is checked against every other Lesson. Tutor, room and enrolled-Student overlaps are
 rejected; the Lesson being edited is not treated as its own conflict, and adjacent slots remain valid. A weekday
 change is rejected while any current or former Student has retained attendance on an incompatible date. PonHub
-does not move or delete that history automatically: use `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` for each
-identified record only if removal is intended, then retry. If a selected dated detail has no attendance but its
+does not move or delete that history automatically. Use `showlesson lid/LESSON_ID d/YYYY-MM-DD` with the Lesson
+and date from the rejection to identify the retained records, including former members. Run `list r/student`
+and match the intended Student's name/stable ID to their current position. Use
+`unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` only if removal is intended, then retry the edit. Recheck positions
+before each indexed command. If a selected dated detail has no attendance but its
 date no longer matches an allowed weekday change, PonHub keeps the Lesson selected and clears that obsolete date.
 
 Unknown, repeated, blank or missing fields, a missing Lesson, Tutor lookup failures, malformed resulting slots and
@@ -481,27 +546,39 @@ schedule clashes are rejected without writing. A save failure preserves the live
 sessions reject the command before parsing and omit `help editlesson`.
 <!-- @@author -->
 
-### 3. Deleting a person: `delete`
+### Deleting a person: `delete`
+{: id="3-deleting-a-person-delete"}
 
-**Active.** Removes one unreferenced person selected by their current displayed index in the people list.
+**Active.** Permanently removes one unreferenced person after you check and confirm their name and stable ID.
 
 #### Format
 
-`delete INDEX`
+`delete INDEX`, followed by `delete confirm` to proceed or `delete cancel` to keep the person.
 
 #### Example
 
 1. `list r/parent`
 2. Check the intended parent's current position. If Pat Tan is at position 1 in this result, enter `delete 1`.
+3. Check the name and stable ID in the prompt. Enter `delete confirm` only if they identify the intended person.
+   Enter `delete cancel` to leave the record and current view unchanged.
 
 For a complete add/filter/delete sequence, follow the [people-position example](#people-positions-and-stable-ids).
 
 #### Expected result
 
-PonHub displays a confirmation such as:
+The first command leaves data and views unchanged and displays:
+
+```text
+Delete parent: Pat Tan (P1)? This permanently removes the record.
+Enter delete confirm to proceed or delete cancel to keep it.
+Any other command cancels this request.
+```
+
+After `delete confirm`, PonHub saves the deletion and reports:
 `Deleted parent: Pat Tan (P1).`
 
 The current filter is preserved. Remaining people keep their IDs and their displayed positions are renumbered.
+Cancellation reports `Person deletion cancelled. No records were changed.` and does not save.
 
 #### Restrictions
 
@@ -509,6 +586,10 @@ The current filter is preserved. Remaining people keep their IDs and their displ
 * Only one person can be deleted per command.
 * Student deletion is blocked while enrolled or referenced by attendance. Tutor deletion is blocked while any lesson references the tutor, including a lesson with an empty roster. Linked records are not deleted automatically; removing a student never removes a shared lesson.
 * Deleting a separate parent record does not erase the parent phone number stored on a student's record.
+* Confirmation applies only to the most recent preview. Any other command, including `help`, `list`, a search or
+  rejected input, cancels it. A new `delete INDEX` replaces it. Closing or restarting also discards it.
+* `delete confirm` and `delete cancel` take no extra arguments. Without a pending preview, confirmation is rejected;
+  cancellation simply reports that no person deletion is awaiting confirmation.
 
 If dependencies prevent deletion, feedback identifies the Student or Tutor and the blocking Lesson ID. Retained
 attendance also identifies its date, for example:
@@ -522,18 +603,26 @@ Successful deletion preserves the role or own-contact search filter and renumber
 stable IDs, lesson/attendance records and Student parent-phone values are unchanged. Deleted IDs are never reused,
 including after restart. Invalid selectors and blocked deletions do not write. Failed saves preserve the live state
 and current view; follow the [unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build)
-for the stored file.
+for the stored file. After a save failure, run `delete INDEX` again, recheck the target and enter `delete confirm`.
 If the lesson panel shows the deleted student's current lessons, it stays empty and identifies that same Student ID
 until you run another `lessons` or lesson-search command. Deletion never switches it to a different student.
 Check the updated people list before deleting another person.
 
-### 4. Creating shared lessons and other lesson operations
+### Creating shared lessons and other lesson operations
+{: id="4-creating-shared-lessons-and-other-lesson-operations"}
 
 **Create (active):** `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
 
-Example: `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1`.
+Example: `addlesson d/Mon st/1600 et/1730 s/A-Math tu/Mei Lim rm/R1`.
 
-The tutor must already exist. `tu/` matches the tutor's complete name, ignoring letter case and repeated spaces. If several tutors share that name, supply their exact phone number, for example `tu/Mei Lim tp/92345678`. An ambiguous name without `tp/` is rejected. A supplied phone must match the named tutor exactly, even when the name is unique; an unmatched name or phone is rejected.
+A subject contains 1 to 50 Unicode letters or digits, with single spaces or hyphens between non-empty parts.
+For example, `Math`, `Primary 5 Math` and `A-Math` are accepted; leading, trailing or repeated hyphens are rejected.
+
+The tutor must already exist. `tu/` uses the same name rules as `n/` and matches the complete name,
+ignoring letter case, repeated spaces and canonical Unicode spelling differences. Accents remain significant.
+If several tutors share that name, supply their exact phone number, for example `tu/Mei Lim tp/92345678`.
+An ambiguous name without `tp/` is rejected. A supplied phone must match the named tutor exactly,
+even when the name is unique; an unmatched name or phone is rejected.
 
 Use `Mon` through `Sun` and four-digit 24-hour HHMM times. Start must be earlier than end on the same day. A successful addition returns a stable lesson ID, such as `L1`, with an empty roster. Creation does not select or enrol a student. Tutor and room bookings must not overlap another lesson on that weekday; adjacent intervals are allowed. Adding more students to this lesson does not book the tutor or room again.
 
@@ -578,7 +667,8 @@ Deleting the selected unreferenced Lesson clears its detail and identifies the u
 the displayed detail unchanged. `lessons` or lesson search restores the catalogue
 view. `showlesson` preserves the current people filter, selection and command positions and does not save data.
 
-### 5. Enrolling and unenrolling students
+### Enrolling and unenrolling students
+{: id="5-enrolling-and-unenrolling-students"}
 
 Both commands are active.
 
@@ -597,13 +687,18 @@ reports both stable IDs, for example `Student S3 enrolled in lesson L1.`
 Run `list r/student` and recheck the student's position. If the intended student appears at position 1, enter `unenrol 1 lid/L1` for lesson `L1`.
 
 This removes current membership and retains dated attendance. It does not delete the lesson or Student. A Student
-who is not currently in that roster is rejected without change. Both commands preserve the current people filter,
-order and positions, and refresh derived roster/student-lesson results. Invalid input, validation failure and save
+who is not currently in that roster is rejected without change. Both commands retain the active people filter
+and the relative order of surviving matches, and refresh derived roster/student-lesson results. Membership changes
+re-evaluate relationship searches, so matching people and displayed positions can change. Recheck the people list
+before the next indexed command. For example, if Alex and Jamie match `search c/student d/Mon s/Math` at positions
+1 and 2, unenrolling Alex from their only matching Lesson removes Alex from the results; Jamie then occupies
+position 1. Invalid input, validation failure and save
 failure leave the live aggregate and active views unchanged. Invalid input and validation failure do not write; after
 a save failure, follow the [unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build) for
 the stored file.
 
-### 6. Searching people and shared lessons
+### Searching people and shared lessons
+{: id="6-searching-people-and-shared-lessons"}
 
 **Format:** `search c/CATEGORY [FILTER_PREFIX/VALUE]...`
 
@@ -632,6 +727,10 @@ Name, email, address, associated Student name, subject, Tutor name and room matc
 fragments. Text queries trim surrounding whitespace and collapse repeated spaces. For example, `n/al` can
 match Sally Tan and `e/@example` can match `mei@example.com`. `tu/mei` searches Tutor names, not IDs;
 use `n/mei` for the Tutor's own name when the result category is `tutor`.
+
+Search does not normalize canonical Unicode spelling differences. Copy the displayed spelling or use a
+fragment such as `n/Jos` to find `José Santos`. Slash-bearing full values remain unsupported in search:
+use `n/Ravi` for `Ravi s/o Kumar` or `a/#01` for `#01/02`.
 
 Phone and parent-phone filters match the complete 3–15-digit number, including leading zeros. Level and
 weekday filters match a complete allowed value, ignoring case: `P1`–`P6`, `S1`–`S5`, `JC1` or `JC2` for
@@ -679,7 +778,7 @@ change removes a match. To enrol a Student while viewing Parents or Tutors, disp
 the command using the current position, then repeat the relationship search.
 
 Lesson searches use the independent right panel and preserve the people list, its filter, selection and
-positions. People searches preserve the selected Lesson, roster or history view. `lessons si/STUDENT_INDEX`
+positions. People searches preserve the selected Lesson, roster or history view. `lessons STUDENT_INDEX`
 and `history STUDENT_INDEX` resolve the current people-list position once, then keep the selected stable
 Student ID even if the people filter changes. Lesson cards, roster rows, history rows and stable ID suffixes
 do not supply person-command positions. See [Selecting people and lessons](#selecting-people-and-lessons).
@@ -731,12 +830,13 @@ remain invisible; the previous subject and both result panels remain intact.
 
 To compare current membership with retained history in the same example, run `list r/student`,
 `mark 1 lid/L1 d/2026-10-05 s/present`, `history 1 lid/L1`, then `unenrol 1 lid/L1`. Alex's open history retains
-the recorded presence and refreshes its label to former member. `lessons si/1` then shows only `L2` and `L3`;
+the recorded presence and refreshes its label to former member. `lessons 1` then shows only `L2` and `L3`;
 `search c/lesson sn/Alex d/Mon s/Math` returns no Lessons. `showlesson lid/L1 d/2026-10-05` shows Jamie's
 current-roster status as unrecorded and Alex's retained presence separately. See [Lesson details](#lesson-details)
 and [attendance history](#attendance-history) for their complete behavior.
 
-### 7. Recording attendance and retrieving history
+### Recording attendance and retrieving history
+{: id="7-recording-attendance-and-retrieving-history"}
 
 **Mark (active):** `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent`
 
@@ -782,13 +882,16 @@ roster/history row or stable ID suffix. `lessons`, `showlesson` or a lesson sear
 Deleting the selected Student or the selected Lesson successfully clears that history selection and returns the
 right panel to lesson results. Unrelated deletions and failed deletions preserve a valid history selection.
 
-![Independent dated attendance for two Students](images/AttendanceDetails.jpg)
+![Development preview, Lesson detail panel crop: Alex present and Jamie absent, both in the current roster](images/AttendanceDetails.jpg)
 
-Alex is present and Jamie is absent for the same Lesson occurrence.
+In this development-build panel crop, Alex is present and Jamie is absent for L1 on 5 October 2026;
+both are still enrolled. The crop keeps the dated heading, roster and statuses readable.
 
-![Retained attendance after unenrolment](images/AttendanceHistory.jpg)
+![Development preview, history panel crop: Student S2 absence retained as former enrolment](images/AttendanceHistory.jpg)
 
-After correcting Jamie to absent and unenrolling Jamie, history retains the dated absence with former-enrolment context.
+After `unenrol 2 lid/L1`, `history 2 lid/L1` retains Jamie's existing absence with former-enrolment context.
+No attendance correction occurs between these two captures; the absent record is the same in both.
+See [capture provenance](images/README.html) for the exact package, commands and crop bounds.
 
 <a id="planned-failure-and-data-behavior"></a>
 
@@ -857,9 +960,18 @@ or restarting. Keep the backup until the recovered records, relationships, atten
 been verified. A failed first save has no previous file or recovery backup; if its error warns of a partial file,
 close PonHub and inspect the reported path before retrying.
 
-These guarantees assume one PonHub instance and no concurrent external changes to the data file or its symbolic
-links. They do not cover abrupt power loss. See [Data protection](#data-protection-in-the-current-build) for the
-general backup and startup-recovery precautions.
+If another PonHub window saves to the selected file, this window rejects its next save rather than overwriting
+the newer records. The command is not applied, and this window's displayed records remain unchanged and may be
+stale. Close the other windows, back up the current file, then restart and inspect its records before re-entering
+the rejected command. Further saves from the stale window stay blocked until restart. A busy-save warning means
+another window is currently saving; wait and retry, following the restart guidance if a change is then detected.
+
+PonHub coordinates saves using an empty sibling file named `<data-file-name>.ponhub-lock`. Leave that file in
+place; its presence after exit is normal and does not block restart. Do not delete or replace it while PonHub is
+running, or select a data filename ending in `.ponhub-lock`. Use one window for normal work. This safeguard
+does not provide live synchronization, coordinate older PonHub builds or external editors, or cover abrupt power
+loss or concurrent changes to symbolic links. Close all windows before manually editing saved data.
+See [Data protection](#data-protection-in-the-current-build) for general backup and startup-recovery precautions.
 
 ### Canonical loading and recovery
 

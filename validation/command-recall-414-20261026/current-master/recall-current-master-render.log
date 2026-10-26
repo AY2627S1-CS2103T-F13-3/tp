@@ -1,0 +1,9 @@
+Configuration file: /mnt/c/Users/ernes/Documents/ChatGPT/CS2103T tP/tp/docs/_config.yml
+To use retry middleware with Faraday v2.0+, install `faraday-retry` gem
+            Source: /mnt/c/Users/ernes/Documents/ChatGPT/CS2103T tP/tp/docs
+       Destination: ../_temp/round1/recall-site/tp
+ Incremental build: disabled. Enable with --incremental
+      Generating...
+       Jekyll Feed: Generating feed for posts
+                    done in 2.005 seconds.
+ Auto-regeneration: disabled. Use --watch to enable.

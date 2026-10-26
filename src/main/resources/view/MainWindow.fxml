@@ -4,6 +4,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Scene?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
@@ -43,28 +44,30 @@
         <SplitPane fx:id="resultSplitPane" orientation="VERTICAL" dividerPositions="0.0"
                    minHeight="210" prefHeight="210" VBox.vgrow="ALWAYS">
           <!-- Start at the usable minimum; give window growth to records until the user drags the divider. -->
-          <VBox fx:id="feedbackSection" minHeight="80" prefHeight="80" SplitPane.resizableWithParent="false">
+          <VBox fx:id="feedbackSection" minHeight="96" prefHeight="96" SplitPane.resizableWithParent="false">
             <FlowPane fx:id="viewNavigation" hgap="6" vgap="4" styleClass="view-navigation" VBox.vgrow="NEVER">
-              <Button fx:id="lessonsButton" text="Lessons" onAction="#handleLessons" />
+              <Button fx:id="lessonsButton" text="All lessons" onAction="#handleLessons" />
               <Button fx:id="studentLessonsButton" text="Student lessons" onAction="#handleStudentLessons" />
-              <Button fx:id="attendanceButton" text="Attendance" onAction="#handleAttendance" />
+              <Button fx:id="attendanceButton" text="Attendance history" onAction="#handleAttendance" />
             </FlowPane>
+            <Label fx:id="studentSelectionGuidance" wrapText="true" maxWidth="Infinity"
+                   text="Select a Student card for Student lessons or Attendance history." />
             <StackPane fx:id="resultDisplayPlaceholder" styleClass="pane-with-border" minHeight="50"
                        VBox.vgrow="ALWAYS">
               <padding>
-                <Insets top="5" right="10" bottom="5" left="10" />
+                <Insets top="6" right="6" bottom="6" left="6" />
               </padding>
             </StackPane>
           </VBox>
 
           <SplitPane fx:id="recordsSplitPane" dividerPositions="0.32" minHeight="120">
-            <VBox fx:id="personList" styleClass="pane-with-border" minWidth="160" minHeight="0">
+            <VBox fx:id="personList" minWidth="160" minHeight="0">
               <padding>
                 <Insets top="10" right="10" bottom="10" left="10" />
               </padding>
               <StackPane fx:id="personListPanelPlaceholder" minHeight="0" VBox.vgrow="ALWAYS"/>
             </VBox>
-            <VBox styleClass="pane-with-border" minWidth="160" minHeight="0">
+            <VBox minWidth="160" minHeight="0">
               <padding>
                 <Insets top="10" right="10" bottom="10" left="10" />
               </padding>

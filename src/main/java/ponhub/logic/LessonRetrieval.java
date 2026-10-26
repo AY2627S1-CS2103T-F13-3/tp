@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -36,6 +38,13 @@ import ponhub.model.search.SearchCriteria;
  * The UI keeps one read-only list while commands select catalogue, student, search or lesson-detail results.
  */
 public final class LessonRetrieval {
+    /**
+     * The selected lesson source, independent of the visible history pane and people selection.
+     */
+    public enum ResultKind {
+        ALL_LESSONS, STUDENT_LESSONS, SEARCH, DETAIL
+    }
+
     private final LessonQueries queries;
     private final PeopleView peopleView;
     private final PonHubData data;
@@ -47,6 +56,7 @@ public final class LessonRetrieval {
     private LessonId selectedDetailId;
     private Optional<LocalDate> selectedDate = Optional.empty();
     private final ReadOnlyStringWrapper context = new ReadOnlyStringWrapper("All lessons");
+    private final ReadOnlyObjectWrapper<ResultKind> resultKind = new ReadOnlyObjectWrapper<>(ResultKind.ALL_LESSONS);
 
     /**
      * Uses the query and people views supplied by the same canonical runtime adapter.
@@ -78,6 +88,14 @@ public final class LessonRetrieval {
     }
 
     /**
+     * Identifies the selected source without relying on its display wording or the current people selection.
+     * Failed requests and committed source refreshes retain this kind.
+     */
+    public ReadOnlyObjectProperty<ResultKind> resultKindProperty() {
+        return resultKind.getReadOnlyProperty();
+    }
+
+    /**
      * Returns the full catalogue or one current-view student's lessons.
      * A supplied index is resolved once against the current people list, then converted to a stable ID.
      * The returned observable result is read-only and remains current after canonical publication.
@@ -86,11 +104,11 @@ public final class LessonRetrieval {
         requireNonNull(studentIndex);
         if (studentIndex.isEmpty()) {
             context.set("All lessons");
-            return select(queries.getLessonList());
+            return select(queries.getLessonList(), ResultKind.ALL_LESSONS);
         }
         var student = PersonIndexResolver.resolveStudent(studentIndex.get(), peopleView.getPeople());
         context.set("Student " + student.getId() + " · current lessons");
-        return select(queries.getStudentLessons(student.getId()));
+        return select(queries.getStudentLessons(student.getId()), ResultKind.STUDENT_LESSONS);
     }
 
     /**
@@ -102,7 +120,7 @@ public final class LessonRetrieval {
         String filters = criteria.getFilters().entrySet().stream()
                 .map(entry -> entry.getKey().getPrefix() + entry.getValue()).collect(Collectors.joining(", "));
         context.set(filters.isEmpty() ? "Lesson search: all lessons" : "Lesson search: " + filters);
-        return select(queries.getFilteredLessonList());
+        return select(queries.getFilteredLessonList(), ResultKind.SEARCH);
     }
 
     /**
@@ -125,7 +143,7 @@ public final class LessonRetrieval {
         detail.setAll(snapshot);
         context.set("Lesson " + lesson.getId() + input.date().map(date -> " · " + date).orElse("")
                 + " · current roster and retained attendance");
-        select(detail);
+        select(detail, ResultKind.DETAIL);
         return snapshot;
     }
 
@@ -175,13 +193,14 @@ public final class LessonRetrieval {
     /**
      * Detaches the previous source so unrelated query updates cannot replace the selected results.
      */
-    private ObservableList<LessonView> select(ObservableList<LessonView> source) {
+    private ObservableList<LessonView> select(ObservableList<LessonView> source, ResultKind kind) {
         if (selected != source) {
             selected.removeListener(refresh);
             selected = source;
             selected.addListener(refresh);
             displayed.setAll(selected);
         }
+        resultKind.set(kind);
         return source;
     }
 }
