@@ -493,7 +493,7 @@ unchanged, so either time endpoint can be edited by itself when the complete res
 before its end. Values follow the same day, time, subject, Tutor and room rules as `addlesson`. Use `tp/` only
 together with `tu/`; the optional phone selects one exact Tutor when normalized full names are shared.
 
-For example, `editlesson lid/L1 st/1630 s/Advanced Math` keeps `L1`'s weekday, end time, Tutor, room and roster.
+For example, `editlesson lid/L1 st/1630 s/A-Math` keeps `L1`'s weekday, end time, Tutor, room and roster.
 An identical edit reports `No changes to lesson: L1.` and does not save. A successful change updates current
 lesson cards, searches and selected details, and survives restart without changing IDs or allocation counters.
 
@@ -575,7 +575,10 @@ Check the updated people list before deleting another person.
 
 **Create (active):** `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
 
-Example: `addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1`.
+Example: `addlesson d/Mon st/1600 et/1730 s/A-Math tu/Mei Lim rm/R1`.
+
+A subject contains 1 to 50 Unicode letters or digits, with single spaces or hyphens between non-empty parts.
+For example, `Math`, `Primary 5 Math` and `A-Math` are accepted; leading, trailing or repeated hyphens are rejected.
 
 The tutor must already exist. `tu/` matches the tutor's complete name, ignoring letter case and repeated spaces. If several tutors share that name, supply their exact phone number, for example `tu/Mei Lim tp/92345678`. An ambiguous name without `tp/` is rejected. A supplied phone must match the named tutor exactly, even when the name is unique; an unmatched name or phone is rejected.
 

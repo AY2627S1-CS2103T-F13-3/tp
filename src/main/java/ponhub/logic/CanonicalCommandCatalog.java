@@ -80,13 +80,15 @@ public final class CanonicalCommandCatalog {
     public static final String MESSAGE_ADD_LESSON_USAGE =
             "Usage: addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM\n"
             + "DAY is Mon-Sun; times use four-digit 24-hour HHMM and start before end.\n"
+            + "SUBJECT uses 1-50 letters or digits separated by single spaces or hyphens.\n"
             + "Tutor matching uses the normalized full name. Supply the exact phone to disambiguate.\n"
-            + "Example: addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1";
+            + "Example: addlesson d/Mon st/1600 et/1730 s/A-Math tu/Mei Lim rm/R1";
     public static final String MESSAGE_EDIT_LESSON_USAGE =
             "Usage: editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] "
                     + "[tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM]\n"
             + "Supply a stable Lesson ID and at least one field; omitted fields stay unchanged.\n"
             + "Supplied values must be nonblank; Lesson fields cannot be cleared.\n"
+            + "SUBJECT uses 1-50 letters or digits separated by single spaces or hyphens.\n"
             + "Use tp/ only with tu/. Tutor matching uses normalized full name and optional exact phone.\n"
             + "The complete edited slot must have start before end and must not clash for its tutor, room "
                     + "or Students.\n"
