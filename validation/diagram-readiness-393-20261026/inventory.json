@@ -1,0 +1,189 @@
+{
+  "repository_revision": "177d4e368f54aec027a927031378f84ee5fcb93a",
+  "guide_sha256_lf": "3e54b2f48893868c04003b32f15ff23f3185634881abee72840c66e264b7039f",
+  "shared_style_sha256_lf": "8dd0b58226e4da849cc12ae9d6378ca47d79eb204b651644b5575469dd67ee72",
+  "hash_convention": "UTF-8 text normalized to LF; PNG hashes use exact file bytes.",
+  "scope": "Raw embedded source, dimensions and DG references only; expanded style, semantics and visuals remain.",
+  "figures": [
+    {
+      "name": "ArchitectureDiagram",
+      "source": "docs/diagrams/ArchitectureDiagram.puml",
+      "source_sha256_lf": "50541382bdcce6c1a85e9f6e930520be7e357904c20f139d55c1854da0ab899c",
+      "image": "docs/images/ArchitectureDiagram.png",
+      "image_sha256": "653a9f99e62d3a41f27cfdb0930f2fc0e4fd38100556a182e2766afb5dc993f0",
+      "width": 689,
+      "height": 579,
+      "embedded_source_matches": true,
+      "comparison": "exact",
+      "guide_lines": [
+        370
+      ],
+      "full_size_link": false
+    },
+    {
+      "name": "ArchitectureSequenceDiagram",
+      "source": "docs/diagrams/ArchitectureSequenceDiagram.puml",
+      "source_sha256_lf": "c907d1ed64815b2a115908564a669d4930a11ac872230a74ec8bc83faf5735af",
+      "image": "docs/images/ArchitectureSequenceDiagram.png",
+      "image_sha256": "7626a8f9c49b7fbe910a4321b631d8712d65b54bb2e666b8d59a52098303fef8",
+      "width": 908,
+      "height": 1079,
+      "embedded_source_matches": true,
+      "comparison": "exact",
+      "guide_lines": [
+        395
+      ],
+      "full_size_link": false
+    },
+    {
+      "name": "AttendanceClassDiagram",
+      "source": "docs/diagrams/AttendanceClassDiagram.puml",
+      "source_sha256_lf": "8021a96bcdb4e5eb74fcd5d426fe90c8a8f39a10c330d6da5e5d1db532502ec2",
+      "image": "docs/images/AttendanceClassDiagram.png",
+      "image_sha256": "9e19f34aa62513e0e1aadf9f61666f7f793c3b3a75b5b6ec012577bd90f11bd5",
+      "width": 897,
+      "height": 304,
+      "embedded_source_matches": true,
+      "comparison": "exact",
+      "guide_lines": [
+        536
+      ],
+      "full_size_link": false
+    },
+    {
+      "name": "CanonicalStorageClassDiagram",
+      "source": "docs/diagrams/CanonicalStorageClassDiagram.puml",
+      "source_sha256_lf": "217a20dde0ba038b098b1a0d72c3a322375a8f815c2c4ec476789501f027af78",
+      "image": "docs/images/CanonicalStorageClassDiagram.png",
+      "image_sha256": "6457f9c9b067aa755f2aaaf10e475806144cdb0e2fbb51b1232d2b513ce8e3b6",
+      "width": 965,
+      "height": 391,
+      "embedded_source_matches": true,
+      "comparison": "renderer-injected-smetana-removed",
+      "guide_lines": [
+        769
+      ],
+      "full_size_link": true
+    },
+    {
+      "name": "LessonAttendanceStateDiagram",
+      "source": "docs/diagrams/LessonAttendanceStateDiagram.puml",
+      "source_sha256_lf": "9ace636010d500df3048b237bd436ef1f56b062b6adf22530ba1db4fe2d5f167",
+      "image": "docs/images/LessonAttendanceStateDiagram.png",
+      "image_sha256": "e30014f445a8176e1a371562543cc5e0f911a4b302877d6fc602215009443d81",
+      "width": 618,
+      "height": 640,
+      "embedded_source_matches": true,
+      "comparison": "exact",
+      "guide_lines": [
+        553
+      ],
+      "full_size_link": false
+    },
+    {
+      "name": "LessonMembershipClassDiagram",
+      "source": "docs/diagrams/LessonMembershipClassDiagram.puml",
+      "source_sha256_lf": "14c3c1cab73f0fdf4997c615ebbac0c3f04206faff9bb007c59d990178e60e87",
+      "image": "docs/images/LessonMembershipClassDiagram.png",
+      "image_sha256": "e959b257300e6e3ab9bd473d64a17387fddfdb5850471fdb4ebb62926f4ddbf8",
+      "width": 942,
+      "height": 323,
+      "embedded_source_matches": true,
+      "comparison": "exact",
+      "guide_lines": [
+        532
+      ],
+      "full_size_link": false
+    },
+    {
+      "name": "LessonQueryRefresh",
+      "source": "docs/diagrams/LessonQueryRefresh.puml",
+      "source_sha256_lf": "3710e077fe1a44e839945e58259cf584453eace3ea33364db72d460cc4ae587f",
+      "image": "docs/images/LessonQueryRefresh.png",
+      "image_sha256": "0266e2ae72edf40f54bf0fe8c613a5f3b8f6f3f391940747e00ddac4b4cd51e4",
+      "width": 839,
+      "height": 839,
+      "embedded_source_matches": true,
+      "comparison": "exact",
+      "guide_lines": [
+        715
+      ],
+      "full_size_link": true
+    },
+    {
+      "name": "LessonRetrieval",
+      "source": "docs/diagrams/LessonRetrieval.puml",
+      "source_sha256_lf": "127a3348411ea59a5011a70c32003a45518df69b13c6f2288151d123f544e088",
+      "image": "docs/images/LessonRetrieval.png",
+      "image_sha256": "24acce0284ffa7e2b9524ea8e4542c12e60de3768c01f5aff7c77aec5bce6964",
+      "width": 1106,
+      "height": 583,
+      "embedded_source_matches": true,
+      "comparison": "exact",
+      "guide_lines": [
+        686
+      ],
+      "full_size_link": true
+    },
+    {
+      "name": "LogicClassDiagram",
+      "source": "docs/diagrams/LogicClassDiagram.puml",
+      "source_sha256_lf": "a4f25ef33945884b31a328d00a1270b632c55b6a39c527a617679f2fca96ac2e",
+      "image": "docs/images/LogicClassDiagram.png",
+      "image_sha256": "9525efaf814181c60abc6e70f9e534bb059ab2a65b67a8b1b9c6ad560699a1b8",
+      "width": 554,
+      "height": 622,
+      "embedded_source_matches": true,
+      "comparison": "exact",
+      "guide_lines": [
+        458
+      ],
+      "full_size_link": false
+    },
+    {
+      "name": "PeopleSelectionClassDiagram",
+      "source": "docs/diagrams/PeopleSelectionClassDiagram.puml",
+      "source_sha256_lf": "6a3740a0eaeb6befebc487842f703efcb5385a6b2bb943d15699709d70e1fd84",
+      "image": "docs/images/PeopleSelectionClassDiagram.png",
+      "image_sha256": "fdd90f8ba035685e6a37e5f42c353b77eab4e192fa33cb78db1506feec5a5121",
+      "width": 627,
+      "height": 550,
+      "embedded_source_matches": true,
+      "comparison": "exact",
+      "guide_lines": [
+        1179
+      ],
+      "full_size_link": false
+    },
+    {
+      "name": "PersonRecordClassDiagram",
+      "source": "docs/diagrams/PersonRecordClassDiagram.puml",
+      "source_sha256_lf": "d95612e7d365be4e674d567a674291fc02abf830bd76228ae47d8976c53ad071",
+      "image": "docs/images/PersonRecordClassDiagram.png",
+      "image_sha256": "7944ec00638c74856c8f000357d43c79e827634688bf202539b8a9f3458e59eb",
+      "width": 473,
+      "height": 434,
+      "embedded_source_matches": true,
+      "comparison": "exact",
+      "guide_lines": [
+        528
+      ],
+      "full_size_link": false
+    },
+    {
+      "name": "UiClassDiagram",
+      "source": "docs/diagrams/UiClassDiagram.puml",
+      "source_sha256_lf": "df8d200bd25a44ae8782bf57d1af4cc78982a786a2484c3c64305de54b11f4fc",
+      "image": "docs/images/UiClassDiagram.png",
+      "image_sha256": "f91ed32e299a73031d85fd3181ee4b15ef815af2d98c760950c43b2acca6f2f1",
+      "width": 875,
+      "height": 393,
+      "embedded_source_matches": true,
+      "comparison": "exact",
+      "guide_lines": [
+        416
+      ],
+      "full_size_link": false
+    }
+  ]
+}
