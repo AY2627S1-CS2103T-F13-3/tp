@@ -149,9 +149,10 @@ public class MainWindowResultResizeTest {
                         fixture.enter(command);
                         String context = command + " at " + size[0] + "x" + size[1];
                         if (command.startsWith("showlesson")) {
-                            ScrollPane detail = (ScrollPane) fixture.root().lookup("#lessonDetailScroll");
+                            ListView<?> detail = (ListView<?>) fixture.root().lookup("#lessonDetailList");
                             assertTrue(detail.isManaged(), context);
-                            assertTrue(detail.getContent().prefHeight(-1) > detail.getHeight(),
+                            assertTrue(detail.lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
+                                    .anyMatch(bar -> bar.getOrientation() == Orientation.VERTICAL && bar.isVisible()),
                                     "The roster must exceed its scrolling viewport.");
                         } else if (command.startsWith("history")) {
                             assertTrue(fixture.root().lookup("#historyListView").getParent().isManaged(), context);
