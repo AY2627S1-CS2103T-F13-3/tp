@@ -18,8 +18,10 @@ public class PersonIndexParserBoundaryTest {
             for (String index : List.of(control + "1", "1" + control, "1" + control + "2")) {
                 assertThrows(ParseException.class, LessonMembershipParser.MESSAGE_ARGUMENTS, () ->
                         new LessonMembershipParser().parse(index + " lid/L10"));
-                assertThrows(ParseException.class, LessonsArgumentsParser.MESSAGE_USAGE, () ->
-                        new LessonsArgumentsParser().parse("si/" + index));
+                for (String selector : List.of(index, "si/" + index)) {
+                    assertThrows(ParseException.class, LessonsArgumentsParser.MESSAGE_USAGE, () ->
+                            new LessonsArgumentsParser().parse(selector));
+                }
                 assertThrows(ParseException.class, HistoryArgumentsParser.MESSAGE_USAGE, () ->
                         new HistoryArgumentsParser().parse(index + " lid/L10"));
                 assertThrows(ParseException.class, AttendanceMarkParser.MESSAGE_SINGLE_LINE, () ->
@@ -35,8 +37,10 @@ public class PersonIndexParserBoundaryTest {
         for (String index : List.of("0", "2147483648", "999999999999999999999")) {
             assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_INDEX, () ->
                     new LessonMembershipParser().parse(index + " lid/L0"));
-            assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_INDEX, () ->
-                    new LessonsArgumentsParser().parse("si/" + index));
+            for (String selector : List.of(index, "si/" + index)) {
+                assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_INDEX, () ->
+                        new LessonsArgumentsParser().parse(selector));
+            }
             assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_INDEX, () ->
                     new HistoryArgumentsParser().parse(index + " lid/L0"));
             assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_INDEX, () ->

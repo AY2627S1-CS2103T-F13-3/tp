@@ -133,6 +133,109 @@ public class CommandBoxTest {
     }
 
     @Test
+    public void arrows_recallWithoutExecuting_andRestoreDraftSelection() throws Exception {
+        runOnFxThread(() -> {
+            List<String> commands = new ArrayList<>();
+            TextField input = createInput(command -> {
+                commands.add(command);
+                return new CommandResult("Success");
+            });
+            for (String command : List.of("help", "list r/student")) {
+                input.setText(command);
+                enter(input);
+            }
+            input.setText("  unfinished draft  ");
+            input.selectRange(12, 3);
+            assertTrue(arrow(input, KeyCode.UP, false));
+            assertEquals("list r/student", input.getText());
+            assertEquals(input.getLength(), input.getCaretPosition());
+            arrow(input, KeyCode.UP, false);
+            arrow(input, KeyCode.UP, false);
+            assertEquals("help", input.getText());
+            arrow(input, KeyCode.DOWN, false);
+            arrow(input, KeyCode.DOWN, false);
+            assertEquals("  unfinished draft  ", input.getText());
+            assertEquals(12, input.getAnchor());
+            assertEquals(3, input.getCaretPosition());
+            assertEquals(List.of("help", "list r/student"), commands);
+            assertFalse(arrow(input, KeyCode.DOWN, false));
+        });
+    }
+
+    @Test
+    public void arrows_failedSubmissionAndEditedRecall_preserveEnterAndCompletion() throws Exception {
+        runOnFxThread(() -> {
+            List<String> commands = new ArrayList<>();
+            TextField input = createInput(command -> {
+                commands.add(command);
+                if (command.equals("invalid")) {
+                    throw new ParseException("Invalid command");
+                }
+                return new CommandResult("Success");
+            });
+            input.setText("invalid");
+            enter(input);
+            input.setText("sho");
+            input.end();
+            assertFalse(arrow(input, KeyCode.UP, true));
+            assertFalse(arrow(input, KeyCode.UP, false, true, false, false));
+            assertFalse(arrow(input, KeyCode.UP, false, false, true, false));
+            assertFalse(arrow(input, KeyCode.UP, false, false, false, true));
+            assertEquals("sho", input.getText());
+            arrow(input, KeyCode.UP, false);
+            assertEquals("invalid", input.getText());
+            arrow(input, KeyCode.DOWN, false);
+            assertTab(input, "showlesson", 10);
+            arrow(input, KeyCode.UP, false);
+            input.setText("help");
+            assertFalse(arrow(input, KeyCode.DOWN, false));
+            arrow(input, KeyCode.UP, false);
+            assertEquals("invalid", input.getText());
+            arrow(input, KeyCode.DOWN, false);
+            assertEquals("help", input.getText());
+            enter(input);
+            assertEquals(List.of("invalid", "help"), commands);
+            assertEquals("", input.getText());
+        });
+    }
+
+    @Test
+    public void arrows_historyIsBoundedAndSessionLocal() throws Exception {
+        runOnFxThread(() -> {
+            TextField input = createInput(command -> new CommandResult("Success"));
+            assertFalse(arrow(input, KeyCode.UP, false));
+            input.setText("   ");
+            enter(input);
+            assertFalse(arrow(input, KeyCode.UP, false));
+            for (int i = 0; i <= CommandBox.HISTORY_LIMIT; i++) {
+                input.setText("help " + i);
+                enter(input);
+            }
+            for (int i = 0; i <= CommandBox.HISTORY_LIMIT; i++) {
+                arrow(input, KeyCode.UP, false);
+            }
+            assertEquals("help 1", input.getText());
+            TextField another = createInput(command -> new CommandResult("Success"));
+            assertFalse(arrow(another, KeyCode.UP, false));
+            assertEquals("", another.getText());
+        });
+    }
+
+    private static boolean arrow(TextField input, KeyCode code, boolean shift) {
+        return arrow(input, code, shift, false, false, false);
+    }
+
+    private static boolean arrow(TextField input, KeyCode code, boolean shift, boolean control,
+            boolean alt, boolean meta) {
+        boolean[] consumed = {false};
+        javafx.event.EventHandler<KeyEvent> observer = event -> consumed[0] = event.isConsumed();
+        input.addEventFilter(KeyEvent.KEY_PRESSED, observer);
+        Event.fireEvent(input, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, shift, control, alt, meta));
+        input.removeEventFilter(KeyEvent.KEY_PRESSED, observer);
+        return consumed[0];
+    }
+
+    @Test
     public void enter_emptyInput_doesNotExecute() throws Exception {
         runOnFxThread(() -> {
             List<String> commands = new ArrayList<>();

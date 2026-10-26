@@ -5,6 +5,7 @@ import static ponhub.commons.util.AppUtil.checkArgument;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import ponhub.model.person.ContactDetails;
 import ponhub.model.person.Parent;
@@ -72,23 +73,26 @@ public final class PersonRecordCardData {
     private static List<List<Detail>> createDetailGroups(PersonRecord person) {
         List<List<Detail>> groups = new ArrayList<>();
         if (person instanceof Student student) {
-            groups.add(List.of(new Detail("Level", student.getLevel().toString())));
+            groups.add(List.of(new Detail("Level", student.getLevel().toString(), false)));
         }
         ContactDetails contacts = person.getContactDetails();
         String phoneLabel = person instanceof Student ? "Own phone" : "Phone";
         groups.add(List.of(
-                new Detail(phoneLabel, contacts.getPhone().map(phone -> phone.value).orElse("Not provided")),
-                new Detail("Email", contacts.getEmail().map(email -> email.value).orElse("Not provided"))));
+                createContact(phoneLabel, contacts.getPhone().map(phone -> phone.value)),
+                createContact("Email", contacts.getEmail().map(email -> email.value))));
         if (person instanceof Student student) {
-            groups.add(List.of(new Detail("Parent phone", student.getParentPhone().value)));
+            groups.add(List.of(createContact("Parent phone", Optional.of(student.getParentPhone().value))));
         }
-        groups.add(List.of(new Detail("Address",
-                contacts.getAddress().map(address -> address.value).orElse("Not provided"))));
+        groups.add(List.of(createContact("Address", contacts.getAddress().map(address -> address.value))));
         return List.copyOf(groups);
     }
 
+    private static Detail createContact(String caption, Optional<String> value) {
+        return new Detail(caption, value.orElse("Not provided"), value.isPresent());
+    }
+
     /**
-     * A caption and its unchanged display value, styled separately by the card.
+     * A caption and unchanged display value, with copying enabled only for present contact values.
      */
-    public record Detail(String caption, String value) { }
+    public record Detail(String caption, String value, boolean isCopyable) { }
 }

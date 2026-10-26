@@ -11,6 +11,7 @@ import ponhub.logic.parser.PersonEditParser;
 import ponhub.model.PeopleView;
 import ponhub.model.PonHubData;
 import ponhub.model.person.PersonRecord;
+import ponhub.model.person.PersonRole;
 import ponhub.model.person.exceptions.DuplicatePersonException;
 
 /**
@@ -19,6 +20,8 @@ import ponhub.model.person.exceptions.DuplicatePersonException;
 public final class CanonicalEditCommand implements CanonicalCommandExecutor.StagedCommand {
     public static final String MESSAGE_SUCCESS = "Edited %s: %s (%s).";
     public static final String MESSAGE_NO_CHANGE = "No changes to %s: %s (%s).";
+    public static final String MESSAGE_DUPLICATE = "A %s with the same normalized name and %s already exists. "
+            + "Change n/ or %s to a unique combination.";
 
     private final PersonEditParser.Input input;
 
@@ -39,7 +42,12 @@ public final class CanonicalEditCommand implements CanonicalCommandExecutor.Stag
             PersonRecord edited = candidate.getEditedPerson();
             return new CommandResult(String.format(candidate.isChanged() ? MESSAGE_SUCCESS : MESSAGE_NO_CHANGE,
                     edited.getRole().getValue(), edited.getName(), edited.getId()));
-        } catch (IllegalArgumentException | DuplicatePersonException failure) {
+        } catch (DuplicatePersonException failure) {
+            boolean isStudent = original.getRole() == PersonRole.STUDENT;
+            String identityPhone = isStudent ? "parent phone (pp/)" : "phone (p/)";
+            throw new CommandException(String.format(MESSAGE_DUPLICATE, original.getRole().getValue(),
+                    identityPhone, isStudent ? "pp/" : "p/"), failure);
+        } catch (IllegalArgumentException failure) {
             throw new CommandException(failure.getMessage(), failure);
         }
     }

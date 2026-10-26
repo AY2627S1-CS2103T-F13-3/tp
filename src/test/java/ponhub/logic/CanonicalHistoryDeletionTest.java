@@ -44,6 +44,7 @@ public class CanonicalHistoryDeletionTest {
             assertTrue(session.historyViewActiveProperty().get());
             session.execute("search c/student");
             session.execute("delete 3");
+            session.execute("delete confirm");
             assertInvalidated(session);
             assertSame(history, session.getDisplayedHistory());
             assertEquals(2, session.getPeople().size());
@@ -95,6 +96,7 @@ public class CanonicalHistoryDeletionTest {
                 assertHistory(session, history, rows, context);
             }
             session.execute("delete 3");
+            session.execute("delete confirm");
             assertHistory(session, history, rows, context);
             session.execute("deletelesson lid/L3");
             assertHistory(session, history, rows, context);
@@ -120,11 +122,18 @@ public class CanonicalHistoryDeletionTest {
             String context = session.historyResultContextProperty().get();
             var before = session.getDataSnapshot();
             byte[] bytes = Files.readAllBytes(path);
-            assertThrows(CommandException.class, () -> session.execute(command));
+            if (command.startsWith("delete ")) {
+                session.execute(command);
+            }
+            assertThrows(CommandException.class, () ->
+                    session.execute(command.startsWith("delete ") ? "delete confirm" : command));
             assertSame(before, session.getDataSnapshot());
             assertArrayEquals(bytes, Files.readAllBytes(path));
             assertHistory(session, history, List.of(), context);
             session.execute(command);
+            if (command.startsWith("delete ")) {
+                session.execute("delete confirm");
+            }
             assertInvalidated(session);
             assertEquals(2, writes[0]);
         }

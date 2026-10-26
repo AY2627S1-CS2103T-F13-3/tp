@@ -1,0 +1,103 @@
+Property settings:
+    file.encoding = UTF-8
+    file.separator = \
+    java.class.path =
+    java.class.version = 69.0
+    java.home = C:\Program Files\Java\jdk-25.0.4
+    java.io.tmpdir = C:\Users\ernes\AppData\Local\Temp\
+    java.library.path = C:\Program Files\Java\jdk-25.0.4\bin
+        C:\WINDOWS\Sun\Java\bin
+        C:\WINDOWS\system32
+        C:\WINDOWS
+        C:\Program Files\PowerShell\7
+        C:\Users\ernes\.codex\tmp\arg0-windows\codex-arg0q8BnT4
+        C:\Users\ernes\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\libheif\libheif\bin
+        C:\Users\ernes\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\jxrlib\jxrlib\bin
+        C:\Users\ernes\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\poppler\Library\bin
+        C:\Users\ernes\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\override
+        C:\Program Files\Common Files\Oracle\Java\javapath
+        C:\Python314\Scripts\
+        C:\Python314\
+        C:\WINDOWS\system32
+        C:\WINDOWS
+        C:\WINDOWS\System32\Wbem
+        C:\WINDOWS\System32\WindowsPowerShell\v1.0\
+        C:\WINDOWS\System32\OpenSSH\
+        C:\Program Files\dotnet\
+        C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common
+        C:\Program Files\NVIDIA Corporation\NVIDIA app\NvDLISR
+        C:\Users\ernes\Downloads\python-3.13.4-amd64.exe
+        C:\Program Files\nodejs\
+        C:\ProgramData\chocolatey\bin
+        C:\Program Files\Docker\Docker\resources\bin
+        C:\Program Files\Git\cmd
+        C:\Program Files\Java\jdk-25.0.4\bin
+        C:\Program Files\PowerShell\7\
+        C:\Users\ernes\AppData\Local\Programs\OpenAI\Codex\bin
+        C:\Users\ernes\AppData\Local\Programs\Python\Python313\Scripts\
+        C:\Users\ernes\AppData\Local\Programs\Python\Python313\
+        C:\Users\ernes\AppData\Local\Programs\Python\Launcher\
+        C:\Users\ernes\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell
+        C:\Users\ernes\AppData\Local\Microsoft\WindowsApps
+        C:\msys64\ucrt64\bin
+        C:\msys64\mingw64\bin
+        C:\Users\ernes\AppData\Local\Programs\Microsoft VS Code\bin
+        C:\Program Files\JetBrains\IntelliJ IDEA 2025.3.1\bin
+        C:\Users\ernes\AppData\Roaming\npm
+        C:\Users\ernes\.fly\bin
+        C:\Users\ernes\AppData\Local\Programs\Ollama
+        C:\Users\ernes\AppData\Local\Programs\Microsoft VS Code\bin\copilot-shim
+        C:\Users\ernes\.cache\codex-runtimes\codex-primary-runtime\dependencies\bin\fallback
+        C:\Users\ernes\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin
+        C:\Users\ernes\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\git\cmd
+        C:\Users\ernes\AppData\Local\OpenAI\Codex\bin\c602dfdab3808440
+        C:\Users\ernes\AppData\Local\OpenAI\Codex\bin\2993767bd1dfb009
+        .
+    java.runtime.name = Java(TM) SE Runtime Environment
+    java.runtime.version = 25.0.4+7-LTS-189
+    java.specification.name = Java Platform API Specification
+    java.specification.vendor = Oracle Corporation
+    java.specification.version = 25
+    java.vendor = Oracle Corporation
+    java.vendor.url = https://java.oracle.com/
+    java.vendor.url.bug = https://bugreport.java.com/bugreport/
+    java.version = 25.0.4
+    java.version.date = 2026-07-21
+    java.vm.compressedOopsMode = Zero based
+    java.vm.info = mixed mode, sharing
+    java.vm.name = Java HotSpot(TM) 64-Bit Server VM
+    java.vm.specification.name = Java Virtual Machine Specification
+    java.vm.specification.vendor = Oracle Corporation
+    java.vm.specification.version = 25
+    java.vm.vendor = Oracle Corporation
+    java.vm.version = 25.0.4+7-LTS-189
+    jdk.debug = release
+    line.separator = \r \n
+    native.encoding = Cp1252
+    os.arch = amd64
+    os.name = Windows 11
+    os.version = 10.0
+    path.separator = ;
+    stderr.encoding = Cp1252
+    stdin.encoding = cp437
+    stdout.encoding = Cp1252
+    sun.arch.data.model = 64
+    sun.boot.library.path = C:\Program Files\Java\jdk-25.0.4\bin
+    sun.cpu.endian = little
+    sun.cpu.isalist = amd64
+    sun.io.unicode.encoding = UnicodeLittle
+    sun.java.launcher = SUN_STANDARD
+    sun.jnu.encoding = Cp1252
+    sun.management.compiler = HotSpot 64-Bit Tiered Compilers
+    sun.os.patch.level =
+    user.country = SG
+    user.dir = C:\Users\ernes\Documents\ChatGPT\CS2103T tP\tp
+    user.home = C:\Users\ernes
+    user.language = en
+    user.name = ernes
+    user.script =
+    user.variant =
+
+java version "25.0.4" 2026-07-21 LTS
+Java(TM) SE Runtime Environment (build 25.0.4+7-LTS-189)
+Java HotSpot(TM) 64-Bit Server VM (build 25.0.4+7-LTS-189, mixed mode, sharing)

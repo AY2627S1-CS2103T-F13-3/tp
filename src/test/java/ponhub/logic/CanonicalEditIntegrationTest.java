@@ -123,6 +123,47 @@ public class CanonicalEditIntegrationTest {
     }
 
     @Test
+    public void execute_duplicateEdit_explainsRoleIdentityAndPreservesState() throws Exception {
+        for (String role : List.of("student", "tutor", "parent")) {
+            Path path = directory.resolve(role + ".json");
+            CanonicalPeopleSession setup = new CanonicalPeopleSession(path);
+            String first = role.equals("student") ? "l/P1 pp/91234567 p/81111111" : "p/91234567";
+            String second = role.equals("student") ? "l/S2 pp/91234567 p/82222222" : "p/91234567";
+            setup.execute("add r/" + role + " n/Alex Tan " + first);
+            setup.execute("add r/" + role + " n/Jamie Tan " + second);
+            AtomicInteger saves = new AtomicInteger();
+            CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+                saves.incrementAndGet();
+                new JsonPonHubDataStorage(path).saveData(state);
+            });
+            session.execute("list r/" + role);
+            var before = session.getDataSnapshot();
+            var visible = List.copyOf(session.getPeople());
+            byte[] bytes = Files.readAllBytes(path);
+            AtomicInteger notifications = new AtomicInteger();
+            session.getPeople().addListener((ListChangeListener<PersonRecord>) c -> notifications.incrementAndGet());
+
+            String identityPhone = role.equals("student") ? "parent phone (pp/)" : "phone (p/)";
+            String prefix = role.equals("student") ? "pp/" : "p/";
+            CommandException failure = assertThrows(CommandException.class, () ->
+                    session.execute("edit 2 n/ ALEX   TAN"));
+            assertEquals("A " + role + " with the same normalized name and " + identityPhone
+                    + " already exists. Change n/ or " + prefix + " to a unique combination.", failure.getMessage());
+            assertSame(before, session.getDataSnapshot());
+            assertEquals(visible, session.getPeople());
+            assertEquals(Optional.of(PersonRole.valueOf(role.toUpperCase(java.util.Locale.ROOT))),
+                    session.getRoleFilter());
+            assertArrayEquals(bytes, Files.readAllBytes(path));
+            assertEquals(0, saves.get());
+            assertEquals(0, notifications.get());
+
+            assertEquals("A person's name cannot be cleared.", assertThrows(CommandException.class, () ->
+                    session.execute("edit 2 n/")).getMessage());
+            assertArrayEquals(bytes, Files.readAllBytes(path));
+        }
+    }
+
+    @Test
     public void execute_protectedSession_rejectsBeforeParsingAndHidesEditHelp() throws Exception {
         Path path = directory.resolve("protected.json");
         Files.writeString(path, "{");

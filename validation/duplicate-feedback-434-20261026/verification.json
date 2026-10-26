@@ -1,0 +1,24 @@
+{
+  "product_source": "0a0f57f3",
+  "tests": {
+    "tests": 25,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "rendered_pages": 10,
+  "local_targets": 496,
+  "errors": [],
+  "browser_viewports": [
+    [
+      2034,
+      1024
+    ],
+    [
+      760,
+      900
+    ]
+  ],
+  "viewport_reset": true,
+  "guide_sha256": "978b8989ab7f1d3073612ca26fd8d44e4d7c5f55641a8465ccf1cbbd9a01fa78"
+}
