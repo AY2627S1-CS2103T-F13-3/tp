@@ -37,6 +37,7 @@ public final class CanonicalCommandCatalog {
     public static final String MESSAGE_HELP_USAGE = "Usage: help [COMMAND]\n"
             + "Shows the commands available in this session, or syntax and an example for one command.\n"
             + "COMMAND is optional and case-insensitive. Supply at most one command word.\n"
+            + "Command box: Up/Down recall recent submissions without executing; Enter submits the draft.\n"
             + "Person cards: use Copy beside an available contact. Tab to Copy, then Space or Ctrl+C "
                     + "(Cmd+C on macOS).\n"
             + "Examples: help, help list";
