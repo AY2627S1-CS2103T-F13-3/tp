@@ -26,6 +26,9 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import ponhub.MainApp;
 import ponhub.model.attendance.AttendanceStatus;
@@ -256,6 +259,62 @@ public class LessonDetailListTest {
             assertEntry(view, primary(2), formerSecondary(originalRecords.getFirst()));
             assertFalse(labelsInOrder(view, ".card_entry_primary").contains(primary(3)));
         });
+    }
+
+    @Test
+    public void detail_endThenWheelBeforeLayout_preservesNewerViewportPosition() throws Exception {
+        runOnFxThread(() -> {
+            Region panel = largeHistoryPanel();
+            ListView<?> view = detailList(panel);
+            fireKey(view, KeyCode.END);
+            Event.fireEvent(view.lookup(".virtual-flow"), new ScrollEvent(ScrollEvent.SCROLL,
+                    20, 20, 20, 20, false, false, false, false, false, false,
+                    0, 600, 0, 600, ScrollEvent.HorizontalTextScrollUnits.NONE, 0,
+                    ScrollEvent.VerticalTextScrollUnits.NONE, 0, 0, null));
+            assertInterruptedViewport(panel, view);
+        });
+    }
+
+    @Test
+    public void detail_endThenScrollbarBeforeLayout_preservesNewerViewportPosition() throws Exception {
+        runOnFxThread(() -> {
+            Region panel = largeHistoryPanel();
+            ListView<?> view = detailList(panel);
+            fireKey(view, KeyCode.END);
+            ScrollBar bar = verticalScrollBar(view);
+            Node thumb = bar.lookup(".thumb");
+            Event.fireEvent(thumb, new MouseEvent(MouseEvent.MOUSE_PRESSED,
+                    2, 2, 2, 2, MouseButton.PRIMARY, 1, false, false, false, false,
+                    true, false, false, false, false, false, null));
+            bar.setValue((bar.getMin() + bar.getMax()) / 2);
+            Event.fireEvent(thumb, new MouseEvent(MouseEvent.MOUSE_RELEASED,
+                    2, 2, 2, 2, MouseButton.PRIMARY, 1, false, false, false, false,
+                    false, false, false, false, false, false, null));
+            assertInterruptedViewport(panel, view);
+        });
+    }
+
+    private static Region largeHistoryPanel() {
+        var records = new ArrayList<LessonDetailView.FormerAttendance>();
+        for (int index = 0; index < 1000; index++) {
+            records.add(formerEntry(1, index));
+        }
+        return panel(detail(Optional.empty(), List.of(), records), 210, 320);
+    }
+
+    private static void assertInterruptedViewport(Region panel, ListView<?> view) {
+        double interruptedPosition = verticalScrollBar(view).getValue();
+        assertTrue(interruptedPosition > 0 && interruptedPosition < 1,
+                "New input must move the viewport away from End before the correction layout: "
+                        + interruptedPosition);
+        settleLayout(panel, view);
+        assertTrue(verticalScrollBar(view).getValue() < 1,
+                "The deferred End correction must not override the newer viewport position");
+        assertEquals(view.getItems().size() - 1, view.getSelectionModel().getSelectedIndex(),
+                "Scrolling the viewport must not replace the keyboard-selected row");
+        assertEquals(1004, view.getItems().size(), "Interruption must retain every history row");
+        assertFalse(labelsInOrder(view, ".card_entry_secondary").contains(formerSecondary(formerEntry(1, 999))),
+                "The viewport must stay away from the final retained record");
     }
 
     private static LessonDetailView detail(Optional<LocalDate> date,

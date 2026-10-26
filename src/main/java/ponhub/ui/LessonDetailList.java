@@ -44,8 +44,12 @@ public class LessonDetailList extends ListView<LessonDetailList.Row> {
                 requestLayout();
             }
         });
-        addEventFilter(ScrollEvent.SCROLL, event -> shouldScrollToEnd = false);
-        addEventFilter(MouseEvent.MOUSE_PRESSED, event -> shouldScrollToEnd = false);
+        addEventFilter(ScrollEvent.SCROLL, event -> {
+            shouldScrollToEnd = false;
+        });
+        addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+            shouldScrollToEnd = false;
+        });
     }
 
     /**
