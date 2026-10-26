@@ -1580,7 +1580,7 @@ Shared lessons, current membership, and retained dated attendance are separate c
 ### Use cases
 
 For the use cases below, the **System** is `PonHub` and the **Actor** is the tuition centre administrator.
-The person, shared-lesson, attendance, search, and help operations accept all required details in one keyboard-entered command. These are target use cases; only the routes listed under [Current increment and command integration](#current-increment-and-command-integration) are active today. Canonical mutations validate and save the complete change without requiring a field prompt, preview, or separate confirmation. Read-only retrieval does not save operational data. Guided previews, capacity, make-ups and other explicitly labeled future extensions are outside the core flows.
+The person, shared-lesson, attendance, search, and help operations use keyboard-entered commands. These are target use cases; only the routes listed under [Current increment and command integration](#current-increment-and-command-integration) are active today. Person deletion requires a separate confirmation of its resolved target; other canonical mutations validate and save the complete change in one command. Read-only retrieval does not save operational data. Guided addition previews, capacity, make-ups and other explicitly labeled future extensions are outside the core flows.
 
 Person selectors in these target use cases are positive indices from the current filtered people list. Resolve the selected record once to its stable ID and enforce any required Student role; another result view does not supply that index. Existing shared lessons are selected by `lid/LESSON_ID`. Creating a lesson uses a normalized full tutor name and optional exact phone; search uses partial tutor-name text.
 
@@ -1733,17 +1733,20 @@ views; remaining attendance references still block student and lesson deletion.
 
 1. The administrator enters `delete INDEX` for the target in the current filtered people list.
 2. PonHub validates the positive index, resolves it once to the stable person ID and checks role-specific dependencies: Student membership or attendance, or Lessons assigned to a Tutor. Deleting a separate Parent does not remove a Student's stored parent phone.
-3. PonHub deletes and saves only the eligible person record, preserves the current filter, refreshes displayed positions and reports success. Surviving stable IDs and relationships remain unchanged.
+3. PonHub shows the resolved name and stable ID without saving or changing views. The administrator checks the target and enters `delete confirm`.
+4. PonHub rechecks the target and dependencies, deletes and saves only that record, preserves the current filter, refreshes displayed positions and reports success. Surviving stable IDs and relationships remain unchanged.
 
 **Extensions**
 
 * 2a. The index is invalid or dependencies prevent deletion: PonHub identifies the problem and changes nothing. Linked records are never deleted automatically.
-* 3a. Saving fails: PonHub discards the staged deletion before publication. The live aggregate and people view
-  remain unchanged; PonHub reports the failure and ends the use case.
+* 3a. The administrator enters `delete cancel` or any other command: the request is discarded without deletion.
+  A new `delete INDEX` replaces the pending target. Rejected input and restart also discard pending confirmation.
+* 4a. Saving fails: PonHub discards the staged deletion before publication. The live aggregate and people view
+  remain unchanged; PonHub reports the failure. Retrying requires a fresh preview and confirmation.
 
 **Postconditions:** One eligible record is deleted without broken references, or the previous state remains unchanged. Recheck displayed positions before selecting another person.
 
-**Future extensions:** Optional previews, student archiving/restoration and undo are separate later requirements (US-23, US-31 and US-35), rather than supported alternatives to this command.
+**Future extensions:** Student archiving/restoration and undo remain separate later requirements (US-31 and US-35).
 
 #### UC-07: Get help and recover from a command-entry error
 
@@ -2483,12 +2486,20 @@ Use role-aware commands in a disposable selected data file.
    Expect protected startup and original bytes preserved through help/list/exit and attempted mutations.
    Use the [Storage recovery procedure](#current-protected-startup) on a deliberately corrected working copy.
 
-### Active guarded person deletion (#91)
+<a id="active-guarded-person-deletion-91"></a>
+
+### Guarded person deletion and confirmation
 
 The session parses a positive people-list index using `ParserUtil`, rejecting non-whitespace ISO control characters
-before trimming the selector. `CanonicalDeleteCommand` resolves it once through
-`PersonIndexResolver` and passes the stable ID to `PonHubData.removePerson`. The aggregate identifies a blocking
-current enrolment, retained attendance key or assigned lesson before creating a replacement people registry.
+before trimming the selector. `CanonicalPeopleSession` resolves it once through `PersonIndexResolver` and checks
+`PonHubData.removePerson` on a disposable snapshot. It retains only the immutable target record for a prompt
+showing the name and stable ID; no live model/view changes or writes occur. `delete confirm` consumes that record
+and executes `CanonicalDeleteCommand`, which rechecks equality and dependency guards using the stable ID.
+Every command consumes the old pending request before parsing, so intervening commands, rejected input,
+cancellation and failed saves cannot leave a stale confirmation armed. Confirmation is not persisted.
+
+The aggregate identifies a blocking current enrolment, retained attendance key or assigned lesson before
+creating a replacement people registry.
 Registry removal and the validated aggregate retain all allocation counters, surviving people order, lessons and
 attendance. Parents have no direct lesson/attendance references; their removal preserves Student parent-phone values.
 The existing executor saves the complete staged aggregate before publishing the people/query refresh. It preserves
@@ -2498,21 +2509,26 @@ both the role filter and the full own-contact search criteria. Protected startup
 enrol/mark/unenrol routes, ID counters after reload, query continuity and failed-save invisibility/retry.
 For manual checks, use an isolated supported dataset:
 
-1. Add two Parents and a Student sharing the first Parent's phone. Run `list r/parent`, then delete the first Parent
-   by its current position. Expect the remaining Parent at position 1 and the Student's parent phone unchanged.
-   Delete the remaining Parent, restart, add another Parent and verify that its stable ID exceeds both removed IDs.
-2. Search for one unreferenced Student by name, with a stable ID suffix different from position 1. Run `delete 1`:
-   only that Student disappears; the search stays active and becomes empty. Surviving IDs and ordering remain intact.
+1. Add two Parents and a Student sharing the first Parent's phone. Run `list r/parent`, then `delete 1`.
+   Check that the prompt names that Parent and stable ID, with unchanged file, selected card and views.
+   Enter `delete cancel` and verify the same state. Repeat `delete 1`, then `delete confirm`: expect the remaining
+   Parent at position 1 and the Student's parent phone unchanged. Preview and confirm removal of the remaining
+   Parent, restart, add another Parent and verify that its stable ID exceeds both removed IDs.
+2. Search for one unreferenced Student by name, with a stable ID suffix different from position 1. Run `delete 1`,
+   check the target, then `delete confirm`: only that Student disappears; the search stays active and becomes empty.
+   Surviving IDs and ordering remain intact. In a separate preview, run `list`, `help` or invalid input before
+   `delete confirm`: expect no pending confirmation and no deletion. A fresh preview can then be confirmed.
 3. Create a Lesson, enrol a Student, and attempt to delete the Student or its Tutor using current people positions.
    Expect feedback naming the blocking Lesson and unchanged file/view. Unenrol the Student without marking attendance:
-   Student deletion now succeeds, while the Tutor remains blocked by the empty Lesson.
+   Student preview and confirmed deletion now succeed, while the Tutor remains blocked by the empty Lesson.
 4. In a separate dataset, enrol, mark and unenrol a Student. Deletion must remain blocked by retained attendance;
    feedback names the Lesson and date. Restart and verify that the same guard remains. An unassigned Tutor is deletable.
 5. Reject `delete`, `delete S1`, `delete 0`, `delete -1`, extra arguments and out-of-range positions without changes.
    `CanonicalDeleteIntegrationTest` also sends actual NUL, backspace and escape characters at both boundaries and
    inside selectors, verifying zero saves and unchanged bytes, snapshots, search filters and displayed positions.
-   Use an isolated unwritable storage seam, attempt deletion and verify unchanged file, people filter/positions and
-   query results. Restore writing and retry: commit only once, then restart and compare the complete saved state.
+   Use an isolated unwritable storage seam, preview and confirm deletion, and verify unchanged file, people
+   filter/positions and query results. A repeated `delete confirm` must not write. Restore writing, preview again
+   and confirm: commit only once, then restart and compare the complete saved state.
 
 Use the active `unmark` route to remove the retained Attendance dependency before retrying Student deletion.
 Use the active `deletelesson` route to remove the empty Lesson before retrying Tutor deletion.

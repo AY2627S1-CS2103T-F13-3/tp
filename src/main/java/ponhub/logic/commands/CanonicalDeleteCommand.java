@@ -3,38 +3,38 @@ package ponhub.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static ponhub.commons.util.CollectionUtil.requireAllNonNull;
 
-import ponhub.commons.core.index.Index;
 import ponhub.logic.CanonicalCommandExecutor;
-import ponhub.logic.PersonIndexResolver;
 import ponhub.logic.commands.exceptions.CommandException;
 import ponhub.model.PeopleView;
 import ponhub.model.PonHubData;
 import ponhub.model.person.PersonRecord;
 
 /**
- * Deletes one unreferenced person selected from the current filtered people list.
+ * Deletes the exact unreferenced person whose immutable record was shown for confirmation.
  */
 public final class CanonicalDeleteCommand implements CanonicalCommandExecutor.StagedCommand {
     public static final String MESSAGE_SUCCESS = "Deleted %s: %s (%s).";
 
-    private final Index index;
+    private final PersonRecord person;
 
     /**
-     * Creates a guarded deletion for a validated current people-list position.
+     * Creates a guarded deletion for the person shown in the pending confirmation.
      */
-    public CanonicalDeleteCommand(Index index) {
-        this.index = requireNonNull(index);
+    public CanonicalDeleteCommand(PersonRecord person) {
+        this.person = requireNonNull(person);
     }
 
     /**
-     * Resolves the person once and removes only that stable identity, preserving the current filter.
+     * Rechecks the confirmed record and removes only its stable identity, preserving the current filter.
      *
-     * @throws CommandException if the displayed position is invalid or the person is referenced.
+     * @throws CommandException if the person has changed, is missing or is referenced.
      */
     @Override
     public CommandResult execute(PonHubData staged, PeopleView stagedView) throws CommandException {
         requireAllNonNull(staged, stagedView);
-        PersonRecord person = PersonIndexResolver.resolve(index, stagedView.getPeople());
+        if (staged.getPerson(person.getId()).filter(person::equals).isEmpty()) {
+            throw new CommandException("The person has changed. Run delete INDEX again to check the target.");
+        }
         try {
             staged.removePerson(person.getId());
             return new CommandResult(String.format(MESSAGE_SUCCESS, person.getRole().getValue(),
