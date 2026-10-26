@@ -1,42 +1,43 @@
 @startuml
 !include style.puml
-!pragma layout smetana
+!pragma layout elk
 
-skinparam linetype ortho
-skinparam nodesep 35
-skinparam ranksep 45
+' Widen the central class for distinct association endpoints.
+' The layout-only stereotype is hidden from the rendered UML.
+<style>
+classDiagram {
+  .layoutHub {
+    MinimumWidth 330
+    RoundCorner 0
+  }
+}
+</style>
+
+skinparam defaultFontSize 16
+skinparam classFontSize 16
+skinparam ArrowFontSize 16
 skinparam arrowThickness 1.1
 skinparam arrowColor MODEL_COLOR
 skinparam classBackgroundColor MODEL_COLOR
 
-package "Canonical aggregate" {
-    class PonHubDataState
-}
+class PonHubDataState
 
-package "People" {
-    class Student
-    class Tutor
-}
+class Student
+class Tutor
 
-package "Shared lessons" {
-    class Lesson
-    class LessonId
-    class LessonTimeSlot
-    class Subject
-    class Room
-}
+class Lesson <<layoutHub>>
+hide <<layoutHub>> stereotype
+class LessonId
+class LessonTimeSlot
+class Subject
+class Room
 
-PonHubDataState "0..*" --> "0..*" Lesson : ordered catalogue
-Lesson "0..*" --> "1" LessonId : id
-Lesson "0..*" --> "1" LessonTimeSlot : timeSlot
-Lesson "0..*" --> "1" Subject : subject
-Lesson "0..*" --> "1" Room : room
-Lesson "0..*" --> "1" Tutor : tutorId (PersonId)
-Lesson "0..*" -- "0..*" Student : enrolledStudentIds (PersonId)
-
-note on link
-  Each Lesson alone stores its roster of stable Student IDs.
-  Student records do not contain copied lesson membership.
-end note
+PonHubDataState "<U+00A0>0..*" --> "<U+00A0>0..*" Lesson : ordered catalogue
+Lesson "<U+00A0>0..*" --> "<U+00A0>1" LessonId : id
+Lesson "<U+00A0>0..*" --> "<U+00A0>1" LessonTimeSlot : timeSlot
+Lesson "<U+00A0>0..*" --> "<U+00A0>1" Subject : subject
+Lesson "<U+00A0>0..*" --> "<U+00A0>1" Room : room
+Lesson "<U+00A0>0..*" --> "<U+00A0>1" Tutor : tutorId\n(PersonId)
+Lesson "<U+00A0>0..*" -up- "<U+00A0>0..*" Student : enrolledStudentIds\n(PersonId)
 
 @enduml

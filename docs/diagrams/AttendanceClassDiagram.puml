@@ -1,43 +1,46 @@
 @startuml
 !include style.puml
-!pragma layout smetana
+!pragma layout elk
 
-skinparam linetype ortho
-skinparam nodesep 35
-skinparam ranksep 45
+' Widen the central class for distinct association endpoints.
+' The layout-only stereotype is hidden from the rendered UML.
+<style>
+classDiagram {
+  .layoutHub {
+    MinimumWidth 240
+    RoundCorner 0
+  }
+}
+</style>
+
+skinparam defaultFontSize 16
+skinparam classFontSize 16
+skinparam classAttributeFontColor #FFFFFF
+skinparam ArrowFontSize 16
 skinparam arrowThickness 1.1
 skinparam arrowColor MODEL_COLOR
 skinparam classBackgroundColor MODEL_COLOR
 
-package "Canonical aggregate" {
-    class PonHubDataState
+class PonHubDataState
+
+class Student
+
+class Lesson
+
+class Attendance <<layoutHub>>
+hide <<layoutHub>> stereotype
+class AttendanceKey
+class AttendanceStatus <<enumeration>> {
+    PRESENT
+    ABSENT
 }
+show AttendanceStatus fields
+hide AttendanceStatus methods
 
-package "People" {
-    class Student
-}
-
-package "Shared lessons" {
-    class Lesson
-}
-
-package "Dated attendance" {
-    class Attendance
-    class AttendanceKey
-    class AttendanceStatus <<enumeration>>
-}
-
-PonHubDataState "0..*" --> "0..*" Attendance : ordered records
-Attendance "0..*" --> "1" AttendanceKey : key
-Attendance "0..*" --> "1" AttendanceStatus : status
-Attendance "0..*" --> "1" Student : studentId (PersonId)
-Attendance "0..*" --> "1" Lesson : lessonId (LessonId)
-
-note as AttendanceNotes
-  Attendance notes:
-  • Unique key: Student ID + Lesson ID + LocalDate.
-  • Attendance is dated history, separate from current membership.
-  • It remains valid after a Student is unenrolled from a Lesson.
-end note
+PonHubDataState "<U+00A0>0..*" --> "<U+00A0>0..*" Attendance : ordered records
+Attendance "<U+00A0>0..*" --> "<U+00A0>1" AttendanceKey : key
+Attendance "<U+00A0>0..*" --> "<U+00A0>1" AttendanceStatus : status
+Attendance "<U+00A0>0..*" --> "<U+00A0>1" Student : studentId\n(PersonId)
+Attendance "<U+00A0>0..*" --> "<U+00A0>1" Lesson : lessonId\n(LessonId)
 
 @enduml

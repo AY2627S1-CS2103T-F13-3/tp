@@ -527,11 +527,11 @@ The right pane switches between lesson and history results without replacing the
 
 **Shared Lesson ownership and membership:**
 
-<img src="images/LessonMembershipClassDiagram.png" alt="Lesson membership class diagram" width="800" />
+<img src="images/LessonMembershipClassDiagram.png" alt="Lesson membership class diagram" width="516" />
 
 **Dated Attendance, separate from current membership:**
 
-<img src="images/AttendanceClassDiagram.png" alt="Attendance class diagram" width="800" />
+<img src="images/AttendanceClassDiagram.png" alt="Attendance class diagram" width="525" />
 
 The canonical model has one current `PonHubDataState` aggregate. Each state references one people-registry snapshot,
 an ordered catalogue of shared `Lesson` records, and separate dated `Attendance` records. Each `PersonRecord` is
