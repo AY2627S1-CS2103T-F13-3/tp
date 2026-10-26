@@ -27,8 +27,8 @@ public final class ProtectedPonHubDataStorage {
     }
 
     private final Path path;
-    private final JsonPonHubDataStorage storage;
     private final FileReader reader;
+    private CanonicalDataFileGuard saveGuard;
     private LoadStatus status = LoadStatus.NOT_LOADED;
     private String loadError;
 
@@ -39,7 +39,6 @@ public final class ProtectedPonHubDataStorage {
     ProtectedPonHubDataStorage(Path path, FileReader reader) {
         this.path = requireNonNull(path);
         this.reader = requireNonNull(reader);
-        storage = new JsonPonHubDataStorage(path);
     }
 
     public LoadStatus getLoadStatus() {
@@ -74,6 +73,11 @@ public final class ProtectedPonHubDataStorage {
             json = reader.read(path);
         } catch (NoSuchFileException missing) {
             if (Files.notExists(path, LinkOption.NOFOLLOW_LINKS)) {
+                try {
+                    saveGuard = new CanonicalDataFileGuard(path, null);
+                } catch (IOException failure) {
+                    throw reject(LoadStatus.UNREADABLE, failure);
+                }
                 PonHubDataState loadedState = new PonHubData().exportState();
                 status = LoadStatus.MISSING;
                 return loadedState;
@@ -99,6 +103,11 @@ public final class ProtectedPonHubDataStorage {
         } catch (IOException failure) {
             throw reject(LoadStatus.CORRUPT, failure);
         }
+        try {
+            saveGuard = new CanonicalDataFileGuard(path, json);
+        } catch (IOException failure) {
+            throw reject(LoadStatus.UNREADABLE, failure);
+        }
         status = LoadStatus.LOADED;
         return loadedState;
     }
@@ -112,7 +121,7 @@ public final class ProtectedPonHubDataStorage {
         if (error.isPresent()) {
             throw new IOException(error.get());
         }
-        storage.saveData(state);
+        saveGuard.save(JsonPonHubDataCodec.encode(state));
     }
 
     private DataLoadingException reject(LoadStatus reason, IOException failure) {
