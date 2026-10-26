@@ -90,7 +90,8 @@ public final class CanonicalCommandCatalog {
             + "Use tp/ only with tu/. Tutor matching uses normalized full name and optional exact phone.\n"
             + "The complete edited slot must have start before end and must not clash for its tutor, room "
                     + "or Students.\n"
-            + "A weekday change cannot invalidate retained attendance; unmark incompatible records explicitly first.\n"
+            + "A weekday change cannot invalidate retained attendance. If blocked, inspect the reported date with "
+                    + "showlesson and obtain each Student's current people-list position before using unmark.\n"
             + "An identical edit makes no write. Example: editlesson lid/L1 st/1630 s/Advanced Math";
     public static final String MESSAGE_ENROL_USAGE = "Usage: enrol STUDENT_INDEX lid/LESSON_ID\n"
             + "STUDENT_INDEX is the current people-list position of a Student. LESSON_ID is stable.\n"

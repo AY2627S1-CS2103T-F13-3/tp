@@ -26,6 +26,7 @@ public class CanonicalCommandCatalogTest {
         assertTrue(lesson.contains("Use tp/ only with tu/"));
         assertTrue(lesson.contains("must not clash for its tutor, room or Students"));
         assertTrue(lesson.contains("weekday change cannot invalidate retained attendance"));
+        assertTrue(lesson.contains("obtain each Student's current people-list position before using unmark"));
         for (String word : List.of("edit", "editlesson")) {
             assertTrue(CanonicalCommandCatalog.getUsage(word, true).isEmpty());
         }
