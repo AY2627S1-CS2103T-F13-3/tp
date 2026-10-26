@@ -4,61 +4,51 @@
 skinparam arrowThickness 1.1
 skinparam arrowColor UI_COLOR_T4
 skinparam classBackgroundColor UI_COLOR
+skinparam nodesep 25
+skinparam ranksep 40
 
-package UI <<Rectangle>>{
-Class "<<interface>>\nUi" as Ui
-Class "{abstract}\nUiPart" as UiPart
-Class UiManager
-Class MainWindow
-Class ResultDisplay
-Class PersonRecordListPanel
-Class PersonRecordCard
-Class LessonListPanel
-Class LessonCard
-Class StatusBarFooter
-Class CommandBox
+package UI as UiPackage {
+    class "<<interface>>\nUi" as UiApi
+    abstract class UiPart
+    class UiManager
+    class MainWindow
+    class ResultDisplay
+    class PersonRecordListPanel
+    class PersonRecordCard
+    class LessonListPanel
+    class LessonCard
+    class HistoryListPanel
+    class AttendanceHistoryCard
+    class StatusBarFooter
+    class CommandBox
+}
+package Logic as LogicPackage {
+    class "<<interface>>\nLogic" as LogicApi LOGIC_COLOR
 }
 
-package Model <<Rectangle>> {
-Class HiddenModel #FFFFFF
-}
+UiManager ..|> UiApi
+UiManager ..> MainWindow : creates
+UiManager --> LogicApi
+MainWindow --> LogicApi
+MainWindow --> ResultDisplay
+MainWindow --> PersonRecordListPanel
+MainWindow ..> CommandBox : creates
+MainWindow ..> LessonListPanel : creates
+MainWindow ..> HistoryListPanel : creates
+MainWindow ..> StatusBarFooter : creates
 
-package Logic <<Rectangle>> {
-Class HiddenLogic #FFFFFF
-}
+PersonRecordListPanel ..> PersonRecordCard : creates
+LessonListPanel ..> LessonCard : creates
+HistoryListPanel ..> AttendanceHistoryCard : creates
 
-Class HiddenOutside #FFFFFF
-HiddenOutside ..> Ui
-
-UiManager .left.|> Ui
-UiManager -down-> "1" MainWindow
-MainWindow *-down->  "1" CommandBox
-MainWindow *-down-> "1" ResultDisplay
-MainWindow *-down-> "1" PersonRecordListPanel
-MainWindow *-down-> "1" LessonListPanel
-MainWindow *-down-> "1" StatusBarFooter
-
-PersonRecordListPanel -down-> "*" PersonRecordCard
-LessonListPanel -down-> "*" LessonCard
-
-MainWindow -left-|> UiPart
-
+MainWindow --|> UiPart
 ResultDisplay --|> UiPart
 CommandBox --|> UiPart
 PersonRecordListPanel --|> UiPart
 PersonRecordCard --|> UiPart
 LessonListPanel --|> UiPart
 LessonCard --|> UiPart
+HistoryListPanel --|> UiPart
+AttendanceHistoryCard --|> UiPart
 StatusBarFooter --|> UiPart
-
-PersonRecordCard ..> Model
-LessonCard ..> Model
-UiManager -right-> Logic
-MainWindow -left-> Logic
-
-PersonRecordListPanel -[hidden]left- CommandBox
-CommandBox -[hidden]left- ResultDisplay
-ResultDisplay -[hidden]left- StatusBarFooter
-
-MainWindow -[hidden]-|> UiPart
 @enduml
