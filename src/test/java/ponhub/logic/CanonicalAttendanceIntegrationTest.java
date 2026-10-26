@@ -157,6 +157,15 @@ public class CanonicalAttendanceIntegrationTest {
                 session.execute("mark 2 lid/L10 d/2036-10-06 s/present ack/future").getFeedbackToUser());
         assertEquals(AttendanceStatus.PRESENT, session.getDataSnapshot().attendance().getFirst().getStatus());
         assertEquals(2, writes[0]);
+
+        PonHubDataState acknowledged = session.getDataSnapshot();
+        byte[] acknowledgedBytes = Files.readAllBytes(path);
+        assertEquals("Attendance for Student S3 in lesson L10 on 2036-10-06 is already marked present. "
+                        + "No changes made.",
+                session.execute("mark 2 lid/L10 d/2036-10-06 s/present").getFeedbackToUser());
+        assertSame(acknowledged, session.getDataSnapshot());
+        assertArrayEquals(acknowledgedBytes, Files.readAllBytes(path));
+        assertEquals(2, writes[0]);
     }
 
     @Test

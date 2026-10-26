@@ -52,20 +52,23 @@ public final class CanonicalMarkAttendanceCommand implements CanonicalCommandExe
         Student student = PersonIndexResolver.resolveStudent(input.studentIndex(), stagedView.getPeople());
         AttendanceKey key = new AttendanceKey(student.getId(), input.lessonId(), input.date());
         Optional<Attendance> existing = staged.getAttendance(key);
+        boolean isNoChange = existing.isPresent() && existing.get().getStatus() == input.status();
         Attendance attendance;
         try {
             attendance = staged.markAttendance(student.getId(), input.lessonId(), input.date(), input.status());
         } catch (IllegalArgumentException failure) {
             throw new CommandException(failure.getMessage(), failure);
         }
+        if (isNoChange) {
+            return new CommandResult(String.format(MESSAGE_NO_CHANGE, student.getId(), input.lessonId(), input.date(),
+                    attendance.getStatus()));
+        }
         LocalDate today = LocalDate.now(clock);
         if (input.status() == AttendanceStatus.PRESENT
                 && input.date().isAfter(today) && !input.futureAcknowledged()) {
             throw new CommandException(String.format(MESSAGE_FUTURE_PRESENT, input.date(), today));
         }
-        String message = existing.isPresent() && existing.get().getStatus() == input.status()
-                ? MESSAGE_NO_CHANGE : MESSAGE_SUCCESS;
-        return new CommandResult(String.format(message, student.getId(), input.lessonId(), input.date(),
+        return new CommandResult(String.format(MESSAGE_SUCCESS, student.getId(), input.lessonId(), input.date(),
                 attendance.getStatus()));
     }
 }
