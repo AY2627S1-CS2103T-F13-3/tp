@@ -7,7 +7,9 @@ import java.util.Map;
 import java.util.Optional;
 
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -89,10 +91,27 @@ public class PersonRecordListPanel extends UiPart<Region> {
      */
     private static class PersonRecordListCell extends ListCell<PersonRecord> {
         private final ObservableValue<Map<PersonId, List<PersonSearchMatch>>> contexts;
+        private final DoubleProperty cardWidth = new SimpleDoubleProperty();
 
         private PersonRecordListCell(ObservableValue<Map<PersonId, List<PersonSearchMatch>>> contexts) {
             this.contexts = contexts;
+            widthProperty().addListener(observable -> updateCardWidth());
+            insetsProperty().addListener(observable -> updateCardWidth());
             indexProperty().addListener((observable, oldIndex, newIndex) -> updateCard());
+        }
+
+        @Override
+        protected void layoutChildren() {
+            // Refresh snapping when a window changes display scale without changing logical cell width.
+            updateCardWidth();
+            super.layoutChildren();
+        }
+
+        /**
+         * Reserves the same pixel-snapped insets as the cell skin when fitting its wrapping graphic.
+         */
+        private void updateCardWidth() {
+            cardWidth.set(Math.max(0, getWidth() - snappedLeftInset() - snappedRightInset()));
         }
 
         @Override
@@ -116,9 +135,7 @@ public class PersonRecordListPanel extends UiPart<Region> {
 
             Region card = new PersonRecordCard(getItem(), getIndex() + 1,
                     contexts.getValue().getOrDefault(getItem().getId(), List.of())).getRoot();
-            card.prefWidthProperty().bind(Bindings.createDoubleBinding(() ->
-                    Math.max(0, getWidth() - getInsets().getLeft() - getInsets().getRight()),
-                    widthProperty(), insetsProperty()));
+            card.prefWidthProperty().bind(cardWidth);
             setGraphic(card);
         }
     }
