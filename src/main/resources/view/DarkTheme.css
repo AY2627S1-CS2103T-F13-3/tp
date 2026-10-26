@@ -91,16 +91,31 @@
     -fx-background-color: -fx-focus-color;
 }
 
-.split-pane:horizontal .split-pane-divider {
-    -fx-background-color: #101010;
-    -fx-border-color: transparent transparent transparent #4d4d4d;
+#recordsSplitPane > .split-pane-divider {
+    -fx-background-color: #101010, #4d4d4d;
+    -fx-background-insets: 0, 0 4 0 3;
+    -fx-border-width: 0;
+    -fx-padding: 4;
+    -fx-cursor: h-resize;
 }
 
 #resultSplitPane > .split-pane-divider {
-    -fx-background-color: #555555;
-    -fx-border-color: #777777 transparent #333333 transparent;
-    -fx-padding: 3;
+    -fx-background-color: #101010, #4d4d4d;
+    -fx-background-insets: 0, 3 0 4 0;
+    -fx-border-width: 0;
+    -fx-padding: 4;
     -fx-cursor: v-resize;
+}
+
+#recordsSplitPane {
+    -fx-border-color: #333333;
+    -fx-border-width: 1;
+    -fx-padding: 0;
+}
+
+#resultDisplayPlaceholder {
+    -fx-background-color: #1C1C1C;
+    -fx-border-width: 1;
 }
 
 .split-pane {
@@ -214,6 +229,9 @@
 
 .result-display {
     -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
+    -fx-padding: 0;
     -fx-font-family: "Segoe UI";
     -fx-font-size: 13pt;
     -fx-text-fill: #F2F2F2;
