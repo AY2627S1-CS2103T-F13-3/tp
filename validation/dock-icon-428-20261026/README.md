@@ -49,3 +49,29 @@ Headless/unsupported/failure branches and Windows/Linux rendered behavior have n
 manually exercised. Hosted checks and substantive non-author review remain integration gates.
 
 Prepared by Vincent with OpenAI Codex assistance. Existing artwork authorship is unchanged.
+
+## Coverage follow-up — 26 October
+
+The original reviewed head `d8b4ce81` passed platform builds but failed Codecov patch coverage
+at 12%. The follow-up adds package-local native-operation/scheduler/resource seams, with production
+bindings remaining direct standard-library method references. It adds ten committed `DockIconTest`
+regressions without an audio/desktop mocking dependency or changes to coverage settings.
+
+The tests exercise non-Mac early return, deferred Mac execution, taskbar/ICON_IMAGE guards,
+pixel-identical bundled PNG decoding and delivery, missing/undecodable/unreadable resources,
+scheduling/support/acquisition/set failures (unsupported/security/native-linkage/AWT), and a
+nonfatal default-binding missing-resource request. Controlled operations establish call order and
+failure containment; they do not establish native Dock rendering on Windows/Linux or Finder launching.
+
+On macOS 27.0.1 arm64 / Zulu Java/FX 25.0.3:
+
+- `./gradlew --offline --no-daemon check coverage shadowJar`: PASS.
+- 980 tests, zero failures/errors/skips; ten are the added Dock tests.
+- Both Checkstyle tasks pass.
+- JaCoCo: DockIcon 27/27 lines, 10/10 branches; DesktopAccess record 1/1 line.
+- Follow-up JAR: 12,891,287 bytes; SHA-256
+  `78ae9828c4015d576fa5f710a6f73037422a4b04104602ee969b6dbeafa1a77d`.
+
+The screenshots above remain evidence for the earlier patched JAR hash, not a new visual replay of
+this follow-up JAR. Current hosted patch checks and substantive non-author re-review must clear
+before integration. No coverage threshold, test assertion or platform gate was weakened.
