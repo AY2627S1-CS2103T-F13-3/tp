@@ -1,12 +1,12 @@
 package ponhub.storage;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
@@ -24,11 +24,17 @@ final class CanonicalDataFileGuard {
 
     private final Path path;
     private final Path target;
+    private final LockFactory lockFactory;
     private String expectedJson;
     private String conflict;
 
     CanonicalDataFileGuard(Path path, String expectedJson) throws IOException {
+        this(path, expectedJson, CanonicalDataFileGuard::acquireLock);
+    }
+
+    CanonicalDataFileGuard(Path path, String expectedJson, LockFactory lockFactory) throws IOException {
         this.path = path;
+        this.lockFactory = Objects.requireNonNull(lockFactory);
         target = resolveTarget(path.toAbsolutePath().normalize());
         if (target.getFileName().toString().endsWith(LOCK_SUFFIX)) {
             throw new IOException("The .ponhub-lock suffix is reserved for save coordination files.");
@@ -45,33 +51,23 @@ final class CanonicalDataFileGuard {
             throw new IOException(conflict);
         }
         Files.createDirectories(target.getParent());
-        Path lockPath = target.resolveSibling(target.getFileName() + LOCK_SUFFIX);
         boolean hasSaved = false;
-        try (FileChannel channel = FileChannel.open(lockPath, StandardOpenOption.CREATE,
-                StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS)) {
-            if (channel.size() != 0) {
-                throw new IOException("Save coordination file is not empty: " + lockPath
-                        + ". Preserve it and close other instances before investigating.");
+        try (Closeable lock = lockFactory.open(target)) {
+            if (lock == null) {
+                throw busy(target);
             }
-            try (FileLock lock = channel.tryLock()) {
-                if (lock == null) {
-                    throw busy();
-                }
-                if (!target.equals(resolveTarget(path.toAbsolutePath().normalize()))
-                        || !Objects.equals(expectedJson, readCurrentJson())) {
-                    conflict = "The data file changed since this window loaded or last saved: " + path.toAbsolutePath()
-                            + ". This command was not saved or applied. Close other PonHub windows, back up the current"
-                            + " file, then restart and inspect the saved records before re-entering this command."
-                            + " Do not copy this window's stale data over the file. Further saves from this window"
-                            + " are blocked until restart.";
-                    throw new IOException(conflict);
-                }
-                FileUtil.writeToFile(target, json);
-                expectedJson = json;
-                hasSaved = true;
+            if (!target.equals(resolveTarget(path.toAbsolutePath().normalize()))
+                    || !Objects.equals(expectedJson, readCurrentJson())) {
+                conflict = "The data file changed since this window loaded or last saved: " + path.toAbsolutePath()
+                        + ". This command was not saved or applied. Close other PonHub windows, back up the current"
+                        + " file, then restart and inspect the saved records before re-entering this command."
+                        + " Do not copy this window's stale data over the file. Further saves from this window"
+                        + " are blocked until restart.";
+                throw new IOException(conflict);
             }
-        } catch (OverlappingFileLockException failure) {
-            throw busy();
+            FileUtil.writeToFile(target, json);
+            expectedJson = json;
+            hasSaved = true;
         } catch (IOException failure) {
             if (!hasSaved) {
                 throw failure;
@@ -81,20 +77,48 @@ final class CanonicalDataFileGuard {
         }
     }
 
-    private IOException busy() {
-        return new IOException("Another PonHub window is saving " + path.toAbsolutePath()
+    private static IOException busy(Path path) {
+        return new IOException("Another PonHub window is saving " + path
                 + ". This command was not saved or applied. Wait for it to finish and retry;"
                 + " if the file changed, restart this window before re-entering the command.");
     }
 
     private String readCurrentJson() throws IOException {
+        if (Files.notExists(target, LinkOption.NOFOLLOW_LINKS)) {
+            return null;
+        }
+        // A deletion/access failure after the absence check must fail closed rather than permit a stale save.
+        return Files.readString(target);
+    }
+
+    private static Closeable acquireLock(Path target) throws IOException {
+        Path lockPath = target.resolveSibling(target.getFileName() + LOCK_SUFFIX);
+        FileChannel channel = FileChannel.open(lockPath, StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS);
+        boolean isAcquired = false;
         try {
-            return Files.readString(target);
-        } catch (NoSuchFileException missing) {
-            if (Files.notExists(target, LinkOption.NOFOLLOW_LINKS)) {
+            if (channel.size() != 0) {
+                throw new IOException("Save coordination file is not empty: " + lockPath
+                        + ". Preserve it and close other instances before investigating.");
+            }
+            FileLock lock = channel.tryLock();
+            if (lock == null) {
                 return null;
             }
-            throw missing;
+            isAcquired = true;
+            return () -> {
+                try {
+                    lock.release();
+                } finally {
+                    channel.close();
+                }
+            };
+        } catch (OverlappingFileLockException failure) {
+            throw busy(target);
+        } finally {
+            if (!isAcquired) {
+                channel.close();
+            }
         }
     }
 
@@ -104,5 +128,14 @@ final class CanonicalDataFileGuard {
         }
         Path parent = path.getParent();
         return parent == null ? path : resolveTarget(parent).resolve(path.getFileName());
+    }
+
+    /**
+     * Acquires the save lease, returning null when busy.
+     * Tests can inject cleanup failures without replacing real file writes.
+     */
+    @FunctionalInterface
+    interface LockFactory {
+        Closeable open(Path target) throws IOException;
     }
 }
