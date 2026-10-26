@@ -469,6 +469,11 @@ Only students accept `l/` and `pp/`. Blank `e/` or `a/` clears that optional val
 student's own phone. Names, student levels/parent phones and tutor/parent phones cannot be cleared.
 Role/ID changes, repeated or unknown prefixes, invalid values and duplicates of another person are rejected.
 
+A duplicate error identifies the fields to correct: students use the normalized name and parent phone
+(`pp/`); tutors and parents use the normalized name and own phone (`p/`). Change `n/` or that identifying
+phone to a unique combination. A student's different level or own phone does not resolve a duplicate.
+The rejected edit leaves the existing records unchanged and stays in the command box for correction.
+
 For example, after the quick-start data, `list r/student` then `edit 1 l/P2 e/` updates Alex's level and
 clears their email. `edit 1 n/Alex  Tan` reports no change after space normalization and does not save;
 `edit 1 n/ALEX TAN` saves the corrected display capitalization. Successful changes survive restart.
