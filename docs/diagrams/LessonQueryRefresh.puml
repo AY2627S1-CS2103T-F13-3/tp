@@ -1,51 +1,36 @@
 @startuml
+' Readability layout by Zhu Zhi Yu with OpenAI Codex assistance (#393).
 !include style.puml
 skinparam ParticipantFontColor #FFFFFF
 skinparam sequenceMessageAlign left
-skinparam maxMessageSize 140
+skinparam defaultFontSize 16
+skinparam maxMessageSize 105
+skinparam ParticipantPadding 5
+skinparam ArrowFontSize 16
 participant "executor" as executor LOGIC_COLOR
-participant "transaction" as transaction MODEL_COLOR
+participant "tx" as transaction MODEL_COLOR
 participant "writer" as writer STORAGE_COLOR
-participant "live root" as live MODEL_COLOR
+participant "root" as live MODEL_COLOR
 participant "queries" as queries MODEL_COLOR
 participant "retrieval" as retrieval LOGIC_COLOR
 
-note over live, retrieval
-  Query: Mon, 1600, Math, Mei, R1, sn/a.
-  Candidates [L1, L2] -> result [L1].
-  Alex and Jamie match; emit L1 once.
-end note
-
-executor -> transaction : prepare editlesson lid/L1 s/English
-note over transaction
-  Staged root: English L1.
-  Live root and results: Math L1.
-end note
-executor -> writer : save changed candidate snapshot
+executor -> transaction : prepare editlesson\nlid/L1 s/English
+executor -> writer : save candidate snapshot
 alt save fails
     writer --> executor : IOException
-    note over executor, retrieval
-      Discard candidate; no publication.
-      Live Math L1 and all view state stay unchanged.
-    end note
 else save succeeds
     writer --> executor : saved
     executor -> transaction : commit()
     transaction -> live : resetData(candidate)
     live -> queries : stateProperty change
     activate queries
-    queries -> queries : rebuild complete derived indexes
-    queries -> queries : refresh held lists / active filter
-    queries -> retrieval : selected filtered list changes to []
-    retrieval -> retrieval : replace displayed entries
+    queries -> queries : rebuild derived indexes
+    queries -> queries : refresh lists / active filter
+    queries -> retrieval : filtered list becomes []
+    retrieval -> retrieval : replace display entries
     retrieval --> queries : display refreshed
     queries --> live : query refresh complete
     deactivate queries
-    note over queries, retrieval
-      Same held/displayed list objects.
-      Student list now has English L1.
-      Old search snapshot still has Math L1.
-    end note
     transaction --> executor : committed
 end
 @enduml

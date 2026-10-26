@@ -1,35 +1,30 @@
 @startuml
+' Readability layout by Zhu Zhi Yu with OpenAI Codex assistance (#393).
 ' Updated by Ernest Chua with OpenAI Codex assistance (#220).
 hide footbox
 skinparam defaultFontName Arial
-skinparam defaultFontSize 14
+skinparam defaultFontSize 16
 skinparam shadowing false
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 220
-participant "session:\nCanonicalPeopleSession" as Session #E5E5FA
-participant "executor:\nCanonicalCommandExecutor" as Executor #E5E5FA
-participant "tx:\nCanonicalTransaction" as Tx #FBE3E6
-participant "writer:\nSnapshotWriter" as Writer #FFF0BD
-[-> Session : execute(commandText)
-Session -> Session : resolve definition, check protection,\nparse arguments and create command
+skinparam maxMessageSize 140
+skinparam ParticipantPadding 8
+participant "session" as Session #E5E5FA
+participant "executor" as Executor #E5E5FA
+participant "transaction" as Tx #FBE3E6
+participant "writer" as Writer #FFF0BD
+[-> Session : execute(...)
+Session -> Session : resolve; check protection;\nparse; create command
 Session -> Executor : execute(command)
 Executor -> Executor : view.beginTransaction()
-note over Executor, Tx
-  PeopleView creates tx with isolated model and filter copies.
-  staged / stagedView are obtained from tx.
-end note
 ref over Executor, Tx
   command.execute(staged, stagedView)
-  Resolve index; validate and stage the edit.
-  Return a prepared CommandResult.
+  Resolve index; validate; stage edit.
+  Return prepared CommandResult.
 end ref
 Executor -> Tx : hasOperationalChanges()
 Tx --> Executor : changed
 alt changed operational snapshot
   Executor -> Writer : save(staged.exportState())
-  note over Tx, Writer
-    Runtime writer: ProtectedPonHubDataStorage.saveData
-  end note
   alt save succeeds
     Writer --> Executor : saved
   else permission / I/O failure
@@ -40,7 +35,7 @@ else no operational change
 end
 alt no operational change or save succeeded
   Executor -> Tx : commit()
-  Tx -> Tx : publish changed root, then people filter;\nrefresh subscribed views
+  Tx -> Tx : publish root, then people filter;\nrefresh views
   Tx --> Executor
   Executor --> Session : CommandResult
   [<-- Session : success feedback
@@ -48,9 +43,4 @@ else save failed
   Executor --> Session : CommandException
   [<-- Session : failure feedback
 end
-legend bottom
-  Solid arrow: call; dashed arrow: return or exception
-  Parse/domain failures also return before save and publication.
-  Optional activation bars are omitted.
-endlegend
 @enduml

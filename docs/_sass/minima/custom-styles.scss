@@ -32,3 +32,22 @@ h2, h3, h4, h5, h6 {
   }
 }
 
+
+// Keep a diagram's caption with its image in the printed Developer Guide.
+.guide-diagram {
+  margin-left: 0;
+  margin-right: 0;
+
+  figcaption {
+    font-size: inherit;
+    font-weight: 600;
+    margin-bottom: $spacing-unit / 2;
+  }
+}
+
+@media print {
+  .guide-diagram {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

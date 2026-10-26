@@ -98,7 +98,14 @@ The sequence below traces `edit 1 n/Jamie Tan` in a normal session where people-
 exists and the replacement is valid. `MainWindow` sends the command through `Logic.execute`;
 `CanonicalLogicManager` delegates to `CanonicalPeopleSession`.
 
-![Canonical edit command: stage, save, then publish](images/ArchitectureSequenceDiagram.png)
+<figure class="guide-diagram">
+  <a href="images/ArchitectureSequenceDiagram.png"><img src="images/ArchitectureSequenceDiagram.png" alt="Canonical edit command: stage, save, then publish" /></a>
+</figure>
+
+The lifelines show roles: `session` is `CanonicalPeopleSession`, `executor` is
+`CanonicalCommandExecutor`, `transaction` is `CanonicalTransaction` and `writer` is the
+`SnapshotWriter` callback supplied by `ProtectedPonHubDataStorage.saveData`. Solid arrows are calls;
+dashed arrows are returns or exceptions. Select the figure to view it at full size.
 
 The session checks startup protection before parsing mutation arguments. A parse or domain failure
 returns without saving or publishing. A valid command prepares a result on isolated transaction
@@ -525,13 +532,15 @@ The right pane switches between lesson and history results without replacing the
 
 ![Person record class diagram](images/PersonRecordClassDiagram.png)
 
-**Shared Lesson ownership and membership:**
+<figure class="guide-diagram">
+  <figcaption>Shared Lesson ownership and membership</figcaption>
+  <a href="images/LessonMembershipClassDiagram.png"><img src="images/LessonMembershipClassDiagram.png" alt="Lesson fields, Tutor and Student membership" /></a>
+</figure>
 
-<img src="images/LessonMembershipClassDiagram.png" alt="Lesson membership class diagram" width="800" />
-
-**Dated Attendance, separate from current membership:**
-
-<img src="images/AttendanceClassDiagram.png" alt="Attendance class diagram" width="800" />
+<figure class="guide-diagram">
+  <figcaption>Dated Attendance, separate from current membership</figcaption>
+  <a href="images/AttendanceClassDiagram.png"><img src="images/AttendanceClassDiagram.png" alt="Attendance key, status, Student and Lesson relationships" /></a>
+</figure>
 
 The canonical model has one current `PonHubDataState` aggregate. Each state references one people-registry snapshot,
 an ordered catalogue of shared `Lesson` records, and separate dated `Attendance` records. Each `PersonRecord` is
@@ -541,7 +550,8 @@ Student-Lesson many-to-many membership without copying lesson data into Student 
 refers to exactly one Student and one Lesson through its dated `AttendanceKey`. Attendance is retained history, not
 current membership.
 
-The diagrams show both stored Java references and domain relationships resolved through stable IDs.
+Select a domain figure to view it at full size. The diagrams show both stored Java references and domain
+relationships resolved through stable IDs.
 `Lesson` retains `tutorId` and `enrolledStudentIds`; `AttendanceKey` retains Student and Lesson IDs,
 resolved through the canonical aggregate. ID-labelled associations express those domain links,
 not additional object fields.
@@ -722,9 +732,11 @@ from the current people list; a roster row, history row or stable-ID suffix supp
 Keep the lesson query above selected after enrolling Alex in `L1`, then run `editlesson lid/L1 s/English`.
 The sequence separates the staged candidate from the live root; the user sees no intermediate mode.
 
-[![A saved Lesson edit refreshes the held query result](images/LessonQueryRefresh.png)](images/LessonQueryRefresh.png)
+<figure class="guide-diagram">
+  <a href="images/LessonQueryRefresh.png"><img src="images/LessonQueryRefresh.png" alt="A saved Lesson edit refreshes the held query result" /></a>
+</figure>
 
-The lifelines show component roles: executor, transaction, snapshot writer, live `PonHubData` root,
+The lifelines show component roles: executor, `tx` transaction, snapshot writer, live `PonHubData` `root`,
 `LessonQueries` and `LessonRetrieval` selector. Informal message labels omit JavaFX listener plumbing;
 the query refresh stays active until the displayed entries have been replaced and the callback returns.
 Select either diagram to view it at full size.
