@@ -42,3 +42,20 @@ successful run. The original attempt remains under `_temp/round1/native-414`.
 
 The #451 packaging fix and final release identity remain separate. No merge
 or release publication is claimed by these local checks.
+
+## Current-master reconciliation
+
+After #438 merged, `bd1f2d53` merges team `2de4faa7` and resolves the shared
+manual-test insertion point by retaining both complete sections. The Unicode
+procedure is byte-equivalent to master's section; the PR still changes only
+its own recall behavior/guidance plus validation artifacts.
+
+44 current recall/completion/catalogue/Name/Unicode-session/JSON tests, both
+Checkstyle tasks and shadowJar pass, zero failures/errors/skips. The frozen
+render passes; all 499 local targets across ten HTML pages resolve, with no
+duplicate IDs or conflict markers. Actual 760x900 Chrome inspection confirms
+both adjacent manual sections and the UG recall guidance; override reset.
+The native recall and same-folder restart checks pass again on the new exact
+JAR; updated identity, logs and captures are in `current-master/`. Earlier
+evidence above remains specific to its original source, rather than being
+silently relabelled as current-master acceptance.
