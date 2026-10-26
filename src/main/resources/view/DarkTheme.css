@@ -313,6 +313,11 @@
     -fx-font-size: 12px;
 }
 
+.person-record-card .person-contact-copy {
+    -fx-padding: 1 6 1 6;
+    -fx-font-size: 12px;
+}
+
 .view-navigation .button:active {
     -fx-background-color: #FF9900;
     -fx-text-fill: black;

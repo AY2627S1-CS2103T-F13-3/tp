@@ -179,8 +179,9 @@ filtered **people list**. Check range and required role, then resolve once to st
 the whole operation. Filtering renumbers positions without changing stored IDs (`S1`, `T1`, `P1`);
 cards distinguish both. Lesson, roster and history results preserve the people filter/order/indices;
 their row positions are never person selectors. Existing lessons use stable `lid/LESSON_ID` (`lid/L1`).
-`lessons [si/STUDENT_INDEX]` resolves its optional Student selector by the same rule. Stored
-relationships and internal query APIs use stable IDs, never displayed positions.
+`lessons [STUDENT_INDEX]` resolves its optional Student selector by the same rule; the former
+`lessons si/STUDENT_INDEX` syntax remains a compatibility alias. Stored relationships and internal query APIs
+use stable IDs, never displayed positions.
 
 **Tutor lookup.** `addlesson` matches `tu/TUTOR_NAME` by normalized full name, ignoring case and
 repeated spaces. If supplied, `tp/TUTOR_PHONE` must also match exactly; never ignore it. Reject zero
@@ -435,7 +436,7 @@ at the top of `feedbackSection`, the upper child of `resultSplitPane`, spanning 
 label explains that selecting a Student card chooses the target of the Student shortcuts. Navigation, guidance
 and feedback share this resizable section, with a 50-pixel minimum for the feedback placeholder. The shared
 divider resizes this section; command entry stays fixed below both record columns. The buttons route through
-`MainWindow` to the same `Logic.execute` boundary as the command box, using `lessons`, `lessons si/CURRENT_INDEX` and
+`MainWindow` to the same `Logic.execute` boundary as the command box, using `lessons`, `lessons CURRENT_INDEX` and
 `history CURRENT_INDEX` respectively. Student shortcuts resolve the selected stable Person ID against the current
 people list and require a Student before creating the indexed command. Missing or stale selection and Tutor/Parent
 selection produce feedback without replacing either result source. Buttons preserve the command-box draft and
@@ -698,7 +699,7 @@ navigation capture rather than presenting this running dataset as a screenshot.
 | Path | Important difference |
 | --- | --- |
 | People search | Replaces the people criteria and context; evaluates own fields first, then the same-child/same-Lesson relationships. It does not change the lesson filter or selected lesson/history source. |
-| `lessons si/INDEX` | Resolves the current visible person once, requires a Student, then subscribes by stable Student ID. Later people filtering cannot retarget that subscription. |
+| `lessons INDEX` | Resolves the current visible person once, requires a Student, then subscribes by stable Student ID. `si/INDEX` remains an input alias; later people filtering cannot retarget either form. |
 | Lesson search | Searches the complete catalogue, including empty rosters unless `sn/` is supplied. It changes only the lesson filter and selected lesson source. |
 | `showlesson lid/ID [d/DATE]` | Looks up the complete catalogue by stable Lesson ID, independently of filters. A dated detail separates unrecorded current members from present/absent records and retained former-member attendance. |
 | `history INDEX [lid/ID]` | Resolves a visible Student once and selects a separate history list, newest date first then Lesson ID. It includes former enrolments and switches the right panel to history. Successful lesson retrieval switches that panel back. |
@@ -714,8 +715,10 @@ The sequence separates the staged candidate from the live root; the user sees no
 
 [![A saved Lesson edit refreshes the held query result](images/LessonQueryRefresh.png)](images/LessonQueryRefresh.png)
 
-The lifelines name the executor, transaction, snapshot writer, live `PonHubData` root, `LessonQueries`
-and `LessonRetrieval` selector. Select either diagram to view it at full size.
+The lifelines show component roles: executor, transaction, snapshot writer, live `PonHubData` root,
+`LessonQueries` and `LessonRetrieval` selector. Informal message labels omit JavaFX listener plumbing;
+the query refresh stays active until the displayed entries have been replaced and the callback returns.
+Select either diagram to view it at full size.
 
 | Boundary | Candidate / saved state | Live queries and displayed result |
 | --- | --- | --- |
@@ -762,18 +765,24 @@ repeating them here.
 
 ### Storage component
 
-`ProtectedPonHubDataStorage` guards the active operational store; `JsonPonHubDataCodec` converts complete
-snapshots and `JsonPonHubDataStorage` performs file access. Preferences use `JsonUserPrefsStorage`
-separately. [Application startup](#canonical-application-startup-85) selects and checks paths.
+`ProtectedPonHubDataStorage` validates the active operational store and uses `JsonPonHubDataCodec` to decode
+and encode complete snapshots. Its `CanonicalDataFileGuard` coordinates each save and delegates replacement
+to the shared file writer. Preferences use `JsonUserPrefsStorage` separately.
+[Application startup](#canonical-application-startup-85) selects and checks paths.
 
 <a href="images/CanonicalStorageClassDiagram.png"><img src="images/CanonicalStorageClassDiagram.png" alt="Active canonical storage and separate preference storage sharing the safe file writer" width="800" /></a>
 
-Select the diagram to view it at full size. The two unconnected UML notes name the classes they describe.
+Select the diagram to view it at full size. The unconnected UML note names the writer whose recovery
+behavior it summarizes.
 
 The diagram shows the active storage classes; solid arrows show a held reference and dashed arrows show
 dependencies. The protected loader reads and classifies operational JSON before decoding the complete
-snapshot. Only a successful load or confirmed absence permits later saves through its owned
-`JsonPonHubDataStorage`. Preferences use their own codec/path through `JsonUtil`; both save paths reach
+snapshot. A successful load or confirmed absence installs one `CanonicalDataFileGuard`; before that,
+or after rejected startup, the loader has no save guard, hence the `0..1` multiplicity. For each later save,
+the codec encodes the candidate and the guard locks the sidecar, checks the file against its baseline, and
+passes the JSON to `FileUtil`. `JsonPonHubDataStorage` remains a standalone codec/file-access convenience,
+outside the active session's save path, and is omitted from this diagram.
+Preferences use their own codec/path through `JsonUtil`; both active save paths reach
 `AtomicFileWriter` through `FileUtil`. The writer's replacement and recovery limits are described once
 under [Safe JSON saves](#safe-json-saves). This is the current implementation, not a proposed storage migration.
 
@@ -793,8 +802,24 @@ shutdown-save failure is logged without preventing shutdown.
 Canonical operational data and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
 Existing destinations are resolved to their real paths, so saving through a symbolic link updates its
 target and preserves the link. Dangling/cyclic links and inaccessible destinations fail before writing.
-New files use a resolved parent directory, creating missing directories as needed. Concurrent external
-changes to links/files and multiple application instances are not coordinated.
+New files use a resolved parent directory, creating missing directories as needed.
+
+Runtime canonical saves additionally use `CanonicalDataFileGuard`. Successful loading records the exact JSON
+text and resolved destination (or confirmed absence). Each save takes a nonblocking operating-system lock on
+the persistent empty sibling `<data-file-name>.ponhub-lock`, compares the current destination and text with
+that baseline, and keeps the lock through the existing replacement/recovery writer. Only successful saving
+advances the baseline. Two windows loaded before the first save therefore cannot silently replace each other's
+different snapshots: a stale save throws before writing or publishing the transaction and remains blocked until
+restart. Reads keep the previous in-memory view; they do not automatically refresh it. Lock contention reports
+a retryable save error. Lock/channel cleanup errors after committed replacement are logged, preserving success.
+
+The sidecar is created only on a save attempt, never on loading, and remains after exit so later processes lock
+the same file. Never delete/replace it while any instance runs. The `.ponhub-lock` suffix is reserved; nonempty
+or symbolic-link sidecars are rejected without truncation. Resolved symbolic-link aliases use the target's
+sidecar. This coordinates cooperating current-runtime saves on local filesystems with working file locks;
+standalone codec writes, preferences, older builds and external editors do not participate. Concurrent external
+changes to links/files, lock-file tampering, live synchronization and power-loss durability remain outside this
+bounded accidental-second-window safeguard.
 
 A complete temporary sibling file is written and closed before atomic replacement is attempted.
 Only `AtomicMoveNotSupportedException` selects the fallback; permission and other move errors propagate.
@@ -1016,8 +1041,10 @@ The immutable types in
 [`model.lesson`](https://github.com/AY2627S1-CS2103T-F13-3/tp/tree/master/src/main/java/ponhub/model/lesson)
 define the exhaustive parsing, normalization and equality rules used by commands, aggregate validation and storage.
 `LessonId` is an `L`-prefixed positive `long`; `LessonDay` stores `Mon`–`Sun`; `LessonTime` stores four-digit 24-hour
-time; and `Subject` and `Room` enforce their length and character contracts. Room case is normalized so it cannot
-bypass clash detection.
+time; and `Subject` and `Room` enforce their length and character contracts. A `Subject` contains 1 to 50 Unicode
+letters or digits, with single spaces or hyphens separating non-empty parts, so conventional labels such as
+`A-Math` survive creation, editing, search and JSON reload unchanged. Room case is normalized so it cannot bypass
+clash detection.
 
 `LessonTimeSlot` requires its end to be later than its start and models `[start, end)`. Therefore `1600–1700` and
 `1700–1800` are adjacent rather than overlapping; equal clock times on different weekdays also do not overlap.
@@ -1083,8 +1110,10 @@ optional parent-record linking follow the [shared contract](#shared-lesson-targe
 role-prefixed positive `long` identity, such as `S1`, with no leading zeros; trimmed constructor input is
 case-normalized. It survives contact and view changes. Value equality includes the ID and all stored fields.
 Business duplicate matching instead compares **role + normalized name + identifying phone**: parent phone
-for a student, own phone for a tutor or parent. Name case and repeated spaces do not distinguish duplicates;
-different IDs, optional contacts or student levels cannot bypass this rule. Different-role records are distinct.
+for a student, own phone for a tutor or parent. Name case, repeated spaces and canonical Unicode spelling
+differences do not distinguish duplicates. Keys use `Locale.ROOT` lowercase without transliteration or accent
+removal, so `José` differs from `Jose`. Different IDs, optional contacts or student levels cannot bypass this rule.
+Different-role records are distinct.
 
 <a id="registry-apis"></a>
 <a id="allocation-and-state-validation"></a>
@@ -1116,14 +1145,19 @@ and saved files from admitting different formats.
 
 | Value | Contract |
 | --- | --- |
-| Name | 1–100 characters after trimming/collapsing ASCII spaces; English letters, spaces, apostrophes, hyphens and periods, with at least one letter. Display case is preserved. |
+| Name | 1–100 Unicode code points after trimming Unicode boundary spaces, collapsing ASCII spaces and NFC normalization. Letters, attached combining marks, ASCII spaces, apostrophes (`'`, `’`), hyphens and periods; at least one letter. Display case is preserved. Digits, emoji, slash, unattached marks and internal non-ASCII whitespace are rejected. |
 | Phone | 3–15 ASCII digits, stored as text to retain leading zeros. |
 | Email | At most 254 characters; local part allows English letters, digits, `.`, `_`, ASCII apostrophes (`'`), `%`, `+`, `-`, without leading/trailing/consecutive periods. Domain has at least two letter/digit/internal-hyphen labels, ending in 2–63 English letters. Spelling/case are preserved. |
 | Address | 1–200 printable ASCII characters after trimming/collapsing spaces; `/`, tabs, line breaks and controls are rejected. |
 
 Name/address normalization occurs once in the value type, before equality and hashing; case remains significant
-for value equality. Name/address parser boundaries preserve controls for rejection; role-aware add rejects
-controls before extraction.
+for value equality. `Name` rejects ISO controls, format characters, line/paragraph separators and lone surrogates
+before trimming, so JSON cannot hide invalid characters at a boundary. It shares the parser's Unicode-boundary
+trimming utility. After NFC normalization, a code-point scan enforces the length and mark-attachment rules.
+Existing duplicate keys and `TutorResolver` consume these canonical `Name` values; both lesson creation and
+editing therefore match canonical equivalents while retaining ambiguity and exact-phone checks. No schema
+change is needed: the loader constructs the same value and the writer saves its normalized display form.
+Name/address parser boundaries preserve controls for rejection; role-aware add rejects controls before extraction.
 Space normalization scans linearly; email rejects excessive length before a linear, constant-stack format scan,
 avoiding stack overflow on hostile repeated input. Phone/email parsing retains surrounding-whitespace trimming.
 
@@ -1131,6 +1165,10 @@ The active `RoleAwareAddParser` and canonical loader use this policy. Previously
 normalization-created duplicates, enter [protected startup](#current-protected-startup); Storage describes
 rejected-file preservation and recovery. This contact policy performs no legacy migration. Role-aware
 add/list are active as described below.
+
+This first #383 increment leaves prefix/slash parsing and search normalization unchanged. Legal-name
+`s/o` / `d/o` markers and numeric slash addresses remain outstanding; search can use a displayed-name fragment
+such as `n/Jos`, but does not promise canonical Unicode equivalence or full internationalization.
 
 <a id="role-aware-addition-parsing-foundation"></a>
 <a id="staged-person-addition-candidate"></a>
@@ -1255,6 +1293,15 @@ context below the own fields. FXML imposes no fixed card height. The `.person-re
 names, metadata, captions and values without changing Lesson/history styling or the list selection behavior.
 `PersonRecordListPanel` fits cards to cell width, updates positions when cells are reused, and supplies count,
 empty placeholder and vertical scrolling for tall cards. Neither projection nor panel owns writable records.
+
+Each present contact detail carries an explicit copyable flag; missing values and the education level do not.
+`PersonRecordCard` adds a standard, focusable **Copy** button with a contact/person accessible name.
+Button activation and its platform copy shortcut write only the exact displayed value to the system clipboard.
+The action holds the immutable detail and never executes a command, changes list selection or touches the
+command field. Mouse press/release activates the button without moving focus, preserving the command field's
+caret and selection; keyboard traversal retains normal button focus. Rebuilding a recycled card also rebuilds
+its actions from the current record. Presence comes from the contact's optional value, so a real address equal
+to `Not provided` remains copyable.
 
 `MainWindow` constructs these canonical cards over the session's current list. Developer preview recipes
 and earlier viewport results are preserved in [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77);
@@ -1549,7 +1596,7 @@ Shared lessons, current membership, and retained dated attendance are separate c
 ### Use cases
 
 For the use cases below, the **System** is `PonHub` and the **Actor** is the tuition centre administrator.
-The person, shared-lesson, attendance, search, and help operations accept all required details in one keyboard-entered command. These are target use cases; only the routes listed under [Current increment and command integration](#current-increment-and-command-integration) are active today. Canonical mutations validate and save the complete change without requiring a field prompt, preview, or separate confirmation. Read-only retrieval does not save operational data. Guided previews, capacity, make-ups and other explicitly labeled future extensions are outside the core flows.
+The person, shared-lesson, attendance, search, and help operations use keyboard-entered commands. These are target use cases; only the routes listed under [Current increment and command integration](#current-increment-and-command-integration) are active today. Person deletion requires a separate confirmation of its resolved target; other canonical mutations validate and save the complete change in one command. Read-only retrieval does not save operational data. Guided addition previews, capacity, make-ups and other explicitly labeled future extensions are outside the core flows.
 
 Person selectors in these target use cases are positive indices from the current filtered people list. Resolve the selected record once to its stable ID and enforce any required Student role; another result view does not supply that index. Existing shared lessons are selected by `lid/LESSON_ID`. Creating a lesson uses a normalized full tutor name and optional exact phone; search uses partial tutor-name text.
 
@@ -1591,7 +1638,7 @@ Person selectors in these target use cases are positive indices from the current
 
 **Extensions**
 
-* 1a. The administrator runs `lessons si/STUDENT_INDEX`: PonHub resolves the current people-list index once to a Student ID and shows that student's current lessons. An invalid index or wrong role is rejected without altering records or the people view.
+* 1a. The administrator runs `lessons STUDENT_INDEX`: PonHub resolves the current people-list index once to a Student ID and shows that student's current lessons. An invalid index or wrong role is rejected without altering records or the people view.
 * 2a. A condition is invalid, unavailable in this slice or incompatible with the category: PonHub explains the supported syntax without changing data. The administrator may resubmit at step 1.
 * 3a. No record matches: PonHub displays a successful empty result, and the use case ends. Unfiltered catalogue retrieval includes shared lessons with empty rosters.
 * 4a. A history Student index is invalid or selects another role, or the optional Lesson does not exist: PonHub reports the error without changing data, the people list or the previous result. The detail view also rejects an invalid date.
@@ -1702,17 +1749,20 @@ views; remaining attendance references still block student and lesson deletion.
 
 1. The administrator enters `delete INDEX` for the target in the current filtered people list.
 2. PonHub validates the positive index, resolves it once to the stable person ID and checks role-specific dependencies: Student membership or attendance, or Lessons assigned to a Tutor. Deleting a separate Parent does not remove a Student's stored parent phone.
-3. PonHub deletes and saves only the eligible person record, preserves the current filter, refreshes displayed positions and reports success. Surviving stable IDs and relationships remain unchanged.
+3. PonHub shows the resolved name and stable ID without saving or changing views. The administrator checks the target and enters `delete confirm`.
+4. PonHub rechecks the target and dependencies, deletes and saves only that record, preserves the current filter, refreshes displayed positions and reports success. Surviving stable IDs and relationships remain unchanged.
 
 **Extensions**
 
 * 2a. The index is invalid or dependencies prevent deletion: PonHub identifies the problem and changes nothing. Linked records are never deleted automatically.
-* 3a. Saving fails: PonHub discards the staged deletion before publication. The live aggregate and people view
-  remain unchanged; PonHub reports the failure and ends the use case.
+* 3a. The administrator enters `delete cancel` or any other command: the request is discarded without deletion.
+  A new `delete INDEX` replaces the pending target. Rejected input and restart also discard pending confirmation.
+* 4a. Saving fails: PonHub discards the staged deletion before publication. The live aggregate and people view
+  remain unchanged; PonHub reports the failure. Retrying requires a fresh preview and confirmation.
 
 **Postconditions:** One eligible record is deleted without broken references, or the previous state remains unchanged. Recheck displayed positions before selecting another person.
 
-**Future extensions:** Optional previews, student archiving/restoration and undo are separate later requirements (US-23, US-31 and US-35), rather than supported alternatives to this command.
+**Future extensions:** Student archiving/restoration and undo remain separate later requirements (US-31 and US-35).
 
 #### UC-07: Get help and recover from a command-entry error
 
@@ -1932,9 +1982,11 @@ named above do not certify native display/scaling acceptance.
 <!-- @@author ys000009 -->
 ### Lesson editing
 
-Use a disposable store and follow the first three steps of the
-[active shared-lesson workflow](#active-shared-lesson-and-attendance-workflow) so `L1`, `L2` and `L3` exist and
-Students 1 and 2 are enrolled in `L1`. Record Monday attendance for both Students before the history checks.
+Use a disposable store and complete the fixture setup in step 1 of the
+[common selector and failure journey](#common-selector-and-failure-journey). This creates `L1`, `L2` and `L3`,
+with Alex and Jamie enrolled in `L1`. Record Monday attendance for both Students before the history checks.
+Use the same common journey for generic selector, rejection, save, retry and reload expectations; the steps below
+retain only the Lesson-specific field, scheduling, Tutor and history behavior.
 
 1. Run `editlesson lid/L1 st/1630 s/Advanced Math`. Expect `Edited lesson: L1.`, the same ID, roster, Tutor,
    room and end time, and a refreshed Lesson card. Restart with the same file and verify the replacement persists.
@@ -1945,38 +1997,32 @@ Students 1 and 2 are enrolled in `L1`. Record Monday attendance for both Student
 4. Attempt edits that overlap another Lesson for the replacement Tutor, room and one enrolled Student. Expect the
    relevant stable IDs in the rejection, unchanged current cards/file and no ID allocation. Verify an adjacent
    boundary and the Lesson's unchanged own slot are not treated as overlaps.
-5. With current and former-member Monday attendance retained for `L1`, reject `editlesson lid/L1 d/Tue`. The
-   message must identify an incompatible date and explain that it can be explicitly unmarked; it must not delete,
-   move or relabel history. Remove each record with `unmark` only for this test, select
+5. Run `list r/student`, then `unenrol 2 lid/L1` so Jamie's Monday record becomes former-member attendance while
+   Alex's remains current. Reject `editlesson lid/L1 d/Tue`. The message must identify an incompatible date and
+   explain that the retained records can be explicitly unmarked; it must not delete, move or relabel history.
+   Remove each record with `unmark` only for this test, select
    `showlesson lid/L1 d/2026-10-05`, then retry the Tuesday edit. Expect the Lesson detail to remain selected with
    no date filter or date in its context.
-6. Follow [unsuccessful-save checks](UserGuide.html#checking-unsuccessful-saves-in-the-current-build). A failed
-   save retains the old Lesson card, selected detail, roster/history, file bytes and counters. Retry after restoring
-   access, restart and verify exactly one persisted replacement.
-7. With rejected disposable data, `editlesson lid/L1 s/Math` is blocked before parsing, `help editlesson` is
-   unavailable and original bytes remain unchanged. Recovery requires correcting/restoring the file and restarting.
+6. Repeat the save, retry and reload part of the
+   [common journey](#common-selector-and-failure-journey) with a valid Lesson edit. In addition to the shared
+   expectations, verify the old Lesson card, selected detail, roster/history and counters before retrying, then
+   verify exactly one persisted replacement after restart. Apply the common journey's stored-file recovery limits;
+   do not assume every failed save leaves destination bytes unchanged.
+7. In the common journey's rejected-data session, `editlesson lid/L1 s/Math` is blocked before parsing and
+   `help editlesson` is unavailable. Original rejected bytes remain unchanged; recovery requires correcting or
+   restoring the file and restarting.
 
 #### Lesson edit owner verification record (#269)
 
-Yang Shuo ran the source-level owner checks on 20 October 2026 from team-master baseline `d1a2b9b5`, using
-macOS 26.6.2 on arm64 and Azul Zulu OpenJDK 25.0.3. The focused
-`CanonicalLessonEditIntegrationTest` run and complete `./gradlew check --no-daemon` repository verification
-both reported `BUILD SUCCESSFUL`. To repeat the focused check after the namespace move, run
-`./gradlew test --tests ponhub.logic.CanonicalLessonEditIntegrationTest --no-daemon`.
+Yang Shuo's exact 20 October 2026 source-level owner record, including the team-master baseline `d1a2b9b5`,
+environment, commands and seven recorded PASS observations, remains preserved in
+[immutable team source `b68ec392`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/b68ec39227a7bef7d587222d616dd2db422f9cd8/docs/DeveloperGuide.md#lesson-edit-owner-verification-record-269).
+It is historical source-level evidence, not packaged/native or independent acceptance.
 
-| Result | Case and recorded observation |
-| --- | --- |
-| PASS | Partial changes to an empty `L4` refreshed the held catalogue result with the same stable ID and roster size 0. Subject, room and both time endpoints changed without allocating another Lesson. |
-| PASS | A populated `L1` retained current Student `S1`, former Student `S2`, all attendance and allocation counters after schedule, subject, Tutor and room changes. The dated detail still showed S1 present and S2 absent. |
-| PASS | `history 1 lid/L1` retained S1's current-member present result; `history 2 lid/L1` retained S2's former-member absent result. Reloading the saved file produced the same complete snapshot. |
-| PASS | Editing only `st/` or only `et/` succeeded when the resulting slot was valid. An adjacent boundary and the edited Lesson's own prior slot were not treated as overlaps. |
-| PASS | Independent Tutor, room and enrolled-Student overlaps were rejected. Missing, malformed and nonexistent `lid/` selectors preserved the held Lesson results, snapshot and saved bytes. |
-| PASS | A normalized no-op performed no save or result publication. Injected IO and permission failures retained Lesson detail, history context, snapshot and bytes before a successful retry and reload. |
-| PASS | Current and former Monday attendance both blocked a Tuesday weekday edit without mutation. After explicit `unmark` commands, the change succeeded and cleared only the obsolete selected-detail date. |
-
-This is source-level owner evidence, not packaged/native or independent acceptance. The #271/#272 verifier should
-rerun the same empty/populated, conflict, roster/detail/history, no-op, invalid-selector, retained-weekday and
-failed-save cases on the exact final candidate, reporting PASS, FAIL or NOT RUN for each affected case.
+For the exact final candidate, rerun the focused
+`./gradlew test --tests ponhub.logic.CanonicalLessonEditIntegrationTest --no-daemon` check and the executable
+Lesson-edit procedure above. Report PASS, FAIL or NOT RUN for the empty/populated, conflict,
+roster/detail/history, no-op, invalid-selector, retained-weekday and failed-save cases.
 <!-- @@author -->
 
 ### Command-name completion
@@ -1994,6 +2040,26 @@ failed-save cases on the exact final candidate, reporting PASS, FAIL or NOT RUN 
 4. Retain an unfinished draft while using menu/F1 help. Expect draft, people filter and selection to
    survive. Restart with malformed operational data: `h`, `li`, `e` complete to `help`, `list`, `exit`;
    `ad` and `sho` do not complete. Preserve the rejected file and confirm only recovery commands run.
+
+### Optional logo sound
+
+Use the packaged JAR and a disposable store. When testing audible playback, enable a working sound output;
+record unavailable or muted output separately rather than claiming that sound was heard.
+
+1. Launch PonHub and verify that no cue plays automatically. Enter `help`, then leave `add r/student n/Alex`
+   unfinished in the command box, with part of the draft selected. Note its caret/selection, feedback and views.
+2. Primary-click the PonHub wordmark. With functioning audio, expect one short percussion cue. Check that focus,
+   the draft and selection, feedback, people/results and operational data remain unchanged. A secondary click
+   does not request playback.
+3. Click repeatedly during the cue: playback must not layer. Click again after it finishes to replay it, then
+   run `help` to check that command entry remains responsive. If audio is unavailable, silence must not prevent
+   normal commands; do not require users to install an audio device to use PonHub.
+4. Start the cue and close the main window. Expect a clean exit with no continuing playback or extra window.
+
+The [audio resource note](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/resources/audio/README.md)
+records the original procedural cue's provenance. Keep actual platform/audio observations in the test result.
+Automated `LogoSoundPlayerTest` and `MainWindowTest` use controlled audio seams; they do not establish audible
+playback on a physical device.
 
 ### Inline help and supported routes
 
@@ -2039,13 +2105,13 @@ former-member attendance. The [active shared-lesson workflow](#active-shared-les
 supplies the commands. Record the tested commit, OS, Java version, window size and actual outcomes; these steps
 are a manual checklist, not evidence that a display/scaling matrix has passed.
 
-1. From history, enter `lessons`, `lessons si/STUDENT_INDEX`, a Lesson search, an undated `showlesson` and a dated
+1. From history, enter `lessons`, `lessons STUDENT_INDEX`, a Lesson search, an undated `showlesson` and a dated
    `showlesson` in turn, using valid current indices and IDs. Repeat with a different Student card selected.
    Each typed command selects its own results without a button click or reliance on the selected card. Run a
    people search from Lesson details and verify its matching people/context, then `history STUDENT_INDEX` to
    display that specified Student's history. People positions and stable IDs remain distinct.
 2. Select one Student card, type an unfinished command and select part of its text, then click **Student lessons**,
-   **Attendance history** and **All lessons**. Expect the same results as `lessons si/CURRENT_INDEX`,
+   **Attendance history** and **All lessons**. Expect the same results as `lessons CURRENT_INDEX`,
    `history CURRENT_INDEX` and `lessons`.
    Each click retains the draft, cursor/text selection and people filter/order/selection; **All lessons** needs
    no selection. The visible guidance explains the purpose of selecting a Student card.
@@ -2064,7 +2130,7 @@ are a manual checklist, not evidence that a display/scaling matrix has passed.
    entry. Resize both dividers and verify wrapping without horizontal overflow, independent vertical scrolling and
    reachable navigation, selection guidance, feedback and command entry at normal and minimum window sizes.
 6. Check all three active indicators for typed commands and shortcut clicks. Initial catalogue and `lessons`
-   activate **All lessons**; `lessons si/STUDENT_INDEX` activates **Student lessons**; `history STUDENT_INDEX`
+   activate **All lessons**; `lessons STUDENT_INDEX` activates **Student lessons**; `history STUDENT_INDEX`
    activates **Attendance history**, including empty results. Lesson search, with or without filters, and
    Lesson details activate none. Switch between two Students in the same result mode. Selecting a conflicting
    card, filtering the result Student out of the people list, opening help and committed edits retain the
@@ -2115,7 +2181,7 @@ these people-specific differences against the [shared selector contract](#shared
 2. Restore `search c/student n/Jamie` from the common journey: Jamie `S2` is position **1**.
    Subscribe to lesson/roster results, then run `unenrol 1 lid/L1` and `enrol 1 lid/L1`.
    Both act on S2, never S1. Verify the same people list object, filter/order/indices and subscribed query
-   objects remain, with their contents refreshed. `lessons si/1` follows Jamie's current card and rejects
+   objects remain, with their contents refreshed. `lessons 1` follows Jamie's current card and rejects
    superseded `sid/S2` input. Lesson references use `lid/`.
 3. Follow the [add/save checks](#canonical-people-commands-and-unsuccessful-saves) for successful-add view reset
    and rejected-add preservation/retry. Apply the current-view selector checks to `delete` for every role;
@@ -2144,6 +2210,18 @@ instructions are preserved in [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp
    on sample data and check that matching relationship context remains complete below the own fields.
    Coordinate whole-window checks with
    [#128](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/128).
+4. Save any clipboard contents you need before testing. Add
+   `add r/student n/Copy Test l/P1 pp/00912345 p/00123456 e/Copy.Test@example.com a/12 Main Road`,
+   then `list r/student`. Select a different Student and leave an unfinished command with part of its text
+   selected. Click each **Copy** button on Copy Test's card and paste into a disposable text editor. Expect
+   only the full corresponding value, retaining phone zeros and email case. The selected card, filter/order,
+   draft, caret/text selection, feedback and operational file bytes stay unchanged.
+5. Use Tab/Shift+Tab to reach the buttons and Space to activate them; also try Ctrl+C on Windows/Linux or
+   Cmd+C on macOS while a Copy button is focused. Confirm a visible focus border and a contact/person accessible
+   name. Copy selected command and feedback text using their normal shortcuts. Missing optional contacts have
+   no Copy button; Tutor/Parent phones remain copyable. Edit a contact, clear an optional contact and filter/scroll
+   away and back: actions must copy current values and disappear for cleared values. Restore your clipboard
+   after testing. Repeat the layout checks with the buttons visible.
 
 Given below are instructions to test the app manually.
 
@@ -2151,6 +2229,25 @@ Given below are instructions to test the app manually.
 testers are expected to do more *exploratory* testing.
 
 </div>
+
+### Unicode person-name checks (#383 first increment)
+
+In a disposable data folder, add `add r/tutor n/José Santos p/00123456`,
+`add r/student n/李明 l/P1 pp/91234567` and `add r/parent n/தமிழ் p/91234567`.
+Expect the displayed spellings and IDs `T1`, `S1`, `P1`; restart and check all three persist.
+Create `addlesson d/Mon st/0900 et/1000 s/Math tu/JOSÉ SANTOS rm/R1` and check it resolves `T1`.
+With the Tutor list selected, `edit 1 n/Anne-Marie O’Neill` must preserve `T1` and the lesson link.
+Restore the Tutor to `José Santos`, then edit again with `José` entered as `Jose` plus combining acute accent:
+the edit must report no change and the saved name must remain `José Santos`.
+A same-role/same-identifying-phone addition using that equivalent spelling must fail.
+`Jose` without an accent remains distinct. An extra Tutor with the same name but another phone must
+require `tp/` for lesson selection; an incorrect supplied phone must fail.
+
+`CanonicalUnicodeNameIntegrationTest` checks command/JSON reload, no-op/duplicate byte preservation,
+allocation counters, existing ASCII data, lesson/roster/attendance stability and invalid-prefix regressions.
+`NameTest` checks normalized code-point limits, supplementary letters and unattached marks;
+`JsonPonHubDataStorageTest` checks human-edited Unicode and protected malformed/duplicate reloads.
+Search and slash grammar retain the limitations described in the contact-validation section above.
 
 ### Launch and shutdown
 
@@ -2181,6 +2278,39 @@ and retain its per-trial results and unavailable combinations. The cases here ch
 Automated initialization/shutdown checks do not establish full-window interaction, physical scaling
 or packaged JAR-folder anchoring. Record actual results for the procedure above.
 Historical verification details are preserved in [#84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84#issuecomment-6140874125).
+
+### Accidental second-window save protection
+
+Use the [common journey's artifact/runtime record](#common-selector-and-failure-journey) and a disposable
+JAR folder. Choose a previously unused path, such as `manual/two-windows.json`; do not use real records.
+Record actual feedback, file hashes and restart results separately from these reusable instructions.
+
+1. From two terminals in that same JAR folder, launch two windows **before either window saves**, using
+   the identical command `java -jar ponhub.jar --data=manual/two-windows.json` in both terminals.
+   Call them A and B. Both should show an empty people list, with no operational file created yet.
+2. In A, enter `add r/student n/Alex Tan l/S2 pp/91234567`.
+   Expect `New student added: Alex Tan (S1).` and Alex in A's list. Record the selected file's SHA-256:
+   `shasum -a 256 manual/two-windows.json` on macOS/Linux, or
+   `Get-FileHash manual/two-windows.json -Algorithm SHA256` in PowerShell.
+3. In the already-open B, enter `add r/student n/Jamie Tan l/P1 pp/91234568`.
+   Expect a save error saying the file changed and this window must restart, with no success feedback.
+   B's list stays empty: the rejected command does not publish Jamie or consume a Student ID.
+   Recheck the file hash; it must equal the hash after A's save. A must still show Alex.
+4. In B, retry the same addition. Expect another rejection and the same file hash. Run `help` and `list`;
+   they remain usable, but B's empty list is stale and does not mean Alex was deleted. Exit both windows
+   normally with `exit`, then confirm the operational file hash still matches. Leave the empty
+   `two-windows.json.ponhub-lock` sidecar in place; its presence after exit is normal.
+5. Restart one window with the same command. Expect Alex as `S1` and no Jamie. Enter Jamie's command again;
+   expect `New student added: Jamie Tan (S2).` and both Students in the list. Exit and reopen once more
+   to confirm both records and IDs persist.
+6. Repeat from an existing supported file: load it in both windows before changing either, save a real
+   mutation in A, then attempt a different mutation in B. Expect B's rejection to preserve A's saved bytes
+   and B's previous live view. Close both and restart before continuing normal work.
+
+If another window is still inside a save, a busy-save error may precede stale-file detection. Wait for that
+save to finish and retry; a changed file must then require restart. Do not delete the sidecar, overwrite
+the newer file with a stale window's data, or edit files while windows are running. See
+[Safe JSON saves](#safe-json-saves) for the safeguard's scope and recovery limits.
 
 ### Canonical people commands and unsuccessful saves
 
@@ -2286,7 +2416,7 @@ The following is one end-to-end procedure for the delivered normal session. `add
    enrol 1 lid/L2
    enrol 1 lid/L3
    lessons
-   lessons si/1
+   lessons 1
    search c/lesson sn/Alex d/Mon s/Math
    search c/lesson sn/Nobody
    ```
@@ -2310,7 +2440,7 @@ The following is one end-to-end procedure for the delivered normal session. `add
 
 5. Remove Alex from both current rosters. Correcting Alex's existing `L1` key still succeeds, while creating the
    new `2026-10-12` key fails because Alex is no longer enrolled in `L1`. The dated detail moves Alex's corrected
-   result to the former-member section, `lessons si/1` excludes `L1` and `L3`, and `delete 1` remains blocked by
+   result to the former-member section, `lessons 1` excludes `L1` and `L3`, and `delete 1` remains blocked by
    retained `L1` attendance. Exit, inspect the closed file, restart with the same `--data` path, and continue with
    step 6 to verify that membership and retained history both reload.
 
@@ -2321,7 +2451,7 @@ The following is one end-to-end procedure for the delivered normal session. `add
    mark 1 lid/L1 d/2026-10-05 s/present
    mark 1 lid/L1 d/2026-10-12 s/present
    showlesson lid/L1 d/2026-10-05
-   lessons si/1
+   lessons 1
    delete 1
    exit
    ```
@@ -2332,13 +2462,13 @@ The following is one end-to-end procedure for the delivered normal session. `add
    blocked by Jamie's attendance. Removing that final key makes deletion succeed. Recreating the same slot must
    receive `L4`, not the deleted `L1`. After exiting, hash the closed operational file as described in step 7.
    Restart once more, run `list r/student` to restore the Student positions, and verify that the catalogue contains
-   `L2`, `L3` and empty-roster `L4` in creation order. `search c/lesson s/Math` returns `L4`, and `lessons si/1`
+   `L2`, `L3` and empty-roster `L4` in creation order. `search c/lesson s/Math` returns `L4`, and `lessons 1`
    remains empty.
 
    ```text
    list r/student
    showlesson lid/L1 d/2026-10-05
-   lessons si/1
+   lessons 1
    delete 1
    unmark 1 lid/L1 d/2026-10-05
    unmark 1 lid/L1 d/2026-10-05
@@ -2352,7 +2482,7 @@ The following is one end-to-end procedure for the delivered normal session. `add
    ```
 
 7. Keep that final restarted, Student-filtered session open. To confirm that retrieval is read-only, run `lessons`,
-   `lessons si/1`, `search c/lesson s/Math`, `showlesson lid/L4 d/2026-10-05`, `help lessons` and
+   `lessons 1`, `search c/lesson s/Math`, `showlesson lid/L4 d/2026-10-05`, `help lessons` and
    `help showlesson`, exit, and compare the closed operational file's hash with the value captured before this
    restart. Preferences are a separate file; the operational bytes must match. From the JAR folder, macOS/Linux
    users can run
@@ -2393,12 +2523,20 @@ Use role-aware commands in a disposable selected data file.
    Expect protected startup and original bytes preserved through help/list/exit and attempted mutations.
    Use the [Storage recovery procedure](#current-protected-startup) on a deliberately corrected working copy.
 
-### Active guarded person deletion (#91)
+<a id="active-guarded-person-deletion-91"></a>
+
+### Guarded person deletion and confirmation
 
 The session parses a positive people-list index using `ParserUtil`, rejecting non-whitespace ISO control characters
-before trimming the selector. `CanonicalDeleteCommand` resolves it once through
-`PersonIndexResolver` and passes the stable ID to `PonHubData.removePerson`. The aggregate identifies a blocking
-current enrolment, retained attendance key or assigned lesson before creating a replacement people registry.
+before trimming the selector. `CanonicalPeopleSession` resolves it once through `PersonIndexResolver` and checks
+`PonHubData.removePerson` on a disposable snapshot. It retains only the immutable target record for a prompt
+showing the name and stable ID; no live model/view changes or writes occur. `delete confirm` consumes that record
+and executes `CanonicalDeleteCommand`, which rechecks equality and dependency guards using the stable ID.
+Every command consumes the old pending request before parsing, so intervening commands, rejected input,
+cancellation and failed saves cannot leave a stale confirmation armed. Confirmation is not persisted.
+
+The aggregate identifies a blocking current enrolment, retained attendance key or assigned lesson before
+creating a replacement people registry.
 Registry removal and the validated aggregate retain all allocation counters, surviving people order, lessons and
 attendance. Parents have no direct lesson/attendance references; their removal preserves Student parent-phone values.
 The existing executor saves the complete staged aggregate before publishing the people/query refresh. It preserves
@@ -2408,21 +2546,26 @@ both the role filter and the full own-contact search criteria. Protected startup
 enrol/mark/unenrol routes, ID counters after reload, query continuity and failed-save invisibility/retry.
 For manual checks, use an isolated supported dataset:
 
-1. Add two Parents and a Student sharing the first Parent's phone. Run `list r/parent`, then delete the first Parent
-   by its current position. Expect the remaining Parent at position 1 and the Student's parent phone unchanged.
-   Delete the remaining Parent, restart, add another Parent and verify that its stable ID exceeds both removed IDs.
-2. Search for one unreferenced Student by name, with a stable ID suffix different from position 1. Run `delete 1`:
-   only that Student disappears; the search stays active and becomes empty. Surviving IDs and ordering remain intact.
+1. Add two Parents and a Student sharing the first Parent's phone. Run `list r/parent`, then `delete 1`.
+   Check that the prompt names that Parent and stable ID, with unchanged file, selected card and views.
+   Enter `delete cancel` and verify the same state. Repeat `delete 1`, then `delete confirm`: expect the remaining
+   Parent at position 1 and the Student's parent phone unchanged. Preview and confirm removal of the remaining
+   Parent, restart, add another Parent and verify that its stable ID exceeds both removed IDs.
+2. Search for one unreferenced Student by name, with a stable ID suffix different from position 1. Run `delete 1`,
+   check the target, then `delete confirm`: only that Student disappears; the search stays active and becomes empty.
+   Surviving IDs and ordering remain intact. In a separate preview, run `list`, `help` or invalid input before
+   `delete confirm`: expect no pending confirmation and no deletion. A fresh preview can then be confirmed.
 3. Create a Lesson, enrol a Student, and attempt to delete the Student or its Tutor using current people positions.
    Expect feedback naming the blocking Lesson and unchanged file/view. Unenrol the Student without marking attendance:
-   Student deletion now succeeds, while the Tutor remains blocked by the empty Lesson.
+   Student preview and confirmed deletion now succeed, while the Tutor remains blocked by the empty Lesson.
 4. In a separate dataset, enrol, mark and unenrol a Student. Deletion must remain blocked by retained attendance;
    feedback names the Lesson and date. Restart and verify that the same guard remains. An unassigned Tutor is deletable.
 5. Reject `delete`, `delete S1`, `delete 0`, `delete -1`, extra arguments and out-of-range positions without changes.
    `CanonicalDeleteIntegrationTest` also sends actual NUL, backspace and escape characters at both boundaries and
    inside selectors, verifying zero saves and unchanged bytes, snapshots, search filters and displayed positions.
-   Use an isolated unwritable storage seam, attempt deletion and verify unchanged file, people filter/positions and
-   query results. Restore writing and retry: commit only once, then restart and compare the complete saved state.
+   Use an isolated unwritable storage seam, preview and confirm deletion, and verify unchanged file, people
+   filter/positions and query results. A repeated `delete confirm` must not write. Restore writing, preview again
+   and confirm: commit only once, then restart and compare the complete saved state.
 
 Use the active `unmark` route to remove the retained Attendance dependency before retrying Student deletion.
 Use the active `deletelesson` route to remove the empty Lesson before retrying Tutor deletion.

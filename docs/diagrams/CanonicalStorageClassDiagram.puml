@@ -15,12 +15,7 @@ package "Operational storage" {
     class ProtectedPonHubDataStorage
     class JsonDataVersionDetector
     class JsonPonHubDataCodec
-    class JsonPonHubDataStorage
-    note as LoadProtection
-      ProtectedPonHubDataStorage:
-      One load attempt per session.
-      Rejected data keeps writes locked.
-    end note
+    class CanonicalDataFileGuard
 }
 
 package "Preferences (separate file)" {
@@ -39,11 +34,10 @@ package "Shared file writing" {
 }
 
 ' The label-only line break separates the multiplicity from the horizontal arrowhead.
-ProtectedPonHubDataStorage -right-> "\n1" JsonPonHubDataStorage : owns
+ProtectedPonHubDataStorage -right-> "\n0..1" CanonicalDataFileGuard : save guard
 ProtectedPonHubDataStorage ..> JsonDataVersionDetector : classify load
-ProtectedPonHubDataStorage ..> JsonPonHubDataCodec : validate/decode load
-JsonPonHubDataStorage ..> JsonPonHubDataCodec : encode/decode
-JsonPonHubDataStorage ..> FileUtil : save JSON
+ProtectedPonHubDataStorage ..> JsonPonHubDataCodec : encode/decode
+CanonicalDataFileGuard ..> FileUtil : save JSON
 JsonUserPrefsStorage ..> JsonUtil : preferences JSON
 JsonUtil ..> FileUtil : save JSON
 FileUtil ..> AtomicFileWriter : create writer

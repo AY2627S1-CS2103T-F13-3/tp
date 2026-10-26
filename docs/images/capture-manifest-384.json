@@ -1,0 +1,90 @@
+{
+  "applicationSource": "b22d81569b96ba66b258c94a9ca2b5a7658cdeaa",
+  "jarSha256": "d54c2456496404180a5f592749847227027a310d5a93a81b64ea5ee8e91b8c7c",
+  "records": [
+    {
+      "file": "Ui.png",
+      "archived": "docs/images/archive/pre-384-Ui.png",
+      "sha256": "dd3126d6e1e88ea40a93eeb7906d915516c23799c8cfb092f1c69a2d4d6c061e"
+    },
+    {
+      "file": "LessonBoardNavigation.png",
+      "archived": "docs/images/archive/pre-384-LessonBoardNavigation.png",
+      "sha256": "8d4f26678a47e5c70baf2a8a95b416abbfd8cad8b1864b54f936d8a54c445e93"
+    },
+    {
+      "file": "AttendanceDetails.jpg",
+      "archived": "docs/images/archive/pre-384-AttendanceDetails.jpg",
+      "sha256": "7e0ff45fc926fd0bfab1119ae066858f559105a7f87c6b6536c764c35a0e21ad"
+    },
+    {
+      "file": "AttendanceHistory.jpg",
+      "archived": "docs/images/archive/pre-384-AttendanceHistory.jpg",
+      "sha256": "320223cf67131f58fffc3e56721dcade4ea841f9941acca1ffcc4b61c24c1be9"
+    },
+    {
+      "raw": "ui-native.png",
+      "rawSha256": "8e3a8f8c8ab291d1de81b8194d97f376146c9f674face55d0a14534f9d5297cb",
+      "file": "Ui.png",
+      "crop": [
+        0,
+        56,
+        1480,
+        1600
+      ],
+      "size": [
+        1480,
+        1544
+      ],
+      "sha256": "7545526b9c08d32c98a1feeff1f2af36b49c5a41b60c72d9eb8d536c824d12fd"
+    },
+    {
+      "raw": "navigation-native.png",
+      "rawSha256": "8e7f7852e1c1de87bbc6634a54925ed5e6f5d14f7015354ef797c08c0802ed4a",
+      "file": "LessonBoardNavigation.png",
+      "crop": [
+        0,
+        56,
+        1480,
+        1600
+      ],
+      "size": [
+        1480,
+        1544
+      ],
+      "sha256": "371327f7cece5d456452bd15482d5585a1297993620ba84890141a6d7f641a01"
+    },
+    {
+      "raw": "details-native.png",
+      "rawSha256": "e71e83114ce57d6c6d93dc2767de11d296d847fe640f0dbb4a20c25020c00eeb",
+      "file": "AttendanceDetails.jpg",
+      "crop": [
+        662,
+        340,
+        1478,
+        1064
+      ],
+      "size": [
+        816,
+        724
+      ],
+      "sha256": "c9c6f82f0a69bbd90cbbca835adb4e7d5ca7453141ab2a73c2e81adbedee94c0"
+    },
+    {
+      "raw": "history-native.png",
+      "rawSha256": "61e07cd22a46403af62917181781860cfbc82bf731b40c00eb5b44684cb7686c",
+      "file": "AttendanceHistory.jpg",
+      "crop": [
+        662,
+        340,
+        1478,
+        660
+      ],
+      "size": [
+        816,
+        320
+      ],
+      "sha256": "9906bfac092dd6d6f3abc9405560adf193b9bcfea1b56cbeebc6f5b989594a5c"
+    }
+  ]
+}

@@ -69,6 +69,7 @@ public class CanonicalLogicManagerTest {
             assertTrue(logic.execute(addition).getFeedbackToUser().contains("Privacy Canary"));
             assertThrows(CommandException.class, () -> logic.execute(addition));
             logic.execute("delete 1");
+            logic.execute("delete confirm");
             assertTrue(logic.getPersonRecords().isEmpty());
             assertThrows(ParseException.class, () -> logic.execute(addition + "\nInjected378"));
             assertThrows(ParseException.class, () -> logic.execute("privacy378@example.com a/378 Canary Avenue"));
@@ -77,6 +78,7 @@ public class CanonicalLogicManagerTest {
 
             assertEquals(List.of("Command type=add outcome=success",
                     "Command type=add outcome=command_rejected cause=CommandException>DuplicatePersonException",
+                    "Command type=delete outcome=success",
                     "Command type=delete outcome=success",
                     "Command type=add outcome=parse_rejected cause=ParseException",
                     "Command type=unknown outcome=parse_rejected cause=ParseException",

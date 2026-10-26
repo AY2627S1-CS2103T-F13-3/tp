@@ -19,9 +19,12 @@ import org.junit.jupiter.api.io.TempDir;
 
 import javafx.collections.ListChangeListener;
 import ponhub.commons.core.index.Index;
+import ponhub.logic.commands.CanonicalDeleteCommand;
+import ponhub.logic.commands.CommandResult;
 import ponhub.logic.commands.exceptions.CommandException;
 import ponhub.logic.parser.ParserUtil;
 import ponhub.logic.parser.exceptions.ParseException;
+import ponhub.model.PeopleView;
 import ponhub.model.PonHubData;
 import ponhub.model.PonHubDataState;
 import ponhub.model.lesson.Lesson;
@@ -57,6 +60,118 @@ public class CanonicalDeleteIntegrationTest {
     Path directory;
 
     @Test
+    public void execute_previewAndCancellation_preserveBytesSnapshotAndAllViewsWithoutSaving() throws Exception {
+        Path path = savedData(Set.of(FIRST_STUDENT));
+        CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+            throw new AssertionError("Preview and cancellation must not save");
+        });
+        session.execute("search c/student n/Bob");
+        session.execute("search c/lesson s/Math");
+        session.execute("history 1");
+        var before = session.getDataSnapshot();
+        byte[] bytes = Files.readAllBytes(path);
+        var people = session.getPeople();
+        var contexts = session.personSearchContextProperty().get();
+        var lessons = session.getDisplayedLessons();
+        var history = session.getDisplayedHistory();
+        String lessonContext = session.lessonResultContextProperty().get();
+        String historyContext = session.historyResultContextProperty().get();
+        int[] events = {0};
+        people.addListener((ListChangeListener<PersonRecord>) change -> events[0]++);
+
+        assertEquals("Delete student: Bob Student (S3)? This permanently removes the record.\n"
+                + "Enter delete confirm to proceed or delete cancel to keep it.\n"
+                + "Any other command cancels this request.", session.execute("delete 1").getFeedbackToUser());
+        assertSame(before, session.getDataSnapshot());
+        assertArrayEquals(bytes, Files.readAllBytes(path));
+        assertEquals("Person deletion cancelled. No records were changed.",
+                session.execute("delete cancel").getFeedbackToUser());
+        assertThrows(CommandException.class, () -> session.execute("delete confirm"));
+        assertSame(before, session.getDataSnapshot());
+        assertArrayEquals(bytes, Files.readAllBytes(path));
+        assertSame(people, session.getPeople());
+        assertEquals(List.of(SECOND_STUDENT), visibleIds(session));
+        assertSame(contexts, session.personSearchContextProperty().get());
+        assertSame(lessons, session.getDisplayedLessons());
+        assertEquals(List.of(LESSON), lessons.stream().map(lesson -> lesson.getLessonId()).toList());
+        assertEquals(lessonContext, session.lessonResultContextProperty().get());
+        assertSame(history, session.getDisplayedHistory());
+        assertTrue(session.historyViewActiveProperty().get());
+        assertEquals(historyContext, session.historyResultContextProperty().get());
+        assertEquals(0, events[0]);
+        assertEquals(before, new CanonicalPeopleSession(path).getDataSnapshot());
+    }
+
+    @Test
+    public void execute_interveningCommandsIncludingRejectedInput_cancelThePendingTarget() throws Exception {
+        Path path = savedData(Set.of());
+        CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+            throw new AssertionError("An expired confirmation must not save");
+        });
+        var before = session.getDataSnapshot();
+        byte[] bytes = Files.readAllBytes(path);
+        for (String command : List.of("list r/student", "search c/parent n/Other", "help delete", "", " ",
+                "unknown", "delete 99", "delete CONFIRM", "delete confirm extra", "delete cancel extra",
+                "delete \0confirm", "delete confirm\b", "delete confirm\n")) {
+            session.execute("list r/parent");
+            session.execute("delete 1");
+            try {
+                session.execute(command);
+            } catch (CommandException | ParseException expected) {
+                // Rejected input must disarm the pending request as well as successful commands.
+            }
+            var visible = List.copyOf(session.getPeople());
+            CommandException failure = assertThrows(CommandException.class, () -> session.execute("delete confirm"));
+            assertTrue(failure.getMessage().contains("No person deletion is awaiting confirmation"), command);
+            assertEquals(visible, session.getPeople());
+            assertSame(before, session.getDataSnapshot());
+            assertArrayEquals(bytes, Files.readAllBytes(path));
+        }
+    }
+
+    @Test
+    public void execute_newPreviewReplacesOldTarget_andConfirmationCannotBeRepeatedOrRestarted() throws Exception {
+        Path path = savedData(Set.of());
+        CanonicalPeopleSession session = new CanonicalPeopleSession(path);
+        session.execute("list r/parent");
+        session.execute("delete 1");
+        assertTrue(session.execute("delete 2").getFeedbackToUser().contains("Other Parent (P5)"));
+        assertEquals("Deleted parent: Other Parent (P5).",
+                session.execute("delete\tconfirm\t").getFeedbackToUser());
+        assertEquals(List.of(new PersonId("P2")), visibleIds(session));
+        assertThrows(CommandException.class, () -> session.execute("delete confirm"));
+        session.execute("delete 1");
+        CanonicalPeopleSession restarted = new CanonicalPeopleSession(path);
+        assertThrows(CommandException.class, () -> restarted.execute("delete confirm"));
+        assertEquals(session.getDataSnapshot(), restarted.getDataSnapshot());
+        assertEquals("No person deletion is awaiting confirmation.",
+                restarted.execute("delete cancel").getFeedbackToUser());
+    }
+
+    @Test
+    public void execute_confirmedCommand_rechecksRecordAndDependencies() throws Exception {
+        Path path = savedData(Set.of());
+        PonHubData data = new PonHubData(new JsonPonHubDataStorage(path).readData().orElseThrow());
+        PersonRecord parent = data.getPerson(new PersonId("P2")).orElseThrow();
+        CanonicalDeleteCommand deletion = new CanonicalDeleteCommand(parent);
+        data.replacePerson(new Parent(parent.getId(), contacts("Changed Parent", "60000001")));
+        var changed = data.exportState();
+        assertThrows(CommandException.class, () -> deletion.execute(data, new PeopleView(data)));
+        assertSame(changed, data.exportState());
+        data.removePerson(parent.getId());
+        assertThrows(CommandException.class, () -> deletion.execute(data, new PeopleView(data)));
+
+        PersonRecord student = data.getPerson(SECOND_STUDENT).orElseThrow();
+        CanonicalDeleteCommand studentDeletion = new CanonicalDeleteCommand(student);
+        data.enrolStudent(SECOND_STUDENT, LESSON);
+        var enrolled = data.exportState();
+        CommandException failure = assertThrows(CommandException.class, () ->
+                studentDeletion.execute(data, new PeopleView(data)));
+        assertTrue(failure.getMessage().contains("enrolled in lesson L10"));
+        assertSame(enrolled, data.exportState());
+    }
+
+    @Test
     public void execute_searchFilteredStudent_preservesFilterCountersAndReload() throws Exception {
         Path path = savedData(Set.of(FIRST_STUDENT));
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
@@ -66,7 +181,7 @@ public class CanonicalDeleteIntegrationTest {
         var roster = session.getLessonQueries().getLessonRoster(LESSON);
         var counters = session.getDataSnapshot().people().getLastAllocatedSequences();
 
-        assertEquals("Deleted student: Bob Student (S3).", session.execute("delete 2").getFeedbackToUser());
+        assertEquals("Deleted student: Bob Student (S3).", confirmDeletion(session, "delete 2").getFeedbackToUser());
         assertSame(visible, session.getPeople());
         assertEquals(List.of(FIRST_STUDENT), visibleIds(session));
         assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
@@ -87,7 +202,7 @@ public class CanonicalDeleteIntegrationTest {
         session.execute("lessons si/4");
         var displayed = session.getDisplayedLessons();
         assertTrue(displayed.isEmpty());
-        session.execute("delete 4");
+        confirmDeletion(session, "delete 4");
         session.execute("add r/student n/New Student l/P2 pp/60000003");
         session.execute("list r/student");
         assertSame(displayed, session.getDisplayedLessons());
@@ -107,10 +222,10 @@ public class CanonicalDeleteIntegrationTest {
         Path path = savedData(Set.of(FIRST_STUDENT));
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("list r/parent");
-        assertEquals("Deleted parent: Pat Parent (P2).", session.execute("delete 1").getFeedbackToUser());
+        assertEquals("Deleted parent: Pat Parent (P2).", confirmDeletion(session, "delete 1").getFeedbackToUser());
         assertEquals(List.of(new PersonId("P5")), visibleIds(session));
         assertEquals(Optional.of(PersonRole.PARENT), session.getRoleFilter());
-        assertEquals("Deleted parent: Other Parent (P5).", session.execute("delete 1").getFeedbackToUser());
+        assertEquals("Deleted parent: Other Parent (P5).", confirmDeletion(session, "delete 1").getFeedbackToUser());
         assertTrue(session.getPeople().isEmpty());
         for (PersonRecord person : session.getDataSnapshot().people().getPeople()) {
             if (person instanceof Student student) {
@@ -118,7 +233,7 @@ public class CanonicalDeleteIntegrationTest {
             }
         }
         session.execute("list r/tutor");
-        assertEquals("Deleted tutor: Free Tutor (T2).", session.execute("delete 2").getFeedbackToUser());
+        assertEquals("Deleted tutor: Free Tutor (T2).", confirmDeletion(session, "delete 2").getFeedbackToUser());
         assertEquals(List.of(new PersonId("T7")), visibleIds(session));
         assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
         assertTrue(session.execute("add r/parent n/New Parent p/60000003").getFeedbackToUser().contains("P6"));
@@ -150,7 +265,7 @@ public class CanonicalDeleteIntegrationTest {
         assertTrue(displayed.isEmpty());
         assertEquals("Student S9 · current lessons", session.lessonResultContextProperty().get());
         assertArrayEquals(emptyLessonBytes, Files.readAllBytes(path));
-        assertEquals("Deleted student: Alice Student (S9).", session.execute("delete 2").getFeedbackToUser());
+        assertEquals("Deleted student: Alice Student (S9).", confirmDeletion(session, "delete 2").getFeedbackToUser());
         assertTrue(session.getLessonQueries().getLessonRoster(LESSON).isEmpty());
         assertEquals(10, session.getDataSnapshot().lastAllocatedLessonSequence());
     }
@@ -237,7 +352,8 @@ public class CanonicalDeleteIntegrationTest {
         assertEquals(before, new CanonicalPeopleSession(path).getDataSnapshot());
 
         // A valid retry must still use the narrowed search, not another Parent's global position.
-        assertEquals("Deleted parent: Other Parent (P5).", session.execute("delete \t1\t ").getFeedbackToUser());
+        assertEquals("Deleted parent: Other Parent (P5).",
+                confirmDeletion(session, "delete \t1\t ").getFeedbackToUser());
         assertEquals(1, writes[0]);
         assertTrue(visible.isEmpty());
         assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
@@ -286,7 +402,8 @@ public class CanonicalDeleteIntegrationTest {
         lessons.addListener((ListChangeListener<? super ponhub.model.query.LessonView>) change -> events[0]++);
         byte[] original = Files.readAllBytes(path);
 
-        CommandException failure = assertThrows(CommandException.class, () -> session.execute("delete 1"));
+        session.execute("delete 1");
+        CommandException failure = assertThrows(CommandException.class, () -> session.execute("delete confirm"));
         assertTrue(failure.getMessage().contains("Injected deletion save failure"));
         assertSame(originalSnapshot, session.getDataSnapshot());
         assertSame(visible, session.getPeople());
@@ -300,7 +417,9 @@ public class CanonicalDeleteIntegrationTest {
         assertEquals("Lesson search: s/math", session.lessonResultContextProperty().get());
         assertArrayEquals(original, Files.readAllBytes(path));
 
-        session.execute("delete 1");
+        assertThrows(CommandException.class, () -> session.execute("delete confirm"));
+        assertEquals(1, writes[0]);
+        confirmDeletion(session, "delete 1");
         assertEquals(2, writes[0]);
         assertTrue(visibleIds(session).isEmpty());
         assertEquals(Optional.of(PersonRole.PARENT), session.getRoleFilter());
@@ -309,6 +428,11 @@ public class CanonicalDeleteIntegrationTest {
         assertEquals(List.of(LESSON), displayed.stream().map(lesson -> lesson.getLessonId()).toList());
         assertEquals("Lesson search: s/math", session.lessonResultContextProperty().get());
         assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
+    }
+
+    private CommandResult confirmDeletion(CanonicalPeopleSession session, String command) throws Exception {
+        session.execute(command);
+        return session.execute("delete confirm");
     }
 
     private Path savedData(Set<PersonId> roster) throws IOException {
