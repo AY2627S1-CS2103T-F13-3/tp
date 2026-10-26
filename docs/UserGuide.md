@@ -139,7 +139,7 @@ session's catalogue. A protected session permits only `help`, `list` and `exit`.
 | [Unenrol student](#5-enrolling-and-unenrolling-students) | `unenrol STUDENT_INDEX lid/LESSON_ID` | `unenrol 1 lid/L1` |
 | [Mark attendance](#7-recording-attendance-and-retrieving-history) | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent</code> | `mark 1 lid/L1 d/2026-10-05 s/present` |
 | [Unmark attendance](#7-recording-attendance-and-retrieving-history) | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` | `unmark 1 lid/L1 d/2026-10-05` |
-| [Delete person](#3-deleting-a-person-delete) | `delete INDEX` | `delete 1` |
+| [Delete person](#3-deleting-a-person-delete) | `delete INDEX`, then `delete confirm` or `delete cancel` | `delete 1`, then `delete confirm` |
 | [Delete shared lesson](#4-creating-shared-lessons-and-other-lesson-operations) | `deletelesson lid/LESSON_ID` | `deletelesson lid/L1` |
 | [List people](#2-listing-people-list) | `list [r/ROLE]` | `list r/student` |
 | [Search people](#searching-people-search) | `search c/CATEGORY [FILTER/VALUE]...` | `search c/student n/Alex d/Mon s/Math` |
@@ -284,10 +284,12 @@ In a fresh, empty dataset, run these commands in order. The result column abbrev
 | `add r/student n/Alex Tan l/S2 pp/91234567` | **1:** Mei Lim (`T1`); **2:** Alex Tan (`S1`) |
 | `add r/student n/Jamie Tan l/S2 pp/91234567` | **1:** Mei Lim (`T1`); **2:** Alex Tan (`S1`); **3:** Jamie Tan (`S2`) |
 | `list r/student` | **1:** Alex Tan (`S1`); **2:** Jamie Tan (`S2`) |
-| `delete 1` | **1:** Jamie Tan (`S2`) |
+| `delete 1` | **1:** Alex Tan (`S1`); **2:** Jamie Tan (`S2`); asks for confirmation |
+| `delete confirm` | **1:** Jamie Tan (`S2`) |
 | `add r/student n/Robin Tan l/S2 pp/91234567` | **1:** Mei Lim (`T1`); **2:** Jamie Tan (`S2`); **3:** Robin Tan (`S3`) |
 
-`delete 1` removes Alex, who has no lesson or attendance references in this example. Jamie keeps `S2` throughout;
+`delete 1` previews Alex, who has no lesson or attendance references in this example; `delete confirm` removes him.
+Jamie keeps `S2` throughout;
 Robin receives `S3` because deleted IDs are never reused. Addition shows all roles again, so Jamie moves to
 position 2. Check the current people cards before the next person command. With existing data, use your actual
 positions and IDs rather than this example's numbers.
@@ -497,25 +499,36 @@ sessions reject the command before parsing and omit `help editlesson`.
 
 ### 3. Deleting a person: `delete`
 
-**Active.** Removes one unreferenced person selected by their current displayed index in the people list.
+**Active.** Permanently removes one unreferenced person after you check and confirm their name and stable ID.
 
 #### Format
 
-`delete INDEX`
+`delete INDEX`, followed by `delete confirm` to proceed or `delete cancel` to keep the person.
 
 #### Example
 
 1. `list r/parent`
 2. Check the intended parent's current position. If Pat Tan is at position 1 in this result, enter `delete 1`.
+3. Check the name and stable ID in the prompt. Enter `delete confirm` only if they identify the intended person.
+   Enter `delete cancel` to leave the record and current view unchanged.
 
 For a complete add/filter/delete sequence, follow the [people-position example](#people-positions-and-stable-ids).
 
 #### Expected result
 
-PonHub displays a confirmation such as:
+The first command leaves data and views unchanged and displays:
+
+```text
+Delete parent: Pat Tan (P1)? This permanently removes the record.
+Enter delete confirm to proceed or delete cancel to keep it.
+Any other command cancels this request.
+```
+
+After `delete confirm`, PonHub saves the deletion and reports:
 `Deleted parent: Pat Tan (P1).`
 
 The current filter is preserved. Remaining people keep their IDs and their displayed positions are renumbered.
+Cancellation reports `Person deletion cancelled. No records were changed.` and does not save.
 
 #### Restrictions
 
@@ -523,6 +536,10 @@ The current filter is preserved. Remaining people keep their IDs and their displ
 * Only one person can be deleted per command.
 * Student deletion is blocked while enrolled or referenced by attendance. Tutor deletion is blocked while any lesson references the tutor, including a lesson with an empty roster. Linked records are not deleted automatically; removing a student never removes a shared lesson.
 * Deleting a separate parent record does not erase the parent phone number stored on a student's record.
+* Confirmation applies only to the most recent preview. Any other command, including `help`, `list`, a search or
+  rejected input, cancels it. A new `delete INDEX` replaces it. Closing or restarting also discards it.
+* `delete confirm` and `delete cancel` take no extra arguments. Without a pending preview, confirmation is rejected;
+  cancellation simply reports that no person deletion is awaiting confirmation.
 
 If dependencies prevent deletion, feedback identifies the Student or Tutor and the blocking Lesson ID. Retained
 attendance also identifies its date, for example:
@@ -536,7 +553,7 @@ Successful deletion preserves the role or own-contact search filter and renumber
 stable IDs, lesson/attendance records and Student parent-phone values are unchanged. Deleted IDs are never reused,
 including after restart. Invalid selectors and blocked deletions do not write. Failed saves preserve the live state
 and current view; follow the [unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build)
-for the stored file.
+for the stored file. After a save failure, run `delete INDEX` again, recheck the target and enter `delete confirm`.
 If the lesson panel shows the deleted student's current lessons, it stays empty and identifies that same Student ID
 until you run another `lessons` or lesson-search command. Deletion never switches it to a different student.
 Check the updated people list before deleting another person.
