@@ -1,10 +1,10 @@
 .ponhub-wordmark {
-    -fx-background-color: #101010;
+    -fx-background-color: #000000;
     -fx-padding: 2 10 2 10;
 }
 
 .ponhub-wordmark .label {
-    -fx-font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+    -fx-font-family: "Arial";
     -fx-font-size: 20px;
     -fx-font-weight: bold;
     -fx-opacity: 1;
@@ -12,12 +12,14 @@
 
 .ponhub-wordmark .wordmark-pon {
     -fx-text-fill: white;
-    -fx-padding: 2 3 2 0;
+    -fx-padding: 0 3 0 0;
 }
 
 .ponhub-wordmark .wordmark-hub {
-    -fx-background-color: #FF9900;
-    -fx-background-radius: 3;
+    -fx-background-color: #F7971D;
+    -fx-background-radius: 2;
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
     -fx-text-fill: black;
-    -fx-padding: 2 5 2 5;
+    -fx-padding: 2 3 2 3;
 }
