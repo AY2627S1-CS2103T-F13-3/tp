@@ -1,0 +1,24 @@
+Time=2026-10-26T10:46:57.900490900Z; Java=25.0.4+7-LTS-189; OS=Windows 11; arch=amd64
+Screen=Rectangle2D [minX = 0.0, minY=0.0, maxX=2048.0, maxY=1152.0, width=2048.0, height=1152.0]; scale=1.25
+Window=740.0x600.0; scene=725.5999755859375x562.4000244140625
+COMMAND=add r/tutor n/mei lim p/92345678; FEEDBACK=New tutor added: mei lim (T1).
+COMMAND=add r/student n/alex tan l/p1 pp/91234567; FEEDBACK=New student added: alex tan (S1).
+COMMAND=add r/student n/jamie tan l/s2 pp/91234568; FEEDBACK=New student added: jamie tan (S2).
+COMMAND=addlesson d/mon st/0900 et/1000 s/math tu/mei lim rm/r1; FEEDBACK=New lesson added: L1.
+COMMAND=addlesson d/mon st/1000 et/1100 s/math tu/mei lim rm/r1; FEEDBACK=New lesson added: L2.
+COMMAND=addlesson d/mon st/1100 et/1200 s/math tu/mei lim rm/r1; FEEDBACK=New lesson added: L3.
+COMMAND=addlesson d/mon st/1200 et/1300 s/math tu/mei lim rm/r1; FEEDBACK=New lesson added: L4.
+COMMAND=addlesson d/mon st/1300 et/1400 s/math tu/mei lim rm/r1; FEEDBACK=New lesson added: L5.
+COMMAND=addlesson d/mon st/1400 et/1500 s/math tu/mei lim rm/r1; FEEDBACK=New lesson added: L6.
+COMMAND=list r/student; FEEDBACK=Showing 2 student(s).
+COMMAND=test; FEEDBACK=Unknown command: 'test'. Type 'help' to see available commands.
+#resultSplitPane hit area=723.9999999999999x8.0; before=0.22321428571428573
+#resultSplitPane after=0.39285714285714285
+#recordsSplitPane hit area=8.0x266.3999938964844; before=0.4383296460176991
+#recordsSplitPane after=0.5157632743362831
+Native scrollbar VirtualFlow moved from=0.0 to=1.0
+Native scrollbar VirtualFlow moved from=0.0 to=1.0
+Native divider drags and independent scrollbars preserve draft, feedback, selection and saved bytes=PASS
+Only disposable fictional data. Native Robot mouse/keyboard; no display settings changed.
+Coverage: Windows/Java 25/default and compact windows/observed scale only; no independent human or other-platform acceptance.
+Diagnostic completed=true
