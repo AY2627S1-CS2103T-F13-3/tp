@@ -16,6 +16,7 @@
 }
 
 .ponhub-wordmark .wordmark-hub {
+    -fx-alignment: center;
     -fx-background-color: #F7971D;
     -fx-background-radius: 2;
     -fx-background-insets: 0;

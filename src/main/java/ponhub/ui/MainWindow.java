@@ -2,14 +2,22 @@ package ponhub.ui;
 
 import java.nio.file.Path;
 
+import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
+import javafx.animation.ScaleTransition;
+import javafx.animation.SequentialTransition;
+import javafx.application.Platform;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -19,6 +27,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import javafx.util.Duration;
 import ponhub.commons.core.GuiSettings;
 import ponhub.logic.LessonRetrieval.ResultKind;
 import ponhub.logic.Logic;
@@ -34,11 +43,15 @@ import ponhub.model.person.PersonRole;
 public class MainWindow extends UiPart<Stage> {
 
     private static final String FXML = "MainWindow.fxml";
+    private static final int CREDITS_CLICK_THRESHOLD = 69;
 
     private Stage primaryStage;
     private Logic logic;
     private Path dataFilePath;
     private final LogoSoundPlayer logoSound;
+    private int logoClicks;
+    private CreditsDialog creditsDialog;
+    private SequentialTransition badgeReset;
 
     // Independent Ui parts residing in this Ui container
     private PersonRecordListPanel personListPanel;
@@ -103,15 +116,112 @@ public class MainWindow extends UiPart<Stage> {
      * Makes the existing wordmark clickable without focusing or changing the command field.
      */
     private void configureLogoSound() {
+        Label badge = (Label) ponhubWordmark.lookup(".wordmark-hub");
+        ponhubWordmark.applyCss();
+        double badgeWidth = badge.prefWidth(-1);
+        badge.setMinWidth(badgeWidth);
+        badge.setPrefWidth(badgeWidth);
+        badge.setMaxWidth(badgeWidth);
+        badge.setTooltip(new Tooltip("Curiosity has consequences."));
+        ScaleTransition pulse = new ScaleTransition(Duration.millis(110), badge);
+        pulse.setFromX(1);
+        pulse.setFromY(1);
+        pulse.setToX(1.08);
+        pulse.setToY(1.08);
+        pulse.setAutoReverse(true);
+        pulse.setCycleCount(2);
         ponhubWordmark.setMouseTransparent(false);
         ponhubWordmark.setCursor(Cursor.HAND);
         ponhubWordmark.setOnMouseClicked(event -> {
             if (event.getButton() == MouseButton.PRIMARY) {
+                stopBadgeReset(badge);
                 logoSound.play();
+                logoClicks++;
+                badge.setText(Integer.toString(logoClicks));
+                badge.setAccessibleText("Mysterious counter: " + logoClicks);
+                pulse.playFromStart();
+                startBadgeReset(badge);
+                if (logoClicks == CREDITS_CLICK_THRESHOLD) {
+                    logoClicks = 0;
+                    showCredits(badge);
+                }
                 event.consume();
             }
         });
-        primaryStage.addEventHandler(WindowEvent.WINDOW_HIDDEN, event -> logoSound.close());
+        primaryStage.addEventHandler(WindowEvent.WINDOW_HIDDEN, event -> {
+            stopBadgeReset(badge);
+            pulse.stop();
+            badge.setScaleX(1);
+            badge.setScaleY(1);
+            logoSound.close();
+            if (creditsDialog != null) {
+                creditsDialog.close();
+            }
+        });
+    }
+
+    private void showCredits(Label badge) {
+        if (creditsDialog != null && creditsDialog.isShowing()) {
+            return;
+        }
+        Node previousFocus = primaryStage.getScene().getFocusOwner();
+        TextInputControl draft = previousFocus instanceof TextInputControl ? (TextInputControl) previousFocus : null;
+        int anchor = draft == null ? 0 : draft.getAnchor();
+        int caret = draft == null ? 0 : draft.getCaretPosition();
+        creditsDialog = new CreditsDialog(primaryStage);
+        creditsDialog.setOnHidden(event -> {
+            restoreBadge(badge);
+            Platform.runLater(() -> {
+                if (primaryStage.isShowing() && previousFocus != null) {
+                    previousFocus.requestFocus();
+                    if (draft != null) {
+                        draft.selectRange(anchor, caret);
+                    }
+                }
+            });
+        });
+        creditsDialog.show();
+    }
+
+    private void stopBadgeReset(Label badge) {
+        if (badgeReset != null) {
+            badgeReset.stop();
+        }
+        Node text = badge.lookup(".text");
+        if (text != null) {
+            text.setOpacity(1);
+        }
+    }
+
+    private void restoreBadge(Label badge) {
+        stopBadgeReset(badge);
+        Node text = badge.lookup(".text");
+        if (!primaryStage.isShowing() || text == null) {
+            badge.setText("hub");
+            badge.setAccessibleText("hub");
+            return;
+        }
+        startBadgeReset(badge);
+    }
+
+    private void startBadgeReset(Label badge) {
+        Node text = badge.lookup(".text");
+        if (text == null) {
+            return;
+        }
+        PauseTransition hold = new PauseTransition(Duration.millis(200));
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(650), text);
+        fadeOut.setFromValue(1);
+        fadeOut.setToValue(0);
+        fadeOut.setOnFinished(event -> {
+            badge.setText("hub");
+            badge.setAccessibleText("hub");
+        });
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(650), text);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        badgeReset = new SequentialTransition(hold, fadeOut, fadeIn);
+        badgeReset.playFromStart();
     }
 
     public Stage getPrimaryStage() {

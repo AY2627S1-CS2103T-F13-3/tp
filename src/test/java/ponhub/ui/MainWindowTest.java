@@ -16,11 +16,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javafx.animation.PauseTransition;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
@@ -28,6 +31,8 @@ import javafx.geometry.Orientation;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuBar;
@@ -41,11 +46,14 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.stage.WindowEvent;
+import javafx.util.Duration;
 import ponhub.logic.CanonicalCommandCatalog;
 import ponhub.logic.CanonicalLogicManager;
 import ponhub.logic.CanonicalPeopleSession;
@@ -88,6 +96,154 @@ public class MainWindowTest {
     @BeforeAll
     public static void startToolkit() throws Exception {
         FxTestUtil.initializeToolkit();
+    }
+
+    @Test
+    public void logoClick_sixtyNinePrimaryClicks_opensCreditsWithoutChangingDraftOrSavedData() throws Exception {
+        callOnFxThread(() -> {
+            MainWindow window = createWindow();
+            try {
+                Region root = layoutWindow(window, 1000, 700);
+                Node logo = root.lookup("#ponhubWordmark");
+                Label badge = (Label) root.lookup(".wordmark-hub");
+                assertEquals("hub", badge.getText());
+                double badgeWidth = badge.getWidth();
+                TextField command = (TextField) root.lookup("#commandTextField");
+                command.setText("unfinished draft");
+                command.requestFocus();
+                command.selectRange(9, 2);
+                byte[] before = Files.readAllBytes(tempDirectory.resolve("contacts.json"));
+                for (int click = 0; click < 68; click++) {
+                    logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                    assertEquals(Integer.toString(click + 1), badge.getText());
+                    root.layout();
+                    assertEquals(badgeWidth, badge.getWidth());
+                }
+                logo.getOnMouseClicked().handle(logoClick(MouseButton.SECONDARY));
+                assertEquals("68", badge.getText());
+                assertTrue(Window.getWindows().stream().noneMatch(candidate -> candidate.getScene() != null
+                        && candidate.getScene().getRoot() instanceof DialogPane));
+                logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                assertEquals("69", badge.getText());
+                DialogPane credits = (DialogPane) Window.getWindows().stream()
+                        .filter(candidate -> candidate.getScene() != null
+                                && candidate.getScene().getRoot() instanceof DialogPane)
+                        .findFirst().orElseThrow().getScene().getRoot();
+                assertTrue(credits.getStyleClass().contains("credits-dialog"));
+                Label heading = (Label) credits.lookup(".credits-heading");
+                assertEquals("Hot singles in your area", heading.getText());
+                assertEquals(5, credits.lookupAll(".credits-card").size());
+                Pane confetti = (Pane) credits.lookup(".credits-confetti");
+                assertTrue(confetti.isMouseTransparent());
+                assertEquals(69, confetti.getChildren().size());
+                assertEquals("unfinished draft", command.getText());
+                assertEquals(9, command.getAnchor());
+                assertEquals(2, command.getCaretPosition());
+                assertArrayEquals(before, Files.readAllBytes(tempDirectory.resolve("contacts.json")));
+                Window creditsWindow = credits.getScene().getWindow();
+                Button close = (Button) credits.lookupButton(credits.getButtonTypes().getFirst());
+                close.fire();
+                assertFalse(creditsWindow.isShowing());
+                assertTrue(confetti.getChildren().isEmpty());
+                assertEquals("hub", badge.getText());
+                for (int click = 0; click < 69; click++) {
+                    logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                    if (click == 0) {
+                        assertEquals("1", badge.getText());
+                    }
+                }
+                assertEquals(1, Window.getWindows().stream().filter(candidate -> candidate.getScene() != null
+                        && candidate.getScene().getRoot() instanceof DialogPane).count());
+            } finally {
+                Event.fireEvent(window.getPrimaryStage(),
+                        new WindowEvent(window.getPrimaryStage(), WindowEvent.WINDOW_HIDDEN));
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void logoClick_dismissCredits_fadesNumberBackToHub() throws Exception {
+        MainWindow window = callOnFxThread(this::createWindow);
+        CompletableFuture<Void> finished = new CompletableFuture<>();
+        try {
+            callOnFxThread(() -> {
+                window.getPrimaryStage().show();
+                Region root = layoutWindow(window, 1000, 700);
+                Node logo = root.lookup("#ponhubWordmark");
+                Label badge = (Label) root.lookup(".wordmark-hub");
+                for (int click = 0; click < 69; click++) {
+                    logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                }
+                DialogPane credits = (DialogPane) Window.getWindows().stream()
+                        .filter(candidate -> candidate.getScene() != null
+                                && candidate.getScene().getRoot() instanceof DialogPane)
+                        .findFirst().orElseThrow().getScene().getRoot();
+                Button close = (Button) credits.lookupButton(credits.getButtonTypes().getFirst());
+                close.fire();
+                assertEquals("69", badge.getText(), "The number must fade out before the label changes.");
+                PauseTransition wait = new PauseTransition(Duration.millis(1900));
+                wait.setOnFinished(event -> {
+                    try {
+                        assertEquals("hub", badge.getText());
+                        assertEquals(1, badge.lookup(".text").getOpacity(), 0.001);
+                        finished.complete(null);
+                    } catch (Throwable failure) {
+                        finished.completeExceptionally(failure);
+                    }
+                });
+                wait.play();
+                return null;
+            });
+            finished.get(5, TimeUnit.SECONDS);
+        } finally {
+            runOnFxThread(() -> window.getPrimaryStage().hide());
+        }
+    }
+
+    @Test
+    public void logoClick_eachNumberFades_retainsCountAndCancelsEarlierReset() throws Exception {
+        MainWindow window = callOnFxThread(this::createWindow);
+        CompletableFuture<Void> finished = new CompletableFuture<>();
+        try {
+            callOnFxThread(() -> {
+                window.getPrimaryStage().show();
+                Region root = layoutWindow(window, 1000, 700);
+                Node logo = root.lookup("#ponhubWordmark");
+                Label badge = (Label) root.lookup(".wordmark-hub");
+                logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                assertEquals("1", badge.getText());
+                PauseTransition firstReset = new PauseTransition(Duration.millis(1900));
+                firstReset.setOnFinished(event -> {
+                    try {
+                        assertEquals("hub", badge.getText());
+                        logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                        assertEquals("2", badge.getText());
+                        logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                        assertEquals("3", badge.getText());
+                        PauseTransition nextReset = new PauseTransition(Duration.millis(1900));
+                        nextReset.setOnFinished(resetEvent -> {
+                            try {
+                                assertEquals("hub", badge.getText());
+                                logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                                assertEquals("4", badge.getText());
+                                finished.complete(null);
+                            } catch (Throwable failure) {
+                                finished.completeExceptionally(failure);
+                            }
+                        });
+                        nextReset.play();
+                    } catch (Throwable failure) {
+                        finished.completeExceptionally(failure);
+                    }
+                });
+                firstReset.play();
+                return null;
+            });
+            finished.get(8, TimeUnit.SECONDS);
+        } finally {
+            runOnFxThread(() -> window.getPrimaryStage().hide());
+        }
     }
 
     @Test
