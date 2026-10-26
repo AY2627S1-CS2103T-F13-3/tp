@@ -212,12 +212,17 @@ Creates a student, tutor or parent record.
 | Parameter | Description and accepted values |
 |-----------|---------------------------------|
 | `r/ROLE` | Required. Use `student`, `tutor` or `parent`. Values are case-insensitive. |
-| `n/NAME` | Required. Between 1 and 100 characters using English letters (`A`–`Z`, `a`–`z`), spaces, apostrophes, hyphens or periods, with at least one letter. Surrounding spaces are removed and repeated spaces are reduced to one before measuring length. Letter case is preserved. Tabs and line breaks are not allowed. |
+| `n/NAME` | Required. Between 1 and 100 Unicode code points after normalization. Use letters, attached combining marks, ordinary spaces, apostrophes (`'` or `’`), hyphens or periods, with at least one letter. See the name rules below. |
 | `l/LEVEL` | Required for students; not allowed for tutors or parents. Use `P1`–`P6`, `S1`–`S5`, `JC1` or `JC2`. Values are case-insensitive and displayed in uppercase. |
 | `pp/PARENT_PHONE` | Required for students; not allowed for tutors or parents. Use 3–15 digits without spaces or punctuation. |
 | `p/PHONE` | Required for tutors and parents; optional for students. Use 3–15 digits without spaces or punctuation. Leading zeros are retained. |
 | `e/EMAIL` | Optional. Use an email address such as `mei@example.com`, with no spaces and at most 254 characters. |
 | `a/ADDRESS` | Optional. Between 1 and 200 printable ASCII characters. Slashes, tabs and line breaks are not allowed. Surrounding spaces are removed and repeated spaces are reduced to one before measuring length. |
+
+For names, surrounding Unicode spaces are removed, repeated ordinary spaces collapse, and canonically
+equivalent spellings are stored in NFC form. Letter case is preserved. Digits, emoji, slashes, controls,
+invisible format characters and internal non-ASCII spaces are rejected. Names such as `Ravi s/o Kumar`
+and addresses such as `#01/02` are not yet accepted.
 
 For email addresses, the local part before `@` may contain English letters, digits, periods, underscores, `%`, `+` and `-`. It must not begin or end with a period or contain consecutive periods. Domain labels may contain English letters, digits and hyphens. The domain must contain at least two dot-separated labels, with no leading or trailing hyphens in a label. Its final label must contain 2–63 English letters. Email spelling and letter case are preserved.
 
@@ -233,6 +238,9 @@ For email addresses, the local part before `@` may contain English letters, digi
   Adds Mei Lim as a tutor with a phone number and email address.
 * `add r/parent n/Pat Tan p/91234567`<br>
   Adds Pat Tan as a parent.
+* `add r/student n/José Santos l/P1 pp/91234567`<br>
+  Accented names, `李明`, `தமிழ்` and `Anne-Marie O’Neill` are also accepted. A combining mark must
+  follow a letter or another attached mark; names cannot begin with a combining mark.
 
 #### Expected result
 
@@ -245,7 +253,9 @@ The person list resets to show all roles, with the new record at the end. Rechec
 
 * A separate parent record is optional. You can add a student using their parent's phone number before creating a parent record.
 * A duplicate has the same role, normalized name and contact number. For students, the contact number used for this check is `pp/`; for tutors and parents, it is `p/`.
-* Duplicate name comparisons ignore letter case and repeated spaces.
+* Duplicate name comparisons ignore letter case, repeated spaces and canonical Unicode spelling differences
+  (for example, `é` typed as one code point or as `e` plus an accent). Accents remain significant:
+  `José` and `Jose` are different names.
 * Siblings with different names may share the same parent phone number.
 * Changing an optional email, address or student phone number does not make an otherwise duplicate record unique.
 
@@ -593,7 +603,11 @@ Example: `addlesson d/Mon st/1600 et/1730 s/A-Math tu/Mei Lim rm/R1`.
 A subject contains 1 to 50 Unicode letters or digits, with single spaces or hyphens between non-empty parts.
 For example, `Math`, `Primary 5 Math` and `A-Math` are accepted; leading, trailing or repeated hyphens are rejected.
 
-The tutor must already exist. `tu/` matches the tutor's complete name, ignoring letter case and repeated spaces. If several tutors share that name, supply their exact phone number, for example `tu/Mei Lim tp/92345678`. An ambiguous name without `tp/` is rejected. A supplied phone must match the named tutor exactly, even when the name is unique; an unmatched name or phone is rejected.
+The tutor must already exist. `tu/` uses the same name rules as `n/` and matches the complete name,
+ignoring letter case, repeated spaces and canonical Unicode spelling differences. Accents remain significant.
+If several tutors share that name, supply their exact phone number, for example `tu/Mei Lim tp/92345678`.
+An ambiguous name without `tp/` is rejected. A supplied phone must match the named tutor exactly,
+even when the name is unique; an unmatched name or phone is rejected.
 
 Use `Mon` through `Sun` and four-digit 24-hour HHMM times. Start must be earlier than end on the same day. A successful addition returns a stable lesson ID, such as `L1`, with an empty roster. Creation does not select or enrol a student. Tutor and room bookings must not overlap another lesson on that weekday; adjacent intervals are allowed. Adding more students to this lesson does not book the tutor or room again.
 
@@ -692,6 +706,9 @@ Name, email, address, associated Student name, subject, Tutor name and room matc
 fragments. Text queries trim surrounding whitespace and collapse repeated spaces. For example, `n/al` can
 match Sally Tan and `e/@example` can match `mei@example.com`. `tu/mei` searches Tutor names, not IDs;
 use `n/mei` for the Tutor's own name when the result category is `tutor`.
+
+Search does not normalize canonical Unicode spelling differences. Copy the displayed spelling or use a
+fragment such as `n/Jos` to find `José Santos`.
 
 Phone and parent-phone filters match the complete 3–15-digit number, including leading zeros. Level and
 weekday filters match a complete allowed value, ignoring case: `P1`–`P6`, `S1`–`S5`, `JC1` or `JC2` for
