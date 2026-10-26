@@ -93,6 +93,7 @@ public final class CanonicalPeopleSession {
     private final LessonRetrieval lessonRetrieval;
     private final AttendanceRetrieval attendanceRetrieval;
     private final CanonicalCommandExecutor executor;
+    private PersonRecord pendingDeletion;
 
     /**
      * Loads the configured canonical path once and connects its protected snapshot writer.
@@ -202,6 +203,9 @@ public final class CanonicalPeopleSession {
      */
     public CommandResult execute(String commandText) throws ParseException, CommandException {
         requireNonNull(commandText);
+        // Consume before parsing: even rejected or empty input must not leave an old confirmation armed.
+        PersonRecord confirmationTarget = pendingDeletion;
+        pendingDeletion = null;
         Matcher matcher = BASIC_COMMAND_FORMAT.matcher(StringUtil.trimSpaces(commandText.stripLeading()));
         if (!matcher.matches()) {
             throw new ParseException(String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, MESSAGE_HELP_USAGE));
@@ -235,7 +239,7 @@ public final class CanonicalPeopleSession {
                     arguments)));
             case HISTORY -> new CommandResult(String.format("Showing %d attendance record(s).",
                     attendanceRetrieval.show(new HistoryArgumentsParser().parse(arguments)).size()));
-            case DELETE -> executor.execute(new CanonicalDeleteCommand(ParserUtil.parseIndex(arguments)));
+            case DELETE -> executeDelete(arguments, confirmationTarget);
             case DELETE_LESSON -> executor.execute(new CanonicalDeleteLessonCommand(
                     new DeleteLessonParser().parse(arguments)));
             case LIST -> {
@@ -273,6 +277,37 @@ public final class CanonicalPeopleSession {
                 yield new CommandResult(CanonicalCommandCatalog.MESSAGE_EXIT_ACKNOWLEDGEMENT, true);
             }
         };
+    }
+
+    /**
+     * Previews an eligible current-index target without publishing or saving, or consumes its confirmation.
+     * Every intervening command cancels the pending request; a failed save also requires a fresh preview.
+     */
+    private CommandResult executeDelete(String arguments, PersonRecord confirmationTarget)
+            throws ParseException, CommandException {
+        String action = arguments.strip();
+        if (action.equals("confirm")) {
+            if (confirmationTarget == null) {
+                throw new CommandException("No person deletion is awaiting confirmation. Run delete INDEX first.");
+            }
+            return executor.execute(new CanonicalDeleteCommand(confirmationTarget));
+        }
+        if (action.equals("cancel")) {
+            return new CommandResult(confirmationTarget == null ? "No person deletion is awaiting confirmation."
+                    : "Person deletion cancelled. No records were changed.");
+        }
+        PersonRecord person = PersonIndexResolver.resolve(ParserUtil.parseIndex(arguments), view.getPeople());
+        // Reuse the aggregate's guards on a disposable snapshot; the live root and views stay untouched.
+        try {
+            new PonHubData(data.exportState()).removePerson(person.getId());
+        } catch (IllegalArgumentException failure) {
+            throw new CommandException(failure.getMessage(), failure);
+        }
+        pendingDeletion = person;
+        return new CommandResult(String.format("Delete %s: %s (%s)? This permanently removes the record.\n"
+                + "Enter delete confirm to proceed or delete cancel to keep it.\n"
+                + "Any other command cancels this request.", person.getRole().getValue(),
+                person.getContactDetails().getName(), person.getId()));
     }
 
     /**

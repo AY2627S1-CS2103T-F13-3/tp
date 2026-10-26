@@ -17,9 +17,11 @@ public class AddressTest {
 
     @Test
     public void constructor_invalidAddress_throwsIllegalArgumentException() {
-        String[] invalidAddresses = {"", " ", "Blk 12/34", "123\tMain Street", "123\nMain Street",
+        String[] invalidAddresses = {"", " ", "A/B", "#01//02", "/12", "12/", "A/12", "12/A",
+            "123\tMain Street", "123\nMain Street",
             "\r123 Main Street", "123 Main Street\0", "123 Main Street\u007f", "Caf\u00e9 Road",
-            "123\u00a0Main Street", "\u7a9d\u5c45", "A".repeat(201)};
+            "123\u00a0Main Street", "\u2028Block", "Block\u2029", "Block\u200b",
+            "\u202eBlock", "Block\ud800", "\udc00Block", "\u7a9d\u5c45", "A".repeat(201)};
         for (String invalidAddress : invalidAddresses) {
             assertFalse(Address.isValidAddress(invalidAddress));
             assertThrows(IllegalArgumentException.class, Address.MESSAGE_CONSTRAINTS, ()
@@ -32,7 +34,8 @@ public class AddressTest {
         // null address
         assertThrows(NullPointerException.class, () -> Address.isValidAddress(null));
 
-        String[] validAddresses = {"-", "Blk 456, Den Road, #01-355", "St. John's Road (East); Unit #01-02",
+        String[] validAddresses = {"-", "Blk 10, #01/02", "Blk 12/34", "Block A12/34B", "1/2/3",
+            "\u00a0Blk 12/34\u2003", "Blk 456, Den Road, #01-355", "St. John's Road (East); Unit #01-02",
             "Block A\\B; \"Unit\" #01-02", "  123   Main Street  ", "A".repeat(200),
             "  " + "A  ".repeat(99) + "AA  "};
         for (String validAddress : validAddresses) {
@@ -55,6 +58,16 @@ public class AddressTest {
         assertEquals(normalizedAddress, unnormalizedAddress);
         assertEquals(normalizedAddress.hashCode(), unnormalizedAddress.hashCode());
         assertFalse(normalizedAddress.equals(new Address("blk 456, den road, #01-355")));
+    }
+
+    @Test
+    public void constructor_slashAndWhitespaceBounds_preservesSharedNormalization() {
+        assertEquals("Blk 10, #01/02", new Address("\u00a0  Blk 10,   #01/02  \u2003").value);
+        assertTrue(Address.isValidAddress("A".repeat(197) + "1/2"));
+        assertFalse(Address.isValidAddress("A".repeat(198) + "1/2"));
+        assertEquals("1/2", new Address(" ".repeat(100_000) + "1/2" + " ".repeat(100_000)).value);
+        assertFalse(Address.isValidAddress("1/２"));
+        assertFalse(Address.isValidAddress("１/2"));
     }
 
     @Test

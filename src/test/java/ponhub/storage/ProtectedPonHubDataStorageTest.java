@@ -30,6 +30,54 @@ public class ProtectedPonHubDataStorageTest {
     Path directory;
 
     @Test
+    public void load_reservedLockSuffix_blocksMissingAndExistingStoresWithoutWriting() throws Exception {
+        Path missingPath = directory.resolve("missing.json.ponhub-lock");
+        ProtectedPonHubDataStorage missing = new ProtectedPonHubDataStorage(missingPath);
+        assertThrows(DataLoadingException.class, missing::load);
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.UNREADABLE, missing.getLoadStatus());
+        assertTrue(missing.getDataLoadError().orElseThrow().contains("reserved"));
+        assertThrows(IOException.class, () -> missing.saveData(new PonHubData().exportState()));
+        assertFalse(Files.exists(missingPath));
+
+        Path existingPath = directory.resolve("existing.json.ponhub-lock");
+        String original = JsonPonHubDataCodec.encode(new PonHubData().exportState());
+        Files.writeString(existingPath, original);
+        ProtectedPonHubDataStorage existing = new ProtectedPonHubDataStorage(existingPath);
+        assertThrows(DataLoadingException.class, existing::load);
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.UNREADABLE, existing.getLoadStatus());
+        assertTrue(existing.getDataLoadError().orElseThrow().contains("reserved"));
+        assertThrows(IOException.class, () -> existing.saveData(new PonHubData().exportState()));
+        assertEquals(original, Files.readString(existingPath));
+    }
+
+    @Test
+    public void load_excessiveNesting_preservesBytesAndRequiresRestartAfterRepair() throws Exception {
+        Path path = directory.resolve("deep.json");
+        String nested = "{\"schemaVersion\":1,\"people\":" + "[".repeat(50_000)
+                + "0" + "]".repeat(50_000) + "}";
+        Files.writeString(path, nested);
+        byte[] original = Files.readAllBytes(path);
+        assertThrows(IOException.class, () -> JsonPonHubDataCodec.decode(nested));
+        ProtectedPonHubDataStorage storage = new ProtectedPonHubDataStorage(path);
+        assertThrows(DataLoadingException.class, storage::load);
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.CORRUPT, storage.getLoadStatus());
+        assertTrue(storage.getDataLoadError().orElseThrow().contains("restart"));
+        assertTrue(storage.getDataLoadError().orElseThrow().contains(path.toAbsolutePath().toString()));
+        assertThrows(IOException.class, () -> storage.saveData(new PonHubData().exportState()));
+        assertArrayEquals(original, Files.readAllBytes(path));
+
+        PonHubDataState repaired = new PonHubDataState(PeopleSampleDataUtil.getSamplePeopleRegistry().exportState(),
+                List.of(), List.of(), 0);
+        Files.writeString(path, JsonPonHubDataCodec.encode(repaired));
+        byte[] repairedBytes = Files.readAllBytes(path);
+        assertThrows(IllegalStateException.class, storage::load);
+        assertThrows(IOException.class, () -> storage.saveData(new PonHubData().exportState()));
+        assertArrayEquals(repairedBytes, Files.readAllBytes(path));
+        assertEquals(repaired, new ProtectedPonHubDataStorage(path).load());
+        assertArrayEquals(repairedBytes, Files.readAllBytes(path));
+    }
+
+    @Test
     public void load_missingFile_startsFreshWithoutWritingAndAllowsSave() throws Exception {
         Path path = directory.resolve("new folder/canonical.json");
         ProtectedPonHubDataStorage storage = new ProtectedPonHubDataStorage(path);

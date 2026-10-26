@@ -41,15 +41,15 @@ PonHub adapts AddressBook-Level3 into a desktop workspace for tuition centre adm
 
 ## PonHub in action
 
-![Two Students sharing one recurring Lesson](../../docs/images/Ui.png)
+![Two Students sharing one recurring Lesson](../../docs/images/archive/pre-384-Ui.png)
 
 Alex and Jamie share one Math Lesson with one Tutor and schedule.
 
-![Independent attendance for the same occurrence](../../docs/images/AttendanceDetails.jpg)
+![Independent attendance for the same occurrence](../../docs/images/archive/pre-384-AttendanceDetails.jpg)
 
 Alex is present while Jamie is absent on the same date.
 
-![Retained attendance after unenrolment](../../docs/images/AttendanceHistory.jpg)
+![Retained attendance after unenrolment](../../docs/images/archive/pre-384-AttendanceHistory.jpg)
 
 After correcting Alex's record and unenrolling Alex, the dated absence remains visible as former-enrolment history.
 

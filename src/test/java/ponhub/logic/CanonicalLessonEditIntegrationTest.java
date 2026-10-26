@@ -231,8 +231,10 @@ public class CanonicalLessonEditIntegrationTest {
 
         CommandException failure = assertThrows(CommandException.class, () ->
                 session.execute("editlesson lid/L1 d/Tue"));
-        assertTrue(failure.getMessage().contains("retained attendance on 2026-10-05"));
-        assertTrue(failure.getMessage().contains("unmark"));
+        assertEquals("Cannot change lesson L1 to Tue because retained attendance for Student S1 (Student One) "
+                + "on 2026-10-05 must match its weekday. Run 'showlesson lid/L1 d/2026-10-05' to inspect the "
+                + "blocking records. Before using unmark, obtain the Student's current people-list position.",
+                failure.getMessage());
         assertSame(before, session.getDataSnapshot());
         assertArrayEquals(bytes, Files.readAllBytes(session.getDataFilePath()));
 

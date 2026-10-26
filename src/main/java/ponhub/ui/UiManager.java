@@ -68,6 +68,7 @@ public class UiManager implements Ui {
         MainWindow mainWindow = new MainWindow(primaryStage, logic, dataFilePath);
         mainWindow.show(); //This should be called before creating other UI parts
         mainWindow.fillInnerParts();
+        DockIcon.install(ICON_APPLICATION);
     }
 
     private Image getImage(String imagePath) {
