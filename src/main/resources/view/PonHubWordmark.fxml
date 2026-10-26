@@ -11,5 +11,5 @@
     <URL value="@PonHubWordmark.css" />
   </stylesheets>
   <Label text="Pon" styleClass="wordmark-pon" minWidth="-Infinity" />
-  <Label text="Hub" styleClass="wordmark-hub" minWidth="-Infinity" />
+  <Label text="hub" styleClass="wordmark-hub" minWidth="-Infinity" />
 </HBox>
