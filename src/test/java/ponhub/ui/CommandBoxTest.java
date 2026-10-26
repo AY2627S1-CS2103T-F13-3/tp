@@ -178,6 +178,9 @@ public class CommandBoxTest {
             input.setText("sho");
             input.end();
             assertFalse(arrow(input, KeyCode.UP, true));
+            assertFalse(arrow(input, KeyCode.UP, false, true, false, false));
+            assertFalse(arrow(input, KeyCode.UP, false, false, true, false));
+            assertFalse(arrow(input, KeyCode.UP, false, false, false, true));
             assertEquals("sho", input.getText());
             arrow(input, KeyCode.UP, false);
             assertEquals("invalid", input.getText());
@@ -201,6 +204,9 @@ public class CommandBoxTest {
         runOnFxThread(() -> {
             TextField input = createInput(command -> new CommandResult("Success"));
             assertFalse(arrow(input, KeyCode.UP, false));
+            input.setText("   ");
+            enter(input);
+            assertFalse(arrow(input, KeyCode.UP, false));
             for (int i = 0; i <= CommandBox.HISTORY_LIMIT; i++) {
                 input.setText("help " + i);
                 enter(input);
@@ -216,10 +222,15 @@ public class CommandBoxTest {
     }
 
     private static boolean arrow(TextField input, KeyCode code, boolean shift) {
+        return arrow(input, code, shift, false, false, false);
+    }
+
+    private static boolean arrow(TextField input, KeyCode code, boolean shift, boolean control,
+            boolean alt, boolean meta) {
         boolean[] consumed = {false};
         javafx.event.EventHandler<KeyEvent> observer = event -> consumed[0] = event.isConsumed();
         input.addEventFilter(KeyEvent.KEY_PRESSED, observer);
-        Event.fireEvent(input, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, shift, false, false, false));
+        Event.fireEvent(input, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, shift, control, alt, meta));
         input.removeEventFilter(KeyEvent.KEY_PRESSED, observer);
         return consumed[0];
     }
