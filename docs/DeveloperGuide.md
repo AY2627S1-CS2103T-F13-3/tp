@@ -402,11 +402,19 @@ Historical coordination and its original source qualifications are retained in
 
 The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/Ui.java)
 
-![Structure of the UI Component](images/UiClassDiagram.png)
+[![Structure of the UI Component](images/UiClassDiagram.png)](images/UiClassDiagram.png)
 
-The JavaFX `MainWindow` composes `UiPart` controls such as `CommandBox`, `ResultDisplay`, `PersonRecordListPanel`, `LessonListPanel` and `HistoryListPanel`; their
-layouts live in `src/main/resources/view`. UI sends commands through `Logic` and observes model-backed results so
-committed changes refresh the display. The diagram shows the active canonical cards.
+This selected Java controller view shows the active panels and cards. Solid navigable lines show stored
+references; dashed `creates` dependencies show construction, including card creation by panel cells.
+Hollow triangles show class inheritance (solid line) or interface realization (dashed line).
+`UiManager` creates and initializes a local `MainWindow`. The window stores `PersonRecordListPanel` and
+`ResultDisplay`; it creates the other shown controls locally and installs their JavaFX roots. Panel cells
+likewise install card roots rather than storing collections of card controllers. JavaFX scene containment,
+FXML fields, model projections and other helpers are omitted. `UiPart` is abstract; all shown window,
+panel, card and control classes extend it. Select the figure to view it at full size.
+
+Layouts live in `src/main/resources/view`. UI sends commands through `Logic` and observes model-backed
+results so committed changes refresh the display.
 
 The active canonical cards display immutable `PersonRecord` projections from the session's same observable people
 list, with separate current-view positions and stable IDs and wrapping labels for required and optional fields.
@@ -690,6 +698,10 @@ is the catalogue, a Student's current lessons, the filtered lesson list, or a si
 The heading identifies the selected Student ID, Lesson ID/date or normalized filters independently of
 later people commands. This diagram focuses on the Lesson path; history uses the separate selector described below.
 The source is `docs/diagrams/LessonRetrieval.puml`.
+As in the [UI component](#ui-component) figure, solid navigable lines show selected stored references and
+dashed arrows show dependencies. `CanonicalPeopleSession` holds the shared query through `LessonQuerySource`,
+which `LessonQueries` implements. `LessonQueries` reads the root during construction and subscribes to committed
+state without retaining a root field. The two unconnected comments name their subjects explicitly.
 The [UG panel illustration](UserGuide.html#listing-and-searching-shared-lessons) reuses the integrated
 navigation capture rather than presenting this running dataset as a screenshot.
 
