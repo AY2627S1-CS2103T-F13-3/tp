@@ -113,9 +113,12 @@ public final class CanonicalCommandCatalog {
             + "Example: after list r/student, history 1 lid/L1";
     public static final String MESSAGE_DELETE_USAGE = "Usage: delete INDEX\n"
             + "INDEX is the person's current position in the displayed people list.\n"
+            + "Shows the resolved name and stable ID without saving. Enter delete confirm to permanently remove\n"
+            + "that person, or delete cancel to keep them. Any other command cancels the pending request.\n"
+            + "A failed save also requires a fresh delete INDEX before confirming again.\n"
             + "Students with enrolments or retained attendance and tutors with assigned lessons cannot be deleted.\n"
             + "Deleting a separate parent preserves students' parent-phone values.\n"
-            + "Example: list r/parent, then delete 1";
+            + "Example: list r/parent, then delete 1, check the name/ID, then delete confirm";
     public static final String MESSAGE_DELETE_LESSON_USAGE = "Usage: deletelesson lid/LESSON_ID\n"
             + "Deletes only an empty Lesson with no retained attendance. LESSON_ID is stable.\n"
             + "Unenrol every Student and unmark every attendance record before deleting the Lesson.\n"

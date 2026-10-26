@@ -350,6 +350,7 @@ public class CanonicalLessonRetrievalIntegrationTest {
             session.execute("history 3");
             assertTrue(session.historyViewActiveProperty().get());
             session.execute("delete 3");
+            session.execute("delete confirm");
             assertFalse(session.historyViewActiveProperty().get());
             assertEquals(route.getValue(), session.lessonResultKindProperty().get());
         }
@@ -396,6 +397,7 @@ public class CanonicalLessonRetrievalIntegrationTest {
             assertTrue(session.historyViewActiveProperty().get());
             assertEquals(historyContext, session.historyResultContextProperty().get());
             session.execute("delete 6");
+            session.execute("delete confirm");
             assertFalse(session.historyViewActiveProperty().get());
             assertEquals(route.getValue(), session.lessonResultKindProperty().get());
         }

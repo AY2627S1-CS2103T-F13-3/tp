@@ -79,12 +79,14 @@ public class CanonicalMainWindowTest {
                 fixture.enter("add r/tutor n/Privacy Canary p/99887766 e/privacy378@example.com a/378 Canary Avenue");
                 assertEquals("New tutor added: Privacy Canary (T1).", fixture.feedback());
                 fixture.enter("delete 1");
+                fixture.enter("delete confirm");
                 assertEquals("Deleted tutor: Privacy Canary (T1).", fixture.feedback());
                 String rejected = "privacy378@example.com a/378 Canary Avenue";
                 fixture.enter(rejected);
                 assertEquals(rejected, fixture.input().getText());
                 assertTrue(fixture.feedback().contains("privacy378@example.com"));
                 assertEquals(List.of("Command type=add outcome=success", "Command type=delete outcome=success",
+                        "Command type=delete outcome=success",
                         "Command type=unknown outcome=parse_rejected cause=ParseException"),
                         capture.getRecords().stream().map(record -> record.getMessage()).toList());
                 for (String privateValue : List.of("Privacy Canary", "99887766", "privacy378@example.com",
@@ -216,6 +218,7 @@ public class CanonicalMainWindowTest {
                 fixture.enter("history 3");
                 assertTrue(fixture.history().getParent().isVisible());
                 fixture.enter("delete 3");
+                fixture.enter("delete confirm");
                 assertFalse(fixture.history().getParent().isVisible());
                 assertTrue(fixture.lessons().getParent().isVisible());
                 assertEquals("Attendance history", ((Label) fixture.root().lookup("#historyContext")).getText());
@@ -641,6 +644,37 @@ public class CanonicalMainWindowTest {
     }
 
     @Test
+    public void commandBox_deletePreviewAndCancel_preserveSelectedCardAndSavedData() throws Exception {
+        seedMixedPeople();
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("list r/student");
+                fixture.enter("history 1");
+                fixture.people().getSelectionModel().select(0);
+                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                var before = fixture.app.snapshot();
+                byte[] bytes = Files.readAllBytes(fixture.dataPath);
+                fixture.enter("delete 1");
+                assertTrue(fixture.feedback().contains("Delete student: Older Student (S9)?"));
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertEquals(before, fixture.app.snapshot());
+                assertArrayEquals(bytes, Files.readAllBytes(fixture.dataPath));
+                assertTrue(fixture.history().getParent().isVisible());
+                fixture.enter("delete cancel");
+                assertEquals("Person deletion cancelled. No records were changed.", fixture.feedback());
+                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertEquals(before, fixture.app.snapshot());
+                assertArrayEquals(bytes, Files.readAllBytes(fixture.dataPath));
+                assertTrue(fixture.history().getParent().isVisible());
+                assertEquals("Student S9 · attendance history", ((Label) fixture.root()
+                        .lookup("#historyContext")).getText());
+                assertTrue(fixture.input().getText().isEmpty());
+            }
+            return null;
+        });
+    }
+
+    @Test
     public void commandBox_guardedDeletion_preservesFilteredCardsAndRenumbers() throws Exception {
         seedMixedPeople();
         callOnFxThread(() -> {
@@ -649,6 +683,7 @@ public class CanonicalMainWindowTest {
                 var visible = fixture.people().getItems();
                 fixture.people().getSelectionModel().select(0);
                 fixture.enter("delete 1");
+                fixture.enter("delete confirm");
                 assertEquals("Deleted student: Older Student (S9).", fixture.feedback());
                 assertTrue(fixture.input().getText().isEmpty());
                 assertSame(visible, fixture.people().getItems());
@@ -688,7 +723,8 @@ public class CanonicalMainWindowTest {
                 Files.move(fixture.dataPath, backup);
                 Files.createDirectory(fixture.dataPath);
                 fixture.enter("delete 1");
-                assertEquals("delete 1", fixture.input().getText());
+                fixture.enter("delete confirm");
+                assertEquals("delete confirm", fixture.input().getText());
                 assertTrue(fixture.input().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
                 assertEquals(original, fixture.app.snapshot());
                 assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
@@ -700,6 +736,7 @@ public class CanonicalMainWindowTest {
                 Files.delete(fixture.dataPath);
                 Files.move(backup, fixture.dataPath);
                 fixture.enter("delete 1");
+                fixture.enter("delete confirm");
                 assertEquals("Deleted student: Older Student (S9).", fixture.feedback());
                 assertCard(fixture, "Student · ID: S3", "Selected Student", 1);
                 assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.roleFilter());
