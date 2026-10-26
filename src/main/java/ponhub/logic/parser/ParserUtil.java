@@ -28,29 +28,7 @@ public class ParserUtil {
      * @throws NullPointerException if the value is null.
      */
     public static String stripUnicodeBoundaryWhitespace(String value) {
-        requireNonNull(value);
-        int start = 0;
-        while (start < value.length()) {
-            int codePoint = value.codePointAt(start);
-            if (!isBoundaryWhitespace(codePoint)) {
-                break;
-            }
-            start += Character.charCount(codePoint);
-        }
-
-        int end = value.length();
-        while (end > start) {
-            int codePoint = value.codePointBefore(end);
-            if (!isBoundaryWhitespace(codePoint)) {
-                break;
-            }
-            end -= Character.charCount(codePoint);
-        }
-        return value.substring(start, end);
-    }
-
-    private static boolean isBoundaryWhitespace(int codePoint) {
-        return Character.isWhitespace(codePoint) || Character.isSpaceChar(codePoint);
+        return StringUtil.stripUnicodeBoundaryWhitespace(value);
     }
 
     /**
