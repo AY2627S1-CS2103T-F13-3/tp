@@ -29,6 +29,35 @@ public class CanonicalDataFileGuardTest {
     Path directory;
 
     @Test
+    public void save_cleanupFailureAfterCommit_retainsSuccessAndAdvancesBaseline() throws Exception {
+        Path path = directory.resolve("cleanup.json");
+        CanonicalDataFileGuard guard = new CanonicalDataFileGuard(path, null, target -> () -> {
+            throw new IOException("Injected lease cleanup failure");
+        });
+        guard.save("committed first save");
+        assertEquals("committed first save", Files.readString(path));
+        guard.save("committed second save");
+        assertEquals("committed second save", Files.readString(path));
+    }
+
+    @Test
+    public void save_cleanupFailureDuringConflict_preservesPrimaryFailureAndNewerBytes() throws Exception {
+        Path path = directory.resolve("cleanup-conflict.json");
+        Files.writeString(path, "original");
+        CanonicalDataFileGuard guard = new CanonicalDataFileGuard(path, "original", target -> () -> {
+            throw new IOException("Injected lease cleanup failure");
+        });
+        Files.writeString(path, "newer");
+        IOException conflict = assertThrows(IOException.class, () -> guard.save("stale"));
+        assertTrue(conflict.getMessage().contains("restart"));
+        assertEquals(1, conflict.getSuppressed().length);
+        assertEquals("Injected lease cleanup failure", conflict.getSuppressed()[0].getMessage());
+        assertEquals("newer", Files.readString(path));
+        assertThrows(IOException.class, () -> guard.save("stale again"));
+        assertEquals("newer", Files.readString(path));
+    }
+
+    @Test
     public void save_twoMissingSessions_preservesWinnerAndRequiresRestart() throws Exception {
         Path path = directory.resolve("new folder/data.json");
         ProtectedPonHubDataStorage first = new ProtectedPonHubDataStorage(path);
