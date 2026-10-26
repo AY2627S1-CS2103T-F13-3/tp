@@ -83,7 +83,7 @@ public final class AddLessonParser {
         do {
             String prefix = matcher.group(1);
             int valueStart = matcher.end();
-            hasNext = matcher.find();
+            hasNext = FieldValueTokenizer.findNextPrefix(matcher, arguments, prefix);
             int valueEnd = hasNext ? matcher.start() : arguments.length();
             if (!PREFIXES.contains(prefix)) {
                 throw new ParseException("Unknown addlesson prefix '" + prefix + "'.");

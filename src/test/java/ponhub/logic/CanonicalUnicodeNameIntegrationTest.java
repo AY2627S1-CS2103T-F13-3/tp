@@ -144,7 +144,7 @@ public class CanonicalUnicodeNameIntegrationTest {
         for (String command : List.of("edit 1 n/\u0301José", "edit 1 n/José\u200b", "edit 1 n/José\u2028",
                 "edit 1 n/José\u00a0Santos", "edit 1 n/José😀", "edit 1 n/José\ud800", "edit 1 n/José\t",
                 "edit 1 n/José x/value", "edit 1 n/José n/Santos", "edit 1 N/José",
-                "add r/student n/Ravi s/o Kumar l/P1 pp/91234567", "edit 1 a/Blk 10, #01/02")) {
+                "add r/student n/Ravi s/other Kumar l/P1 pp/91234567", "edit 1 a/Blk 10, #01//02")) {
             assertThrows(ParseException.class, () -> session.execute(command), command);
             assertSame(before, session.getDataSnapshot());
             assertArrayEquals(bytes, Files.readAllBytes(path));

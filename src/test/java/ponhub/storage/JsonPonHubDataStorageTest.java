@@ -214,6 +214,44 @@ public class JsonPonHubDataStorageTest {
         });
     }
 
+    @Test
+    public void decode_humanEditedSlashContacts_normalizesWithoutSchemaOrIdentityChanges() throws Exception {
+        ObjectNode root = (ObjectNode) mapper.readTree(JsonPonHubDataCodec.encode(original));
+        person(root, 0).put("name", "\u00a0Jose\u0301   s/o   Santos\u2003")
+                .put("address", "\u00a0Blk 10,   #01/02\u2003");
+        person(root, 1).put("name", "Anita d/o Kumar");
+        PonHubDataState edited = JsonPonHubDataCodec.decode(root.toString());
+        var contacts = edited.people().getPeople().getFirst().getContactDetails();
+        assertEquals("José s/o Santos", contacts.getName().fullName);
+        assertEquals("Blk 10, #01/02", contacts.getAddress().orElseThrow().value);
+        assertEquals(original.people().getLastAllocatedSequences(), edited.people().getLastAllocatedSequences());
+        assertEquals(original.lastAllocatedLessonSequence(), edited.lastAllocatedLessonSequence());
+        assertEquals(original.people().getPeople().stream().map(person -> person.getId()).toList(),
+                edited.people().getPeople().stream().map(person -> person.getId()).toList());
+        storage.saveData(edited);
+        assertEquals(edited, storage.readData().orElseThrow());
+    }
+
+    @Test
+    public void decode_invalidSlashContactsAndNormalizedDuplicates_protectsOriginalFile() throws Exception {
+        for (String name : List.of("s/o", "Ravi s/o", "Ravi/Kumar", "Ravi s/other Kumar")) {
+            assertProtectedNameRejection(root -> person(root, 0).put("name", name));
+        }
+        for (String address : List.of("A/B", "#01//02", "1/", "/2", "Block\t", "\u2028Block",
+                "Block\u2029", "Block\u200b", "Block\ud800", "Block\u00a0A", "A".repeat(201))) {
+            assertProtectedNameRejection(root -> person(root, 0).put("address", address));
+        }
+        assertProtectedNameRejection(root -> {
+            person(root, 0).put("name", "José s/o Santos");
+            ObjectNode duplicate = person(root, 0).deepCopy();
+            duplicate.put("id", "T2").put("name", "\u00a0JOSE\u0301   s/o   SANTOS\u2003");
+            ArrayNode people = (ArrayNode) root.get("people");
+            people.add(duplicate);
+            ObjectNode counters = (ObjectNode) root.get("personCounters");
+            counters.put("TUTOR", 2);
+        });
+    }
+
     private void assertProtectedNameRejection(Consumer<ObjectNode> edit) throws Exception {
         ObjectNode root = (ObjectNode) mapper.readTree(JsonPonHubDataCodec.encode(original));
         edit.accept(root);
