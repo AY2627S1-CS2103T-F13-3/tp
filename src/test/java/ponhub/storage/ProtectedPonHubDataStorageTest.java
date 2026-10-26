@@ -51,6 +51,33 @@ public class ProtectedPonHubDataStorageTest {
     }
 
     @Test
+    public void load_excessiveNesting_preservesBytesAndRequiresRestartAfterRepair() throws Exception {
+        Path path = directory.resolve("deep.json");
+        String nested = "{\"schemaVersion\":1,\"people\":" + "[".repeat(50_000)
+                + "0" + "]".repeat(50_000) + "}";
+        Files.writeString(path, nested);
+        byte[] original = Files.readAllBytes(path);
+        assertThrows(IOException.class, () -> JsonPonHubDataCodec.decode(nested));
+        ProtectedPonHubDataStorage storage = new ProtectedPonHubDataStorage(path);
+        assertThrows(DataLoadingException.class, storage::load);
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.CORRUPT, storage.getLoadStatus());
+        assertTrue(storage.getDataLoadError().orElseThrow().contains("restart"));
+        assertTrue(storage.getDataLoadError().orElseThrow().contains(path.toAbsolutePath().toString()));
+        assertThrows(IOException.class, () -> storage.saveData(new PonHubData().exportState()));
+        assertArrayEquals(original, Files.readAllBytes(path));
+
+        PonHubDataState repaired = new PonHubDataState(PeopleSampleDataUtil.getSamplePeopleRegistry().exportState(),
+                List.of(), List.of(), 0);
+        Files.writeString(path, JsonPonHubDataCodec.encode(repaired));
+        byte[] repairedBytes = Files.readAllBytes(path);
+        assertThrows(IllegalStateException.class, storage::load);
+        assertThrows(IOException.class, () -> storage.saveData(new PonHubData().exportState()));
+        assertArrayEquals(repairedBytes, Files.readAllBytes(path));
+        assertEquals(repaired, new ProtectedPonHubDataStorage(path).load());
+        assertArrayEquals(repairedBytes, Files.readAllBytes(path));
+    }
+
+    @Test
     public void load_missingFile_startsFreshWithoutWritingAndAllowsSave() throws Exception {
         Path path = directory.resolve("new folder/canonical.json");
         ProtectedPonHubDataStorage storage = new ProtectedPonHubDataStorage(path);
