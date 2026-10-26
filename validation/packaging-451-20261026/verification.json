@@ -1,0 +1,37 @@
+{
+  "tests": {
+    "tests": 996,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 22
+  },
+  "jar_bytes": 12948786,
+  "sha256": "2880efe1a7bddfd9ddc0b707e6b83e949903362d1c1f66001b45df25ebd36aba",
+  "packaged_notice_paths": [
+    "META-INF/licenses/ponhub/LICENSE",
+    "META-INF/licenses/Apache-2.0.txt",
+    "META-INF/licenses/README.txt",
+    "META-INF/licenses/javafx-17.0.7/javafx.base/ADDITIONAL_LICENSE_INFO",
+    "META-INF/licenses/javafx-17.0.7/javafx.base/ASSEMBLY_EXCEPTION",
+    "META-INF/licenses/javafx-17.0.7/javafx.base/LICENSE",
+    "META-INF/licenses/javafx-17.0.7/javafx.controls/ADDITIONAL_LICENSE_INFO",
+    "META-INF/licenses/javafx-17.0.7/javafx.controls/ASSEMBLY_EXCEPTION",
+    "META-INF/licenses/javafx-17.0.7/javafx.controls/LICENSE",
+    "META-INF/licenses/javafx-17.0.7/javafx.fxml/ADDITIONAL_LICENSE_INFO",
+    "META-INF/licenses/javafx-17.0.7/javafx.fxml/ASSEMBLY_EXCEPTION",
+    "META-INF/licenses/javafx-17.0.7/javafx.fxml/LICENSE",
+    "META-INF/licenses/javafx-17.0.7/javafx.graphics/ADDITIONAL_LICENSE_INFO",
+    "META-INF/licenses/javafx-17.0.7/javafx.graphics/ASSEMBLY_EXCEPTION",
+    "META-INF/licenses/javafx-17.0.7/javafx.graphics/LICENSE",
+    "META-INF/licenses/javafx-17.0.7/javafx.graphics/jpeg_fx.md",
+    "META-INF/licenses/javafx-17.0.7/javafx.graphics/mesa3d.md",
+    "META-INF/licenses/jackson-datatype-jsr310-2.7.4/META-INF/LICENSE",
+    "META-INF/licenses/jackson-databind-2.7.4/META-INF/LICENSE",
+    "META-INF/licenses/jackson-databind-2.7.4/META-INF/NOTICE",
+    "META-INF/licenses/jackson-annotations-2.7.0/META-INF/LICENSE",
+    "META-INF/licenses/jackson-core-2.7.4/META-INF/LICENSE",
+    "META-INF/licenses/jackson-core-2.7.4/META-INF/NOTICE"
+  ],
+  "direct_source_comparisons": 17,
+  "gradle_comparisons_including_audio_and_jackson": 24
+}
