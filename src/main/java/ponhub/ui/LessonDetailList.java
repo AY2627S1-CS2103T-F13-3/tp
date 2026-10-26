@@ -7,9 +7,16 @@ import java.util.Locale;
 
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import ponhub.model.attendance.AttendanceStatus;
@@ -21,11 +28,24 @@ import ponhub.model.query.LessonView;
  * The lesson summary and both expanded sections share one variable-height virtualized list.
  */
 public class LessonDetailList extends ListView<LessonDetailList.Row> {
+    private static final KeyCodeCombination END_SCROLL = new KeyCodeCombination(KeyCode.END,
+            KeyCombination.SHIFT_ANY, KeyCombination.SHORTCUT_ANY);
+
+    private boolean shouldScrollToEnd;
+
     /**
      * Creates a width-fitting detail view with ordinary keyboard scrolling, independent of people selectors.
      */
     public LessonDetailList() {
         setCellFactory(list -> new DetailCell());
+        addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            shouldScrollToEnd = END_SCROLL.match(event);
+            if (shouldScrollToEnd) {
+                requestLayout();
+            }
+        });
+        addEventFilter(ScrollEvent.SCROLL, event -> shouldScrollToEnd = false);
+        addEventFilter(MouseEvent.MOUSE_PRESSED, event -> shouldScrollToEnd = false);
     }
 
     /**
@@ -33,6 +53,7 @@ public class LessonDetailList extends ListView<LessonDetailList.Row> {
      */
     public void showDetail(LessonDetailView detail) {
         requireNonNull(detail);
+        shouldScrollToEnd = false;
         var rows = new ArrayList<Row>();
         rows.add(new Summary(detail));
         rows.add(new Heading("Current roster", false));
@@ -56,6 +77,24 @@ public class LessonDetailList extends ListView<LessonDetailList.Row> {
         getSelectionModel().clearSelection();
         getFocusModel().focus(0);
         scrollTo(0);
+    }
+
+    @Override
+    protected void layoutChildren() {
+        super.layoutChildren();
+        if (shouldScrollToEnd) {
+            shouldScrollToEnd = false;
+            if (getItems().isEmpty()) {
+                return;
+            }
+            // End can use estimated heights before the final wrapping rows have been measured.
+            for (var child : getChildrenUnmodifiable()) {
+                if (child instanceof Parent parent) {
+                    parent.layout();
+                }
+            }
+            scrollTo(getItems().size() - 1);
+        }
     }
 
     private static String displayStatus(AttendanceStatus status) {

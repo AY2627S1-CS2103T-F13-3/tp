@@ -172,10 +172,9 @@ public class LessonDetailListTest {
             assertNotNull(view.lookup("#lessonCardPane"));
             double topPosition = verticalScrollBar(view).getValue();
             pressKey(panel, view, KeyCode.PAGE_DOWN);
-            assertTrue(view.getSelectionModel().getSelectedIndex() > 0);
-            int firstPageIndex = view.getSelectionModel().getSelectedIndex();
             pressKey(panel, view, KeyCode.PAGE_DOWN);
-            assertTrue(view.getSelectionModel().getSelectedIndex() > firstPageIndex);
+            assertTrue(view.getSelectionModel().getSelectedIndex() > 0,
+                    "Two Page Down presses must advance the active row");
             assertTrue(verticalScrollBar(view).getValue() > topPosition,
                     "Page Down must move the viewport beyond its initial position");
 
@@ -187,6 +186,17 @@ public class LessonDetailListTest {
             assertEquals(selectedBeforeDown + 12, view.getSelectionModel().getSelectedIndex());
             assertTrue(verticalScrollBar(view).getValue() > pagePosition,
                     "Arrow navigation must keep advancing the viewport after moving beyond the visible rows");
+            fireKey(view, KeyCode.END);
+            fireKey(view, KeyCode.HOME);
+            settleLayout(panel, view);
+            assertEquals(0, view.getSelectionModel().getSelectedIndex());
+            Node summary = view.lookup("#lessonCardPane");
+            assertNotNull(summary, "Home after End must leave the lesson summary reachable at the top");
+            var summaryBounds = summary.localToScene(summary.getBoundsInLocal());
+            var viewportBounds = view.localToScene(view.getBoundsInLocal());
+            assertTrue(summaryBounds.getMinY() >= viewportBounds.getMinY()
+                            && summaryBounds.getMinY() <= viewportBounds.getMinY() + 2,
+                    "Home before the next layout must keep the viewport at the summary");
             assertSame(results, catalogue(panel).getItems());
             assertEquals(List.of(detail), results);
             assertSame(detail, results.getFirst());
@@ -223,10 +233,19 @@ public class LessonDetailListTest {
             assertTrue(catalogue(panel).isVisible());
             assertSame(results, catalogue(panel).getItems());
             assertEquals(5, catalogue(panel).getItems().size());
+            var catalogueResults = List.copyOf(results);
+            pressKey(panel, view, KeyCode.END);
+            assertTrue(view.getItems().isEmpty());
+            assertSame(results, catalogue(panel).getItems());
+            assertEquals(catalogueResults, results);
             results.clear();
             settleLayout(panel, catalogue(panel));
             assertSame(results, catalogue(panel).getItems());
             assertEquals("No lessons to display.", ((Label) catalogue(panel).getPlaceholder()).getText());
+            pressKey(panel, view, KeyCode.END);
+            assertTrue(view.getItems().isEmpty());
+            assertTrue(results.isEmpty());
+            assertSame(results, catalogue(panel).getItems());
 
             results.setAll(original);
             settleLayout(panel, view);
@@ -291,9 +310,13 @@ public class LessonDetailListTest {
     }
 
     private static void pressKey(Region panel, ListView<?> view, KeyCode code) {
+        fireKey(view, code);
+        settleLayout(panel, view);
+    }
+
+    private static void fireKey(ListView<?> view, KeyCode code) {
         Event.fireEvent(view, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code,
                 false, false, false, false));
-        settleLayout(panel, view);
     }
 
     private static ScrollBar verticalScrollBar(ListView<?> view) {
@@ -348,9 +371,13 @@ public class LessonDetailListTest {
     private static void assertEndVisible(ListView<?> view, Node entry) {
         var viewportBounds = view.localToScene(view.getBoundsInLocal());
         var entryBounds = entry.localToScene(entry.getBoundsInLocal());
+        var scrollBars = view.lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
+                .map(bar -> bar.getOrientation() + "=" + bar.getValue() + "/" + bar.getMax())
+                .collect(Collectors.toList());
         assertTrue(entryBounds.getMaxY() >= viewportBounds.getMinY()
                         && entryBounds.getMaxY() <= viewportBounds.getMaxY() + 1,
-                "Scrolling to the last record must expose its end: " + entryBounds + "; viewport=" + viewportBounds);
+                "Scrolling to the last record must expose its end: " + entryBounds + "; viewport=" + viewportBounds
+                        + "; scrollbars=" + scrollBars);
     }
 
     private static void assertNoHorizontalScroll(ListView<?> view) {
