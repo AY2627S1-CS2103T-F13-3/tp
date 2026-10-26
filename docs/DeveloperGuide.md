@@ -1278,6 +1278,15 @@ names, metadata, captions and values without changing Lesson/history styling or 
 `PersonRecordListPanel` fits cards to cell width, updates positions when cells are reused, and supplies count,
 empty placeholder and vertical scrolling for tall cards. Neither projection nor panel owns writable records.
 
+Each present contact detail carries an explicit copyable flag; missing values and the education level do not.
+`PersonRecordCard` adds a standard, focusable **Copy** button with a contact/person accessible name.
+Button activation and its platform copy shortcut write only the exact displayed value to the system clipboard.
+The action holds the immutable detail and never executes a command, changes list selection or touches the
+command field. Mouse press/release activates the button without moving focus, preserving the command field's
+caret and selection; keyboard traversal retains normal button focus. Rebuilding a recycled card also rebuilds
+its actions from the current record. Presence comes from the contact's optional value, so a real address equal
+to `Not provided` remains copyable.
+
 `MainWindow` constructs these canonical cards over the session's current list. Developer preview recipes
 and earlier viewport results are preserved in [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/77);
 actual application/platform display evidence belongs to [manual testing](#planned-people-card-display-checks).
@@ -2182,6 +2191,18 @@ instructions are preserved in [#77](https://github.com/AY2627S1-CS2103T-F13-3/tp
    on sample data and check that matching relationship context remains complete below the own fields.
    Coordinate whole-window checks with
    [#128](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/128).
+4. Save any clipboard contents you need before testing. Add
+   `add r/student n/Copy Test l/P1 pp/00912345 p/00123456 e/Copy.Test@example.com a/12 Main Road`,
+   then `list r/student`. Select a different Student and leave an unfinished command with part of its text
+   selected. Click each **Copy** button on Copy Test's card and paste into a disposable text editor. Expect
+   only the full corresponding value, retaining phone zeros and email case. The selected card, filter/order,
+   draft, caret/text selection, feedback and operational file bytes stay unchanged.
+5. Use Tab/Shift+Tab to reach the buttons and Space to activate them; also try Ctrl+C on Windows/Linux or
+   Cmd+C on macOS while a Copy button is focused. Confirm a visible focus border and a contact/person accessible
+   name. Copy selected command and feedback text using their normal shortcuts. Missing optional contacts have
+   no Copy button; Tutor/Parent phones remain copyable. Edit a contact, clear an optional contact and filter/scroll
+   away and back: actions must copy current values and disappear for cleared values. Restore your clipboard
+   after testing. Repeat the layout checks with the buttons visible.
 
 Given below are instructions to test the app manually.
 
