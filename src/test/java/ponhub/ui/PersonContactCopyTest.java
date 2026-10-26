@@ -83,8 +83,17 @@ public class PersonContactCopyTest {
     @AfterEach
     public void restoreClipboard() throws Exception {
         if (originalClipboard != null) {
-            runOnFxThread(() -> assertTrue(Clipboard.getSystemClipboard().setContent(originalClipboard)));
+            runOnFxThread(() -> restoreClipboardContents(originalClipboard));
         }
+    }
+
+    @Test
+    public void restoreClipboard_emptySnapshot_clearsCopiedContacts() throws Exception {
+        runOnFxThread(() -> {
+            setClipboard("temporary copied contact");
+            restoreClipboardContents(Map.of());
+            assertTrue(Clipboard.getSystemClipboard().getContentTypes().isEmpty());
+        });
     }
 
     @Test
@@ -276,6 +285,16 @@ public class PersonContactCopyTest {
         return root.lookupAll(".person-contact-copy").stream().map(Button.class::cast)
                 .filter(button -> button.getAccessibleText().equals("Copy " + caption + " for " + name))
                 .findFirst().orElseThrow();
+    }
+
+    private static void restoreClipboardContents(Map<DataFormat, Object> contents) {
+        Clipboard clipboard = Clipboard.getSystemClipboard();
+        if (contents.isEmpty()) {
+            clipboard.clear();
+            assertTrue(clipboard.getContentTypes().isEmpty());
+        } else {
+            assertTrue(clipboard.setContent(contents));
+        }
     }
 
     private static void setClipboard(String value) {
