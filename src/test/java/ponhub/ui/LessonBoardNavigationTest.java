@@ -12,6 +12,7 @@ import java.lang.reflect.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -26,7 +27,6 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -715,12 +715,21 @@ public class LessonBoardNavigationTest {
             return (ListView<AttendanceHistoryEntry>) root().lookup("#historyListView");
         }
 
-        private ScrollPane detail() {
-            return (ScrollPane) root().lookup("#lessonDetailScroll");
+        private ListView<?> detail() {
+            return (ListView<?>) root().lookup("#lessonDetailList");
         }
 
         private List<String> detailLabels() {
-            return detail().lookupAll(".label").stream().map(Label.class::cast).map(Label::getText).toList();
+            var labels = new ArrayList<String>();
+            for (int row = 0; row < detail().getItems().size(); row++) {
+                detail().scrollTo(row);
+                detail().layout();
+                labels.addAll(detail().lookupAll(".label").stream().map(Label.class::cast)
+                        .map(Label::getText).toList());
+            }
+            detail().scrollTo(0);
+            detail().layout();
+            return labels;
         }
 
         private List<String> peopleIds() {

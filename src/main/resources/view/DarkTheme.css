@@ -417,7 +417,9 @@
 #lessonCardPane .card_field_value,
 #attendanceHistoryCardPane .card_field_value,
 #lessonCardPane .card_section_heading,
-#lessonCardPane .card_entry_primary {
+#lessonCardPane .card_entry_primary,
+#lessonDetailList .card_section_heading,
+#lessonDetailList .card_entry_primary {
     -fx-text-fill: #F2F2F2;
 }
 
@@ -431,7 +433,8 @@
     -fx-padding: 10 0 0 0;
 }
 
-#lessonCardPane .card_section_heading {
+#lessonCardPane .card_section_heading,
+#lessonDetailList .card_section_heading {
     -fx-font-size: 14px;
     -fx-font-weight: bold;
 }
@@ -441,13 +444,26 @@
 }
 
 #lessonCardPane .card_entry_secondary,
-#lessonCardPane .card_empty_label {
+#lessonCardPane .card_empty_label,
+#lessonDetailList .card_entry_secondary,
+#lessonDetailList .card_empty_label {
     -fx-font-size: 12px;
     -fx-text-fill: #B8B8B8;
 }
 
-#lessonCardPane .card_empty_label {
+#lessonCardPane .card_empty_label,
+#lessonDetailList .card_empty_label {
     -fx-font-style: italic;
+}
+
+#lessonDetailList .card_secondary_section {
+    -fx-border-color: #3A3A3A transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 10 15 5 15;
+}
+
+#lessonDetailList .list-cell:filled {
+    -fx-border-width: 0;
 }
 
 #commandTypeLabel {

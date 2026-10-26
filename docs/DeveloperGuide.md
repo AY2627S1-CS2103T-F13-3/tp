@@ -425,7 +425,10 @@ list, with separate current-view positions and stable IDs and wrapping labels fo
 IDs, schedule, subject, room and roster size. The subject is the card heading, followed by one line with the
 stable Lesson ID and schedule. `showlesson` switches the right pane to a scrolling detail view with
 the current roster and retained former-member attendance, both expanded immediately for undated and dated
-results. Missing dated records remain labelled `unrecorded`. Each panel scrolls independently, and lesson commands
+results. Detail rows, including the summary and section headings, share a virtualized list: controls are
+created for the viewport as it scrolls, while every roster and retained-attendance entry remains reachable in
+its original order. The hidden catalogue suppresses detail graphics to avoid duplicate row construction.
+Missing dated records remain labelled `unrecorded`. Each panel scrolls independently, and lesson commands
 never replace the people list. `HistoryListPanel` shares the right pane for dated records with current/former
 membership labels and refreshes after committed changes. See the
 [shared selector contract](#shared-lesson-target-contract).
@@ -2493,8 +2496,9 @@ it after enrolment, unenrolment, marking, correction, removal or restoration. A 
 so the previous detail and people view remain unchanged. If `deletelesson` removes the selected unreferenced
 Lesson, its result becomes empty and the context identifies the unavailable stable ID. `lessons` and lesson
 search switch back to their own sources. The normal lesson ListView remains for catalogue results; the detail
-uses a dedicated width-fitting ScrollPane and wrapping labels for long rosters/history. No roster row number is
-used as a person-command selector.
+uses a dedicated width-fitting virtualized list and wrapping labels for long rosters/history. Its row focus
+supports keyboard scrolling and never selects a person-command target. No roster row number is used as a
+person-command selector.
 
 UC-02/manual checks: show a shared Monday Lesson with two current Students, one recorded present and one
 unrecorded, then mark the second absent. Unenrol that Student and verify the dated absence moves to the labelled

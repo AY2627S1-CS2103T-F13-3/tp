@@ -36,8 +36,4 @@
     <Label fx:id="lessonRosterSize" styleClass="cell_small_label, card_field_value" wrapText="true"
            minWidth="0" maxWidth="Infinity" GridPane.rowIndex="3" GridPane.columnIndex="1" />
   </GridPane>
-  <VBox fx:id="rosterDetails" spacing="5" styleClass="card_section" visible="false" managed="false"
-        minWidth="0" maxWidth="Infinity" />
-  <VBox fx:id="formerDetails" spacing="5" styleClass="card_section, card_secondary_section"
-        visible="false" managed="false" minWidth="0" maxWidth="Infinity" />
 </VBox>

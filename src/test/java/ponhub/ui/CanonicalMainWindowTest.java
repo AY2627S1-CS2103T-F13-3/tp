@@ -29,7 +29,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.ScrollBar;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
@@ -174,7 +173,7 @@ public class CanonicalMainWindowTest {
                 fixture.enter("showlesson lid/L99");
                 assertTrue(fixture.history().getParent().isVisible());
                 fixture.enter("showlesson lid/L10 d/2026-10-05");
-                ScrollPane detail = (ScrollPane) fixture.root().lookup("#lessonDetailScroll");
+                ListView<?> detail = (ListView<?>) fixture.root().lookup("#lessonDetailList");
                 assertFalse(fixture.history().getParent().isVisible());
                 assertTrue(fixture.lessons().getParent().isVisible());
                 assertTrue(detail.isVisible());
@@ -384,14 +383,18 @@ public class CanonicalMainWindowTest {
                 fixture.people().getSelectionModel().select(0);
                 var selected = fixture.people().getSelectionModel().getSelectedItem();
                 fixture.enter("showlesson lid/L10 d/2026-10-05");
-                ScrollPane detail = (ScrollPane) fixture.root().lookup("#lessonDetailScroll");
+                ListView<?> detail = (ListView<?>) fixture.root().lookup("#lessonDetailList");
                 assertTrue(detail.isVisible());
                 assertFalse(fixture.lessons().isVisible());
                 assertEquals("Math", ((Label) detail.lookup("#lessonHeading")).getText());
+                detail.scrollTo(2);
+                detail.layout();
                 assertTrue(detail.lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("S1 · Alex Tan")));
                 assertTrue(detail.lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("Attendance: present")));
+                detail.scrollTo(detail.getItems().size() - 1);
+                detail.layout();
                 assertTrue(detail.lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("S2 · Jamie Tan")));
                 assertTrue(detail.lookupAll(".label").stream().map(Label.class::cast)

@@ -10,8 +10,6 @@ import static ponhub.testutil.FxTestUtil.runOnFxThread;
 import static ponhub.testutil.LessonQueryTestData.createData;
 import static ponhub.testutil.LessonQueryTestData.lesson;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,26 +19,22 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
 import ponhub.MainApp;
 import ponhub.model.PonHubData;
 import ponhub.model.PonHubDataState;
-import ponhub.model.attendance.AttendanceStatus;
+import ponhub.model.lesson.LessonId;
 import ponhub.model.person.ContactDetails;
-import ponhub.model.person.EducationLevel;
 import ponhub.model.person.Name;
 import ponhub.model.person.PeopleRegistryState;
 import ponhub.model.person.PersonId;
 import ponhub.model.person.PersonRole;
 import ponhub.model.person.Phone;
-import ponhub.model.person.Student;
 import ponhub.model.person.Tutor;
 import ponhub.model.query.LessonDetailView;
 import ponhub.model.query.LessonQueries;
@@ -64,26 +58,6 @@ public class LessonListPanelTest {
             assertLabel(new LessonCard(lessons.get(2)).getRoot(), "lessonRosterSize", "0");
             assertEquals(Set.of("Schedule", "Tutor", "Room", "Students enrolled"),
                     card.lookupAll(".card_field_label").stream().map(Label.class::cast)
-                            .map(Label::getText).collect(Collectors.toSet()));
-            PonHubData data = createData();
-            var detailLesson = data.getLesson(new ponhub.model.lesson.LessonId("L10")).orElseThrow();
-            var currentStudent = (ponhub.model.person.Student) data.getPerson(new PersonId("S1"))
-                    .orElseThrow();
-            var currentRoster = List.of(new LessonDetailView.RosterStatus(currentStudent, Optional.empty()));
-            Region dated = new LessonCard(new LessonDetailView(detailLesson, "Mei Lim",
-                    Optional.of(LocalDate.of(2026, 10, 5)), currentRoster, List.of())).getRoot();
-            assertTrue(dated.lookupAll(".card_entry_primary").stream().map(Label.class::cast)
-                    .anyMatch(label -> label.getText().equals("S1 · Alex Tan")));
-            assertTrue(dated.lookupAll(".card_entry_secondary").stream().map(Label.class::cast)
-                    .anyMatch(label -> label.getText().equals("Attendance: unrecorded")));
-            assertTrue(dated.lookupAll(".label").stream().map(Label.class::cast)
-                    .anyMatch(label -> label.getText().equals("No retained attendance for former members.")));
-            Region undated = new LessonCard(new LessonDetailView(detailLesson, "Mei Lim",
-                    Optional.empty(), currentRoster, List.of())).getRoot();
-            assertTrue(undated.lookupAll(".card_entry_primary").stream().map(Label.class::cast)
-                    .anyMatch(label -> label.getText().equals("S1 · Alex Tan")));
-            assertEquals(Set.of("Current roster", "Former members' retained attendance"),
-                    undated.lookupAll(".card_section_heading").stream().map(Label.class::cast)
                             .map(Label::getText).collect(Collectors.toSet()));
             assertThrows(NullPointerException.class, () -> new LessonCard(null));
             assertThrows(NullPointerException.class, () -> new LessonListPanel(null));
@@ -131,6 +105,10 @@ public class LessonListPanelTest {
             cell.updateItem(lessons.get(1), false);
             assertFalse(previous.prefWidthProperty().isBound());
             assertLabel((Region) cell.getGraphic(), "lessonHeading", "Math");
+            var detail = new LessonDetailView(createData().getLesson(new LessonId("L10")).orElseThrow(),
+                    "Mei Lim", Optional.empty(), List.of(), List.of());
+            cell.updateItem(detail, false);
+            assertNull(cell.getGraphic());
             cell.updateItem(null, false);
             assertNull(cell.getGraphic());
             cell.updateItem(lessons.get(0), false);
@@ -199,50 +177,6 @@ public class LessonListPanelTest {
                         "Scrolling to the final card must expose its end: " + bounds
                                 + "; viewport=" + viewportBounds);
             }
-        });
-    }
-
-    @Test
-    public void detailCard_manyRetainedRecordsRemainInsideDedicatedScrollPane() throws Exception {
-        runOnFxThread(() -> {
-            PonHubData data = createData();
-            var lesson = data.getLesson(new ponhub.model.lesson.LessonId("L10")).orElseThrow();
-            var currentRoster = new ArrayList<LessonDetailView.RosterStatus>();
-            for (int index = 1; index <= 30; index++) {
-                var student = new Student(new PersonId("S" + index),
-                        new ContactDetails(new Name("Alexandra Catherine Montgomery Wellington")),
-                        new EducationLevel("S2"), new Phone("91234567"));
-                currentRoster.add(new LessonDetailView.RosterStatus(student,
-                        Optional.of(index % 2 == 0 ? AttendanceStatus.PRESENT : AttendanceStatus.ABSENT)));
-            }
-            var formerStudent = new Student(new PersonId("S31"),
-                    new ContactDetails(new Name("Former Alexandra Catherine Montgomery Wellington")),
-                    new EducationLevel("S2"), new Phone("91234567"));
-            var records = new ArrayList<LessonDetailView.FormerAttendance>();
-            for (int week = 0; week < 30; week++) {
-                records.add(new LessonDetailView.FormerAttendance(formerStudent,
-                        LocalDate.of(2026, 10, 5).plusWeeks(week), AttendanceStatus.ABSENT));
-            }
-            var detail = new LessonDetailView(lesson, "Mei Lim", Optional.of(LocalDate.of(2026, 10, 5)),
-                    currentRoster, records);
-            var results = FXCollections.observableArrayList((LessonView) detail);
-            Region panel = new LessonListPanel(results).getRoot();
-            layout(panel, 210, 320);
-            ScrollPane scroll = (ScrollPane) panel.lookup("#lessonDetailScroll");
-            assertTrue(scroll.isVisible());
-            assertTrue(scroll.getContent().prefHeight(220) > scroll.getViewportBounds().getHeight());
-            assertTrue(scroll.lookupAll(".label").stream().map(Label.class::cast)
-                    .anyMatch(label -> label.getText().contains(records.getLast().date().toString())));
-            assertTrue(scroll.lookupAll(".card_entry_primary").stream().map(Label.class::cast)
-                    .anyMatch(label -> label.getText().startsWith("S30 ·")));
-            assertFalse(scroll.lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
-                    .anyMatch(bar -> bar.getOrientation() == Orientation.HORIZONTAL && bar.isVisible()));
-            scroll.setVvalue(1);
-            scroll.layout();
-            assertEquals(1, scroll.getVvalue());
-            results.setAll(new LessonQueries(data).getLessonList());
-            assertFalse(scroll.isVisible());
-            assertTrue(list(panel).isVisible());
         });
     }
 
