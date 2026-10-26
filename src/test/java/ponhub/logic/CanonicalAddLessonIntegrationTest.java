@@ -85,6 +85,23 @@ public class CanonicalAddLessonIntegrationTest {
     }
 
     @Test
+    public void execute_hyphenatedSubject_createEditSearchAndReloadPreserveLabel() throws Exception {
+        Path path = directory.resolve("hyphenated-subject.json");
+        new JsonPonHubDataStorage(path).saveData(createState(List.of(), 12));
+        CanonicalPeopleSession session = new CanonicalPeopleSession(path);
+
+        session.execute("addlesson d/Mon st/1600 et/1730 s/A-Math tu/Unique Tutor rm/R1");
+        assertEquals(new Subject("A-Math"), session.getDataSnapshot().lessons().getFirst().getSubject());
+        assertEquals("Found 1 lesson(s).", session.execute("search c/lesson s/a-math").getFeedbackToUser());
+        assertEquals(NEXT_LESSON_ID, session.getDisplayedLessons().getFirst().getLessonId());
+
+        session.execute("editlesson lid/L13 s/H2-Math");
+        CanonicalPeopleSession reloaded = new CanonicalPeopleSession(path);
+        assertEquals("Found 1 lesson(s).", reloaded.execute("search c/lesson s/h2-math").getFeedbackToUser());
+        assertEquals(new Subject("H2-Math"), reloaded.getDisplayedLessons().getFirst().getSubject());
+    }
+
+    @Test
     public void execute_tutorSelection_requiresUniqueNameAndHonorsEverySuppliedPhone() throws Exception {
         CanonicalPeopleSession session = createSessionWithoutWrites(createState(List.of(), 12));
         PonHubDataState before = session.getDataSnapshot();
