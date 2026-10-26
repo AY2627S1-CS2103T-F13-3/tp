@@ -80,14 +80,14 @@ for the commands available in that downloaded JAR.
    * `add r/student n/Jamie Tan l/P1 pp/91234567` adds a second student.
    * `list r/student` shows Alex at position 1 and Jamie at position 2 in this fresh dataset.
    * `enrol 1 lid/L1`, then `enrol 2 lid/L1`, enrols both students in the same lesson.
-   * `lessons` shows lesson `L1` once with a roster size of 2; `lessons si/1` shows Alex's current lessons.
+   * `lessons` shows lesson `L1` once with a roster size of 2; `lessons 1` shows Alex's current lessons.
    * `mark 1 lid/L1 d/2026-10-05 s/present`, then `mark 2 lid/L1 d/2026-10-05 s/absent`,
      records independent attendance for the same Monday occurrence.
      `showlesson lid/L1 d/2026-10-05` displays Alex as present and Jamie as absent.
    * `mark 1 lid/L1 d/2026-10-05 s/absent` corrects only Alex's record.
      Run `showlesson lid/L1 d/2026-10-05` again to see both students recorded as absent.
    * `unenrol 1 lid/L1` removes Alex's membership while keeping both attendance records.
-     `lessons si/1` now shows no current lessons; `lessons` still shows `L1` with Jamie enrolled.
+     `lessons 1` now shows no current lessons; `lessons` still shows `L1` with Jamie enrolled.
    * `history 1 lid/L1` shows Alex's retained absence with former-member context after unenrolment.
    * `unmark 1 lid/L1 d/2026-10-05` removes Alex's retained record after unenrolment, keeping Jamie's record and membership.
      Repeating it reports no change.
@@ -143,7 +143,7 @@ session's catalogue. A protected session permits only `help`, `list` and `exit`.
 | [Delete shared lesson](#4-creating-shared-lessons-and-other-lesson-operations) | `deletelesson lid/LESSON_ID` | `deletelesson lid/L1` |
 | [List people](#2-listing-people-list) | `list [r/ROLE]` | `list r/student` |
 | [Search people](#searching-people-search) | `search c/CATEGORY [FILTER/VALUE]...` | `search c/student n/Alex d/Mon s/Math` |
-| [List shared lessons](#listing-and-searching-shared-lessons) | `lessons [si/STUDENT_INDEX]` | `lessons` |
+| [List shared lessons](#listing-and-searching-shared-lessons) | `lessons [STUDENT_INDEX]` | `lessons` |
 | [Attendance history](#7-recording-attendance-and-retrieving-history) | `history STUDENT_INDEX [lid/LESSON_ID]` | `history 1 lid/L1` |
 | [Show lesson details](#listing-and-searching-shared-lessons) | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` | `showlesson lid/L1 d/2026-10-05` |
 | [Search shared lessons](#listing-and-searching-shared-lessons) | `search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]` | `search c/lesson tu/mei d/Mon` |
@@ -338,7 +338,7 @@ use `n/` for the Tutor's own name in this category.
 
 **Formats:**
 
-* `lessons [si/STUDENT_INDEX]`
+* `lessons [STUDENT_INDEX]`
 * `search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]`
 
 The right-hand lesson panel initially shows the full catalogue. `lessons` restores it after a lesson search or
@@ -349,11 +349,12 @@ The lesson heading identifies the selected Student ID or active filters even aft
 the feedback. Scroll either panel independently; drag the divider to give long values more room. Labels wrap within their cards.
 
 To show one student's current lessons, find their position in the **current people panel**, then enter
-`lessons si/POSITION`. For example, after `list r/student`, use `lessons si/1` only if the intended student is
-at position 1. This selects the visible person once. A stable ID such as `S1`, a lesson ID, zero, negative or
-out-of-range position, repeated `si/`, or a position occupied by a tutor/parent is rejected. Changing the people
-filter later does not change which student's lessons are being shown. Attendance retained after unenrolment
-does not make a lesson part of that student's current enrolments; use `history` to inspect retained records.
+`lessons POSITION`. For example, after `list r/student`, use `lessons 1` only if the intended Student is at
+position 1. The older `lessons si/POSITION` form remains accepted for compatibility. Either form selects the
+visible person once. A stable ID such as `S1`, a lesson ID, zero, negative or out-of-range position, a repeated
+or combined selector, or a position occupied by a Tutor/Parent is rejected. Changing the people filter later
+does not change which Student's lessons are being shown. Attendance retained after unenrolment does not make a
+lesson part of that Student's current enrolments; use `history` to inspect retained records.
 
 For Lesson search, use `search c/lesson` with the filters in the
 [search matrix](#6-searching-people-and-shared-lessons). A search starts from the complete catalogue rather
@@ -378,7 +379,7 @@ both panels as needed; invalid requests and failed saves leave the previous resu
 Hover over a Lesson or attendance heading or its result count to read its complete current text in a
 wrapping tooltip. This also works after `help` replaces the command feedback.
 
-Enter `lessons`, `lessons si/STUDENT_INDEX`, `history STUDENT_INDEX`, `showlesson lid/LESSON_ID` or a `search`
+Enter `lessons`, `lessons STUDENT_INDEX`, `history STUDENT_INDEX`, `showlesson lid/LESSON_ID` or a `search`
 command from any current result. Successful commands display their results automatically. Typed commands use
 their supplied selectors and filters, regardless of which people card is selected; no preliminary button click
 is needed. Check the current people-list position before supplying a Student index.
@@ -388,7 +389,7 @@ If you prefer a shortcut, use the buttons above the results:
 | Button | Equivalent command | Selection needed |
 | --- | --- | --- |
 | **All lessons** | `lessons` | None |
-| **Student lessons** | `lessons si/STUDENT_INDEX` | A Student card in the current people list |
+| **Student lessons** | `lessons STUDENT_INDEX` | A Student card in the current people list |
 | **Attendance history** | `history STUDENT_INDEX` | A Student card in the current people list |
 
 The guidance below the buttons explains card selection: select a Student card to choose the target of
@@ -722,7 +723,7 @@ change removes a match. To enrol a Student while viewing Parents or Tutors, disp
 the command using the current position, then repeat the relationship search.
 
 Lesson searches use the independent right panel and preserve the people list, its filter, selection and
-positions. People searches preserve the selected Lesson, roster or history view. `lessons si/STUDENT_INDEX`
+positions. People searches preserve the selected Lesson, roster or history view. `lessons STUDENT_INDEX`
 and `history STUDENT_INDEX` resolve the current people-list position once, then keep the selected stable
 Student ID even if the people filter changes. Lesson cards, roster rows, history rows and stable ID suffixes
 do not supply person-command positions. See [Selecting people and lessons](#selecting-people-and-lessons).
@@ -774,7 +775,7 @@ remain invisible; the previous subject and both result panels remain intact.
 
 To compare current membership with retained history in the same example, run `list r/student`,
 `mark 1 lid/L1 d/2026-10-05 s/present`, `history 1 lid/L1`, then `unenrol 1 lid/L1`. Alex's open history retains
-the recorded presence and refreshes its label to former member. `lessons si/1` then shows only `L2` and `L3`;
+the recorded presence and refreshes its label to former member. `lessons 1` then shows only `L2` and `L3`;
 `search c/lesson sn/Alex d/Mon s/Math` returns no Lessons. `showlesson lid/L1 d/2026-10-05` shows Jamie's
 current-roster status as unrecorded and Alex's retained presence separately. See [Lesson details](#lesson-details)
 and [attendance history](#attendance-history) for their complete behavior.
