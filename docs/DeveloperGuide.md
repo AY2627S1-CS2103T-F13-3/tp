@@ -1017,8 +1017,8 @@ folder or copy the JAR into a separate empty folder. Re-enter records with expli
 required fields using `add`; verify the new store before retiring the old working folder. Never infer
 roles, drop invalid records or convert the original in place. There is no import, export or recover command.
 
-Contact validation can reject formerly accepted numeric-only names, long phones or slash-containing
-addresses, or reveal duplicates after normalization. Inspect JSON read-only, or use an older build on an
+Contact validation can reject formerly accepted numeric-only names, long phones or addresses with nonnumeric
+slash components, or reveal duplicates after normalization. Inspect JSON read-only, or use an older build on an
 additional working copy. The administrator supplies corrections and missing role information. Valid
 human edits to the supported schema must load; invalid edits follow [startup protection](#current-protected-startup).
 
@@ -1146,15 +1146,16 @@ and saved files from admitting different formats.
 
 | Value | Contract |
 | --- | --- |
-| Name | 1–100 Unicode code points after trimming Unicode boundary spaces, collapsing ASCII spaces and NFC normalization. Letters, attached combining marks, ASCII spaces, apostrophes (`'`, `’`), hyphens and periods; at least one letter. Display case is preserved. Digits, emoji, slash, unattached marks and internal non-ASCII whitespace are rejected. |
+| Name | 1–100 Unicode code points after trimming Unicode boundary spaces, collapsing ASCII spaces and NFC normalization. Letters, attached combining marks, ASCII spaces, apostrophes (`'`, `’`), hyphens and periods; at least one letter. Standalone lowercase `s/o` and `d/o` may separate letter-bearing name text. Display case is preserved. Digits, emoji, other slashes, unattached marks and internal non-ASCII whitespace are rejected. |
 | Phone | 3–15 ASCII digits, stored as text to retain leading zeros. |
 | Email | At most 254 characters; local part allows letters, digits, `.`, `_`, `%`, `+`, `-`, without leading/trailing/consecutive periods. Domain has at least two letter/digit/internal-hyphen labels, ending in 2–63 English letters. Spelling/case are preserved. |
-| Address | 1–200 printable ASCII characters after trimming/collapsing spaces; `/`, tabs, line breaks and controls are rejected. |
+| Address | 1–200 printable ASCII characters after trimming Unicode boundary spaces and collapsing ASCII spaces. Each `/` must have ASCII digits immediately on both sides; tabs, line breaks and controls are rejected. |
 
 Name/address normalization occurs once in the value type, before equality and hashing; case remains significant
-for value equality. `Name` rejects ISO controls, format characters, line/paragraph separators and lone surrogates
-before trimming, so JSON cannot hide invalid characters at a boundary. It shares the parser's Unicode-boundary
-trimming utility. After NFC normalization, a code-point scan enforces the length and mark-attachment rules.
+for value equality. Both reject ISO controls, format characters, line/paragraph separators and lone surrogates
+before trimming, so JSON cannot hide invalid characters at a boundary. They share the parser's Unicode-boundary
+trimming utility. After NFC normalization, a code-point scan enforces name length, mark attachment and
+letter-bearing text on either side of each standalone marker. Address validation checks every slash's neighbors.
 Existing duplicate keys and `TutorResolver` consume these canonical `Name` values; both lesson creation and
 editing therefore match canonical equivalents while retaining ambiguity and exact-phone checks. No schema
 change is needed: the loader constructs the same value and the writer saves its normalized display form.
@@ -1167,9 +1168,12 @@ normalization-created duplicates, enter [protected startup](#current-protected-s
 rejected-file preservation and recovery. This contact policy performs no legacy migration. Role-aware
 add/list are active as described below.
 
-This first #383 increment leaves prefix/slash parsing and search normalization unchanged. Legal-name
-`s/o` / `d/o` markers and numeric slash addresses remain outstanding; search can use a displayed-name fragment
-such as `n/Jos`, but does not promise canonical Unicode equivalence or full internationalization.
+The four add/edit parsers use `FieldValueTokenizer` only when advancing through a field's value. It skips
+complete lowercase `s/o` / `d/o` tokens inside `n/` or `tu/`, and digit-surrounded slash components inside `a/`.
+All other prefix-shaped tokens still reach the existing unknown/repeated-prefix checks; value types reject
+malformed literals. This preserves prefix order, error precedence and edit keep/clear operations without a
+quoting grammar. Search retains its own slash restriction and normalization: use fragments such as `n/Ravi`,
+`a/#01` or `n/Jos`, rather than a full slash value or a promise of canonical Unicode search equivalence.
 
 <a id="role-aware-addition-parsing-foundation"></a>
 <a id="staged-person-addition-candidate"></a>
@@ -2242,7 +2246,10 @@ testers are expected to do more *exploratory* testing.
 3. Close and reopen: Up must not recall the previous window's submissions. `CommandBoxTest` covers
    the 50-entry eviction boundary separately. Recheck displayed people positions before rerunning mutations.
 
-### Unicode person-name checks (#383 first increment)
+
+<a id="unicode-person-name-checks-383-first-increment"></a>
+
+### Unicode and slash contact checks
 
 In a disposable data folder, add `add r/tutor n/José Santos p/00123456`,
 `add r/student n/李明 l/P1 pp/91234567` and `add r/parent n/தமிழ் p/91234567`.
@@ -2259,7 +2266,13 @@ require `tp/` for lesson selection; an incorrect supplied phone must fail.
 allocation counters, existing ASCII data, lesson/roster/attendance stability and invalid-prefix regressions.
 `NameTest` checks normalized code-point limits, supplementary letters and unattached marks;
 `JsonPonHubDataStorageTest` checks human-edited Unicode and protected malformed/duplicate reloads.
-Search and slash grammar retain the limitations described in the contact-validation section above.
+For slash values, add `add r/student n/Ravi s/o Kumar l/P1 pp/91234567 a/Blk 10, #01/02` in a fresh
+working copy. Edit that Student to `n/Anita d/o Kumar a/Block A12/34B`, then restart and check the stable ID,
+normalized values and links. Create a Tutor named `Ravi s/o Kumar`; use `tu/Ravi s/o Kumar` in both
+`addlesson` and `editlesson`, retaining the normal `tp/` disambiguation rules. Reject `n/s/o`,
+`n/Ravi s/other Kumar`, `a/A/B`, `a/#01//02` and unknown/repeated prefixes without changing the snapshot.
+Search with `n/Anita a/A12`, rather than a full slash value. `CanonicalSlashContactIntegrationTest` covers
+these command/JSON, duplicate/no-op, relationship and unchanged-search boundaries.
 
 ### Launch and shutdown
 

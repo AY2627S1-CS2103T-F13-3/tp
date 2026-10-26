@@ -215,12 +215,18 @@ Creates a student, tutor or parent record.
 | `pp/PARENT_PHONE` | Required for students; not allowed for tutors or parents. Use 3–15 digits without spaces or punctuation. |
 | `p/PHONE` | Required for tutors and parents; optional for students. Use 3–15 digits without spaces or punctuation. Leading zeros are retained. |
 | `e/EMAIL` | Optional. Use an email address such as `mei@example.com`, with no spaces and at most 254 characters. |
-| `a/ADDRESS` | Optional. Between 1 and 200 printable ASCII characters. Slashes, tabs and line breaks are not allowed. Surrounding spaces are removed and repeated spaces are reduced to one before measuring length. |
+| `a/ADDRESS` | Optional. Between 1 and 200 printable ASCII characters. A slash is allowed only with a digit immediately on each side, as in `#01/02`. Tabs and line breaks are rejected. Surrounding Unicode spaces are removed and repeated ordinary spaces collapse before measuring length. |
 
 For names, surrounding Unicode spaces are removed, repeated ordinary spaces collapse, and canonically
-equivalent spellings are stored in NFC form. Letter case is preserved. Digits, emoji, slashes, controls,
-invisible format characters and internal non-ASCII spaces are rejected. Names such as `Ravi s/o Kumar`
-and addresses such as `#01/02` are not yet accepted.
+equivalent spellings are stored in NFC form. Letter case is preserved. Standalone lowercase `s/o` and `d/o`
+are accepted between letter-bearing name text, as in `Ravi s/o Kumar` and `Anita d/o Kumar`.
+Other slashes, digits, emoji, controls, invisible format characters and internal non-ASCII spaces are rejected.
+Addresses accept `Blk 10, #01/02`, `Blk 12/34` and `Block A12/34B`; `A/B`, `/` and `#01//02` are rejected.
+These literals apply to `n/` and `a/` in add/edit, and to Tutor `tu/` in lesson creation/editing.
+Unknown, uppercase and repeated prefixes still cause errors; general quoting or escaping is unavailable.
+
+For example, `add r/student n/Ravi s/o Kumar l/P1 pp/91234567 a/Blk 10, #01/02` stores both values.
+The same name and address rules apply when editing a person and when loading saved data.
 
 For email addresses, the local part before `@` may contain English letters, digits, periods, underscores, `%`, `+` and `-`. It must not begin or end with a period or contain consecutive periods. Domain labels may contain English letters, digits and hyphens. The domain must contain at least two dot-separated labels, with no leading or trailing hyphens in a label. Its final label must contain 2–63 English letters. Email spelling and letter case are preserved.
 
@@ -723,7 +729,8 @@ match Sally Tan and `e/@example` can match `mei@example.com`. `tu/mei` searches 
 use `n/mei` for the Tutor's own name when the result category is `tutor`.
 
 Search does not normalize canonical Unicode spelling differences. Copy the displayed spelling or use a
-fragment such as `n/Jos` to find `José Santos`.
+fragment such as `n/Jos` to find `José Santos`. Slash-bearing full values remain unsupported in search:
+use `n/Ravi` for `Ravi s/o Kumar` or `a/#01` for `#01/02`.
 
 Phone and parent-phone filters match the complete 3–15-digit number, including leading zeros. Level and
 weekday filters match a complete allowed value, ignoring case: `P1`–`P6`, `S1`–`S5`, `JC1` or `JC2` for

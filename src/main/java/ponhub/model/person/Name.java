@@ -17,6 +17,7 @@ public final class Name {
     public static final String MESSAGE_CONSTRAINTS =
             "Names must contain 1 to 100 Unicode code points after normalization, using letters with attached "
             + "combining marks, spaces, apostrophes (' or ’), hyphens or periods, with at least one letter. "
+            + "Standalone lowercase s/o or d/o is allowed between letter-bearing name text. "
             + "Controls, format characters and internal non-ASCII whitespace are not allowed.";
 
     public final String fullName;
@@ -60,13 +61,22 @@ public final class Name {
         if (name.codePointCount(0, name.length()) > MAX_LENGTH) {
             return false;
         }
-        boolean hasLetter = false;
+        boolean hasLetterSinceMarker = false;
         boolean canAttachMark = false;
         for (int offset = 0; offset < name.length();) {
+            if (isNameMarkerAt(name, offset)) {
+                if (!hasLetterSinceMarker) {
+                    return false;
+                }
+                hasLetterSinceMarker = false;
+                canAttachMark = false;
+                offset += 3;
+                continue;
+            }
             int codePoint = name.codePointAt(offset);
             offset += Character.charCount(codePoint);
             if (Character.isLetter(codePoint)) {
-                hasLetter = true;
+                hasLetterSinceMarker = true;
                 canAttachMark = true;
             } else if (isCombiningMark(codePoint)) {
                 if (!canAttachMark) {
@@ -79,7 +89,13 @@ public final class Name {
                 return false;
             }
         }
-        return hasLetter;
+        return hasLetterSinceMarker;
+    }
+
+    private static boolean isNameMarkerAt(String name, int offset) {
+        return offset > 0 && name.charAt(offset - 1) == ' ' && offset + 3 < name.length()
+                && name.charAt(offset + 3) == ' '
+                && (name.startsWith("s/o", offset) || name.startsWith("d/o", offset));
     }
 
     private static boolean isCombiningMark(int codePoint) {
