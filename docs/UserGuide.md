@@ -145,7 +145,7 @@ session's catalogue. A protected session permits only `help`, `list` and `exit`;
 | [Edit shared lesson](#editing-a-shared-lesson-editlesson) | `editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM]` | `editlesson lid/L1 st/1630 s/Advanced Math` |
 | [Enrol student](#5-enrolling-and-unenrolling-students) | `enrol STUDENT_INDEX lid/LESSON_ID` | `enrol 1 lid/L1` |
 | [Unenrol student](#5-enrolling-and-unenrolling-students) | `unenrol STUDENT_INDEX lid/LESSON_ID` | `unenrol 1 lid/L1` |
-| [Mark attendance](#7-recording-attendance-and-retrieving-history) | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent</code> | `mark 1 lid/L1 d/2026-10-05 s/present` |
+| [Mark attendance](#7-recording-attendance-and-retrieving-history) | <code>mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present&#124;absent [ack/future]</code> | `mark 1 lid/L1 d/2026-10-05 s/present` |
 | [Unmark attendance](#7-recording-attendance-and-retrieving-history) | `unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD` | `unmark 1 lid/L1 d/2026-10-05` |
 | [Delete person](#3-deleting-a-person-delete) | `delete INDEX`, then `delete confirm` or `delete cancel` | `delete 1`, then `delete confirm` |
 | [Delete shared lesson](#4-creating-shared-lessons-and-other-lesson-operations) | `deletelesson lid/LESSON_ID` | `deletelesson lid/L1` |
@@ -838,7 +838,7 @@ and [attendance history](#attendance-history) for their complete behavior.
 ### Recording attendance and retrieving history
 {: id="7-recording-attendance-and-retrieving-history"}
 
-**Mark (active):** `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent`
+**Mark (active):** `mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent [ack/future]`
 
 Example: Run `list r/student`. If the intended student appears at position 1 and the lesson ID is `L1`, enter `mark 1 lid/L1 d/2026-10-05 s/present`.
 
@@ -846,6 +846,12 @@ Example: Run `list r/student`. If the intended student appears at position 1 and
 stable ID, not a per-student lesson index. Use a real date in `YYYY-MM-DD` format that matches the Lesson's weekday,
 and status `present` or `absent`. Past dates are accepted. A new Student/Lesson/date record requires current
 enrolment. The same date is independent for different Students, and different dates are independent for one Student.
+
+A future `absent` outcome is accepted without extra syntax so planned absence can be recorded intentionally.
+A future `present` outcome is not saved on the first attempt because it is likely to be a date or year typo. Check
+the date, then repeat the same valid command with `ack/future` only when future presence is intentional, for example
+`mark 1 lid/L1 d/2036-10-06 s/present ack/future`. The acknowledgement does not bypass real-date, Lesson weekday,
+Student, membership or persistence checks.
 
 Marking an existing Student/Lesson/date again with the other status corrects that one record instead of appending a
 duplicate. This correction remains allowed after unenrolment, but a new date is rejected until the Student is enrolled

@@ -17,12 +17,14 @@ import ponhub.model.lesson.LessonId;
  */
 public final class AttendanceMarkParser {
     public static final String MESSAGE_ARGUMENTS =
-            "Supply STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent, "
+            "Supply STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent [ack/future], "
                     + "for example 1 lid/L1 d/2026-10-05 s/present.";
     public static final String MESSAGE_SINGLE_LINE =
             "Mark arguments must be on one line and use spaces rather than control characters.";
+    public static final String MESSAGE_ACKNOWLEDGEMENT =
+            "Attendance acknowledgement must be ack/future.";
 
-    private static final Set<String> PREFIXES = Set.of("lid/", "d/", "s/");
+    private static final Set<String> PREFIXES = Set.of("lid/", "d/", "s/", "ack/");
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
 
     /**
@@ -45,7 +47,13 @@ public final class AttendanceMarkParser {
             LessonId lessonId = new LessonId(parsed.requireValue("lid/"));
             LocalDate date = Attendance.parseDate(parsed.requireValue("d/"));
             AttendanceStatus status = AttendanceStatus.parse(parsed.requireValue("s/"));
-            return new AttendanceMarkInput(studentIndex, lessonId, date, status);
+            boolean futureAcknowledged = parsed.optionalValue("ack/").map(value -> {
+                if (!value.equalsIgnoreCase("future")) {
+                    throw new IllegalArgumentException(MESSAGE_ACKNOWLEDGEMENT);
+                }
+                return true;
+            }).orElse(false);
+            return new AttendanceMarkInput(studentIndex, lessonId, date, status, futureAcknowledged);
         } catch (IllegalArgumentException exception) {
             throw new ParseException(exception.getMessage(), exception);
         }

@@ -31,6 +31,10 @@ public class CanonicalCommandCatalogTest {
         for (String word : List.of("edit", "editlesson")) {
             assertTrue(CanonicalCommandCatalog.getUsage(word, true).isEmpty());
         }
+
+        String mark = CanonicalCommandCatalog.getUsage("mark", false).orElseThrow();
+        assertTrue(mark.contains("[ack/future]"));
+        assertTrue(mark.contains("Future absent outcomes are allowed"));
     }
 
     @Test
