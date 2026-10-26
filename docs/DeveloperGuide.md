@@ -1054,8 +1054,10 @@ define the exhaustive parsing, normalization and equality rules used by commands
 `LessonId` is an `L`-prefixed positive `long`; `LessonDay` stores `Mon`–`Sun`; `LessonTime` stores four-digit 24-hour
 time; and `Subject` and `Room` enforce their length and character contracts. A `Subject` contains 1 to 50 Unicode
 letters or digits, with single spaces or hyphens separating non-empty parts, so conventional labels such as
-`A-Math` survive creation, editing, search and JSON reload unchanged. Room case is normalized so it cannot bypass
-clash detection.
+`A-Math` survive creation, editing, search and JSON reload unchanged. A `Room` contains 1 to 10 characters in total,
+including any hyphens, and otherwise uses letters or digits with optional single hyphens separating non-empty parts.
+It is normalized to upper case while retaining hyphens, so `b-01` and `B-01` have the same equality and hash values
+and cannot bypass clash detection.
 
 `LessonTimeSlot` requires its end to be later than its start and models `[start, end)`. Therefore `1600–1700` and
 `1700–1800` are adjacent rather than overlapping; equal clock times on different weekdays also do not overlap.
