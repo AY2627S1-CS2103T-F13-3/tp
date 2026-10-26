@@ -426,7 +426,7 @@ public class PersonRecordCardTest {
         assertEquals("Position: " + position, ((Label) root.lookup("#position")).getText());
         assertEquals(details, detailBox.getChildren().stream().map(VBox.class::cast)
                 .flatMap(group -> group.getChildren().stream()).map(VBox.class::cast)
-                .map(field -> ((Label) field.getChildren().get(0)).getText() + ": "
+                .map(field -> ((Label) field.lookup(".person-caption")).getText() + ": "
                         + ((Label) field.getChildren().get(1)).getText()).toList());
     }
 

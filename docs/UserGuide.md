@@ -272,6 +272,18 @@ Example feedback:
 
 An empty result is valid. PonHub reports a count of zero and the people panel shows `No persons to display.`
 
+#### Copying contact values
+
+Click **Copy** beside an available phone, email or address to put the full value on your system clipboard,
+without its caption. For example, **Copy** beside Alex's parent phone copies `91234567`.
+Phone numbers retain their displayed leading zeros. Missing values marked `Not provided` have no Copy button.
+
+For keyboard access, use Tab or Shift+Tab to focus the desired **Copy** button, then press Space or
+Ctrl+C (Cmd+C on macOS). The button's accessible name identifies the contact and person.
+Copying leaves records, the people filter/order, selected card and unfinished command text unchanged.
+Mouse copying also keeps command focus, cursor and text selection. It replaces the clipboard's previous
+contents. Ctrl+C or Cmd+C in the command box or feedback area continues to copy that area's selected text.
+
 <a id="people-positions-and-stable-ids"></a>
 
 #### Example: positions change, IDs stay fixed
