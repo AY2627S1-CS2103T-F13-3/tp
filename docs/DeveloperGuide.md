@@ -1941,9 +1941,11 @@ named above do not certify native display/scaling acceptance.
 <!-- @@author ys000009 -->
 ### Lesson editing
 
-Use a disposable store and follow the first three steps of the
-[active shared-lesson workflow](#active-shared-lesson-and-attendance-workflow) so `L1`, `L2` and `L3` exist and
-Students 1 and 2 are enrolled in `L1`. Record Monday attendance for both Students before the history checks.
+Use a disposable store and complete the fixture setup in step 1 of the
+[common selector and failure journey](#common-selector-and-failure-journey). This creates `L1`, `L2` and `L3`,
+with Alex and Jamie enrolled in `L1`. Record Monday attendance for both Students before the history checks.
+Use the same common journey for generic selector, rejection, save, retry and reload expectations; the steps below
+retain only the Lesson-specific field, scheduling, Tutor and history behavior.
 
 1. Run `editlesson lid/L1 st/1630 s/Advanced Math`. Expect `Edited lesson: L1.`, the same ID, roster, Tutor,
    room and end time, and a refreshed Lesson card. Restart with the same file and verify the replacement persists.
@@ -1954,38 +1956,32 @@ Students 1 and 2 are enrolled in `L1`. Record Monday attendance for both Student
 4. Attempt edits that overlap another Lesson for the replacement Tutor, room and one enrolled Student. Expect the
    relevant stable IDs in the rejection, unchanged current cards/file and no ID allocation. Verify an adjacent
    boundary and the Lesson's unchanged own slot are not treated as overlaps.
-5. With current and former-member Monday attendance retained for `L1`, reject `editlesson lid/L1 d/Tue`. The
-   message must identify an incompatible date and explain that it can be explicitly unmarked; it must not delete,
-   move or relabel history. Remove each record with `unmark` only for this test, select
+5. Run `list r/student`, then `unenrol 2 lid/L1` so Jamie's Monday record becomes former-member attendance while
+   Alex's remains current. Reject `editlesson lid/L1 d/Tue`. The message must identify an incompatible date and
+   explain that the retained records can be explicitly unmarked; it must not delete, move or relabel history.
+   Remove each record with `unmark` only for this test, select
    `showlesson lid/L1 d/2026-10-05`, then retry the Tuesday edit. Expect the Lesson detail to remain selected with
    no date filter or date in its context.
-6. Follow [unsuccessful-save checks](UserGuide.html#checking-unsuccessful-saves-in-the-current-build). A failed
-   save retains the old Lesson card, selected detail, roster/history, file bytes and counters. Retry after restoring
-   access, restart and verify exactly one persisted replacement.
-7. With rejected disposable data, `editlesson lid/L1 s/Math` is blocked before parsing, `help editlesson` is
-   unavailable and original bytes remain unchanged. Recovery requires correcting/restoring the file and restarting.
+6. Repeat the save, retry and reload part of the
+   [common journey](#common-selector-and-failure-journey) with a valid Lesson edit. In addition to the shared
+   expectations, verify the old Lesson card, selected detail, roster/history and counters before retrying, then
+   verify exactly one persisted replacement after restart. Apply the common journey's stored-file recovery limits;
+   do not assume every failed save leaves destination bytes unchanged.
+7. In the common journey's rejected-data session, `editlesson lid/L1 s/Math` is blocked before parsing and
+   `help editlesson` is unavailable. Original rejected bytes remain unchanged; recovery requires correcting or
+   restoring the file and restarting.
 
 #### Lesson edit owner verification record (#269)
 
-Yang Shuo ran the source-level owner checks on 20 October 2026 from team-master baseline `d1a2b9b5`, using
-macOS 26.6.2 on arm64 and Azul Zulu OpenJDK 25.0.3. The focused
-`CanonicalLessonEditIntegrationTest` run and complete `./gradlew check --no-daemon` repository verification
-both reported `BUILD SUCCESSFUL`. To repeat the focused check after the namespace move, run
-`./gradlew test --tests ponhub.logic.CanonicalLessonEditIntegrationTest --no-daemon`.
+Yang Shuo's exact 20 October 2026 source-level owner record, including the team-master baseline `d1a2b9b5`,
+environment, commands and seven recorded PASS observations, remains preserved in
+[immutable team source `b68ec392`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/b68ec39227a7bef7d587222d616dd2db422f9cd8/docs/DeveloperGuide.md#lesson-edit-owner-verification-record-269).
+It is historical source-level evidence, not packaged/native or independent acceptance.
 
-| Result | Case and recorded observation |
-| --- | --- |
-| PASS | Partial changes to an empty `L4` refreshed the held catalogue result with the same stable ID and roster size 0. Subject, room and both time endpoints changed without allocating another Lesson. |
-| PASS | A populated `L1` retained current Student `S1`, former Student `S2`, all attendance and allocation counters after schedule, subject, Tutor and room changes. The dated detail still showed S1 present and S2 absent. |
-| PASS | `history 1 lid/L1` retained S1's current-member present result; `history 2 lid/L1` retained S2's former-member absent result. Reloading the saved file produced the same complete snapshot. |
-| PASS | Editing only `st/` or only `et/` succeeded when the resulting slot was valid. An adjacent boundary and the edited Lesson's own prior slot were not treated as overlaps. |
-| PASS | Independent Tutor, room and enrolled-Student overlaps were rejected. Missing, malformed and nonexistent `lid/` selectors preserved the held Lesson results, snapshot and saved bytes. |
-| PASS | A normalized no-op performed no save or result publication. Injected IO and permission failures retained Lesson detail, history context, snapshot and bytes before a successful retry and reload. |
-| PASS | Current and former Monday attendance both blocked a Tuesday weekday edit without mutation. After explicit `unmark` commands, the change succeeded and cleared only the obsolete selected-detail date. |
-
-This is source-level owner evidence, not packaged/native or independent acceptance. The #271/#272 verifier should
-rerun the same empty/populated, conflict, roster/detail/history, no-op, invalid-selector, retained-weekday and
-failed-save cases on the exact final candidate, reporting PASS, FAIL or NOT RUN for each affected case.
+For the exact final candidate, rerun the focused
+`./gradlew test --tests ponhub.logic.CanonicalLessonEditIntegrationTest --no-daemon` check and the executable
+Lesson-edit procedure above. Report PASS, FAIL or NOT RUN for the empty/populated, conflict,
+roster/detail/history, no-op, invalid-selector, retained-weekday and failed-save cases.
 <!-- @@author -->
 
 ### Command-name completion
