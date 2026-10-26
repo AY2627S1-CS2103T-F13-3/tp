@@ -3,18 +3,22 @@ package ponhub.ui;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static ponhub.testutil.FxTestUtil.callOnFxThread;
 import static ponhub.testutil.FxTestUtil.runOnFxThread;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +36,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
@@ -63,6 +69,10 @@ import ponhub.model.person.Tutor;
  * Exercises real clipboard actions and input routing while restoring the user's original clipboard formats.
  */
 public class PersonContactCopyTest {
+    private static final DataFormat BINARY_FORMAT = new DataFormat("application/x-ponhub-clipboard-test");
+    private static final Set<String> NATIVE_METADATA_TARGETS =
+            Set.of("TARGETS", "TIMESTAMP", "MULTIPLE", "SAVE_TARGETS", "INCR");
+
     @TempDir
     Path directory;
 
@@ -70,14 +80,7 @@ public class PersonContactCopyTest {
 
     @BeforeEach
     public void preserveClipboard() throws Exception {
-        originalClipboard = callOnFxThread(() -> {
-            Clipboard clipboard = Clipboard.getSystemClipboard();
-            Map<DataFormat, Object> contents = new HashMap<>();
-            for (DataFormat format : clipboard.getContentTypes()) {
-                contents.put(format, clipboard.getContent(format));
-            }
-            return contents;
-        });
+        originalClipboard = callOnFxThread(PersonContactCopyTest::snapshotClipboardContents);
     }
 
     @AfterEach
@@ -92,7 +95,67 @@ public class PersonContactCopyTest {
         runOnFxThread(() -> {
             setClipboard("temporary copied contact");
             restoreClipboardContents(Map.of());
-            assertTrue(Clipboard.getSystemClipboard().getContentTypes().isEmpty());
+            assertTrue(snapshotClipboardContents().isEmpty());
+            assertNull(Clipboard.getSystemClipboard().getString());
+        });
+    }
+
+    @Test
+    public void restoreClipboard_nonemptySnapshot_restoresReadableTextImageFilesAndBinary() throws Exception {
+        Path originalFile = Files.writeString(directory.resolve("original.txt"), "Original file");
+        runOnFxThread(() -> {
+            WritableImage image = new WritableImage(2, 1);
+            image.getPixelWriter().setArgb(0, 0, 0xff123456);
+            image.getPixelWriter().setArgb(1, 0, 0xffabcdef);
+            Map<DataFormat, Object> original = Map.of(
+                    DataFormat.PLAIN_TEXT, "Original clipboard text",
+                    DataFormat.HTML, "<b>Original clipboard text</b>",
+                    DataFormat.IMAGE, image,
+                    DataFormat.FILES, List.of(originalFile.toFile()),
+                    BINARY_FORMAT, ByteBuffer.wrap(new byte[] {0, 1, 2, -1}));
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            clipboard.setContent(original);
+            Map<DataFormat, Object> snapshot = snapshotClipboardContents();
+            assertTrue(snapshot.keySet().containsAll(original.keySet()));
+
+            setClipboard("temporary copied contact");
+            restoreClipboardContents(snapshot);
+
+            assertEquals("Original clipboard text", clipboard.getString());
+            assertEquals("<b>Original clipboard text</b>", clipboard.getHtml());
+            assertEquals(List.of(originalFile.toFile()), clipboard.getFiles());
+            assertEquals(ByteBuffer.wrap(new byte[] {0, 1, 2, -1}), clipboard.getContent(BINARY_FORMAT));
+            assertEquals(0xff123456, clipboard.getImage().getPixelReader().getArgb(0, 0));
+            assertEquals(0xffabcdef, clipboard.getImage().getPixelReader().getArgb(1, 0));
+        });
+    }
+
+    @Test
+    public void snapshotClipboard_unreadableAndEmptyFormats_retainsOnlyIndependentReadablePayloads() {
+        ByteBuffer binary = ByteBuffer.wrap(new byte[] {1, 2, 3});
+        Map<DataFormat, Object> advertised = new HashMap<>();
+        advertised.put(DataFormat.PLAIN_TEXT, "Original text");
+        advertised.put(DataFormat.HTML, null);
+        advertised.put(DataFormat.FILES, List.of());
+        advertised.put(BINARY_FORMAT, binary);
+        DataFormat metadata = Optional.ofNullable(DataFormat.lookupMimeType("TARGETS"))
+                .orElseGet(() -> new DataFormat("TARGETS"));
+        advertised.put(metadata, ByteBuffer.wrap(new byte[] {0, 1}));
+
+        Map<DataFormat, Object> snapshot = copyReadableClipboardContents(advertised);
+        binary.put(0, (byte) 9);
+
+        assertEquals(Map.of(DataFormat.PLAIN_TEXT, "Original text",
+                BINARY_FORMAT, ByteBuffer.wrap(new byte[] {1, 2, 3})), snapshot);
+    }
+
+    @Test
+    public void restoreClipboard_emptyFileList_clearsCopiedContacts() throws Exception {
+        runOnFxThread(() -> {
+            setClipboard("temporary copied contact");
+            restoreClipboardContents(Map.of(DataFormat.FILES, List.of()));
+            assertTrue(snapshotClipboardContents().isEmpty());
+            assertNull(Clipboard.getSystemClipboard().getString());
         });
     }
 
@@ -287,13 +350,74 @@ public class PersonContactCopyTest {
                 .findFirst().orElseThrow();
     }
 
+    private static Map<DataFormat, Object> snapshotClipboardContents() {
+        Clipboard clipboard = Clipboard.getSystemClipboard();
+        Map<DataFormat, Object> contents = new HashMap<>();
+        for (DataFormat format : clipboard.getContentTypes()) {
+            if (isClipboardPayloadFormat(format)) {
+                contents.put(format, clipboard.getContent(format));
+            }
+        }
+        return copyReadableClipboardContents(contents);
+    }
+
+    /**
+     * Snapshots readable payloads, omitting advertised formats without data and empty native file lists.
+     * Binary buffers must not share mutable storage with the clipboard being replaced.
+     */
+    private static Map<DataFormat, Object> copyReadableClipboardContents(Map<DataFormat, Object> contents) {
+        Map<DataFormat, Object> snapshot = new HashMap<>();
+        contents.forEach((format, value) -> {
+            if (!isClipboardPayloadFormat(format) || value == null
+                    || format == DataFormat.FILES && ((List<?>) value).isEmpty()
+                    || value instanceof Image image && image.getPixelReader() == null) {
+                return;
+            }
+            if (value instanceof ByteBuffer buffer) {
+                value = ByteBuffer.allocate(buffer.remaining()).put(buffer.duplicate()).flip();
+            } else if (value instanceof List<?> files) {
+                value = List.copyOf(files);
+            }
+            snapshot.put(format, value);
+        });
+        return snapshot;
+    }
+
+    private static boolean isClipboardPayloadFormat(DataFormat format) {
+        // GTK advertises selection-protocol targets even when no user payload exists.
+        return format.getIdentifiers().stream().anyMatch(identifier -> !NATIVE_METADATA_TARGETS.contains(identifier));
+    }
+
     private static void restoreClipboardContents(Map<DataFormat, Object> contents) {
         Clipboard clipboard = Clipboard.getSystemClipboard();
-        if (contents.isEmpty()) {
+        Map<DataFormat, Object> readable = copyReadableClipboardContents(contents);
+        if (readable.isEmpty()) {
             clipboard.clear();
-            assertTrue(clipboard.getContentTypes().isEmpty());
+            assertTrue(snapshotClipboardContents().isEmpty());
         } else {
-            assertTrue(clipboard.setContent(contents));
+            // OpenJFX can return false for a nonempty map containing no publishable payload.
+            // Verify restored values instead of assuming map size or the return flag proves preservation.
+            clipboard.setContent(readable);
+            contents.forEach((format, value) -> {
+                if (readable.containsKey(format)) {
+                    assertClipboardValueEquals(value, clipboard.getContent(format), format);
+                }
+            });
+        }
+    }
+
+    private static void assertClipboardValueEquals(Object expected, Object actual, DataFormat format) {
+        if (expected instanceof Image expectedImage && actual instanceof Image actualImage) {
+            assertEquals(expectedImage.getWidth(), actualImage.getWidth());
+            assertEquals(expectedImage.getHeight(), actualImage.getHeight());
+            for (int y = 0; y < expectedImage.getHeight(); y++) {
+                for (int x = 0; x < expectedImage.getWidth(); x++) {
+                    assertTrue(expectedImage.getPixelReader().getArgb(x, y)
+                            == actualImage.getPixelReader().getArgb(x, y), "Restored image pixels differ");
+                }
+            }
+        } else {
+            assertTrue(Objects.deepEquals(expected, actual), "Restored clipboard content differs for " + format);
         }
     }
 
