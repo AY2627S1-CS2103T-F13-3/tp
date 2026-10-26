@@ -1,42 +1,34 @@
 @startuml
+' Readability layout by Vincent with Codex assistance (#393); existing model/feature credit retained.
 !include style.puml
 !pragma layout smetana
 
+skinparam defaultFontSize 16
+skinparam classFontSize 16
+skinparam noteFontSize 15
 skinparam linetype ortho
-skinparam nodesep 35
-skinparam ranksep 45
+skinparam nodesep 50
+skinparam ranksep 60
 skinparam arrowThickness 1.1
 skinparam arrowColor MODEL_COLOR
 skinparam classBackgroundColor MODEL_COLOR
 
-package "Canonical aggregate" {
     class PonHubDataState
-}
 
-package "People" {
     class Student
     class Tutor
-}
 
-package "Shared lessons" {
     class Lesson
-    class LessonId
-    class LessonTimeSlot
-    class Subject
-    class Room
-}
 
 PonHubDataState "0..*" --> "0..*" Lesson : ordered catalogue
-Lesson "0..*" --> "1" LessonId : id
-Lesson "0..*" --> "1" LessonTimeSlot : timeSlot
-Lesson "0..*" --> "1" Subject : subject
-Lesson "0..*" --> "1" Room : room
 Lesson "0..*" --> "1" Tutor : tutorId (PersonId)
 Lesson "0..*" -- "0..*" Student : enrolledStudentIds (PersonId)
 
 note on link
-  Each Lesson alone stores its roster of stable Student IDs.
-  Student records do not contain copied lesson membership.
+  Each Lesson alone stores its roster
+  of stable Student IDs.
+  Student records do not contain
+  copied lesson membership.
 end note
 
 @enduml

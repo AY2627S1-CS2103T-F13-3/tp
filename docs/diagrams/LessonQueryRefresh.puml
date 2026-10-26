@@ -1,8 +1,14 @@
 @startuml
+' Readability layout by Vincent with Codex assistance (#393); existing model/feature credit retained.
 !include style.puml
 skinparam ParticipantFontColor #FFFFFF
 skinparam sequenceMessageAlign left
-skinparam maxMessageSize 140
+skinparam maxMessageSize 95
+skinparam ParticipantPadding 5
+skinparam ArrowFontSize 16
+skinparam defaultFontSize 16
+skinparam ParticipantFontSize 14
+skinparam noteFontSize 15
 participant "executor" as executor LOGIC_COLOR
 participant "transaction" as transaction MODEL_COLOR
 participant "writer" as writer STORAGE_COLOR
@@ -11,7 +17,8 @@ participant "queries" as queries MODEL_COLOR
 participant "retrieval" as retrieval LOGIC_COLOR
 
 note over live, retrieval
-  Query: Mon, 1600, Math, Mei, R1, sn/a.
+  Query: Mon, 1600, Math,
+  Mei, R1, sn/a.
   Candidates [L1, L2] -> result [L1].
   Alex and Jamie match; emit L1 once.
 end note
@@ -26,10 +33,14 @@ alt save fails
     writer --> executor : IOException
     note over executor, retrieval
       Discard candidate; no publication.
-      Live Math L1 and all view state stay unchanged.
+      Live Math L1 and all view state
+      stay unchanged.
     end note
 else save succeeds
     writer --> executor : saved
+end
+newpage Successful-save publication and query refresh
+opt save succeeded
     executor -> transaction : commit()
     transaction -> live : resetData(candidate)
     live -> queries : stateProperty change

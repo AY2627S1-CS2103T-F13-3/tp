@@ -32,3 +32,31 @@ h2, h3, h4, h5, h6 {
   }
 }
 
+
+// Keep a diagram title attached to its image on screen and in paged output.
+.dg-figure {
+  margin: 1.5em 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+
+  figcaption {
+    font-weight: bold;
+    margin-bottom: .6em;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+@media print {
+  .dg-figure img {
+    max-height: 235mm;
+    width: auto;
+    object-fit: contain;
+  }
+}
