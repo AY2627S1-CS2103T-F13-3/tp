@@ -38,9 +38,10 @@ Student .up.|> PersonRecord
 PersonRecord "0..*" -left-> "1" PersonId : id
 PersonRecord "0..*" -right-> "1" ContactDetails : contactDetails
 ContactDetails "0..*" -right-> "1" Name : name
-ContactDetails "0..*" -down-> "0..1" Phone : phone
+' Offset the downward multiplicities from their arrow shafts and heads.
+ContactDetails "0..*<U+00A0><U+00A0>" -down-> "0..1<U+00A0><U+00A0>" Phone : phone
 ContactDetails "0..*" -up-> "0..1" Email : email
-ContactDetails "0..*" -down-> "0..1" Address : address
+ContactDetails "0..*<U+00A0><U+00A0>" -down-> "0..1<U+00A0><U+00A0>" Address : address
 Student "0..*" -down-> "1" EducationLevel : level
 Student "0..*" -right-> "1" Phone : parentPhone
 
