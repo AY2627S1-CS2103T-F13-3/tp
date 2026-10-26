@@ -32,6 +32,8 @@ public class SubjectTest {
 
     @Test
     public void isValidSubject() {
+        String supplementaryLetter = new String(Character.toChars(0x20000));
+
         assertThrows(NullPointerException.class, () -> Subject.isValidSubject(null));
 
         assertFalse(Subject.isValidSubject(""));
@@ -40,12 +42,14 @@ public class SubjectTest {
         assertFalse(Subject.isValidSubject("A--Math"));
         assertFalse(Subject.isValidSubject("Math!"));
         assertFalse(Subject.isValidSubject("A".repeat(51)));
+        assertFalse(Subject.isValidSubject(supplementaryLetter.repeat(51)));
 
         assertTrue(Subject.isValidSubject("Math"));
         assertTrue(Subject.isValidSubject("A-Math"));
         assertTrue(Subject.isValidSubject("H2-Math 1"));
         assertTrue(Subject.isValidSubject("Primary 5 Math"));
         assertTrue(Subject.isValidSubject("A".repeat(50)));
+        assertTrue(Subject.isValidSubject(supplementaryLetter.repeat(50)));
     }
 
     @Test

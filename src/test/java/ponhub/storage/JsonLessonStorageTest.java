@@ -137,6 +137,20 @@ public class JsonLessonStorageTest {
         assertEquals(loaded, JsonPonHubDataCodec.decode(JsonPonHubDataCodec.encode(loaded)));
     }
 
+    @Test
+    public void decode_supplementarySubjectAtCharacterLimit_acceptsExistingData() throws Exception {
+        String supplementaryLetter = new String(Character.toChars(0x20000));
+        String subject = supplementaryLetter.repeat(50);
+        ObjectNode root = createJson();
+        getLessonNode(root, 0).put("subject", subject);
+        Path path = directory.resolve("supplementary-subject.json");
+        Files.writeString(path, root.toString());
+
+        PonHubDataState loaded = new ProtectedPonHubDataStorage(path).load();
+
+        assertEquals(subject, loaded.lessons().getFirst().getSubject().toString());
+    }
+
     private ObjectNode createJson() throws IOException {
         return (ObjectNode) mapper.readTree(JsonPonHubDataCodec.encode(original));
     }
