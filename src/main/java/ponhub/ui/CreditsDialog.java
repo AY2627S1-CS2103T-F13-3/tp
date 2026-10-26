@@ -180,10 +180,21 @@ final class CreditsDialog extends Dialog<Void> {
     }
 
     private static void browseProfile(String url) {
+        browseProfile(url, target -> Desktop.getDesktop().browse(target));
+    }
+
+    static void browseProfile(String url, ProfileBrowser browser) {
         try {
-            Desktop.getDesktop().browse(URI.create(url));
+            browser.browse(URI.create(url));
         } catch (IOException failure) {
             throw new UncheckedIOException(failure);
         }
+    }
+
+    /** Browser boundary, allowing URI delivery and launch failures to be checked without opening real tabs. */
+    @FunctionalInterface
+    interface ProfileBrowser {
+        /** Opens the requested URI, or reports that the browser could not be launched. */
+        void browse(URI uri) throws IOException;
     }
 }

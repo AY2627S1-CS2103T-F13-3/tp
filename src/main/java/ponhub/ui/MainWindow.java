@@ -187,16 +187,12 @@ public class MainWindow extends UiPart<Stage> {
         if (badgeReset != null) {
             badgeReset.stop();
         }
-        Node text = badge.lookup(".text");
-        if (text != null) {
-            text.setOpacity(1);
-        }
+        badge.setOpacity(1);
     }
 
     private void restoreBadge(Label badge) {
         stopBadgeReset(badge);
-        Node text = badge.lookup(".text");
-        if (!primaryStage.isShowing() || text == null) {
+        if (!primaryStage.isShowing()) {
             badge.setText("hub");
             badge.setAccessibleText("hub");
             return;
@@ -205,19 +201,15 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     private void startBadgeReset(Label badge) {
-        Node text = badge.lookup(".text");
-        if (text == null) {
-            return;
-        }
         PauseTransition hold = new PauseTransition(Duration.millis(200));
-        FadeTransition fadeOut = new FadeTransition(Duration.millis(650), text);
+        FadeTransition fadeOut = new FadeTransition(Duration.millis(650), badge);
         fadeOut.setFromValue(1);
         fadeOut.setToValue(0);
         fadeOut.setOnFinished(event -> {
             badge.setText("hub");
             badge.setAccessibleText("hub");
         });
-        FadeTransition fadeIn = new FadeTransition(Duration.millis(650), text);
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(650), badge);
         fadeIn.setFromValue(0);
         fadeIn.setToValue(1);
         badgeReset = new SequentialTransition(hold, fadeOut, fadeIn);

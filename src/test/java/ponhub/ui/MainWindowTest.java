@@ -163,6 +163,41 @@ public class MainWindowTest {
     }
 
     @Test
+    public void logoClick_repeatedActivation_keepsOneDialogAndRestoresNavigationFocus() throws Exception {
+        MainWindow window = callOnFxThread(this::createWindow);
+        try {
+            callOnFxThread(() -> {
+                window.getPrimaryStage().show();
+                Region root = layoutWindow(window, 1000, 700);
+                Node navigation = root.lookup("#lessonsButton");
+                navigation.requestFocus();
+                Node logo = root.lookup("#ponhubWordmark");
+                for (int click = 0; click < 69; click++) {
+                    logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                }
+                Window creditsWindow = Window.getWindows().stream()
+                        .filter(candidate -> candidate.getScene() != null
+                                && candidate.getScene().getRoot() instanceof DialogPane)
+                        .findFirst().orElseThrow();
+                for (int click = 0; click < 69; click++) {
+                    logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                }
+                assertEquals(1, Window.getWindows().stream().filter(candidate -> candidate.getScene() != null
+                        && candidate.getScene().getRoot() instanceof DialogPane).count());
+                assertTrue(creditsWindow.isShowing());
+                DialogPane pane = (DialogPane) creditsWindow.getScene().getRoot();
+                Button close = (Button) pane.lookupButton(pane.getButtonTypes().getFirst());
+                close.fire();
+                return null;
+            });
+            runOnFxThread(() -> assertSame(window.getPrimaryStage().getScene().lookup("#lessonsButton"),
+                    window.getPrimaryStage().getScene().getFocusOwner()));
+        } finally {
+            runOnFxThread(() -> window.getPrimaryStage().hide());
+        }
+    }
+
+    @Test
     public void logoClick_dismissCredits_fadesNumberBackToHub() throws Exception {
         MainWindow window = callOnFxThread(this::createWindow);
         CompletableFuture<Void> finished = new CompletableFuture<>();
