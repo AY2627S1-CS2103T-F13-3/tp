@@ -33,7 +33,8 @@ class PersonIndexResolver {
 
 PonHubData --> "1" PonHubDataState : state
 PonHubDataState --> "1" PeopleRegistryState : people
-PeopleRegistryState --> "0..*" PersonRecord : people {ordered}
+' Keep the multiplicity above the curved connector by reserving a blank label row.
+PeopleRegistryState --> "0..*\n" PersonRecord : people {ordered}
 PersonRecord --> "1" PersonId : id
 PeopleView --> "1" PonHubData : source
 PeopleView --> "0..*" PersonRecord : current people\n{ordered, read-only}

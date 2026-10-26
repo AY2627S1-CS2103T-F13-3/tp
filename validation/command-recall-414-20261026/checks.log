@@ -1,0 +1,19 @@
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava
+> Task :processTestResources UP-TO-DATE
+> Task :testClasses
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by com.sun.glass.utils.NativeLibLoader in an unnamed module (file:/C:/Users/ernes/.gradle/caches/modules-2/files-2.1/org.openjfx/javafx-graphics/17.0.7/43ca0f3861f1e3a2cda4a6a7b8746bbf5bcbe754/javafx-graphics-17.0.7-win.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+> Task :test
+> Task :checkstyleMain UP-TO-DATE
+> Task :jacocoTestReport
+> Task :checkstyleTest
+
+BUILD SUCCESSFUL in 7s
+8 actionable tasks: 4 executed, 4 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.1/userguide/configuration_cache_enabling.html

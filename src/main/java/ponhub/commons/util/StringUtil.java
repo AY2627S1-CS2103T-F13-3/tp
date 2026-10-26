@@ -11,6 +11,27 @@ import java.io.StringWriter;
 public class StringUtil {
 
     /**
+     * Removes Unicode boundary whitespace, preserving internal text. Does not validate the value;
+     * callers that forbid controls or line breaks must reject them before trimming.
+     */
+    public static String stripUnicodeBoundaryWhitespace(String value) {
+        requireNonNull(value);
+        int start = 0;
+        int end = value.length();
+        while (start < end && isBoundaryWhitespace(value.codePointAt(start))) {
+            start += Character.charCount(value.codePointAt(start));
+        }
+        while (end > start && isBoundaryWhitespace(value.codePointBefore(end))) {
+            end -= Character.charCount(value.codePointBefore(end));
+        }
+        return value.substring(start, end);
+    }
+
+    private static boolean isBoundaryWhitespace(int codePoint) {
+        return Character.isWhitespace(codePoint) || Character.isSpaceChar(codePoint);
+    }
+
+    /**
      * Returns {@code value} with surrounding ASCII spaces removed, preserving other characters.
      */
     public static String trimSpaces(String value) {

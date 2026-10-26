@@ -1,5 +1,6 @@
 package ponhub.ui;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javafx.collections.ObservableList;
@@ -18,11 +19,16 @@ import ponhub.logic.parser.exceptions.ParseException;
 public class CommandBox extends UiPart<Region> {
 
     public static final String ERROR_STYLE_CLASS = "error";
+    static final int HISTORY_LIMIT = 50;
     private static final String FXML = "CommandBox.fxml";
 
     private final CommandExecutor commandExecutor;
     private final CommandWordCompleter completer;
     private boolean isCompleting;
+    private final List<String> submittedCommands = new ArrayList<>();
+    private int historyPosition;
+    private Draft unfinishedDraft;
+    private boolean isRecalling;
 
     @FXML
     private TextField commandTextField;
@@ -37,10 +43,62 @@ public class CommandBox extends UiPart<Region> {
         // calls #setStyleToDefault() whenever there is a change to the text of the command box.
         commandTextField.textProperty().addListener((unused1, unused2, unused3) -> setStyleToDefault());
         commandTextField.textProperty().addListener((observable, previous, current) -> resetCompletion());
+        commandTextField.textProperty().addListener((observable, previous, current) -> {
+            if (!isRecalling) {
+                resetRecall();
+            }
+        });
         commandTextField.caretPositionProperty().addListener((observable, previous, current) -> resetCompletion());
         commandTextField.anchorProperty().addListener((observable, previous, current) -> resetCompletion());
         commandTextField.focusedProperty().addListener((observable, previous, current) -> resetCompletion());
         commandTextField.addEventFilter(KeyEvent.KEY_PRESSED, this::handleCompletion);
+        commandTextField.addEventFilter(KeyEvent.KEY_PRESSED, this::handleRecall);
+    }
+
+    private void resetRecall() {
+        historyPosition = submittedCommands.size();
+        unfinishedDraft = null;
+    }
+
+    private void handleRecall(KeyEvent event) {
+        if ((event.getCode() != KeyCode.UP && event.getCode() != KeyCode.DOWN) || event.isShiftDown()
+                || event.isControlDown() || event.isAltDown() || event.isMetaDown() || submittedCommands.isEmpty()) {
+            return;
+        }
+        int newest = submittedCommands.size();
+        if (event.getCode() == KeyCode.DOWN && historyPosition == newest) {
+            return;
+        }
+        if (historyPosition == newest) {
+            unfinishedDraft = new Draft(commandTextField.getText(), commandTextField.getAnchor(),
+                    commandTextField.getCaretPosition());
+        }
+        historyPosition = event.getCode() == KeyCode.UP ? Math.max(0, historyPosition - 1) : historyPosition + 1;
+        Draft recalled = historyPosition == newest ? unfinishedDraft
+                : new Draft(submittedCommands.get(historyPosition), submittedCommands.get(historyPosition).length(),
+                        submittedCommands.get(historyPosition).length());
+        isRecalling = true;
+        try {
+            commandTextField.setText(recalled.text());
+            commandTextField.selectRange(recalled.anchor(), recalled.caret());
+        } finally {
+            isRecalling = false;
+        }
+        event.consume();
+    }
+
+    private void rememberSubmission(String command) {
+        if (!command.isBlank()) {
+            submittedCommands.add(command);
+            if (submittedCommands.size() > HISTORY_LIMIT) {
+                submittedCommands.removeFirst();
+            }
+        }
+        resetRecall();
+    }
+
+    /** The original draft includes its selection direction as well as its text. */
+    private record Draft(String text, int anchor, int caret) {
     }
 
     private void resetCompletion() {
@@ -83,6 +141,7 @@ public class CommandBox extends UiPart<Region> {
             return;
         }
 
+        rememberSubmission(commandText);
         try {
             commandExecutor.execute(commandText);
             commandTextField.setText("");

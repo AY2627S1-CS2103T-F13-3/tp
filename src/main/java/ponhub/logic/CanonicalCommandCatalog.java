@@ -37,6 +37,9 @@ public final class CanonicalCommandCatalog {
     public static final String MESSAGE_HELP_USAGE = "Usage: help [COMMAND]\n"
             + "Shows the commands available in this session, or syntax and an example for one command.\n"
             + "COMMAND is optional and case-insensitive. Supply at most one command word.\n"
+            + "Command box: Up/Down recall recent submissions without executing; Enter submits the draft.\n"
+            + "Person cards: use Copy beside an available contact. Tab to Copy, then Space or Ctrl+C "
+                    + "(Cmd+C on macOS).\n"
             + "Examples: help, help list";
     public static final String MESSAGE_SEARCH_USAGE =
             "Usage: search c/student [n/NAME] [l/LEVEL] [p/PHONE] [pp/PARENT_PHONE] [e/EMAIL] [a/ADDRESS]\n"
@@ -61,13 +64,14 @@ public final class CanonicalCommandCatalog {
             + "Tutor conditions must match one assigned lesson and its current roster. Use n/ for tutor names.\n"
             + "Use list or lessons to restore each view.\n"
             + "Examples: search c/student n/Alex l/P1 pp/91234567, search c/lesson tu/mei d/Mon s/Math";
-    public static final String MESSAGE_LESSONS_USAGE = "Usage: lessons [si/STUDENT_INDEX]\n"
+    public static final String MESSAGE_LESSONS_USAGE = "Usage: lessons [STUDENT_INDEX]\n"
             + "Shows each shared lesson once, in creation order, including empty rosters.\n"
-            + "si/ is an optional positive position in the current people list and must select a student.\n"
+            + "STUDENT_INDEX is an optional positive position in the current people list and must select a Student.\n"
+            + "The older si/STUDENT_INDEX form remains accepted for compatibility.\n"
             + "It shows only that student's current enrolments; past attendance does not imply membership.\n"
             + "Lesson cards show stable IDs, schedule, tutor, room and roster size. Scroll to see more results.\n"
             + "People filters and command positions are preserved. This command does not save data.\n"
-            + "Examples: lessons; after list r/student, lessons si/1 (if position 1 is the intended student)";
+            + "Examples: lessons; after list r/student, lessons 1 (if position 1 is the intended Student)";
     public static final String MESSAGE_SHOW_LESSON_USAGE = "Usage: showlesson lid/LESSON_ID [d/YYYY-MM-DD]\n"
             + "Shows one stable shared lesson, its tutor, schedule, room and current Student roster.\n"
             + "The two prefixes may appear in either order when a date is supplied.\n"
@@ -77,17 +81,20 @@ public final class CanonicalCommandCatalog {
     public static final String MESSAGE_ADD_LESSON_USAGE =
             "Usage: addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM\n"
             + "DAY is Mon-Sun; times use four-digit 24-hour HHMM and start before end.\n"
+            + "SUBJECT uses 1-50 letters or digits separated by single spaces or hyphens.\n"
             + "Tutor matching uses the normalized full name. Supply the exact phone to disambiguate.\n"
-            + "Example: addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim rm/R1";
+            + "Example: addlesson d/Mon st/1600 et/1730 s/A-Math tu/Mei Lim rm/R1";
     public static final String MESSAGE_EDIT_LESSON_USAGE =
             "Usage: editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] "
                     + "[tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM]\n"
             + "Supply a stable Lesson ID and at least one field; omitted fields stay unchanged.\n"
             + "Supplied values must be nonblank; Lesson fields cannot be cleared.\n"
+            + "SUBJECT uses 1-50 letters or digits separated by single spaces or hyphens.\n"
             + "Use tp/ only with tu/. Tutor matching uses normalized full name and optional exact phone.\n"
             + "The complete edited slot must have start before end and must not clash for its tutor, room "
                     + "or Students.\n"
-            + "A weekday change cannot invalidate retained attendance; unmark incompatible records explicitly first.\n"
+            + "A weekday change cannot invalidate retained attendance. If blocked, inspect the reported date with "
+                    + "showlesson and obtain each Student's current people-list position before using unmark.\n"
             + "An identical edit makes no write. Example: editlesson lid/L1 st/1630 s/Advanced Math";
     public static final String MESSAGE_ENROL_USAGE = "Usage: enrol STUDENT_INDEX lid/LESSON_ID\n"
             + "STUDENT_INDEX is the current people-list position of a Student. LESSON_ID is stable.\n"
@@ -114,9 +121,12 @@ public final class CanonicalCommandCatalog {
             + "Example: after list r/student, history 1 lid/L1";
     public static final String MESSAGE_DELETE_USAGE = "Usage: delete INDEX\n"
             + "INDEX is the person's current position in the displayed people list.\n"
+            + "Shows the resolved name and stable ID without saving. Enter delete confirm to permanently remove\n"
+            + "that person, or delete cancel to keep them. Any other command cancels the pending request.\n"
+            + "A failed save also requires a fresh delete INDEX before confirming again.\n"
             + "Students with enrolments or retained attendance and tutors with assigned lessons cannot be deleted.\n"
             + "Deleting a separate parent preserves students' parent-phone values.\n"
-            + "Example: list r/parent, then delete 1";
+            + "Example: list r/parent, then delete 1, check the name/ID, then delete confirm";
     public static final String MESSAGE_DELETE_LESSON_USAGE = "Usage: deletelesson lid/LESSON_ID\n"
             + "Deletes only an empty Lesson with no retained attendance. LESSON_ID is stable.\n"
             + "Unenrol every Student and unmark every attendance record before deleting the Lesson.\n"
@@ -151,10 +161,10 @@ public final class CanonicalCommandCatalog {
         StringBuilder overview = new StringBuilder("PonHub commands available in this build:\n");
         CanonicalCommandDefinition.forSession(loadError.isPresent()).forEach(definition ->
                 overview.append(definition.getWord()).append(" - ").append(definition.getDescription())
-                        .append('\n').append(definition.getUsage()).append("\n\n"));
+                        .append('\n'));
         overview.append("\nType help COMMAND for syntax and an example, e.g. help list.\n\n");
         loadError.ifPresent(error -> overview.append(error).append("\n\n"));
-        return overview.append("Scroll this Result Display to read long guidance.").toString();
+        return overview.append("Scroll the Result Display if needed.").toString();
     }
 
 }
