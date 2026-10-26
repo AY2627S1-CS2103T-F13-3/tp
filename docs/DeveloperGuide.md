@@ -793,8 +793,24 @@ shutdown-save failure is logged without preventing shutdown.
 Canonical operational data and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
 Existing destinations are resolved to their real paths, so saving through a symbolic link updates its
 target and preserves the link. Dangling/cyclic links and inaccessible destinations fail before writing.
-New files use a resolved parent directory, creating missing directories as needed. Concurrent external
-changes to links/files and multiple application instances are not coordinated.
+New files use a resolved parent directory, creating missing directories as needed.
+
+Runtime canonical saves additionally use `CanonicalDataFileGuard`. Successful loading records the exact JSON
+text and resolved destination (or confirmed absence). Each save takes a nonblocking operating-system lock on
+the persistent empty sibling `<data-file-name>.ponhub-lock`, compares the current destination and text with
+that baseline, and keeps the lock through the existing replacement/recovery writer. Only successful saving
+advances the baseline. Two windows loaded before the first save therefore cannot silently replace each other's
+different snapshots: a stale save throws before writing or publishing the transaction and remains blocked until
+restart. Reads keep the previous in-memory view; they do not automatically refresh it. Lock contention reports
+a retryable save error. Lock/channel cleanup errors after committed replacement are logged, preserving success.
+
+The sidecar is created only on a save attempt, never on loading, and remains after exit so later processes lock
+the same file. Never delete/replace it while any instance runs. The `.ponhub-lock` suffix is reserved; nonempty
+or symbolic-link sidecars are rejected without truncation. Resolved symbolic-link aliases use the target's
+sidecar. This coordinates cooperating current-runtime saves on local filesystems with working file locks;
+standalone codec writes, preferences, older builds and external editors do not participate. Concurrent external
+changes to links/files, lock-file tampering, live synchronization and power-loss durability remain outside this
+bounded accidental-second-window safeguard.
 
 A complete temporary sibling file is written and closed before atomic replacement is attempted.
 Only `AtomicMoveNotSupportedException` selects the fallback; permission and other move errors propagate.
