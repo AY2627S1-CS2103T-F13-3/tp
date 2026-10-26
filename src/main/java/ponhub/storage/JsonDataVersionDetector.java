@@ -50,13 +50,11 @@ public final class JsonDataVersionDetector {
         requireNonNull(json);
         JsonNode root;
         try (JsonParser parser = mapper.getFactory().createParser(json)) {
-            if (!hasBoundedNesting(json)) {
+            if (!isBoundedDocument(parser)) {
                 return Format.MALFORMED_JSON;
             }
-            root = mapper.readTree(parser);
-            if (root == null || parser.nextToken() != null) {
-                return Format.MALFORMED_JSON;
-            }
+            // The scan validates exactly one complete document; readTree(String) owns its tree parser.
+            root = mapper.readTree(json);
         } catch (IOException e) {
             return Format.MALFORMED_JSON;
         }
@@ -84,22 +82,25 @@ public final class JsonDataVersionDetector {
     /**
      * Scans tokens iteratively before recursive tree construction, counting objects and arrays rather than text.
      * Uses the same parser settings so duplicate fields and invalid syntax still fail closed.
+     * Requires exactly one root value, rejecting empty input and trailing documents before tree parsing.
      */
-    private static boolean hasBoundedNesting(String json) throws IOException {
-        try (JsonParser parser = mapper.getFactory().createParser(json)) {
-            int depth = 0;
-            JsonToken token;
-            while ((token = parser.nextToken()) != null) {
-                if (token == JsonToken.START_OBJECT || token == JsonToken.START_ARRAY) {
-                    depth++;
-                    if (depth > MAX_NESTING_DEPTH) {
-                        return false;
-                    }
-                } else if (token == JsonToken.END_OBJECT || token == JsonToken.END_ARRAY) {
-                    depth--;
-                }
+    private static boolean isBoundedDocument(JsonParser parser) throws IOException {
+        int depth = 0;
+        int roots = 0;
+        JsonToken token;
+        while ((token = parser.nextToken()) != null) {
+            if (depth == 0 && ++roots > 1) {
+                return false;
             }
-            return true;
+            if (token == JsonToken.START_OBJECT || token == JsonToken.START_ARRAY) {
+                depth++;
+                if (depth > MAX_NESTING_DEPTH) {
+                    return false;
+                }
+            } else if (token == JsonToken.END_OBJECT || token == JsonToken.END_ARRAY) {
+                depth--;
+            }
         }
+        return roots == 1;
     }
 }

@@ -102,7 +102,8 @@ public class JsonDataVersionDetectorTest {
     @Test
     public void detect_malformedOrMultipleDocuments_rejects() {
         for (String json : new String[]{"", " \n", "{", "{\"persons\":[}", "{\"persons\":[],}",
-            "{\"persons\":[]} {}", "{\"schemaVersion\":1} null", "{\"schemaVersion\":1} garbage"}) {
+            "{\"persons\":[]} {}", "{\"schemaVersion\":1} null", "{\"schemaVersion\":1} garbage",
+            "[] []", "1 2", "null true", "{\"schemaVersion\":1} [" + "[".repeat(100)}) {
             assertEquals(MALFORMED_JSON, JsonDataVersionDetector.detect(json), json);
         }
     }

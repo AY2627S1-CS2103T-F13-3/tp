@@ -160,8 +160,8 @@ public class ApplicationStartupTest {
             assertTrue(hasExited, "Bootstrap timed out; see " + log + "\n" + output);
             assertEquals(0, process.exitValue(), output);
             int previousPhase = -1;
-            for (String phase : List.of("init verified", "stage shown", "pulse observed", "stop entered",
-                    "stop verified", COMPLETION_MARKER)) {
+            for (String phase : List.of("init verified", "stage shown", "pulse observed", "stage hidden",
+                    "stop entered", "stop verified", COMPLETION_MARKER)) {
                 int position = output.indexOf(phase);
                 assertTrue(position > previousPhase, "Missing or out-of-order phase: " + phase + "\n" + output);
                 previousPhase = position;
@@ -203,13 +203,14 @@ public class ApplicationStartupTest {
     }
 
     /**
-     * Retains production init/stop; a minimal stage observes a pulse before requesting toolkit exit.
+     * Retains production init/stop; a minimal stage observes a pulse and hides before requesting toolkit exit.
      * This avoids terminating the fixture before it has exercised the native stage lifecycle.
      */
     public static class BootstrapApplication extends MainApp {
         private Path data;
         private byte[] original;
         private boolean hasObservedPulse;
+        private boolean hasHiddenStage;
 
         @Override
         public void init() throws Exception {
@@ -270,6 +271,21 @@ public class ApplicationStartupTest {
         @Override
         public void start(Stage primaryStage) {
             assertTrue(Platform.isFxApplicationThread());
+            // Own the teardown order instead of letting last-window shutdown race an explicit toolkit exit.
+            Platform.setImplicitExit(false);
+            primaryStage.setOnHidden(event -> {
+                try {
+                    assertTrue(Platform.isFxApplicationThread());
+                    assertTrue(hasObservedPulse);
+                    assertFalse(primaryStage.isShowing());
+                    hasHiddenStage = true;
+                    System.out.println("Bootstrap phase: stage hidden");
+                } catch (Throwable failure) {
+                    StartupProbe.recordFailure(failure);
+                } finally {
+                    Platform.runLater(Platform::exit);
+                }
+            });
             System.out.println("Bootstrap runtime: " + System.getProperty("os.name") + " / "
                     + System.getProperty("os.arch") + " / " + System.getProperty("java.vendor") + " / "
                     + System.getProperty("java.runtime.version") + " / JavaFX "
@@ -290,8 +306,8 @@ public class ApplicationStartupTest {
                     } catch (Throwable failure) {
                         StartupProbe.recordFailure(failure);
                     } finally {
-                        // Let this pulse finish before the launcher invokes production shutdown.
-                        Platform.runLater(Platform::exit);
+                        // Finish this pulse, then hide the native window before exiting the toolkit.
+                        Platform.runLater(primaryStage::hide);
                     }
                 }
             }.start();
@@ -303,6 +319,7 @@ public class ApplicationStartupTest {
                 System.out.println("Bootstrap phase: stop entered");
                 assertTrue(Platform.isFxApplicationThread());
                 assertTrue(hasObservedPulse);
+                assertTrue(hasHiddenStage);
                 super.stop();
                 if (original == null) {
                     assertFalse(Files.exists(data));
