@@ -848,8 +848,8 @@ and status `present` or `absent`. Past dates are accepted. A new Student/Lesson/
 enrolment. The same date is independent for different Students, and different dates are independent for one Student.
 
 A future `absent` outcome is accepted without extra syntax so planned absence can be recorded intentionally.
-A future `present` outcome is not saved on the first attempt because it is likely to be a date or year typo. Check
-the date, then repeat the same valid command with `ack/future` only when future presence is intentional, for example
+A new or changed future `present` outcome requires `ack/future` before it can be saved. If PonHub warns about the
+date, check it, then repeat the valid command with `ack/future` only when future presence is intentional, for example
 `mark 1 lid/L1 d/2036-10-06 s/present ack/future`. The acknowledgement does not bypass real-date, Lesson weekday,
 Student, membership or persistence checks.
 
