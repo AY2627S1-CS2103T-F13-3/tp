@@ -25,8 +25,9 @@ successful UI startup.
 1. Baseline: Vincent reported “it shows the generic icon” and supplied
    [the Dock screenshot](baseline-user.png), showing the black tile with green `exec` text.
 2. Patched: Vincent reported “it shows the patched icon” after the second JAR launched.
-   **An after screenshot has not been supplied.** This is the operator's manual confirmation,
-   not an independently captured Codex Dock screenshot.
+   [The after screenshot](patched-user.png) shows the bundled orange PonHub artwork;
+   the tooltip still reads `java`, consistent with the icon-only scope. Both screenshots
+   were supplied by Vincent, rather than captured independently by Codex.
 
 The native Dock capture tool timed out. The screenshot and operator confirmation above
 are distinguished from automated evidence. Finder double-click launching has not been checked.
