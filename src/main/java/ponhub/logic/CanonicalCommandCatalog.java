@@ -63,13 +63,14 @@ public final class CanonicalCommandCatalog {
             + "Tutor conditions must match one assigned lesson and its current roster. Use n/ for tutor names.\n"
             + "Use list or lessons to restore each view.\n"
             + "Examples: search c/student n/Alex l/P1 pp/91234567, search c/lesson tu/mei d/Mon s/Math";
-    public static final String MESSAGE_LESSONS_USAGE = "Usage: lessons [si/STUDENT_INDEX]\n"
+    public static final String MESSAGE_LESSONS_USAGE = "Usage: lessons [STUDENT_INDEX]\n"
             + "Shows each shared lesson once, in creation order, including empty rosters.\n"
-            + "si/ is an optional positive position in the current people list and must select a student.\n"
+            + "STUDENT_INDEX is an optional positive position in the current people list and must select a Student.\n"
+            + "The older si/STUDENT_INDEX form remains accepted for compatibility.\n"
             + "It shows only that student's current enrolments; past attendance does not imply membership.\n"
             + "Lesson cards show stable IDs, schedule, tutor, room and roster size. Scroll to see more results.\n"
             + "People filters and command positions are preserved. This command does not save data.\n"
-            + "Examples: lessons; after list r/student, lessons si/1 (if position 1 is the intended student)";
+            + "Examples: lessons; after list r/student, lessons 1 (if position 1 is the intended Student)";
     public static final String MESSAGE_SHOW_LESSON_USAGE = "Usage: showlesson lid/LESSON_ID [d/YYYY-MM-DD]\n"
             + "Shows one stable shared lesson, its tutor, schedule, room and current Student roster.\n"
             + "The two prefixes may appear in either order when a date is supplied.\n"
