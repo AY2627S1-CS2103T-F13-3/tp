@@ -877,9 +877,18 @@ or restarting. Keep the backup until the recovered records, relationships, atten
 been verified. A failed first save has no previous file or recovery backup; if its error warns of a partial file,
 close PonHub and inspect the reported path before retrying.
 
-These guarantees assume one PonHub instance and no concurrent external changes to the data file or its symbolic
-links. They do not cover abrupt power loss. See [Data protection](#data-protection-in-the-current-build) for the
-general backup and startup-recovery precautions.
+If another PonHub window saves to the selected file, this window rejects its next save rather than overwriting
+the newer records. The command is not applied, and this window's displayed records remain unchanged and may be
+stale. Close the other windows, back up the current file, then restart and inspect its records before re-entering
+the rejected command. Further saves from the stale window stay blocked until restart. A busy-save warning means
+another window is currently saving; wait and retry, following the restart guidance if a change is then detected.
+
+PonHub coordinates saves using an empty sibling file named `<data-file-name>.ponhub-lock`. Leave that file in
+place; its presence after exit is normal and does not block restart. Do not delete or replace it while PonHub is
+running, or select a data filename ending in `.ponhub-lock`. Use one window for normal work. This safeguard
+does not provide live synchronization, coordinate older PonHub builds or external editors, or cover abrupt power
+loss or concurrent changes to symbolic links. Close all windows before manually editing saved data.
+See [Data protection](#data-protection-in-the-current-build) for general backup and startup-recovery precautions.
 
 ### Canonical loading and recovery
 
