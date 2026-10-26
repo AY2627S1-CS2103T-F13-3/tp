@@ -1,6 +1,7 @@
 package ponhub.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -51,8 +52,13 @@ public class CanonicalCommandCatalogTest {
                 int position = overview.indexOf("\n" + word + " - ");
                 assertTrue(position > previous);
                 previous = position;
-                assertTrue(overview.contains(CanonicalCommandCatalog.getUsage(word, isProtected).orElseThrow()));
+                assertFalse(overview.contains(CanonicalCommandCatalog.getUsage(word, isProtected).orElseThrow()));
             }
+            assertEquals(words, overview.lines().filter(line -> line.contains(" - "))
+                    .map(line -> line.substring(0, line.indexOf(" - "))).toList());
+            assertFalse(overview.contains("Usage:"));
+            assertTrue(overview.contains("Type help COMMAND for syntax and an example, e.g. help list."));
+            assertTrue(overview.endsWith("Scroll the Result Display if needed."));
             error.ifPresent(guidance -> assertTrue(overview.contains(guidance)));
             assertTrue(CanonicalCommandCatalog.getUsage("clear", isProtected).isEmpty());
             assertTrue(CanonicalCommandCatalog.getUsage("EXIT", isProtected).isEmpty());

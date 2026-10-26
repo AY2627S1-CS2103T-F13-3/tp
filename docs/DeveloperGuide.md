@@ -153,6 +153,12 @@ consumes unmodified Tab. Shift+Tab and ineligible input retain normal traversal,
 the existing execution and failed-draft behavior. See the [UG keyboard guidance](UserGuide.html#completing-command-names-with-tab)
 and [manual checks](#command-name-completion).
 
+`CommandBox` also retains at most 50 nonblank submitted command strings in memory, including failures.
+Unmodified Up/Down browse these without invoking Logic. The first Up saves the current draft's text,
+anchor and caret; Down beyond the newest submission restores them. A guarded text/selection update
+preserves browsing, while a user edit or Tab replacement starts a new draft. Submitting resets browsing;
+closing the window discards the history. This UI recall is unrelated to persisted attendance history.
+
 The [20 October shell validation record](https://github.com/gugrusaurus/tp/tree/draft-lesson-board-layout-319/validation/shell-319-20261020)
 contains user-executed native checks and screenshots for the tested build. A later custom-scaling
 follow-up completed the 1280×720/150% checks; the earlier NOT RUN entry remains historical. The report
@@ -1073,6 +1079,8 @@ remain responsibilities of the canonical aggregate and the [shared contract](#sh
 ### Inline help
 
 `CanonicalCommandCatalog` owns the active command descriptions, usage and runnable examples.
+Bare `help` lists one short description per supported command in catalogue order and points to
+`help COMMAND` for detailed syntax, rules and examples; it does not repeat each command's usage.
 `CanonicalPeopleSession` accepts zero or one help topic, normalizes with `Locale.ROOT`, rejects unknown
 topics/excess arguments and restricts guidance to the protected-session routes after rejected loading.
 Help preserves records and the people view without operational saves; preferences have a separate
@@ -2069,7 +2077,9 @@ playback on a physical device.
 
 Use the active catalogue in the tested build; these examples apply to canonical startup.
 
-1. In a fresh JAR folder, run `help`, then `help add`, `help edit`, `help addlesson`, `help editlesson`, `help enrol`, `help unenrol`, `help mark`,
+1. In a fresh JAR folder, run `help`. Expect one short description per supported command in catalogue order
+   and a `help COMMAND` instruction with an example, without repeated usage blocks.
+   Then run `help add`, `help edit`, `help addlesson`, `help editlesson`, `help enrol`, `help unenrol`, `help mark`,
    `help unmark`, `help history`, `help delete`, `help deletelesson`, `help list`, `help lessons`, `help showlesson`,
    `help search`, `help help` and
    `help exit`. Each topic matches its
@@ -2233,6 +2243,18 @@ Given below are instructions to test the app manually.
 testers are expected to do more *exploratory* testing.
 
 </div>
+
+### Command recall
+
+1. In a fresh window press Up: expect unchanged empty input. Submit `help`, then `list r/student`.
+   Type an unfinished draft and select part of it. Up recalls `list r/student`, then `help`; Down returns
+   through the commands and restores the exact draft and selection. Neither arrow executes or saves.
+2. Recall a command, edit it and verify Enter executes the edited text once. A failed submission remains
+   editable and is also recallable. With a restored `sho` draft, Tab must still complete `showlesson`.
+   Modified arrows retain text editing, and navigation keeps focus in the command box.
+3. Close and reopen: Up must not recall the previous window's submissions. `CommandBoxTest` covers
+   the 50-entry eviction boundary separately. Recheck displayed people positions before rerunning mutations.
+
 
 <a id="unicode-person-name-checks-383-first-increment"></a>
 

@@ -118,6 +118,19 @@ unmatched prefixes and arguments. **Shift+Tab** always moves focus backwards; us
 while a command name matches. Tab does not run a command; press **Enter** to submit the completed draft.
 Arguments and values are not completed.
 
+### Recalling submitted commands with Up and Down
+
+With focus in the command box, press **Up** for an older submitted command and **Down** for a newer one.
+Recall does not execute a command; edit it if needed and press **Enter** to submit it. Down past the newest
+entry restores your unfinished draft, including its caret and selection. Typing or using Tab completion on
+a recalled command makes the edited text your new draft. Shift/Ctrl/Alt/Command with an arrow keeps its
+normal editing behavior.
+
+The last 50 nonblank submissions, including unsuccessful commands, are kept only for the current window
+session and are cleared when it closes. Check current people positions and Lesson IDs before reusing an
+old command: its original target may have moved or been removed. This recall is separate from the
+attendance `history` command.
+
 ## Current command summary
 
 The active routes use one saved aggregate with role-specific people, stable IDs and shared lessons whose rosters
@@ -158,7 +171,9 @@ Addition allocates the ID; do not supply it as an add argument. Role values igno
 
 **Format:** `help [COMMAND]`
 
-`help` shows the current supported-command catalogue in Result Display. In a normal session, `help add`,
+`help` shows a concise catalogue in Result Display, with one short description per supported command.
+Use `help COMMAND`, for example `help list`, for that command's full syntax, rules and examples.
+In a normal session, `help add`,
 `help edit`, `help addlesson`, `help editlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark`, `help delete`, `help deletelesson`,
 `help list`, `help lessons`, `help showlesson`, `help history`, `help search`, `help help` and `help exit` show usage guidance.
 Topic names are case-insensitive, so `help ADD` is
