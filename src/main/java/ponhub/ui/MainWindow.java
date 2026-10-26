@@ -123,7 +123,8 @@ public class MainWindow extends UiPart<Stage> {
         badge.setPrefWidth(badgeWidth);
         badge.setMaxWidth(badgeWidth);
         badge.setTooltip(new Tooltip("Curiosity has consequences."));
-        ScaleTransition pulse = new ScaleTransition(Duration.millis(110), badge);
+        Node badgeFrame = badge.getParent();
+        ScaleTransition pulse = new ScaleTransition(Duration.millis(110), badgeFrame);
         pulse.setFromX(1);
         pulse.setFromY(1);
         pulse.setToX(1.08);
@@ -151,8 +152,8 @@ public class MainWindow extends UiPart<Stage> {
         primaryStage.addEventHandler(WindowEvent.WINDOW_HIDDEN, event -> {
             stopBadgeReset(badge);
             pulse.stop();
-            badge.setScaleX(1);
-            badge.setScaleY(1);
+            badgeFrame.setScaleX(1);
+            badgeFrame.setScaleY(1);
             logoSound.close();
             if (creditsDialog != null) {
                 creditsDialog.close();
