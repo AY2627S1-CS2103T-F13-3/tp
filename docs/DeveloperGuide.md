@@ -762,18 +762,24 @@ repeating them here.
 
 ### Storage component
 
-`ProtectedPonHubDataStorage` guards the active operational store; `JsonPonHubDataCodec` converts complete
-snapshots and `JsonPonHubDataStorage` performs file access. Preferences use `JsonUserPrefsStorage`
-separately. [Application startup](#canonical-application-startup-85) selects and checks paths.
+`ProtectedPonHubDataStorage` validates the active operational store and uses `JsonPonHubDataCodec` to decode
+and encode complete snapshots. Its `CanonicalDataFileGuard` coordinates each save and delegates replacement
+to the shared file writer. Preferences use `JsonUserPrefsStorage` separately.
+[Application startup](#canonical-application-startup-85) selects and checks paths.
 
 <a href="images/CanonicalStorageClassDiagram.png"><img src="images/CanonicalStorageClassDiagram.png" alt="Active canonical storage and separate preference storage sharing the safe file writer" width="800" /></a>
 
-Select the diagram to view it at full size. The two unconnected UML notes name the classes they describe.
+Select the diagram to view it at full size. The unconnected UML note names the writer whose recovery
+behavior it summarizes.
 
 The diagram shows the active storage classes; solid arrows show a held reference and dashed arrows show
 dependencies. The protected loader reads and classifies operational JSON before decoding the complete
-snapshot. Only a successful load or confirmed absence permits later saves through its owned
-`JsonPonHubDataStorage`. Preferences use their own codec/path through `JsonUtil`; both save paths reach
+snapshot. A successful load or confirmed absence installs one `CanonicalDataFileGuard`; before that,
+or after rejected startup, the loader has no save guard, hence the `0..1` multiplicity. For each later save,
+the codec encodes the candidate and the guard locks the sidecar, checks the file against its baseline, and
+passes the JSON to `FileUtil`. `JsonPonHubDataStorage` remains a standalone codec/file-access convenience,
+outside the active session's save path, and is omitted from this diagram.
+Preferences use their own codec/path through `JsonUtil`; both active save paths reach
 `AtomicFileWriter` through `FileUtil`. The writer's replacement and recovery limits are described once
 under [Safe JSON saves](#safe-json-saves). This is the current implementation, not a proposed storage migration.
 
@@ -793,8 +799,24 @@ shutdown-save failure is logged without preventing shutdown.
 Canonical operational data and preferences share a UTF-8 file writer. JSON serialization finishes before writing.
 Existing destinations are resolved to their real paths, so saving through a symbolic link updates its
 target and preserves the link. Dangling/cyclic links and inaccessible destinations fail before writing.
-New files use a resolved parent directory, creating missing directories as needed. Concurrent external
-changes to links/files and multiple application instances are not coordinated.
+New files use a resolved parent directory, creating missing directories as needed.
+
+Runtime canonical saves additionally use `CanonicalDataFileGuard`. Successful loading records the exact JSON
+text and resolved destination (or confirmed absence). Each save takes a nonblocking operating-system lock on
+the persistent empty sibling `<data-file-name>.ponhub-lock`, compares the current destination and text with
+that baseline, and keeps the lock through the existing replacement/recovery writer. Only successful saving
+advances the baseline. Two windows loaded before the first save therefore cannot silently replace each other's
+different snapshots: a stale save throws before writing or publishing the transaction and remains blocked until
+restart. Reads keep the previous in-memory view; they do not automatically refresh it. Lock contention reports
+a retryable save error. Lock/channel cleanup errors after committed replacement are logged, preserving success.
+
+The sidecar is created only on a save attempt, never on loading, and remains after exit so later processes lock
+the same file. Never delete/replace it while any instance runs. The `.ponhub-lock` suffix is reserved; nonempty
+or symbolic-link sidecars are rejected without truncation. Resolved symbolic-link aliases use the target's
+sidecar. This coordinates cooperating current-runtime saves on local filesystems with working file locks;
+standalone codec writes, preferences, older builds and external editors do not participate. Concurrent external
+changes to links/files, lock-file tampering, live synchronization and power-loss durability remain outside this
+bounded accidental-second-window safeguard.
 
 A complete temporary sibling file is written and closed before atomic replacement is attempted.
 Only `AtomicMoveNotSupportedException` selects the fallback; permission and other move errors propagate.
@@ -2177,6 +2199,39 @@ and retain its per-trial results and unavailable combinations. The cases here ch
 Automated initialization/shutdown checks do not establish full-window interaction, physical scaling
 or packaged JAR-folder anchoring. Record actual results for the procedure above.
 Historical verification details are preserved in [#84](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/84#issuecomment-6140874125).
+
+### Accidental second-window save protection
+
+Use the [common journey's artifact/runtime record](#common-selector-and-failure-journey) and a disposable
+JAR folder. Choose a previously unused path, such as `manual/two-windows.json`; do not use real records.
+Record actual feedback, file hashes and restart results separately from these reusable instructions.
+
+1. From two terminals in that same JAR folder, launch two windows **before either window saves**, using
+   the identical command `java -jar ponhub.jar --data=manual/two-windows.json` in both terminals.
+   Call them A and B. Both should show an empty people list, with no operational file created yet.
+2. In A, enter `add r/student n/Alex Tan l/S2 pp/91234567`.
+   Expect `New student added: Alex Tan (S1).` and Alex in A's list. Record the selected file's SHA-256:
+   `shasum -a 256 manual/two-windows.json` on macOS/Linux, or
+   `Get-FileHash manual/two-windows.json -Algorithm SHA256` in PowerShell.
+3. In the already-open B, enter `add r/student n/Jamie Tan l/P1 pp/91234568`.
+   Expect a save error saying the file changed and this window must restart, with no success feedback.
+   B's list stays empty: the rejected command does not publish Jamie or consume a Student ID.
+   Recheck the file hash; it must equal the hash after A's save. A must still show Alex.
+4. In B, retry the same addition. Expect another rejection and the same file hash. Run `help` and `list`;
+   they remain usable, but B's empty list is stale and does not mean Alex was deleted. Exit both windows
+   normally with `exit`, then confirm the operational file hash still matches. Leave the empty
+   `two-windows.json.ponhub-lock` sidecar in place; its presence after exit is normal.
+5. Restart one window with the same command. Expect Alex as `S1` and no Jamie. Enter Jamie's command again;
+   expect `New student added: Jamie Tan (S2).` and both Students in the list. Exit and reopen once more
+   to confirm both records and IDs persist.
+6. Repeat from an existing supported file: load it in both windows before changing either, save a real
+   mutation in A, then attempt a different mutation in B. Expect B's rejection to preserve A's saved bytes
+   and B's previous live view. Close both and restart before continuing normal work.
+
+If another window is still inside a save, a busy-save error may precede stale-file detection. Wait for that
+save to finish and retry; a changed file must then require restart. Do not delete the sidecar, overwrite
+the newer file with a stale window's data, or edit files while windows are running. See
+[Safe JSON saves](#safe-json-saves) for the safeguard's scope and recovery limits.
 
 ### Canonical people commands and unsuccessful saves
 

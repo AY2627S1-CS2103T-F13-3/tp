@@ -30,6 +30,27 @@ public class ProtectedPonHubDataStorageTest {
     Path directory;
 
     @Test
+    public void load_reservedLockSuffix_blocksMissingAndExistingStoresWithoutWriting() throws Exception {
+        Path missingPath = directory.resolve("missing.json.ponhub-lock");
+        ProtectedPonHubDataStorage missing = new ProtectedPonHubDataStorage(missingPath);
+        assertThrows(DataLoadingException.class, missing::load);
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.UNREADABLE, missing.getLoadStatus());
+        assertTrue(missing.getDataLoadError().orElseThrow().contains("reserved"));
+        assertThrows(IOException.class, () -> missing.saveData(new PonHubData().exportState()));
+        assertFalse(Files.exists(missingPath));
+
+        Path existingPath = directory.resolve("existing.json.ponhub-lock");
+        String original = JsonPonHubDataCodec.encode(new PonHubData().exportState());
+        Files.writeString(existingPath, original);
+        ProtectedPonHubDataStorage existing = new ProtectedPonHubDataStorage(existingPath);
+        assertThrows(DataLoadingException.class, existing::load);
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.UNREADABLE, existing.getLoadStatus());
+        assertTrue(existing.getDataLoadError().orElseThrow().contains("reserved"));
+        assertThrows(IOException.class, () -> existing.saveData(new PonHubData().exportState()));
+        assertEquals(original, Files.readString(existingPath));
+    }
+
+    @Test
     public void load_excessiveNesting_preservesBytesAndRequiresRestartAfterRepair() throws Exception {
         Path path = directory.resolve("deep.json");
         String nested = "{\"schemaVersion\":1,\"people\":" + "[".repeat(50_000)
