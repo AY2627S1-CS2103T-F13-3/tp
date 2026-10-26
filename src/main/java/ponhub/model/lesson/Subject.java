@@ -38,7 +38,7 @@ public final class Subject {
     }
 
     private static boolean isNormalizedSubjectValid(String subject) {
-        return subject.length() <= 50 && subject.matches(VALIDATION_REGEX);
+        return subject.codePointCount(0, subject.length()) <= 50 && subject.matches(VALIDATION_REGEX);
     }
 
     public String getValue() {
