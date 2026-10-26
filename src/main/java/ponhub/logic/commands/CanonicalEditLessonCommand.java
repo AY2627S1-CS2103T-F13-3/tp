@@ -16,6 +16,7 @@ import ponhub.model.attendance.Attendance;
 import ponhub.model.lesson.Lesson;
 import ponhub.model.lesson.LessonDay;
 import ponhub.model.person.PersonId;
+import ponhub.model.person.PersonRecord;
 
 /**
  * Edits one stable Lesson solely within the executor's staged transaction.
@@ -24,8 +25,9 @@ public final class CanonicalEditLessonCommand implements CanonicalCommandExecuto
     public static final String MESSAGE_SUCCESS = "Edited lesson: %s.";
     public static final String MESSAGE_NO_CHANGE = "No changes to lesson: %s.";
     public static final String MESSAGE_RETAINED_ATTENDANCE =
-            "Cannot change lesson %s to %s because retained attendance on %s must match its weekday. "
-                    + "Keep the current weekday or unmark the incompatible attendance record first.";
+            "Cannot change lesson %s to %s because retained attendance for Student %s (%s) on %s "
+                    + "must match its weekday. Run 'showlesson lid/%s d/%s' to inspect the blocking records. "
+                    + "Before using unmark, obtain the Student's current people-list position.";
 
     private final LessonEditParser.Input input;
 
@@ -64,8 +66,11 @@ public final class CanonicalEditLessonCommand implements CanonicalCommandExecuto
         Optional<Attendance> incompatible = staged.getAttendanceForLesson(original.getId()).stream()
                 .filter(record -> !replacementDay.matches(record.getDate())).findFirst();
         if (incompatible.isPresent()) {
-            throw new CommandException(String.format(MESSAGE_RETAINED_ATTENDANCE, original.getId(), replacementDay,
-                    incompatible.orElseThrow().getDate()));
+            Attendance blockingAttendance = incompatible.orElseThrow();
+            PersonRecord blockingStudent = staged.getPerson(blockingAttendance.getStudentId()).orElseThrow();
+            throw new CommandException(String.format(MESSAGE_RETAINED_ATTENDANCE,
+                    original.getId(), replacementDay, blockingStudent.getId(), blockingStudent.getName(),
+                    blockingAttendance.getDate(), original.getId(), blockingAttendance.getDate()));
         }
     }
 }

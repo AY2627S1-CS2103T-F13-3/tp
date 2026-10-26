@@ -38,6 +38,8 @@ else save succeeds
     queries -> queries : refresh held lists / active filter
     queries -> retrieval : selected filtered list changes to []
     retrieval -> retrieval : replace displayed entries
+    retrieval --> queries : display refreshed
+    queries --> live : query refresh complete
     deactivate queries
     note over queries, retrieval
       Same held/displayed list objects.

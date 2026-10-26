@@ -20,7 +20,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ponhub.commons.exceptions.DataLoadingException;
@@ -169,6 +171,100 @@ public class JsonPonHubDataStorageTest {
         PonHubDataState edited = JsonPonHubDataCodec.decode(root.toString());
         assertEquals("00012345", edited.people().getPeople().get(1).getContactDetails().getPhone().orElseThrow().value);
         assertEquals(edited, JsonPonHubDataCodec.decode(JsonPonHubDataCodec.encode(edited)));
+    }
+
+    @Test
+    public void decode_humanEditedUnicodeNames_normalizesWithoutChangingIdentityOrRelationships() throws Exception {
+        ObjectNode root = (ObjectNode) mapper.readTree(JsonPonHubDataCodec.encode(original));
+        person(root, 0).put("name", "\u00a0Jose\u0301   Santos\u2003");
+        person(root, 1).put("name", "李明");
+        person(root, 2).put("name", "தமிழ்");
+        Files.createDirectories(storage.getDataFilePath().getParent());
+        Files.writeString(storage.getDataFilePath(), root.toString());
+        byte[] before = Files.readAllBytes(storage.getDataFilePath());
+
+        PonHubDataState edited = storage.readData().orElseThrow();
+        assertEquals(List.of("José Santos", "李明", "தமிழ்"), edited.people().getPeople().stream()
+                .map(person -> person.getContactDetails().getName().fullName).toList());
+        assertEquals(original.people().getLastAllocatedSequences(), edited.people().getLastAllocatedSequences());
+        assertEquals(original.people().getPeople().stream().map(person -> person.getId()).toList(),
+                edited.people().getPeople().stream().map(person -> person.getId()).toList());
+        assertEquals(original.lessons(), edited.lessons());
+        assertEquals(original.attendance(), edited.attendance());
+        assertArrayEquals(before, Files.readAllBytes(storage.getDataFilePath()));
+        storage.saveData(edited);
+        assertEquals(edited, storage.readData().orElseThrow());
+        assertTrue(Files.readString(storage.getDataFilePath()).contains("José Santos"));
+    }
+
+    @Test
+    public void decode_invalidUnicodeNamesAndCanonicalDuplicates_protectsOriginalFile() throws Exception {
+        for (String name : List.of("\u0301José", "José\u0000", "José\t", "\u2028José", "José\u2029",
+                "\u202eJosé", "José\u200b", "José\ud800", "José\udc00", "José\u00a0Santos", "José😀")) {
+            assertProtectedNameRejection(root -> person(root, 0).put("name", name));
+        }
+        assertProtectedNameRejection(root -> {
+            person(root, 0).put("name", "José Santos");
+            ObjectNode duplicate = person(root, 0).deepCopy();
+            duplicate.put("id", "T2").put("name", "\u00a0JOSE\u0301   SANTOS\u2003");
+            ArrayNode people = (ArrayNode) root.get("people");
+            people.add(duplicate);
+            ObjectNode counters = (ObjectNode) root.get("personCounters");
+            counters.put("TUTOR", 2);
+        });
+    }
+
+    @Test
+    public void decode_humanEditedSlashContacts_normalizesWithoutSchemaOrIdentityChanges() throws Exception {
+        ObjectNode root = (ObjectNode) mapper.readTree(JsonPonHubDataCodec.encode(original));
+        person(root, 0).put("name", "\u00a0Jose\u0301   s/o   Santos\u2003")
+                .put("address", "\u00a0Blk 10,   #01/02\u2003");
+        person(root, 1).put("name", "Anita d/o Kumar");
+        PonHubDataState edited = JsonPonHubDataCodec.decode(root.toString());
+        var contacts = edited.people().getPeople().getFirst().getContactDetails();
+        assertEquals("José s/o Santos", contacts.getName().fullName);
+        assertEquals("Blk 10, #01/02", contacts.getAddress().orElseThrow().value);
+        assertEquals(original.people().getLastAllocatedSequences(), edited.people().getLastAllocatedSequences());
+        assertEquals(original.lastAllocatedLessonSequence(), edited.lastAllocatedLessonSequence());
+        assertEquals(original.people().getPeople().stream().map(person -> person.getId()).toList(),
+                edited.people().getPeople().stream().map(person -> person.getId()).toList());
+        storage.saveData(edited);
+        assertEquals(edited, storage.readData().orElseThrow());
+    }
+
+    @Test
+    public void decode_invalidSlashContactsAndNormalizedDuplicates_protectsOriginalFile() throws Exception {
+        for (String name : List.of("s/o", "Ravi s/o", "Ravi/Kumar", "Ravi s/other Kumar")) {
+            assertProtectedNameRejection(root -> person(root, 0).put("name", name));
+        }
+        for (String address : List.of("A/B", "#01//02", "1/", "/2", "Block\t", "\u2028Block",
+                "Block\u2029", "Block\u200b", "Block\ud800", "Block\u00a0A", "A".repeat(201))) {
+            assertProtectedNameRejection(root -> person(root, 0).put("address", address));
+        }
+        assertProtectedNameRejection(root -> {
+            person(root, 0).put("name", "José s/o Santos");
+            ObjectNode duplicate = person(root, 0).deepCopy();
+            duplicate.put("id", "T2").put("name", "\u00a0JOSE\u0301   s/o   SANTOS\u2003");
+            ArrayNode people = (ArrayNode) root.get("people");
+            people.add(duplicate);
+            ObjectNode counters = (ObjectNode) root.get("personCounters");
+            counters.put("TUTOR", 2);
+        });
+    }
+
+    private void assertProtectedNameRejection(Consumer<ObjectNode> edit) throws Exception {
+        ObjectNode root = (ObjectNode) mapper.readTree(JsonPonHubDataCodec.encode(original));
+        edit.accept(root);
+        Files.createDirectories(storage.getDataFilePath().getParent());
+        // Escape lone surrogates so the UTF-8 fixture contains malformed name data rather than invalid bytes.
+        Files.writeString(storage.getDataFilePath(), mapper.writer().with(JsonGenerator.Feature.ESCAPE_NON_ASCII)
+                .writeValueAsString(root));
+        byte[] before = Files.readAllBytes(storage.getDataFilePath());
+        ProtectedPonHubDataStorage protectedStorage = new ProtectedPonHubDataStorage(storage.getDataFilePath());
+        assertThrows(DataLoadingException.class, protectedStorage::load);
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.CORRUPT, protectedStorage.getLoadStatus());
+        assertThrows(IOException.class, () -> protectedStorage.saveData(original));
+        assertArrayEquals(before, Files.readAllBytes(storage.getDataFilePath()));
     }
 
     @Test

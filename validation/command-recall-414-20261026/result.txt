@@ -1,0 +1,9 @@
+Time=2026-10-26T10:37:48.485239900Z; Java=25.0.4+7-LTS-189; OS=Windows 11; arch=amd64
+Screen=Rectangle2D [minX = 0.0, minY=0.0, maxX=2048.0, maxY=1152.0, width=2048.0, height=1152.0]; scale=1.25
+Window=740.0x600.0; scene=725.5999755859375x562.4000244140625
+COMMAND=help list; FEEDBACK=Use list or list r/student|tutor|parent, with at most one role filter.
+COMMAND=list r/student; FEEDBACK=Showing 0 student(s).
+Native Up/Down order, boundaries, draft/selection preservation, no execution/write, Tab, failure recall and Enter=PASS
+Only disposable fictional data. Native Robot mouse/keyboard; no display settings changed.
+Coverage: Windows/Java 25/default window/observed scale only; no independent human or other-platform acceptance.
+Diagnostic completed=true

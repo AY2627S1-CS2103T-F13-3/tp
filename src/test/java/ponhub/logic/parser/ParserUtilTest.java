@@ -227,7 +227,7 @@ public class ParserUtilTest {
     @Test
     public void parseAddress_controlCharacters_throwsParseException() {
         String[] invalidAddresses = {"\t" + VALID_ADDRESS, VALID_ADDRESS + "\n", VALID_ADDRESS + "\r",
-            VALID_ADDRESS + "\0", "123\tMain Street", "Blk 12/34", "A".repeat(201)};
+            VALID_ADDRESS + "\0", "123\tMain Street", "Blk 12//34", "A".repeat(201)};
         for (String invalidAddress : invalidAddresses) {
             assertThrows(ParseException.class, Address.MESSAGE_CONSTRAINTS, ()
                     -> ParserUtil.parseAddress(invalidAddress));

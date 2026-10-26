@@ -55,19 +55,19 @@
             <StackPane fx:id="resultDisplayPlaceholder" styleClass="pane-with-border" minHeight="50"
                        VBox.vgrow="ALWAYS">
               <padding>
-                <Insets top="5" right="10" bottom="5" left="10" />
+                <Insets top="6" right="6" bottom="6" left="6" />
               </padding>
             </StackPane>
           </VBox>
 
           <SplitPane fx:id="recordsSplitPane" dividerPositions="0.32" minHeight="120">
-            <VBox fx:id="personList" styleClass="pane-with-border" minWidth="160" minHeight="0">
+            <VBox fx:id="personList" minWidth="160" minHeight="0">
               <padding>
                 <Insets top="10" right="10" bottom="10" left="10" />
               </padding>
               <StackPane fx:id="personListPanelPlaceholder" minHeight="0" VBox.vgrow="ALWAYS"/>
             </VBox>
-            <VBox styleClass="pane-with-border" minWidth="160" minHeight="0">
+            <VBox minWidth="160" minHeight="0">
               <padding>
                 <Insets top="10" right="10" bottom="10" left="10" />
               </padding>

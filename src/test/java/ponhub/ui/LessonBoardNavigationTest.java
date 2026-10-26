@@ -547,6 +547,7 @@ public class LessonBoardNavigationTest {
                 fixture.assertLessonPane("studentLessonsButton");
                 assertTrue(fixture.lessonIds().isEmpty());
                 fixture.enter("delete 3");
+                fixture.enter("delete confirm");
                 fixture.assertLessonPane("studentLessonsButton");
                 assertTrue(fixture.lessonIds().isEmpty());
                 assertEquals("Student S3 · current lessons", fixture.label("lessonContext"));
@@ -568,6 +569,7 @@ public class LessonBoardNavigationTest {
                     fixture.enter("history 6");
                     fixture.assertHistoryPane();
                     fixture.enter("delete 6");
+                    fixture.enter("delete confirm");
                     fixture.assertLessonPane(activeButtons.get(route));
                     assertEquals(lessonContext, fixture.label("lessonContext"));
                     assertEquals("Attendance history", fixture.label("historyContext"));
