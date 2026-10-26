@@ -1,1 +1,5 @@
 *.pdf binary
+# Preserve exact upstream notice bytes, including their whitespace.
+licenses/javafx-17.0.7/** binary
+licenses/Apache-2.0.txt text eol=lf
+licenses/README.txt text eol=lf

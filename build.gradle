@@ -83,6 +83,21 @@ dependencies {
 
 shadowJar {
     archiveFileName = 'ponhub.jar'
+    from('LICENSE') {
+        into 'META-INF/licenses/ponhub'
+    }
+    from('licenses') {
+        into 'META-INF/licenses'
+    }
+    // Keep each resolved Jackson component's notices, even when names collide.
+    project.configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+        if (artifact.moduleVersion.id.group.startsWith('com.fasterxml.jackson')) {
+            from(zipTree(artifact.file)) {
+                include 'META-INF/LICENSE*', 'META-INF/NOTICE*'
+                into "META-INF/licenses/${artifact.name}-${artifact.moduleVersion.id.version}"
+            }
+        }
+    }
     manifest {
         attributes(
                 'Implementation-Title': 'PonHub',
@@ -90,5 +105,46 @@ shadowJar {
         )
     }
 }
+
+tasks.register('verifyPackagedLicenses') {
+    group = 'verification'
+    description = 'Compare packaged project and dependency notices with their source bytes.'
+    dependsOn shadowJar
+    doLast {
+        def expected = ['META-INF/licenses/ponhub/LICENSE': file('LICENSE').bytes,
+                        'audio/LICENSE.txt': file('src/main/resources/audio/LICENSE.txt').bytes]
+        fileTree('licenses').files.each { notice ->
+            def relative = file('licenses').toPath().relativize(notice.toPath()).toString().replace('\\', '/')
+            expected["META-INF/licenses/${relative}".toString()] = notice.bytes
+        }
+        configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            if (artifact.moduleVersion.id.group.startsWith('com.fasterxml.jackson')) {
+                new java.util.zip.ZipFile(artifact.file).withCloseable { dependency ->
+                    def notices = dependency.entries().findAll {
+                        it.name ==~ /META-INF\/(LICENSE|NOTICE).*/ && !it.directory
+                    }
+                    if (notices.empty) {
+                        throw new GradleException("No notices found in ${artifact.file.name}")
+                    }
+                    notices.each { notice ->
+                        def prefix = "META-INF/licenses/${artifact.name}-${artifact.moduleVersion.id.version}/"
+                        expected[(prefix + notice.name).toString()] = dependency.getInputStream(notice).bytes
+                    }
+                }
+            }
+        }
+        new java.util.zip.ZipFile(shadowJar.archiveFile.get().asFile).withCloseable { packaged ->
+            expected.each { path, bytes ->
+                def matches = packaged.entries().findAll { it.name == path }
+                if (matches.size() != 1 || !Arrays.equals(bytes, packaged.getInputStream(matches.first()).bytes)) {
+                    throw new GradleException("Missing, duplicated or changed packaged notice: ${path}")
+                }
+            }
+        }
+        logger.lifecycle("Verified ${expected.size()} packaged licence/notice files byte for byte.")
+    }
+}
+
+check.dependsOn verifyPackagedLicenses
 
 defaultTasks 'clean', 'test'
