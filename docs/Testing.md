@@ -95,8 +95,13 @@ After a Gradle run, open the local reports:
 `build/reports/jacoco/test/html/index.html`. Coverage describes executed code, not correctness or a required percentage.
 After a filtered run, reports cover that selection; rerun `check coverage` to obtain the full suite's result.
 
-When a check fails, record the source commit, command, OS/JDK, failing test or task and report details.
+When a check fails, record the source commit, command, OS/JDK, failing test or task and report details
+in the corresponding issue description/comments. Keep generated results outside tracked repository files.
 Distinguish a product failure from a missing display/tool or unsupported local runtime, then rerun the relevant
-checks after resolving the cause. Preserve actual failures and skips in the PR evidence. For manual checks,
+checks after resolving the cause. Summarize actual failures and skips in the PR. For manual checks,
 reuse the [DG procedure](DeveloperGuide.html#appendix-instructions-for-manual-testing) and record the exact artifact
 and environment tested rather than copying the procedure or repeating another owner's acceptance campaign.
+
+Optional [packaged UI diagnostic agents](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/tools/manual-checks/README.md)
+can supplement these checks using a supplied JAR and disposable fictitious data. They do not replace
+the DG procedures or establish acceptance of an untested platform/display configuration.

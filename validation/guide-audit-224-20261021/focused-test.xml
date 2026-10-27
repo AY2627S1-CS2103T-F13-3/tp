@@ -1,9 +1,0 @@
-<testsuite name="seedu.address.logic.PersonIndexResolverTest" tests="7" failures="0" errors="0" skipped="0">
-  <testcase name="resolveStudent_viewRefresh_preservesCapturedRecordAndStableIdentity()" classname="seedu.address.logic.PersonIndexResolverTest" />
-  <testcase name="resolve_nullArgumentsOrSelectedRecord_throwsNullPointerException()" classname="seedu.address.logic.PersonIndexResolverTest" />
-  <testcase name="resolveStudent_mixedView_keepsPeopleListPositions()" classname="seedu.address.logic.PersonIndexResolverTest" />
-  <testcase name="resolve_filteredProjection_usesCurrentPositionsRatherThanUnfilteredOrderOrIdSuffix()" classname="seedu.address.logic.PersonIndexResolverTest" />
-  <testcase name="resolve_mixedView_returnsActualRecordsWithoutMutatingView()" classname="seedu.address.logic.PersonIndexResolverTest" />
-  <testcase name="resolve_emptyAndOutOfRangeViews_throwsCheckedErrorWithoutChangingView()" classname="seedu.address.logic.PersonIndexResolverTest" />
-  <testcase name="resolveStudent_tutorAndParentPositions_rejectsWithoutHiddenStudentFiltering()" classname="seedu.address.logic.PersonIndexResolverTest" />
-</testsuite>

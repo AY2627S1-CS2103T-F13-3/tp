@@ -1,5 +1,0 @@
-Time=2026-10-26T10:37:56.787424500Z; Java=25.0.4+7-LTS-189; OS=Windows 11; arch=amd64
-Screen=Rectangle2D [minX = 0.0, minY=0.0, maxX=2048.0, maxY=1152.0, width=2048.0, height=1152.0]; scale=1.25
-Window=740.0x600.0; scene=725.5999755859375x562.4000244140625
-Same-folder restart command history=EMPTY
-Diagnostic completed=true

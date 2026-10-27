@@ -1,8 +1,6 @@
-# Original logo-click percussion — version 3
+# Original logo-click percussion
 
-`logo-drum.wav` is the original version-3 cue selected by Vincent for issue #430
-and PR #431 on 25 October 2026. It replaces the previously supplied third-party
-recording. Created at Vincent's direction with OpenAI Codex assistance.
+`logo-drum.wav` was created at Vincent Lin's direction with OpenAI Codex assistance.
 
 ## Source and provenance
 
@@ -12,10 +10,10 @@ It uses only Python 3 standard-library sine oscillators, seeded pseudorandom
 noise, pitch sweeps, amplitude envelopes and soft saturation. No external audio,
 samples, extracted reference timings or transcription are inputs.
 
-The new 100 BPM pattern uses syncopated kicks, snares, hi-hats, tom/clap accents
+The 100 BPM pattern uses syncopated kicks, snares, hi-hats, tom/clap accents
 and a B1–D2–A1 bass contour. The requested similarity is a general short, dry,
-punchy drum/bass character; this is not a cover or transcription of the earlier
-recording. It is computer-generated audio, not a claimed human performance.
+punchy drum/bass character, without covering or transcribing an existing recording.
+It is computer-generated audio, not a claimed human performance.
 
 From the repository root, reproduce with Python 3 and no extra dependencies:
 
@@ -44,15 +42,6 @@ subject to retaining that notice. The notice is packaged alongside the WAV.
 The repository's existing licence and contributors' credits remain intact.
 No guarantee of copyrightability or exclusive rights in generic musical
 building blocks is made; no rights in third-party recordings are granted.
-
-## Replacement history
-
-Earlier PR commits contained the externally supplied `Voicy_Pornhub intro.wav`
-(SHA-256 `f7e6cfbc3747d5679cd4fe4bd008a5e56d31f0f80cf326bdc470359496910e4b`).
-That recording is absent from the current resource and resulting JAR. Its reuse
-permission was not established. This MIT notice applies to the new generated
-cue and its generator, not that earlier recording. Existing branch history is
-retained; earlier candidate-specific playback evidence is not relabelled.
 
 ## Playback
 

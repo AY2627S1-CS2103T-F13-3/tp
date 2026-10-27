@@ -1,9 +1,0 @@
-{
-  "FreshFolder": "C:\\Users\\ernes\\Documents\\ChatGPT\\CS2103T tP\\tp\\_temp\\round1\\native-429-baseline\\run-45a1b0374c764d3d8c698cc3af8e2f88\\app",
-  "Manifest": "Manifest-Version: 1.0\r\nImplementation-Title: PonHub\r\nImplementation-Version: 1.4\r\nMain-Class: ponhub.Main\r\n\r\n",
-  "Bytes": 12948786,
-  "SHA256": "2880efe1a7bddfd9ddc0b707e6b83e949903362d1c1f66001b45df25ebd36aba",
-  "JavaHome": "C:\\Program Files\\Java\\jdk-25.0.4",
-  "Source": "C:\\Users\\ernes\\Documents\\ChatGPT\\CS2103T tP\\tp\\_temp\\round1\\native-451-416-final\\run-30b17dbbcb8046dab2c6a52f804efc68\\app\\ponhub.jar",
-  "SourceCommit": "2f8f1f1036b2a0d3b93af7ca1a95ffd5c8267ecc"
-}

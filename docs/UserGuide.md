@@ -16,7 +16,7 @@ shortcuts to the same commands; see [moving between results](#moving-between-res
 The [Lesson board example](#listing-and-searching-shared-lessons) shows a filtered people list beside
 independent Lesson results. View the [application overview](images/Ui.png) for the full layout.
 Screenshots show the current development build, including changes after public v1.4;
-[the capture record](images/README.html) identifies the package and fictitious fixture.
+the [screenshot source and credit note](images/README.html) identifies their source and fictitious content.
 
 * Table of Contents
 {:toc}
@@ -902,7 +902,7 @@ both are still enrolled. The crop keeps the dated heading, roster and statuses r
 
 After `unenrol 2 lid/L1`, `history 2 lid/L1` retains Jamie's existing absence with former-enrolment context.
 No attendance correction occurs between these two captures; the absent record is the same in both.
-See [capture provenance](images/README.html) for the exact package, commands and crop bounds.
+See [screenshot sources and credits](images/README.html) for the image source and crop bounds.
 
 <a id="planned-failure-and-data-behavior"></a>
 
