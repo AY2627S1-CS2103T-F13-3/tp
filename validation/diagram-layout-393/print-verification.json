@@ -1,14 +1,14 @@
 {
   "pdf_filename": "Developer Guide _ PonHub.pdf",
-  "pdf_sha256": "9393a67b36cced78b107ff91f22355b09689301ff5739f8d6595c3fdf01cc733",
-  "pdf_bytes": 3235456,
-  "pdf_creation_sgt": "2026-10-27 08:18:13 +08:00",
+  "pdf_sha256": "5721ab03fed12a65f32431027a85c0eca69eb9bcd0f4ba3017e7e82d1c81ffc9",
+  "pdf_bytes": 3235478,
+  "pdf_creation_sgt": "2026-10-27 08:22:33 +08:00",
   "page_count": 99,
   "page_size_pt": [
     594.96,
     841.92
   ],
-  "compared_candidate": "0e14e0da0e027c6cd67d5ab7909890f60671ce43",
+  "compared_candidate": "a2860c6",
   "comparison": "RGB dimensions and decoded-pixel SHA-256, not encoded PNG bytes or embedded PlantUML metadata",
   "diagram_matches": 16,
   "diagram_mismatches": [],
@@ -236,20 +236,16 @@
   "visually_inspected_pages": [
     16,
     17,
-    21
+    18,
+    19
   ],
   "scope": "diagram pages only; not a full 99-page editorial audit",
-  "new_layout_finding": {
-    "page": 16,
-    "continued_page": 17,
-    "heading": "UI component",
-    "result": "heading orphaned; now grouped with introduction and image, fresh print confirmation pending"
-  },
   "unchanged_rendered_pages_compared_with_previous_inspected_export": [
     5,
     7,
     8,
     19,
+    21,
     22,
     23,
     24,
@@ -258,5 +254,11 @@
     31,
     34,
     47
+  ],
+  "print_result": "PASS for scoped diagram readability, corrected group placement and current-image identity",
+  "resolved_findings": [
+    "Cached PersonRecord image replaced with current 566x434 pixels",
+    "UI heading/introduction/image stay together on page 17",
+    "Logic diagram present on page 19; no broken-image placeholder"
   ]
 }

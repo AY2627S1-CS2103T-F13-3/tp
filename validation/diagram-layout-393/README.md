@@ -52,37 +52,46 @@ and two sequence continuations. No quota or universal font-size threshold is int
 
 ## Print evidence and remaining gates
 
-Vincent supplied two 99-page A4 Chrome exports. The initial 07:30:21 SGT PDF
-(SHA-256 `90d1712a359da68a7e3de48125011626b9f92392764c2eb30c59dfadc7be769e`)
-had a cached 473×434 PersonRecord image. Its comparison record is preserved in
-`print-verification-first-export.json`; it is superseded for image identity.
+### Accepted A4 diagram export
 
-The refreshed export, created 27 October 2026 at 08:18:13 SGT, is 3,235,456 bytes;
-SHA-256 `9393a67b36cced78b107ff91f22355b09689301ff5739f8d6595c3fdf01cc733`.
-A4 dimensions are 594.96×841.92 points. The earlier settings screenshot records
-portrait, 15 mm margins, Actual size, headers/footers and background graphics off.
-All **16/16** diagram images match candidate `0e14e0d` by decoded RGB pixels and
-dimensions, including the integrated #500 PersonRecord **566×434** image.
-This comparison covers displayed pixels, not PNG encoded bytes or embedded PlantUML
-metadata; source/image provenance remains covered separately by inventory.json.
+Vincent's final Chrome PDF was created 27 October 2026 at **08:22:33 SGT**.
+It has 99 A4 pages (594.96×841.92 points), 3,235,478 bytes and SHA-256
+`5721ab03fed12a65f32431027a85c0eca69eb9bcd0f4ba3017e7e82d1c81ffc9`.
+The earlier settings screenshot records portrait, 15 mm margins, Actual size,
+headers/footers and background graphics off. Compared candidate: `a2860c6`.
+The evidence-only follow-up does not alter guide, style, source or image assets.
 
-Rendered every diagram-bearing page. Pages 5, 7–8, 19, 22–24, 28, 30–31, 34 and 47
-are pixel-identical to the previously visually inspected renders. Inspected changed
-pages 17 and 21 and preceding page 16 directly. The membership caption/image remain
-together on page 22; domain/value pairs on pages 22–23 and sequence panels on pages
-7–8 and 30–31 remain whole and readable. Current PersonRecord endpoints/counts are
-visible without clipping. Exact selected PDF page renders are retained in `print-pages/`.
-Scope is diagram pages, not an editorial audit of all 99 pages or physical paper.
+All **16/16** diagram images match candidate assets by decoded RGB pixels and
+dimensions, including integrated #500's **566×434** PersonRecord and the intact
+Logic diagram on page 19. This comparison covers displayed pixels, not PNG encoded
+bytes or embedded PlantUML metadata; inventory.json covers source/image provenance.
 
-**One newly observed print defect remains for confirmation:** the refreshed export
-places `UI component` alone at the bottom of page 16, with its introduction/diagram
-on page 17. The guide now groups that heading, introduction and linked image inside
-one `dg-figure` (using Kramdown's `markdown="1"` to retain the existing heading ID).
-Frozen theme build and all 302 local target occurrences pass; browser DOM confirms
-the preserved `ui-component` anchor, loaded image and computed `break-inside: avoid`.
-A final PDF has been requested to verify actual pagination after this correction.
-Keep the PR draft until this last rendered check is reconciled. This export establishes
-image identity but predates the UI grouping correction.
+Rendered all diagram-bearing pages. Pages 5, 7–8, 19, 21–24, 28, 30–31, 34 and 47
+are pixel-identical to the earlier visually inspected second export. Inspected final
+pages 16–19 directly. The corrected **UI heading, introduction and image stay together
+on page 17**, without the orphan on page 16. The membership caption/image stay together
+on page 22. Compact domain/value views on pages 22–23 and sequence panels on pages
+7–8 and 30–31 remain whole and readable. PersonRecord counts remain visible; no
+clipping or broken diagram image was observed. Logic's section heading/API introduction
+are on page 18 and its intact figure follows on page 19; the UI-specific grouping does
+not claim every section introduction and subsequent illustration share one page.
+Selected exact final PDF page renders are retained in `print-pages/`.
+
+**PASS within scope:** diagram readability, corrected figure grouping and current-image
+identity in the actual A4 export. This is not an editorial audit of all 99 pages,
+a physical-paper test, non-author review or post-merge publication verification.
+Frozen actual-theme rebuild, all 302 local targets, preserved `ui-component` anchor,
+all sixteen browser-loaded diagram images and no horizontal overflow also pass.
+
+### Superseded print attempts
+
+Preserve identities/results in `print-verification-first-export.json` (07:30:21,
+old cached PersonRecord), `print-verification-second-export.json` (08:18:13,
+16/16 current images but an orphan UI heading), and `print-verification-third-export.json`
+(08:20:34, UI grouping corrected but Logic failed to load into that export).
+The final accepted export resolves those findings. The UI correction groups the existing
+heading/introduction/image inside `dg-figure`, with Kramdown `markdown="1"` preserving
+its original heading ID. No Java or diagram semantics changed for this follow-up.
 
 Obtain substantive non-author rendered/notation review of this increment, current hosted checks and
 eligible integration. Then compare actual public PNG bytes, links and guide context with accepted assets.
