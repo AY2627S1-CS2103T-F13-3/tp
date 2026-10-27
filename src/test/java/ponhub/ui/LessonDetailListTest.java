@@ -3,6 +3,7 @@ package ponhub.ui;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static ponhub.testutil.FxTestUtil.runOnFxThread;
@@ -22,6 +23,7 @@ import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.input.KeyCode;
@@ -92,6 +94,38 @@ public class LessonDetailListTest {
                 assertTrue(view.lookupAll(".card_entry_primary").isEmpty());
                 assertTrue(view.lookupAll(".card_entry_secondary").isEmpty());
             }
+        });
+    }
+
+    @Test
+    public void detail_nullListItem_clearsRecycledCellAndRestoresNextSnapshot() throws Exception {
+        runOnFxThread(() -> {
+            var original = detail(Optional.of(SELECTED_DATE),
+                    List.of(rosterEntry(1, Optional.of(AttendanceStatus.PRESENT))), List.of());
+            Region panel = panel(original, 420, 900);
+            LessonDetailList view = (LessonDetailList) detailList(panel);
+            ListCell<?> entryCell = cellAt(view, 2);
+            Region oldRow = (Region) entryCell.getGraphic();
+            assertNotNull(oldRow);
+            assertTrue(oldRow.prefWidthProperty().isBound());
+
+            // The inherited ListView API permits null items, which are distinct from empty cells.
+            view.getItems().set(2, null);
+            settleLayout(panel, view);
+            ListCell<?> nullCell = cellAt(view, 2);
+            assertFalse(nullCell.isEmpty());
+            assertNull(nullCell.getItem());
+            assertNull(nullCell.getText());
+            assertNull(nullCell.getGraphic(), "A null item must not retain the previous student's graphic");
+            assertFalse(oldRow.prefWidthProperty().isBound(), "Recycled content must release its width binding");
+
+            var refreshed = detail(Optional.of(SELECTED_DATE),
+                    List.of(rosterEntry(2, Optional.of(AttendanceStatus.ABSENT))), List.of());
+            view.showDetail(refreshed);
+            settleLayout(panel, view);
+            assertEntry(view, primary(2), "Attendance: absent");
+            assertFalse(labelsInOrder(view, ".card_entry_primary").contains(primary(1)));
+            assertWrapping(view, 420);
         });
     }
 
@@ -446,6 +480,11 @@ public class LessonDetailListTest {
 
     private static ListView<?> detailList(Region panel) {
         return (ListView<?>) panel.lookup("#lessonDetailList");
+    }
+
+    private static ListCell<?> cellAt(ListView<?> view, int index) {
+        return view.lookupAll(".list-cell").stream().map(node -> (ListCell<?>) node)
+                .filter(cell -> cell.getIndex() == index).findFirst().orElseThrow();
     }
 
     private static ListView<?> catalogue(Region panel) {
