@@ -1,0 +1,21 @@
+@startuml
+' Readability layout by Vincent with Codex assistance (#393); existing model/feature credit retained.
+!include style.puml
+!pragma layout smetana
+' Layout split from LessonMembershipClassDiagram; relationships unchanged (#393).
+skinparam defaultFontSize 16
+skinparam classFontSize 16
+skinparam nodesep 50
+skinparam ranksep 65
+skinparam arrowColor MODEL_COLOR
+skinparam classBackgroundColor MODEL_COLOR
+class Lesson
+class LessonId
+class LessonTimeSlot
+class Subject
+class Room
+Lesson "0..*" -up-> "1" LessonId : id
+Lesson "0..*" -right-> "1" LessonTimeSlot : timeSlot
+Lesson "0..*" -down-> "1" Subject : subject
+Lesson "0..*" -left-> "1" Room : room
+@enduml

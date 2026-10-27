@@ -1,0 +1,227 @@
+{
+  "pdf_sha256": "325f81e9f1f6a1618be71f17dcb7edf12d1ff9fe7fd10e5c5d0bbf85d8ce14b7",
+  "pdf_bytes": 3189358,
+  "pdf_creation_sgt": "2026-10-27 08:20:34 +08:00",
+  "page_count": 99,
+  "compared_candidate": "a2860c6",
+  "image_matches": 15,
+  "missing_diagram": "LogicClassDiagram.png",
+  "broken_image_page": 18,
+  "ui_grouping_result": "heading/introduction/image together on page 17; preceding page 16 no orphan",
+  "pages_with_images": [
+    {
+      "page": 5,
+      "images": [
+        {
+          "size": [
+            689,
+            579
+          ],
+          "asset": "ArchitectureDiagram.png",
+          "pixel_sha256": "eeb161562d802d40c3ee17b298fb5dceb3859b6563eb90f763af81ae0799828d"
+        },
+        {
+          "size": [
+            64,
+            64
+          ],
+          "asset": null,
+          "pixel_sha256": "5b1acf51890b65a7f2ec8fcab647899132c298609115fa028b6cb85c359d7336"
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "images": [
+        {
+          "size": [
+            868,
+            967
+          ],
+          "asset": "ArchitectureSequenceDiagram.png",
+          "pixel_sha256": "e1bc79fc59607ba09bedffc59237526453002f75622e29c5b74e7d05bc721c57"
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "images": [
+        {
+          "size": [
+            868,
+            526
+          ],
+          "asset": "ArchitectureSequenceDiagram_001.png",
+          "pixel_sha256": "5509d3ee4146939e03715a0179ac58942bd55dde45737871af93b64609f3f04c"
+        }
+      ]
+    },
+    {
+      "page": 17,
+      "images": [
+        {
+          "size": [
+            717,
+            444
+          ],
+          "asset": "UiClassDiagram.png",
+          "pixel_sha256": "da1e67128c93feeebc33be791c20cbeb1d5d4d0165692ea9baec03a46a41fcf3"
+        }
+      ]
+    },
+    {
+      "page": 18,
+      "images": [
+        {
+          "size": [
+            28,
+            32
+          ],
+          "asset": null,
+          "pixel_sha256": "2e9a78494784e991d8cdf1066fb34ac3fcc1e2d11a88b95e720891ebed240aa7"
+        }
+      ]
+    },
+    {
+      "page": 21,
+      "images": [
+        {
+          "size": [
+            566,
+            434
+          ],
+          "asset": "PersonRecordClassDiagram.png",
+          "pixel_sha256": "ef53a6fe3a3e30b587f396035f6548c8da4941cfb4811ac8864a33052eecbfe7"
+        },
+        {
+          "size": [
+            513,
+            306
+          ],
+          "asset": "LessonMembershipClassDiagram.png",
+          "pixel_sha256": "9cf114bd26290779445487f5676ce417f055318817c50296d6c39bdb10a5a7f5"
+        }
+      ]
+    },
+    {
+      "page": 22,
+      "images": [
+        {
+          "size": [
+            394,
+            217
+          ],
+          "asset": "LessonValuesClassDiagram.png",
+          "pixel_sha256": "06f2c6c2573ffb0c8467c87dcea385b07f591db3860e1472b3c92ed9084925f6"
+        },
+        {
+          "size": [
+            463,
+            323
+          ],
+          "asset": "AttendanceClassDiagram.png",
+          "pixel_sha256": "882b693bd3d1b2e660563e31244c68689726828ee1530a8404859cab3ba1ea92"
+        },
+        {
+          "size": [
+            277,
+            150
+          ],
+          "asset": "AttendanceValuesClassDiagram.png",
+          "pixel_sha256": "9c3825a2f49e6a1e4ca6cdc5f32835ab849e6588aae317cfcd967ce38c31209c"
+        }
+      ]
+    },
+    {
+      "page": 24,
+      "images": [
+        {
+          "size": [
+            618,
+            640
+          ],
+          "asset": "LessonAttendanceStateDiagram.png",
+          "pixel_sha256": "f2360a09ceb818404eb2d50134cbf12e66c2fe7db9235eeab2f1b4955a2f1197"
+        }
+      ]
+    },
+    {
+      "page": 28,
+      "images": [
+        {
+          "size": [
+            849,
+            625
+          ],
+          "asset": "LessonRetrieval.png",
+          "pixel_sha256": "4c55fc6c14e5f1c22c2274a79048d9d589b83baef5ba57de3703cd9c8e7aff48"
+        }
+      ]
+    },
+    {
+      "page": 30,
+      "images": [
+        {
+          "size": [
+            747,
+            586
+          ],
+          "asset": "LessonQueryRefresh.png",
+          "pixel_sha256": "4e8de15aa3d44742ca9de85a37912527192604326dd6b8c532b3eb7ecb079c1a"
+        }
+      ]
+    },
+    {
+      "page": 31,
+      "images": [
+        {
+          "size": [
+            747,
+            844
+          ],
+          "asset": "LessonQueryRefresh_001.png",
+          "pixel_sha256": "05062535e7d816b9564ad031c394bdb0226729134478ab31bb99a8e06510440e"
+        }
+      ]
+    },
+    {
+      "page": 34,
+      "images": [
+        {
+          "size": [
+            737,
+            467
+          ],
+          "asset": "CanonicalStorageClassDiagram.png",
+          "pixel_sha256": "f361a0b82a3ff046fa1f41ba5959589548657861460dd5f90ab5f7356220bb89"
+        }
+      ]
+    },
+    {
+      "page": 47,
+      "images": [
+        {
+          "size": [
+            627,
+            550
+          ],
+          "asset": "PeopleSelectionClassDiagram.png",
+          "pixel_sha256": "0b1a035cdcc0316303e341950dea5d0ce319812b06692ca5115cee37289b2db6"
+        }
+      ]
+    },
+    {
+      "page": 87,
+      "images": [
+        {
+          "size": [
+            64,
+            64
+          ],
+          "asset": null,
+          "pixel_sha256": "edfe564d18fa87cf783d309a8544f578720bbd4839d034fc4c20a45293a8b56f"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+@startuml
+' Readability layout by Vincent with Codex assistance (#393); existing model/feature credit retained.
+!include style.puml
+!pragma layout smetana
+' Layout split from AttendanceClassDiagram; relationships unchanged (#393).
+skinparam defaultFontSize 16
+skinparam classFontSize 16
+skinparam nodesep 65
+skinparam ranksep 65
+skinparam arrowColor MODEL_COLOR
+skinparam classBackgroundColor MODEL_COLOR
+class Attendance
+class AttendanceKey
+class AttendanceStatus <<enumeration>>
+Attendance "0..*" --> "1" AttendanceKey : key
+Attendance "0..*" --> "1" AttendanceStatus : status
+@enduml

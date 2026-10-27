@@ -1,11 +1,17 @@
 @startuml
+' Readability layout by Vincent with Codex assistance (#393); existing model/feature credit retained.
 ' Updated by Ernest Chua with OpenAI Codex assistance (#220).
 hide footbox
 skinparam defaultFontName Arial
-skinparam defaultFontSize 14
 skinparam shadowing false
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 220
+skinparam maxMessageSize 175
+skinparam ParticipantPadding 5
+skinparam BoxPadding 5
+skinparam ArrowFontSize 16
+skinparam defaultFontSize 16
+skinparam ParticipantFontSize 14
+skinparam noteFontSize 15
 participant "session:\nCanonicalPeopleSession" as Session #E5E5FA
 participant "executor:\nCanonicalCommandExecutor" as Executor #E5E5FA
 participant "tx:\nCanonicalTransaction" as Tx #FBE3E6
@@ -15,20 +21,25 @@ Session -> Session : resolve definition, check protection,\nparse arguments and 
 Session -> Executor : execute(command)
 Executor -> Executor : view.beginTransaction()
 note over Executor, Tx
-  PeopleView creates tx with isolated model and filter copies.
+  PeopleView creates tx with isolated
+  model and filter copies.
   staged / stagedView are obtained from tx.
 end note
 ref over Executor, Tx
-  command.execute(staged, stagedView)
-  Resolve index; validate and stage the edit.
-  Return a prepared CommandResult.
+  command.execute(
+  staged, stagedView)
+  Resolve index; validate
+  and stage the edit.
+  Return a prepared
+  CommandResult.
 end ref
 Executor -> Tx : hasOperationalChanges()
 Tx --> Executor : changed
 alt changed operational snapshot
   Executor -> Writer : save(staged.exportState())
   note over Tx, Writer
-    Runtime writer: ProtectedPonHubDataStorage.saveData
+    Runtime writer:
+    ProtectedPonHubDataStorage.saveData
   end note
   alt save succeeds
     Writer --> Executor : saved
@@ -36,8 +47,12 @@ alt changed operational snapshot
     Writer --> Executor : IOException
   end
 else no operational change
-  note over Executor, Tx : Skip save; a view-only change may still commit.
+  note over Executor, Tx
+    Skip save; a view-only change
+    may still commit.
+  end note
 end
+newpage Publication after the save outcome
 alt no operational change or save succeeded
   Executor -> Tx : commit()
   Tx -> Tx : publish changed root, then people filter;\nrefresh subscribed views

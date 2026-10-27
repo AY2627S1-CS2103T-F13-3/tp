@@ -73,7 +73,7 @@ See the [Testing guide](Testing.html#running-tests) for regression checks.
 
 ### Architecture
 
-![Current component responsibilities and dependencies](images/ArchitectureDiagram.png)
+[![Current component responsibilities and dependencies](images/ArchitectureDiagram.png)](images/ArchitectureDiagram.png)
 
 `Main` launches JavaFX; [`MainApp`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java)
 checks application paths, constructs the canonical session and separate preferences, then connects
@@ -98,7 +98,18 @@ The sequence below traces `edit 1 n/Jamie Tan` in a normal session where people-
 exists and the replacement is valid. `MainWindow` sends the command through `Logic.execute`;
 `CanonicalLogicManager` delegates to `CanonicalPeopleSession`.
 
-![Canonical edit command: stage, save, then publish](images/ArchitectureSequenceDiagram.png)
+<figure class="dg-figure">
+  <figcaption>Canonical edit command: stage, save, then publish</figcaption>
+  <a href="images/ArchitectureSequenceDiagram.png"><img src="images/ArchitectureSequenceDiagram.png" alt="Canonical edit command: stage, save, then publish" /></a>
+</figure>
+
+<figure class="dg-figure">
+  <figcaption>Canonical edit command, continued: publication or failure</figcaption>
+  <a href="images/ArchitectureSequenceDiagram_001.png"><img src="images/ArchitectureSequenceDiagram_001.png" alt="Canonical edit command, continued: publication or failure" /></a>
+</figure>
+
+Read the two panels in order: the first establishes the save outcome, and the second continues publication
+only when saving succeeded or no operational write was needed.
 
 The session checks startup protection before parsing mutation arguments. A parse or domain failure
 returns without saving or publishing. A valid command prepares a result on isolated transaction
@@ -398,11 +409,15 @@ role/duplicate guards, identity and view refresh, no-ops, protected startup, fai
 Historical coordination and its original source qualifications are retained in
 [#388](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/388#issuecomment-6367776297).
 
+<figure class="dg-figure" markdown="1">
+
 ### UI component
 
 The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/Ui.java)
 
 [![Structure of the UI Component](images/UiClassDiagram.png)](images/UiClassDiagram.png)
+
+</figure>
 
 This selected Java controller view shows the active panels and cards. Solid navigable lines show stored
 references; dashed `creates` dependencies show construction, including card creation by panel cells.
@@ -452,7 +467,7 @@ Display context text supplies headings, never navigation state.
 
 **API:** [`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/Logic.java).
 
-![Active command-boundary collaborators](images/LogicClassDiagram.png)
+[![Active command-boundary collaborators](images/LogicClassDiagram.png)](images/LogicClassDiagram.png)
 
 The diagram shows selected command-boundary operations. `Logic` also exposes the observable
 retrieval APIs used by the UI; the responsibilities below describe session routing and executor ordering.
@@ -523,15 +538,30 @@ The right pane switches between lesson and history results without replacing the
 
 **Person records and shared immutable values:**
 
-![Person record class diagram](images/PersonRecordClassDiagram.png)
+[![Person record class diagram](images/PersonRecordClassDiagram.png)](images/PersonRecordClassDiagram.png)
 
-**Shared Lesson ownership and membership:**
+<figure class="dg-figure">
+  <figcaption>Shared Lesson ownership and membership</figcaption>
+  <a href="images/LessonMembershipClassDiagram.png"><img src="images/LessonMembershipClassDiagram.png" alt="Lesson catalogue, Tutor and Student membership relationships" /></a>
+</figure>
 
-<img src="images/LessonMembershipClassDiagram.png" alt="Lesson membership class diagram" width="800" />
+<figure class="dg-figure">
+  <figcaption>Shared Lesson identity and value references</figcaption>
+  <a href="images/LessonValuesClassDiagram.png"><img src="images/LessonValuesClassDiagram.png" alt="Lesson identity, time slot, subject and room references" /></a>
+</figure>
 
-**Dated Attendance, separate from current membership:**
+<figure class="dg-figure">
+  <figcaption>Dated Attendance, separate from current membership</figcaption>
+  <a href="images/AttendanceClassDiagram.png"><img src="images/AttendanceClassDiagram.png" alt="Dated Attendance catalogue and Student and Lesson relationships" /></a>
+</figure>
 
-<img src="images/AttendanceClassDiagram.png" alt="Attendance class diagram" width="800" />
+<figure class="dg-figure">
+  <figcaption>Dated Attendance key and status</figcaption>
+  <a href="images/AttendanceValuesClassDiagram.png"><img src="images/AttendanceValuesClassDiagram.png" alt="Attendance key and enumerated status references" /></a>
+</figure>
+
+The paired views separate domain relationships from value references so that each endpoint remains readable.
+The repeated `Lesson` and `Attendance` boxes denote the same classifier in each view.
 
 The canonical model has one current `PonHubDataState` aggregate. Each state references one people-registry snapshot,
 an ordered catalogue of shared `Lesson` records, and separate dated `Attendance` records. Each `PersonRecord` is
@@ -552,7 +582,7 @@ that sharing explicit; they do not introduce a second writable owner of lesson m
 
 **Example: one Lesson, two Students and independent dated attendance**
 
-![Lesson and attendance state changes](images/LessonAttendanceStateDiagram.png)
+[![Lesson and attendance state changes](images/LessonAttendanceStateDiagram.png)](images/LessonAttendanceStateDiagram.png)
 
 In this Monday `L1`, `S1` is Alex and `S2` is Jamie. The Lesson is the sole source of the roster `{S1, S2}` while
 the separate attendance collection contains one key per Student for `2026-10-05`. Marking Alex present and Jamie
@@ -722,7 +752,15 @@ from the current people list; a roster row, history row or stable-ID suffix supp
 Keep the lesson query above selected after enrolling Alex in `L1`, then run `editlesson lid/L1 s/English`.
 The sequence separates the staged candidate from the live root; the user sees no intermediate mode.
 
-[![A saved Lesson edit refreshes the held query result](images/LessonQueryRefresh.png)](images/LessonQueryRefresh.png)
+<figure class="dg-figure">
+  <figcaption>A saved Lesson edit refreshes the held query result: preparation and save</figcaption>
+  <a href="images/LessonQueryRefresh.png"><img src="images/LessonQueryRefresh.png" alt="A saved Lesson edit refreshes the held query result" /></a>
+</figure>
+
+<figure class="dg-figure">
+  <figcaption>Successful-save query refresh, continued</figcaption>
+  <a href="images/LessonQueryRefresh_001.png"><img src="images/LessonQueryRefresh_001.png" alt="Successful-save query refresh, continued" /></a>
+</figure>
 
 The lifelines show component roles: executor, transaction, snapshot writer, live `PonHubData` root,
 `LessonQueries` and `LessonRetrieval` selector. Informal message labels omit JavaFX listener plumbing;
@@ -1233,7 +1271,7 @@ Tutor/Parent at that position without searching another list; range/role failure
 
 **Current people selection and stored identity:**
 
-![Current people selection class diagram](images/PeopleSelectionClassDiagram.png)
+[![Current people selection class diagram](images/PeopleSelectionClassDiagram.png)](images/PeopleSelectionClassDiagram.png)
 
 The solid arrows show references; the dashed arrow shows the resolver's dependency on the returned record type.
 Reverse multiplicities are omitted: immutable snapshots and records can be shared across roots and successive
