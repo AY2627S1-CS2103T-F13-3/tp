@@ -2,8 +2,9 @@ package ponhub.ui;
 
 import static java.util.Objects.requireNonNull;
 
-import javafx.beans.binding.Bindings;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -70,6 +71,24 @@ public class LessonListPanel extends UiPart<Region> {
      * Fits each wrapping card to the available cell width and clears recycled graphics.
      */
     static class LessonListCell extends ListCell<LessonView> {
+        private final DoubleProperty cardWidth = new SimpleDoubleProperty();
+
+        LessonListCell() {
+            widthProperty().addListener(observable -> updateCardWidth());
+            insetsProperty().addListener(observable -> updateCardWidth());
+        }
+
+        @Override
+        protected void layoutChildren() {
+            // Display-scale changes can change snapped insets without changing logical cell width.
+            updateCardWidth();
+            super.layoutChildren();
+        }
+
+        private void updateCardWidth() {
+            cardWidth.set(Math.max(0, getWidth() - snappedLeftInset() - snappedRightInset()));
+        }
+
         @Override
         protected void updateItem(LessonView lesson, boolean empty) {
             super.updateItem(lesson, empty);
@@ -82,9 +101,7 @@ public class LessonListPanel extends UiPart<Region> {
                 return;
             }
             Region card = new LessonCard(lesson).getRoot();
-            card.prefWidthProperty().bind(Bindings.createDoubleBinding(() ->
-                    Math.max(0, getWidth() - getInsets().getLeft() - getInsets().getRight()),
-                    widthProperty(), insetsProperty()));
+            card.prefWidthProperty().bind(cardWidth);
             setGraphic(card);
         }
     }
