@@ -12,8 +12,9 @@ import java.util.Locale;
 public final class Room {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Rooms should contain 1 to 10 letters or digits without spaces or punctuation";
-    public static final String VALIDATION_REGEX = "[A-Z0-9]{1,10}";
+            "Rooms should contain 1 to 10 characters in total, including any hyphens, "
+                    + "using letters or digits optionally separated by single hyphens";
+    public static final String VALIDATION_REGEX = "[A-Z0-9]+(?:-[A-Z0-9]+)*";
 
     private final String value;
 
@@ -40,7 +41,7 @@ public final class Room {
     }
 
     private static boolean isNormalizedRoomValid(String room) {
-        return room.matches(VALIDATION_REGEX);
+        return room.length() <= 10 && room.matches(VALIDATION_REGEX);
     }
 
     public String getValue() {

@@ -85,6 +85,27 @@ public class CanonicalAddLessonIntegrationTest {
     }
 
     @Test
+    public void execute_hyphenatedRoom_preservesLabelAndCollisionIdentityAcrossOperations() throws Exception {
+        Path path = directory.resolve("hyphenated-room.json");
+        new JsonPonHubDataStorage(path).saveData(createState(List.of(), 12));
+        CanonicalPeopleSession session = new CanonicalPeopleSession(path);
+
+        session.execute("addlesson d/Mon st/1600 et/1730 s/Math tu/Unique Tutor rm/b-01");
+        assertEquals(new Room("B-01"), session.getDataSnapshot().lessons().getFirst().getRoom());
+        assertCommandFailure(session,
+                "addlesson d/Mon st/1600 et/1730 s/Science tu/Mei Lim tp/00123456 rm/B-01",
+                "Room schedule overlap between L13 and L14.");
+
+        session.execute("editlesson lid/L13 rm/b-02");
+        assertEquals("Found 1 lesson(s).", session.execute("search c/lesson rm/b-02").getFeedbackToUser());
+        assertEquals(new Room("B-02"), session.getDisplayedLessons().getFirst().getRoom());
+
+        CanonicalPeopleSession reloaded = new CanonicalPeopleSession(path);
+        assertEquals("Found 1 lesson(s).", reloaded.execute("search c/lesson rm/B-02").getFeedbackToUser());
+        assertEquals(new Room("B-02"), reloaded.getDisplayedLessons().getFirst().getRoom());
+    }
+
+    @Test
     public void execute_hyphenatedSubject_createEditSearchAndReloadPreserveLabel() throws Exception {
         Path path = directory.resolve("hyphenated-subject.json");
         new JsonPonHubDataStorage(path).saveData(createState(List.of(), 12));

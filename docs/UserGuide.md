@@ -613,10 +613,15 @@ Check the updated people list before deleting another person.
 
 **Create (active):** `addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM`
 
-Example: `addlesson d/Mon st/1600 et/1730 s/A-Math tu/Mei Lim rm/R1`.
+Example: `addlesson d/Mon st/1600 et/1730 s/A-Math tu/Mei Lim rm/B-01`.
 
 A subject contains 1 to 50 Unicode letters or digits, with single spaces or hyphens between non-empty parts.
 For example, `Math`, `Primary 5 Math` and `A-Math` are accepted; leading, trailing or repeated hyphens are rejected.
+
+A room identifier contains 1 to 10 characters in total, including any hyphens. It otherwise uses letters or digits,
+with optional single hyphens between non-empty parts. PonHub displays it in upper case, so `b-01` becomes `B-01`.
+Case variants therefore identify the same room and cannot bypass room-clash checks. Spaces and leading, trailing or
+repeated hyphens are rejected.
 
 The tutor must already exist. `tu/` uses the same name rules as `n/` and matches the complete name,
 ignoring letter case, repeated spaces and canonical Unicode spelling differences. Accents remain significant.
