@@ -1,0 +1,33 @@
+{
+  "ProductJarModified": false,
+  "SHA256": "95088f4890034c33b3c46573ceb7567c6ccbdf15c4d09ea9ec10131407a7647a",
+  "Bytes": 20352584,
+  "PackagedNotices": [
+    "META-INF/licenses/ponhub/LICENSE",
+    "META-INF/licenses/Apache-2.0.txt",
+    "META-INF/licenses/README.txt",
+    "META-INF/licenses/javafx-17.0.7/javafx.base/ADDITIONAL_LICENSE_INFO",
+    "META-INF/licenses/javafx-17.0.7/javafx.base/ASSEMBLY_EXCEPTION",
+    "META-INF/licenses/javafx-17.0.7/javafx.base/LICENSE",
+    "META-INF/licenses/javafx-17.0.7/javafx.controls/ADDITIONAL_LICENSE_INFO",
+    "META-INF/licenses/javafx-17.0.7/javafx.controls/ASSEMBLY_EXCEPTION",
+    "META-INF/licenses/javafx-17.0.7/javafx.controls/LICENSE",
+    "META-INF/licenses/javafx-17.0.7/javafx.fxml/ADDITIONAL_LICENSE_INFO",
+    "META-INF/licenses/javafx-17.0.7/javafx.fxml/ASSEMBLY_EXCEPTION",
+    "META-INF/licenses/javafx-17.0.7/javafx.fxml/LICENSE",
+    "META-INF/licenses/javafx-17.0.7/javafx.graphics/ADDITIONAL_LICENSE_INFO",
+    "META-INF/licenses/javafx-17.0.7/javafx.graphics/ASSEMBLY_EXCEPTION",
+    "META-INF/licenses/javafx-17.0.7/javafx.graphics/LICENSE",
+    "META-INF/licenses/javafx-17.0.7/javafx.graphics/jpeg_fx.md",
+    "META-INF/licenses/javafx-17.0.7/javafx.graphics/mesa3d.md",
+    "META-INF/licenses/jackson-datatype-jsr310-2.7.4/META-INF/LICENSE",
+    "META-INF/licenses/jackson-databind-2.7.4/META-INF/LICENSE",
+    "META-INF/licenses/jackson-databind-2.7.4/META-INF/NOTICE",
+    "META-INF/licenses/jackson-annotations-2.7.0/META-INF/LICENSE",
+    "META-INF/licenses/jackson-core-2.7.4/META-INF/LICENSE",
+    "META-INF/licenses/jackson-core-2.7.4/META-INF/NOTICE"
+  ],
+  "Manifest": "Manifest-Version: 1.0\r\nImplementation-Title: PonHub\r\nImplementation-Version: 1.4\r\nMain-Class: ponhub.Main\r\n\r\n",
+  "JavaHome": "C:\\Program Files\\Java\\jdk-25.0.4",
+  "SourceCommit": "2f1b83123808f1b1cf79ce9d22e39d368eeae830"
+}
