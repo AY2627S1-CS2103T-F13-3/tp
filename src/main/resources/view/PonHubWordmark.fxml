@@ -3,6 +3,7 @@
 <?import java.net.URL?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 
 <!-- Original text-only wordmark, assisted by OpenAI Codex; see DG acknowledgements. -->
 <HBox alignment="CENTER_LEFT" styleClass="ponhub-wordmark" mouseTransparent="true"
@@ -11,5 +12,7 @@
     <URL value="@PonHubWordmark.css" />
   </stylesheets>
   <Label text="Pon" styleClass="wordmark-pon" minWidth="-Infinity" />
-  <Label text="hub" styleClass="wordmark-hub" minWidth="-Infinity" />
+  <StackPane styleClass="wordmark-badge">
+    <Label text="hub" styleClass="wordmark-hub" minWidth="-Infinity" />
+  </StackPane>
 </HBox>

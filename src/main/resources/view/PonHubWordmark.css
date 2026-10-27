@@ -15,11 +15,15 @@
     -fx-padding: 0 3 0 0;
 }
 
-.ponhub-wordmark .wordmark-hub {
+.ponhub-wordmark .wordmark-badge {
     -fx-background-color: #F7971D;
     -fx-background-radius: 2;
     -fx-background-insets: 0;
     -fx-border-width: 0;
+}
+
+.ponhub-wordmark .wordmark-hub {
+    -fx-alignment: center;
     -fx-text-fill: black;
     -fx-padding: 2 3 2 3;
 }

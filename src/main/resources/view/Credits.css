@@ -1,0 +1,118 @@
+.credits-dialog {
+    -fx-background-color: linear-gradient(to bottom right, #200040, #05051c);
+    -fx-border-color: #00ffff #ff38ce #ff38ce #00ffff;
+    -fx-border-width: 4;
+    -fx-padding: 16;
+    -fx-font-family: "Arial";
+    -fx-font-size: 13px;
+}
+
+.credits-dialog .label {
+    -fx-text-fill: #ffffff;
+}
+
+.credits-dialog .credits-ribbon {
+    -fx-background-color: #ffff00;
+    -fx-text-fill: #70003d;
+    -fx-font-family: "Courier New";
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-border-color: #ff38ce;
+    -fx-border-width: 2;
+    -fx-border-style: dashed;
+    -fx-padding: 6;
+}
+
+.credits-dialog .credits-heading {
+    -fx-text-fill: #ffff00;
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, #ff00aa, 2, 1, 2, 2);
+}
+
+.credits-dialog .credits-subtitle {
+    -fx-text-fill: #7cffff;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.credits-dialog .credits-role {
+    -fx-text-fill: #91ffff;
+}
+
+.credits-dialog .credits-name {
+    -fx-text-fill: #fff779;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.credits-dialog .credits-fine-print {
+    -fx-text-fill: #ccff00;
+    -fx-font-family: "Courier New";
+    -fx-font-weight: bold;
+}
+
+.credits-roster,
+.credits-roster > .viewport {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.credits-card {
+    -fx-background-color: #150a35;
+    -fx-border-color: #c897ff #5a267e #5a267e #c897ff;
+    -fx-border-width: 2;
+    -fx-padding: 14;
+}
+
+.credits-roster .scroll-bar,
+.credits-roster .scroll-bar .track,
+.credits-roster .scroll-bar .increment-button,
+.credits-roster .scroll-bar .decrement-button {
+    -fx-background-color: #110725;
+    -fx-border-width: 0;
+}
+
+.credits-roster .scroll-bar .thumb {
+    -fx-background-color: #c897ff;
+    -fx-background-radius: 0;
+}
+
+.credits-dialog .button {
+    -fx-background-color: #c0c0c0;
+    -fx-text-fill: #101010;
+    -fx-font-family: "Courier New";
+    -fx-font-weight: bold;
+    -fx-background-radius: 0;
+    -fx-padding: 9 16;
+    -fx-border-width: 2;
+    -fx-border-color: #ffffff #505050 #505050 #ffffff;
+    -fx-border-radius: 0;
+}
+
+.credits-dialog .button:focused {
+    -fx-border-color: #00ffff;
+}
+
+.credits-dialog .button-bar {
+    -fx-background-color: transparent;
+}
+
+.credits-portrait {
+    -fx-background-color: #05051c;
+    -fx-border-color: #ff38ce #00ffff #00ffff #ff38ce;
+    -fx-border-width: 2;
+    -fx-padding: 2;
+}
+
+.credits-dialog .credits-chat {
+    -fx-background-color: linear-gradient(to bottom, #ffff44, #baff00);
+    -fx-text-fill: #61002e;
+    -fx-font-size: 15px;
+    -fx-padding: 6 14;
+}
+
+.credits-dialog .credits-chat:hover {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #a00070;
+}
