@@ -54,6 +54,13 @@ h2, h3, h4, h5, h6 {
 }
 
 @media print {
+  // Keep captions and images in one atomic box in WebKit's paged layout.
+  .dg-figure {
+    display: inline-block;
+    width: 100%;
+    vertical-align: top;
+  }
+
   .dg-figure img {
     max-height: 235mm;
     width: auto;
