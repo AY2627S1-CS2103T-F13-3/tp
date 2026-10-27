@@ -11,7 +11,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
 import ponhub.model.query.LessonDetailView;
 import ponhub.model.query.LessonView;
@@ -29,7 +28,7 @@ public class LessonListPanel extends UiPart<Region> {
     @FXML
     private ListView<LessonView> lessonListView;
     @FXML
-    private ScrollPane lessonDetailScroll;
+    private LessonDetailList lessonDetailList;
 
     /**
      * Keeps the same observable result list through commands and committed refreshes.
@@ -56,14 +55,14 @@ public class LessonListPanel extends UiPart<Region> {
         boolean showingDetail = lessons.size() == 1 && lessons.getFirst() instanceof LessonDetailView;
         lessonListView.setVisible(!showingDetail);
         lessonListView.setManaged(!showingDetail);
-        lessonDetailScroll.setVisible(showingDetail);
-        lessonDetailScroll.setManaged(showingDetail);
+        lessonDetailList.setVisible(showingDetail);
+        lessonDetailList.setManaged(showingDetail);
         if (showingDetail) {
             lessonSummary.setText("Showing lesson details.");
-            lessonDetailScroll.setContent(new LessonCard(lessons.getFirst()).getRoot());
+            lessonDetailList.showDetail((LessonDetailView) lessons.getFirst());
         } else {
             lessonSummary.setText(String.format("Showing %d lesson(s).", lessons.size()));
-            lessonDetailScroll.setContent(null);
+            lessonDetailList.getItems().clear();
         }
     }
 
@@ -78,7 +77,7 @@ public class LessonListPanel extends UiPart<Region> {
                 oldCard.prefWidthProperty().unbind();
             }
             setText(null);
-            if (empty || lesson == null) {
+            if (empty || lesson == null || lesson instanceof LessonDetailView) {
                 setGraphic(null);
                 return;
             }
