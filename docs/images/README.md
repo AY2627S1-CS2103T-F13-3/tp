@@ -5,15 +5,14 @@ title: Screenshot sources and credits
 
 ## Guide screenshots
 
-`Ui.png`, `LessonBoardNavigation.png`, `AttendanceDetails.jpg` and
-`AttendanceHistory.jpg` show development source
-[`b22d81569b96ba66b258c94a9ca2b5a7658cdeaa`](https://github.com/AY2627S1-CS2103T-F13-3/tp/tree/b22d81569b96ba66b258c94a9ca2b5a7658cdeaa),
-which includes changes after public v1.4. They illustrate the interface with fictitious
-records; they are not a claim of release or display-matrix acceptance.
+The images illustrate the development interface using fictitious records. They are
+not a claim of release or display-matrix acceptance.
 
-Vincent Lin (`gugrusaurus`) directed these native macOS captures with OpenAI Codex
-assistance. Only rectangular cropping and image encoding were applied: no UI content
-was redrawn, composited or AI-generated. The raw windows measured 1480×1600 pixels.
+Vincent Lin (`gugrusaurus`) created the original guide media. Zhu Zhi Yu
+(`ultramanarm`) refreshes the overview and navigation images. Both use OpenAI Codex
+assistance. These are native macOS application captures: only rectangular cropping
+and image encoding are applied, without redrawing, compositing or AI-generated UI
+content. The raw windows measure 1480×1600 pixels.
 Crop bounds below are `(left, top, right, bottom)` in those pixels; no resizing was
 applied. The JPEGs use quality 95 with no chroma subsampling.
 
@@ -25,7 +24,10 @@ applied. The JPEGs use quality 95 with no chroma subsampling.
 | [AttendanceHistory.jpg](AttendanceHistory.jpg) | 816×320 | `(662, 340, 1478, 660)` | Jamie's absence retained after unenrolment. |
 
 Overview/navigation crops omit the native title bar. Attendance crops retain the
-relevant heading and results so their text remains readable in the guide.
+relevant heading and results so their text remains readable in the guide. The attendance
+images show source
+[`b22d81569b96ba66b258c94a9ca2b5a7658cdeaa`](https://github.com/AY2627S1-CS2103T-F13-3/tp/tree/b22d81569b96ba66b258c94a9ca2b5a7658cdeaa).
+Overview and navigation reflect the development interface and may differ from public v1.4.
 
 ## Other project media
 
