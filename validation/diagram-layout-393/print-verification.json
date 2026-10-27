@@ -1,31 +1,17 @@
 {
   "pdf_filename": "Developer Guide _ PonHub.pdf",
-  "pdf_sha256": "90d1712a359da68a7e3de48125011626b9f92392764c2eb30c59dfadc7be769e",
-  "pdf_bytes": 3241031,
-  "pdf_creation_sgt": "2026-10-27 07:30:21 +08:00",
+  "pdf_sha256": "9393a67b36cced78b107ff91f22355b09689301ff5739f8d6595c3fdf01cc733",
+  "pdf_bytes": 3235456,
+  "pdf_creation_sgt": "2026-10-27 08:18:13 +08:00",
   "page_count": 99,
   "page_size_pt": [
     594.96,
     841.92
   ],
-  "compared_candidate": "83a57e0b34becd018d8fe90bf02a3ec5f800cb72",
+  "compared_candidate": "0e14e0da0e027c6cd67d5ab7909890f60671ce43",
   "comparison": "RGB dimensions and decoded-pixel SHA-256, not encoded PNG bytes or embedded PlantUML metadata",
-  "diagram_matches": 15,
-  "diagram_mismatches": [
-    {
-      "page": 21,
-      "figure": "PersonRecordClassDiagram",
-      "pdf_size": [
-        473,
-        434
-      ],
-      "candidate_size": [
-        566,
-        434
-      ],
-      "result": "older cached image; not current-candidate print acceptance"
-    }
-  ],
+  "diagram_matches": 16,
+  "diagram_mismatches": [],
   "pages_with_images": [
     {
       "page": 5,
@@ -105,11 +91,11 @@
       "images": [
         {
           "size": [
-            473,
+            566,
             434
           ],
-          "asset": null,
-          "pixel_sha256": "4dcaea473dca35253c84715d5970fa0bf0a40282aa43397b88c76ef035589abb"
+          "asset": "PersonRecordClassDiagram.png",
+          "pixel_sha256": "ef53a6fe3a3e30b587f396035f6548c8da4941cfb4811ac8864a33052eecbfe7"
         }
       ]
     },
@@ -248,12 +234,22 @@
     }
   ],
   "visually_inspected_pages": [
+    16,
+    17,
+    21
+  ],
+  "scope": "diagram pages only; not a full 99-page editorial audit",
+  "new_layout_finding": {
+    "page": 16,
+    "continued_page": 17,
+    "heading": "UI component",
+    "result": "heading orphaned; now grouped with introduction and image, fresh print confirmation pending"
+  },
+  "unchanged_rendered_pages_compared_with_previous_inspected_export": [
     5,
     7,
     8,
-    17,
     19,
-    21,
     22,
     23,
     24,
@@ -262,6 +258,5 @@
     31,
     34,
     47
-  ],
-  "scope": "diagram pages only; not a full 99-page editorial audit"
+  ]
 }

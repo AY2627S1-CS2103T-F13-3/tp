@@ -409,11 +409,15 @@ role/duplicate guards, identity and view refresh, no-ops, protected startup, fai
 Historical coordination and its original source qualifications are retained in
 [#388](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/388#issuecomment-6367776297).
 
+<figure class="dg-figure" markdown="1">
+
 ### UI component
 
 The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/Ui.java)
 
 [![Structure of the UI Component](images/UiClassDiagram.png)](images/UiClassDiagram.png)
+
+</figure>
 
 This selected Java controller view shows the active panels and cards. Solid navigable lines show stored
 references; dashed `creates` dependencies show construction, including card creation by panel cells.

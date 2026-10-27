@@ -52,31 +52,37 @@ and two sequence continuations. No quota or universal font-size threshold is int
 
 ## Print evidence and remaining gates
 
-Vincent supplied a 99-page A4 Chrome PDF, `Developer Guide _ PonHub.pdf`, created
-27 October 2026 at 07:30:21 SGT. Size: 3,241,031 bytes; SHA-256:
-`90d1712a359da68a7e3de48125011626b9f92392764c2eb30c59dfadc7be769e`.
-Its A4 dimensions are 594.96×841.92 points. The earlier screenshot records portrait,
-15 mm margins, Actual size, headers/footers and background graphics off.
+Vincent supplied two 99-page A4 Chrome exports. The initial 07:30:21 SGT PDF
+(SHA-256 `90d1712a359da68a7e3de48125011626b9f92392764c2eb30c59dfadc7be769e`)
+had a cached 473×434 PersonRecord image. Its comparison record is preserved in
+`print-verification-first-export.json`; it is superseded for image identity.
 
-Rendered and visually inspected every diagram-bearing page: 5, 7–8, 17, 19, 21–24,
-28, 30–31, 34 and 47. The corrected membership caption and image are together on
-page 22. Both compact domain/value pairs retain visible endpoints and counts on
-pages 22–23. Both Architecture panels on pages 7–8 and query panels on pages 30–31
-fit whole, with readable guards, repeated lifeline headers and the query activation.
-No clipping or new caption/image separation was observed in those changed figures.
-Selected exact PDF page renders are retained in `print-pages/`; page 21 is explicitly
-stale evidence, not an accepted current figure. This is a diagram-page inspection,
-not an editorial audit of all 99 pages or a physical-paper reading test.
-
-Decoded RGB pixel hashes and dimensions match **15 of the 16** current candidate diagram
-images. These compare displayed pixels, not PNG file bytes or embedded PlantUML source
+The refreshed export, created 27 October 2026 at 08:18:13 SGT, is 3,235,456 bytes;
+SHA-256 `9393a67b36cced78b107ff91f22355b09689301ff5739f8d6595c3fdf01cc733`.
+A4 dimensions are 594.96×841.92 points. The earlier settings screenshot records
+portrait, 15 mm margins, Actual size, headers/footers and background graphics off.
+All **16/16** diagram images match candidate `0e14e0d` by decoded RGB pixels and
+dimensions, including the integrated #500 PersonRecord **566×434** image.
+This comparison covers displayed pixels, not PNG encoded bytes or embedded PlantUML
 metadata; source/image provenance remains covered separately by inventory.json.
-The exception is page 21: its PersonRecord image is the older cached **473×434** render;
-the integrated #500 candidate is **566×434**. The supplied PDF therefore demonstrates
-that the changed layouts print correctly, but cannot certify the complete current
-candidate. A fresh export from the no-store origin `http://127.0.0.1:9394/DeveloperGuide.html`
-has been requested. See `print-verification.json` for reproducible identities and page mapping.
-Keep the PR draft until this remaining candidate print check is reconciled.
+
+Rendered every diagram-bearing page. Pages 5, 7–8, 19, 22–24, 28, 30–31, 34 and 47
+are pixel-identical to the previously visually inspected renders. Inspected changed
+pages 17 and 21 and preceding page 16 directly. The membership caption/image remain
+together on page 22; domain/value pairs on pages 22–23 and sequence panels on pages
+7–8 and 30–31 remain whole and readable. Current PersonRecord endpoints/counts are
+visible without clipping. Exact selected PDF page renders are retained in `print-pages/`.
+Scope is diagram pages, not an editorial audit of all 99 pages or physical paper.
+
+**One newly observed print defect remains for confirmation:** the refreshed export
+places `UI component` alone at the bottom of page 16, with its introduction/diagram
+on page 17. The guide now groups that heading, introduction and linked image inside
+one `dg-figure` (using Kramdown's `markdown="1"` to retain the existing heading ID).
+Frozen theme build and all 302 local target occurrences pass; browser DOM confirms
+the preserved `ui-component` anchor, loaded image and computed `break-inside: avoid`.
+A final PDF has been requested to verify actual pagination after this correction.
+Keep the PR draft until this last rendered check is reconciled. This export establishes
+image identity but predates the UI grouping correction.
 
 Obtain substantive non-author rendered/notation review of this increment, current hosted checks and
 eligible integration. Then compare actual public PNG bytes, links and guide context with accepted assets.
