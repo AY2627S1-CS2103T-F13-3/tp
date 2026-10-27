@@ -15,9 +15,17 @@ import ponhub.model.lesson.LessonId;
  * @param lessonId Stable identity of the selected shared lesson.
  * @param date Date of the recurring lesson occurrence.
  * @param status Recorded present or absent outcome.
+ * @param futureAcknowledged Whether the user explicitly acknowledged a future present outcome.
  */
 public record AttendanceMarkInput(Index studentIndex, LessonId lessonId, LocalDate date,
-        AttendanceStatus status) {
+        AttendanceStatus status, boolean futureAcknowledged) {
+
+    /**
+     * Creates an attendance input without a future-date acknowledgement.
+     */
+    public AttendanceMarkInput(Index studentIndex, LessonId lessonId, LocalDate date, AttendanceStatus status) {
+        this(studentIndex, lessonId, date, status, false);
+    }
 
     /**
      * Rejects null attendance input before command execution.

@@ -26,6 +26,9 @@ public class AttendanceMarkParserTest {
         assertEquals(new AttendanceMarkInput(Index.fromOneBased(3), new LessonId("L7"),
                 LocalDate.of(2024, 2, 29), AttendanceStatus.ABSENT),
                 parser.parse("3 s/absent lid/L7 d/2024-02-29"));
+        assertEquals(new AttendanceMarkInput(Index.fromOneBased(2), new LessonId("L12"),
+                LocalDate.of(2036, 10, 6), AttendanceStatus.PRESENT, true),
+                parser.parse("2 lid/L12 d/2036-10-06 s/present ack/FuTuRe"));
     }
 
     @Test
@@ -113,6 +116,8 @@ public class AttendanceMarkParserTest {
                         parser.parse(VALID_ARGUMENTS + " " + field[0] + value));
             }
         }
+        assertThrows(ParseException.class, "Repeated mark prefix 'ack/'.", () ->
+                parser.parse(VALID_ARGUMENTS + " ack/future ack/FUTURE"));
     }
 
     @Test
@@ -143,6 +148,8 @@ public class AttendanceMarkParserTest {
             assertThrows(ParseException.class, AttendanceStatus.MESSAGE_CONSTRAINTS, () ->
                     parser.parse("2 lid/L12 d/2026-10-05 s/" + status));
         }
+        assertThrows(ParseException.class, AttendanceMarkParser.MESSAGE_ACKNOWLEDGEMENT, () ->
+                parser.parse(VALID_ARGUMENTS + " ack/yes"));
     }
 
     @Test

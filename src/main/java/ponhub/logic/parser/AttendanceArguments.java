@@ -2,6 +2,7 @@ package ponhub.logic.parser;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -75,6 +76,13 @@ final class AttendanceArguments {
             throw new ParseException("Missing required " + commandName + " prefix '" + prefix + "'.");
         }
         return value;
+    }
+
+    /**
+     * Returns an optional supported prefix value.
+     */
+    Optional<String> optionalValue(String prefix) {
+        return Optional.ofNullable(values.get(prefix));
     }
 
     private static String commandNameCapitalized(String commandName) {
