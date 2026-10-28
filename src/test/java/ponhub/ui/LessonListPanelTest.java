@@ -22,9 +22,11 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.layout.Region;
+import javafx.stage.Stage;
 import ponhub.MainApp;
 import ponhub.model.PonHubData;
 import ponhub.model.PonHubDataState;
@@ -104,10 +106,17 @@ public class LessonListPanelTest {
             assertTrue(previous.getPrefWidth() <= 320);
             cell.updateItem(lessons.get(1), false);
             assertFalse(previous.prefWidthProperty().isBound());
-            assertLabel((Region) cell.getGraphic(), "lessonHeading", "Math");
+            double previousWidth = previous.getPrefWidth();
+            Region current = (Region) cell.getGraphic();
+            assertTrue(current.prefWidthProperty().isBound());
+            cell.resize(420, 200);
+            assertEquals(previousWidth, previous.getPrefWidth());
+            assertEquals(420, current.getPrefWidth());
+            assertLabel(current, "lessonHeading", "Math");
             var detail = new LessonDetailView(createData().getLesson(new LessonId("L10")).orElseThrow(),
                     "Mei Lim", Optional.empty(), List.of(), List.of());
             cell.updateItem(detail, false);
+            assertFalse(current.prefWidthProperty().isBound());
             assertNull(cell.getGraphic());
             cell.updateItem(null, false);
             assertNull(cell.getGraphic());
@@ -115,6 +124,63 @@ public class LessonListPanelTest {
             cell.updateItem(null, true);
             assertNull(cell.getGraphic());
             assertNull(cell.getText());
+        });
+    }
+
+    @Test
+    public void catalogue_displayScaleChanges_keepCardsWithinViewport() throws Exception {
+        runOnFxThread(() -> {
+            for (double initialScale : new double[] {1.25, 1.5, 1, 2}) {
+                Region panel = new LessonListPanel(new LessonQueries(createData()).getLessonList()).getRoot();
+                Stage stage = createLayoutStage(panel);
+                stage.setRenderScaleX(initialScale);
+                stage.setRenderScaleY(initialScale);
+                try {
+                    for (double width : new double[] {290.4, 399.2, 520}) {
+                        layout(panel, width, 342.4);
+                        assertCatalogueFits(panel, initialScale, width);
+                    }
+                    for (double scale : new double[] {1, 1.25, 1.5, 2, 1.25}) {
+                        stage.setRenderScaleX(scale);
+                        stage.setRenderScaleY(scale);
+                        layout(panel, 520, 342.4);
+                        assertCatalogueFits(panel, scale, 520);
+                    }
+                } finally {
+                    stage.close();
+                }
+            }
+        });
+    }
+
+    @Test
+    public void cell_displayScaleChangesWithoutResize_keepsPreferredBreadthWithinWidth() throws Exception {
+        runOnFxThread(() -> {
+            var cell = new LessonListPanel.LessonListCell();
+            var lessons = new LessonQueries(createData()).getLessonList();
+            cell.updateListView(new ListView<>(lessons));
+            cell.updateItem(lessons.getFirst(), false);
+            Stage stage = createLayoutStage(cell);
+            stage.setRenderScaleX(1);
+            stage.setRenderScaleY(1);
+            try {
+                layout(cell, 320, 480);
+                double width = cell.getWidth();
+                for (double scale : new double[] {1.25, 1.5, 2, 1}) {
+                    stage.setRenderScaleX(scale);
+                    stage.setRenderScaleY(scale);
+                    cell.requestLayout();
+                    cell.layout();
+                    assertEquals(width, cell.getWidth());
+                    assertTrue(cell.prefWidth(-1) <= width + 0.01,
+                            "Scale changes must fit the card without requiring a resize: " + scale
+                                    + "; cell=" + width + ", preferred=" + cell.prefWidth(-1)
+                                    + ", card=" + ((Region) cell.getGraphic()).getPrefWidth()
+                                    + ", insets=" + cell.snappedLeftInset() + "/" + cell.snappedRightInset());
+                }
+            } finally {
+                stage.close();
+            }
         });
     }
 
@@ -131,65 +197,105 @@ public class LessonListPanelTest {
                             "ROOM123456", Set.of()),
                     lesson("L2", tutor, "Tue", "2300", "2359", "Last subject", "LASTROOM", Set.of())),
                     List.of(), 2));
-            for (int width : new int[] {210, 420, 853}) {
+            for (double scale : new double[] {1.25, 1.5, 1, 2}) {
                 Region panel = new LessonListPanel(new LessonQueries(data).getLessonList()).getRoot();
-                layout(panel, width, 480);
-                ListView<LessonView> view = list(panel);
-                assertFalse(view.lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
-                        .anyMatch(bar -> bar.getOrientation() == Orientation.HORIZONTAL && bar.isVisible()));
-                for (var node : view.lookupAll("#lessonCardPane")) {
-                    for (var labelNode : node.lookupAll(".label")) {
-                        Label label = (Label) labelNode;
-                        assertTrue(label.isWrapText());
-                        assertTrue(label.getWidth() > 0 && label.getWidth() <= width,
-                                label.getText() + " width=" + label.getWidth() + ", panel=" + width);
-                        assertTrue(label.getHeight() + 1 >= label.prefHeight(label.getWidth()), label.getText());
+                Stage stage = createLayoutStage(panel);
+                stage.setRenderScaleX(scale);
+                stage.setRenderScaleY(scale);
+                try {
+                    for (double width : new double[] {210, 290.4, 399.2, 420, 520, 853}) {
+                        list(panel).scrollTo(0);
+                        layout(panel, width, 480);
+                        assertCatalogueFits(panel, scale, width);
+                        assertLongValuesReachable(panel, width);
+                        assertCatalogueFits(panel, scale, width);
                     }
+                } finally {
+                    stage.close();
                 }
-                view.scrollTo(1);
-                view.layout();
-                Optional<ScrollBar> vertical = visibleScrollBar(view, Orientation.VERTICAL);
-                if (vertical.isPresent()) {
-                    ScrollBar bar = vertical.orElseThrow();
-                    double previousMaximum;
-                    int layoutPasses = 0;
-                    do {
-                        previousMaximum = bar.getMax();
-                        bar.setValue(previousMaximum);
-                        panel.applyCss();
-                        panel.layout();
-                        view.layout();
-                        layoutPasses++;
-                    } while (layoutPasses < 12 && (Math.abs(bar.getMax() - previousMaximum) > 0.01
-                            || Math.abs(bar.getValue() - bar.getMax()) > 0.01));
-                    bar.setValue(bar.getMax());
-                    panel.layout();
-                    view.layout();
-                    assertEquals(bar.getMax(), bar.getValue(), 0.01);
-                }
-                var viewportBounds = view.localToScene(view.getBoundsInLocal());
-                var last = view.lookupAll("#lessonCardPane").stream()
-                        .filter(node -> ((Label) node.lookup("#lessonIdentity")).getText().equals("Lesson L2"))
-                        .findFirst().orElseThrow();
-                var bounds = last.localToScene(last.getBoundsInLocal());
-                assertTrue(bounds.getMaxY() >= viewportBounds.getMinY()
-                                && bounds.getMaxY() <= viewportBounds.getMaxY() + 1,
-                        "Scrolling to the final card must expose its end: " + bounds
-                                + "; viewport=" + viewportBounds);
             }
         });
+    }
+
+    private static void assertLongValuesReachable(Region panel, double width) {
+        ListView<LessonView> view = list(panel);
+        for (var node : view.lookupAll("#lessonCardPane")) {
+            for (var labelNode : node.lookupAll(".label")) {
+                Label label = (Label) labelNode;
+                assertTrue(label.isWrapText());
+                assertTrue(label.getWidth() > 0 && label.getWidth() <= width,
+                        label.getText() + " width=" + label.getWidth() + ", panel=" + width);
+                assertTrue(label.getHeight() + 1 >= label.prefHeight(label.getWidth()), label.getText());
+            }
+        }
+        view.scrollTo(1);
+        view.layout();
+        Optional<ScrollBar> vertical = visibleScrollBar(view, Orientation.VERTICAL);
+        if (vertical.isPresent()) {
+            ScrollBar bar = vertical.orElseThrow();
+            double previousMaximum;
+            int layoutPasses = 0;
+            do {
+                previousMaximum = bar.getMax();
+                bar.setValue(previousMaximum);
+                panel.applyCss();
+                panel.layout();
+                view.layout();
+                layoutPasses++;
+            } while (layoutPasses < 12 && (Math.abs(bar.getMax() - previousMaximum) > 0.01
+                    || Math.abs(bar.getValue() - bar.getMax()) > 0.01));
+            bar.setValue(bar.getMax());
+            panel.layout();
+            view.layout();
+            assertEquals(bar.getMax(), bar.getValue(), 0.01);
+        }
+        var viewportBounds = view.localToScene(view.getBoundsInLocal());
+        var last = view.lookupAll("#lessonCardPane").stream()
+                .filter(node -> ((Label) node.lookup("#lessonIdentity")).getText().equals("Lesson L2"))
+                .findFirst().orElseThrow();
+        var bounds = last.localToScene(last.getBoundsInLocal());
+        assertTrue(bounds.getMaxY() >= viewportBounds.getMinY()
+                        && bounds.getMaxY() <= viewportBounds.getMaxY() + 1,
+                "Scrolling to the final card must expose its end: " + bounds
+                        + "; viewport=" + viewportBounds);
     }
 
     private static void assertLabel(Region root, String id, String expected) {
         assertEquals(expected, ((Label) root.lookup("#" + id)).getText());
     }
 
-    private static void layout(Region panel, int width, int height) {
-        Scene scene = new Scene(panel, width, height);
+    private static void assertCatalogueFits(Region panel, double scale, double width) {
+        ListView<LessonView> view = list(panel);
+        assertTrue(visibleScrollBar(view, Orientation.HORIZONTAL).isEmpty(),
+                "Horizontal overflow at scale=" + scale + ", width=" + width);
+        for (var node : view.lookupAll(".list-cell")) {
+            ListCell<?> cell = (ListCell<?>) node;
+            if (!cell.isEmpty() && cell.getGraphic() != null) {
+                assertTrue(cell.prefWidth(-1) <= cell.getWidth() + 0.01,
+                        "The card and snapped border must fit within the cell");
+            }
+        }
+    }
+
+    private static Stage createLayoutStage(Region panel) {
+        Scene scene = new Scene(panel);
         scene.getStylesheets().add(MainApp.class.getResource("/view/DarkTheme.css").toExternalForm());
-        panel.applyCss();
-        panel.resize(width, height);
-        panel.layout();
+        // A Window is required for Region's pixel snapping to use the configured render scale.
+        Stage stage = new Stage();
+        stage.setScene(scene);
+        return stage;
+    }
+
+    private static void layout(Region panel, double width, double height) {
+        if (panel.getScene() == null) {
+            Scene scene = new Scene(panel);
+            scene.getStylesheets().add(MainApp.class.getResource("/view/DarkTheme.css").toExternalForm());
+        }
+        for (int pass = 0; pass < 8; pass++) {
+            panel.applyCss();
+            panel.resize(width, height);
+            panel.layout();
+        }
     }
 
     private static Optional<ScrollBar> visibleScrollBar(ListView<?> view, Orientation orientation) {

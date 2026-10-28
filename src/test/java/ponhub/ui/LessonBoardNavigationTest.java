@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -86,11 +87,16 @@ public class LessonBoardNavigationTest {
                 stage.setHeight(stage.getMinHeight());
                 return null;
             });
-            // Return to the event queue after the native resize before inspecting the scene's content area.
-            callOnFxThread(() -> {
-                fixture.layoutShownWindow();
-                return null;
-            });
+            // Native resize acknowledgements can arrive after several JavaFX event-queue turns.
+            long resizeDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+            while (System.nanoTime() < resizeDeadline && !callOnFxThread(() -> {
+                Stage stage = fixture.window().getPrimaryStage();
+                return Math.abs(stage.getWidth() - 450) <= 1 && Math.abs(stage.getHeight() - 360) <= 1
+                        && stage.getScene().getWidth() <= stage.getWidth()
+                        && stage.getScene().getHeight() <= stage.getHeight();
+            })) {
+                TimeUnit.MILLISECONDS.sleep(20);
+            }
             callOnFxThread(() -> {
                 fixture.layoutShownWindow();
                 Stage stage = fixture.window().getPrimaryStage();
