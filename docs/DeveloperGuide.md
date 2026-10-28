@@ -717,7 +717,9 @@ All four are assigned to Mei. Consider
 
 The [criteria matrix](#supported-criteria) gives the accepted fields and validation rules. Exact-value
 buckets preserve substring semantics for `s/`, `tu/`, `rm/` and `sn/`; a prefix trie would not preserve
-arbitrary fragments such as `s/ath`. Without a supplied day or time, candidates are the whole catalogue.
+arbitrary fragments such as `s/ath`. Lesson-only `tp/` compares the assigned Tutor's current complete phone
+from the same committed people index; it can be combined with partial `tu/` or used alone. Without a supplied
+day or time, candidates are the whole catalogue.
 For bounded field lengths, searching costs `O(B + R_B + K)`: `B` candidates, their roster links `R_B` when
 `sn/` is supplied, and `K` results. This is not a constant-time text search or a mutation/persistence bound.
 
@@ -1416,6 +1418,7 @@ input is valid. Prefixes are lowercase, order-independent and unique within a co
 | `et/` | Lesson end time | Yes | Yes | Yes | Yes | Exact HHMM |
 | `s/` | Lesson subject | Yes | Yes | Yes | Yes | Partial text |
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes | Partial text |
+| `tp/` | Lesson tutor's phone | — | — | — | Yes | Exact digits |
 | `rm/` | Lesson room | Yes | Yes | Yes | Yes | Partial text |
 
 Text query values are trimmed, have repeated spaces collapsed, and are case-normalized with `Locale.ROOT`. Filters
@@ -2502,6 +2505,12 @@ The following is one end-to-end procedure for the delivered normal session. `add
    search c/lesson sn/Alex d/Mon s/Math
    search c/lesson sn/Nobody
    ```
+
+   To check same-named Tutor disambiguation in a separate disposable store, create two `Mei Lim` Tutors
+   with phones `0012345` and `93456789`, then give each a non-clashing Lesson using `addlesson`
+   with the matching `tp/`. `search c/lesson tu/mei` returns both; adding `tp/0012345` returns
+   only the first Tutor's Lesson. `tp/12345` returns none. An invalid `tp/12` must retain the
+   previous results, people positions and stored bytes.
 
 4. Record two independent keys for Monday 5 October 2026. Repeating Alex's `present` status is a no-op; changing
    it to `absent` corrects the existing key rather than adding another. Tuesday is rejected because it does not
