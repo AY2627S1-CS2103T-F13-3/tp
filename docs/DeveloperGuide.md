@@ -361,7 +361,11 @@ against every other Tutor, room and enrolled Student schedule. Whole-root valida
 weekday that disagrees with any retained attendance date, including a former member's record. People,
 attendance and allocation counters are retained, and an equal replacement performs no state notification.
 The `editlesson` command prepares from its fresh staged snapshot, saves a changed candidate before
-publication, and skips save/publication for a no-op. Activation does not change the JSON schema.
+publication, and skips save/publication for a no-op. Changed edits with retained attendance append a warning
+that the records use current Lesson details and recommend a new Lesson for future-only changes. The
+executor returns this feedback only after saving/publication. `LessonDetailList` labels dated summaries and
+undated summaries with former-member attendance as current information; it does not imply historical Lesson
+versioning or change attendance dates/statuses. Activation does not change the JSON schema.
 
 <!-- @@author ys000009 -->
 **Lesson command activation (#264).** `LessonEditParser.Input` holds the stable Lesson ID, typed optional
@@ -2037,8 +2041,11 @@ with Alex and Jamie enrolled in `L1`. Record Monday attendance for both Students
 Use the same common journey for generic selector, rejection, save, retry and reload expectations; the steps below
 retain only the Lesson-specific field, scheduling, Tutor and history behavior.
 
-1. Run `editlesson lid/L1 st/1630 s/Advanced Math`. Expect `Edited lesson: L1.`, the same ID, roster, Tutor,
-   room and end time, and a refreshed Lesson card. Restart with the same file and verify the replacement persists.
+1. Run `editlesson lid/L1 st/1630 s/Advanced Math`. Expect `Edited lesson: L1.` followed by the retained-attendance
+   warning and guidance to create a new Lesson for future-only changes. The ID, roster, Tutor, room, end time
+   and recorded dates/statuses stay unchanged. Open the recorded date with `showlesson`: expect the changed
+   subject/time and a **Current Lesson information** note. Restart and verify the same data and note. A changed
+   Lesson without attendance has ordinary success feedback; an identical edit has no warning or write.
 2. Run a valid edit with only `st/`, then one with only `et/`. Reject an endpoint that makes start equal to or
    later than end. Run an identical normalized edit and expect `No changes to lesson: L1.` with unchanged bytes.
 3. Add two Tutors with the same normalized full name but different phones. Reject `tu/NAME` as ambiguous; select

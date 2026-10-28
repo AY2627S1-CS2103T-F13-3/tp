@@ -530,6 +530,11 @@ For example, `editlesson lid/L1 st/1630 s/A-Math` keeps `L1`'s weekday, end time
 An identical edit reports `No changes to lesson: L1.` and does not save. A successful change updates current
 lesson cards, searches and selected details, and survives restart without changing IDs or allocation counters.
 
+If the Lesson has retained attendance, the successful edit warns that those records are displayed with its
+current details. Attendance dates and statuses stay unchanged, but subject, Tutor, room and time shown for an
+old date reflect the edited Lesson. Create a new Lesson when a change should apply only to future occurrences;
+keep the original Lesson for its retained records.
+
 The complete replacement is checked against every other Lesson. Tutor, room and enrolled-Student overlaps are
 rejected; the Lesson being edited is not treated as its own conflict, and adjacent slots remain valid. A weekday
 change is rejected while any current or former Student has retained attendance on an incompatible date. PonHub
@@ -665,6 +670,10 @@ attendance entry exists; it is never treated as absent. Retained records for for
 section, limited to the supplied date when one is given. Without a date, that section shows all retained
 former-member records, newest first. The two prefixes may appear in either order, for example
 `showlesson d/2026-10-05 lid/L1`. An empty roster is valid.
+
+A dated detail, or one showing former-member attendance, labels its summary **Current Lesson information**.
+Subject, Tutor, room and schedule describe the current Lesson, rather than a snapshot taken on the attendance
+date. [Editing a Lesson](#editing-a-shared-lesson-editlesson) preserves the recorded dates and statuses.
 
 An unknown lesson ID, invalid date or date on another weekday leaves the previous lesson result visible. Lesson
 details refresh after saved membership and attendance changes, including corrections and removal by `unmark`.

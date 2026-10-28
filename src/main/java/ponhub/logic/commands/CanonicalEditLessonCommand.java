@@ -24,6 +24,10 @@ import ponhub.model.person.PersonRecord;
 public final class CanonicalEditLessonCommand implements CanonicalCommandExecutor.StagedCommand {
     public static final String MESSAGE_SUCCESS = "Edited lesson: %s.";
     public static final String MESSAGE_NO_CHANGE = "No changes to lesson: %s.";
+    public static final String MESSAGE_CURRENT_DETAILS =
+            "Warning: retained attendance for %s is displayed with current Lesson details. "
+                    + "Dates and statuses are unchanged. Create a new Lesson for changes intended only "
+                    + "for future occurrences.";
     public static final String MESSAGE_RETAINED_ATTENDANCE =
             "Cannot change lesson %s to %s because retained attendance for Student %s (%s) on %s "
                     + "must match its weekday. Run 'showlesson lid/%s d/%s' to inspect the blocking records. "
@@ -51,8 +55,12 @@ public final class CanonicalEditLessonCommand implements CanonicalCommandExecuto
             if (candidate.isChanged()) {
                 staged.resetData(candidate.getCandidateState());
             }
-            return new CommandResult(String.format(candidate.isChanged() ? MESSAGE_SUCCESS : MESSAGE_NO_CHANGE,
-                    candidate.getEditedLesson().getId()));
+            String feedback = String.format(candidate.isChanged() ? MESSAGE_SUCCESS : MESSAGE_NO_CHANGE,
+                    candidate.getEditedLesson().getId());
+            if (candidate.isChanged() && !staged.getAttendanceForLesson(original.getId()).isEmpty()) {
+                feedback += "\n" + String.format(MESSAGE_CURRENT_DETAILS, original.getId());
+            }
+            return new CommandResult(feedback);
         } catch (IllegalArgumentException failure) {
             throw new CommandException(failure.getMessage(), failure);
         }

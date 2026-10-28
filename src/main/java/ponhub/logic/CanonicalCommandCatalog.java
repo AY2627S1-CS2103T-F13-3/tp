@@ -77,6 +77,7 @@ public final class CanonicalCommandCatalog {
             + "The two prefixes may appear in either order when a date is supplied.\n"
             + "A real date must match the lesson weekday; current members show present, absent or unrecorded.\n"
             + "Former members' retained attendance appears separately. People positions are preserved.\n"
+            + "Lesson details are current information, including when a past attendance date is selected.\n"
             + "This read-only view refreshes after saved changes. Example: showlesson lid/L1 d/2026-10-05";
     public static final String MESSAGE_ADD_LESSON_USAGE =
             "Usage: addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM\n"
@@ -97,6 +98,7 @@ public final class CanonicalCommandCatalog {
                     + "or Students.\n"
             + "A weekday change cannot invalidate retained attendance. If blocked, inspect the reported date with "
                     + "showlesson and obtain each Student's current people-list position before using unmark.\n"
+            + "Retained attendance uses current Lesson details. Create a new Lesson for future-only changes.\n"
             + "An identical edit makes no write. Example: editlesson lid/L1 st/1630 s/Advanced Math";
     public static final String MESSAGE_ENROL_USAGE = "Usage: enrol STUDENT_INDEX lid/LESSON_ID\n"
             + "STUDENT_INDEX is the current people-list position of a Student. LESSON_ID is stable.\n"
