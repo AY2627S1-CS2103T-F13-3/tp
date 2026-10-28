@@ -151,10 +151,10 @@ session's catalogue. A protected session permits only `help`, `list` and `exit`;
 | [Delete shared lesson](#4-creating-shared-lessons-and-other-lesson-operations) | `deletelesson lid/LESSON_ID` | `deletelesson lid/L1` |
 | [List people](#2-listing-people-list) | `list [r/ROLE]` | `list r/student` |
 | [Search people](#searching-people-search) | `search c/CATEGORY [FILTER/VALUE]...` | `search c/student n/Alex d/Mon s/Math` |
-| [List shared lessons](#listing-and-searching-shared-lessons) | `lessons [STUDENT_INDEX] [sort/creation\|schedule]` | `lessons` |
+| [List shared lessons](#listing-and-searching-shared-lessons) | <code>lessons [STUDENT_INDEX] [sort/creation&#124;schedule]</code> | `lessons` |
 | [Attendance history](#7-recording-attendance-and-retrieving-history) | `history STUDENT_INDEX [lid/LESSON_ID]` | `history 1 lid/L1` |
 | [Show lesson details](#listing-and-searching-shared-lessons) | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` | `showlesson lid/L1 d/2026-10-05` |
-| [Search shared lessons](#listing-and-searching-shared-lessons) | `search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM] [sort/creation\|schedule]` | `search c/lesson tu/mei d/Mon` |
+| [Search shared lessons](#listing-and-searching-shared-lessons) | <code>search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM] [sort/creation&#124;schedule]</code> | `search c/lesson tu/mei d/Mon` |
 | [Get help](#viewing-command-help-help) | `help [COMMAND]` | `help add` |
 | Exit | `exit` | `exit` |
 
