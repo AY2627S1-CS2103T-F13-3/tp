@@ -60,7 +60,8 @@ public interface Logic {
 
     /**
      * Returns lessons matching the active lesson filter, without changing the people view.
-     * Results are distinct and retain catalogue order. A valid filter with no matches returns an empty list.
+     * Results are distinct and use the requested order; catalogue order is the default.
+     * A valid filter with no matches returns an empty list.
      */
     ObservableList<LessonView> getFilteredLessonList();
 
