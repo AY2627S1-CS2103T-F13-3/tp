@@ -14,7 +14,8 @@ assistance. These are native macOS application captures: only rectangular croppi
 and image encoding are applied, without redrawing, compositing or AI-generated UI
 content. The raw windows measure 1480×1600 pixels.
 Crop bounds below are `(left, top, right, bottom)` in those pixels; no resizing was
-applied. The JPEGs use quality 95 with no chroma subsampling.
+applied. The overview/navigation images use PNG encoding that preserves the decoded
+capture pixels. The attendance JPEGs use quality 95 with no chroma subsampling.
 
 | Image | Pixels | Crop bounds | Illustration |
 | --- | --- | --- | --- |
