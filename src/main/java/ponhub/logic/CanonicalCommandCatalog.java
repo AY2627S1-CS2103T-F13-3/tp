@@ -114,13 +114,15 @@ public final class CanonicalCommandCatalog {
             "Usage: unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD\n"
                     + "Removes only that dated attendance record, including retained history after unenrolment.\n"
                     + "Example: unmark 1 lid/L1 d/2026-10-05";
-    public static final String MESSAGE_HISTORY_USAGE = "Usage: history STUDENT_INDEX [lid/LESSON_ID]\n"
+    public static final String MESSAGE_HISTORY_USAGE =
+            "Usage: history STUDENT_INDEX [lid/LESSON_ID] [d/YYYY-MM-DD] [s/present|absent]\n"
             + "Shows retained dated attendance, newest first, then by stable Lesson ID.\n"
             + "STUDENT_INDEX selects a Student in the current people list.\n"
-            + "An optional existing Lesson ID filters records.\n"
+            + "Optional Lesson ID, exact date and status filters combine; each may appear once in any order.\n"
+            + "Dates must be real YYYY-MM-DD values; status ignores case. Omitted filters show all values.\n"
             + "A missing record is unrecorded, not absent. Current and former membership are shown separately.\n"
             + "The people list and operational data remain unchanged.\n"
-            + "Example: after list r/student, history 1 lid/L1";
+            + "Example: after list r/student, history 1 lid/L1 s/absent";
     public static final String MESSAGE_DELETE_USAGE = "Usage: delete INDEX\n"
             + "INDEX is the person's current position in the displayed people list.\n"
             + "Shows the resolved name and stable ID without saving. Enter delete confirm to permanently remove\n"
