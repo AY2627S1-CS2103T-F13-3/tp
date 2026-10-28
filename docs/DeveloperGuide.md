@@ -184,7 +184,9 @@ below `resultSplitPane`, spanning beneath both record columns; it does not move 
 shared feedback divider. The people sidebar starts at 32% of the records width and remains adjustable.
 The existing vertical result split retains its separate pane minima and session divider behavior.
 After populating the window, startup explicitly focuses the command input. Result Display remains
-focusable for text selection and copying; menu/F1 help preserves an unfinished command draft.
+focusable for text selection, copying and keyboard scrolling. Its border reserves the same space in both
+focus states and turns orange when focused; focus changes do not resize the reading viewport.
+Menu/F1 help preserves an unfinished command draft.
 
 `Logic.getCommandWords()` supplies the canonical definitions in session catalogue order, including the
 protected-startup restriction. `MainWindow` passes this immutable list to `CommandBox`.
@@ -2219,9 +2221,14 @@ Use the active catalogue in the tested build; these examples apply to canonical 
    `help editlesson` requires nonblank supplied values and `tu/` with `tp/`. In a protected session, both editing
    topics are unavailable, both mutation routes return recovery guidance before parsing, and menu/F1 list only
    help/list/exit while retaining the draft and original rejected bytes.
-4. At minimum width, run `help add` and scroll to the final example/back to the top. Text wraps
-   readably; a new topic resets scrolling. Record actual display conditions using the
-   [people-card/whole-window checks](#planned-people-card-display-checks).
+4. At minimum width and in a wider window, run `help` and `help add`. From the blank command field,
+   Tab past the three view buttons to Result Display; expect an orange focus outline without layout movement.
+   Use Up/Down and Page Up/Page Down to reach the final line and return to the top, then compare mouse or
+   trackpad scrolling. On Mac keyboards, Fn+Up/Down supplies Page Up/Page Down. Shift+Tab returns through
+   the view buttons. Replace long feedback with `list`, then another help topic; each new response starts
+   at the top and remains complete. Recheck [completion](#command-name-completion) and
+   [recall/draft restoration](#command-recall); command-box arrows must not scroll the response.
+   Record actual display conditions using the [whole-window checks](#planned-people-card-display-checks).
 5. `clear` and `find Alex` identify the unknown command and suggest `help` without changing data.
    `edit` and `editlesson` are active canonical routes; verify their guards with the edit checks above.
    `list extra`, an invalid `addlesson`, an invalid `mark`, an invalid `unmark`, `delete S1`,

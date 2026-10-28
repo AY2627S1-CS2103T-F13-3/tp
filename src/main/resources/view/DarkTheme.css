@@ -230,11 +230,16 @@
 .result-display {
     -fx-background-color: transparent;
     -fx-background-insets: 0;
-    -fx-border-width: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
     -fx-padding: 0;
     -fx-font-family: "Segoe UI";
     -fx-font-size: 13pt;
     -fx-text-fill: #F2F2F2;
+}
+
+.result-display:focused {
+    -fx-border-color: #FF9900;
 }
 
 .result-display .label {

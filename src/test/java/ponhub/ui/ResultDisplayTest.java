@@ -15,6 +15,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javafx.css.PseudoClass;
 import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.scene.Scene;
@@ -24,7 +25,9 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderStroke;
 import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import ponhub.logic.CanonicalCommandCatalog;
 import ponhub.logic.CanonicalLogicManager;
@@ -67,6 +70,47 @@ public class ResultDisplayTest {
     @Test
     public void setFeedbackToUser_repeatsIdenticalScrolledFeedback_resetsCaretAndViewport() throws Exception {
         assertScrolledFeedbackReset(LONG_FEEDBACK);
+    }
+
+    @Test
+    public void focusStyling_highlightsResponseWithoutChangingContentInsets() throws Exception {
+        runOnFxThread(() -> {
+            ResultDisplay display = new ResultDisplay();
+            Region root = display.getRoot();
+            Scene scene = new Scene(root, 300, 120);
+            scene.getStylesheets().add(ResultDisplayTest.class.getResource("/view/DarkTheme.css").toExternalForm());
+            TextArea area = (TextArea) root.lookup("#resultDisplay");
+            display.setFeedbackToUser(LONG_FEEDBACK);
+            root.applyCss();
+            root.resize(300, 120);
+            root.layout();
+            var originalInsets = area.getInsets();
+            BorderStroke originalBorder = area.getBorder().getStrokes().getFirst();
+            assertEquals(Color.TRANSPARENT, originalBorder.getTopStroke());
+            assertEquals(1, originalBorder.getWidths().getTop());
+
+            // Exercise rendered CSS states without depending on foreground OS focus.
+            PseudoClass focused = PseudoClass.getPseudoClass("focused");
+            area.pseudoClassStateChanged(focused, true);
+            root.applyCss();
+            root.layout();
+
+            BorderStroke focusedBorder = area.getBorder().getStrokes().getFirst();
+            Color focusColor = Color.web("#FF9900");
+            assertEquals(focusColor, focusedBorder.getTopStroke());
+            assertEquals(focusColor, focusedBorder.getRightStroke());
+            assertEquals(focusColor, focusedBorder.getBottomStroke());
+            assertEquals(focusColor, focusedBorder.getLeftStroke());
+            assertEquals(originalInsets, area.getInsets(), "Focus must not change the response's reading space.");
+            assertEquals(LONG_FEEDBACK, area.getText());
+            assertTrue(area.isFocusTraversable());
+            assertFalse(area.isEditable());
+
+            area.pseudoClassStateChanged(focused, false);
+            root.applyCss();
+            assertEquals(Color.TRANSPARENT, area.getBorder().getStrokes().getFirst().getTopStroke());
+            assertEquals(originalInsets, area.getInsets());
+        });
     }
 
     @Test
