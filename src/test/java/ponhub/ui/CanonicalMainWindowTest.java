@@ -72,6 +72,43 @@ public class CanonicalMainWindowTest {
     Path directory;
 
     @Test
+    public void peopleHeading_sameCountSearchesAndUnrelatedCommands_retainsCriteriaAndResetGuidance() throws Exception {
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("add r/student n/Alex Tan l/P1 pp/91234567");
+                fixture.enter("add r/student n/Jamie Tan l/P1 pp/91234568");
+                fixture.enter("search c/student n/ALEX");
+                Label heading = (Label) fixture.root().lookup("#peopleContext");
+                Label reset = (Label) fixture.root().lookup("#filterResetHint");
+                assertEquals("Student search: c/student n/alex", heading.getText());
+                assertTrue(reset.isVisible());
+                assertEquals("Use list to show all people.", reset.getText());
+                byte[] saved = Files.readAllBytes(fixture.dataPath());
+                fixture.enter("help add");
+                fixture.enter("lessons");
+                assertEquals("Student search: c/student n/alex", heading.getText());
+                assertEquals("Alex Tan", fixture.people().getItems().getFirst().getContactDetails().getName().fullName);
+                fixture.enter("search c/student n/JAMIE");
+                assertEquals("Student search: c/student n/jamie", heading.getText());
+                assertEquals(1, fixture.people().getItems().size());
+                fixture.enter("search c/student n/Nobody");
+                assertEquals("Student search: c/student n/nobody", heading.getText());
+                assertTrue(fixture.people().getItems().isEmpty());
+                fixture.enter("search c/student n/");
+                assertEquals("Student search: c/student n/nobody", heading.getText());
+                fixture.enter("list r/student");
+                assertEquals("Students", heading.getText());
+                fixture.enter("list");
+                assertEquals("All people", heading.getText());
+                assertFalse(reset.isVisible());
+                assertFalse(reset.isManaged());
+                assertArrayEquals(saved, Files.readAllBytes(fixture.dataPath()));
+            }
+            return null;
+        });
+    }
+
+    @Test
     public void commandBox_logsOncePerOutcomeWithoutFeedbackOrRejectedDrafts() throws Exception {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow(); LogCapture capture = new LogCapture()) {
@@ -992,7 +1029,8 @@ public class CanonicalMainWindowTest {
             people().layout();
             lessons().layout();
             history().layout();
-            for (String id : List.of("lessonContext", "lessonSummary", "historyContext", "historySummary")) {
+            for (String id : List.of("lessonContext", "lessonSummary", "historyContext", "historySummary",
+                    "peopleContext")) {
                 Label heading = (Label) root().lookup("#" + id);
                 assertNotNull(heading.getTooltip(), id);
                 assertEquals(heading.getText(), heading.getTooltip().getText(), id);

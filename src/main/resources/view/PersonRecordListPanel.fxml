@@ -2,9 +2,17 @@
 
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox minWidth="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+<VBox minWidth="0" minHeight="0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+  <ScrollPane fx:id="peopleContextPane" fitToWidth="true" minHeight="24" maxHeight="64"
+              minWidth="0" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
+    <Label fx:id="peopleContext" styleClass="cell_small_label" wrapText="true"
+           minWidth="0" maxWidth="Infinity" />
+  </ScrollPane>
+  <Label fx:id="filterResetHint" styleClass="cell_small_label" text="Use list to show all people."
+         wrapText="true" />
   <Label fx:id="summary" styleClass="cell_small_label" wrapText="true" />
-  <ListView fx:id="personListView" minWidth="0" VBox.vgrow="ALWAYS" />
+  <ListView fx:id="personListView" minWidth="0" minHeight="0" VBox.vgrow="ALWAYS" />
 </VBox>

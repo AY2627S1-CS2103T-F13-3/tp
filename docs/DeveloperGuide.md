@@ -1352,7 +1352,10 @@ zeros are retained. `PersonRecordCard` renders each group with each caption abov
 context below the own fields. FXML imposes no fixed card height. The `.person-record-card` CSS scope distinguishes
 names, metadata, captions and values without changing Lesson/history styling or the list selection behavior.
 `PersonRecordListPanel` fits cards to cell width, updates positions when cells are reused, and supplies count,
-empty placeholder and vertical scrolling for tall cards. Neither projection nor panel owns writable records.
+empty placeholder and vertical scrolling for tall cards. `PeopleView.resultContextProperty()` supplies the
+current all-people, role-list or normalized search scope through Logic. The panel retains that heading and
+filter-reset guidance independently of command feedback; long headings have a bounded, keyboard-scrollable
+area so every criterion and the records remain reachable. Neither projection nor panel owns writable records.
 
 Each present contact detail carries an explicit copyable flag; missing values and the education level do not.
 `PersonRecordCard` adds a standard, focusable **Copy** button with a contact/person accessible name.
@@ -2435,7 +2438,11 @@ Use [command transactions](#command-transactions) for publication/no-op rules an
    Check case/repeated-space normalization, exact phones including zeros, absent optional values and zero results.
    Resolve the next person selector against this visible view; its position must not become an ID suffix.
 3. Switch between two same-role searches, then `list r/student` and `list`. Each listing clears the search criteria.
-   `help search`, Help menu and F1 preserve the filtered view; compare operational bytes before/after read commands.
+   `help search`, Help menu and F1 preserve the filtered view and its people-panel category/criteria heading;
+   compare operational bytes before/after read commands. Include two searches with the same result count,
+   a zero-match search and long criteria at compact widths. The scrollable heading must retain every filter,
+   the reset hint stays visible and the list remains reachable. Role listing replaces the search heading;
+   `list` restores `All people`.
 4. Run `search c/student d/Mon`; expect `Found N student(s).` and one result per Student enrolled in a Monday
    Lesson, with only matching Lesson context. No matches is a successful `Found 0 student(s).` result.
    Run `search c/parent sn/Alex`; expect `Found N parent(s).` with each Parent linked by exact phone to a

@@ -3,11 +3,15 @@ package ponhub.model;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import ponhub.model.person.PersonId;
@@ -32,6 +36,7 @@ public final class PeopleView {
     private Optional<PersonRole> roleFilter = Optional.empty();
     private Optional<SearchCriteria> searchCriteria = Optional.empty();
     private final LessonQueries queries;
+    private final ReadOnlyStringWrapper resultContext = new ReadOnlyStringWrapper("All people");
     private final ReadOnlyObjectWrapper<Map<PersonId, List<PersonSearchMatch>>> contexts =
             new ReadOnlyObjectWrapper<>(Map.of());
 
@@ -70,6 +75,13 @@ public final class PeopleView {
         return new CanonicalTransaction(source, this);
     }
 
+    /**
+     * Returns the active people scope and normalized search criteria independently of transient command feedback.
+     */
+    public ReadOnlyStringProperty resultContextProperty() {
+        return resultContext.getReadOnlyProperty();
+    }
+
     public Optional<PersonRole> getRoleFilter() {
         return roleFilter;
     }
@@ -97,6 +109,7 @@ public final class PeopleView {
         roleFilter = criteria.getCategory().getPersonRole();
         searchCriteria = Optional.of(criteria);
         contexts.set(matches.contexts());
+        updateResultContext();
         people.setAll(matches.people());
     }
 
@@ -118,6 +131,7 @@ public final class PeopleView {
      * When attached to JavaFX controls, refreshes run on the JavaFX application thread.
      */
     public void refresh() {
+        updateResultContext();
         if (searchCriteria.isPresent()) {
             var matches = PersonRelationshipSearch.search(source.getPeople(), queries, searchCriteria.orElseThrow());
             contexts.set(matches.contexts());
@@ -128,5 +142,25 @@ public final class PeopleView {
         people.setAll(source.getPeople().stream()
                 .filter(person -> roleFilter.isEmpty() || person.getRole() == roleFilter.get())
                 .toList());
+    }
+
+    /**
+     * Describes the selected query, including a category-only search and a search with zero matches.
+     */
+    private void updateResultContext() {
+        if (searchCriteria.isPresent()) {
+            SearchCriteria criteria = searchCriteria.orElseThrow();
+            String category = criteria.getCategory().name().toLowerCase(Locale.ROOT);
+            String filters = criteria.getFilters().entrySet().stream()
+                    .map(entry -> " " + entry.getKey().getPrefix() + entry.getValue())
+                    .collect(Collectors.joining());
+            resultContext.set(Character.toUpperCase(category.charAt(0)) + category.substring(1)
+                    + " search: c/" + category + filters);
+        } else {
+            resultContext.set(roleFilter.map(role -> {
+                String roleName = role.name().toLowerCase(Locale.ROOT);
+                return Character.toUpperCase(roleName.charAt(0)) + roleName.substring(1) + "s";
+            }).orElse("All people"));
+        }
     }
 }
