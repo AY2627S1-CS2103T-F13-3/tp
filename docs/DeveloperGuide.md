@@ -2235,6 +2235,27 @@ Help checks do not establish the
 [active shared-lesson and attendance workflow](#active-shared-lesson-and-attendance-workflow)
 or final guide/site acceptance ([#102](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/102)).
 
+#### Keyboard menu access on macOS
+
+On the prescribed Mac runtime, `MenuBarSkin` supplies Control+F10 for the in-window menu bar;
+ordinary Tab traversal skips File and Help. Control+F2 targets the macOS system menu bar and does not
+establish access to these in-window menus. See the
+[UG key sequence](UserGuide.html#opening-file-and-help-with-the-keyboard-on-macos).
+
+1. In a disposable JAR folder, select a person card and leave an unfinished command with selected text.
+   Press Control+F10, adding Fn/Globe if needed to emit F10. Release all keys, then press Down to open File.
+   Expect a visible File selection and an Exit item. Right switches to Help; Down then Enter activates
+   its Help item. Expect the inline catalogue with the command draft, selected range and people selection retained.
+2. Repeat from an All lessons button focus, reached by Tab from an unmatched draft. Expect the same menu
+   route and retained draft text, with focus returning to the button. Returning to the command field by
+   ordinary Tab traversal may select its text; assess command-origin selection preservation separately.
+3. Use Left/Right and Escape to switch and dismiss menus without executing an item. Recheck F1 help from
+   the command field and Result Display, with Fn if needed. Test File > Exit only against the disposable
+   store, after the other checks; it must close the application.
+
+Record the actual JAR/runtime and physical-key versus automated coverage. A test through a diagnostic app
+launcher does not by itself establish the ordinary terminal launch or an untested platform.
+
 ### Lesson cards and result navigation (#320, #371)
 
 Use a disposable mixed-role store with two Students, a shared Lesson, an empty-roster Lesson and retained
