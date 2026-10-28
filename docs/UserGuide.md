@@ -777,6 +777,10 @@ use `n/mei` for the Tutor's own name when the result category is `tutor`. For Le
 `tp/` also works alone; it matches the complete current Tutor phone, including leading zeros.
 A phone shared by differently named Tutors may match both; combine it with `tu/` as needed.
 
+Greek sigma forms `Σ`, `σ` and `ς` match one another, including fragments such as `n/Σ` in `ΝΊΚΟΣ`.
+Search preserves stored/displayed spellings and uses lowercase comparison with this sigma equivalence;
+it does not equate `ß` with `ss` or remove accents. Duplicate checks and full-name Tutor selection retain
+their existing rules; two saved people whose spellings differ only by `ς`/`σ` can both appear in a search.
 Search does not normalize canonical Unicode spelling differences. Copy the displayed spelling or use a
 fragment such as `n/Jos` to find `José Santos`. Slash-bearing full values remain unsupported in search:
 use `n/Ravi` for `Ravi s/o Kumar` or `a/#01` for `#01/02`.

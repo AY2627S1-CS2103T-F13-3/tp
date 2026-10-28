@@ -1475,7 +1475,14 @@ input is valid. Prefixes are lowercase, order-independent and unique within a co
 
 Text query values are trimmed, have repeated spaces collapsed, and are case-normalized with `Locale.ROOT`. Filters
 use case-insensitive substring matching; fragments need not form a complete valid field value. Thus `n/al` matches
-`Sally Tan` and `s/Math` matches `Add Math`. This agrees with canonical name and address normalization.
+`Sally Tan` and `s/Math` matches `Add Math`. `SearchField` lowercases both text queries and candidates with
+`Locale.ROOT`, then maps final sigma `ς` to ordinary sigma `σ`. This makes `Σ`/`σ`/`ς` equivalent in partial,
+internal, final and complete-name searches across all shared text fields. It deliberately preserves the existing
+lowercase policy otherwise: no sharp-S-to-`ss` expansion, accent removal or canonical Unicode normalization.
+This comparison is search-only: stored/displayed names, duplicate keys and `TutorResolver` retain their existing
+contracts. In particular, existing `ς`/`σ` duplicate-key distinctions remain loadable; a search can return both
+records. Changing those identities needs a separate compatibility decision by the people/name owner, not a
+search-triggered migration or stricter loader.
 Lesson creation selects a tutor by normalized **full** name and optional exact phone; search `tu/` matches a tutor
 name **fragment**, while tutor-category own-name search uses `n/`.
 

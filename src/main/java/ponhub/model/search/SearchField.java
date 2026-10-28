@@ -130,7 +130,7 @@ public enum SearchField {
                             + "' requires a valid four-digit HHMM.");
                 }
             }
-            default -> StringUtil.normalizeSpaces(trimmed).toLowerCase(Locale.ROOT);
+            default -> normalizeTextCase(StringUtil.normalizeSpaces(trimmed));
         };
     }
 
@@ -149,7 +149,15 @@ public enum SearchField {
                     yield false;
                 }
             }
-            default -> candidate.toLowerCase(Locale.ROOT).contains(query);
+            default -> normalizeTextCase(candidate).contains(query);
         };
+    }
+
+    /**
+     * Retains locale-independent lowercase comparison while treating both lowercase sigma forms alike.
+     * This search-only policy does not expand sharp S, strip accents or normalize canonical spelling.
+     */
+    private static String normalizeTextCase(String value) {
+        return value.toLowerCase(Locale.ROOT).replace('ς', 'σ');
     }
 }
