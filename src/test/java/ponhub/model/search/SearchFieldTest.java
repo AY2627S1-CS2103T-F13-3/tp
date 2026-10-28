@@ -251,6 +251,41 @@ public class SearchFieldTest {
     }
 
     @Test
+    public void matchesValue_sigmaVariants_matchAtEveryPositionAcrossTextFields() {
+        for (SearchField field : textFields()) {
+            for (String candidate : List.of("ΝΊΚΟΣ", "Νίκος", "Νίκοσ", "Σίγμα", "αςα", "σσς")) {
+                for (String query : List.of("Σ", "σ", "ς")) {
+                    assertTrue(field.matchesValue(field.normalizeValue(query), candidate), field + " " + candidate);
+                }
+                for (String query : List.of(candidate, candidate.toUpperCase(Locale.ROOT),
+                        candidate.toLowerCase(Locale.ROOT), candidate.replace('ς', 'σ'))) {
+                    assertTrue(field.matchesValue(field.normalizeValue(query), candidate), field + " " + query);
+                }
+            }
+            assertFalse(field.matchesValue(field.normalizeValue("σς"), "Νίκος"), field.name());
+        }
+    }
+
+    @Test
+    public void matchesValue_otherUnicodeText_preservesExistingComparisonLimits() {
+        for (SearchField field : textFields()) {
+            assertTrue(field.matchesValue(field.normalizeValue("É"), "José"), field.name());
+            assertTrue(field.matchesValue(field.normalizeValue("STRAẞE"), "Straße"), field.name());
+            assertFalse(field.matchesValue(field.normalizeValue("STRASSE"), "Straße"), field.name());
+            assertFalse(field.matchesValue(field.normalizeValue("SS"), "ß"), field.name());
+            assertFalse(field.matchesValue(field.normalizeValue("e"), "é"), field.name());
+            assertFalse(field.matchesValue(field.normalizeValue("e\u0301"), "é"), field.name());
+            assertTrue(field.matchesValue(field.normalizeValue("中"), "中文"), field.name());
+            assertFalse(field.matchesValue(field.normalizeValue("σ"), null), field.name());
+        }
+    }
+
+    private static List<SearchField> textFields() {
+        return List.of(SearchField.NAME, SearchField.EMAIL, SearchField.ADDRESS, SearchField.STUDENT_NAME,
+                SearchField.SUBJECT, SearchField.TUTOR_NAME, SearchField.ROOM);
+    }
+
+    @Test
     public void normalizeValue_blankOrDelimitedValues_preserveAllPrefixErrors() {
         for (SearchField field : SearchField.values()) {
             String error = "Search filter '" + field.getPrefix()
