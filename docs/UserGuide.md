@@ -348,7 +348,10 @@ Enter `search c/student`, `search c/parent` or `search c/tutor`, followed by any
 For example, `search c/student n/alex l/s2 pp/91234567` finds students whose own details match all three values.
 See [Searching people and shared lessons](#6-searching-people-and-shared-lessons) for the complete filter matrix,
 matching rules and a reusable example. Results replace the people list, so check its new positions before
-issuing a person command.
+issuing a person command. The people-panel heading keeps the active category and normalized filters visible
+when help or another command replaces the feedback. Long headings scroll vertically within their own area;
+click that area and use the arrow keys, or scroll over it, to read every criterion.
+`list r/student` (or another role) replaces the search with that role list; `list` shows all people.
 
 ### Searching parents through their children
 

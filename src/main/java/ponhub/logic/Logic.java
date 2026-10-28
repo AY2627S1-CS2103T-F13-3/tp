@@ -59,6 +59,11 @@ public interface Logic {
     ReadOnlyObjectProperty<Map<PersonId, List<PersonSearchMatch>>> personSearchContextProperty();
 
     /**
+     * Returns the persistent people scope and normalized active search criteria for the UI.
+     */
+    ReadOnlyStringProperty peopleResultContextProperty();
+
+    /**
      * Returns lessons matching the active lesson filter, without changing the people view.
      * Results are distinct and retain catalogue order. A valid filter with no matches returns an empty list.
      */

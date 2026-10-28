@@ -220,6 +220,27 @@ public class PeopleViewTest {
         }
     }
 
+    @Test
+    public void resultContext_normalizedCriteriaAndRefresh_retainsScopeWithoutChangingStoredState() {
+        PonHubData source = new PonHubData(originalState);
+        PeopleView view = new PeopleView(source);
+        var context = view.resultContextProperty();
+        view.setSearchCriteria(new SearchCriteria(SearchCategory.STUDENT,
+                Map.of(SearchField.NAME, "  ALEX  TAN ", SearchField.LEVEL, "s2")));
+        assertEquals("Student search: c/student n/alex tan l/S2", context.get());
+        source.resetData(createState(List.of(parent)));
+        view.refresh();
+        assertTrue(view.getPeople().isEmpty());
+        assertEquals("Student search: c/student n/alex tan l/S2", context.get());
+        assertSame(context, view.resultContextProperty());
+        view.setSearchCriteria(new SearchCriteria(SearchCategory.PARENT, Map.of()));
+        assertEquals("Parent search: c/parent", context.get());
+        view.setRoleFilter(Optional.of(PersonRole.TUTOR));
+        assertEquals("Tutors", context.get());
+        view.setRoleFilter(Optional.empty());
+        assertEquals("All people", context.get());
+    }
+
     private static PonHubDataState createState(List<PersonRecord> people) {
         PeopleRegistryState state = new PeopleRegistryState(people,
                 Map.of(PersonRole.STUDENT, 9L, PersonRole.TUTOR, 7L, PersonRole.PARENT, 2L));
