@@ -741,11 +741,16 @@ navigation capture rather than presenting this running dataset as a screenshot.
 | `lessons INDEX` | Resolves the current visible person once, requires a Student, then subscribes by stable Student ID. `si/INDEX` remains an input alias; later people filtering cannot retarget either form. |
 | Lesson search | Searches the complete catalogue, including empty rosters unless `sn/` is supplied. It changes only the lesson filter and selected lesson source. |
 | `showlesson lid/ID [d/DATE]` | Looks up the complete catalogue by stable Lesson ID, independently of filters. A dated detail separates unrecorded current members from present/absent records and retained former-member attendance. |
-| `history INDEX [lid/ID]` | Resolves a visible Student once and selects a separate history list, newest date first then Lesson ID. It includes former enrolments and switches the right panel to history. Successful lesson retrieval switches that panel back. |
+| `history INDEX [lid/ID] [d/DATE] [s/STATUS]` | Resolves a visible Student once and selects a separate history list, newest date first then Lesson ID. Optional Lesson, exact-date and recorded-status filters combine conjunctively. It includes former enrolments and switches the right panel to history. Successful lesson retrieval switches that panel back. |
 
 Read-only routes validate before changing selection and never save or stage a copy of the aggregate.
 An invalid role, range, date or filter leaves the preceding panels intact. Student selectors always come
 from the current people list; a roster row, history row or stable-ID suffix supplies no person position.
+
+`HistoryArgumentsParser` validates optional filters with the existing attendance date/status validators.
+`AttendanceRetrieval` holds those filters alongside the stable Student/Lesson selection and applies them to
+each committed query refresh. The displayed list keeps the query's ordering and current/former membership
+context; selecting the same query with new or omitted filters immediately replaces the previous criteria.
 
 ##### Refresh only after publication
 
@@ -2694,9 +2699,15 @@ automated tooltip-skin and command-window regressions in `ResultHeadingTooltipTe
    `history STUDENT_INDEX`, then add `lid/LESSON_ID` for an existing Lesson. Verify the same Student's retained
    entries, newest date first and then numeric Lesson ID, with stable IDs, status and current/former membership.
    An existing Student or selected existing Lesson without records produces a successful empty result.
+   Add `s/absent`, then `d/YYYY-MM-DD`, using dates/statuses already recorded in the fixture. Verify exact-date
+   matching, conjunctive Lesson/date/status combinations in either order, the heading's active criteria and a
+   successful empty result for nonmatching filters. `history STUDENT_INDEX` clears all filters. Invalid dates,
+   unknown statuses and repeated/unknown prefixes preserve the previous view and saved bytes.
 2. Mark and correct a dated key while history is open, then unenrol the Student. Verify immediate committed refresh
    and a former-member label without losing the record. Remove the retained key with `unmark`; a repeat is a no-op.
    Restart and repeat the query to verify persistence. A missing dated key is unrecorded, never an absent entry.
+   Repeat with `s/absent`: correcting an absence to present removes it from the filtered view, and correcting a
+   present record to absent adds it in query order. Filters survive committed refreshes and later people filtering.
 3. Switch from history to `showlesson`, `lessons` and lesson search, then back to history. Each successful retrieval
    selects its intended right pane. Invalid indices, wrong roles, stable person IDs, malformed Lesson IDs and missing
    Lessons preserve the prior pane, people filter/order/selection and operational bytes. Filtering people later must

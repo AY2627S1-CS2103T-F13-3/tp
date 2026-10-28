@@ -152,7 +152,7 @@ session's catalogue. A protected session permits only `help`, `list` and `exit`;
 | [List people](#2-listing-people-list) | `list [r/ROLE]` | `list r/student` |
 | [Search people](#searching-people-search) | `search c/CATEGORY [FILTER/VALUE]...` | `search c/student n/Alex d/Mon s/Math` |
 | [List shared lessons](#listing-and-searching-shared-lessons) | `lessons [STUDENT_INDEX]` | `lessons` |
-| [Attendance history](#7-recording-attendance-and-retrieving-history) | `history STUDENT_INDEX [lid/LESSON_ID]` | `history 1 lid/L1` |
+| [Attendance history](#7-recording-attendance-and-retrieving-history) | <code>history STUDENT_INDEX [lid/LESSON_ID] [d/YYYY-MM-DD] [s/present&#124;absent]</code> | `history 1 lid/L1 s/absent` |
 | [Show lesson details](#listing-and-searching-shared-lessons) | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` | `showlesson lid/L1 d/2026-10-05` |
 | [Search shared lessons](#listing-and-searching-shared-lessons) | `search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]` | `search c/lesson tu/mei d/Mon` |
 | [Get help](#viewing-command-help-help) | `help [COMMAND]` | `help add` |
@@ -878,13 +878,21 @@ occurrence unrecorded, not absent. Success, no-op and failure preserve the curre
 
 <a id="attendance-history"></a>
 
-**History (active):** `history STUDENT_INDEX [lid/LESSON_ID]`.
+**History (active):** `history STUDENT_INDEX [lid/LESSON_ID] [d/YYYY-MM-DD] [s/present|absent]`.
 
 Example: After `list r/student`, if the intended student appears at position 1, enter `history 1 lid/L1` to view their attendance for lesson `L1`.
 
+Add `d/2026-10-05` to show records for that exact date, `s/absent` to find recorded absences, or both to
+combine them. For example, `history 1 lid/L1 d/2026-10-05 s/absent` shows only that Student's absence
+for L1 on 5 October. The optional filters may appear once each in any order and must all match. Dates use
+real `YYYY-MM-DD` values; status is `present` or `absent`, ignoring case. Omitted filters include all values;
+run `history 1` again to clear the filters. The heading shows the active filters, which remain applied as
+committed changes refresh the view. A valid date need not match a Lesson's weekday: it simply produces no
+matching record if none exists.
+
 History shows recorded entries as dated cards in a separate scrolling panel, newest date first, then by numeric
 Lesson ID. Each card shows the stable Student and Lesson IDs, labelled `present` or `absent` status, and whether the
-Student is currently enrolled or a former member. An existing Student with no records, or no records for the selected existing Lesson, gets a successful
+Student is currently enrolled or a former member. An existing Student with no records matching the filters gets a successful
 empty result. An unrecorded occurrence has no entry; it is never counted as absent. After `mark`, correction, `unmark` or
 unenrolment, an open history view refreshes from committed data. History retrieval does not save data or change the
 current people filter, order, selection or indices. Use the Student's current position in the people list, not a
