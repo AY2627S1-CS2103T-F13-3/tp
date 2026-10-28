@@ -32,6 +32,8 @@ public enum SearchField {
     DAY("d/", STUDENT, PARENT, TUTOR, LESSON),
     START_TIME("st/", STUDENT, PARENT, TUTOR, LESSON),
     END_TIME("et/", STUDENT, PARENT, TUTOR, LESSON),
+    FROM_TIME("from/", LESSON),
+    TO_TIME("to/", LESSON),
     SUBJECT("s/", STUDENT, PARENT, TUTOR, LESSON),
     TUTOR_NAME("tu/", STUDENT, PARENT, LESSON),
     TUTOR_PHONE("tp/", LESSON),
@@ -117,7 +119,7 @@ public enum SearchField {
                             + "Mon, Tue, Wed, Thu, Fri, Sat or Sun.");
                 }
             }
-            case START_TIME, END_TIME -> {
+            case START_TIME, END_TIME, FROM_TIME, TO_TIME -> {
                 try {
                     yield new LessonTime(trimmed).toString();
                 } catch (IllegalArgumentException e) {
@@ -137,7 +139,7 @@ public enum SearchField {
             return false;
         }
         return switch (this) {
-            case PHONE, PARENT_PHONE, TUTOR_PHONE, LEVEL, DAY, START_TIME, END_TIME -> {
+            case PHONE, PARENT_PHONE, TUTOR_PHONE, LEVEL, DAY, START_TIME, END_TIME, FROM_TIME, TO_TIME -> {
                 try {
                     yield query.equals(normalizeValue(candidate));
                 } catch (IllegalArgumentException e) {

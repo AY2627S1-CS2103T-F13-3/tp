@@ -154,7 +154,7 @@ session's catalogue. A protected session permits only `help`, `list` and `exit`;
 | [List shared lessons](#listing-and-searching-shared-lessons) | `lessons [STUDENT_INDEX]` | `lessons` |
 | [Attendance history](#7-recording-attendance-and-retrieving-history) | <code>history STUDENT_INDEX [lid/LESSON_ID] [d/YYYY-MM-DD] [s/present&#124;absent]</code> | `history 1 lid/L1 s/absent` |
 | [Show lesson details](#listing-and-searching-shared-lessons) | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` | `showlesson lid/L1 d/2026-10-05` |
-| [Search shared lessons](#listing-and-searching-shared-lessons) | `search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM]` | `search c/lesson tu/mei d/Mon` |
+| [Search shared lessons](#listing-and-searching-shared-lessons) | `search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM] [from/HHMM to/HHMM]` | `search c/lesson tu/mei d/Mon` |
 | [Get help](#viewing-command-help-help) | `help [COMMAND]` | `help add` |
 | Exit | `exit` | `exit` |
 
@@ -370,7 +370,7 @@ use `n/` for the Tutor's own name in this category.
 **Formats:**
 
 * `lessons [STUDENT_INDEX]`
-* `search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM]`
+* `search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM] [from/HHMM to/HHMM]`
 
 The right-hand lesson panel initially shows the full catalogue. `lessons` restores it after a lesson search or
 student selection. Every shared lesson appears once in creation order, including empty rosters. Cards show the
@@ -740,6 +740,7 @@ and `search c/lesson` includes Lessons with empty rosters. The complete active f
 | `d/` | Lesson weekday | Yes | Yes | Yes | Yes |
 | `st/` | Lesson start time | Yes | Yes | Yes | Yes |
 | `et/` | Lesson end time | Yes | Yes | Yes | Yes |
+| `from/`, `to/` | Paired Lesson time window | — | — | — | Yes |
 | `s/` | Lesson subject | Yes | Yes | Yes | Yes |
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes |
 | `tp/` | Lesson tutor's exact phone | — | — | — | Yes |
@@ -763,6 +764,13 @@ weekday filters match a complete allowed value, ignoring case: `P1`–`P6`, `S1`
 Either time may be supplied alone; together, end must be later than start on the same day. Missing optional
 contacts do not match a supplied filter. Unsupported, category-incompatible, blank or repeated prefixes,
 invalid values, slashes and line breaks in values are rejected before replacing either result panel.
+
+For a Lesson time window, supply both `from/HHMM` and `to/HHMM`, with `from` earlier than `to` on
+one day. The result contains Lessons that overlap any positive part of that window. A Lesson ending at
+`from`, or starting at `to`, does not match. For example, with Monday Lessons 1600–1700 and 1700–1800,
+`search c/lesson d/Mon from/1630 to/1730` returns both, while `from/1700 to/1800` returns only
+the second. Without `d/`, the window is applied to each weekday. Combine it with any other supported
+Lesson filters; `st/` and `et/` retain their exact-time meaning. Overnight windows are unsupported.
 
 <a id="relationship-search-rules"></a>
 

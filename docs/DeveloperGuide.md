@@ -723,6 +723,10 @@ buckets preserve substring semantics for `s/`, `tu/`, `rm/` and `sn/`; a prefix 
 arbitrary fragments such as `s/ath`. Lesson-only `tp/` compares the assigned Tutor's current complete phone
 from the same committed people index; it can be combined with partial `tu/` or used alone. Without a supplied
 day or time, candidates are the whole catalogue.
+Paired lesson-only `from/` and `to/` validate a same-day increasing window. Each candidate overlaps it
+exactly when `lesson.start < to && lesson.end > from`; endpoint-only contact is excluded. Existing
+exact `st/` and `et/` buckets remain available and all supplied predicates are conjunctive.
+
 For bounded field lengths, searching costs `O(B + R_B + K)`: `B` candidates, their roster links `R_B` when
 `sn/` is supplied, and `K` results. This is not a constant-time text search or a mutation/persistence bound.
 
@@ -1419,6 +1423,7 @@ input is valid. Prefixes are lowercase, order-independent and unique within a co
 | `d/` | Lesson weekday | Yes | Yes | Yes | Yes | Exact weekday |
 | `st/` | Lesson start time | Yes | Yes | Yes | Yes | Exact HHMM |
 | `et/` | Lesson end time | Yes | Yes | Yes | Yes | Exact HHMM |
+| `from/`, `to/` | Paired Lesson time window | — | — | — | Yes | Positive interval overlap |
 | `s/` | Lesson subject | Yes | Yes | Yes | Yes | Partial text |
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes | Partial text |
 | `tp/` | Lesson tutor's phone | — | — | — | Yes | Exact digits |
@@ -1434,6 +1439,8 @@ Phone filters require 3–15 ASCII digits, retain leading zeros and match the co
 `P1`–`P6`, `S1`–`S5`, `JC1` and `JC2`, normalized to uppercase. Weekdays accept only `Mon`, `Tue`, `Wed`, `Thu`, `Fri`,
 `Sat` and `Sun`, normalized to lowercase. Times require four digits from `0000` to `2359`, with valid minutes.
 Start or end may be supplied independently; when both are present, end must be later than start on the same day.
+Lesson-only `from/` and `to/` must be supplied together with `from < to` on one day. They select positive
+overlap; a Lesson merely touching either endpoint does not match. Exact `st/` and `et/` remain conjunctive.
 
 An omitted filter imposes no restriction; a supplied filter never matches an absent optional field. A person with no
 relationships still qualifies for own-field-only search. All supplied relational filters must refer to the same
@@ -2513,6 +2520,12 @@ The following is one end-to-end procedure for the delivered normal session. `add
    search c/lesson sn/Alex d/Mon s/Math
    search c/lesson sn/Nobody
    ```
+
+   To test time-window boundaries with the Lessons above, `search c/lesson d/Mon from/1700 to/1730`
+   returns `L1` only: `L2` ends at 1700 and `L3` starts at 1730. `from/1630 to/1800` returns
+   `L1,L2,L3`. Adding `s/Science` leaves `L2`; adding `st/1600` instead leaves `L1`.
+   A missing endpoint, equal or reversed endpoints, `2400` or a people-category window must fail without
+   replacing either panel or writing data. Valid no-match windows display an empty Lesson panel.
 
    To check same-named Tutor disambiguation in a separate disposable store, create two `Mei Lim` Tutors
    with phones `0012345` and `93456789`, then give each a non-clashing Lesson using `addlesson`
