@@ -19,7 +19,9 @@ import javax.imageio.ImageIO;
 
 import ponhub.commons.core.LogsCenter;
 
-/** Applies the bundled artwork to the running macOS application when supported. */
+/**
+ * Applies the bundled artwork to the running macOS application when supported.
+ */
 final class DockIcon {
     private static final Logger logger = LogsCenter.getLogger(DockIcon.class);
 
@@ -36,7 +38,9 @@ final class DockIcon {
                         Taskbar::isSupported, Taskbar::setIconImage), DockIcon.class::getResource);
     }
 
-    /** Supplies native boundaries independently so guards can be checked without altering the real Dock. */
+    /**
+     * Supplies native boundaries independently so guards can be checked without altering the real Dock.
+     */
     static <T> void install(String osName, String resourcePath, Consumer<Runnable> schedule,
             DesktopAccess<T> desktop, Function<String, URL> resources) {
         try {
@@ -72,7 +76,9 @@ final class DockIcon {
         }
     }
 
-    /** Direct standard-library bindings in production; controlled native operations in tests. */
+    /**
+     * Direct standard-library bindings in production; controlled native operations in tests.
+     */
     record DesktopAccess<T>(BooleanSupplier supported, Supplier<T> taskbar,
             BiPredicate<T, Taskbar.Feature> featureSupported, BiConsumer<T, BufferedImage> setIcon) {
     }

@@ -119,19 +119,27 @@ public class LessonDetailList extends ListView<LessonDetailList.Row> {
     sealed interface Row permits Summary, Heading, EmptyMessage, Entry {
     }
 
-    /** Summary data is rendered only while its row is needed. */
+    /**
+     * Summary data is rendered only while its row is needed.
+     */
     private record Summary(LessonDetailView lesson) implements Row {
     }
 
-    /** An expanded section heading, with a boundary before retained attendance. */
+    /**
+     * An expanded section heading, with a boundary before retained attendance.
+     */
     private record Heading(String text, boolean isSecondary) implements Row {
     }
 
-    /** Explicit feedback for a section with no entries. */
+    /**
+     * Explicit feedback for a section with no entries.
+     */
     private record EmptyMessage(String text) implements Row {
     }
 
-    /** Complete entry text, with an optional empty secondary line for an undated roster. */
+    /**
+     * Complete entry text, with an optional empty secondary line for an undated roster.
+     */
     private record Entry(String primary, String secondary) implements Row {
     }
 

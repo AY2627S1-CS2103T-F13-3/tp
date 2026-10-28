@@ -97,7 +97,9 @@ public class CommandBox extends UiPart<Region> {
         resetRecall();
     }
 
-    /** The original draft includes its selection direction as well as its text. */
+    /**
+     * The original draft includes its selection direction as well as its text.
+     */
     private record Draft(String text, int anchor, int caret) {
     }
 
