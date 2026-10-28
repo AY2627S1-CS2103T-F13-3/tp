@@ -1877,11 +1877,10 @@ The [UG command summary](UserGuide.html#current-command-summary) and [selector r
 1.  Should work on Windows, Linux and macOS using Java `25`. On macOS, use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`), as described in [Setting up and getting started](SettingUp.html#setting-up-the-project-on-your-computer).
 2.  Should be able to hold at least 1,000 persons, 1,000 recurring lessons, and 10,000 attendance records in one local data file.
 3.  Team performance target: with the data volume in NFR 2, common command-to-GUI-update operations should complete
-    within 2 seconds on the reference machine. [Completed #101 evidence](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101#issuecomment-6194333977)
-    records 285 native command-to-render measurements on an Apple M4 Pro MacBook Pro with 24 GB RAM, macOS 15.7.7
-    and the prescribed Azul Java/JavaFX 25.0.3 runtime; the maximum was 53.435 ms at source `0ecf1adc`. This bounded
-    source/harness result met the team target. It is not a universal performance guarantee or packaged-JAR,
-    cross-platform, cold-start or physical-display acceptance result.
+    within 2 seconds on the reference machine: an Apple M4 Pro MacBook Pro with 24 GB RAM, macOS 15.7.7
+    and the prescribed Azul Java/JavaFX 25.0.3 runtime. Scope performance claims to the measured workload and
+    environment; command-to-GUI measurements alone do not establish packaged-JAR, cross-platform, cold-start
+    or physical-display performance. See [performance evidence](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101#issuecomment-6194333977).
 4.  A user with above average typing speed for regular English text (i.e. not code or system administration commands) should be able to accomplish most recurring tasks faster using commands than using the mouse.
 5.  The product should be for a single user and use one local data store, without requiring user accounts, concurrent access, or live synchronisation.
 6.  The product should be packaged into a single executable `.jar` file and should not require an installer.
