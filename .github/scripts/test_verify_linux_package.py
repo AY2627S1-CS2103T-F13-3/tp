@@ -1,11 +1,58 @@
-"""Checks outcome synchronization and UI feedback verification without an X11 display."""
+"""Checks candidate versions, package metadata and UI outcome handling without an X11 display."""
 
 import tempfile
 from pathlib import Path
 import unittest
 from unittest.mock import Mock, patch
+import zipfile
 
+from resolve_candidate_version import resolve_version
 import verify_linux_package as verifier
+
+
+class CandidateVersionTest(unittest.TestCase):
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
+        self.build_file = Path(self.folder.name) / "build.gradle"
+        self.build_file.write_text("version = '1.5'\n")
+
+    def test_event_run_uses_source_version_and_tracks_later_candidates(self):
+        self.assertEqual("1.5", resolve_version(self.build_file))
+        self.build_file.write_text('version = "1.6"\n')
+        self.assertEqual("1.6", resolve_version(self.build_file))
+
+    def test_manual_run_accepts_matching_reviewed_version(self):
+        self.assertEqual("1.5", resolve_version(self.build_file, "1.5", require_expected=True))
+
+    def test_manual_run_rejects_absent_or_mismatched_handoff_version(self):
+        for version in (None, "", "1.4", "v1.5", "1.5\nEXPECTED_SHA256=other"):
+            with self.subTest(version=version), self.assertRaises(ValueError):
+                resolve_version(self.build_file, version, require_expected=True)
+
+    def test_missing_computed_or_ambiguous_source_version_is_rejected(self):
+        for source in ("", "version = releaseVersion\n", "version = '1.5'\nversion = '1.6'\n"):
+            self.build_file.write_text(source)
+            with self.subTest(source=source), self.assertRaises(ValueError):
+                resolve_version(self.build_file, "1.5", require_expected=True)
+
+    def test_source_expectation_accepts_v15_jar_and_rejects_stale_manifest(self):
+        jar = Path(self.folder.name) / "ponhub.jar"
+        expected = resolve_version(self.build_file, "1.5", require_expected=True)
+        for manifest_version in ("1.5", "1.4"):
+            with zipfile.ZipFile(jar, "w") as archive:
+                archive.writestr("META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n"
+                                 "Implementation-Title: PonHub\n"
+                                 f"Implementation-Version: {manifest_version}\n"
+                                 "Main-Class: ponhub.Main\n")
+                archive.writestr("ponhub/Main.class", b"synthetic metadata fixture")
+            if manifest_version == "1.5":
+                self.assertEqual("1.5", verifier.verify_package_metadata(jar, expected)["Implementation-Version"])
+                with self.assertRaisesRegex(RuntimeError, "Manifest implementation version differs"):
+                    verifier.verify_package_metadata(jar, "1.4")
+            else:
+                with self.assertRaisesRegex(RuntimeError, "Manifest implementation version differs"):
+                    verifier.verify_package_metadata(jar, expected)
 
 
 class PackageSessionTest(unittest.TestCase):

@@ -128,11 +128,14 @@ Building a JAR or passing Java CI alone does not establish these packaged outcom
 
 For hosted Linux verification, manually dispatch **Verify Linux release package** in GitHub Actions using
 the [workflow](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/.github/workflows/linux-package.yml).
-Set both `candidate_ref` to the reviewed **team source SHA** and `expected_sha256` to the intended JAR's
-**matching SHA-256**. Manual dispatch deliberately has no remembered candidate defaults. Push and pull-request
-runs exercise the event SHA and its freshly calculated checksum, so they check the verification tooling but do
-not establish the independently identified release handoff. The v1.4 candidate owner tracks final verification in
-[#271](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/271).
+Set `candidate_ref` to the reviewed **team source SHA**, `expected_sha256` to the intended JAR's
+**matching SHA-256**, and `expected_version` to the **product version recorded in the reviewed handoff**
+(for example, `1.5`, without the startup log's `v` prefix). Manual dispatch deliberately has no remembered
+candidate defaults. The expected version must match the candidate source's `build.gradle` declaration;
+it is then checked against the JAR manifest and runtime startup version. Push and pull-request runs use
+the event SHA, its source-declared product version and freshly calculated checksum, so they check the
+verification tooling but do not establish the independently identified release handoff. Track the current
+v1.5 candidate's final verification in [#327](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/327).
 
 The hosted Ubuntu job rebuilds that source, rejects a different checksum and drives the real JAR's command
 box on a virtual display through person and Lesson edits, rejected conflicting edits, attendance correction,
