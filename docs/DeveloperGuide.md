@@ -1406,6 +1406,7 @@ input is valid. Prefixes are lowercase, order-independent and unique within a co
 | `d/` | Lesson weekday | Yes | Yes | Yes | Yes | Exact weekday |
 | `st/` | Lesson start time | Yes | Yes | Yes | Yes | Exact HHMM |
 | `et/` | Lesson end time | Yes | Yes | Yes | Yes | Exact HHMM |
+| `from/`, `to/` | Paired Lesson time window | — | — | — | Yes | Positive interval overlap |
 | `s/` | Lesson subject | Yes | Yes | Yes | Yes | Partial text |
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes | Partial text |
 | `rm/` | Lesson room | Yes | Yes | Yes | Yes | Partial text |
@@ -1420,6 +1421,8 @@ Phone filters require 3–15 ASCII digits, retain leading zeros and match the co
 `P1`–`P6`, `S1`–`S5`, `JC1` and `JC2`, normalized to uppercase. Weekdays accept only `Mon`, `Tue`, `Wed`, `Thu`, `Fri`,
 `Sat` and `Sun`, normalized to lowercase. Times require four digits from `0000` to `2359`, with valid minutes.
 Start or end may be supplied independently; when both are present, end must be later than start on the same day.
+Lesson-only `from/` and `to/` must be supplied together with `from < to` on one day. They select positive
+overlap; a Lesson merely touching either endpoint does not match. Exact `st/` and `et/` remain conjunctive.
 
 An omitted filter imposes no restriction; a supplied filter never matches an absent optional field. A person with no
 relationships still qualifies for own-field-only search. All supplied relational filters must refer to the same
