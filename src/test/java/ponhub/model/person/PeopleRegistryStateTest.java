@@ -84,6 +84,79 @@ public class PeopleRegistryStateTest {
     }
 
     @Test
+    public void constructor_unicodeNamesAndOptionalContacts_preservesDuplicateRulesForEveryRole() {
+        for (PersonRole role : PersonRole.values()) {
+            PersonRecord original = record(role, 1, "José Santos");
+            ContactDetails changedContacts = new ContactDetails(new Name("\u00a0JOSE\u0301   SANTOS\u2003"),
+                    Optional.of(new Phone("00012345")), Optional.of(new Email("changed@example.com")),
+                    Optional.of(new Address("Changed address")));
+            PersonRecord duplicate = switch (role) {
+                case STUDENT -> new Student(PersonId.of(role, 2), changedContacts,
+                        new EducationLevel("JC2"), new Phone("00012345"));
+                case TUTOR -> new Tutor(PersonId.of(role, 2), changedContacts);
+                case PARENT -> new Parent(PersonId.of(role, 2), changedContacts);
+            };
+
+            assertThrows(DuplicatePersonException.class, () -> new PeopleRegistryState(
+                    List.of(original, duplicate), counters(2, 2, 2)), role.toString());
+            PersonRecord unaccented = record(role, 2, "Jose Santos");
+            List<PersonRecord> distinctNames = List.of(original, unaccented);
+            assertEquals(distinctNames, new PeopleRegistryState(distinctNames, counters(2, 2, 2)).getPeople());
+        }
+    }
+
+    @Test
+    public void constructor_studentOwnPhoneAndLevel_doNotDistinguishDuplicateIdentity() {
+        Student original = student("S1", "Alex Tan");
+        ContactDetails changedContacts = new ContactDetails(new Name("Alex Tan"),
+                Optional.of(new Phone("99912345")), Optional.empty(), Optional.empty());
+        Student duplicate = new Student(new PersonId("S2"), changedContacts,
+                new EducationLevel("JC2"), original.getParentPhone());
+
+        assertThrows(DuplicatePersonException.class, () -> new PeopleRegistryState(
+                List.of(original, duplicate), counters(2, 0, 0)));
+    }
+
+    @Test
+    public void constructor_differentRelevantPhones_preservesLeadingZerosForEveryRole() {
+        for (PersonRole role : PersonRole.values()) {
+            PersonRecord original = record(role, 1, "Alex Tan");
+            ContactDetails changedContacts = new ContactDetails(new Name("Alex Tan"),
+                    Optional.of(new Phone("12345")), Optional.empty(), Optional.empty());
+            PersonRecord differentPhone = switch (role) {
+                case STUDENT -> new Student(PersonId.of(role, 2), details("Alex Tan"),
+                        new EducationLevel("S2"), new Phone("12345"));
+                case TUTOR -> new Tutor(PersonId.of(role, 2), changedContacts);
+                case PARENT -> new Parent(PersonId.of(role, 2), changedContacts);
+            };
+            List<PersonRecord> distinctPhones = List.of(original, differentPhone);
+
+            assertEquals(distinctPhones, new PeopleRegistryState(distinctPhones, counters(2, 2, 2)).getPeople());
+        }
+    }
+
+    @Test
+    public void constructor_largeRegistry_preservesOrderAndHistoryAndRejectsLateDuplicate() {
+        List<PersonRecord> rows = new ArrayList<>();
+        for (int sequence = 1; sequence <= 1000; sequence++) {
+            String suffix = "" + (char) ('A' + sequence / (26 * 26))
+                    + (char) ('A' + sequence / 26 % 26) + (char) ('A' + sequence % 26);
+            for (PersonRole role : PersonRole.values()) {
+                rows.add(record(role, sequence, "Load Test " + suffix));
+            }
+        }
+        Map<PersonRole, Long> allocationHistory = counters(2000, 3000, 4000);
+        PeopleRegistryState state = new PeopleRegistryState(rows, allocationHistory);
+        assertEquals(rows, state.getPeople());
+        assertEquals(allocationHistory, state.getLastAllocatedSequences());
+
+        rows.add(record(PersonRole.STUDENT, 2000, "LOAD TEST AAB"));
+        assertThrows(DuplicatePersonException.class, () -> new PeopleRegistryState(rows, allocationHistory));
+        assertEquals(3000, state.getPeople().size());
+        assertEquals(allocationHistory, state.getLastAllocatedSequences());
+    }
+
+    @Test
     public void constructor_customMutableImplementation_rejectsUntrustedRecord() {
         MutableRecord custom = new MutableRecord(new PersonId("S1"), details("Alex Tan"));
 
