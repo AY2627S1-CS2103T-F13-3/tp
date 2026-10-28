@@ -34,6 +34,14 @@ the [screenshot source and credit note](images/README.html) identifies their sou
 * An ellipsis (`...`) means more supported fields may follow. For search, combine different filters allowed for that category; do not type the dots or repeat a prefix. Accepted values and case rules are given with each command.
 * Person positions and stored IDs select different things. Follow [Selecting people and lessons](#selecting-people-and-lessons) before using `INDEX`, `STUDENT_INDEX` or `LESSON_ID`.
 
+Copied horizontal Unicode spaces, including **em space** (U+2003), **no-break space** (U+00A0) and
+**narrow no-break space** (U+202F), work at command and field boundaries where ordinary spaces are allowed.
+For example, separating `search`, `c/student` and `n/Alex` with these spaces gives the same search.
+Surrounding spaces in search values are removed, including exact phone and level filters. This does not
+replace spaces inside a value: names and addresses still require ordinary internal spaces, phones cannot
+contain spaces, and text-search fragments retain internal Unicode spaces. Line breaks remain invalid;
+commands that reject tabs or other controls still reject them.
+
 ### Selecting people and lessons
 
 `INDEX` is a positive, one-based position in the **currently displayed people list**. `STUDENT_INDEX` uses

@@ -15,7 +15,7 @@ public final class DeleteLessonParser {
     public static final String MESSAGE_ARGUMENTS =
             "Supply lid/LESSON_ID, for example lid/L1.";
 
-    private static final Pattern ARGUMENTS_FORMAT = Pattern.compile("[ \\t]*lid/([^ \\t]+)[ \\t]*");
+    private static final Pattern ARGUMENTS_FORMAT = Pattern.compile("[\\p{Zs}\\t]*lid/([^\\p{Zs}\\t]+)[\\p{Zs}\\t]*");
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
 
     /**

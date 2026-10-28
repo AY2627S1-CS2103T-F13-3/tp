@@ -1418,6 +1418,23 @@ after `search` into immutable `SearchCriteria`. It produces a value object, not 
 routes validated criteria to people or lesson retrieval. `SearchField` owns category compatibility and field matching, while
 the canonical query layer combines fields against records and relationships. Parsing never writes operational data.
 
+Command boundaries accept Unicode horizontal space separators (`Character.SPACE_SEPARATOR`), including
+U+2003, U+00A0 and U+202F, wherever their grammar already allows ordinary spaces. The session and logging
+command-word patterns both use `UNICODE_CHARACTER_CLASS`; `StringUtil.stripUnicodeBoundarySpaces` trims
+outer horizontal separators while retaining trailing controls for each route's validation. The existing
+`ParserUtil.stripUnicodeBoundaryWhitespace` is reused for validated value boundaries. Search prefix
+recognition now uses the same Unicode character class as add/edit and attendance extraction, and search
+values use the shared boundary helper before field-specific validation. No interior Unicode-space replacement
+or new quoting/slash grammar is introduced.
+
+The boundary audit covers add/edit, lesson add/edit, search, list, lessons, membership, attendance, history,
+showlesson, lesson deletion, person deletion, help and exit. Fixed-selector grammars accept Unicode space
+separators in the positions previously accepting ordinary spaces; they do not gain extra optional positions
+inside IDs or prefixes. Existing command-specific tab rules remain. Search, history and showlesson reject
+all `\R` line breaks before trimming; mutations retain their existing control rejection. Regression tests
+exercise command routing, exact/fragment filters, current-index mapping, unknown/repeated prefixes,
+name/address interior rejection, no-op edits, saved-byte preservation and reload through disposable sessions.
+
 #### Supported criteria
 
 The required category is `c/student`, `c/parent`, `c/tutor` or `c/lesson`, ignoring category-value case. Category-only

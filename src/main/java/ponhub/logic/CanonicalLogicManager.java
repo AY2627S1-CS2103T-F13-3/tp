@@ -16,6 +16,7 @@ import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.collections.ObservableList;
 import ponhub.commons.core.GuiSettings;
 import ponhub.commons.core.LogsCenter;
+import ponhub.commons.util.StringUtil;
 import ponhub.logic.commands.CommandResult;
 import ponhub.logic.commands.exceptions.CommandException;
 import ponhub.logic.parser.exceptions.ParseException;
@@ -33,7 +34,8 @@ import ponhub.model.search.PersonSearchMatch;
  * Commands, person cards, lesson retrieval and attendance history share the session's canonical data root.
  */
 public final class CanonicalLogicManager implements Logic {
-    private static final Pattern COMMAND_WORD = Pattern.compile("(?<word>\\S+).*", Pattern.DOTALL);
+    private static final Pattern COMMAND_WORD = Pattern.compile("[\\p{javaWhitespace}\\p{Zs}]*(?<word>\\S+).*",
+            Pattern.DOTALL | Pattern.UNICODE_CHARACTER_CLASS);
     private final Logger logger = LogsCenter.getLogger(CanonicalLogicManager.class);
 
     private final CanonicalPeopleSession session;
@@ -51,7 +53,7 @@ public final class CanonicalLogicManager implements Logic {
     @Override
     public CommandResult execute(String commandText) throws CommandException, ParseException {
         requireAllNonNull(commandText);
-        var matcher = COMMAND_WORD.matcher(commandText.stripLeading());
+        var matcher = COMMAND_WORD.matcher(StringUtil.stripUnicodeBoundarySpaces(commandText));
         String command = matcher.matches() ? CanonicalCommandDefinition.fromWord(matcher.group("word"))
                 .map(CanonicalCommandDefinition::getWord).orElse("unknown") : "unknown";
         try {

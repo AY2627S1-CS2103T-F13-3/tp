@@ -86,7 +86,7 @@ public enum SearchField {
      */
     String normalizeValue(String value) {
         requireNonNull(value);
-        String trimmed = value.strip();
+        String trimmed = StringUtil.stripUnicodeBoundaryWhitespace(value);
         if (trimmed.isEmpty() || value.contains("/") || value.contains("\n") || value.contains("\r")) {
             throw new IllegalArgumentException("Search filter '" + prefix
                     + "' requires a non-blank value without slashes or line breaks.");

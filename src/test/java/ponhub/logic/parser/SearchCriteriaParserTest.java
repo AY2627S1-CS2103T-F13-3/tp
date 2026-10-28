@@ -92,6 +92,30 @@ public class SearchCriteriaParserTest {
     }
 
     @Test
+    public void parse_unicodeSpacesAtPrefixesAndValues_matchesOrdinarySpaces() throws Exception {
+        for (String space : new String[]{" ", "\u2003", "\u00a0", "\u202f"}) {
+            assertEquals(parser.parse("c/student n/Alex Tan l/P1 pp/00123456"), parser.parse(
+                    space + "c/" + space + "student" + space + "n/" + space + "Alex Tan" + space
+                            + "l/" + space + "P1" + space + "pp/" + space + "00123456" + space));
+            assertThrows(ParseException.class, () -> parser.parse("c/student" + space + "n/Alex"
+                    + space + "n/Alex"));
+            assertThrows(ParseException.class, () -> parser.parse("c/student n/Alex" + space + "xyz/no"));
+            assertThrows(ParseException.class, () -> parser.parse("c/student n/" + space));
+            assertThrows(ParseException.class, () -> parser.parse("c/student pp/001" + space + "23456"));
+            assertThrows(ParseException.class, () -> parser.parse("c/student l/P" + space + "1"));
+        }
+    }
+
+    @Test
+    public void parse_unicodeLineBreaksAtBoundaries_rejectsBeforeTrimming() {
+        for (String lineBreak : new String[]{"\u0085", "\u2028", "\u2029", "\f", "\u000b"}) {
+            assertThrows(ParseException.class, () -> parser.parse(lineBreak + "c/student"));
+            assertThrows(ParseException.class, () -> parser.parse("c/student n/Alex" + lineBreak));
+            assertThrows(ParseException.class, () -> parser.parse("c/student" + lineBreak + "n/Alex"));
+        }
+    }
+
+    @Test
     public void parse_missingCategoryOrUnexpectedPreamble_throwsParseException() {
         String[] inputs = {"", "   ", "\t", "n/Alex", "student", "search c/student", "Alex c/student"};
         for (String input : inputs) {
