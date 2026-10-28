@@ -221,6 +221,10 @@ For names, surrounding Unicode spaces are removed, repeated ordinary spaces coll
 equivalent spellings are stored in NFC form. Letter case is preserved. Standalone lowercase `s/o` and `d/o`
 are accepted between letter-bearing name text, as in `Ravi s/o Kumar` and `Anita d/o Kumar`.
 Other slashes, digits, emoji, controls, invisible format characters and internal non-ASCII spaces are rejected.
+
+**Name display:** Some accepted Unicode characters may appear as boxes if your system's fonts or rendering
+support lack a usable glyph. This affects how the name looks; the Unicode name is still saved.
+
 Addresses accept `Blk 10, #01/02`, `Blk 12/34` and `Block A12/34B`; `A/B`, `/` and `#01//02` are rejected.
 These literals apply to `n/` and `a/` in add/edit, and to Tutor `tu/` in lesson creation/editing.
 Unknown, uppercase and repeated prefixes still cause errors; general quoting or escaping is unavailable.
