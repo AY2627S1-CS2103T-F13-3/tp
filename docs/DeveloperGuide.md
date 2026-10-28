@@ -434,8 +434,9 @@ results so committed changes refresh the display.
 The active canonical cards display immutable `PersonRecord` projections from the session's same observable people
 list, with separate current-view positions and stable IDs and wrapping labels for required and optional fields.
 `LessonListPanel` observes `Logic.getDisplayedLessons()` and renders wrapping `LessonCard`s with stable lesson/tutor
-IDs, schedule, subject, room and roster size. The subject is the card heading, followed by one line with the
-stable Lesson ID and schedule. `showlesson` switches the right pane to a scrolling detail view with
+IDs, schedule, subject, room and roster size. The subject is the card heading, followed by the
+stable Lesson ID on its own line and a separate Schedule row. `showlesson` switches the right pane to a
+scrolling detail view with
 the current roster and retained former-member attendance, both expanded immediately for undated and dated
 results. Detail rows, including the summary and section headings, share a virtualized list: controls are
 created for the viewport as it scrolls, while every roster and retained-attendance entry remains reachable in
@@ -1810,7 +1811,7 @@ The [UG command summary](UserGuide.html#current-command-summary) and [selector r
 
 **Command reference:** [Deleting a person](UserGuide.html#3-deleting-a-person-delete).
 
-**Future extensions:** Student archiving/restoration and undo remain proposals (US-31 and US-35).
+**Future extensions:** Student archiving/restoration and undo remain proposals (US-23 and US-31).
 
 #### UC-07: Get help and recover from a command-entry error
 
