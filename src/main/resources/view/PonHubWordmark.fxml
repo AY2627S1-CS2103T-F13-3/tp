@@ -6,13 +6,15 @@
 <?import javafx.scene.layout.StackPane?>
 
 <!-- Original text-only wordmark, assisted by OpenAI Codex; see DG acknowledgements. -->
-<HBox alignment="CENTER_LEFT" styleClass="ponhub-wordmark" mouseTransparent="true"
+<HBox alignment="CENTER_LEFT" styleClass="ponhub-wordmark" mouseTransparent="true" snapToPixel="false"
       accessibleText="PonHub" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
   <stylesheets>
     <URL value="@PonHubWordmark.css" />
   </stylesheets>
-  <Label text="Pon" styleClass="wordmark-pon" minWidth="-Infinity" />
-  <StackPane styleClass="wordmark-badge">
-    <Label text="hub" styleClass="wordmark-hub" minWidth="-Infinity" />
+  <Label snapToPixel="false" text="Pon" styleClass="wordmark-pon" minWidth="-Infinity" />
+  <StackPane styleClass="wordmark-badge" snapToPixel="false">
+    <Label snapToPixel="false" text="hub" styleClass="wordmark-hub" minWidth="-Infinity" maxWidth="Infinity" />
+    <!-- Reserve the full word during counter changes without rounding away fractional text width. -->
+    <Label snapToPixel="false" text="hub" styleClass="wordmark-hub" minWidth="-Infinity" visible="false" />
   </StackPane>
 </HBox>

@@ -35,6 +35,7 @@ public enum SearchField {
     END_TIME("et/", STUDENT, PARENT, TUTOR, LESSON),
     SUBJECT("s/", STUDENT, PARENT, TUTOR, LESSON),
     TUTOR_NAME("tu/", STUDENT, PARENT, LESSON),
+    TUTOR_PHONE("tp/", LESSON),
     ROOM("rm/", STUDENT, PARENT, TUTOR, LESSON),
     LESSON_ORDER("sort/", LESSON);
 
@@ -91,7 +92,7 @@ public enum SearchField {
 
         return switch (this) {
             case LESSON_ORDER -> LessonOrder.fromValue(trimmed).name().toLowerCase(Locale.ROOT);
-            case PHONE, PARENT_PHONE -> {
+            case PHONE, PARENT_PHONE, TUTOR_PHONE -> {
                 try {
                     yield new Phone(trimmed).value;
                 } catch (IllegalArgumentException e) {
@@ -139,7 +140,7 @@ public enum SearchField {
             return false;
         }
         return switch (this) {
-            case PHONE, PARENT_PHONE, LEVEL, DAY, START_TIME, END_TIME -> {
+            case PHONE, PARENT_PHONE, TUTOR_PHONE, LEVEL, DAY, START_TIME, END_TIME -> {
                 try {
                     yield query.equals(normalizeValue(candidate));
                 } catch (IllegalArgumentException e) {

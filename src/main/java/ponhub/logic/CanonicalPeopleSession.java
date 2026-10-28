@@ -147,6 +147,13 @@ public final class CanonicalPeopleSession {
         return view.searchContextProperty();
     }
 
+    /**
+     * Returns the persistent people scope independently of transient command feedback.
+     */
+    public ReadOnlyStringProperty peopleResultContextProperty() {
+        return view.resultContextProperty();
+    }
+
     public Optional<PersonRole> getRoleFilter() {
         return view.getRoleFilter();
     }

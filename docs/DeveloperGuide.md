@@ -361,7 +361,11 @@ against every other Tutor, room and enrolled Student schedule. Whole-root valida
 weekday that disagrees with any retained attendance date, including a former member's record. People,
 attendance and allocation counters are retained, and an equal replacement performs no state notification.
 The `editlesson` command prepares from its fresh staged snapshot, saves a changed candidate before
-publication, and skips save/publication for a no-op. Activation does not change the JSON schema.
+publication, and skips save/publication for a no-op. Changed edits with retained attendance append a warning
+that the records use current Lesson details and recommend a new Lesson for future-only changes. The
+executor returns this feedback only after saving/publication. `LessonDetailList` labels dated summaries and
+undated summaries with former-member attendance as current information; it does not imply historical Lesson
+versioning or change attendance dates/statuses. Activation does not change the JSON schema.
 
 <!-- @@author ys000009 -->
 **Lesson command activation (#264).** `LessonEditParser.Input` holds the stable Lesson ID, typed optional
@@ -713,7 +717,9 @@ All four are assigned to Mei. Consider
 
 The [criteria matrix](#supported-criteria) gives the accepted fields and validation rules. Exact-value
 buckets preserve substring semantics for `s/`, `tu/`, `rm/` and `sn/`; a prefix trie would not preserve
-arbitrary fragments such as `s/ath`. Without a supplied day or time, candidates are the whole catalogue.
+arbitrary fragments such as `s/ath`. Lesson-only `tp/` compares the assigned Tutor's current complete phone
+from the same committed people index; it can be combined with partial `tu/` or used alone. Without a supplied
+day or time, candidates are the whole catalogue.
 Optional lesson-only `sort/schedule` sorts the matched snapshot by Monday-Sunday, start time and numeric
 Lesson ID; it does not change catalogue storage order. The same option on `lessons` sorts its displayed
 projection after committed refreshes. Omitting the option restores creation order for that request.
@@ -745,11 +751,16 @@ navigation capture rather than presenting this running dataset as a screenshot.
 | `lessons INDEX` | Resolves the current visible person once, requires a Student, then subscribes by stable Student ID. `si/INDEX` remains an input alias; later people filtering cannot retarget either form. |
 | Lesson search | Searches the complete catalogue, including empty rosters unless `sn/` is supplied. It changes only the lesson filter and selected lesson source. |
 | `showlesson lid/ID [d/DATE]` | Looks up the complete catalogue by stable Lesson ID, independently of filters. A dated detail separates unrecorded current members from present/absent records and retained former-member attendance. |
-| `history INDEX [lid/ID]` | Resolves a visible Student once and selects a separate history list, newest date first then Lesson ID. It includes former enrolments and switches the right panel to history. Successful lesson retrieval switches that panel back. |
+| `history INDEX [lid/ID] [d/DATE] [s/STATUS]` | Resolves a visible Student once and selects a separate history list, newest date first then Lesson ID. Optional Lesson, exact-date and recorded-status filters combine conjunctively. It includes former enrolments and switches the right panel to history. Successful lesson retrieval switches that panel back. |
 
 Read-only routes validate before changing selection and never save or stage a copy of the aggregate.
 An invalid role, range, date or filter leaves the preceding panels intact. Student selectors always come
 from the current people list; a roster row, history row or stable-ID suffix supplies no person position.
+
+`HistoryArgumentsParser` validates optional filters with the existing attendance date/status validators.
+`AttendanceRetrieval` holds those filters alongside the stable Student/Lesson selection and applies them to
+each committed query refresh. The displayed list keeps the query's ordering and current/former membership
+context; selecting the same query with new or omitted filters immediately replaces the previous criteria.
 
 ##### Refresh only after publication
 
@@ -1348,7 +1359,10 @@ zeros are retained. `PersonRecordCard` renders each group with each caption abov
 context below the own fields. FXML imposes no fixed card height. The `.person-record-card` CSS scope distinguishes
 names, metadata, captions and values without changing Lesson/history styling or the list selection behavior.
 `PersonRecordListPanel` fits cards to cell width, updates positions when cells are reused, and supplies count,
-empty placeholder and vertical scrolling for tall cards. Neither projection nor panel owns writable records.
+empty placeholder and vertical scrolling for tall cards. `PeopleView.resultContextProperty()` supplies the
+current all-people, role-list or normalized search scope through Logic. The panel retains that heading and
+filter-reset guidance independently of command feedback; long headings have a bounded, keyboard-scrollable
+area so every criterion and the records remain reachable. Neither projection nor panel owns writable records.
 
 Each present contact detail carries an explicit copyable flag; missing values and the education level do not.
 `PersonRecordCard` adds a standard, focusable **Copy** button with a contact/person accessible name.
@@ -1409,6 +1423,7 @@ input is valid. Prefixes are lowercase, order-independent and unique within a co
 | `et/` | Lesson end time | Yes | Yes | Yes | Yes | Exact HHMM |
 | `s/` | Lesson subject | Yes | Yes | Yes | Yes | Partial text |
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes | Partial text |
+| `tp/` | Lesson tutor's phone | — | — | — | Yes | Exact digits |
 | `rm/` | Lesson room | Yes | Yes | Yes | Yes | Partial text |
 | `sort/` | Lesson presentation order | — | — | — | Yes | `creation` or `schedule` |
 
@@ -2045,8 +2060,11 @@ with Alex and Jamie enrolled in `L1`. Record Monday attendance for both Students
 Use the same common journey for generic selector, rejection, save, retry and reload expectations; the steps below
 retain only the Lesson-specific field, scheduling, Tutor and history behavior.
 
-1. Run `editlesson lid/L1 st/1630 s/Advanced Math`. Expect `Edited lesson: L1.`, the same ID, roster, Tutor,
-   room and end time, and a refreshed Lesson card. Restart with the same file and verify the replacement persists.
+1. Run `editlesson lid/L1 st/1630 s/Advanced Math`. Expect `Edited lesson: L1.` followed by the retained-attendance
+   warning and guidance to create a new Lesson for future-only changes. The ID, roster, Tutor, room, end time
+   and recorded dates/statuses stay unchanged. Open the recorded date with `showlesson`: expect the changed
+   subject/time and a **Current Lesson information** note. Restart and verify the same data and note. A changed
+   Lesson without attendance has ordinary success feedback; an identical edit has no warning or write.
 2. Run a valid edit with only `st/`, then one with only `et/`. Reject an endpoint that makes start equal to or
    later than end. Run an identical normalized edit and expect `No changes to lesson: L1.` with unchanged bytes.
 3. Add two Tutors with the same normalized full name but different phones. Reject `tu/NAME` as ambiguous; select
@@ -2431,7 +2449,11 @@ Use [command transactions](#command-transactions) for publication/no-op rules an
    Check case/repeated-space normalization, exact phones including zeros, absent optional values and zero results.
    Resolve the next person selector against this visible view; its position must not become an ID suffix.
 3. Switch between two same-role searches, then `list r/student` and `list`. Each listing clears the search criteria.
-   `help search`, Help menu and F1 preserve the filtered view; compare operational bytes before/after read commands.
+   `help search`, Help menu and F1 preserve the filtered view and its people-panel category/criteria heading;
+   compare operational bytes before/after read commands. Include two searches with the same result count,
+   a zero-match search and long criteria at compact widths. The scrollable heading must retain every filter,
+   the reset hint stays visible and the list remains reachable. Role listing replaces the search heading;
+   `list` restores `All people`.
 4. Run `search c/student d/Mon`; expect `Found N student(s).` and one result per Student enrolled in a Monday
    Lesson, with only matching Lesson context. No matches is a successful `Found 0 student(s).` result.
    Run `search c/parent sn/Alex`; expect `Found N parent(s).` with each Parent linked by exact phone to a
@@ -2498,6 +2520,12 @@ The following is one end-to-end procedure for the delivered normal session. `add
    order. Enrol a Student in two of them and repeat with `lessons STUDENT_INDEX sort/schedule`.
    After narrowing the people list, its positions must remain unchanged by each Lesson-order request.
    An invalid `sort/name` must retain the previous view and stored bytes.
+
+   To check same-named Tutor disambiguation in a separate disposable store, create two `Mei Lim` Tutors
+   with phones `0012345` and `93456789`, then give each a non-clashing Lesson using `addlesson`
+   with the matching `tp/`. `search c/lesson tu/mei` returns both; adding `tp/0012345` returns
+   only the first Tutor's Lesson. `tp/12345` returns none. An invalid `tp/12` must retain the
+   previous results, people positions and stored bytes.
 
 4. Record two independent keys for Monday 5 October 2026. Repeating Alex's `present` status is a no-op; changing
    it to `absent` corrects the existing key rather than adding another. Tuesday is rejected because it does not
@@ -2709,9 +2737,15 @@ automated tooltip-skin and command-window regressions in `ResultHeadingTooltipTe
    `history STUDENT_INDEX`, then add `lid/LESSON_ID` for an existing Lesson. Verify the same Student's retained
    entries, newest date first and then numeric Lesson ID, with stable IDs, status and current/former membership.
    An existing Student or selected existing Lesson without records produces a successful empty result.
+   Add `s/absent`, then `d/YYYY-MM-DD`, using dates/statuses already recorded in the fixture. Verify exact-date
+   matching, conjunctive Lesson/date/status combinations in either order, the heading's active criteria and a
+   successful empty result for nonmatching filters. `history STUDENT_INDEX` clears all filters. Invalid dates,
+   unknown statuses and repeated/unknown prefixes preserve the previous view and saved bytes.
 2. Mark and correct a dated key while history is open, then unenrol the Student. Verify immediate committed refresh
    and a former-member label without losing the record. Remove the retained key with `unmark`; a repeat is a no-op.
    Restart and repeat the query to verify persistence. A missing dated key is unrecorded, never an absent entry.
+   Repeat with `s/absent`: correcting an absence to present removes it from the filtered view, and correcting a
+   present record to absent adds it in query order. Filters survive committed refreshes and later people filtering.
 3. Switch from history to `showlesson`, `lessons` and lesson search, then back to history. Each successful retrieval
    selects its intended right pane. Invalid indices, wrong roles, stable person IDs, malformed Lesson IDs and missing
    Lessons preserve the prior pane, people filter/order/selection and operational bytes. Filtering people later must

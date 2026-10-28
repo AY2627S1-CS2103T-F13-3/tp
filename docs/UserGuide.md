@@ -152,9 +152,9 @@ session's catalogue. A protected session permits only `help`, `list` and `exit`;
 | [List people](#2-listing-people-list) | `list [r/ROLE]` | `list r/student` |
 | [Search people](#searching-people-search) | `search c/CATEGORY [FILTER/VALUE]...` | `search c/student n/Alex d/Mon s/Math` |
 | [List shared lessons](#listing-and-searching-shared-lessons) | <code>lessons [STUDENT_INDEX] [sort/creation&#124;schedule]</code> | `lessons` |
-| [Attendance history](#7-recording-attendance-and-retrieving-history) | `history STUDENT_INDEX [lid/LESSON_ID]` | `history 1 lid/L1` |
+| [Attendance history](#7-recording-attendance-and-retrieving-history) | <code>history STUDENT_INDEX [lid/LESSON_ID] [d/YYYY-MM-DD] [s/present&#124;absent]</code> | `history 1 lid/L1 s/absent` |
 | [Show lesson details](#listing-and-searching-shared-lessons) | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` | `showlesson lid/L1 d/2026-10-05` |
-| [Search shared lessons](#listing-and-searching-shared-lessons) | <code>search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM] [sort/creation&#124;schedule]</code> | `search c/lesson tu/mei d/Mon` |
+| [Search shared lessons](#listing-and-searching-shared-lessons) | <code>search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM] [sort/creation&#124;schedule]</code> | `search c/lesson tu/mei d/Mon` |
 | [Get help](#viewing-command-help-help) | `help [COMMAND]` | `help add` |
 | Exit | `exit` | `exit` |
 
@@ -348,7 +348,10 @@ Enter `search c/student`, `search c/parent` or `search c/tutor`, followed by any
 For example, `search c/student n/alex l/s2 pp/91234567` finds students whose own details match all three values.
 See [Searching people and shared lessons](#6-searching-people-and-shared-lessons) for the complete filter matrix,
 matching rules and a reusable example. Results replace the people list, so check its new positions before
-issuing a person command.
+issuing a person command. The people-panel heading keeps the active category and normalized filters visible
+when help or another command replaces the feedback. Long headings scroll vertically within their own area;
+click that area and use the arrow keys, or scroll over it, to read every criterion.
+`list r/student` (or another role) replaces the search with that role list; `list` shows all people.
 
 ### Searching parents through their children
 
@@ -367,7 +370,7 @@ use `n/` for the Tutor's own name in this category.
 **Formats:**
 
 * `lessons [STUDENT_INDEX] [sort/creation|schedule]`
-* `search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM] [sort/creation|schedule]`
+* `search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM] [sort/creation|schedule]`
 
 The right-hand lesson panel initially shows the full catalogue. `lessons` restores it after a lesson search or
 student selection. Every shared lesson appears once in creation order by default, including empty rosters. Cards show the
@@ -536,6 +539,11 @@ For example, `editlesson lid/L1 st/1630 s/A-Math` keeps `L1`'s weekday, end time
 An identical edit reports `No changes to lesson: L1.` and does not save. A successful change updates current
 lesson cards, searches and selected details, and survives restart without changing IDs or allocation counters.
 
+If the Lesson has retained attendance, the successful edit warns that those records are displayed with its
+current details. Attendance dates and statuses stay unchanged, but subject, Tutor, room and time shown for an
+old date reflect the edited Lesson. Create a new Lesson when a change should apply only to future occurrences;
+keep the original Lesson for its retained records.
+
 The complete replacement is checked against every other Lesson. Tutor, room and enrolled-Student overlaps are
 rejected; the Lesson being edited is not treated as its own conflict, and adjacent slots remain valid. A weekday
 change is rejected while any current or former Student has retained attendance on an incompatible date. PonHub
@@ -672,6 +680,10 @@ section, limited to the supplied date when one is given. Without a date, that se
 former-member records, newest first. The two prefixes may appear in either order, for example
 `showlesson d/2026-10-05 lid/L1`. An empty roster is valid.
 
+A dated detail, or one showing former-member attendance, labels its summary **Current Lesson information**.
+Subject, Tutor, room and schedule describe the current Lesson, rather than a snapshot taken on the attendance
+date. [Editing a Lesson](#editing-a-shared-lesson-editlesson) preserves the recorded dates and statuses.
+
 An unknown lesson ID, invalid date or date on another weekday leaves the previous lesson result visible. Lesson
 details refresh after saved membership and attendance changes, including corrections and removal by `unmark`.
 Deleting the selected unreferenced Lesson clears its detail and identifies the unavailable ID. A failed save leaves
@@ -732,13 +744,17 @@ and `search c/lesson` includes Lessons with empty rosters. The complete active f
 | `et/` | Lesson end time | Yes | Yes | Yes | Yes |
 | `s/` | Lesson subject | Yes | Yes | Yes | Yes |
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes |
+| `tp/` | Lesson tutor's exact phone | — | — | — | Yes |
 | `rm/` | Lesson room | Yes | Yes | Yes | Yes |
 | `sort/` | Lesson order: `creation` or `schedule` | — | — | — | Yes |
 
 Name, email, address, associated Student name, subject, Tutor name and room match case-insensitive text
 fragments. Text queries trim surrounding whitespace and collapse repeated spaces. For example, `n/al` can
 match Sally Tan and `e/@example` can match `mei@example.com`. `tu/mei` searches Tutor names, not IDs;
-use `n/mei` for the Tutor's own name when the result category is `tutor`.
+use `n/mei` for the Tutor's own name when the result category is `tutor`. For Lesson results, add
+`tp/92345678` to distinguish same-named Tutors: `search c/lesson tu/Mei tp/92345678`.
+`tp/` also works alone; it matches the complete current Tutor phone, including leading zeros.
+A phone shared by differently named Tutors may match both; combine it with `tu/` as needed.
 
 Search does not normalize canonical Unicode spelling differences. Copy the displayed spelling or use a
 fragment such as `n/Jos` to find `José Santos`. Slash-bearing full values remain unsupported in search:
@@ -886,13 +902,21 @@ occurrence unrecorded, not absent. Success, no-op and failure preserve the curre
 
 <a id="attendance-history"></a>
 
-**History (active):** `history STUDENT_INDEX [lid/LESSON_ID]`.
+**History (active):** `history STUDENT_INDEX [lid/LESSON_ID] [d/YYYY-MM-DD] [s/present|absent]`.
 
 Example: After `list r/student`, if the intended student appears at position 1, enter `history 1 lid/L1` to view their attendance for lesson `L1`.
 
+Add `d/2026-10-05` to show records for that exact date, `s/absent` to find recorded absences, or both to
+combine them. For example, `history 1 lid/L1 d/2026-10-05 s/absent` shows only that Student's absence
+for L1 on 5 October. The optional filters may appear once each in any order and must all match. Dates use
+real `YYYY-MM-DD` values; status is `present` or `absent`, ignoring case. Omitted filters include all values;
+run `history 1` again to clear the filters. The heading shows the active filters, which remain applied as
+committed changes refresh the view. A valid date need not match a Lesson's weekday: it simply produces no
+matching record if none exists.
+
 History shows recorded entries as dated cards in a separate scrolling panel, newest date first, then by numeric
 Lesson ID. Each card shows the stable Student and Lesson IDs, labelled `present` or `absent` status, and whether the
-Student is currently enrolled or a former member. An existing Student with no records, or no records for the selected existing Lesson, gets a successful
+Student is currently enrolled or a former member. An existing Student with no records matching the filters gets a successful
 empty result. An unrecorded occurrence has no entry; it is never counted as absent. After `mark`, correction, `unmark` or
 unenrolment, an open history view refreshes from committed data. History retrieval does not save data or change the
 current people filter, order, selection or indices. Use the Student's current position in the people list, not a

@@ -21,7 +21,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import ponhub.model.attendance.AttendanceStatus;
 import ponhub.model.query.LessonDetailView;
-import ponhub.model.query.LessonView;
 
 /**
  * Scrolls a complete lesson detail while creating controls only for the rows needed by the viewport.
@@ -121,7 +120,7 @@ public class LessonDetailList extends ListView<LessonDetailList.Row> {
     }
 
     /** Summary data is rendered only while its row is needed. */
-    private record Summary(LessonView lesson) implements Row {
+    private record Summary(LessonDetailView lesson) implements Row {
     }
 
     /** An expanded section heading, with a boundary before retained attendance. */
@@ -156,7 +155,7 @@ public class LessonDetailList extends ListView<LessonDetailList.Row> {
                 return;
             }
             Region content = switch (row) {
-                case Summary summary -> new LessonCard(summary.lesson()).getRoot();
+                case Summary summary -> createSummary(summary);
                 case Heading heading -> createHeading(heading);
                 case EmptyMessage message -> wrap(label(message.text(), "card_empty_label"), 2, 5);
                 case Entry entry -> createEntry(entry);
@@ -165,6 +164,17 @@ public class LessonDetailList extends ListView<LessonDetailList.Row> {
                     Math.max(0, getWidth() - getInsets().getLeft() - getInsets().getRight()),
                     widthProperty(), insetsProperty()));
             setGraphic(content);
+        }
+
+        private static VBox createSummary(Summary summary) {
+            VBox content = new VBox();
+            content.setMinWidth(0);
+            content.setMaxWidth(Double.MAX_VALUE);
+            content.getChildren().add(new LessonCard(summary.lesson()).getRoot());
+            if (summary.lesson().date().isPresent() || !summary.lesson().formerAttendance().isEmpty()) {
+                content.getChildren().add(wrap(label("Current Lesson information", "card_context_label"), 0, 5));
+            }
+            return content;
         }
 
         private static VBox createHeading(Heading heading) {

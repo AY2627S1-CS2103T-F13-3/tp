@@ -2,37 +2,42 @@ package ponhub.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 
+import java.time.LocalDate;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Set;
 
 import ponhub.commons.core.index.Index;
 import ponhub.logic.parser.exceptions.ParseException;
+import ponhub.model.attendance.Attendance;
+import ponhub.model.attendance.AttendanceStatus;
 import ponhub.model.lesson.LessonId;
 
 /**
- * Parses a current people-list Student index and an optional stable Lesson ID.
+ * Parses a current people-list Student index and optional Lesson, exact date and status filters.
  */
 public final class HistoryArgumentsParser {
-    public static final String MESSAGE_USAGE = "Format: history STUDENT_INDEX [lid/LESSON_ID]";
-    private static final Pattern FORMAT = Pattern.compile("([0-9]+)(?: +lid/([^\\s]+))?");
+    public static final String MESSAGE_USAGE =
+            "Format: history STUDENT_INDEX [lid/LESSON_ID] [d/YYYY-MM-DD] [s/present|absent]";
+    private static final Set<String> PREFIXES = Set.of("lid/", "d/", "s/");
 
     /**
-     * Returns a positive current people index and optional validated Lesson ID.
+     * Returns a positive current people index and validated optional filters in any order.
      */
     public Input parse(String arguments) throws ParseException {
         requireNonNull(arguments);
         if (arguments.codePoints().anyMatch(Character::isISOControl)) {
             throw new ParseException(MESSAGE_USAGE);
         }
-        Matcher matcher = FORMAT.matcher(arguments.strip());
-        if (!matcher.matches()) {
-            throw new ParseException(MESSAGE_USAGE);
+        String stripped = arguments.strip();
+        if (stripped.matches("[0-9]+")) {
+            return new Input(ParserUtil.parseIndex(stripped), Optional.empty(), Optional.empty(), Optional.empty());
         }
-        Index studentIndex = ParserUtil.parseIndex(matcher.group(1));
+        AttendanceArguments parsed = AttendanceArguments.extract(stripped, "history", PREFIXES, MESSAGE_USAGE);
+        Index studentIndex = ParserUtil.parseIndex(parsed.studentIndex());
         try {
-            return new Input(studentIndex, matcher.group(2) == null
-                    ? Optional.empty() : Optional.of(new LessonId(matcher.group(2))));
+            return new Input(studentIndex, parsed.optionalValue("lid/").map(LessonId::new),
+                    parsed.optionalValue("d/").map(Attendance::parseDate),
+                    parsed.optionalValue("s/").map(AttendanceStatus::parse));
         } catch (IllegalArgumentException exception) {
             throw new ParseException(exception.getMessage(), exception);
         }
@@ -41,6 +46,7 @@ public final class HistoryArgumentsParser {
     /**
      * Parsed command selectors, prior to current-view role and reference validation.
      */
-    public record Input(Index studentIndex, Optional<LessonId> lessonId) {
+    public record Input(Index studentIndex, Optional<LessonId> lessonId, Optional<LocalDate> date,
+            Optional<AttendanceStatus> status) {
     }
 }

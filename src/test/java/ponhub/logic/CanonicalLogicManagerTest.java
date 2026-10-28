@@ -153,6 +153,7 @@ public class CanonicalLogicManagerTest {
 
         assertSame(session.getPeople(), people);
         assertSame(session.personSearchContextProperty(), logic.personSearchContextProperty());
+        assertSame(session.peopleResultContextProperty(), logic.peopleResultContextProperty());
         assertEquals(CanonicalCommandCatalog.getOverview(Optional.empty()), logic.execute("help").getFeedbackToUser());
         assertEquals("Showing 0 parent(s).", logic.execute("list r/parent").getFeedbackToUser());
         assertFalse(Files.exists(path));
