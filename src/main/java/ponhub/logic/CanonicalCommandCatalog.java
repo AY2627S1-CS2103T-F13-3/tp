@@ -17,6 +17,7 @@ public final class CanonicalCommandCatalog {
             + "blank p/ clears only a Student's phone.\n"
             + "Names, Student levels/parent phones and Tutor/Parent phones cannot be cleared. Role and ID stay fixed.\n"
             + "Filters are retained and search results refresh. Recheck displayed positions after editing.\n"
+            + "A changed Parent phone or Student parent phone reports any removed Parent-Student links by ID.\n"
             + "An identical edit makes no write. Example: list r/student, then edit 1 l/P2 e/";
     public static final String MESSAGE_UNKNOWN_HELP_TOPIC =
             "Unknown command: '%s'. Type 'help' to see available commands.";
