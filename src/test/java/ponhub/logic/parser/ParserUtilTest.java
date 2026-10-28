@@ -117,9 +117,10 @@ public class ParserUtilTest {
         String whitespace = " \t\r\n\f\u000b\u001c\u001d\u001e\u001f";
         assertEquals(INDEX_FIRST_PERSON, ParserUtil.parseIndex(whitespace + "1" + whitespace));
         assertEquals(INDEX_FIRST_PERSON, ParserUtil.parseIndex("01"));
+        assertEquals(INDEX_FIRST_PERSON, ParserUtil.parseIndex("\u00a01\u202f"));
         assertEquals(INDEX_FIRST_PERSON, ParserUtil.parseIndex("１"));
         assertEquals(Index.fromOneBased(Integer.MAX_VALUE), ParserUtil.parseIndex("2147483647"));
-        for (String index : List.of("", " ", "0", "-1", "+1", "2147483648", "1\t2", "\u00a01")) {
+        for (String index : List.of("", " ", "0", "-1", "+1", "2147483648", "1\t2")) {
             assertThrows(ParseException.class, MESSAGE_INVALID_INDEX, () -> ParserUtil.parseIndex(index));
         }
     }

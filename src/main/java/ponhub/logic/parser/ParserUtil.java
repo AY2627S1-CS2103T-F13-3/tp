@@ -43,7 +43,7 @@ public class ParserUtil {
             throw new ParseException(MESSAGE_INVALID_INDEX);
         }
 
-        String trimmedIndex = oneBasedIndex.trim();
+        String trimmedIndex = stripUnicodeBoundaryWhitespace(oneBasedIndex);
         if (!StringUtil.isNonZeroUnsignedInteger(trimmedIndex)) {
             throw new ParseException(MESSAGE_INVALID_INDEX);
         }

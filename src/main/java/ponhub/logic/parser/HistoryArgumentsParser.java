@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import ponhub.commons.core.index.Index;
 import ponhub.logic.parser.exceptions.ParseException;
@@ -18,6 +19,7 @@ import ponhub.model.lesson.LessonId;
 public final class HistoryArgumentsParser {
     public static final String MESSAGE_USAGE =
             "Format: history STUDENT_INDEX [lid/LESSON_ID] [d/YYYY-MM-DD] [s/present|absent]";
+    private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
     private static final Set<String> PREFIXES = Set.of("lid/", "d/", "s/");
 
     /**
@@ -25,10 +27,11 @@ public final class HistoryArgumentsParser {
      */
     public Input parse(String arguments) throws ParseException {
         requireNonNull(arguments);
-        if (arguments.codePoints().anyMatch(Character::isISOControl)) {
+        if (LINE_BREAK_PATTERN.matcher(arguments).find()
+                || arguments.codePoints().anyMatch(Character::isISOControl)) {
             throw new ParseException(MESSAGE_USAGE);
         }
-        String stripped = arguments.strip();
+        String stripped = ParserUtil.stripUnicodeBoundaryWhitespace(arguments);
         if (stripped.matches("[0-9]+")) {
             return new Input(ParserUtil.parseIndex(stripped), Optional.empty(), Optional.empty(), Optional.empty());
         }

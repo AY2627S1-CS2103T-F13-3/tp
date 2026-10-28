@@ -27,6 +27,23 @@ public class StringUtil {
         return value.substring(start, end);
     }
 
+    /**
+     * Removes Unicode horizontal space separators at command boundaries, preserving controls for validation.
+     * In particular, tabs and line breaks are not removed by this method.
+     */
+    public static String stripUnicodeBoundarySpaces(String value) {
+        requireNonNull(value);
+        int start = 0;
+        int end = value.length();
+        while (start < end && Character.getType(value.codePointAt(start)) == Character.SPACE_SEPARATOR) {
+            start += Character.charCount(value.codePointAt(start));
+        }
+        while (end > start && Character.getType(value.codePointBefore(end)) == Character.SPACE_SEPARATOR) {
+            end -= Character.charCount(value.codePointBefore(end));
+        }
+        return value.substring(start, end);
+    }
+
     private static boolean isBoundaryWhitespace(int codePoint) {
         return Character.isWhitespace(codePoint) || Character.isSpaceChar(codePoint);
     }

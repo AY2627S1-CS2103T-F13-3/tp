@@ -17,7 +17,10 @@ import ponhub.model.search.SearchField;
  * All prefix-shaped tokens are recognized so unknown prefixes cannot silently become part of another filter's text.
  */
 public class SearchCriteriaParser {
-    private static final Pattern PREFIX_PATTERN = Pattern.compile("(?<!\\S)([^\\s/]+/)");
+    private static final Pattern PREFIX_PATTERN = Pattern.compile("(?<!\\S)([^\\s/]+/)",
+            Pattern.UNICODE_CHARACTER_CLASS);
+
+    private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
 
     /**
      * Parses arguments of the form {@code c/CATEGORY [PREFIX/VALUE]...}, excluding the command word.
@@ -27,14 +30,15 @@ public class SearchCriteriaParser {
      */
     public SearchCriteria parse(String args) throws ParseException {
         requireNonNull(args);
-        if (args.contains("\n") || args.contains("\r")) {
+        if (LINE_BREAK_PATTERN.matcher(args).find()) {
             throw new ParseException("Search arguments must not contain line breaks.");
         }
-        if (args.isBlank()) {
+        if (ParserUtil.stripUnicodeBoundaryWhitespace(args).isEmpty()) {
             throw new ParseException("Search category c/ is required.");
         }
         Matcher matcher = PREFIX_PATTERN.matcher(args);
-        if (!matcher.find() || !args.substring(0, matcher.start()).isBlank()) {
+        if (!matcher.find()
+                || !ParserUtil.stripUnicodeBoundaryWhitespace(args.substring(0, matcher.start())).isEmpty()) {
             throw new ParseException("Search arguments must start with a prefix, for example c/student.");
         }
 
@@ -46,7 +50,7 @@ public class SearchCriteriaParser {
             int valueStart = matcher.end();
             hasNext = matcher.find();
             int valueEnd = hasNext ? matcher.start() : args.length();
-            String value = args.substring(valueStart, valueEnd).strip();
+            String value = ParserUtil.stripUnicodeBoundaryWhitespace(args.substring(valueStart, valueEnd));
             if (value.isEmpty()) {
                 throw new ParseException("Search prefix '" + prefix + "' requires a non-blank value.");
             }

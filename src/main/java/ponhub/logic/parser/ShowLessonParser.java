@@ -18,17 +18,20 @@ public final class ShowLessonParser {
     public static final String MESSAGE_USAGE = "Usage: showlesson lid/LESSON_ID [d/YYYY-MM-DD]";
 
     private static final Pattern ARGUMENTS = Pattern.compile(
-            "(?:lid/(\\S+)(?: +d/(\\S+))?|d/(\\S+) +lid/(\\S+))");
+            "(?:lid/(\\S+)(?:\\p{Zs}+d/(\\S+))?|d/(\\S+)\\p{Zs}+lid/(\\S+))", Pattern.UNICODE_CHARACTER_CLASS);
+
+    private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
 
     /**
      * Rejects missing, repeated or unknown fields before the selected view changes.
      */
     public ShowLessonInput parse(String arguments) throws ParseException {
         requireNonNull(arguments);
-        if (arguments.codePoints().anyMatch(Character::isISOControl)) {
+        if (LINE_BREAK_PATTERN.matcher(arguments).find()
+                || arguments.codePoints().anyMatch(Character::isISOControl)) {
             throw new ParseException(MESSAGE_USAGE);
         }
-        Matcher matcher = ARGUMENTS.matcher(arguments.strip());
+        Matcher matcher = ARGUMENTS.matcher(ParserUtil.stripUnicodeBoundaryWhitespace(arguments));
         if (!matcher.matches()) {
             throw new ParseException(MESSAGE_USAGE);
         }

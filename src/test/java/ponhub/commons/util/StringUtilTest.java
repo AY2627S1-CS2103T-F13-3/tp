@@ -12,6 +12,18 @@ import org.junit.jupiter.api.Test;
 public class StringUtilTest {
 
     @Test
+    public void stripUnicodeBoundarySpaces_horizontalSeparators_preservesInteriorAndControls() {
+        assertEquals("", StringUtil.stripUnicodeBoundarySpaces(""));
+        assertEquals("", StringUtil.stripUnicodeBoundarySpaces("\u2003\u00a0\u202f"));
+        assertEquals("Alex\u00a0Tan", StringUtil.stripUnicodeBoundarySpaces("\u2003Alex\u00a0Tan\u202f"));
+        for (String control : new String[]{"\t", "\n", "\u2028", "\u2029", "\u0000", "\u001b"}) {
+            assertEquals(control + "Alex" + control,
+                    StringUtil.stripUnicodeBoundarySpaces("\u00a0" + control + "Alex" + control + "\u202f"));
+        }
+        assertThrows(NullPointerException.class, () -> StringUtil.stripUnicodeBoundarySpaces(null));
+    }
+
+    @Test
     public void trimSpaces_onlyAsciiSpaces_preservesOtherCharacters() {
         assertEquals("", StringUtil.trimSpaces(""));
         assertEquals("", StringUtil.trimSpaces(" ".repeat(100_000)));

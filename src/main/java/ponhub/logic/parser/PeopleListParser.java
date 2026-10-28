@@ -17,7 +17,8 @@ public final class PeopleListParser {
     public static final String MESSAGE_USAGE = "Use list or list r/student|tutor|parent, with at most one role filter.";
 
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
-    private static final Pattern ROLE_FILTER_PATTERN = Pattern.compile("[ \\t]*r/[ \\t]*([A-Za-z]+)[ \\t]*");
+    private static final Pattern ROLE_FILTER_PATTERN =
+            Pattern.compile("[\\p{Zs}\\t]*r/[\\p{Zs}\\t]*([A-Za-z]+)[\\p{Zs}\\t]*");
 
     /**
      * Parses arguments after the command word into an optional role filter.
@@ -32,7 +33,7 @@ public final class PeopleListParser {
             throw new ParseException("People-list arguments must be on one line. " + MESSAGE_USAGE);
         }
 
-        if (arguments.isBlank()) {
+        if (ParserUtil.stripUnicodeBoundaryWhitespace(arguments).isEmpty()) {
             return Optional.empty();
         }
 
