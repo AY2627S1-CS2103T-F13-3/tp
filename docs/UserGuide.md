@@ -154,7 +154,7 @@ session's catalogue. A protected session permits only `help`, `list` and `exit`;
 | [List shared lessons](#listing-and-searching-shared-lessons) | `lessons [STUDENT_INDEX]` | `lessons` |
 | [Attendance history](#7-recording-attendance-and-retrieving-history) | `history STUDENT_INDEX [lid/LESSON_ID]` | `history 1 lid/L1` |
 | [Show lesson details](#listing-and-searching-shared-lessons) | `showlesson lid/LESSON_ID [d/YYYY-MM-DD]` | `showlesson lid/L1 d/2026-10-05` |
-| [Search shared lessons](#listing-and-searching-shared-lessons) | `search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]` | `search c/lesson tu/mei d/Mon` |
+| [Search shared lessons](#listing-and-searching-shared-lessons) | `search c/lesson [sn/NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM]` | `search c/lesson tu/mei d/Mon` |
 | [Get help](#viewing-command-help-help) | `help [COMMAND]` | `help add` |
 | Exit | `exit` | `exit` |
 
@@ -367,7 +367,7 @@ use `n/` for the Tutor's own name in this category.
 **Formats:**
 
 * `lessons [STUDENT_INDEX]`
-* `search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [rm/ROOM]`
+* `search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM]`
 
 The right-hand lesson panel initially shows the full catalogue. `lessons` restores it after a lesson search or
 student selection. Every shared lesson appears once in creation order, including empty rosters. Cards show the
@@ -726,12 +726,16 @@ and `search c/lesson` includes Lessons with empty rosters. The complete active f
 | `et/` | Lesson end time | Yes | Yes | Yes | Yes |
 | `s/` | Lesson subject | Yes | Yes | Yes | Yes |
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes |
+| `tp/` | Lesson tutor's exact phone | — | — | — | Yes |
 | `rm/` | Lesson room | Yes | Yes | Yes | Yes |
 
 Name, email, address, associated Student name, subject, Tutor name and room match case-insensitive text
 fragments. Text queries trim surrounding whitespace and collapse repeated spaces. For example, `n/al` can
 match Sally Tan and `e/@example` can match `mei@example.com`. `tu/mei` searches Tutor names, not IDs;
-use `n/mei` for the Tutor's own name when the result category is `tutor`.
+use `n/mei` for the Tutor's own name when the result category is `tutor`. For Lesson results, add
+`tp/92345678` to distinguish same-named Tutors: `search c/lesson tu/Mei tp/92345678`.
+`tp/` also works alone; it matches the complete current Tutor phone, including leading zeros.
+A phone shared by differently named Tutors may match both; combine it with `tu/` as needed.
 
 Search does not normalize canonical Unicode spelling differences. Copy the displayed spelling or use a
 fragment such as `n/Jos` to find `José Santos`. Slash-bearing full values remain unsupported in search:

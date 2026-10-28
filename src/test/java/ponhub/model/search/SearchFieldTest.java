@@ -41,6 +41,7 @@ public class SearchFieldTest {
                 Map.entry("et/", SearchField.END_TIME),
                 Map.entry("s/", SearchField.SUBJECT),
                 Map.entry("tu/", SearchField.TUTOR_NAME),
+                Map.entry("tp/", SearchField.TUTOR_PHONE),
                 Map.entry("rm/", SearchField.ROOM));
 
         assertEquals(EnumSet.allOf(SearchField.class), Set.copyOf(fields.values()));
@@ -76,6 +77,7 @@ public class SearchFieldTest {
                 Map.entry(SearchField.END_TIME, all),
                 Map.entry(SearchField.SUBJECT, all),
                 Map.entry(SearchField.TUTOR_NAME, Set.of(STUDENT, PARENT, LESSON)),
+                Map.entry(SearchField.TUTOR_PHONE, Set.of(LESSON)),
                 Map.entry(SearchField.ROOM, all));
 
         assertEquals(EnumSet.allOf(SearchField.class), categories.keySet());
@@ -101,7 +103,7 @@ public class SearchFieldTest {
 
     @Test
     public void normalizeValue_validPhones_preserveDomainDigitsAndLeadingZeros() {
-        for (SearchField field : List.of(SearchField.PHONE, SearchField.PARENT_PHONE)) {
+        for (SearchField field : List.of(SearchField.PHONE, SearchField.PARENT_PHONE, SearchField.TUTOR_PHONE)) {
             for (String phone : List.of("000", "123", "0012345", "123456789012345", "000000000000000")) {
                 assertEquals(phone, field.normalizeValue("\u2003" + phone + "\t"));
                 assertEquals(new Phone(phone).toString(), field.normalizeValue(phone));
@@ -111,7 +113,7 @@ public class SearchFieldTest {
 
     @Test
     public void normalizeValue_invalidPhones_preserveBothPrefixErrors() {
-        for (SearchField field : List.of(SearchField.PHONE, SearchField.PARENT_PHONE)) {
+        for (SearchField field : List.of(SearchField.PHONE, SearchField.PARENT_PHONE, SearchField.TUTOR_PHONE)) {
             String error = "Search filter '" + field.getPrefix() + "' requires 3-15 digits.";
             for (String phone : List.of("12", "1234567890123456", "+123", "12 3", "123-4", "12a", "１２３")) {
                 assertFalse(Phone.isValidPhone(phone), phone);
