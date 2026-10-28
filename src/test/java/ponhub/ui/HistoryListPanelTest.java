@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static ponhub.testutil.FxTestUtil.runOnFxThread;
 
 import java.time.LocalDate;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.layout.Region;
+import javafx.stage.Stage;
 import ponhub.MainApp;
 import ponhub.model.lesson.LessonId;
 import ponhub.model.query.AttendanceHistoryEntry;
@@ -41,23 +44,34 @@ public class HistoryListPanelTest {
             Region panel = new HistoryListPanel(history, new SimpleStringProperty("Attendance history")).getRoot();
             Scene scene = new Scene(panel, 198, 220);
             scene.getStylesheets().add(MainApp.class.getResource("/view/DarkTheme.css").toExternalForm());
+            Stage stage = new Stage();
+            stage.setScene(scene);
             @SuppressWarnings("unchecked")
             ListView<AttendanceHistoryEntry> list = (ListView<AttendanceHistoryEntry>) panel.lookup("#historyListView");
             list.getSelectionModel().select(0);
-            for (int width : new int[] {198, 399, 160, 399}) {
-                panel.resize(width, 220);
-                layout(panel);
-                assertSame(history, list.getItems());
-                assertEquals(history.getFirst(), list.getSelectionModel().getSelectedItem());
-                assertTrue(scrollBar(list, Orientation.VERTICAL).isVisible());
-                assertFalse(scrollBar(list, Orientation.HORIZONTAL).isVisible(),
-                        "History must wrap without horizontal scrolling at width " + width);
-                assertWrappedCard(list, history.getFirst());
-                list.scrollTo(59);
-                layout(panel);
-                assertWrappedCard(list, history.getLast());
-                list.scrollTo(0);
-                layout(panel);
+            try {
+                for (double scale : new double[] {1, 1.25, 1.5, 1}) {
+                    stage.setRenderScaleX(scale);
+                    stage.setRenderScaleY(scale);
+                    for (double width : new double[] {198, 399, 160, 290.4}) {
+                        panel.resize(width, 220);
+                        layout(panel);
+                        assertSame(history, list.getItems());
+                        assertEquals(history.getFirst(), list.getSelectionModel().getSelectedItem());
+                        assertTrue(scrollBar(list, Orientation.VERTICAL).isVisible());
+                        assertFalse(scrollBar(list, Orientation.HORIZONTAL).isVisible(),
+                                "History must wrap without horizontal scrolling at width " + width
+                                        + ", scale " + scale);
+                        assertWrappedCard(list, history.getFirst());
+                        list.scrollTo(59);
+                        layout(panel);
+                        assertWrappedCard(list, history.getLast());
+                        list.scrollTo(0);
+                        layout(panel);
+                    }
+                }
+            } finally {
+                stage.close();
             }
             // Refresh and clear the same live list after VirtualFlow has reused its cells.
             history.setAll(new AttendanceHistoryEntryData(LessonQueryTestData.STUDENT_ONE,
@@ -96,8 +110,11 @@ public class HistoryListPanelTest {
                 label(card, "attendanceIdentity").getText());
         assertEquals(entry.getStatus().name().toLowerCase(java.util.Locale.ROOT),
                 label(card, "attendanceStatus").getText());
-        assertEquals(entry.isCurrentlyEnrolled() ? "currently enrolled" : "former enrolment",
+        assertEquals(entry.isCurrentlyEnrolled() ? "currently enrolled" : "not currently enrolled",
                 label(card, "attendanceMembership").getText());
+        assertEquals(Set.of("Status", "Enrolment Status:"),
+                card.lookupAll(".card_field_label").stream().map(Label.class::cast)
+                        .map(Label::getText).collect(Collectors.toSet()));
         for (var node : card.lookupAll(".label")) {
             Label cardLabel = (Label) node;
             assertTrue(cardLabel.isWrapText(), cardLabel.getText());
@@ -140,7 +157,7 @@ public class HistoryListPanelTest {
             assertFalse(previous.prefWidthProperty().isBound());
             Region replacement = (Region) cell.getGraphic();
             assertEquals("absent", label(replacement, "attendanceStatus").getText());
-            assertEquals("former enrolment", label(replacement, "attendanceMembership").getText());
+            assertEquals("not currently enrolled", label(replacement, "attendanceMembership").getText());
             cell.updateItem(null, false);
             assertNull(cell.getText());
             assertNull(cell.getGraphic());

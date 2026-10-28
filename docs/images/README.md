@@ -9,25 +9,27 @@ The images illustrate the development interface using fictitious records. They a
 not a claim of release or display-matrix acceptance.
 
 Vincent Lin (`gugrusaurus`) created the original guide media. Zhu Zhi Yu
-(`ultramanarm`) refreshes the overview and navigation images. Both use OpenAI Codex
+(`ultramanarm`) refreshes the overview, navigation and attendance-history images. Both use OpenAI Codex
 assistance. These are native macOS application captures: only rectangular cropping
 and image encoding are applied, without redrawing, compositing or AI-generated UI
 content. The raw windows measure 1480×1600 pixels.
 Crop bounds below are `(left, top, right, bottom)` in those pixels; no resizing was
-applied. The overview/navigation images use PNG encoding that preserves the decoded
-capture pixels. The attendance JPEGs use quality 95 with no chroma subsampling.
+applied. The PNG images preserve the decoded capture pixels. The attendance-detail JPEG
+uses quality 95 with no chroma subsampling.
 
 | Image | Pixels | Crop bounds | Illustration |
 | --- | --- | --- | --- |
 | [Ui.png](Ui.png) | 1480×1600 | `(0, 0, 1480, 1600)` | Two Students sharing one Lesson. |
 | [LessonBoardNavigation.png](LessonBoardNavigation.png) | 1480×1600 | `(0, 0, 1480, 1600)` | Student lessons beside an independent people filter. |
 | [AttendanceDetails.jpg](AttendanceDetails.jpg) | 816×724 | `(662, 340, 1478, 1064)` | Alex present and Jamie absent in the current roster. |
-| [AttendanceHistory.jpg](AttendanceHistory.jpg) | 816×320 | `(662, 340, 1478, 660)` | Jamie's absence retained after unenrolment. |
+| [AttendanceHistory.png](AttendanceHistory.png) | 816×340 | `(662, 340, 1478, 680)` | Jamie's retained absence, showing the current enrolment-status wording. |
 
 Overview/navigation captures include the native title bar and persistent people heading.
 Attendance crops retain the relevant heading and results so their text remains readable in the guide. The attendance
-images show source
+detail image shows source
 [`b22d81569b96ba66b258c94a9ca2b5a7658cdeaa`](https://github.com/AY2627S1-CS2103T-F13-3/tp/tree/b22d81569b96ba66b258c94a9ca2b5a7658cdeaa).
+The history crop uses the current [attendance-history card](https://github.com/ultramanarm/tp/blob/545-clarify-attendance-enrolment-status/src/main/resources/view/AttendanceHistoryCard.fxml)
+and a fictitious fixture with S2 outside L1's current roster while its 5 October 2026 absence remains recorded.
 Overview and navigation show source
 [`aa81aa445276366cd1baafc1b7cbb09b10cbcf01`](https://github.com/AY2627S1-CS2103T-F13-3/tp/tree/aa81aa445276366cd1baafc1b7cbb09b10cbcf01)
 with the persistent Student heading and reset hint. They may differ from public v1.4.

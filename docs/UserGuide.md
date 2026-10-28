@@ -887,7 +887,7 @@ remain invisible; the previous subject and both result panels remain intact.
 
 To compare current membership with retained history in the same example, run `list r/student`,
 `mark 1 lid/L1 d/2026-10-05 s/present`, `history 1 lid/L1`, then `unenrol 1 lid/L1`. Alex's open history retains
-the recorded presence and refreshes its label to former member. `lessons 1` then shows only `L2` and `L3`;
+the recorded presence and shows `not currently enrolled`. `lessons 1` then shows only `L2` and `L3`;
 `search c/lesson sn/Alex d/Mon s/Math` returns no Lessons. `showlesson lid/L1 d/2026-10-05` shows Jamie's
 current-roster status as unrecorded and Alex's retained presence separately. See [Lesson details](#lesson-details)
 and [attendance history](#attendance-history) for their complete behavior.
@@ -943,8 +943,9 @@ committed changes refresh the view. A valid date need not match a Lesson's weekd
 matching record if none exists.
 
 History shows recorded entries as dated cards in a separate scrolling panel, newest date first, then by numeric
-Lesson ID. Each card shows the stable Student and Lesson IDs, labelled `present` or `absent` status, and whether the
-Student is currently enrolled or a former member. An existing Student with no records matching the filters gets a successful
+Lesson ID. Each card shows the stable Student and Lesson IDs, labelled `present` or `absent` attendance status, and
+**Enrolment Status:** with `currently enrolled` or `not currently enrolled`. Enrolment status describes the Lesson's
+current roster, not membership on the attendance date. An existing Student with no records matching the filters gets a successful
 empty result. An unrecorded occurrence has no entry; it is never counted as absent. After `mark`, correction, `unmark` or
 unenrolment, an open history view refreshes from committed data. History retrieval does not save data or change the
 current people filter, order, selection or indices. Use the Student's current position in the people list, not a
@@ -958,10 +959,11 @@ right panel to lesson results. Unrelated deletions and failed deletions preserve
 In this development-build panel crop, Alex is present and Jamie is absent for L1 on 5 October 2026;
 both are still enrolled. The crop keeps the dated heading, roster and statuses readable.
 
-![Development preview, history panel crop: Student S2 absence retained as former enrolment](images/AttendanceHistory.jpg)
+![Development preview, history panel crop: Student S2 absence retained with Enrolment Status: not currently enrolled](images/AttendanceHistory.png)
 
-After `unenrol 2 lid/L1`, `history 2 lid/L1` retains Jamie's existing absence with former-enrolment context.
-No attendance correction occurs between these two captures; the absent record is the same in both.
+After `unenrol 2 lid/L1`, `history 2 lid/L1` retains Jamie's existing absence and shows **Enrolment Status:**
+`not currently enrolled`. Both illustrations use the same dated absence; unenrolment changes the current roster
+without correcting or removing the attendance record.
 See [screenshot sources and credits](images/README.html) for the image source and crop bounds.
 
 <a id="planned-failure-and-data-behavior"></a>
