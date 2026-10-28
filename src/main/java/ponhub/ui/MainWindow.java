@@ -117,11 +117,6 @@ public class MainWindow extends UiPart<Stage> {
      */
     private void configureLogoSound() {
         Label badge = (Label) ponhubWordmark.lookup(".wordmark-hub");
-        ponhubWordmark.applyCss();
-        double badgeWidth = badge.prefWidth(-1);
-        badge.setMinWidth(badgeWidth);
-        badge.setPrefWidth(badgeWidth);
-        badge.setMaxWidth(badgeWidth);
         badge.setTooltip(new Tooltip("Curiosity has consequences."));
         Node badgeFrame = badge.getParent();
         ScaleTransition pulse = new ScaleTransition(Duration.millis(110), badgeFrame);

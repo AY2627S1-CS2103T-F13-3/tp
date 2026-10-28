@@ -99,6 +99,47 @@ public class MainWindowTest {
     }
 
     @Test
+    public void wordmark_fractionalScalesAndResizing_keepBadgeTextCompleteAndCounterWidthStable() throws Exception {
+        for (double scale : new double[] {1, 1.25, 1.5}) {
+            MainWindow window = callOnFxThread(() -> {
+                MainWindow result = createWindow();
+                Stage stage = result.getPrimaryStage();
+                stage.setRenderScaleX(scale);
+                stage.setRenderScaleY(scale);
+                stage.show();
+                stage.setRenderScaleX(scale);
+                stage.setRenderScaleY(scale);
+                return result;
+            });
+            try {
+                for (double width : new double[] {450, 1000, 450}) {
+                    runOnFxThread(() -> {
+                        window.getPrimaryStage().setWidth(width);
+                        window.getPrimaryStage().setHeight(420);
+                        Region root = layoutWindow(window, width, 420);
+                        Label badge = (Label) root.lookup(".wordmark-hub");
+                        Region badgeFrame = (Region) badge.getParent();
+                        double badgeWidth = badgeFrame.getWidth();
+                        for (String text : new String[] {"hub", "1", "68", "69", "hub"}) {
+                            badge.setText(text);
+                            layoutWindow(window, width, 420);
+                            assertEquals(text, ((Text) badge.lookup(".text")).getText(),
+                                    "Visible badge text at scale " + scale + ", width " + width);
+                            assertEquals(badgeWidth, badgeFrame.getWidth(), 0.01);
+                            Label prefix = (Label) root.lookup(".wordmark-pon");
+                            assertEquals("Pon", ((Text) prefix.lookup(".text")).getText());
+                            assertAccessible(root.lookup("#ponhubWordmark"), root);
+                            assertAccessible(root.lookup("#menuBar"), root);
+                        }
+                    });
+                }
+            } finally {
+                runOnFxThread(() -> window.getPrimaryStage().close());
+            }
+        }
+    }
+
+    @Test
     public void logoClick_sixtyNinePrimaryClicks_opensCreditsWithoutChangingDraftOrSavedData() throws Exception {
         callOnFxThread(() -> {
             MainWindow window = createWindow();
