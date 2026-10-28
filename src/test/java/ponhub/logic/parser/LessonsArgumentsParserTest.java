@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import ponhub.commons.core.index.Index;
 import ponhub.logic.parser.exceptions.ParseException;
+import ponhub.model.query.LessonOrder;
 
 public class LessonsArgumentsParserTest {
     private final LessonsArgumentsParser parser = new LessonsArgumentsParser();
@@ -24,6 +25,20 @@ public class LessonsArgumentsParserTest {
         assertEquals(Optional.of(Index.fromOneBased(1)), parser.parse("si/1"));
         assertEquals(Optional.of(Index.fromOneBased(12)), parser.parse("  si/12  "));
         assertEquals(Optional.of(Index.fromOneBased(1)), parser.parse("si/01"));
+    }
+
+    @Test
+    public void parseInput_acceptsOptionalOrderAndRejectsMalformedOrRepeatedOptions() throws Exception {
+        assertEquals(new LessonsInput(Optional.empty(), LessonOrder.CREATION), parser.parseInput(""));
+        assertEquals(new LessonsInput(Optional.empty(), LessonOrder.SCHEDULE), parser.parseInput("sort/SCHEDULE"));
+        assertEquals(new LessonsInput(Optional.of(Index.fromOneBased(2)), LessonOrder.SCHEDULE),
+                parser.parseInput("si/2 sort/schedule"));
+        assertEquals(new LessonsInput(Optional.of(Index.fromOneBased(2)), LessonOrder.CREATION),
+                parser.parseInput("2 sort/creation"));
+        for (String input : List.of("sort/", "sort/name", "sort/schedule sort/creation", "1sort/schedule",
+                "sort/schedule 1", "1 SORT/schedule", "1 sort/schedule\n", "1 sort/schedule extra")) {
+            assertThrows(ParseException.class, () -> parser.parseInput(input), input);
+        }
     }
 
     @Test

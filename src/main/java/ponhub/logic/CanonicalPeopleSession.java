@@ -269,7 +269,7 @@ public final class CanonicalPeopleSession {
                 yield new CanonicalSearchCommand(criteria).execute(data, view);
             }
             case LESSONS -> {
-                int lessonCount = lessonRetrieval.list(new LessonsArgumentsParser().parse(arguments)).size();
+                int lessonCount = lessonRetrieval.listInput(new LessonsArgumentsParser().parseInput(arguments)).size();
                 attendanceRetrieval.hide();
                 yield new CommandResult(String.format("Showing %d lesson(s).", lessonCount));
             }

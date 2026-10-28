@@ -41,6 +41,7 @@ public class SearchFieldTest {
                 Map.entry("et/", SearchField.END_TIME),
                 Map.entry("s/", SearchField.SUBJECT),
                 Map.entry("tu/", SearchField.TUTOR_NAME),
+                Map.entry("sort/", SearchField.LESSON_ORDER),
                 Map.entry("rm/", SearchField.ROOM));
 
         assertEquals(EnumSet.allOf(SearchField.class), Set.copyOf(fields.values()));
@@ -76,6 +77,7 @@ public class SearchFieldTest {
                 Map.entry(SearchField.END_TIME, all),
                 Map.entry(SearchField.SUBJECT, all),
                 Map.entry(SearchField.TUTOR_NAME, Set.of(STUDENT, PARENT, LESSON)),
+                Map.entry(SearchField.LESSON_ORDER, Set.of(LESSON)),
                 Map.entry(SearchField.ROOM, all));
 
         assertEquals(EnumSet.allOf(SearchField.class), categories.keySet());

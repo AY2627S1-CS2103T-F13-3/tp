@@ -19,7 +19,8 @@ public interface LessonQuerySource {
     ObservableList<LessonView> getLessonList();
 
     /**
-     * Returns the active lesson-filter results in catalogue order without changing the people view.
+     * Returns active lesson-filter results in the requested order, defaulting to catalogue order.
+     * The people view is unchanged.
      */
     ObservableList<LessonView> getFilteredLessonList();
 

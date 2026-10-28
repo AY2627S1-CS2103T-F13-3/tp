@@ -165,7 +165,8 @@ public final class LessonQueries implements LessonQuerySource {
                 }
             }
         }
-        return candidates.stream().filter(lesson -> matches(criteria, lesson)).toList();
+        return LessonOrder.fromValue(criteria.getValue(SearchField.LESSON_ORDER).orElse("creation"))
+                .apply(candidates.stream().filter(lesson -> matches(criteria, lesson)).toList());
     }
 
     private boolean matches(SearchCriteria criteria, LessonView lesson) {

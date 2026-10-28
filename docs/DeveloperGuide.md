@@ -508,7 +508,7 @@ declares the UI-facing retrieval methods; [`LessonQuerySource`](https://github.c
 and [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQueries.java)
 define the lesson backend supplied by the active `CanonicalPeopleSession`. Its canonical Model owns projections
 from one `PonHubData` root; `CanonicalLogicManager` delegates to that same source. Catalogue and filtered
-results contain each lesson once in creation order, including empty lessons. Student lessons derive from current
+results contain each lesson once in creation order by default, including empty lessons. Student lessons derive from current
 Lesson-owned membership; rosters use people creation order, and tutor schedules use weekday, start time and numeric
 lesson ID. Lookup by lesson ID reads the full catalogue regardless of its active filter.
 
@@ -703,7 +703,7 @@ All four are assigned to Mei. Consider
 2. **Check every condition on each candidate.** `L2` fails Monday. `L1` matches Monday, 1600, Math, Mei
    and R1, and its current roster contains Jamie, whose name contains `a` ignoring case. The result is
    `[L1]`, in catalogue order, with feedback `Found 1 lesson(s).` The index only narrows candidates;
-   it never replaces the remaining predicates.
+   it never replaces the remaining predicates. Optional schedule ordering adds `O(K log K)` work.
 3. **Do not borrow a match.** `search c/student n/Alex d/Mon s/Math` returns zero: Alex has Tuesday Math
    and Monday Science, not Monday Math. `search c/parent sn/Alex d/Mon s/Math` also returns zero even
    though Pat's other child Jamie has Monday Math. The named child and the enrolled Lesson must both match.
@@ -714,7 +714,11 @@ All four are assigned to Mei. Consider
 The [criteria matrix](#supported-criteria) gives the accepted fields and validation rules. Exact-value
 buckets preserve substring semantics for `s/`, `tu/`, `rm/` and `sn/`; a prefix trie would not preserve
 arbitrary fragments such as `s/ath`. Without a supplied day or time, candidates are the whole catalogue.
-For bounded field lengths, searching costs `O(B + R_B + K)`: `B` candidates, their roster links `R_B` when
+Optional lesson-only `sort/schedule` sorts the matched snapshot by Monday-Sunday, start time and numeric
+Lesson ID; it does not change catalogue storage order. The same option on `lessons` sorts its displayed
+projection after committed refreshes. Omitting the option restores creation order for that request.
+
+For bounded field lengths, searching without sorting costs `O(B + R_B + K)`: `B` candidates, their roster links `R_B` when
 `sn/` is supplied, and `K` results. This is not a constant-time text search or a mutation/persistence bound.
 
 ##### Select a view without changing another panel
@@ -796,7 +800,8 @@ for retrieval signatures, ordering and missing-ID contracts, and
 [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQueries.java)
 for indexes, immutable snapshots, active filters and subscription refresh. Stable-ID maps, reverse
 membership indexes and day/time buckets are derived once per publication, not per read. Tutor schedules
-sort by weekday/start/ID; catalogue results retain creation order. Callbacks may request another subscription
+sort by weekday/start/ID; raw catalogue results retain creation order. Optional `sort/schedule` orders the
+displayed catalogue, Student enrolments or search results without changing those source lists. Callbacks may request another subscription
 because refresh snapshots the subscription entries before notifying listeners. All access runs on the
 single model/JavaFX application thread. Construction/refresh includes index rebuilding, schedule sorting
 and copying subscribed results; the query cost above excludes that work.
@@ -2483,6 +2488,13 @@ The following is one end-to-end procedure for the delivered normal session. `add
    search c/lesson sn/Alex d/Mon s/Math
    search c/lesson sn/Nobody
    ```
+
+   To check optional ordering, use a fresh store with a Tutor and create Tuesday 1600, Monday 0900 and Monday
+   1400 Lessons as `L1`, `L2`, `L3`. `lessons` shows `L1,L2,L3`; `lessons sort/schedule` and
+   `search c/lesson tu/Mei sort/schedule` show `L2,L3,L1`. `lessons sort/creation` restores the original
+   order. Enrol a Student in two of them and repeat with `lessons STUDENT_INDEX sort/schedule`.
+   After narrowing the people list, its positions must remain unchanged by each Lesson-order request.
+   An invalid `sort/name` must retain the previous view and stored bytes.
 
 4. Record two independent keys for Monday 5 October 2026. Repeating Alex's `present` status is a no-op; changing
    it to `absent` corrects the existing key rather than adding another. Tuesday is rejected because it does not
