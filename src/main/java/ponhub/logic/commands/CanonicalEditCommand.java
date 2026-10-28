@@ -44,7 +44,7 @@ public final class CanonicalEditCommand implements CanonicalCommandExecutor.Stag
             PersonEditCandidate candidate = PersonEditCandidate.prepare(staged.exportState(), original.getId(),
                     input.edit());
             PersonRecord edited = candidate.getEditedPerson();
-            List<String> disconnected = disconnectedLinks(staged.getPeople(), original, edited);
+            List<String> disconnected = findDisconnectedLinks(staged.getPeople(), original, edited);
             if (candidate.isChanged()) {
                 staged.resetData(candidate.getCandidateState());
             }
@@ -68,7 +68,7 @@ public final class CanonicalEditCommand implements CanonicalCommandExecutor.Stag
      * Identifies lost exact-phone links against the complete pre-edit snapshot, including hidden people.
      * The candidate preserves the endpoint's role; new links do not hide the loss of existing links.
      */
-    private static List<String> disconnectedLinks(List<PersonRecord> people, PersonRecord original,
+    private static List<String> findDisconnectedLinks(List<PersonRecord> people, PersonRecord original,
             PersonRecord edited) {
         if (original instanceof Parent parent) {
             Parent replacement = (Parent) edited;
