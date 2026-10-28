@@ -714,6 +714,10 @@ All four are assigned to Mei. Consider
 The [criteria matrix](#supported-criteria) gives the accepted fields and validation rules. Exact-value
 buckets preserve substring semantics for `s/`, `tu/`, `rm/` and `sn/`; a prefix trie would not preserve
 arbitrary fragments such as `s/ath`. Without a supplied day or time, candidates are the whole catalogue.
+Paired lesson-only `from/` and `to/` validate a same-day increasing window. Each candidate overlaps it
+exactly when `lesson.start < to && lesson.end > from`; endpoint-only contact is excluded. Existing
+exact `st/` and `et/` buckets remain available and all supplied predicates are conjunctive.
+
 For bounded field lengths, searching costs `O(B + R_B + K)`: `B` candidates, their roster links `R_B` when
 `sn/` is supplied, and `K` results. This is not a constant-time text search or a mutation/persistence bound.
 
@@ -2483,6 +2487,12 @@ The following is one end-to-end procedure for the delivered normal session. `add
    search c/lesson sn/Alex d/Mon s/Math
    search c/lesson sn/Nobody
    ```
+
+   To test time-window boundaries with the Lessons above, `search c/lesson d/Mon from/1700 to/1730`
+   returns `L1` only: `L2` ends at 1700 and `L3` starts at 1730. `from/1630 to/1800` returns
+   `L1,L2,L3`. Adding `s/Science` leaves `L2`; adding `st/1600` instead leaves `L1`.
+   A missing endpoint, equal or reversed endpoints, `2400` or a people-category window must fail without
+   replacing either panel or writing data. Valid no-match windows display an empty Lesson panel.
 
 4. Record two independent keys for Monday 5 October 2026. Repeating Alex's `present` status is a no-op; changing
    it to `absent` corrects the existing key rather than adding another. Tuesday is rejected because it does not

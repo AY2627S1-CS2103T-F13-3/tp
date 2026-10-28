@@ -39,6 +39,8 @@ public class SearchFieldTest {
                 Map.entry("d/", SearchField.DAY),
                 Map.entry("st/", SearchField.START_TIME),
                 Map.entry("et/", SearchField.END_TIME),
+                Map.entry("from/", SearchField.FROM_TIME),
+                Map.entry("to/", SearchField.TO_TIME),
                 Map.entry("s/", SearchField.SUBJECT),
                 Map.entry("tu/", SearchField.TUTOR_NAME),
                 Map.entry("rm/", SearchField.ROOM));
@@ -74,6 +76,8 @@ public class SearchFieldTest {
                 Map.entry(SearchField.DAY, all),
                 Map.entry(SearchField.START_TIME, all),
                 Map.entry(SearchField.END_TIME, all),
+                Map.entry(SearchField.FROM_TIME, Set.of(LESSON)),
+                Map.entry(SearchField.TO_TIME, Set.of(LESSON)),
                 Map.entry(SearchField.SUBJECT, all),
                 Map.entry(SearchField.TUTOR_NAME, Set.of(STUDENT, PARENT, LESSON)),
                 Map.entry(SearchField.ROOM, all));
