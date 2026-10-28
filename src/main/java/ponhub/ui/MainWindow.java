@@ -117,11 +117,6 @@ public class MainWindow extends UiPart<Stage> {
      */
     private void configureLogoSound() {
         Label badge = (Label) ponhubWordmark.lookup(".wordmark-hub");
-        ponhubWordmark.applyCss();
-        double badgeWidth = badge.prefWidth(-1);
-        badge.setMinWidth(badgeWidth);
-        badge.setPrefWidth(badgeWidth);
-        badge.setMaxWidth(badgeWidth);
         badge.setTooltip(new Tooltip("Curiosity has consequences."));
         Node badgeFrame = badge.getParent();
         ScaleTransition pulse = new ScaleTransition(Duration.millis(110), badgeFrame);
@@ -261,7 +256,8 @@ public class MainWindow extends UiPart<Stage> {
      * Fills up all the placeholders of this window.
      */
     void fillInnerParts() {
-        personListPanel = new PersonRecordListPanel(logic.getPersonRecords(), logic.personSearchContextProperty());
+        personListPanel = new PersonRecordListPanel(logic.getPersonRecords(), logic.personSearchContextProperty(),
+                logic.peopleResultContextProperty());
         personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
 
         LessonListPanel lessonListPanel = new LessonListPanel(logic.getDisplayedLessons(),

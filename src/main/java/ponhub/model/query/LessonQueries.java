@@ -175,6 +175,8 @@ public final class LessonQueries implements LessonQuerySource {
                 && matchesTimeWindow(criteria, lesson)
                 && criteria.matches(SearchField.SUBJECT, lesson.getSubject().getValue())
                 && criteria.matches(SearchField.TUTOR_NAME, lesson.getTutorName())
+                && criteria.matches(SearchField.TUTOR_PHONE, peopleById.get(lesson.getTutorId())
+                        .getContactDetails().getPhone().orElseThrow().value)
                 && criteria.matches(SearchField.ROOM, lesson.getRoom().getValue())
                 && (criteria.getValue(SearchField.STUDENT_NAME).isEmpty()
                     || rosters.get(lesson.getLessonId()).stream()

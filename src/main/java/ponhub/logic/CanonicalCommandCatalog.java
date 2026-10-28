@@ -49,7 +49,7 @@ public final class CanonicalCommandCatalog {
             + "       search c/tutor [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]\n"
             + "       [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [rm/ROOM]\n"
             + "       search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT]"
-            + " [tu/TUTOR_NAME] [rm/ROOM] [from/HHMM to/HHMM]\n"
+            + " [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM] [from/HHMM to/HHMM]\n"
             + "Category values ignore case. Supply each lowercase prefix at most once, with a nonblank value.\n"
             + "All filters must match the same person. Name, email and address match text fragments ignoring case;\n"
             + "name/address spaces are normalized. Level and phones match exactly; phone leading zeros matter.\n"
@@ -57,7 +57,8 @@ public final class CanonicalCommandCatalog {
             + "People results replace the people view and renumber current positions without saving.\n"
             + "Lesson results use a separate panel and preserve people filters and positions.\n"
             + "All lesson filters must match one lesson; sn/ matches its current roster. Text ignores case;\n"
-            + "tu/ matches tutor names. Day and st/et HHMM times match exactly; together, end > start.\n"
+            + "tu/ matches tutor names; lesson-only tp/ matches the complete tutor phone, with or without tu/.\n"
+            + "Day and st/et HHMM times match exactly; together, end > start.\n"
             + "Lesson-only from/ and to/ must be supplied together, from < to, and match positive overlap.\n"
             + "Touching endpoints alone do not overlap. Other supplied filters still apply to the same lesson.\n"
             + "Empty lessons are included unless sn/ is supplied. Zero matches display an empty lesson panel.\n"
@@ -79,6 +80,7 @@ public final class CanonicalCommandCatalog {
             + "The two prefixes may appear in either order when a date is supplied.\n"
             + "A real date must match the lesson weekday; current members show present, absent or unrecorded.\n"
             + "Former members' retained attendance appears separately. People positions are preserved.\n"
+            + "Lesson details are current information, including when a past attendance date is selected.\n"
             + "This read-only view refreshes after saved changes. Example: showlesson lid/L1 d/2026-10-05";
     public static final String MESSAGE_ADD_LESSON_USAGE =
             "Usage: addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM\n"
@@ -99,6 +101,7 @@ public final class CanonicalCommandCatalog {
                     + "or Students.\n"
             + "A weekday change cannot invalidate retained attendance. If blocked, inspect the reported date with "
                     + "showlesson and obtain each Student's current people-list position before using unmark.\n"
+            + "Retained attendance uses current Lesson details. Create a new Lesson for future-only changes.\n"
             + "An identical edit makes no write. Example: editlesson lid/L1 st/1630 s/Advanced Math";
     public static final String MESSAGE_ENROL_USAGE = "Usage: enrol STUDENT_INDEX lid/LESSON_ID\n"
             + "STUDENT_INDEX is the current people-list position of a Student. LESSON_ID is stable.\n"
@@ -116,13 +119,15 @@ public final class CanonicalCommandCatalog {
             "Usage: unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD\n"
                     + "Removes only that dated attendance record, including retained history after unenrolment.\n"
                     + "Example: unmark 1 lid/L1 d/2026-10-05";
-    public static final String MESSAGE_HISTORY_USAGE = "Usage: history STUDENT_INDEX [lid/LESSON_ID]\n"
+    public static final String MESSAGE_HISTORY_USAGE =
+            "Usage: history STUDENT_INDEX [lid/LESSON_ID] [d/YYYY-MM-DD] [s/present|absent]\n"
             + "Shows retained dated attendance, newest first, then by stable Lesson ID.\n"
             + "STUDENT_INDEX selects a Student in the current people list.\n"
-            + "An optional existing Lesson ID filters records.\n"
+            + "Optional Lesson ID, exact date and status filters combine; each may appear once in any order.\n"
+            + "Dates must be real YYYY-MM-DD values; status ignores case. Omitted filters show all values.\n"
             + "A missing record is unrecorded, not absent. Current and former membership are shown separately.\n"
             + "The people list and operational data remain unchanged.\n"
-            + "Example: after list r/student, history 1 lid/L1";
+            + "Example: after list r/student, history 1 lid/L1 s/absent";
     public static final String MESSAGE_DELETE_USAGE = "Usage: delete INDEX\n"
             + "INDEX is the person's current position in the displayed people list.\n"
             + "Shows the resolved name and stable ID without saving. Enter delete confirm to permanently remove\n"

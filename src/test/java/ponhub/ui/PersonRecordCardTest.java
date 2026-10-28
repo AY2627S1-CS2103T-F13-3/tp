@@ -23,6 +23,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -53,6 +54,9 @@ import ponhub.model.person.Student;
 import ponhub.model.person.Tutor;
 import ponhub.model.query.LessonQueries;
 import ponhub.model.search.PersonSearchMatch;
+import ponhub.model.search.SearchCategory;
+import ponhub.model.search.SearchCriteria;
+import ponhub.model.search.SearchField;
 import ponhub.testutil.FxTestUtil;
 import ponhub.testutil.LessonQueryTestData;
 import ponhub.testutil.PeopleSampleDataUtil;
@@ -179,6 +183,39 @@ public class PersonRecordCardTest {
         assertThrows(NullPointerException.class, () -> new PersonRecordCard(null, 1));
         assertThrows(IllegalArgumentException.class, () -> new PersonRecordCard(tutor, 0));
         assertThrows(IllegalArgumentException.class, () -> new PersonRecordCard(tutor, -1));
+    }
+
+    @Test
+    public void panel_longSearchCriteria_keepsCompleteTooltipAndReachableListAtCompactWidth() throws Exception {
+        runOnFxThread(() -> {
+            PeopleView view = new PeopleView(new PonHubData());
+            String value = "long value ".repeat(100);
+            view.setSearchCriteria(new SearchCriteria(SearchCategory.STUDENT, Map.of(SearchField.ADDRESS, value)));
+            for (double width : new double[] {290.4, 853}) {
+                view.setSearchCriteria(new SearchCriteria(SearchCategory.STUDENT,
+                        Map.of(SearchField.ADDRESS, value)));
+                Region panel = new PersonRecordListPanel(view).getRoot();
+                layoutScene(panel, width, 420);
+                Label heading = (Label) panel.lookup("#peopleContext");
+                assertEquals(view.resultContextProperty().get(), heading.getText());
+                assertEquals(heading.getText(), heading.getTooltip().getText());
+                ScrollPane contextPane = (ScrollPane) panel.lookup("#peopleContextPane");
+                contextPane.applyCss();
+                contextPane.layout();
+                assertTrue(contextPane.getHeight() <= 64);
+                assertTrue(heading.getHeight() > contextPane.getViewportBounds().getHeight());
+                contextPane.setVvalue(1);
+                panel.layout();
+                assertEquals(1, contextPane.getVvalue());
+                view.setSearchCriteria(new SearchCriteria(SearchCategory.STUDENT,
+                        Map.of(SearchField.ADDRESS, value + "new criterion")));
+                assertEquals(0, contextPane.getVvalue());
+                // The offscreen Scene uses integer pixel snapping for this fractional logical width.
+                assertTrue(contextPane.getWidth() <= Math.ceil(width));
+                assertTrue(getRecordList(panel).getHeight() > 250);
+                assertTrue(panel.lookup("#filterResetHint").isVisible());
+            }
+        });
     }
 
     @Test

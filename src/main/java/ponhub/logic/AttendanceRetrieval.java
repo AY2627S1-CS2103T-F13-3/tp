@@ -2,6 +2,7 @@ package ponhub.logic;
 
 import static java.util.Objects.requireNonNull;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -15,6 +16,7 @@ import ponhub.logic.commands.exceptions.CommandException;
 import ponhub.logic.parser.HistoryArgumentsParser.Input;
 import ponhub.model.PeopleView;
 import ponhub.model.PonHubData;
+import ponhub.model.attendance.AttendanceStatus;
 import ponhub.model.lesson.LessonId;
 import ponhub.model.person.PersonId;
 import ponhub.model.query.AttendanceHistoryEntry;
@@ -29,12 +31,14 @@ public final class AttendanceRetrieval {
     private final ObservableList<AttendanceHistoryEntry> displayed = FXCollections.observableArrayList();
     private final ObservableList<AttendanceHistoryEntry> readOnlyDisplayed =
             FXCollections.unmodifiableObservableList(displayed);
-    private final ListChangeListener<AttendanceHistoryEntry> refresh = change -> displayed.setAll(change.getList());
+    private final ListChangeListener<AttendanceHistoryEntry> refresh = change -> refreshDisplayed();
     private final ReadOnlyStringWrapper context = new ReadOnlyStringWrapper("Attendance history");
     private final ReadOnlyBooleanWrapper active = new ReadOnlyBooleanWrapper(false);
     private ObservableList<AttendanceHistoryEntry> selected;
     private PersonId selectedStudentId;
     private Optional<LessonId> selectedLessonId = Optional.empty();
+    private Optional<LocalDate> selectedDate = Optional.empty();
+    private Optional<AttendanceStatus> selectedStatus = Optional.empty();
 
     /**
      * Connects history results and selection validity to the same canonical root and people view.
@@ -78,12 +82,16 @@ public final class AttendanceRetrieval {
             }
             selected = source;
             selected.addListener(refresh);
-            displayed.setAll(selected);
         }
         selectedStudentId = student.getId();
         selectedLessonId = lessonId;
+        selectedDate = input.date();
+        selectedStatus = input.status();
+        refreshDisplayed();
         context.set("Student " + student.getId() + " · attendance history"
-                + lessonId.map(id -> " · " + id).orElse(""));
+                + lessonId.map(id -> " · " + id).orElse("")
+                + selectedDate.map(date -> " · " + date).orElse("")
+                + selectedStatus.map(status -> " · " + status).orElse(""));
         active.set(true);
         return readOnlyDisplayed;
     }
@@ -93,6 +101,17 @@ public final class AttendanceRetrieval {
      */
     public void hide() {
         active.set(false);
+    }
+
+    /**
+     * Applies the held filters to committed records without changing their query order or membership context.
+     */
+    private void refreshDisplayed() {
+        displayed.setAll(selected.stream()
+                .filter(entry -> selectedDate.map(date -> date.equals(entry.getDate())).orElse(true))
+                .filter(entry -> selectedStatus.map(status -> status.name().equals(entry.getStatus().name()))
+                        .orElse(true))
+                .toList());
     }
 
     /**
@@ -107,6 +126,8 @@ public final class AttendanceRetrieval {
         selected = null;
         selectedStudentId = null;
         selectedLessonId = Optional.empty();
+        selectedDate = Optional.empty();
+        selectedStatus = Optional.empty();
         displayed.clear();
         context.set("Attendance history");
         hide();

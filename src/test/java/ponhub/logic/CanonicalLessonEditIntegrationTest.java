@@ -51,7 +51,7 @@ public class CanonicalLessonEditIntegrationTest {
         PonHubDataState before = session.getDataSnapshot();
         List<LessonId> ids = before.lessons().stream().map(Lesson::getId).toList();
 
-        assertEquals("Edited lesson: L1.", session.execute("editlesson rm/r4 tp/00333333 tu/tutor   TWO "
+        assertEquals(editedWithAttendance(), session.execute("editlesson rm/r4 tp/00333333 tu/tutor   TWO "
                 + "s/Advanced Math et/1045 lid/l1 st/0915 d/mon").getFeedbackToUser());
 
         PonHubDataState after = session.getDataSnapshot();
@@ -70,6 +70,28 @@ public class CanonicalLessonEditIntegrationTest {
         assertEquals(before.people().getLastAllocatedSequences(), after.people().getLastAllocatedSequences());
         assertEquals(before.lastAllocatedLessonSequence(), after.lastAllocatedLessonSequence());
         assertEquals(after, new CanonicalPeopleSession(session.getDataFilePath()).getDataSnapshot());
+    }
+
+    @Test
+    public void execute_formerAttendance_warnsForChangedDetailsButNotNoOpOrRemovedHistory() throws Exception {
+        CanonicalPeopleSession session = baseline("former-warning.json");
+        session.execute("mark 1 lid/L1 d/2026-10-05 s/present");
+        session.execute("unenrol 1 lid/L1");
+        PonHubDataState before = session.getDataSnapshot();
+        session.execute("showlesson lid/L1 d/2026-10-05");
+        assertEquals(editedWithAttendance(), session.execute("editlesson lid/L1 s/Science").getFeedbackToUser());
+        LessonDetailView detail = (LessonDetailView) session.getDisplayedLessons().getFirst();
+        assertEquals(new Subject("Science"), detail.getSubject());
+        assertEquals(AttendanceStatus.PRESENT, detail.formerAttendance().getFirst().status());
+        assertEquals(before.attendance(), session.getDataSnapshot().attendance());
+        byte[] bytes = Files.readAllBytes(session.getDataFilePath());
+        assertEquals("No changes to lesson: L1.",
+                session.execute("editlesson lid/L1 s/Science").getFeedbackToUser());
+        assertArrayEquals(bytes, Files.readAllBytes(session.getDataFilePath()));
+        session.execute("unmark 1 lid/L1 d/2026-10-05");
+        assertEquals("Edited lesson: L1.", session.execute("editlesson lid/L1 s/English").getFeedbackToUser());
+        assertEquals(session.getDataSnapshot(),
+                new CanonicalPeopleSession(session.getDataFilePath()).getDataSnapshot());
     }
 
     @Test
@@ -101,7 +123,7 @@ public class CanonicalLessonEditIntegrationTest {
         session.execute("showlesson lid/L1 d/2026-10-05");
         var displayedDetail = session.getDisplayedLessons();
 
-        assertEquals("Edited lesson: L1.", session.execute("editlesson lid/L1 st/0915 et/1045 "
+        assertEquals(editedWithAttendance(), session.execute("editlesson lid/L1 st/0915 et/1045 "
                 + "s/Advanced Math tu/Tutor Two tp/00333333 rm/R6").getFeedbackToUser());
         assertSame(displayedDetail, session.getDisplayedLessons());
         LessonDetailView detail = (LessonDetailView) displayedDetail.getFirst();
@@ -279,7 +301,9 @@ public class CanonicalLessonEditIntegrationTest {
             String context = session.lessonResultContextProperty().get();
             byte[] unchangedBytes = Files.readAllBytes(path);
 
-            assertThrows(CommandException.class, () -> session.execute("editlesson lid/L1 s/Changed Subject"));
+            CommandException failure = assertThrows(CommandException.class, () ->
+                    session.execute("editlesson lid/L1 s/Changed Subject"));
+            assertFalse(failure.getMessage().contains("retained attendance"));
             assertSame(unchanged, session.getDataSnapshot());
             assertSame(displayed, session.getDisplayedLessons());
             assertSame(selected, displayed.getFirst());
@@ -291,7 +315,7 @@ public class CanonicalLessonEditIntegrationTest {
             assertEquals(1, saves.get());
 
             failSave.set(false);
-            assertEquals("Edited lesson: L1.",
+            assertEquals(editedWithAttendance(),
                     session.execute("editlesson lid/L1 s/Changed Subject").getFeedbackToUser());
             assertEquals(2, saves.get());
             assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
@@ -309,6 +333,12 @@ public class CanonicalLessonEditIntegrationTest {
         assertFalse(protectedSession.getCommandWords().contains("editlesson"));
         assertThrows(ParseException.class, () -> protectedSession.execute("help editlesson"));
         assertEquals("{", Files.readString(rejectedPath));
+    }
+
+    private static String editedWithAttendance() {
+        return "Edited lesson: L1.\nWarning: retained attendance for L1 is displayed with current Lesson details. "
+                + "Dates and statuses are unchanged. Create a new Lesson for changes intended only "
+                + "for future occurrences.";
     }
 
     private CanonicalPeopleSession baseline(String filename) throws Exception {

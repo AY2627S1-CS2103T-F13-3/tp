@@ -100,6 +100,11 @@ public final class CanonicalLogicManager implements Logic {
     }
 
     @Override
+    public ReadOnlyStringProperty peopleResultContextProperty() {
+        return session.peopleResultContextProperty();
+    }
+
+    @Override
     public ObservableList<LessonView> getLessonList() {
         return session.getLessonQueries().getLessonList();
     }

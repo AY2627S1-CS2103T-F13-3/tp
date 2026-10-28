@@ -9,6 +9,7 @@ import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -16,6 +17,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
 import ponhub.model.PeopleView;
 import ponhub.model.person.PersonId;
@@ -34,6 +36,15 @@ public class PersonRecordListPanel extends UiPart<Region> {
     private Label summary;
 
     @FXML
+    private Label peopleContext;
+
+    @FXML
+    private ScrollPane peopleContextPane;
+
+    @FXML
+    private Label filterResetHint;
+
+    @FXML
     private ListView<PersonRecord> personListView;
 
     /**
@@ -41,7 +52,8 @@ public class PersonRecordListPanel extends UiPart<Region> {
      * Later filter changes and explicit model refreshes update the same list and renumber visible cards.
      */
     public PersonRecordListPanel(PeopleView peopleView) {
-        this(requireNonNull(peopleView).getPeople(), peopleView.searchContextProperty());
+        this(requireNonNull(peopleView).getPeople(), peopleView.searchContextProperty(),
+                peopleView.resultContextProperty());
     }
 
     /**
@@ -57,8 +69,21 @@ public class PersonRecordListPanel extends UiPart<Region> {
      */
     public PersonRecordListPanel(ObservableList<PersonRecord> people,
             ObservableValue<Map<PersonId, List<PersonSearchMatch>>> contexts) {
+        this(people, contexts, new ReadOnlyStringWrapper("All people").getReadOnlyProperty());
+    }
+
+    /**
+     * Keeps the current query visible when unrelated commands replace transient feedback.
+     */
+    public PersonRecordListPanel(ObservableList<PersonRecord> people,
+            ObservableValue<Map<PersonId, List<PersonSearchMatch>>> contexts, ObservableValue<String> scope) {
         super(FXML);
         requireNonNull(contexts);
+        peopleContext.textProperty().bind(requireNonNull(scope));
+        scope.addListener((observable, previous, current) -> peopleContextPane.setVvalue(0));
+        ResultHeadingTooltip.install(peopleContext);
+        filterResetHint.visibleProperty().bind(peopleContext.textProperty().isNotEqualTo("All people"));
+        filterResetHint.managedProperty().bind(filterResetHint.visibleProperty());
         personListView.setItems(requireNonNull(people));
         summary.textProperty().bind(Bindings.size(people).asString("Showing %d person(s)."));
         personListView.setCellFactory(list -> new PersonRecordListCell(contexts));

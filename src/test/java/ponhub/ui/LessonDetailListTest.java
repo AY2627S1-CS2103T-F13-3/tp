@@ -84,6 +84,29 @@ public class LessonDetailListTest {
     }
 
     @Test
+    public void detail_historicalContext_labelsCurrentInformationAndClearsItForPlainRoster() throws Exception {
+        runOnFxThread(() -> {
+            Region panel = panel(detail(Optional.of(SELECTED_DATE), List.of(), List.of()), 210, 900);
+            LessonDetailList view = (LessonDetailList) detailList(panel);
+            String note = "Current Lesson information";
+            assertEquals(List.of(note), labelsInOrder(view, ".card_context_label"));
+            assertWrapping(view, 210);
+            assertNoHorizontalScroll(view);
+
+            view.showDetail(detail(Optional.empty(), List.of(), List.of(formerEntry(1, 0))));
+            settleLayout(panel, view);
+            assertEquals(List.of(note), labelsInOrder(view, ".card_context_label"));
+            assertWrapping(view, 210);
+            assertNoHorizontalScroll(view);
+
+            view.showDetail(detail(Optional.empty(), List.of(rosterEntry(1, Optional.empty())), List.of()));
+            settleLayout(panel, view);
+            assertTrue(labelsInOrder(view, ".card_context_label").isEmpty());
+            assertEquals(List.of(primary(1)), labelsInOrder(view, ".card_entry_primary"));
+        });
+    }
+
+    @Test
     public void detail_emptySections_preservesExplicitEmptyFeedback() throws Exception {
         runOnFxThread(() -> {
             for (var date : List.of(Optional.of(SELECTED_DATE), Optional.<LocalDate>empty())) {
