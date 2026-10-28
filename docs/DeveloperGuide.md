@@ -1406,6 +1406,7 @@ input is valid. Prefixes are lowercase, order-independent and unique within a co
 | `et/` | Lesson end time | Yes | Yes | Yes | Yes | Exact HHMM |
 | `s/` | Lesson subject | Yes | Yes | Yes | Yes | Partial text |
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes | Partial text |
+| `tp/` | Lesson tutor's phone | — | — | — | Yes | Exact digits |
 | `rm/` | Lesson room | Yes | Yes | Yes | Yes | Partial text |
 
 Text query values are trimmed, have repeated spaces collapsed, and are case-normalized with `Locale.ROOT`. Filters
