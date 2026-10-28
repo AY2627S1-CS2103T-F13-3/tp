@@ -1368,8 +1368,15 @@ names, metadata, captions and values without changing Lesson/history styling or 
 `PersonRecordListPanel` fits cards to cell width, updates positions when cells are reused, and supplies count,
 empty placeholder and vertical scrolling for tall cards. `PeopleView.resultContextProperty()` supplies the
 current all-people, role-list or normalized search scope through Logic. The panel retains that heading and
-filter-reset guidance independently of command feedback; long headings have a bounded, keyboard-scrollable
-area so every criterion and the records remain reachable. Neither projection nor panel owns writable records.
+filter-reset guidance independently of command feedback. The heading's ScrollPane remains bounded to 64
+logical pixels. Scoped scrollbar arrow padding and thumb insets keep the thumb paintable even at the
+24-pixel minimum, without allocating more space at the expense of the people list. Its focus-traversable
+property binds to content height exceeding viewport height, so Tab and
+Shift+Tab can reach overflowing criteria while short headings add no stop. The existing ScrollPane keyboard
+behavior handles arrows, Page Up/Down and Home/End. Accessible text follows the complete heading, and the
+visible hint identifies the keyboard route when it overflows. A reserved one-pixel border turns orange on
+focus without changing wrapping or viewport size. Scope changes reset scroll to the top; resize updates the
+overflow binding. Neither projection nor panel owns writable records.
 
 Each present contact detail carries an explicit copyable flag; missing values and the education level do not.
 `PersonRecordCard` adds a standard, focusable **Copy** button with a contact/person accessible name.
@@ -2228,7 +2235,15 @@ are a manual checklist, not evidence that a display/scaling matrix has passed.
 1. In an isolated working folder, launch the application on a 1280×720 display at 150% scaling and on a 1920×1080 display at 100% and 125%. Record the OS, scaling, Java version and usable desktop work area. The complete window must fit inside that work area; menu actions, command entry, results and the people list must remain reachable. Logical-size previews are useful checks, but do not replace actual platform/scaling results.
 2. Resize to the minimum window size. Run `help add` and scroll to the final example. Scroll the people list to its last card. Expect separate usable result and people scrollbars, with the command box and menus still visible.
 3. Add role-aware people with a long valid name, postal address and unbroken email using the active syntax, such as `add r/tutor n/Alexandra Catherine Elizabeth Montgomery Wellington p/001234567890123 e/alexandracatherineelizabethmontgomerywellington@example.com a/123 Long Residential Avenue Clementi District Block 456 Unit 12-345 Singapore 123456`. Run `list` followed by `help add` to refresh the cards, then narrow, widen and narrow the window again. Expect full values to wrap within the card without horizontal overflow; scroll vertically to reach the bottom of a tall card and the final person. Canonical add does not accept tags.
-4. Close the application and restart with the retained preferences. Valid sizes and coordinates remain unchanged. In the isolated folder, test an oversized saved window, coordinates from a removed monitor and a still-connected monitor to the left or above the primary display. Expect an oversized/offscreen window to fit a current work area, while valid secondary-monitor coordinates remain usable.
+4. Submit a people search with enough long filters to overflow its heading, including a valid zero-result
+   search. At compact and wide widths, use Tab/Shift+Tab to reach the heading and check its orange focus border
+   and visible keyboard hint. Up/Down, Page Up/Down and Home/End must reveal the complete text; Tab and
+   Shift+Tab must leave it. Check the mouse wheel and visible scrollbar thumb. From the command box, blank or
+   unmatched input must still traverse and a matching command prefix must still complete; Shift+Tab leaves
+   matching input. Keep a command draft/caret/selection and selected person, then scroll the heading: records,
+   active filters, selection and saved bytes must remain unchanged. Resize a shorter heading until it fits;
+   it should leave the traversal route. Run `list`: the heading resets to the top and no longer adds a stop.
+5. Close the application and restart with the retained preferences. Valid sizes and coordinates remain unchanged. In the isolated folder, test an oversized saved window, coordinates from a removed monitor and a still-connected monitor to the left or above the primary display. Expect an oversized/offscreen window to fit a current work area, while valid secondary-monitor coordinates remain usable.
 
 Automated bounds regressions cover scaled work areas, desktop bars, removed and secondary monitors, partial overlap and invalid saved dimensions. Actual-FXML layout checks use isolated fixture data; they do not establish Windows or Linux font/scaling behavior. Keep real display results in issue #128.
 

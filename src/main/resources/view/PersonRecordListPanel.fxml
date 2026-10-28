@@ -12,7 +12,7 @@
            minWidth="0" maxWidth="Infinity" />
   </ScrollPane>
   <Label fx:id="filterResetHint" styleClass="cell_small_label" text="Use list to show all people."
-         wrapText="true" />
+         wrapText="true" minHeight="-Infinity" />
   <Label fx:id="summary" styleClass="cell_small_label" wrapText="true" />
   <ListView fx:id="personListView" minWidth="0" minHeight="0" VBox.vgrow="ALWAYS" />
 </VBox>

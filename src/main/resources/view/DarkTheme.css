@@ -550,3 +550,23 @@
 .menu-item:disabled .label {
     -fx-text-fill: #B8B8B8;
 }
+
+/* Reserve the focus frame so focusing a wrapped heading does not change its viewport. */
+#peopleContextPane {
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
+}
+
+#peopleContextPane:focused {
+    -fx-border-color: #FF9900;
+}
+
+/* The bounded heading needs a compact track whose thumb remains paintable at 24 pixels. */
+#peopleContextPane .scroll-bar:vertical .increment-arrow,
+#peopleContextPane .scroll-bar:vertical .decrement-arrow {
+    -fx-padding: 0 4 0 4;
+}
+
+#peopleContextPane .scroll-bar:vertical .thumb {
+    -fx-background-insets: 2;
+}
