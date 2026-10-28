@@ -294,7 +294,10 @@ Check duplicates against every other record, excluding the target ID: Student us
 and parent phone; Tutor/Parent use normalized name and own phone within the same role. A Tutor rename
 keeps every Lesson's Tutor ID. Changing a Parent's own phone or a Student's parent phone recomputes
 exact-phone derived links without changing another person's stored phone, creating a Parent or
-requiring a matching Parent.
+requiring a matching Parent. Before resetting the staged root, `CanonicalEditCommand` compares the edited
+endpoint with all people in the pre-edit snapshot. Successful feedback identifies every removed Parent/Student
+ID pair; unchanged phone values and previously unlinked records produce no warning. The executor returns
+that feedback only after a changed snapshot is saved and published, so a failed save reports failure instead.
 
 **Person model API (#261).** `PersonEditInput` contains typed immutable field operations:
 `Field.keep()` retains an omitted field, `Field.clear()` represents an explicit blank, and
@@ -2031,8 +2034,13 @@ named above do not certify native display/scaling acceptance.
 4. With `list r/tutor`, run `showlesson lid/L1 d/2026-10-05`, then `edit 1 n/Corrected Tutor`.
    Expect the same Lesson/Tutor IDs and date, current tutor label, roster and retained former-member attendance.
 5. Run `search c/parent sn/Alex`, then `edit 1 p/90000000`. Pat leaves the retained search result; the
-   Student's stored parent phone remains unchanged. Run `list r/student`, then `edit 1 pp/90000000` and
-   repeat the Parent search: Pat links to Alex again. No additional Parent is created or edited implicitly.
+   Student's stored parent phone remains unchanged. The success feedback lists `P1 / S1` as a removed link
+   (and any other linked Students in this fixture). Run `list r/student`, then `edit 1 pp/90000000` and
+   repeat the Parent search: Pat links to Alex again without a removal warning. Run `list r/student`,
+   then `edit 1 pp/91234567`: expect `P1 / S1` in the warning, and repeat the Parent search to verify no
+   matching Parent. Restore both phones; an unchanged
+   phone, a name-only edit and a previously unlinked phone change must not warn. No additional Parent
+   is created or edited implicitly.
 6. Run `list r/student`, `history 1 lid/L1`, then `search c/student n/Alex`. Select Alex and run
    `edit 1 n/Changed Student`. Expect Alex to leave the people search and selection to clear, while
    the right pane keeps Student S1's retained history. Recheck positions before another indexed command.

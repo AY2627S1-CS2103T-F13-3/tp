@@ -513,6 +513,10 @@ The role/search filter stays active and results are re-evaluated. A renamed pers
 name search; recheck positions before the next indexed command. Lessons, rosters, attendance and counters
 retain their identities. A tutor rename updates current lesson labels. Changing `pp/`, or a parent's `p/`,
 recomputes exact-phone relationships without changing anyone else's stored phone.
+
+If an existing link is removed, the successful result lists each affected Parent/Student ID pair, including people hidden by the current filter.
+Update the corresponding phone values to restore a link; changing one record never updates the other automatically.
+
 Protected sessions reject edits. Invalid input does not write. Save errors preserve the previous live data and view;
 follow the [unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build) for the stored file.
 <!-- @@author -->
