@@ -64,7 +64,7 @@ public class MainWindowResultResizeTest {
                 assertTrue(height >= 96 && height <= 116,
                         "Startup feedback must stay compact at " + size[0] + "x" + size[1]
                                 + "; actual height=" + height);
-                assertTrue(fixture.records().getHeight() >= 120);
+                assertTrue(fixture.records().getHeight() >= 100);
                 fixture.enter("list");
                 assertEquals(height, fixture.resultPane().getHeight(), 1);
                 ScrollPane scroll = (ScrollPane) fixture.result().lookup(".scroll-pane");
@@ -197,9 +197,9 @@ public class MainWindowResultResizeTest {
                 fixture.split().setDividerPositions(0.75);
                 fixture.layout();
                 if (size[1] == 330) {
-                    // At this compact attached-scene height both sections have reached their usable minimum.
-                    assertEquals(initialHeight, fixture.resultPane().getHeight(), 1);
-                    assertEquals(120, fixture.records().getHeight(), 1);
+                    // Only a small amount of divider movement remains in the compact workspace.
+                    assertTrue(fixture.resultPane().getHeight() >= initialHeight);
+                    assertTrue(fixture.records().getHeight() >= 100);
                 } else {
                     assertTrue(fixture.resultPane().getHeight() > initialHeight + 1,
                             "Moving the divider down must enlarge the actual result area.");
@@ -210,7 +210,7 @@ public class MainWindowResultResizeTest {
                     fixture.layout();
                     assertTrue(fixture.resultPane().getHeight() >= 96);
                     assertTrue(fixture.root().lookup("#resultDisplayPlaceholder").getBoundsInLocal().getHeight() >= 50);
-                    assertTrue(fixture.records().getHeight() >= 120);
+                    assertTrue(fixture.records().getHeight() >= 100);
                     assertTrue(fixture.root().lookup("#personListView").getBoundsInLocal().getHeight() >= 50);
                     assertTrue(fixture.root().lookup("#lessonListView").getBoundsInLocal().getHeight() >= 50);
                     for (String selector : List.of("#commandTextField", "#resultDisplay", "#personListView",
@@ -225,6 +225,39 @@ public class MainWindowResultResizeTest {
                         .filter(node -> node.getParent() == fixture.split()).findFirst().orElseThrow();
                 assertEquals(Cursor.V_RESIZE, divider.getCursor());
                 assertTrue(divider.getBoundsInParent().getHeight() >= 6);
+            });
+        }
+    }
+
+    @Test
+    public void feedbackFrame_atEveryPaneHeight_containsContentAndStaysInsideSection() throws Exception {
+        Fixture fixture = callOnFxThread(this::createFixture);
+        for (int[] size : new int[][] {{450, 330}, {792, 812}, {1536, 1000}}) {
+            runOnFxThread(() -> {
+                fixture.resize(size[0], size[1]);
+                for (String feedback : List.of("", "Showing 2 students.", "Long feedback. ".repeat(100))) {
+                    fixture.result().setText(feedback);
+                    for (double position : new double[] {0, 0.13, 0.35, 0.65, 1, 0}) {
+                        fixture.split().setDividerPositions(position);
+                        fixture.layout();
+                        Region frame = (Region) fixture.root().lookup("#resultDisplayPlaceholder");
+                        Bounds frameBounds = frame.localToScene(frame.getLayoutBounds());
+                        Bounds sectionBounds = fixture.resultPane().localToScene(
+                                fixture.resultPane().getLayoutBounds());
+                        Node content = frame.getChildrenUnmodifiable().getFirst();
+                        Bounds contentBounds = content.localToScene(content.getLayoutBounds());
+                        String context = size[0] + "x" + size[1] + "; divider=" + position;
+                        // Allow one layout pixel for snapping, but not clipping or control overflow.
+                        assertTrue(frameBounds.getMinY() >= sectionBounds.getMinY()
+                                && frameBounds.getMaxY() <= sectionBounds.getMaxY() + 1,
+                                "The complete feedback frame must fit its section: " + context);
+                        assertTrue(contentBounds.getMinY() >= frameBounds.getMinY() + frame.getInsets().getTop() - 1
+                                && contentBounds.getMaxY() <= frameBounds.getMaxY() - frame.getInsets().getBottom() + 1,
+                                "Feedback must stay within the padded frame: " + context);
+                        fixture.assertFeedbackBorder(frameBounds, context);
+                        assertTrue(fixture.records().getHeight() >= 100, context);
+                    }
+                }
             });
         }
     }
@@ -329,6 +362,29 @@ public class MainWindowResultResizeTest {
     }
 
     private record Fixture(Region root, Path dataPath, String originalData) {
+        private void assertFeedbackBorder(Bounds frame, String context) {
+            var image = root.snapshot(null, null);
+            double[][] edges = {{frame.getCenterX(), frame.getMinY()},
+                {frame.getCenterX(), frame.getMaxY() - 1},
+                {frame.getMinX(), frame.getCenterY()}, {frame.getMaxX() - 1, frame.getCenterY()}};
+            for (double[] edge : edges) {
+                boolean visible = false;
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dy = -1; dy <= 1; dy++) {
+                        int x = (int) Math.round(edge[0]) + dx;
+                        int y = (int) Math.round(edge[1]) + dy;
+                        if (x >= 0 && x < image.getWidth() && y >= 0 && y < image.getHeight()) {
+                            var color = image.getPixelReader().getColor(x, y);
+                            visible |= Math.abs(color.getRed() - 0.2) < 0.04
+                                    && Math.abs(color.getGreen() - 0.2) < 0.04
+                                    && Math.abs(color.getBlue() - 0.2) < 0.04;
+                        }
+                    }
+                }
+                assertTrue(visible, "All four feedback edges must render inside the clip: " + context);
+            }
+        }
+
         private SplitPane split() {
             return (SplitPane) root.lookup("#resultSplitPane");
         }

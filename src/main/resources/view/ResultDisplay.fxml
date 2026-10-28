@@ -3,7 +3,8 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.StackPane?>
 
-<StackPane fx:id="placeHolder" xmlns="http://javafx.com/javafx/17"
+<!-- Let the read-only control shrink within the outer frame's padded content area. -->
+<StackPane fx:id="placeHolder" minHeight="0" xmlns="http://javafx.com/javafx/17"
     xmlns:fx="http://javafx.com/fxml/1">
-  <TextArea fx:id="resultDisplay" editable="false" wrapText="true" styleClass="result-display"/>
+  <TextArea fx:id="resultDisplay" minHeight="0" editable="false" wrapText="true" styleClass="result-display"/>
 </StackPane>

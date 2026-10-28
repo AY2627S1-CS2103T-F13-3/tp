@@ -44,7 +44,12 @@
         <SplitPane fx:id="resultSplitPane" orientation="VERTICAL" dividerPositions="0.0"
                    minHeight="210" prefHeight="210" VBox.vgrow="ALWAYS">
           <!-- Start at the usable minimum; give window growth to records until the user drags the divider. -->
-          <VBox fx:id="feedbackSection" minHeight="96" prefHeight="96" SplitPane.resizableWithParent="false">
+          <!-- Size the minimum from the navigation and feedback; keep its frame inside the split content clip. -->
+          <!-- #541 layout correction prepared with OpenAI Codex assistance. -->
+          <VBox fx:id="feedbackSection" prefHeight="96" SplitPane.resizableWithParent="false">
+            <padding>
+              <Insets bottom="1" />
+            </padding>
             <FlowPane fx:id="viewNavigation" hgap="6" vgap="4" styleClass="view-navigation" VBox.vgrow="NEVER">
               <Button fx:id="lessonsButton" text="All lessons" onAction="#handleLessons" />
               <Button fx:id="studentLessonsButton" text="Student lessons" onAction="#handleStudentLessons" />
@@ -60,16 +65,17 @@
             </StackPane>
           </VBox>
 
-          <SplitPane fx:id="recordsSplitPane" dividerPositions="0.32" minHeight="120">
+          <!-- Use record padding space for the feedback frame, preserving both viewports at 450x360. -->
+          <SplitPane fx:id="recordsSplitPane" dividerPositions="0.32" minHeight="100">
             <VBox fx:id="personList" minWidth="160" minHeight="0">
               <padding>
-                <Insets top="10" right="10" bottom="10" left="10" />
+                <Insets right="10" left="10" />
               </padding>
               <StackPane fx:id="personListPanelPlaceholder" minHeight="0" VBox.vgrow="ALWAYS"/>
             </VBox>
             <VBox minWidth="160" minHeight="0">
               <padding>
-                <Insets top="10" right="10" bottom="10" left="10" />
+                <Insets right="10" left="10" />
               </padding>
               <StackPane fx:id="lessonListPanelPlaceholder" minHeight="0" VBox.vgrow="ALWAYS"/>
             </VBox>
