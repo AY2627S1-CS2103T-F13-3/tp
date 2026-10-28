@@ -17,7 +17,9 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Exercises startup link-resolution bounds without initializing preferences or operational storage. */
+/**
+ * Exercises startup link-resolution bounds without initializing preferences or operational storage.
+ */
 public class MainAppPathResolutionTest {
     @TempDir
     Path directory;

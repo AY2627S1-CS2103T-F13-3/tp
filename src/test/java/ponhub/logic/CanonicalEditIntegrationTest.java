@@ -31,7 +31,9 @@ import ponhub.model.query.LessonDetailView;
 import ponhub.storage.JsonPonHubDataStorage;
 import ponhub.storage.ProtectedPonHubDataStorage;
 
-/** Exercises editing through real startup, displayed selectors and the saved canonical session. */
+/**
+ * Exercises editing through real startup, displayed selectors and the saved canonical session.
+ */
 public class CanonicalEditIntegrationTest {
     @TempDir
     Path directory;

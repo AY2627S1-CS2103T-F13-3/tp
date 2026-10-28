@@ -49,7 +49,9 @@ import ponhub.model.person.Phone;
 import ponhub.storage.JsonPonHubDataStorage;
 import ponhub.testutil.LessonQueryTestData;
 
-/** Attached production layouts; native drag/scaling acceptance remains a separate check. */
+/**
+ * Attached production layouts; native drag/scaling acceptance remains a separate check.
+ */
 public class MainWindowResultResizeTest {
     @TempDir
     public Path directory;

@@ -13,7 +13,9 @@ import org.junit.jupiter.api.io.TempDir;
 
 import ponhub.logic.parser.exceptions.ParseException;
 
-/** Tests same-named Tutor selection through the active saved lesson-search route. */
+/**
+ * Tests same-named Tutor selection through the active saved lesson-search route.
+ */
 public class LessonTutorSearchIntegrationTest {
     @TempDir
     Path directory;

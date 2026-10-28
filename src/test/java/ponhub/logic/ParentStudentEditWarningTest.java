@@ -23,7 +23,9 @@ import ponhub.model.person.Student;
 import ponhub.storage.JsonPonHubDataStorage;
 import ponhub.storage.ProtectedPonHubDataStorage;
 
-/** Checks lost exact-phone relationship feedback through the saved canonical editing boundary. */
+/**
+ * Checks lost exact-phone relationship feedback through the saved canonical editing boundary.
+ */
 public class ParentStudentEditWarningTest {
     @TempDir
     Path directory;

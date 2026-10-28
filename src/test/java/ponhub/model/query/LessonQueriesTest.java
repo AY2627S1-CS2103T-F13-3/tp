@@ -450,7 +450,9 @@ public class LessonQueriesTest {
         }
     }
 
-    /** Independent specification: scan raw records, resolve people, compare exact values or folded substrings. */
+    /**
+     * Independent specification: scan raw records, resolve people, compare exact values or folded substrings.
+     */
     private boolean scanMatches(SearchCriteria criteria, Lesson lesson) {
         for (var entry : criteria.getFilters().entrySet()) {
             String query = entry.getValue();

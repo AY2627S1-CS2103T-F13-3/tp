@@ -16,7 +16,9 @@ import org.junit.jupiter.api.io.TempDir;
 import ponhub.logic.parser.exceptions.ParseException;
 import ponhub.storage.JsonPonHubDataStorage;
 
-/** Exercises optional schedule ordering without rewriting canonical order or people positions. */
+/**
+ * Exercises optional schedule ordering without rewriting canonical order or people positions.
+ */
 public class LessonOrderIntegrationTest {
     @TempDir
     Path directory;

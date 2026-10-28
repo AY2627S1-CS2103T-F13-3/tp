@@ -25,7 +25,9 @@ import ponhub.storage.JsonPonHubDataCodec;
 import ponhub.storage.JsonUserPrefsStorage;
 import ponhub.storage.ProtectedPonHubDataStorage;
 
-/** Exercises the active application's canonical startup, command and shutdown boundaries together. */
+/**
+ * Exercises the active application's canonical startup, command and shutdown boundaries together.
+ */
 public class ProtectedStartupTest {
     private static final String ADD_COMMAND = "add r/parent n/Alex p/91234567 e/alex@example.com a/Somewhere";
 
