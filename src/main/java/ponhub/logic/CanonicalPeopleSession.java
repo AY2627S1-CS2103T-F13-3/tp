@@ -84,7 +84,8 @@ public final class CanonicalPeopleSession {
             "Unknown command: '%s'. Type 'help' to see available commands.";
 
     private static final Pattern BASIC_COMMAND_FORMAT =
-            Pattern.compile("(?<commandWord>\\S+)(?<arguments>.*)", Pattern.DOTALL);
+            Pattern.compile("[\\p{javaWhitespace}\\p{Zs}]*(?<commandWord>\\S+)(?<arguments>.*)",
+                    Pattern.DOTALL | Pattern.UNICODE_CHARACTER_CLASS);
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
 
     private final ProtectedPonHubDataStorage storage;
@@ -224,7 +225,8 @@ public final class CanonicalPeopleSession {
         // Consume before parsing: even rejected or empty input must not leave an old confirmation armed.
         PersonRecord confirmationTarget = pendingDeletion;
         pendingDeletion = null;
-        Matcher matcher = BASIC_COMMAND_FORMAT.matcher(StringUtil.trimSpaces(commandText.stripLeading()));
+        Matcher matcher = BASIC_COMMAND_FORMAT.matcher(
+                StringUtil.stripUnicodeBoundarySpaces(commandText));
         if (!matcher.matches()) {
             throw new ParseException(String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, MESSAGE_HELP_USAGE));
         }
@@ -288,7 +290,7 @@ public final class CanonicalPeopleSession {
             }
             case HELP -> new CommandResult(getHelp(arguments));
             case EXIT -> {
-                if (!arguments.isBlank()) {
+                if (!StringUtil.stripUnicodeBoundaryWhitespace(arguments).isEmpty()) {
                     throw new ParseException(String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT,
                             CanonicalCommandCatalog.MESSAGE_EXIT_USAGE));
                 }
@@ -303,7 +305,7 @@ public final class CanonicalPeopleSession {
      */
     private CommandResult executeDelete(String arguments, PersonRecord confirmationTarget)
             throws ParseException, CommandException {
-        String action = arguments.strip();
+        String action = StringUtil.stripUnicodeBoundaryWhitespace(arguments);
         if (action.equals("confirm")) {
             if (confirmationTarget == null) {
                 throw new CommandException("No person deletion is awaiting confirmation. Run delete INDEX first.");
@@ -332,7 +334,7 @@ public final class CanonicalPeopleSession {
      * Resolves help against this session's routes, including its protected startup restrictions.
      */
     private String getHelp(String arguments) throws ParseException {
-        String topic = arguments.strip().toLowerCase(Locale.ROOT);
+        String topic = StringUtil.stripUnicodeBoundaryWhitespace(arguments).toLowerCase(Locale.ROOT);
         if (topic.isEmpty()) {
             return CanonicalCommandCatalog.getOverview(getDataLoadError());
         }

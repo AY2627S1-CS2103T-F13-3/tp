@@ -17,7 +17,7 @@ public final class LessonMembershipParser {
             "Supply STUDENT_INDEX lid/LESSON_ID, for example 1 lid/L1.";
 
     private static final Pattern ARGUMENTS_FORMAT =
-            Pattern.compile("[ \\t]*([0-9]+)[ \\t]+lid/([^ \\t]+)[ \\t]*");
+            Pattern.compile("[\\p{Zs}\\t]*([0-9]+)[\\p{Zs}\\t]+lid/([^\\p{Zs}\\t]+)[\\p{Zs}\\t]*");
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
 
     /**

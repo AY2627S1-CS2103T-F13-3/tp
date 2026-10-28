@@ -36,19 +36,21 @@ public final class LessonsArgumentsParser {
         if (LINE_BREAK.matcher(arguments).find()) {
             throw new ParseException(MESSAGE_USAGE);
         }
-        String trimmed = arguments.strip();
+        String trimmed = ParserUtil.stripUnicodeBoundaryWhitespace(arguments);
         LessonOrder order = LessonOrder.CREATION;
         int sortStart = trimmed.indexOf("sort/");
         if (sortStart >= 0) {
-            if (sortStart > 0 && !Character.isWhitespace(trimmed.charAt(sortStart - 1))) {
+            if (sortStart > 0 && !(Character.isWhitespace(trimmed.charAt(sortStart - 1))
+                    || Character.isSpaceChar(trimmed.charAt(sortStart - 1)))) {
                 throw new ParseException(MESSAGE_USAGE);
             }
             try {
-                order = LessonOrder.fromValue(trimmed.substring(sortStart + "sort/".length()));
+                order = LessonOrder.fromValue(ParserUtil.stripUnicodeBoundaryWhitespace(
+                        trimmed.substring(sortStart + "sort/".length())));
             } catch (IllegalArgumentException failure) {
                 throw new ParseException(MESSAGE_USAGE, failure);
             }
-            trimmed = trimmed.substring(0, sortStart).strip();
+            trimmed = ParserUtil.stripUnicodeBoundaryWhitespace(trimmed.substring(0, sortStart));
         }
         if (trimmed.isEmpty()) {
             return new LessonsInput(Optional.empty(), order);

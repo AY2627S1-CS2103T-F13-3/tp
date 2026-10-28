@@ -170,10 +170,10 @@ public class SearchFieldTest {
                 SearchField.START_TIME, new String[]{"0000", "Search filter 'st/' requires a valid four-digit HHMM."},
                 SearchField.END_TIME, new String[]{"2359", "Search filter 'et/' requires a valid four-digit HHMM."});
         cases.forEach((field, values) -> {
-            for (String boundary : List.of("\t", "\u001f", "\u2003", "\u3000")) {
+            for (String boundary : List.of("\t", "\u001f", "\u2003", "\u3000", "\u00a0", "\u2007", "\u202f")) {
                 assertEquals(values[0], field.normalizeValue(boundary + values[0] + boundary), field.name());
             }
-            for (String boundary : List.of("\u0000", "\b", "\u001b", "\u00a0", "\u2007", "\u202f")) {
+            for (String boundary : List.of("\u0000", "\b", "\u001b")) {
                 assertThrows(IllegalArgumentException.class, values[1], () ->
                         field.normalizeValue(boundary + values[0]));
                 assertThrows(IllegalArgumentException.class, values[1], () ->
