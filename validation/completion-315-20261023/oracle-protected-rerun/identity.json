@@ -1,9 +1,0 @@
-{
-  "SHA256": "d255e450644df651ba7b2386e781e0f439fb70ec7505706edccc2b6b8a7c31b2",
-  "Bytes": 12659587,
-  "JavaHome": "C:\\Program Files\\Java\\jdk-25.0.4",
-  "Manifest": "Manifest-Version: 1.0\r\nImplementation-Title: PonHub\r\nImplementation-Version: 1.4\r\nMain-Class: ponhub.Main\r\n\r\n",
-  "Source": "C:\\Users\\ernes\\tp\\_temp\\ernest-tab-completion-315\\build\\libs\\ponhub.jar",
-  "Protected": true,
-  "FreshFolder": "C:\\Users\\ernes\\AppData\\Local\\Temp\\ponhub-completion-1ca4eb66580d4f7dbdb0bb26d4be5da8\\app"
-}

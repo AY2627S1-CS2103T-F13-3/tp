@@ -1,6 +1,7 @@
 # PonHub v1.3 — What's New
 
-Release copy reconciled against v1.3 candidate source `b513d313d1ba219df662d401bc0949e5afb49309`. The candidate has recorded #103 verification; Vincent confirms that issue is closed. Publication is handled separately under #153. The original Mac demonstration media below retains its `c5b8233e` source identity; exact-candidate Windows captures and the claim-by-claim check are in [the candidate handoff](candidate-handoff.md). See also [the media manifest](media-plan.md).
+The illustrations show v1.3 application source `b513d313d1ba219df662d401bc0949e5afb49309`;
+see [media sources and credits](media-plan.md).
 
 PonHub adapts AddressBook-Level3 into a desktop workspace for tuition centre administrators. Manage Students, Tutors and Parents, enrol multiple Students in one recurring Lesson, and keep dated attendance even after a Student leaves. Commands remain keyboard-driven, with separate people and lesson/history views.
 
@@ -41,15 +42,15 @@ PonHub adapts AddressBook-Level3 into a desktop workspace for tuition centre adm
 
 ## PonHub in action
 
-![Two Students sharing one recurring Lesson](../../docs/images/archive/pre-384-Ui.png)
+![Two Students sharing one recurring Lesson](media/windows-shared-lesson.png)
 
 Alex and Jamie share one Math Lesson with one Tutor and schedule.
 
-![Independent attendance for the same occurrence](../../docs/images/archive/pre-384-AttendanceDetails.jpg)
+![Independent attendance for the same occurrence](media/windows-attendance.png)
 
 Alex is present while Jamie is absent on the same date.
 
-![Retained attendance after unenrolment](../../docs/images/archive/pre-384-AttendanceHistory.jpg)
+![Retained attendance after unenrolment](media/windows-former-history.png)
 
 After correcting Alex's record and unenrolling Alex, the dated absence remains visible as former-enrolment history.
 
