@@ -18,16 +18,18 @@ applied. The JPEGs use quality 95 with no chroma subsampling.
 
 | Image | Pixels | Crop bounds | Illustration |
 | --- | --- | --- | --- |
-| [Ui.png](Ui.png) | 1480×1544 | `(0, 56, 1480, 1600)` | Two Students sharing one Lesson. |
-| [LessonBoardNavigation.png](LessonBoardNavigation.png) | 1480×1544 | `(0, 56, 1480, 1600)` | Student lessons beside an independent people filter. |
+| [Ui.png](Ui.png) | 1480×1600 | `(0, 0, 1480, 1600)` | Two Students sharing one Lesson. |
+| [LessonBoardNavigation.png](LessonBoardNavigation.png) | 1480×1600 | `(0, 0, 1480, 1600)` | Student lessons beside an independent people filter. |
 | [AttendanceDetails.jpg](AttendanceDetails.jpg) | 816×724 | `(662, 340, 1478, 1064)` | Alex present and Jamie absent in the current roster. |
 | [AttendanceHistory.jpg](AttendanceHistory.jpg) | 816×320 | `(662, 340, 1478, 660)` | Jamie's absence retained after unenrolment. |
 
-Overview/navigation crops omit the native title bar. Attendance crops retain the
-relevant heading and results so their text remains readable in the guide. The attendance
+Overview/navigation captures include the native title bar and persistent people heading.
+Attendance crops retain the relevant heading and results so their text remains readable in the guide. The attendance
 images show source
 [`b22d81569b96ba66b258c94a9ca2b5a7658cdeaa`](https://github.com/AY2627S1-CS2103T-F13-3/tp/tree/b22d81569b96ba66b258c94a9ca2b5a7658cdeaa).
-Overview and navigation reflect the development interface and may differ from public v1.4.
+Overview and navigation show source
+[`aa81aa445276366cd1baafc1b7cbb09b10cbcf01`](https://github.com/AY2627S1-CS2103T-F13-3/tp/tree/aa81aa445276366cd1baafc1b7cbb09b10cbcf01)
+with the persistent Student heading and reset hint. They may differ from public v1.4.
 
 ## Other project media
 
