@@ -33,6 +33,6 @@ public class AttendanceHistoryCard extends UiPart<Region> {
         attendanceDate.setText(entry.getDate().toString());
         attendanceIdentity.setText("Student " + entry.getStudentId() + " · Lesson " + entry.getLessonId());
         attendanceStatus.setText(entry.getStatus().name().toLowerCase(Locale.ROOT));
-        attendanceMembership.setText(entry.isCurrentlyEnrolled() ? "currently enrolled" : "former enrolment");
+        attendanceMembership.setText(entry.isCurrentlyEnrolled() ? "currently enrolled" : "not currently enrolled");
     }
 }

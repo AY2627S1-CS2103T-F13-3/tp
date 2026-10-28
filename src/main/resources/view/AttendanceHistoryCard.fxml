@@ -24,7 +24,7 @@
            minWidth="0" GridPane.rowIndex="0" GridPane.columnIndex="0" />
     <Label fx:id="attendanceStatus" styleClass="cell_small_label, card_field_value" wrapText="true"
            minWidth="0" maxWidth="Infinity" GridPane.rowIndex="0" GridPane.columnIndex="1" />
-    <Label text="Membership" styleClass="cell_small_label, card_field_label" wrapText="true"
+    <Label text="Enrolment Status:" styleClass="cell_small_label, card_field_label" wrapText="true"
            minWidth="0" GridPane.rowIndex="1" GridPane.columnIndex="0" />
     <Label fx:id="attendanceMembership" styleClass="cell_small_label, card_field_value" wrapText="true"
            minWidth="0" maxWidth="Infinity" GridPane.rowIndex="1" GridPane.columnIndex="1" />

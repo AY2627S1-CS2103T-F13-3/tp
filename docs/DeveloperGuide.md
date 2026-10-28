@@ -445,8 +445,9 @@ results. Detail rows, including the summary and section headings, share a virtua
 created for the viewport as it scrolls, while every roster and retained-attendance entry remains reachable in
 its original order. The hidden catalogue suppresses detail graphics to avoid duplicate row construction.
 Missing dated records remain labelled `unrecorded`. Each panel scrolls independently, and lesson commands
-never replace the people list. `HistoryListPanel` shares the right pane for dated records with current/former
-membership labels and refreshes after committed changes. See the
+never replace the people list. `HistoryListPanel` shares the right pane for dated records with an **Enrolment Status:**
+field showing `currently enrolled` or `not currently enrolled` from the Lesson's current roster, independently of the
+attendance date and present/absent status. It refreshes after committed changes. See the
 [shared selector contract](#shared-lesson-target-contract).
 
 The optional **All lessons**, **Student lessons** and **Attendance history** buttons share a wrapping `FlowPane`
@@ -2755,14 +2756,17 @@ automated tooltip-skin and command-window regressions in `ResultHeadingTooltipTe
 
 1. Keep a filtered people list where a Student's displayed position differs from their stable ID suffix. Run
    `history STUDENT_INDEX`, then add `lid/LESSON_ID` for an existing Lesson. Verify the same Student's retained
-   entries, newest date first and then numeric Lesson ID, with stable IDs, status and current/former membership.
+   entries, newest date first and then numeric Lesson ID, with stable IDs, present/absent status and an
+   **Enrolment Status:** field showing `currently enrolled` or `not currently enrolled` from the current roster.
    An existing Student or selected existing Lesson without records produces a successful empty result.
    Add `s/absent`, then `d/YYYY-MM-DD`, using dates/statuses already recorded in the fixture. Verify exact-date
    matching, conjunctive Lesson/date/status combinations in either order, the heading's active criteria and a
    successful empty result for nonmatching filters. `history STUDENT_INDEX` clears all filters. Invalid dates,
    unknown statuses and repeated/unknown prefixes preserve the previous view and saved bytes.
 2. Mark and correct a dated key while history is open, then unenrol the Student. Verify immediate committed refresh
-   and a former-member label without losing the record. Remove the retained key with `unmark`; a repeat is a no-op.
+   and `not currently enrolled` without losing the record or changing its date/status. Re-enrol the Student and
+   verify `currently enrolled` returns for the same historical record. Unenrol again, then remove the retained key
+   with `unmark`; a repeat is a no-op.
    Restart and repeat the query to verify persistence. A missing dated key is unrecorded, never an absent entry.
    Repeat with `s/absent`: correcting an absence to present removes it from the filtered view, and correcting a
    present record to absent adds it in query order. Filters survive committed refreshes and later people filtering.
