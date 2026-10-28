@@ -1410,6 +1410,7 @@ input is valid. Prefixes are lowercase, order-independent and unique within a co
 | `s/` | Lesson subject | Yes | Yes | Yes | Yes | Partial text |
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes | Partial text |
 | `rm/` | Lesson room | Yes | Yes | Yes | Yes | Partial text |
+| `sort/` | Lesson presentation order | — | — | — | Yes | `creation` or `schedule` |
 
 Text query values are trimmed, have repeated spaces collapsed, and are case-normalized with `Locale.ROOT`. Filters
 use case-insensitive substring matching; fragments need not form a complete valid field value. Thus `n/al` matches
@@ -1427,7 +1428,9 @@ relationships still qualifies for own-field-only search. All supplied relational
 linked student or lesson: a parent cannot take `sn/` from one child and `s/` from another, and a student cannot take
 `d/` from one enrolled lesson and `s/` from another. Tutor `sn/` and lesson fields must match one assigned lesson.
 Lesson `sn/` checks its current roster, so former members do not match; without `sn/`, empty lessons remain eligible.
-Every result is distinct by stable ID and retains canonical order, including a valid zero-result list.
+Every result is distinct by stable ID, including a valid zero-result list. People and default Lesson results
+retain canonical order; optional Lesson-only `sort/schedule` selects weekday/start-time/numeric-ID order.
+`sort/creation` or omitting the option restores canonical order for that request.
 
 #### Errors and integration boundary
 
