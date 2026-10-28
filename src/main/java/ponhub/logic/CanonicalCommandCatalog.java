@@ -17,6 +17,7 @@ public final class CanonicalCommandCatalog {
             + "blank p/ clears only a Student's phone.\n"
             + "Names, Student levels/parent phones and Tutor/Parent phones cannot be cleared. Role and ID stay fixed.\n"
             + "Filters are retained and search results refresh. Recheck displayed positions after editing.\n"
+            + "A changed Parent phone or Student parent phone reports any removed Parent-Student links by ID.\n"
             + "An identical edit makes no write. Example: list r/student, then edit 1 l/P2 e/";
     public static final String MESSAGE_UNKNOWN_HELP_TOPIC =
             "Unknown command: '%s'. Type 'help' to see available commands.";
@@ -49,7 +50,7 @@ public final class CanonicalCommandCatalog {
             + "       search c/tutor [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS]\n"
             + "       [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [rm/ROOM]\n"
             + "       search c/lesson [sn/STUDENT_NAME] [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT]"
-            + " [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM] [sort/creation|schedule]\n"
+            + " [tu/TUTOR_NAME] [tp/TUTOR_PHONE] [rm/ROOM] [from/HHMM to/HHMM] [sort/creation|schedule]\n"
             + "Category values ignore case. Supply each lowercase prefix at most once, with a nonblank value.\n"
             + "All filters must match the same person. Name, email and address match text fragments ignoring case;\n"
             + "name/address spaces are normalized. Level and phones match exactly; phone leading zeros matter.\n"
@@ -59,7 +60,9 @@ public final class CanonicalCommandCatalog {
             + "Lesson-only sort/schedule orders Mon-Sun, start time, then numeric Lesson ID; default is creation.\n"
             + "All lesson filters must match one lesson; sn/ matches its current roster. Text ignores case;\n"
             + "tu/ matches tutor names; lesson-only tp/ matches the complete tutor phone, with or without tu/.\n"
-            + "Day and HHMM times match exactly. When both times are given, end > start.\n"
+            + "Day and st/et HHMM times match exactly; together, end > start.\n"
+            + "Lesson-only from/ and to/ must be supplied together, from < to, and match positive overlap.\n"
+            + "Touching endpoints alone do not overlap. Other supplied filters still apply to the same lesson.\n"
             + "Empty lessons are included unless sn/ is supplied. Zero matches display an empty lesson panel.\n"
             + "Student lesson filters match one current enrolment and show its context below the student card.\n"
             + "Parent links use exact phone equality; sn/ and every lesson condition must match the same child.\n"

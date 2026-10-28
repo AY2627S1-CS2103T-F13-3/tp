@@ -46,6 +46,19 @@ public class LessonOrderIntegrationTest {
     }
 
     @Test
+    public void search_scheduleOrderComposesWithTutorPhoneAndOverlap() throws Exception {
+        CanonicalPeopleSession session = fixture();
+        byte[] bytes = Files.readAllBytes(directory.resolve("data.json"));
+        session.execute("search c/lesson tp/00112233 from/0900 to/1000 sort/schedule");
+        assertIds(session, "L10", "L2");
+        session.execute("search c/lesson tp/00112233 from/0900 to/1000 sort/creation");
+        assertIds(session, "L2", "L10");
+        session.execute("search c/lesson tp/00112233 from/1000 to/1100 sort/schedule");
+        assertIds(session, "L4");
+        assertArrayEquals(bytes, Files.readAllBytes(directory.resolve("data.json")));
+    }
+
+    @Test
     public void scheduleOrder_usesMondayFirstWeekdaysRatherThanAlphabeticalNames() throws Exception {
         CanonicalPeopleSession session = fixture();
         session.execute("addlesson d/Fri st/0900 et/1000 s/English tu/Mei Lim tp/00112233 rm/R1");

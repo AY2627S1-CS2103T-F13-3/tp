@@ -294,7 +294,10 @@ Check duplicates against every other record, excluding the target ID: Student us
 and parent phone; Tutor/Parent use normalized name and own phone within the same role. A Tutor rename
 keeps every Lesson's Tutor ID. Changing a Parent's own phone or a Student's parent phone recomputes
 exact-phone derived links without changing another person's stored phone, creating a Parent or
-requiring a matching Parent.
+requiring a matching Parent. Before resetting the staged root, `CanonicalEditCommand` compares the edited
+endpoint with all people in the pre-edit snapshot. Successful feedback identifies every removed Parent/Student
+ID pair; unchanged phone values and previously unlinked records produce no warning. The executor returns
+that feedback only after a changed snapshot is saved and published, so a failed save reports failure instead.
 
 **Person model API (#261).** `PersonEditInput` contains typed immutable field operations:
 `Field.keep()` retains an omitted field, `Field.clear()` represents an explicit blank, and
@@ -720,6 +723,10 @@ buckets preserve substring semantics for `s/`, `tu/`, `rm/` and `sn/`; a prefix 
 arbitrary fragments such as `s/ath`. Lesson-only `tp/` compares the assigned Tutor's current complete phone
 from the same committed people index; it can be combined with partial `tu/` or used alone. Without a supplied
 day or time, candidates are the whole catalogue.
+Paired lesson-only `from/` and `to/` validate a same-day increasing window. Each candidate overlaps it
+exactly when `lesson.start < to && lesson.end > from`; endpoint-only contact is excluded. Existing
+exact `st/` and `et/` buckets remain available and all supplied predicates are conjunctive.
+
 Optional lesson-only `sort/schedule` sorts the matched snapshot by Monday-Sunday, start time and numeric
 Lesson ID; it does not change catalogue storage order. The same option on `lessons` sorts its displayed
 projection after committed refreshes. Omitting the option restores creation order for that request.
@@ -1421,6 +1428,7 @@ input is valid. Prefixes are lowercase, order-independent and unique within a co
 | `d/` | Lesson weekday | Yes | Yes | Yes | Yes | Exact weekday |
 | `st/` | Lesson start time | Yes | Yes | Yes | Yes | Exact HHMM |
 | `et/` | Lesson end time | Yes | Yes | Yes | Yes | Exact HHMM |
+| `from/`, `to/` | Paired Lesson time window | — | — | — | Yes | Positive interval overlap |
 | `s/` | Lesson subject | Yes | Yes | Yes | Yes | Partial text |
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes | Partial text |
 | `tp/` | Lesson tutor's phone | — | — | — | Yes | Exact digits |
@@ -1437,6 +1445,8 @@ Phone filters require 3–15 ASCII digits, retain leading zeros and match the co
 `P1`–`P6`, `S1`–`S5`, `JC1` and `JC2`, normalized to uppercase. Weekdays accept only `Mon`, `Tue`, `Wed`, `Thu`, `Fri`,
 `Sat` and `Sun`, normalized to lowercase. Times require four digits from `0000` to `2359`, with valid minutes.
 Start or end may be supplied independently; when both are present, end must be later than start on the same day.
+Lesson-only `from/` and `to/` must be supplied together with `from < to` on one day. They select positive
+overlap; a Lesson merely touching either endpoint does not match. Exact `st/` and `et/` remain conjunctive.
 
 An omitted filter imposes no restriction; a supplied filter never matches an absent optional field. A person with no
 relationships still qualifies for own-field-only search. All supplied relational filters must refer to the same
@@ -2039,8 +2049,13 @@ named above do not certify native display/scaling acceptance.
 4. With `list r/tutor`, run `showlesson lid/L1 d/2026-10-05`, then `edit 1 n/Corrected Tutor`.
    Expect the same Lesson/Tutor IDs and date, current tutor label, roster and retained former-member attendance.
 5. Run `search c/parent sn/Alex`, then `edit 1 p/90000000`. Pat leaves the retained search result; the
-   Student's stored parent phone remains unchanged. Run `list r/student`, then `edit 1 pp/90000000` and
-   repeat the Parent search: Pat links to Alex again. No additional Parent is created or edited implicitly.
+   Student's stored parent phone remains unchanged. The success feedback lists `P1 / S1` as a removed link
+   (and any other linked Students in this fixture). Run `list r/student`, then `edit 1 pp/90000000` and
+   repeat the Parent search: Pat links to Alex again without a removal warning. Run `list r/student`,
+   then `edit 1 pp/91234567`: expect `P1 / S1` in the warning, and repeat the Parent search to verify no
+   matching Parent. Restore both phones; an unchanged
+   phone, a name-only edit and a previously unlinked phone change must not warn. No additional Parent
+   is created or edited implicitly.
 6. Run `list r/student`, `history 1 lid/L1`, then `search c/student n/Alex`. Select Alex and run
    `edit 1 n/Changed Student`. Expect Alex to leave the people search and selection to clear, while
    the right pane keeps Student S1's retained history. Recheck positions before another indexed command.
@@ -2513,6 +2528,12 @@ The following is one end-to-end procedure for the delivered normal session. `add
    search c/lesson sn/Alex d/Mon s/Math
    search c/lesson sn/Nobody
    ```
+
+   To test time-window boundaries with the Lessons above, `search c/lesson d/Mon from/1700 to/1730`
+   returns `L1` only: `L2` ends at 1700 and `L3` starts at 1730. `from/1630 to/1800` returns
+   `L1,L2,L3`. Adding `s/Science` leaves `L2`; adding `st/1600` instead leaves `L1`.
+   A missing endpoint, equal or reversed endpoints, `2400` or a people-category window must fail without
+   replacing either panel or writing data. Valid no-match windows display an empty Lesson panel.
 
    To check optional ordering, use a fresh store with a Tutor and create Tuesday 1600, Monday 0900 and Monday
    1400 Lessons as `L1`, `L2`, `L3`. `lessons` shows `L1,L2,L3`; `lessons sort/schedule` and

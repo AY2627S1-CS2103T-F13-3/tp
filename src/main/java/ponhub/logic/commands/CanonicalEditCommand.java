@@ -3,6 +3,8 @@ package ponhub.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static ponhub.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.List;
+
 import ponhub.logic.CanonicalCommandExecutor;
 import ponhub.logic.PersonEditCandidate;
 import ponhub.logic.PersonIndexResolver;
@@ -10,8 +12,10 @@ import ponhub.logic.commands.exceptions.CommandException;
 import ponhub.logic.parser.PersonEditParser;
 import ponhub.model.PeopleView;
 import ponhub.model.PonHubData;
+import ponhub.model.person.Parent;
 import ponhub.model.person.PersonRecord;
 import ponhub.model.person.PersonRole;
+import ponhub.model.person.Student;
 import ponhub.model.person.exceptions.DuplicatePersonException;
 
 /**
@@ -22,6 +26,9 @@ public final class CanonicalEditCommand implements CanonicalCommandExecutor.Stag
     public static final String MESSAGE_NO_CHANGE = "No changes to %s: %s (%s).";
     public static final String MESSAGE_DUPLICATE = "A %s with the same normalized name and %s already exists. "
             + "Change n/ or %s to a unique combination.";
+
+    public static final String MESSAGE_DISCONNECTED_LINKS = "Warning: Parent-Student links removed: %s. "
+            + "Update the corresponding phone values to restore a link.";
 
     private final PersonEditParser.Input input;
 
@@ -36,12 +43,17 @@ public final class CanonicalEditCommand implements CanonicalCommandExecutor.Stag
         try {
             PersonEditCandidate candidate = PersonEditCandidate.prepare(staged.exportState(), original.getId(),
                     input.edit());
+            PersonRecord edited = candidate.getEditedPerson();
+            List<String> disconnected = findDisconnectedLinks(staged.getPeople(), original, edited);
             if (candidate.isChanged()) {
                 staged.resetData(candidate.getCandidateState());
             }
-            PersonRecord edited = candidate.getEditedPerson();
-            return new CommandResult(String.format(candidate.isChanged() ? MESSAGE_SUCCESS : MESSAGE_NO_CHANGE,
-                    edited.getRole().getValue(), edited.getName(), edited.getId()));
+            String feedback = String.format(candidate.isChanged() ? MESSAGE_SUCCESS : MESSAGE_NO_CHANGE,
+                    edited.getRole().getValue(), edited.getName(), edited.getId());
+            if (!disconnected.isEmpty()) {
+                feedback += "\n" + String.format(MESSAGE_DISCONNECTED_LINKS, String.join(", ", disconnected));
+            }
+            return new CommandResult(feedback);
         } catch (DuplicatePersonException failure) {
             boolean isStudent = original.getRole() == PersonRole.STUDENT;
             String identityPhone = isStudent ? "parent phone (pp/)" : "phone (p/)";
@@ -50,5 +62,32 @@ public final class CanonicalEditCommand implements CanonicalCommandExecutor.Stag
         } catch (IllegalArgumentException failure) {
             throw new CommandException(failure.getMessage(), failure);
         }
+    }
+
+    /**
+     * Identifies lost exact-phone links against the complete pre-edit snapshot, including hidden people.
+     * The candidate preserves the endpoint's role; new links do not hide the loss of existing links.
+     */
+    private static List<String> findDisconnectedLinks(List<PersonRecord> people, PersonRecord original,
+            PersonRecord edited) {
+        if (original instanceof Parent parent) {
+            Parent replacement = (Parent) edited;
+            if (parent.getPhone().equals(replacement.getPhone())) {
+                return List.of();
+            }
+            return people.stream().filter(Student.class::isInstance).map(Student.class::cast)
+                    .filter(student -> student.getParentPhone().equals(parent.getPhone()))
+                    .map(student -> parent.getId() + " / " + student.getId()).toList();
+        }
+        if (original instanceof Student student) {
+            Student replacement = (Student) edited;
+            if (student.getParentPhone().equals(replacement.getParentPhone())) {
+                return List.of();
+            }
+            return people.stream().filter(Parent.class::isInstance).map(Parent.class::cast)
+                    .filter(parent -> parent.getPhone().equals(student.getParentPhone()))
+                    .map(parent -> parent.getId() + " / " + student.getId()).toList();
+        }
+        return List.of();
     }
 }
