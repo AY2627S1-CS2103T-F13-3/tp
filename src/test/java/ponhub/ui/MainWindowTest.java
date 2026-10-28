@@ -12,6 +12,7 @@ import static ponhub.testutil.FxTestUtil.runOnFxThread;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import javafx.animation.PauseTransition;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
@@ -123,8 +125,18 @@ public class MainWindowTest {
                 assertEquals("68", badge.getText());
                 assertTrue(Window.getWindows().stream().noneMatch(candidate -> candidate.getScene() != null
                         && candidate.getScene().getRoot() instanceof DialogPane));
-                logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
-                assertEquals("69", badge.getText());
+                // Dialog creation can outlast the badge's 850 ms hold/fade and process its reset pulse.
+                List<String> thresholdChanges = new ArrayList<>();
+                ChangeListener<String> counterListener = (observable, previous, current) ->
+                        thresholdChanges.add(current);
+                badge.textProperty().addListener(counterListener);
+                try {
+                    logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                } finally {
+                    badge.textProperty().removeListener(counterListener);
+                }
+                assertFalse(thresholdChanges.isEmpty(), "The threshold click must update the counter");
+                assertEquals("69", thresholdChanges.getFirst(), "The threshold must display before credits open");
                 DialogPane credits = (DialogPane) Window.getWindows().stream()
                         .filter(candidate -> candidate.getScene() != null
                                 && candidate.getScene().getRoot() instanceof DialogPane)
