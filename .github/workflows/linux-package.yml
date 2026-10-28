@@ -6,11 +6,13 @@ on:
       - '.github/workflows/linux-package.yml'
       - '.github/scripts/verify_linux_package.py'
       - '.github/scripts/test_verify_linux_package.py'
+      - '.github/scripts/resolve_candidate_version.py'
   pull_request:
     paths:
       - '.github/workflows/linux-package.yml'
       - '.github/scripts/verify_linux_package.py'
       - '.github/scripts/test_verify_linux_package.py'
+      - '.github/scripts/resolve_candidate_version.py'
   workflow_dispatch:
     inputs:
       candidate_ref:
@@ -18,6 +20,9 @@ on:
         required: true
       expected_sha256:
         description: SHA-256 of the exact candidate JAR
+        required: true
+      expected_version:
+        description: Product version from the reviewed candidate handoff (for example 1.5)
         required: true
 
 permissions:
@@ -30,6 +35,7 @@ jobs:
     env:
       CANDIDATE_REF: ${{ inputs.candidate_ref || github.sha }}
       EXPECTED_SHA256: ${{ inputs.expected_sha256 }}
+      EXPECTED_VERSION: ${{ inputs.expected_version }}
     steps:
       - name: Check out verification tooling
         uses: actions/checkout@v7
@@ -51,6 +57,22 @@ jobs:
           sudo apt-get install --yes xvfb xdotool xclip imagemagick
       - name: Check the verification tool's outcome handling
         run: python3 -m unittest discover -s .github/scripts -p 'test_verify_linux_package.py'
+      - name: Resolve the expected candidate version
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          version_args=()
+          if [[ "$EVENT_NAME" == workflow_dispatch ]]; then
+            version_args+=(--require-expected)
+            if [[ -z "$EXPECTED_SHA256" ]]; then
+              echo 'Manual dispatch requires the exact candidate SHA-256' >&2
+              exit 1
+            fi
+          fi
+          python3 .github/scripts/resolve_candidate_version.py \
+            --build-file _temp/candidate/build.gradle \
+            --expected-version "$EXPECTED_VERSION" "${version_args[@]}" >> "$GITHUB_ENV"
       - name: Build the exact candidate
         working-directory: _temp/candidate
         shell: bash
@@ -72,7 +94,7 @@ jobs:
             --jar _temp/candidate/build/libs/ponhub.jar \
             --source "$(cat _temp/linux-package/source.txt)" \
             --expected-sha256 "$EXPECTED_SHA256" \
-            --expected-version 1.4 \
+            --expected-version "$EXPECTED_VERSION" \
             --evidence _temp/linux-package
       - name: Retain exact JAR, runtime, logs, data and screenshots
         if: always()
