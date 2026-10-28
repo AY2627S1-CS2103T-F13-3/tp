@@ -62,7 +62,7 @@ for path, page in pages.items():
         if url.scheme or url.netloc:
             continue
         target = unquote(url.path)
-        if target == BASEURL or target.startswith(BASEURL + "/"):
+        if BASEURL and (target == BASEURL or target.startswith(BASEURL + "/")):
             target = target[len(BASEURL):] or "/"
         dest = SITE / target.lstrip("/") if target.startswith("/") else path.parent / target
         if not target:
