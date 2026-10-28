@@ -875,7 +875,7 @@ remain invisible; the previous subject and both result panels remain intact.
 
 To compare current membership with retained history in the same example, run `list r/student`,
 `mark 1 lid/L1 d/2026-10-05 s/present`, `history 1 lid/L1`, then `unenrol 1 lid/L1`. Alex's open history retains
-the recorded presence and refreshes its label to former member. `lessons 1` then shows only `L2` and `L3`;
+the recorded presence and shows `not currently enrolled`. `lessons 1` then shows only `L2` and `L3`;
 `search c/lesson sn/Alex d/Mon s/Math` returns no Lessons. `showlesson lid/L1 d/2026-10-05` shows Jamie's
 current-roster status as unrecorded and Alex's retained presence separately. See [Lesson details](#lesson-details)
 and [attendance history](#attendance-history) for their complete behavior.
