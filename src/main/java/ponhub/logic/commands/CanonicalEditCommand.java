@@ -66,18 +66,24 @@ public final class CanonicalEditCommand implements CanonicalCommandExecutor.Stag
 
     /**
      * Identifies lost exact-phone links against the complete pre-edit snapshot, including hidden people.
-     * Only the edited endpoint can change, so new links do not hide the loss of existing links.
+     * The candidate preserves the endpoint's role; new links do not hide the loss of existing links.
      */
     private static List<String> disconnectedLinks(List<PersonRecord> people, PersonRecord original,
             PersonRecord edited) {
-        if (original instanceof Parent parent && edited instanceof Parent replacement
-                && !parent.getPhone().equals(replacement.getPhone())) {
+        if (original instanceof Parent parent) {
+            Parent replacement = (Parent) edited;
+            if (parent.getPhone().equals(replacement.getPhone())) {
+                return List.of();
+            }
             return people.stream().filter(Student.class::isInstance).map(Student.class::cast)
                     .filter(student -> student.getParentPhone().equals(parent.getPhone()))
                     .map(student -> parent.getId() + " / " + student.getId()).toList();
         }
-        if (original instanceof Student student && edited instanceof Student replacement
-                && !student.getParentPhone().equals(replacement.getParentPhone())) {
+        if (original instanceof Student student) {
+            Student replacement = (Student) edited;
+            if (student.getParentPhone().equals(replacement.getParentPhone())) {
+                return List.of();
+            }
             return people.stream().filter(Parent.class::isInstance).map(Parent.class::cast)
                     .filter(parent -> parent.getPhone().equals(student.getParentPhone()))
                     .map(parent -> parent.getId() + " / " + student.getId()).toList();
