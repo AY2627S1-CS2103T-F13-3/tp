@@ -98,20 +98,29 @@ public final class PeopleRegistryState {
      */
     private void validatePeople() {
         Set<PersonId> ids = new HashSet<>();
-        for (int i = 0; i < people.size(); i++) {
-            PersonRecord person = people.get(i);
+        Set<DuplicateKey> duplicateKeys = new HashSet<>();
+        for (PersonRecord person : people) {
             checkArgument(person instanceof Student || person instanceof Tutor || person instanceof Parent,
                     "Registry snapshots support only immutable student, tutor, and parent records.");
             if (!ids.add(person.getId())) {
                 throw new DuplicatePersonException();
             }
-            for (int j = 0; j < i; j++) {
-                if (person.isDuplicateOf(people.get(j))) {
-                    throw new DuplicatePersonException();
-                }
+            Phone duplicatePhone = person instanceof Student student
+                    ? student.getParentPhone() : person.getContactDetails().getPhone().orElseThrow();
+            DuplicateKey duplicateKey = new DuplicateKey(person.getRole(),
+                    person.getContactDetails().getNormalizedName(), duplicatePhone);
+            if (!duplicateKeys.add(duplicateKey)) {
+                throw new DuplicatePersonException();
             }
             checkArgument(person.getId().getSequence() <= lastAllocatedSequences.get(person.getRole()),
                     "Allocation state must include every retained person ID.");
         }
+    }
+
+    /**
+     * A role-specific business identity using the same normalized name and phone as {@code isDuplicateOf}.
+     * The validation-local set computes each key once without changing record order or retaining an index.
+     */
+    private record DuplicateKey(PersonRole role, String normalizedName, Phone phone) {
     }
 }

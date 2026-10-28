@@ -45,6 +45,7 @@ import ponhub.model.person.Name;
 import ponhub.model.person.PeopleRegistry;
 import ponhub.model.person.PeopleRegistryState;
 import ponhub.model.person.PersonId;
+import ponhub.model.person.PersonRole;
 import ponhub.model.person.Phone;
 import ponhub.model.person.exceptions.PersonIdExhaustedException;
 
@@ -203,15 +204,24 @@ public class JsonPonHubDataStorageTest {
                 "\u202eJosé", "José\u200b", "José\ud800", "José\udc00", "José\u00a0Santos", "José😀")) {
             assertProtectedNameRejection(root -> person(root, 0).put("name", name));
         }
-        assertProtectedNameRejection(root -> {
-            person(root, 0).put("name", "José Santos");
-            ObjectNode duplicate = person(root, 0).deepCopy();
-            duplicate.put("id", "T2").put("name", "\u00a0JOSE\u0301   SANTOS\u2003");
-            ArrayNode people = (ArrayNode) root.get("people");
-            people.add(duplicate);
-            ObjectNode counters = (ObjectNode) root.get("personCounters");
-            counters.put("TUTOR", 2);
-        });
+        for (int index : new int[]{0, 1, 2}) {
+            assertProtectedNameRejection(root -> {
+                var role = original.people().getPeople().get(index).getRole();
+                long nextSequence = original.people().getLastAllocatedSequences().get(role) + 1;
+                person(root, index).put("name", "José Santos");
+                ObjectNode duplicate = person(root, index).deepCopy();
+                duplicate.put("id", PersonId.of(role, nextSequence).toString())
+                        .put("name", "\u00a0JOSE\u0301   SANTOS\u2003")
+                        .put("email", "changed@example.com").put("address", "Changed address");
+                if (role == PersonRole.STUDENT) {
+                    duplicate.put("phone", "00123456").put("level", "JC2");
+                }
+                ArrayNode people = (ArrayNode) root.get("people");
+                people.add(duplicate);
+                ObjectNode counters = (ObjectNode) root.get("personCounters");
+                counters.put(role.name(), nextSequence);
+            });
+        }
     }
 
     @Test

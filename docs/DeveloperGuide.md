@@ -626,6 +626,15 @@ lists and validate the entire candidate against the [shared/domain contracts](#s
 before replacement: identities, roles, references, scheduling and attendance must all be consistent.
 Invalid construction or null replacement leaves the current state intact; no partial candidate is installed.
 
+People-registry validation builds temporary hash sets for stable IDs and role-specific duplicate keys.
+Each key uses the existing normalized name and the Student's parent phone or the Tutor/Parent's own phone,
+with the role kept distinct. Computing one key per record replaces pairwise person comparisons with
+expected linear-time duplicate validation and linear temporary memory. The sets do not reorder records
+or persist between snapshots. Loading and mutation candidates still validate all people, supported record
+types and allocation counters; the JSON format and protected-load/save guarantees are unchanged.
+This optimization does not establish a numeric person capacity or a whole-product latency guarantee;
+Lesson scheduling, relationships, complete-file saves and UI refresh have separate costs.
+
 Equality includes collection order, records, relationships and allocation history, including deleted IDs.
 Counters must cover retained IDs and are never inferred from them: zero means no allocation and
 `Long.MAX_VALUE` means exhaustion. Normal changes preserve committed allocation history; restoring an
