@@ -17,6 +17,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
 import ponhub.model.PeopleView;
 import ponhub.model.person.PersonId;
@@ -36,6 +37,9 @@ public class PersonRecordListPanel extends UiPart<Region> {
 
     @FXML
     private Label peopleContext;
+
+    @FXML
+    private ScrollPane peopleContextPane;
 
     @FXML
     private Label filterResetHint;
@@ -76,6 +80,7 @@ public class PersonRecordListPanel extends UiPart<Region> {
         super(FXML);
         requireNonNull(contexts);
         peopleContext.textProperty().bind(requireNonNull(scope));
+        scope.addListener((observable, previous, current) -> peopleContextPane.setVvalue(0));
         ResultHeadingTooltip.install(peopleContext);
         filterResetHint.visibleProperty().bind(peopleContext.textProperty().isNotEqualTo("All people"));
         filterResetHint.managedProperty().bind(filterResetHint.visibleProperty());

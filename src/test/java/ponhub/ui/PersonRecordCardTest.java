@@ -192,6 +192,8 @@ public class PersonRecordCardTest {
             String value = "long value ".repeat(100);
             view.setSearchCriteria(new SearchCriteria(SearchCategory.STUDENT, Map.of(SearchField.ADDRESS, value)));
             for (double width : new double[] {290.4, 853}) {
+                view.setSearchCriteria(new SearchCriteria(SearchCategory.STUDENT,
+                        Map.of(SearchField.ADDRESS, value)));
                 Region panel = new PersonRecordListPanel(view).getRoot();
                 layoutScene(panel, width, 420);
                 Label heading = (Label) panel.lookup("#peopleContext");
@@ -205,6 +207,9 @@ public class PersonRecordCardTest {
                 contextPane.setVvalue(1);
                 panel.layout();
                 assertEquals(1, contextPane.getVvalue());
+                view.setSearchCriteria(new SearchCriteria(SearchCategory.STUDENT,
+                        Map.of(SearchField.ADDRESS, value + "new criterion")));
+                assertEquals(0, contextPane.getVvalue());
                 // The offscreen Scene uses integer pixel snapping for this fractional logical width.
                 assertTrue(contextPane.getWidth() <= Math.ceil(width));
                 assertTrue(getRecordList(panel).getHeight() > 250);
