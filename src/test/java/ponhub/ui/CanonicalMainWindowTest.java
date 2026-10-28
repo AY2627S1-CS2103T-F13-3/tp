@@ -481,7 +481,9 @@ public class CanonicalMainWindowTest {
         return fixture.lessons().getItems().stream().map(LessonView::getLessonId).map(Object::toString).toList();
     }
 
-    /** Optionally captures the real FXML window for guide updates, using only the test's temporary saved fixture. */
+    /**
+     * Optionally captures the real FXML window for guide updates, using only the test's temporary saved fixture.
+     */
     private static void captureWindow(WindowFixture fixture, String environmentVariable,
             int width, int height, String format) throws IOException {
         captureRegion(fixture, environmentVariable, width, height, format, fixture.root());

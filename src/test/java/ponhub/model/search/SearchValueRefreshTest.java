@@ -28,7 +28,9 @@ import ponhub.model.person.Phone;
 import ponhub.model.person.Student;
 import ponhub.model.query.LessonQueries;
 
-/** Verifies exact search keys against replacement records and schedules without adding editing routes. */
+/**
+ * Verifies exact search keys against replacement records and schedules without adding editing routes.
+ */
 public class SearchValueRefreshTest {
     private final SearchCriteriaParser parser = new SearchCriteriaParser();
 

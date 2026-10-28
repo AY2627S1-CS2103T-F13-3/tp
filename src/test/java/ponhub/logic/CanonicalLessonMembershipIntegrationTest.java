@@ -45,7 +45,9 @@ import ponhub.model.query.StudentView;
 import ponhub.storage.JsonPonHubDataStorage;
 import ponhub.storage.ProtectedPonHubDataStorage;
 
-/** Exercises shared-lesson membership commands through parsing, staging, persistence and live queries. */
+/**
+ * Exercises shared-lesson membership commands through parsing, staging, persistence and live queries.
+ */
 public class CanonicalLessonMembershipIntegrationTest {
     private static final PersonId STUDENT_ONE = new PersonId("S9");
     private static final PersonId STUDENT_TWO = new PersonId("S3");

@@ -30,7 +30,9 @@ import ponhub.model.lesson.Lesson;
 import ponhub.model.lesson.LessonId;
 import ponhub.model.person.PersonId;
 
-/** Regressions for read-only callbacks that subscribe to more query results during source publication. */
+/**
+ * Regressions for read-only callbacks that subscribe to more query results during source publication.
+ */
 public class LessonQueriesListenerTest {
     private PonHubData data;
     private LessonQueries queries;
@@ -141,7 +143,9 @@ public class LessonQueriesListenerTest {
         assertEquals(List.of(new LessonId("L2")), lessonIds(heldFiltered));
     }
 
-    /** JavaFX forwards callback errors to this handler instead of throwing them from resetData. */
+    /**
+     * JavaFX forwards callback errors to this handler instead of throwing them from resetData.
+     */
     private void publishWithoutListenerErrors(PonHubDataState replacement) {
         Thread thread = Thread.currentThread();
         Thread.UncaughtExceptionHandler previous = thread.getUncaughtExceptionHandler();

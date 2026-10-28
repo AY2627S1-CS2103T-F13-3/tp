@@ -15,7 +15,9 @@ import ponhub.logic.parser.exceptions.ParseException;
 import ponhub.model.person.Email;
 import ponhub.model.person.PersonRole;
 
-/** Exercises email validation and preservation through commands and canonical storage. */
+/**
+ * Exercises email validation and preservation through commands and canonical storage.
+ */
 public class CanonicalEmailIntegrationTest {
     @TempDir
     Path directory;

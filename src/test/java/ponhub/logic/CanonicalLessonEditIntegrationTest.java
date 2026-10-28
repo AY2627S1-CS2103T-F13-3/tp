@@ -36,7 +36,9 @@ import ponhub.model.query.LessonView;
 import ponhub.storage.JsonPonHubDataStorage;
 import ponhub.storage.ProtectedPonHubDataStorage;
 
-/** Exercises Lesson editing through real parsing, staged execution, persistence and live views. */
+/**
+ * Exercises Lesson editing through real parsing, staged execution, persistence and live views.
+ */
 public class CanonicalLessonEditIntegrationTest {
     @TempDir
     Path directory;

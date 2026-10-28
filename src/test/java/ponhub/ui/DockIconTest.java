@@ -26,7 +26,9 @@ import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Checks optional branding without changing the native taskbar or depending on installed desktop support. */
+/**
+ * Checks optional branding without changing the native taskbar or depending on installed desktop support.
+ */
 public class DockIconTest {
     private static final String ICON = "/images/ponhub_icon.png";
 
@@ -158,7 +160,9 @@ public class DockIconTest {
         throw (Error) failure;
     }
 
-    /** Records call order and delays execution independently from any native desktop. */
+    /**
+     * Records call order and delays execution independently from any native desktop.
+     */
     private static class Harness {
         private final Object taskbar = new Object();
         private final Queue<Runnable> queue = new ArrayDeque<>();

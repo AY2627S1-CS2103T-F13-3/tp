@@ -19,7 +19,9 @@ import ponhub.model.person.PeopleRegistry;
 import ponhub.model.person.PersonId;
 import ponhub.model.person.Phone;
 
-/** Shared-query fixtures with duplicate names, mixed people order, shared and empty lessons. */
+/**
+ * Shared-query fixtures with duplicate names, mixed people order, shared and empty lessons.
+ */
 public final class LessonQueryTestData {
     public static final PersonId STUDENT_ONE = new PersonId("S1");
     public static final PersonId STUDENT_TWO = new PersonId("S2");
@@ -33,7 +35,9 @@ public final class LessonQueryTestData {
     private LessonQueryTestData() {
     }
 
-    /** Catalogue order deliberately differs from numeric ID and schedule order. */
+    /**
+     * Catalogue order deliberately differs from numeric ID and schedule order.
+     */
     public static PonHubData createData() {
         PeopleRegistry people = PeopleSampleDataUtil.getSamplePeopleRegistry();
         people.addTutor(new ContactDetails(new Name("Unassigned Tutor"), Optional.of(new Phone("12345678")),
@@ -48,7 +52,9 @@ public final class LessonQueryTestData {
         return new PonHubData(new PonHubDataState(people.exportState(), lessons, List.of(), 11));
     }
 
-    /** Builds a validated immutable lesson. */
+    /**
+     * Builds a validated immutable lesson.
+     */
     public static Lesson lesson(String id, PersonId tutor, String day, String start, String end,
             String subject, String room, Set<PersonId> students) {
         return new Lesson(new LessonId(id), tutor, new LessonTimeSlot(LessonDay.fromString(day),

@@ -13,7 +13,9 @@ import org.junit.jupiter.api.io.TempDir;
 
 import ponhub.logic.parser.exceptions.ParseException;
 
-/** Tests same-day positive overlap while keeping exact-time filters compatible. */
+/**
+ * Tests same-day positive overlap while keeping exact-time filters compatible.
+ */
 public class LessonTimeWindowIntegrationTest {
     @TempDir
     Path directory;
