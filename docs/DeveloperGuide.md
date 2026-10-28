@@ -237,6 +237,17 @@ The [UG command formats](UserGuide.html#planned-command-summary) and [search mat
 define the supported syntax and filters. The [runtime summary](#current-increment-and-command-integration)
 identifies active routes; future features remain in Requirements.
 
+<a id="capacity-policy"></a>
+
+**Capacity policy (v1.5).** There is no per-Lesson capacity field, enrolment cap or fixed total-person cap.
+Retain complete valid people, rosters and attendance on load and save, without a count-based rejection,
+truncation or hidden subset. Preserve all duplicate, identity, relationship, schedule and supported-file
+guards and the [save-before-publication contract](#command-transactions). Person IDs remain bounded by
+positive `long` sequences independently for Students, Tutors and Parents; Lesson IDs have their own
+positive `long` sequence. Exhausted allocation counters must still reject new IDs and survive deletion
+and reload. These ID bounds do not define a tested workload or practical capacity. Administrators remain
+responsible for physical classroom capacity; see the [UG capacity guidance](UserGuide.html#capacity-and-large-datasets).
+
 **Scheduling and history.** Create each lesson once with an empty roster. Reject tutor/room clashes
 between distinct same-weekday lessons, and a student's clashes with other enrolled lessons. Joining
 the same lesson does not book its tutor/room again. Times are half-open `[start, end)`: adjacent
@@ -1893,11 +1904,19 @@ The [UG command summary](UserGuide.html#current-command-summary) and [selector r
     file fails, the previous complete data must remain either at the destination after automatic recovery or in the
     recovery backup identified by the error. First-save recovery, concurrent external file changes, multiple
     application instances and power loss remain limited as described in [Safe JSON saves](#safe-json-saves).
+
 12. All person, lesson, and attendance data must remain on the user's computer and must never be transmitted over the internet.
 13. The application should function offline without requiring an internet connection or a team-owned remote server.
 14. Invalid inputs must not crash the application or modify existing data. The application should display a specific error message explaining how the user can correct the input.
 15. The application should be implemented primarily using object-oriented programming, with clear separation between the UI, Logic, Model, and Storage components.
 16. Team testing target: the JUnit-based automated test suite should achieve at least 70% line coverage, and all automated tests should pass before a release. The percentage is the team's own goal, not a course-mandated minimum; coverage does not replace behavior-focused regression and integration checks.
+
+**Large-data benchmark scope.** The primary people-validation workload is 5,000 people in total across
+Students, Tutors and Parents; 20,000 and 50,000 people are stress workloads. These counts are benchmark
+inputs, not enforced limits or per-Lesson roster capacities. They do not extend NFR 3's latency target
+to larger datasets or establish Lesson, membership or attendance capacity. State the measured workload,
+operation, timings and hardware with any performance claim; no latency guarantee is set for these larger
+workloads. The [capacity policy](#capacity-policy) preserves validation and valid existing data.
 
 ### Glossary
 
