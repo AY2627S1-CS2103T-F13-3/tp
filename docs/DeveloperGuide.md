@@ -2285,8 +2285,9 @@ are a manual checklist, not evidence that a display/scaling matrix has passed.
    and visible keyboard hint. Up/Down, Page Up/Down and Home/End must reveal the complete text; Tab and
    Shift+Tab must leave it. Check the mouse wheel and visible scrollbar thumb. From the command box, blank or
    unmatched input must still traverse and a matching command prefix must still complete; Shift+Tab leaves
-   matching input. Keep a command draft/caret/selection and selected person, then scroll the heading: records,
-   active filters, selection and saved bytes must remain unchanged. Resize a shorter heading until it fits;
+   matching input. Keep a command draft and selected person, focus the heading, then record the draft's
+   caret/selection and scroll: draft text, caret/selection, active filters, selected person and saved bytes must
+   remain unchanged by scrolling. Normal TextField focus traversal can reset its text selection. Resize a shorter heading until it fits;
    it should leave the traversal route. Run `list`: the heading resets to the top and no longer adds a stop.
 5. Close the application and restart with the retained preferences. Valid sizes and coordinates remain unchanged. In the isolated folder, test an oversized saved window, coordinates from a removed monitor and a still-connected monitor to the left or above the primary display. Expect an oversized/offscreen window to fit a current work area, while valid secondary-monitor coordinates remain usable.
 
