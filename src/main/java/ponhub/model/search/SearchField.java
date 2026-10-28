@@ -16,6 +16,7 @@ import ponhub.model.lesson.LessonDay;
 import ponhub.model.lesson.LessonTime;
 import ponhub.model.person.EducationLevel;
 import ponhub.model.person.Phone;
+import ponhub.model.query.LessonOrder;
 
 /**
  * Search prefixes, their category compatibility and their field-level matching rules.
@@ -37,7 +38,8 @@ public enum SearchField {
     SUBJECT("s/", STUDENT, PARENT, TUTOR, LESSON),
     TUTOR_NAME("tu/", STUDENT, PARENT, LESSON),
     TUTOR_PHONE("tp/", LESSON),
-    ROOM("rm/", STUDENT, PARENT, TUTOR, LESSON);
+    ROOM("rm/", STUDENT, PARENT, TUTOR, LESSON),
+    LESSON_ORDER("sort/", LESSON);
 
     private final String prefix;
     private final Set<SearchCategory> supportedCategories;
@@ -91,6 +93,7 @@ public enum SearchField {
         }
 
         return switch (this) {
+            case LESSON_ORDER -> LessonOrder.fromValue(trimmed).name().toLowerCase(Locale.ROOT);
             case PHONE, PARENT_PHONE, TUTOR_PHONE -> {
                 try {
                     yield new Phone(trimmed).value;

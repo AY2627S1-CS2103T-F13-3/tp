@@ -515,7 +515,7 @@ declares the UI-facing retrieval methods; [`LessonQuerySource`](https://github.c
 and [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQueries.java)
 define the lesson backend supplied by the active `CanonicalPeopleSession`. Its canonical Model owns projections
 from one `PonHubData` root; `CanonicalLogicManager` delegates to that same source. Catalogue and filtered
-results contain each lesson once in creation order, including empty lessons. Student lessons derive from current
+results contain each lesson once in creation order by default, including empty lessons. Student lessons derive from current
 Lesson-owned membership; rosters use people creation order, and tutor schedules use weekday, start time and numeric
 lesson ID. Lookup by lesson ID reads the full catalogue regardless of its active filter.
 
@@ -710,7 +710,7 @@ All four are assigned to Mei. Consider
 2. **Check every condition on each candidate.** `L2` fails Monday. `L1` matches Monday, 1600, Math, Mei
    and R1, and its current roster contains Jamie, whose name contains `a` ignoring case. The result is
    `[L1]`, in catalogue order, with feedback `Found 1 lesson(s).` The index only narrows candidates;
-   it never replaces the remaining predicates.
+   it never replaces the remaining predicates. Optional schedule ordering adds `O(K log K)` work.
 3. **Do not borrow a match.** `search c/student n/Alex d/Mon s/Math` returns zero: Alex has Tuesday Math
    and Monday Science, not Monday Math. `search c/parent sn/Alex d/Mon s/Math` also returns zero even
    though Pat's other child Jamie has Monday Math. The named child and the enrolled Lesson must both match.
@@ -727,7 +727,11 @@ Paired lesson-only `from/` and `to/` validate a same-day increasing window. Each
 exactly when `lesson.start < to && lesson.end > from`; endpoint-only contact is excluded. Existing
 exact `st/` and `et/` buckets remain available and all supplied predicates are conjunctive.
 
-For bounded field lengths, searching costs `O(B + R_B + K)`: `B` candidates, their roster links `R_B` when
+Optional lesson-only `sort/schedule` sorts the matched snapshot by Monday-Sunday, start time and numeric
+Lesson ID; it does not change catalogue storage order. The same option on `lessons` sorts its displayed
+projection after committed refreshes. Omitting the option restores creation order for that request.
+
+For bounded field lengths, searching without sorting costs `O(B + R_B + K)`: `B` candidates, their roster links `R_B` when
 `sn/` is supplied, and `K` results. This is not a constant-time text search or a mutation/persistence bound.
 
 ##### Select a view without changing another panel
@@ -814,7 +818,8 @@ for retrieval signatures, ordering and missing-ID contracts, and
 [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQueries.java)
 for indexes, immutable snapshots, active filters and subscription refresh. Stable-ID maps, reverse
 membership indexes and day/time buckets are derived once per publication, not per read. Tutor schedules
-sort by weekday/start/ID; catalogue results retain creation order. Callbacks may request another subscription
+sort by weekday/start/ID; raw catalogue results retain creation order. Optional `sort/schedule` orders the
+displayed catalogue, Student enrolments or search results without changing those source lists. Callbacks may request another subscription
 because refresh snapshots the subscription entries before notifying listeners. All access runs on the
 single model/JavaFX application thread. Construction/refresh includes index rebuilding, schedule sorting
 and copying subscribed results; the query cost above excludes that work.
@@ -1428,6 +1433,7 @@ input is valid. Prefixes are lowercase, order-independent and unique within a co
 | `tu/` | Lesson tutor's name | Yes | Yes | — | Yes | Partial text |
 | `tp/` | Lesson tutor's phone | — | — | — | Yes | Exact digits |
 | `rm/` | Lesson room | Yes | Yes | Yes | Yes | Partial text |
+| `sort/` | Lesson presentation order | — | — | — | Yes | `creation` or `schedule` |
 
 Text query values are trimmed, have repeated spaces collapsed, and are case-normalized with `Locale.ROOT`. Filters
 use case-insensitive substring matching; fragments need not form a complete valid field value. Thus `n/al` matches
@@ -1447,7 +1453,9 @@ relationships still qualifies for own-field-only search. All supplied relational
 linked student or lesson: a parent cannot take `sn/` from one child and `s/` from another, and a student cannot take
 `d/` from one enrolled lesson and `s/` from another. Tutor `sn/` and lesson fields must match one assigned lesson.
 Lesson `sn/` checks its current roster, so former members do not match; without `sn/`, empty lessons remain eligible.
-Every result is distinct by stable ID and retains canonical order, including a valid zero-result list.
+Every result is distinct by stable ID, including a valid zero-result list. People and default Lesson results
+retain canonical order; optional Lesson-only `sort/schedule` selects weekday/start-time/numeric-ID order.
+`sort/creation` or omitting the option restores canonical order for that request.
 
 #### Errors and integration boundary
 
@@ -2526,6 +2534,13 @@ The following is one end-to-end procedure for the delivered normal session. `add
    `L1,L2,L3`. Adding `s/Science` leaves `L2`; adding `st/1600` instead leaves `L1`.
    A missing endpoint, equal or reversed endpoints, `2400` or a people-category window must fail without
    replacing either panel or writing data. Valid no-match windows display an empty Lesson panel.
+
+   To check optional ordering, use a fresh store with a Tutor and create Tuesday 1600, Monday 0900 and Monday
+   1400 Lessons as `L1`, `L2`, `L3`. `lessons` shows `L1,L2,L3`; `lessons sort/schedule` and
+   `search c/lesson tu/Mei sort/schedule` show `L2,L3,L1`. `lessons sort/creation` restores the original
+   order. Enrol a Student in two of them and repeat with `lessons STUDENT_INDEX sort/schedule`.
+   After narrowing the people list, its positions must remain unchanged by each Lesson-order request.
+   An invalid `sort/name` must retain the previous view and stored bytes.
 
    To check same-named Tutor disambiguation in a separate disposable store, create two `Mei Lim` Tutors
    with phones `0012345` and `93456789`, then give each a non-clashing Lesson using `addlesson`

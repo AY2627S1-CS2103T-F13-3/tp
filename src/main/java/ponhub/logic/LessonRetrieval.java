@@ -19,6 +19,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import ponhub.commons.core.index.Index;
 import ponhub.logic.commands.exceptions.CommandException;
+import ponhub.logic.parser.LessonsInput;
 import ponhub.logic.parser.ShowLessonInput;
 import ponhub.model.PeopleView;
 import ponhub.model.PonHubData;
@@ -29,6 +30,7 @@ import ponhub.model.lesson.LessonId;
 import ponhub.model.person.PersonId;
 import ponhub.model.person.Student;
 import ponhub.model.query.LessonDetailView;
+import ponhub.model.query.LessonOrder;
 import ponhub.model.query.LessonQueries;
 import ponhub.model.query.LessonView;
 import ponhub.model.search.SearchCriteria;
@@ -51,7 +53,8 @@ public final class LessonRetrieval {
     private final ObservableList<LessonView> displayed = FXCollections.observableArrayList();
     private final ObservableList<LessonView> readOnlyDisplayed = FXCollections.unmodifiableObservableList(displayed);
     private final ObservableList<LessonView> detail = FXCollections.observableArrayList();
-    private final ListChangeListener<LessonView> refresh = change -> displayed.setAll(change.getList());
+    private final ListChangeListener<LessonView> refresh = change -> refreshDisplayed();
+    private LessonOrder order = LessonOrder.CREATION;
     private ObservableList<LessonView> selected;
     private LessonId selectedDetailId;
     private Optional<LocalDate> selectedDate = Optional.empty();
@@ -101,14 +104,26 @@ public final class LessonRetrieval {
      * The returned observable result is read-only and remains current after canonical publication.
      */
     public ObservableList<LessonView> list(Optional<Index> studentIndex) throws CommandException {
-        requireNonNull(studentIndex);
+        listInput(new LessonsInput(studentIndex, LessonOrder.CREATION));
+        return selected;
+    }
+
+    /**
+     * Shows the requested catalogue or Student enrolments in the selected presentation order.
+     */
+    public ObservableList<LessonView> listInput(LessonsInput input) throws CommandException {
+        requireNonNull(input);
+        Optional<Index> studentIndex = input.studentIndex();
+        String suffix = input.order() == LessonOrder.SCHEDULE ? " · schedule order" : "";
         if (studentIndex.isEmpty()) {
-            context.set("All lessons");
-            return select(queries.getLessonList(), ResultKind.ALL_LESSONS);
+            context.set("All lessons" + suffix);
+            select(queries.getLessonList(), ResultKind.ALL_LESSONS, input.order());
+            return readOnlyDisplayed;
         }
         var student = PersonIndexResolver.resolveStudent(studentIndex.get(), peopleView.getPeople());
-        context.set("Student " + student.getId() + " · current lessons");
-        return select(queries.getStudentLessons(student.getId()), ResultKind.STUDENT_LESSONS);
+        context.set("Student " + student.getId() + " · current lessons" + suffix);
+        select(queries.getStudentLessons(student.getId()), ResultKind.STUDENT_LESSONS, input.order());
+        return readOnlyDisplayed;
     }
 
     /**
@@ -194,13 +209,23 @@ public final class LessonRetrieval {
      * Detaches the previous source so unrelated query updates cannot replace the selected results.
      */
     private ObservableList<LessonView> select(ObservableList<LessonView> source, ResultKind kind) {
+        return select(source, kind, LessonOrder.CREATION);
+    }
+
+    private ObservableList<LessonView> select(ObservableList<LessonView> source, ResultKind kind,
+            LessonOrder requestedOrder) {
+        order = requestedOrder;
         if (selected != source) {
             selected.removeListener(refresh);
             selected = source;
             selected.addListener(refresh);
-            displayed.setAll(selected);
         }
+        refreshDisplayed();
         resultKind.set(kind);
         return source;
+    }
+
+    private void refreshDisplayed() {
+        displayed.setAll(order.apply(selected));
     }
 }

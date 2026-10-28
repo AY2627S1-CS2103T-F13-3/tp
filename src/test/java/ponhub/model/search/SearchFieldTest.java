@@ -43,6 +43,7 @@ public class SearchFieldTest {
                 Map.entry("to/", SearchField.TO_TIME),
                 Map.entry("s/", SearchField.SUBJECT),
                 Map.entry("tu/", SearchField.TUTOR_NAME),
+                Map.entry("sort/", SearchField.LESSON_ORDER),
                 Map.entry("tp/", SearchField.TUTOR_PHONE),
                 Map.entry("rm/", SearchField.ROOM));
 
@@ -81,6 +82,7 @@ public class SearchFieldTest {
                 Map.entry(SearchField.TO_TIME, Set.of(LESSON)),
                 Map.entry(SearchField.SUBJECT, all),
                 Map.entry(SearchField.TUTOR_NAME, Set.of(STUDENT, PARENT, LESSON)),
+                Map.entry(SearchField.LESSON_ORDER, Set.of(LESSON)),
                 Map.entry(SearchField.TUTOR_PHONE, Set.of(LESSON)),
                 Map.entry(SearchField.ROOM, all));
 

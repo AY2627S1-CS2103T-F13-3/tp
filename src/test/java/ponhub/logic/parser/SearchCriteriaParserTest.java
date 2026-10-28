@@ -36,12 +36,13 @@ public class SearchCriteriaParserTest {
                         "tu/", "rm/"),
                 SearchCategory.PARENT, Set.of("n/", "p/", "e/", "a/", "sn/", "d/", "st/", "et/", "s/", "tu/", "rm/"),
                 SearchCategory.TUTOR, Set.of("n/", "p/", "e/", "a/", "sn/", "d/", "st/", "et/", "s/", "rm/"),
-                SearchCategory.LESSON, Set.of("sn/", "d/", "st/", "et/", "s/", "tu/", "tp/", "rm/"));
+                SearchCategory.LESSON, Set.of("sn/", "d/", "st/", "et/", "s/", "tu/", "tp/", "rm/", "sort/"));
         Map<String, String> values = Map.ofEntries(
                 Map.entry("n/", "Alex"), Map.entry("l/", "S2"), Map.entry("p/", "91234567"),
                 Map.entry("pp/", "0012345"), Map.entry("e/", "@example.com"), Map.entry("a/", "Jurong"),
                 Map.entry("sn/", "Alex"), Map.entry("d/", "Mon"), Map.entry("st/", "0900"),
-                Map.entry("et/", "1000"), Map.entry("tp/", "0012345"), Map.entry("s/", "Math"),
+                Map.entry("et/", "1000"), Map.entry("s/", "Math"), Map.entry("sort/", "schedule"),
+                Map.entry("tp/", "0012345"),
                 Map.entry("tu/", "Mei"), Map.entry("rm/", "R1"));
         for (SearchCategory category : SearchCategory.values()) {
             for (Map.Entry<String, String> filter : values.entrySet()) {
