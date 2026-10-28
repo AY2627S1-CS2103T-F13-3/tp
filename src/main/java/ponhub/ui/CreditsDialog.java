@@ -191,10 +191,14 @@ final class CreditsDialog extends Dialog<Void> {
         }
     }
 
-    /** Browser boundary, allowing URI delivery and launch failures to be checked without opening real tabs. */
+    /**
+     * Browser boundary, allowing URI delivery and launch failures to be checked without opening real tabs.
+     */
     @FunctionalInterface
     interface ProfileBrowser {
-        /** Opens the requested URI, or reports that the browser could not be launched. */
+        /**
+         * Opens the requested URI, or reports that the browser could not be launched.
+         */
         void browse(URI uri) throws IOException;
     }
 }
