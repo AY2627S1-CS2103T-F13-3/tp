@@ -721,6 +721,10 @@ that Student's other enrolled lessons are rejected. Adjacent times and equal tim
 A second Student can join the same shared lesson without creating another lesson or tutor/room booking. Success
 reports both stable IDs, for example `Student S3 enrolled in lesson L1.`
 
+PonHub does not enforce a class-size limit. Check the room's physical capacity before enrolling students;
+the displayed **Students enrolled** value counts current members, rather than remaining places.
+See [capacity and large datasets](#capacity-and-large-datasets) for the data-size policy.
+
 **Unenrol (active):** `unenrol STUDENT_INDEX lid/LESSON_ID`.
 
 Run `list r/student` and recheck the student's position. If the intended student appears at position 1, enter `unenrol 1 lid/L1` for lesson `L1`.
@@ -981,6 +985,19 @@ failed saves preserve the previous live data and view. Future mutations must ret
 --------------------------------------------------------------------------------------------------------------------
 
 ## FAQ
+
+<a id="capacity-and-large-datasets"></a>
+
+**Q**: Does PonHub enforce a class or total-person limit?<br>
+**A**: v1.5 has no per-Lesson capacity field, enrolment cap or fixed total-person cap. Valid existing people,
+rosters and attendance are retained regardless of their count; PonHub does not trim or hide records to meet
+a size threshold. All field, duplicate, relationship, schedule and saved-file checks still apply, as do the
+existing ID allocation bounds. Invalid data is still rejected.
+
+This policy does not guarantee unlimited practical capacity or a particular response time. A benchmark's
+dataset size describes the workload tested, rather than a limit enforced by the app. Timings depend on the
+machine and the mix of people, lessons, memberships and attendance; a people-only test does not establish
+capacity for the other records.
 
 **Q**: How do I transfer my PonHub data to another computer?<br>
 **A**: Close PonHub on both computers. Install the same version or one that supports your data format on the new computer, then copy your operational file into the new JAR folder, preserving its relative path, or select its new location inside that folder with `--data=PATH`. If you use the default location, copy the `data` folder. Keep a backup of the original folder until you have opened PonHub and checked your records on the new computer. Moving a legacy contact file to a canonical-format build does not migrate it; follow the [current recovery rules](#data-protection-in-the-current-build).
