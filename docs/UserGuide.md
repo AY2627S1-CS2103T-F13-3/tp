@@ -473,7 +473,9 @@ The guidance below the buttons explains card selection: select a Student card to
 shortcuts use that card's current displayed position. Select a Student again if filtering or a data change
 removes that selection. With no current Student selected, including a selected Tutor or Parent,
 the buttons explain what to select and keep the previous results. Clicking a shortcut preserves any unfinished
-command text, cursor and text selection. The shortcuts follow the same validation and protected-session
+command text, cursor and text selection. A mouse click keeps focus where you were editing; keyboard users
+can reach the buttons with Tab or Shift+Tab and activate the focused button with Space.
+The shortcuts follow the same validation and protected-session
 restrictions as typed commands. For dated Lesson details, Lesson-specific history or search filters, enter
 the full command directly.
 

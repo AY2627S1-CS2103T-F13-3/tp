@@ -9,6 +9,8 @@ import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
+import javafx.event.EventDispatcher;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
@@ -21,6 +23,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -283,7 +286,39 @@ public class MainWindow extends UiPart<Stage> {
 
         CommandBox commandBox = new CommandBox(this::executeCommand, logic.getCommandWords());
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
+        preserveFocusOnMouseClick(lessonsButton);
+        preserveFocusOnMouseClick(studentLessonsButton);
+        preserveFocusOnMouseClick(attendanceButton);
         commandBox.requestFocus();
+    }
+
+    /**
+     * Keeps mouse activation from taking editing focus while retaining the standard Button gesture lifecycle.
+     * Keyboard traversal and activation keep the button's configured focus behavior.
+     */
+    private static void preserveFocusOnMouseClick(Button button) {
+        EventHandler<MouseEvent> ignoreNonPrimary = event -> {
+            if (event.getButton() != MouseButton.PRIMARY) {
+                event.consume();
+            }
+        };
+        button.addEventFilter(MouseEvent.MOUSE_PRESSED, ignoreNonPrimary);
+        button.addEventFilter(MouseEvent.MOUSE_RELEASED, ignoreNonPrimary);
+        EventDispatcher dispatcher = button.getEventDispatcher();
+        button.setEventDispatcher((event, tail) -> {
+            if (event.getEventType() != MouseEvent.MOUSE_PRESSED) {
+                return dispatcher.dispatchEvent(event, tail);
+            }
+
+            // Let JavaFX track pressed/armed state, but suppress its mouse-only focus request.
+            boolean wasFocusTraversable = button.isFocusTraversable();
+            button.setFocusTraversable(false);
+            try {
+                return dispatcher.dispatchEvent(event, tail);
+            } finally {
+                button.setFocusTraversable(wasFocusTraversable);
+            }
+        });
     }
 
     private void updateNavigation() {
