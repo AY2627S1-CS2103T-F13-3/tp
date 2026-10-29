@@ -6,9 +6,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javafx.application.Platform;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import ponhub.MainApp;
 import ponhub.commons.core.LogsCenter;
@@ -81,14 +87,48 @@ public class UiManager implements Ui {
      */
     void showAlertDialogAndWait(Stage owner, AlertType type, String title, String headerText,
             String contentText) {
+        createAlert(owner, type, title, headerText, contentText).showAndWait();
+    }
+
+    /**
+     * Builds a bounded, resizable dialog whose complete diagnostic text remains readable and copyable.
+     */
+    Alert createAlert(Stage owner, AlertType type, String title, String headerText, String contentText) {
         final Alert alert = new Alert(type);
         alert.getDialogPane().getStylesheets().add("view/DarkTheme.css");
         alert.initOwner(owner);
         alert.setTitle(title);
         alert.setHeaderText(headerText);
-        alert.setContentText(contentText);
+        Label summary = new Label(type == AlertType.WARNING
+                ? "Your original file is unchanged. Operational writes are blocked. Back up the original "
+                        + "and follow the recovery instructions below, then restart."
+                : "Read the details below. You can select and copy the text.");
+        summary.setWrapText(true);
+        summary.setMaxWidth(Double.MAX_VALUE);
+        TextArea details = new TextArea(contentText);
+        details.setId("alertDetails");
+        details.setAccessibleText("Recovery and diagnostic details");
+        details.setEditable(false);
+        details.setWrapText(true);
+        details.setFocusTraversable(true);
+        details.setMinHeight(60);
+        details.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        VBox content = new VBox(12, summary, details);
+        VBox.setVgrow(details, Priority.ALWAYS);
+        alert.getDialogPane().setContent(content);
         alert.getDialogPane().setId(ALERT_DIALOG_PANE_FIELD_ID);
-        alert.showAndWait();
+        Rectangle2D workArea = (owner == null ? Screen.getPrimary() : Screen.getScreensForRectangle(
+                owner.getX(), owner.getY(), owner.getWidth(), owner.getHeight()).stream()
+                        .findFirst().orElse(Screen.getPrimary())).getVisualBounds();
+        alert.getDialogPane().setPrefSize(Math.max(1, Math.min(640, workArea.getWidth() - 40)),
+                Math.max(1, Math.min(460, workArea.getHeight() - 80)));
+        alert.setResizable(true);
+        alert.setOnShown(event -> {
+            details.requestFocus();
+            details.positionCaret(0);
+            details.setScrollTop(0);
+        });
+        return alert;
     }
 
     /**

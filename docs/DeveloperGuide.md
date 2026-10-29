@@ -2910,3 +2910,15 @@ configured operational path; use a separate disposable copy for each rejected-fi
    [legacy re-entry](#planned-protected-loading-and-legacy-upgrade) into a separate unused path. Verify
    explicit roles/required fields and that the original and backup remain unchanged. No silent conversion,
    record dropping, guessed roles or importer/recovery command is expected.
+
+### Readable protected-load diagnostics (#575)
+
+`UiManager` shows concise protection/recovery guidance above a read-only, wrapped TextArea containing the
+complete diagnostic. The dialog starts within the owner's display work area and is resizable. The details
+receive initial keyboard focus and support caret scrolling, selection and normal copy shortcuts; Tab reaches
+OK, and Escape dismisses the dialog. A long unknown field or path cannot displace the summary or button with
+unbounded content height. Ordinary malformed-file errors use the same presentation.
+
+In a disposable packaged build, load a valid empty store with a 5,000-character unknown root field, then a
+separate `{bad` store. Check the visible summary, keyboard navigation to the final diagnostic text, selection/
+copy, Tab to OK and Escape. Confirm both rejected stores remain byte-identical after dismissal and shutdown.
