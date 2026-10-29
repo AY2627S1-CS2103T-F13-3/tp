@@ -2,12 +2,20 @@ package ponhub.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static ponhub.testutil.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -68,6 +76,60 @@ public class JsonUserPrefsStorageTest {
         UserPrefs actual = readUserPrefs("ExtraValuesUserPref.json").get();
 
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void readUserPrefs_hugeCoordinate_rejectsBeforeConversionWithoutChangingFile() throws Exception {
+        Path file = testFolder.resolve("huge.json");
+        String json = "{\"guiSettings\":{\"windowCoordinates\":{\"x\":" + "9".repeat(1_000_000) + ",\"y\":0}}}";
+        Files.writeString(file, json);
+        DataLoadingException error = assertThrows(DataLoadingException.class, () ->
+                new JsonUserPrefsStorage(file).readUserPrefs());
+        assertTrue(error.getMessage().contains("numeric token exceeds"));
+        assertTrue(error.getMessage().length() < 200);
+        assertEquals(json, Files.readString(file));
+    }
+
+    @Test
+    public void readUserPrefs_longInvalidString_boundsWarningAndExceptionChain() throws Exception {
+        Path file = testFolder.resolve("invalid-string.json");
+        Files.writeString(file, "{\"guiSettings\":{\"windowWidth\":\"" + "x".repeat(10_000) + "\"}}");
+        List<String> warnings = new ArrayList<>();
+        Logger logger = ponhub.commons.core.LogsCenter.getLogger(ponhub.commons.util.JsonUtil.class);
+        Handler recorder = new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                if (record.getLevel().intValue() >= java.util.logging.Level.WARNING.intValue()) {
+                    warnings.add(record.getMessage());
+                }
+            }
+            @Override
+            public void flush() { }
+            @Override
+            public void close() { }
+        };
+        logger.addHandler(recorder);
+        try {
+            DataLoadingException error = assertThrows(DataLoadingException.class, () ->
+                new JsonUserPrefsStorage(file).readUserPrefs());
+            assertTrue(error.getMessage().length() < 600);
+            assertTrue(error.getCause().getMessage().endsWith("[truncated]"));
+            assertNull(error.getCause().getCause());
+            assertEquals(1, warnings.size());
+            assertTrue(warnings.get(0).length() < 1000);
+        } finally {
+            logger.removeHandler(recorder);
+        }
+    }
+
+    @Test
+    public void readUserPrefs_nonfiniteDimensionsAndExtremeCoordinates_keepExistingPolicy() throws Exception {
+        Path file = testFolder.resolve("extreme.json");
+        Files.writeString(file, "{\"guiSettings\":{\"windowWidth\":\"NaN\",\"windowHeight\":1e309,"
+                + "\"windowCoordinates\":{\"x\":-2147483648,\"y\":2147483647}}}");
+        GuiSettings actual = new JsonUserPrefsStorage(file).readUserPrefs().orElseThrow().getGuiSettings();
+        assertEquals(new GuiSettings(Double.NaN, Double.POSITIVE_INFINITY,
+                Integer.MIN_VALUE, Integer.MAX_VALUE), actual);
     }
 
     private UserPrefs getTypicalUserPrefs() {

@@ -112,7 +112,8 @@ public class MainAppPreferencesTest {
         byte[] original = Files.readAllBytes(data);
         Path prefs = directory.resolve("prefs.json");
         for (String document : new String[]{"null", "{\"guiSettings\":null}",
-            "{\"guiSettings\":{\"windowHeight\":null}}", "[]"}) {
+            "{\"guiSettings\":{\"windowHeight\":null}}", "[]",
+            "{\"guiSettings\":{\"windowCoordinates\":{\"x\":" + "9".repeat(500_000) + ",\"y\":0}}}"}) {
             Files.writeString(prefs, document);
             MainApp app = new MainApp();
             app.initialize(data, prefs);

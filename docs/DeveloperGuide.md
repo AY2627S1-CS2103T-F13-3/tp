@@ -2910,3 +2910,20 @@ configured operational path; use a separate disposable copy for each rejected-fi
    [legacy re-entry](#planned-protected-loading-and-legacy-upgrade) into a separate unused path. Verify
    explicit roles/required fields and that the original and backup remain unchanged. No silent conversion,
    record dropping, guessed roles or importer/recovery command is expected.
+
+### Preference JSON resource limits (#578)
+
+`JsonUtil` scans token text before object deserialization: numeric tokens are limited to 64 characters,
+and nesting to 64 containers including the root. This covers preference coordinates and dimensions,
+including unknown fields, without using numeric getters that could construct a large `BigInteger` first.
+Normal missing/default/extra-field preference behavior remains; `WindowPlacement` still fits dimensions
+and coordinates to the available desktop. This guard is independent of canonical schema detection.
+
+Read failures retain at most 512 characters of diagnostic detail plus a truncation marker. The logged warning
+and returned `DataLoadingException` share the bounded detail, without chaining Jackson's unbounded exception.
+`MainApp` recovers with reloadable default preferences while leaving operational data unchanged.
+
+Regression coverage checks numeric/depth boundaries, a million-digit coordinate, bounded warnings for a long
+invalid string, nonfinite dimensions and extreme coordinates, and full initialization/shutdown recovery with
+a 500,000-digit coordinate. Stress probes should use disposable files and a bounded subprocess rather than
+asserting a machine-specific duration in unit tests.
