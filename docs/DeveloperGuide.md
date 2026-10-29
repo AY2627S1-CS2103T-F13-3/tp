@@ -2910,3 +2910,18 @@ configured operational path; use a separate disposable copy for each rejected-fi
    [legacy re-entry](#planned-protected-loading-and-legacy-upgrade) into a separate unused path. Verify
    explicit roles/required fields and that the original and backup remain unchanged. No silent conversion,
    record dropping, guessed roles or importer/recovery command is expected.
+
+### Numeric JSON resource boundary (#573)
+
+`JsonDataVersionDetector` classifies the document in a strict streaming pass before the codec builds its
+single tree. Besides the 64-container depth limit, non-version numeric tokens are limited to 64 characters
+(including signs, decimal points and exponents). Supported counters need at most 19 digits; their existing
+range checks still apply. String contents and array width are unaffected. Root `schemaVersion` values are
+classified lexically without constructing `BigInteger`: positive future integers remain unsupported,
+whereas zero, negative and non-integer versions remain invalid. Duplicate fields and trailing roots still fail.
+An oversized numeric token follows protected corrupt-file loading: preserve bytes and block operational writes.
+
+Regression checks cover the 64/65-character boundary, million-digit version classification and a 500,000-digit
+counter through protected loading. To inspect packaged behavior, use a disposable copy of a valid empty store,
+replace the STUDENT counter with an unquoted 500,000-digit integer and launch. Expect prompt protected startup,
+no overwritten file and no operational saves. Do not replace a real user's store.
