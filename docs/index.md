@@ -20,7 +20,7 @@ stable IDs and linked records, with validation and schedule checks protecting ch
 
 Download **`ponhub.jar`** from the latest published release,
 [v1.5](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.5), and follow its
-[version-matched User Guide](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/v1.5/docs/UserGuide.md#quick-start).
+[version-matched User Guide](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/f76be6739317dc07dad7bb60f621703d67c113a0/docs/UserGuide.md#quick-start).
 Use Java 25 and launch it with `java -jar ponhub.jar` in a writable application folder.
 Contributors can [build the current source](DevOps.html#build-automation) to try later development changes.
 Use the version-matched guide above when running the released JAR.
