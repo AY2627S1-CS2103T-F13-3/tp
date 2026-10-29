@@ -1118,6 +1118,23 @@ slash components, or reveal duplicates after normalization. Inspect JSON read-on
 additional working copy. The administrator supplies corrections and missing role information. Valid
 human edits to the supported schema must load; invalid edits follow [startup protection](#current-protected-startup).
 
+#### Preference JSON resource limits (#578)
+
+`JsonUtil` scans token text before object deserialization: numeric tokens are limited to 64 characters,
+and nesting to 64 containers including the root. This covers preference coordinates and dimensions,
+including unknown fields, without using numeric getters that could construct a large `BigInteger` first.
+Normal missing/default/extra-field preference behavior remains; `WindowPlacement` still fits dimensions
+and coordinates to the available desktop. This guard is independent of canonical schema detection.
+
+Read failures retain at most 512 characters of diagnostic detail plus a truncation marker. The logged warning
+and returned `DataLoadingException` share the bounded detail, without chaining Jackson's unbounded exception.
+`MainApp` recovers with reloadable default preferences while leaving operational data unchanged.
+
+Regression coverage checks numeric/depth boundaries, a million-digit coordinate, bounded warnings for a long
+invalid string, nonfinite dimensions and extreme coordinates, and full initialization/shutdown recovery with
+a 500,000-digit coordinate. Stress probes should use disposable files and a bounded subprocess rather than
+asserting a machine-specific duration in unit tests.
+
 ### Common classes
 
 `ponhub.commons` contains shared settings/value helpers, exceptions, JSON/file/string utilities
@@ -2911,19 +2928,17 @@ configured operational path; use a separate disposable copy for each rejected-fi
    explicit roles/required fields and that the original and backup remain unchanged. No silent conversion,
    record dropping, guessed roles or importer/recovery command is expected.
 
-### Preference JSON resource limits (#578)
+### Numeric JSON resource boundary (#573)
 
-`JsonUtil` scans token text before object deserialization: numeric tokens are limited to 64 characters,
-and nesting to 64 containers including the root. This covers preference coordinates and dimensions,
-including unknown fields, without using numeric getters that could construct a large `BigInteger` first.
-Normal missing/default/extra-field preference behavior remains; `WindowPlacement` still fits dimensions
-and coordinates to the available desktop. This guard is independent of canonical schema detection.
+`JsonDataVersionDetector` classifies the document in a strict streaming pass before the codec builds its
+single tree. Besides the 64-container depth limit, non-version numeric tokens are limited to 64 characters
+(including signs, decimal points and exponents). Supported counters need at most 19 digits; their existing
+range checks still apply. String contents and array width are unaffected. Root `schemaVersion` values are
+classified lexically without constructing `BigInteger`: positive future integers remain unsupported,
+whereas zero, negative and non-integer versions remain invalid. Duplicate fields and trailing roots still fail.
+An oversized numeric token follows protected corrupt-file loading: preserve bytes and block operational writes.
 
-Read failures retain at most 512 characters of diagnostic detail plus a truncation marker. The logged warning
-and returned `DataLoadingException` share the bounded detail, without chaining Jackson's unbounded exception.
-`MainApp` recovers with reloadable default preferences while leaving operational data unchanged.
-
-Regression coverage checks numeric/depth boundaries, a million-digit coordinate, bounded warnings for a long
-invalid string, nonfinite dimensions and extreme coordinates, and full initialization/shutdown recovery with
-a 500,000-digit coordinate. Stress probes should use disposable files and a bounded subprocess rather than
-asserting a machine-specific duration in unit tests.
+Regression checks cover the 64/65-character boundary, million-digit version classification and a 500,000-digit
+counter through protected loading. To inspect packaged behavior, use a disposable copy of a valid empty store,
+replace the STUDENT counter with an unquoted 500,000-digit integer and launch. Expect prompt protected startup,
+no overwritten file and no operational saves. Do not replace a real user's store.
