@@ -29,6 +29,7 @@ import ponhub.model.search.PersonSearchMatch;
 public interface Logic {
     /**
      * Executes the command and returns the result.
+     *
      * @param commandText The command as entered by the user.
      * @return the result of the command execution.
      * @throws CommandException If an error occurs during command execution.
@@ -90,7 +91,8 @@ public interface Logic {
     /**
      * Looks up a lesson in the complete catalogue, independently of the active lesson filter.
      * The returned projection is a snapshot of the lesson at lookup time.
-     * @param lessonId stable lesson identity
+     *
+     * @param lessonId stable lesson identity.
      * @return the lesson, or empty if the ID is valid but no lesson exists
      * @throws NullPointerException if {@code lessonId} is null
      */
@@ -99,7 +101,8 @@ public interface Logic {
     /**
      * Returns a student's current lessons in creation order. Membership comes from Lesson-owned student IDs.
      * Past attendance does not imply current membership.
-     * @param studentId stable identity of an existing student
+     *
+     * @param studentId stable identity of an existing student.
      * @throws NullPointerException if {@code studentId} is null
      * @throws IllegalArgumentException if the ID has the wrong role or is unknown
      */
@@ -108,7 +111,8 @@ public interface Logic {
     /**
      * Returns the current roster in people creation order, resolved from Lesson-owned student IDs.
      * An existing lesson with no students returns an empty list.
-     * @param lessonId stable identity of an existing lesson
+     *
+     * @param lessonId stable identity of an existing lesson.
      * @throws NullPointerException if {@code lessonId} is null
      * @throws IllegalArgumentException if the ID is unknown
      */
@@ -116,7 +120,8 @@ public interface Logic {
 
     /**
      * Returns the tutor's lessons, including empty lessons, by weekday, start time and lesson ID.
-     * @param tutorId stable identity of an existing tutor
+     *
+     * @param tutorId stable identity of an existing tutor.
      * @throws NullPointerException if {@code tutorId} is null
      * @throws IllegalArgumentException if the ID has the wrong role or is unknown
      */
@@ -125,7 +130,8 @@ public interface Logic {
     /**
      * Returns the student's recorded attendance, including entries retained after unenrolment.
      * Results are ordered by date, newest first, then by lesson ID. Missing entries are unrecorded.
-     * @param studentId stable identity of an existing student
+     *
+     * @param studentId stable identity of an existing student.
      * @throws NullPointerException if {@code studentId} is null
      * @throws IllegalArgumentException if the ID has the wrong role or is unknown
      */
@@ -134,8 +140,9 @@ public interface Logic {
     /**
      * Returns the student's recorded attendance for one lesson, including former enrolments.
      * An existing student and lesson with no matching records produce an empty list.
-     * @param studentId stable identity of an existing student
-     * @param lessonId stable identity of an existing lesson
+     *
+     * @param studentId stable identity of an existing student.
+     * @param lessonId stable identity of an existing lesson.
      * @throws NullPointerException if either ID is null
      * @throws IllegalArgumentException if an ID has the wrong role or is unknown
      */
