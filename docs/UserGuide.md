@@ -361,8 +361,11 @@ For example, `search c/student n/alex l/s2 pp/91234567` finds students whose own
 See [Searching people and shared lessons](#6-searching-people-and-shared-lessons) for the complete filter matrix,
 matching rules and a reusable example. Results replace the people list, so check its new positions before
 issuing a person command. The people-panel heading keeps the active category and normalized filters visible
-when help or another command replaces the feedback. Long headings scroll vertically within their own area;
-click that area and use the arrow keys, or scroll over it, to read every criterion.
+when help or another command replaces the feedback. When a heading overflows, use **Tab** or **Shift+Tab**
+to reach its area: an orange border shows keyboard focus. Use **Up/Down**, **Page Up/Page Down** or
+**Home/End** to read every criterion, then Tab or Shift+Tab to leave. The hint below the heading identifies
+this route. Mouse scrolling over the heading also works. Short headings do not add a keyboard stop.
+Command-name Tab completion still applies in the command box; use Shift+Tab to leave matching input.
 `list r/student` (or another role) replaces the search with that role list; `list` shows all people.
 
 ### Searching parents through their children

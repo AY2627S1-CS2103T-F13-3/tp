@@ -82,6 +82,15 @@ public class PersonRecordListPanel extends UiPart<Region> {
         peopleContext.textProperty().bind(requireNonNull(scope));
         scope.addListener((observable, previous, current) -> peopleContextPane.setVvalue(0));
         ResultHeadingTooltip.install(peopleContext);
+        var headingOverflows = Bindings.createBooleanBinding(() ->
+                peopleContext.getLayoutBounds().getHeight() > peopleContextPane.getViewportBounds().getHeight(),
+                peopleContext.layoutBoundsProperty(), peopleContextPane.viewportBoundsProperty());
+        peopleContextPane.focusTraversableProperty().bind(headingOverflows);
+        peopleContextPane.accessibleTextProperty().bind(peopleContext.textProperty());
+        peopleContextPane.setAccessibleHelp("Use arrow keys, Page Up, Page Down, Home or End to scroll the heading.");
+        filterResetHint.textProperty().bind(Bindings.when(headingOverflows)
+                .then("Tab: scroll; list: all")
+                .otherwise("Use list to show all people."));
         filterResetHint.visibleProperty().bind(peopleContext.textProperty().isNotEqualTo("All people"));
         filterResetHint.managedProperty().bind(filterResetHint.visibleProperty());
         personListView.setItems(requireNonNull(people));

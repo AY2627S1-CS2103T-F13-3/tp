@@ -29,6 +29,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
@@ -103,6 +104,48 @@ public class CanonicalMainWindowTest {
                 assertFalse(reset.isVisible());
                 assertFalse(reset.isManaged());
                 assertArrayEquals(saved, Files.readAllBytes(fixture.dataPath()));
+            }
+            return null;
+        });
+    }
+
+    @Test
+    public void peopleHeading_compactShell_keepsThumbAndKeyboardGuidanceVisible() throws Exception {
+        callOnFxThread(() -> {
+            try (WindowFixture fixture = createWindow()) {
+                fixture.enter("search c/student n/Alexandra Catherine Elizabeth Montgomery Wellington"
+                        + " l/JC2 pp/91234567 e/alexandra.montgomery.wellington@example.com"
+                        + " a/Block 123 Clementi Avenue Four Tuition Centre West Wing Level Three");
+                for (double width : new double[] {450, 1180}) {
+                    fixture.root().resize(width, 330);
+                    for (int pass = 0; pass < 3; pass++) {
+                        fixture.root().layout();
+                    }
+                    ScrollPane pane = (ScrollPane) fixture.root().lookup("#peopleContextPane");
+                    ScrollBar bar = (ScrollBar) pane.lookupAll(".scroll-bar").stream()
+                            .filter(node -> ((ScrollBar) node).getOrientation() == Orientation.VERTICAL)
+                            .findFirst().orElseThrow();
+                    boolean overflows = pane.getContent().getLayoutBounds().getHeight()
+                            > pane.getViewportBounds().getHeight();
+                    assertEquals(overflows, pane.isFocusTraversable());
+                    assertTrue(pane.getHeight() <= 64);
+                    assertEquals(overflows, bar.isVisible());
+                    if (overflows) {
+                        assertTrue(bar.lookup(".thumb").isVisible(), "The compact track must paint its thumb.");
+                    }
+                    Label hint = (Label) fixture.root().lookup("#filterResetHint");
+                    assertEquals(overflows, hint.getText().contains("Tab"));
+                    assertFalse(hint.isTextTruncated());
+                    assertTrue(fixture.people().getHeight() > 0);
+                }
+                fixture.enter("list");
+                for (int pass = 0; pass < 3; pass++) {
+                    fixture.root().layout();
+                }
+                ScrollPane pane = (ScrollPane) fixture.root().lookup("#peopleContextPane");
+                assertFalse(pane.isFocusTraversable());
+                assertTrue(pane.getHeight() <= 64);
+                assertFalse(Files.exists(fixture.dataPath()));
             }
             return null;
         });
