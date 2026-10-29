@@ -2910,3 +2910,15 @@ configured operational path; use a separate disposable copy for each rejected-fi
    [legacy re-entry](#planned-protected-loading-and-legacy-upgrade) into a separate unused path. Verify
    explicit roles/required fields and that the original and backup remain unchanged. No silent conversion,
    record dropping, guessed roles or importer/recovery command is expected.
+
+### Raw command input protection (#572)
+
+`CommandBox` filters raw replacements with a `TextFormatter` before JavaFX can silently remove controls.
+ISO controls and Unicode line/paragraph separators reject the entire replacement. A rejection blocks Enter
+until the text changes; caret movement alone cannot submit the preserved draft. This also covers the
+control's paste action and context menu. Parser validation remains a separate boundary.
+
+For a packaged native check in a disposable store, add a contact with an email. Paste a name containing
+a newline, then paste `edit 1 e/` followed by a newline. Expect rejection, unchanged stored contact data,
+and no execution on Enter. Repeat with a tab and CRLF, including replacement of a reversed selection.
+Correct the text and verify a normal command succeeds; an intentionally entered blank `e/` still clears email.

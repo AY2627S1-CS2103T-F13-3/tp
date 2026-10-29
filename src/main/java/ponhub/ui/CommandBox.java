@@ -2,10 +2,12 @@ package ponhub.ui;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
@@ -19,6 +21,8 @@ import ponhub.logic.parser.exceptions.ParseException;
 public class CommandBox extends UiPart<Region> {
 
     public static final String ERROR_STYLE_CLASS = "error";
+    public static final String MESSAGE_REJECTED_INPUT = "Input rejected: commands must be on one line without tabs "
+            + "or control characters. Your draft was kept; edit it before submitting.";
     static final int HISTORY_LIMIT = 50;
     private static final String FXML = "CommandBox.fxml";
 
@@ -29,6 +33,8 @@ public class CommandBox extends UiPart<Region> {
     private int historyPosition;
     private Draft unfinishedDraft;
     private boolean isRecalling;
+    private boolean inputRejected;
+    private final Consumer<String> inputFeedback;
 
     @FXML
     private TextField commandTextField;
@@ -36,12 +42,26 @@ public class CommandBox extends UiPart<Region> {
     /**
      * Creates a command input with the executor and the active session's immutable command catalogue.
      */
-    public CommandBox(CommandExecutor commandExecutor, List<String> commandWords) {
+    public CommandBox(CommandExecutor commandExecutor, List<String> commandWords, Consumer<String> inputFeedback) {
         super(FXML);
         this.commandExecutor = commandExecutor;
+        this.inputFeedback = java.util.Objects.requireNonNull(inputFeedback);
         completer = new CommandWordCompleter(commandWords);
+        // TextFormatter receives raw replacements before TextField silently strips controls.
+        commandTextField.setTextFormatter(new TextFormatter<>(change -> {
+            if (change.getText().codePoints().anyMatch(codePoint -> Character.isISOControl(codePoint)
+                    || Character.getType(codePoint) == Character.LINE_SEPARATOR
+                    || Character.getType(codePoint) == Character.PARAGRAPH_SEPARATOR)) {
+                rejectInput();
+                return null;
+            }
+            return change;
+        }));
         // calls #setStyleToDefault() whenever there is a change to the text of the command box.
-        commandTextField.textProperty().addListener((unused1, unused2, unused3) -> setStyleToDefault());
+        commandTextField.textProperty().addListener((unused1, unused2, unused3) -> {
+            inputRejected = false;
+            setStyleToDefault();
+        });
         commandTextField.textProperty().addListener((observable, previous, current) -> resetCompletion());
         commandTextField.textProperty().addListener((observable, previous, current) -> {
             if (!isRecalling) {
@@ -138,6 +158,10 @@ public class CommandBox extends UiPart<Region> {
      */
     @FXML
     private void handleCommandEntered() {
+        if (inputRejected) {
+            rejectInput();
+            return;
+        }
         String commandText = commandTextField.getText();
         if (commandText.equals("")) {
             return;
@@ -150,6 +174,15 @@ public class CommandBox extends UiPart<Region> {
         } catch (CommandException | ParseException e) {
             setStyleToIndicateCommandFailure();
         }
+    }
+
+    /**
+     * Keeps a rejected replacement from turning an existing draft into an unintended submission.
+     */
+    private void rejectInput() {
+        inputRejected = true;
+        inputFeedback.accept(MESSAGE_REJECTED_INPUT);
+        setStyleToIndicateCommandFailure();
     }
 
     /**

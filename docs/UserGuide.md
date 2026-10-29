@@ -106,6 +106,13 @@ The first successful mutation creates the data file. Keep the same JAR folder to
 
 For a separate store, launch with `java -jar FILENAME.jar --data=data/another-ponhub.json`. Quote an argument containing spaces, for example `java -jar FILENAME.jar --data="separate store/ponhub.json"`. Select a previously unused path when re-entering legacy records; see [Data protection](#data-protection-in-the-current-build).
 
+### Pasting commands
+
+Paste one command on one line. Replacements containing tabs, line breaks or control characters
+are rejected in full: the existing draft and selection are kept, and the response explains the rejection.
+Edit the draft before pressing Enter again. This prevents a rejected paste from submitting an older draft,
+including an edit that would clear an optional contact field. Ordinary Unicode spaces remain available.
+
 ### Completing command names with Tab
 
 In the command box, type a lowercase command prefix and press **Tab**: `sho` becomes `showlesson`.

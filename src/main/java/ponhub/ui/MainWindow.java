@@ -284,7 +284,8 @@ public class MainWindow extends UiPart<Stage> {
         StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath);
         statusbarPlaceholder.getChildren().add(statusBarFooter.getRoot());
 
-        CommandBox commandBox = new CommandBox(this::executeCommand, logic.getCommandWords());
+        CommandBox commandBox = new CommandBox(this::executeCommand, logic.getCommandWords(),
+                resultDisplay::setFeedbackToUser);
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
         preserveFocusOnMouseClick(lessonsButton);
         preserveFocusOnMouseClick(studentLessonsButton);

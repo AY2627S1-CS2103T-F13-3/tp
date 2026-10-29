@@ -9,6 +9,7 @@ import static ponhub.testutil.FxTestUtil.runOnFxThread;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +24,55 @@ import ponhub.logic.commands.exceptions.CommandException;
 import ponhub.logic.parser.exceptions.ParseException;
 
 public class CommandBoxTest {
+
+    @Test
+    public void replacement_controlsRejectWholeChangeAndBlockEnterUntilTextEdit() throws Exception {
+        runOnFxThread(() -> {
+            for (String control : List.of("\n", "\r\n", "\t", "\u0000", "\u001b", "\u0085",
+                    "\u2028", "\u2029")) {
+                List<String> commands = new ArrayList<>();
+                List<String> feedback = new ArrayList<>();
+                TextField input = createInput(command -> {
+                    commands.add(command);
+                    return new CommandResult("Success");
+                }, feedback::add);
+                input.setText("edit 1 e/");
+                input.selectRange(9, 7);
+                input.replaceSelection("original" + control + "@example.com");
+                assertEquals("edit 1 e/", input.getText());
+                assertEquals(9, input.getAnchor());
+                assertEquals(7, input.getCaretPosition());
+                assertEquals(List.of(CommandBox.MESSAGE_REJECTED_INPUT), feedback);
+                input.end();
+                enter(input);
+                enter(input);
+                assertTrue(commands.isEmpty(), "Rejected paste must not submit the preserved clearing draft.");
+                assertFalse(arrow(input, KeyCode.UP, false), "Rejected input must not enter history.");
+                input.appendText("corrected@example.com");
+                enter(input);
+                assertEquals(List.of("edit 1 e/corrected@example.com"), commands);
+            }
+        });
+    }
+
+    @Test
+    public void replacement_legalUnicodeSpacesAndIntentionalClearRemainAvailable() throws Exception {
+        runOnFxThread(() -> {
+            List<String> commands = new ArrayList<>();
+            TextField input = createInput(command -> {
+                commands.add(command);
+                return new CommandResult("Success");
+            });
+            String command = "add\u2003r/student n/Alex\u00a0Tan\u202fLee";
+            input.replaceSelection(command);
+            enter(input);
+            assertEquals(List.of(command), commands);
+            input.setText("edit 1 e/x");
+            input.deleteText(9, 10);
+            enter(input);
+            assertEquals(List.of(command, "edit 1 e/"), commands);
+        });
+    }
 
     @Test
     public void tab_completesAndCyclesWithoutExecuting_enterSubmitsCompletedDraft() throws Exception {
@@ -363,7 +413,11 @@ public class CommandBoxTest {
     }
 
     private static TextField createInput(CommandBox.CommandExecutor executor) {
-        CommandBox box = new CommandBox(executor, CanonicalCommandCatalog.getCommandWords(false));
+        return createInput(executor, message -> { });
+    }
+
+    private static TextField createInput(CommandBox.CommandExecutor executor, Consumer<String> feedback) {
+        CommandBox box = new CommandBox(executor, CanonicalCommandCatalog.getCommandWords(false), feedback);
         TextField input = (TextField) box.getRoot().lookup("#commandTextField");
         assertNotNull(input.getOnAction(), "The FXML must bind the Enter action.");
         input.getStyleClass().add("custom-command-style");
