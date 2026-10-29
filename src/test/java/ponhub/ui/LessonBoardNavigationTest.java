@@ -408,7 +408,7 @@ public class LessonBoardNavigationTest {
     }
 
     @Test
-    public void navigationMouseCancellation_andKeyboardActivation_keepTheirFocusBehavior() throws Exception {
+    public void navigationMouseEvents_cancelledAndIgnored_keepDraftAndKeyboardActivation() throws Exception {
         seedRecordedData();
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
@@ -424,6 +424,20 @@ public class LessonBoardNavigationTest {
                 fixture.assertDraft();
                 assertSame(fixture.input(), fixture.root().getScene().getFocusOwner());
                 assertFalse(all.isArmed());
+
+                // A release without a fresh press must not reactivate the cancelled shortcut.
+                fixture.sendMouseEvent(all, MouseEvent.MOUSE_RELEASED, 5, 5);
+                fixture.assertHistoryPane();
+                fixture.assertDraft();
+                assertSame(fixture.input(), fixture.root().getScene().getFocusOwner());
+                for (MouseButton mouseButton : List.of(MouseButton.SECONDARY, MouseButton.MIDDLE)) {
+                    fixture.sendMouseEvent(all, MouseEvent.MOUSE_PRESSED, 5, 5, mouseButton);
+                    fixture.sendMouseEvent(all, MouseEvent.MOUSE_RELEASED, 5, 5, mouseButton);
+                    fixture.assertHistoryPane();
+                    fixture.assertDraft();
+                    assertSame(fixture.input(), fixture.root().getScene().getFocusOwner());
+                    assertFalse(all.isArmed());
+                }
 
                 for (String id : List.of("lessonsButton", "studentLessonsButton", "attendanceButton")) {
                     Button button = (Button) fixture.root().lookup("#" + id);
@@ -896,11 +910,18 @@ public class LessonBoardNavigationTest {
         }
 
         private void sendMouseEvent(Button button, EventType<MouseEvent> type, double x, double y) {
+            sendMouseEvent(button, type, x, y, MouseButton.PRIMARY);
+        }
+
+        private void sendMouseEvent(Button button, EventType<MouseEvent> type, double x, double y,
+                MouseButton mouseButton) {
             var point = button.localToScene(x, y);
             var pick = new PickResult(button, point.getX(), point.getY());
+            boolean isPress = type == MouseEvent.MOUSE_PRESSED;
             Event.fireEvent(button, new MouseEvent(type, point.getX(), point.getY(), point.getX(), point.getY(),
-                    MouseButton.PRIMARY, 1, false, false, false, false, type == MouseEvent.MOUSE_PRESSED,
-                    false, false, false, false, true, pick));
+                    mouseButton, 1, false, false, false, false, isPress && mouseButton == MouseButton.PRIMARY,
+                    isPress && mouseButton == MouseButton.MIDDLE, isPress && mouseButton == MouseButton.SECONDARY,
+                    false, false, true, pick));
         }
 
         private void draft() {
