@@ -1130,6 +1130,23 @@ slash components, or reveal duplicates after normalization. Inspect JSON read-on
 additional working copy. The administrator supplies corrections and missing role information. Valid
 human edits to the supported schema must load; invalid edits follow [startup protection](#current-protected-startup).
 
+#### Preference JSON resource limits (#578)
+
+`JsonUtil` scans token text before object deserialization: numeric tokens are limited to 64 characters,
+and nesting to 64 containers including the root. This covers preference coordinates and dimensions,
+including unknown fields, without using numeric getters that could construct a large `BigInteger` first.
+Normal missing/default/extra-field preference behavior remains; `WindowPlacement` still fits dimensions
+and coordinates to the available desktop. This guard is independent of canonical schema detection.
+
+Read failures retain at most 512 characters of diagnostic detail plus a truncation marker. The logged warning
+and returned `DataLoadingException` share the bounded detail, without chaining Jackson's unbounded exception.
+`MainApp` recovers with reloadable default preferences while leaving operational data unchanged.
+
+Regression coverage checks numeric/depth boundaries, a million-digit coordinate, bounded warnings for a long
+invalid string, nonfinite dimensions and extreme coordinates, and full initialization/shutdown recovery with
+a 500,000-digit coordinate. Stress probes should use disposable files and a bounded subprocess rather than
+asserting a machine-specific duration in unit tests.
+
 ### Common classes
 
 `ponhub.commons` contains shared settings/value helpers, exceptions, JSON/file/string utilities

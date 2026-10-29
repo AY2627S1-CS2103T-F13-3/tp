@@ -12,6 +12,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import ponhub.model.UserPrefs;
 import ponhub.testutil.SerializableTestClass;
 import ponhub.testutil.TestUtil;
 
@@ -50,6 +51,27 @@ public class JsonUtilTest {
         Files.writeString(target, "original");
         assertThrows(IOException.class, () -> JsonUtil.saveJsonFile(new UnserializableValue(), target));
         assertEquals("original", Files.readString(target));
+    }
+
+    @Test
+    public void fromJsonString_numericBoundary_checksIgnoredIntegersFractionsAndExponents() throws Exception {
+        int limit = JsonUtil.MAX_NUMERIC_TOKEN_LENGTH;
+        for (String number : new String[]{"9".repeat(limit), "-" + "9".repeat(limit - 1),
+            "0." + "9".repeat(limit - 2), "1e" + "9".repeat(limit - 2)}) {
+            assertEquals(new UserPrefs(), JsonUtil.fromJsonString("{\"extra\":" + number + "}", UserPrefs.class));
+            IOException error = assertThrows(IOException.class, () -> JsonUtil.fromJsonString(
+                    "{\"extra\":" + number + "9}", UserPrefs.class));
+            assertEquals("JSON numeric token exceeds 64 characters.", error.getMessage());
+        }
+    }
+
+    @Test
+    public void fromJsonString_nestingBoundary_protectsIgnoredValues() throws Exception {
+        int limit = JsonUtil.MAX_NESTING_DEPTH;
+        String atLimit = "{\"extra\":" + "[".repeat(limit - 1) + "0" + "]".repeat(limit - 1) + "}";
+        assertEquals(new UserPrefs(), JsonUtil.fromJsonString(atLimit, UserPrefs.class));
+        String tooDeep = "{\"extra\":" + "[".repeat(limit) + "0" + "]".repeat(limit) + "}";
+        assertThrows(IOException.class, () -> JsonUtil.fromJsonString(tooDeep, UserPrefs.class));
     }
 
     private static class UnserializableValue {
