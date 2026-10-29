@@ -846,6 +846,16 @@ the history selection. Unenrolment only changes current-membership context; it d
 These are source-level contracts; the separate [post-edit acceptance task (#268)](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/268)
 and final packaged/native checks retain their own evidence requirements.
 
+##### Query subscription lifetime (#574)
+
+`LessonQueries` strongly caches result lists only while their Student, Tutor or Lesson identity exists.
+Deletion first removes the active cache entry and clears its externally held result. Retired result identity tokens are weak
+keys, with IDs as values: the query source cannot keep either an unreferenced result or its ID alive after
+weak-map cleanup. A public read-only wrapper retains its `ResultList`, preserving externally held handles.
+On model restore, surviving retired handles rejoin the active cache and refresh automatically, retaining the
+existing restoration contract. A live but unassigned person or empty lesson remains strongly cached.
+This applies to student lessons, tutor schedules, rosters and both history routes.
+
 ##### Find exact contracts and regression checks
 
 Use [`LessonQuerySource`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQuerySource.java)

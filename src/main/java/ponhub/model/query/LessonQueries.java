@@ -11,9 +11,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.WeakHashMap;
+import java.util.function.Predicate;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableListBase;
 import ponhub.model.PonHubData;
 import ponhub.model.PonHubDataState;
 import ponhub.model.attendance.Attendance;
@@ -55,11 +58,16 @@ public final class LessonQueries implements LessonQuerySource {
     private final Map<String, List<Student>> studentsByParentPhone = new HashMap<>();
     private final Map<SearchField, Map<String, List<LessonView>>> exactIndexes = new EnumMap<>(SearchField.class);
     private final Map<PersonId, ResultList<LessonView>> studentSubscriptions = new HashMap<>();
+    private final Map<RetiredResult<LessonView>, PersonId> retiredStudents = new WeakHashMap<>();
     private final Map<PersonId, ResultList<LessonView>> tutorSubscriptions = new HashMap<>();
+    private final Map<RetiredResult<LessonView>, PersonId> retiredTutors = new WeakHashMap<>();
     private final Map<LessonId, ResultList<StudentView>> rosterSubscriptions = new HashMap<>();
+    private final Map<RetiredResult<StudentView>, LessonId> retiredRosters = new WeakHashMap<>();
     private final Map<PersonId, List<AttendanceHistoryEntry>> histories = new HashMap<>();
     private final Map<PersonId, ResultList<AttendanceHistoryEntry>> historySubscriptions = new HashMap<>();
+    private final Map<RetiredResult<AttendanceHistoryEntry>, PersonId> retiredHistories = new WeakHashMap<>();
     private final Map<HistoryKey, ResultList<AttendanceHistoryEntry>> lessonHistorySubscriptions = new HashMap<>();
+    private final Map<RetiredResult<AttendanceHistoryEntry>, HistoryKey> retiredLessonHistories = new WeakHashMap<>();
     private SearchCriteria activeFilter = new SearchCriteria(SearchCategory.LESSON, Map.of());
 
     /**
@@ -117,11 +125,7 @@ public final class LessonQueries implements LessonQuerySource {
         requireNonNull(lessonId);
         checkArgument(lessonsById.containsKey(lessonId), "The lesson does not exist: " + lessonId);
         HistoryKey key = new HistoryKey(studentId, lessonId);
-        return lessonHistorySubscriptions.computeIfAbsent(key, unused -> {
-            ResultList<AttendanceHistoryEntry> result = new ResultList<>();
-            result.replace(historyForLesson(key));
-            return result;
-        }).readOnly;
+        return subscribed(key, lessonHistorySubscriptions, Map.of(key, historyForLesson(key)));
     }
 
     /**
@@ -267,6 +271,12 @@ public final class LessonQueries implements LessonQuerySource {
         tutorSchedules.values().forEach(schedule -> schedule.sort(SCHEDULE_ORDER));
         studentsByParentPhone.replaceAll((phone, students) -> List.copyOf(students));
         // All derived indexes are complete before any observable list publishes replacement entries.
+        reconcileSubscriptions(studentSubscriptions, retiredStudents, peopleById::containsKey);
+        reconcileSubscriptions(tutorSubscriptions, retiredTutors, peopleById::containsKey);
+        reconcileSubscriptions(rosterSubscriptions, retiredRosters, lessonsById::containsKey);
+        reconcileSubscriptions(historySubscriptions, retiredHistories, peopleById::containsKey);
+        reconcileSubscriptions(lessonHistorySubscriptions, retiredLessonHistories,
+                key -> peopleById.containsKey(key.studentId()) && lessonsById.containsKey(key.lessonId()));
         catalogue.replace(entries);
         refreshSubscriptions(studentSubscriptions, studentLessons);
         refreshSubscriptions(tutorSubscriptions, tutorSchedules);
@@ -301,6 +311,29 @@ public final class LessonQueries implements LessonQuerySource {
         }).readOnly;
     }
 
+    /**
+     * Drops ownership of deleted identities while allowing externally held results to revive on restore.
+     * Weak identity tokens avoid list-value equality; unreferenced retired results cannot retain their IDs.
+     */
+    private static <K, T> void reconcileSubscriptions(Map<K, ResultList<T>> active,
+            Map<RetiredResult<T>, K> retired, Predicate<K> exists) {
+        // Retain actual weak keys during reconciliation, rather than weak Map.Entry objects.
+        List.copyOf(retired.keySet()).forEach(result -> {
+            K key = retired.get(result);
+            if (exists.test(key)) {
+                retired.remove(result);
+                active.put(key, result.result);
+            }
+        });
+        List.copyOf(active.entrySet()).forEach(entry -> {
+            if (!exists.test(entry.getKey())) {
+                active.remove(entry.getKey());
+                retired.put(entry.getValue().retirement, entry.getKey());
+                entry.getValue().replace(List.of());
+            }
+        });
+    }
+
     private static <K, T> void refreshSubscriptions(Map<K, ResultList<T>> subscriptions, Map<K, List<T>> index) {
         // List callbacks may subscribe to more query results, so do not traverse the live subscription map.
         List.copyOf(subscriptions.entrySet()).forEach(entry ->
@@ -308,14 +341,44 @@ public final class LessonQueries implements LessonQuerySource {
     }
 
     /**
+     * Provides an identity token for weak retirement without using observable-list value equality.
+     * A held public list retains its token, allowing that same result to revive on model restore.
+     */
+    private static final class RetiredResult<T> {
+        private final ResultList<T> result;
+
+        private RetiredResult(ResultList<T> result) {
+            this.result = result;
+        }
+    }
+
+    /**
      * Keeps the observable object held by callers stable while its immutable entries are replaced.
      */
-    private static final class ResultList<T> {
-        private final ObservableList<T> values = FXCollections.observableArrayList();
-        private final ObservableList<T> readOnly = FXCollections.unmodifiableObservableList(values);
+    private static final class ResultList<T> extends ObservableListBase<T> {
+        private final RetiredResult<T> retirement = new RetiredResult<>(this);
+        private List<T> values = List.of();
+        // Holding the public wrapper keeps this ResultList and its weak retirement token alive.
+        private final ObservableList<T> readOnly = FXCollections.unmodifiableObservableList(this);
+
+        @Override
+        public T get(int index) {
+            return values.get(index);
+        }
+
+        @Override
+        public int size() {
+            return values.size();
+        }
 
         private void replace(List<T> replacement) {
-            values.setAll(replacement);
+            List<T> previous = values;
+            values = List.copyOf(replacement);
+            if (!previous.isEmpty() || !values.isEmpty()) {
+                beginChange();
+                nextReplace(0, values.size(), previous);
+                endChange();
+            }
         }
     }
 }
