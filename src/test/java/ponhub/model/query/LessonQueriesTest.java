@@ -68,6 +68,76 @@ public class LessonQueriesTest {
     }
 
     @Test
+    public void deletedIdentities_releaseStrongCachesAndHeldHandlesReviveIndependently() throws Exception {
+        PonHubDataState original = data.exportState();
+        var studentOne = queries.getStudentLessons(STUDENT_ONE);
+        var studentTwo = queries.getStudentLessons(STUDENT_TWO);
+        var tutor = queries.getTutorSchedule(TUTOR_ONE);
+        var roster = queries.getLessonRoster(SHARED_LESSON);
+        var history = queries.getAttendanceHistory(STUDENT_ONE);
+        var lessonHistory = queries.getAttendanceHistory(STUDENT_ONE, SHARED_LESSON);
+        data.resetData(new PonHubData());
+        for (var result : List.of(studentOne, studentTwo, tutor, roster, history, lessonHistory)) {
+            assertTrue(result.isEmpty());
+        }
+        for (String field : List.of("studentSubscriptions", "tutorSubscriptions", "rosterSubscriptions",
+                "historySubscriptions", "lessonHistorySubscriptions")) {
+            assertEquals(0, subscriptionCount(queries, field));
+        }
+        data.resetData(original);
+        assertSame(studentOne, queries.getStudentLessons(STUDENT_ONE));
+        assertSame(studentTwo, queries.getStudentLessons(STUDENT_TWO));
+        assertSame(tutor, queries.getTutorSchedule(TUTOR_ONE));
+        assertSame(roster, queries.getLessonRoster(SHARED_LESSON));
+        assertSame(history, queries.getAttendanceHistory(STUDENT_ONE));
+        assertSame(lessonHistory, queries.getAttendanceHistory(STUDENT_ONE, SHARED_LESSON));
+        assertIds(studentOne, "L2", "L10");
+        assertIds(studentTwo, "L10", "L11");
+        assertFalse(roster.isEmpty());
+    }
+
+    @Test
+    public void liveEmptyIdentities_keepStableHandlesAcrossUnrelatedPublications() throws Exception {
+        var student = queries.getStudentLessons(STUDENT_WITHOUT_LESSONS);
+        var tutor = queries.getTutorSchedule(TUTOR_WITHOUT_LESSONS);
+        var roster = queries.getLessonRoster(EMPTY_LESSON);
+        var history = queries.getAttendanceHistory(STUDENT_WITHOUT_LESSONS);
+        var byLesson = queries.getAttendanceHistory(STUDENT_WITHOUT_LESSONS, EMPTY_LESSON);
+        data.removeLesson(new LessonId("L4"));
+        assertSame(student, queries.getStudentLessons(STUDENT_WITHOUT_LESSONS));
+        assertSame(tutor, queries.getTutorSchedule(TUTOR_WITHOUT_LESSONS));
+        assertSame(roster, queries.getLessonRoster(EMPTY_LESSON));
+        assertSame(history, queries.getAttendanceHistory(STUDENT_WITHOUT_LESSONS));
+        assertSame(byLesson, queries.getAttendanceHistory(STUDENT_WITHOUT_LESSONS, EMPTY_LESSON));
+    }
+
+    @Test
+    public void createViewDeleteChurn_doesNotAccumulateStrongCacheEntries(
+            @org.junit.jupiter.api.io.TempDir java.nio.file.Path directory) throws Exception {
+        var session = new ponhub.logic.CanonicalPeopleSession(
+                directory.resolve("data.json"));
+        for (int i = 0; i < 100; i++) {
+            session.execute("add r/student n/Temporary Student l/P1 pp/91234567");
+            session.execute("lessons 1");
+            session.execute("history 1");
+            session.execute("delete 1");
+            session.execute("delete confirm");
+            LessonQueries source = (LessonQueries) session.getLessonQueries();
+            assertEquals(0, subscriptionCount(source, "studentSubscriptions"));
+            assertEquals(0, subscriptionCount(source, "historySubscriptions"));
+        }
+        assertTrue(session.getPeople().isEmpty());
+        assertEquals(100, session.getDataSnapshot().people().getLastAllocatedSequences()
+                .get(ponhub.model.person.PersonRole.STUDENT));
+    }
+
+    private static int subscriptionCount(LessonQueries source, String name) throws Exception {
+        var field = LessonQueries.class.getDeclaredField(name);
+        field.setAccessible(true);
+        return ((Map<?, ?>) field.get(source)).size();
+    }
+
+    @Test
     public void catalogueAndLookup_includeEmptyAndSharedLessonsInCreationOrder() {
         PonHubDataState before = data.exportState();
         assertIds(queries.getLessonList(), "L2", "L10", "L3", "L4", "L11");

@@ -2910,3 +2910,13 @@ configured operational path; use a separate disposable copy for each rejected-fi
    [legacy re-entry](#planned-protected-loading-and-legacy-upgrade) into a separate unused path. Verify
    explicit roles/required fields and that the original and backup remain unchanged. No silent conversion,
    record dropping, guessed roles or importer/recovery command is expected.
+
+### Query subscription lifetime (#574)
+
+`LessonQueries` strongly caches result lists only while their Student, Tutor or Lesson identity exists.
+Deletion first removes the active cache entry and clears its externally held result. Retired result identity tokens are weak
+keys, with IDs as values: the query source cannot keep either an unreferenced result or its ID alive after
+weak-map cleanup. A public read-only wrapper retains its `ResultList`, preserving externally held handles.
+On model restore, surviving retired handles rejoin the active cache and refresh automatically, retaining the
+existing restoration contract. A live but unassigned person or empty lesson remains strongly cached.
+This applies to student lessons, tutor schedules, rosters and both history routes.
