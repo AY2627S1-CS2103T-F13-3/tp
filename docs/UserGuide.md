@@ -15,7 +15,7 @@ shortcuts to the same commands; see [moving between results](#moving-between-res
 
 The [Lesson board example](#listing-and-searching-shared-lessons) shows a filtered people list beside
 independent Lesson results. View the [application overview](images/Ui.png) for the full layout.
-Screenshots show the current development build, including changes after public v1.4;
+Screenshots illustrate the people and Lesson views;
 the [screenshot source and credit note](images/README.html) identifies their source and fictitious content.
 
 * Table of Contents
@@ -62,17 +62,13 @@ positions. To create a lesson, use the [tutor lookup rules](#4-creating-shared-l
 
 ## Quick start
 
-The latest published release is [v1.4](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.4).
-This current-source guide can include unreleased changes; use the
-[v1.4 User Guide](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/v1.4/docs/UserGuide.md#quick-start)
-for the commands available in that downloaded JAR.
+These instructions are for [PonHub v1.5](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.5).
+Use the released JAR with this guide for its commands and keyboard routes.
 
 1. Ensure that Java `25` is installed on your computer.<br>
    **Mac users:** Install Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) as prescribed by the [course's Mac advisory](https://nus-cs2103-ay2627-s1.github.io/website/admin/programmingLanguages.html) and [Mac installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html). Use this installation in the terminal that launches PonHub.
 
-1. Download **`ponhub.jar`** from the [v1.4 release](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.4).
-   To preview unreleased changes described in this guide, contributors can instead build
-   `build/libs/ponhub.jar` with `./gradlew shadowJar`; see [DevOps](DevOps.html#build-automation).
+1. Download **`ponhub.jar`** from the [v1.5 release](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.5).
 
 1. Put the JAR file in the folder you want to use for PonHub. Keep this folder when moving or backing up your data.
 
