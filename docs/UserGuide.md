@@ -138,6 +138,17 @@ session and are cleared when it closes. Check current people positions and Lesso
 old command: its original target may have moved or been removed. This recall is separate from the
 attendance `history` command.
 
+### Reading long responses with the keyboard
+
+After running `help` or another command with a long response, leave the command box blank and press **Tab**
+past **All lessons**, **Student lessons** and **Attendance history** to focus Result Display. Its orange outline identifies where scrolling keys apply. If Tab completes a
+command name in an unfinished draft, use **Shift+Tab** to move focus backwards instead.
+
+With Result Display focused, use **Up/Down** or **Page Up/Page Down** to read the response, then **Tab** or
+**Shift+Tab** to leave it. On Mac keyboards without Page keys, **Fn+Up/Down** supplies Page Up/Page Down.
+Mouse or trackpad scrolling also works. Up/Down in the command box
+continues to [recall commands](#recalling-submitted-commands-with-up-and-down).
+
 ## Current command summary
 
 Use this summary to find a command's syntax and example; the linked action names lead to its details.
@@ -189,7 +200,8 @@ you can select and copy their text.
 
 Choose **Help > Help** or press **F1** for the same catalogue, including when focus is in the command box or Result Display. Menu/F1 preserve unfinished command text. Help preserves records, the active person filter, order, selection and preferences. Typed help clears the submitted command in the usual way. Help needs no internet connection and does not save operational data.
 
-Long guidance wraps within Result Display. Scroll vertically to read the rest; each new result starts at the top.
+For keyboard access, see [Reading long responses](#reading-long-responses-with-the-keyboard).
+Each new response starts at the top.
 
 * `help addlesson`, `help editlesson`, `help enrol`, `help unenrol`, `help mark`, `help unmark` and `help showlesson` show their active syntax and examples. `help remove` returns
   `Unknown command: 'remove'. Type 'help' to see available commands.`
