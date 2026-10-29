@@ -132,6 +132,7 @@ public class JsonPonHubDataStorageTest {
         assertRejected(root -> person(root, 0).put("id", "S1"));
         assertRejected(root -> person(root, 1).put("level", "P9"));
         assertRejected(root -> person(root, 1).put("name", ""));
+        assertRejected(root -> person(root, 1).put("name", "A" + "\u0315\u0327".repeat(20_000)));
         assertRejected(root -> person(root, 1).put("role", "UNKNOWN"));
         assertRejected(root -> root.withArray("people").add(person(root, 1).deepCopy()));
         assertRejected(root -> root.withArray("people").add(person(root, 1).deepCopy().put("id", "S2")));

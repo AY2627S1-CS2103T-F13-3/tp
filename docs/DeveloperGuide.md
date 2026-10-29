@@ -1297,7 +1297,12 @@ Existing duplicate keys and `TutorResolver` consume these canonical `Name` value
 editing therefore match canonical equivalents while retaining ambiguity and exact-phone checks. No schema
 change is needed: the loader constructs the same value and the writer saves its normalized display form.
 Name/address parser boundaries preserve controls for rejection; role-aware add rejects controls before extraction.
-Space normalization scans linearly; email rejects excessive length before a linear, constant-stack format scan,
+Space normalization scans linearly. Before NFC canonical reordering, Name rejects more than 400 code points
+after space normalization: each scalar in the supported Java 25 runtime canonically decomposes into at most
+four code points, so no spelling equivalent to a valid 100-code-point NFC name is excluded. This bounds
+normalization work while preserving decomposed accents, Hangul composition and the final 100-code-point limit.
+The constructor and static validator share this guard, including command and storage callers.
+Email rejects excessive length before a linear, constant-stack format scan,
 avoiding stack overflow on hostile repeated input. Phone/email parsing retains surrounding-whitespace trimming.
 
 The active `RoleAwareAddParser` and canonical loader use this policy. Previously accepted files outside it, including

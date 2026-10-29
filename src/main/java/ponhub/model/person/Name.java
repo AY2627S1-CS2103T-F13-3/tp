@@ -20,6 +20,10 @@ public final class Name {
             + "Standalone lowercase s/o or d/o is allowed between letter-bearing name text. "
             + "Controls, format characters and internal non-ASCII whitespace are not allowed.";
 
+    // Every Unicode scalar has at most four code points in its full canonical decomposition in Java 25.
+    // Canonically equivalent input cannot exceed the NFD length of a valid 100-code-point NFC name.
+    private static final int MAX_NORMALIZATION_CODE_POINTS = MAX_LENGTH * 4;
+
     public final String fullName;
 
     /**
@@ -31,7 +35,9 @@ public final class Name {
     public Name(String name) {
         requireNonNull(name);
         checkArgument(!hasForbiddenCodePoints(name), MESSAGE_CONSTRAINTS);
-        String normalizedName = normalize(name);
+        String spacedName = normalizeSpaces(name);
+        checkArgument(isWithinNormalizationBudget(spacedName), MESSAGE_CONSTRAINTS);
+        String normalizedName = Normalizer.normalize(spacedName, Normalizer.Form.NFC);
         checkArgument(isValidNormalizedName(normalizedName), MESSAGE_CONSTRAINTS);
         fullName = normalizedName;
     }
@@ -41,12 +47,20 @@ public final class Name {
      */
     public static boolean isValidName(String test) {
         requireNonNull(test);
-        return !hasForbiddenCodePoints(test) && isValidNormalizedName(normalize(test));
+        if (hasForbiddenCodePoints(test)) {
+            return false;
+        }
+        String spacedName = normalizeSpaces(test);
+        return isWithinNormalizationBudget(spacedName)
+                && isValidNormalizedName(Normalizer.normalize(spacedName, Normalizer.Form.NFC));
     }
 
-    private static String normalize(String name) {
-        return Normalizer.normalize(StringUtil.normalizeSpaces(StringUtil.stripUnicodeBoundaryWhitespace(name)),
-                Normalizer.Form.NFC);
+    private static String normalizeSpaces(String name) {
+        return StringUtil.normalizeSpaces(StringUtil.stripUnicodeBoundaryWhitespace(name));
+    }
+
+    private static boolean isWithinNormalizationBudget(String name) {
+        return name.codePointCount(0, name.length()) <= MAX_NORMALIZATION_CODE_POINTS;
     }
 
     private static boolean hasForbiddenCodePoints(String name) {

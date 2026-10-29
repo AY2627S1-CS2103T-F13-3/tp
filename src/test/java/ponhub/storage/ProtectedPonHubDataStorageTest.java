@@ -67,6 +67,25 @@ public class ProtectedPonHubDataStorageTest {
     }
 
     @Test
+    public void load_excessiveNameCombiningRun_preservesBytesAndBlocksWrites() throws Exception {
+        Path path = directory.resolve("huge-name.json");
+        PonHubDataState valid = new PonHubDataState(PeopleSampleDataUtil.getSamplePeopleRegistry().exportState(),
+                List.of(), List.of(), 0);
+        String originalName = valid.people().getPeople().getFirst().getContactDetails().getName().fullName;
+        String oversizedName = "A" + "\u0315\u0327".repeat(20_000);
+        String json = JsonPonHubDataCodec.encode(valid).replace("\"name\" : \"" + originalName + "\"",
+                "\"name\" : \"" + oversizedName + "\"");
+        assertTrue(json.contains(oversizedName));
+        Files.writeString(path, json);
+        byte[] original = Files.readAllBytes(path);
+        ProtectedPonHubDataStorage storage = new ProtectedPonHubDataStorage(path);
+        assertThrows(DataLoadingException.class, storage::load);
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.CORRUPT, storage.getLoadStatus());
+        assertThrows(IOException.class, () -> storage.saveData(new PonHubData().exportState()));
+        assertArrayEquals(original, Files.readAllBytes(path));
+    }
+
+    @Test
     public void load_excessiveNesting_preservesBytesAndRequiresRestartAfterRepair() throws Exception {
         Path path = directory.resolve("deep.json");
         String nested = "{\"schemaVersion\":1,\"people\":" + "[".repeat(50_000)
