@@ -47,7 +47,7 @@ public final class JsonDataVersionDetector {
      * Documents exceeding the nesting or numeric-token limit are malformed, including unrecognized fields.
      * Root versions are classified lexically, so even an oversized future version needs no BigInteger.
      *
-     * @param json non-null file contents
+     * @param json non-null file contents.
      * @return explicit format or rejection reason
      */
     public static Format detect(String json) {

@@ -36,6 +36,7 @@ public class JsonUserPrefsStorage {
 
     /**
      * Similar to {@link #readUserPrefs()}
+     *
      * @param prefsFilePath location of the data. Cannot be null.
      * @throws DataLoadingException if the file format is not as expected.
      */
@@ -49,6 +50,7 @@ public class JsonUserPrefsStorage {
 
     /**
      * Saves the given {@link ponhub.model.ReadOnlyUserPrefs} to the storage.
+     *
      * @param userPrefs cannot be null.
      * @throws IOException if there was any problem writing to the file.
      */
