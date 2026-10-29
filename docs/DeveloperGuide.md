@@ -207,6 +207,18 @@ Use the [common window and layout checks](#common-window-and-layout-checks) to e
 on the actual platform and display configuration being assessed.
 The command box exposes the routes described in [command integration](#current-increment-and-command-integration).
 
+### Raw command input protection (#572)
+
+`CommandBox` filters raw replacements with a `TextFormatter` before JavaFX can silently remove controls.
+ISO controls and Unicode line/paragraph separators reject the entire replacement. A rejection blocks Enter
+until the text changes; caret movement alone cannot submit the preserved draft. This also covers the
+control's paste action and context menu. Parser validation remains a separate boundary.
+
+For a packaged native check in a disposable store, add a contact with an email. Paste a name containing
+a newline, then paste `edit 1 e/` followed by a newline. Expect rejection, unchanged stored contact data,
+and no execution on Enter. Repeat with a tab and CRLF, including replacement of a reversed selection.
+Correct the text and verify a normal command succeeds; an intentionally entered blank `e/` still clears email.
+
 ### Shared-lesson target contract
 
 The agreed design ([#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60)) uses one canonical
@@ -2911,14 +2923,17 @@ configured operational path; use a separate disposable copy for each rejected-fi
    explicit roles/required fields and that the original and backup remain unchanged. No silent conversion,
    record dropping, guessed roles or importer/recovery command is expected.
 
-### Raw command input protection (#572)
+### Numeric JSON resource boundary (#573)
 
-`CommandBox` filters raw replacements with a `TextFormatter` before JavaFX can silently remove controls.
-ISO controls and Unicode line/paragraph separators reject the entire replacement. A rejection blocks Enter
-until the text changes; caret movement alone cannot submit the preserved draft. This also covers the
-control's paste action and context menu. Parser validation remains a separate boundary.
+`JsonDataVersionDetector` classifies the document in a strict streaming pass before the codec builds its
+single tree. Besides the 64-container depth limit, non-version numeric tokens are limited to 64 characters
+(including signs, decimal points and exponents). Supported counters need at most 19 digits; their existing
+range checks still apply. String contents and array width are unaffected. Root `schemaVersion` values are
+classified lexically without constructing `BigInteger`: positive future integers remain unsupported,
+whereas zero, negative and non-integer versions remain invalid. Duplicate fields and trailing roots still fail.
+An oversized numeric token follows protected corrupt-file loading: preserve bytes and block operational writes.
 
-For a packaged native check in a disposable store, add a contact with an email. Paste a name containing
-a newline, then paste `edit 1 e/` followed by a newline. Expect rejection, unchanged stored contact data,
-and no execution on Enter. Repeat with a tab and CRLF, including replacement of a reversed selection.
-Correct the text and verify a normal command succeeds; an intentionally entered blank `e/` still clears email.
+Regression checks cover the 64/65-character boundary, million-digit version classification and a 500,000-digit
+counter through protected loading. To inspect packaged behavior, use a disposable copy of a valid empty store,
+replace the STUDENT counter with an unquoted 500,000-digit integer and launch. Expect prompt protected startup,
+no overwritten file and no operational saves. Do not replace a real user's store.

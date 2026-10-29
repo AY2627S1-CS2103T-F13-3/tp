@@ -51,6 +51,22 @@ public class ProtectedPonHubDataStorageTest {
     }
 
     @Test
+    public void load_oversizedCounter_preservesBytesAndBlocksWrites() throws Exception {
+        Path path = directory.resolve("huge-number.json");
+        String json = JsonPonHubDataCodec.encode(new PonHubData().exportState())
+                .replace("\"STUDENT\" : 0", "\"STUDENT\" : " + "9".repeat(500_000));
+        assertTrue(json.contains("9".repeat(100)));
+        Files.writeString(path, json);
+        byte[] original = Files.readAllBytes(path);
+        assertThrows(IOException.class, () -> JsonPonHubDataCodec.decode(json));
+        ProtectedPonHubDataStorage storage = new ProtectedPonHubDataStorage(path);
+        assertThrows(DataLoadingException.class, storage::load);
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.CORRUPT, storage.getLoadStatus());
+        assertThrows(IOException.class, () -> storage.saveData(new PonHubData().exportState()));
+        assertArrayEquals(original, Files.readAllBytes(path));
+    }
+
+    @Test
     public void load_excessiveNesting_preservesBytesAndRequiresRestartAfterRepair() throws Exception {
         Path path = directory.resolve("deep.json");
         String nested = "{\"schemaVersion\":1,\"people\":" + "[".repeat(50_000)
