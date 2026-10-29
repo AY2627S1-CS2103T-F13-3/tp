@@ -23,6 +23,7 @@ import org.junit.jupiter.api.io.TempDir;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
@@ -366,6 +367,61 @@ public class LessonBoardNavigationTest {
     }
 
     @Test
+    public void navigationMouseDragExitAndReentry_firesOnceAndPreservesCommandSelection() throws Exception {
+        seedRecordedData();
+        WindowFixture fixture = callOnFxThread(this::createWindow);
+        try {
+            callOnFxThread(() -> {
+                fixture.window().show();
+                fixture.people().getSelectionModel().select(3);
+                return null;
+            });
+            byte[] original = Files.readAllBytes(fixture.dataPath());
+            for (String id : List.of("lessonsButton", "studentLessonsButton", "attendanceButton")) {
+                for (int[] range : new int[][] {{3, 5}, {5, 3}, {4, 4}}) {
+                    callOnFxThread(() -> {
+                        fixture.input().requestFocus();
+                        fixture.input().setText(WindowFixture.DRAFT);
+                        fixture.input().selectRange(range[0], range[1]);
+                        Button button = (Button) fixture.root().lookup("#" + id);
+                        var actions = new ArrayList<ActionEvent>();
+                        EventHandler<ActionEvent> actionCounter = actions::add;
+                        button.addEventHandler(ActionEvent.ACTION, actionCounter);
+
+                        fixture.sendMouseEvent(button, MouseEvent.MOUSE_PRESSED, 5, 5);
+                        assertTrue(button.isArmed(), id);
+                        assertTrue(button.isPressed(), id);
+                        fixture.sendMouseEvent(button, MouseEvent.MOUSE_EXITED, -5, -5,
+                                MouseButton.PRIMARY, true);
+                        assertFalse(button.isArmed(), id);
+                        fixture.sendMouseEvent(button, MouseEvent.MOUSE_ENTERED, 5, 5,
+                                MouseButton.PRIMARY, true);
+                        assertTrue(button.isArmed(), id);
+                        fixture.sendMouseEvent(button, MouseEvent.MOUSE_RELEASED, 5, 5);
+                        assertEquals(1, actions.size(), id);
+                        assertFalse(button.isArmed(), id);
+                        assertFalse(button.isPressed(), id);
+                        assertTrue(button.isFocusTraversable(), id);
+                        button.removeEventHandler(ActionEvent.ACTION, actionCounter);
+                        fixture.assertActiveOnly(id);
+                        assertEquals(WindowFixture.DRAFT, fixture.input().getText());
+                        assertEquals(range[0], fixture.input().getAnchor(), id);
+                        assertEquals(range[1], fixture.input().getCaretPosition(), id);
+                        assertSame(fixture.input(), fixture.root().getScene().getFocusOwner());
+                        return null;
+                    });
+                }
+            }
+            assertArrayEquals(original, Files.readAllBytes(fixture.dataPath()));
+        } finally {
+            callOnFxThread(() -> {
+                fixture.close();
+                return null;
+            });
+        }
+    }
+
+    @Test
     public void navigationMouseClick_rejectedSelections_preserveDraftAndPreviousResults() throws Exception {
         seedRecordedData();
         WindowFixture fixture = callOnFxThread(this::createWindow);
@@ -419,6 +475,7 @@ public class LessonBoardNavigationTest {
                 fixture.draft();
                 Button all = (Button) fixture.root().lookup("#lessonsButton");
                 fixture.sendMouseEvent(all, MouseEvent.MOUSE_PRESSED, 5, 5);
+                fixture.sendMouseEvent(all, MouseEvent.MOUSE_EXITED, -5, -5, MouseButton.PRIMARY, true);
                 fixture.sendMouseEvent(all, MouseEvent.MOUSE_RELEASED, -5, -5);
                 fixture.assertHistoryPane();
                 fixture.assertDraft();
@@ -426,6 +483,9 @@ public class LessonBoardNavigationTest {
                 assertFalse(all.isArmed());
 
                 // A release without a fresh press must not reactivate the cancelled shortcut.
+                fixture.sendMouseEvent(all, MouseEvent.MOUSE_ENTERED, 5, 5, MouseButton.NONE, false);
+                assertFalse(all.isArmed());
+                assertFalse(all.isPressed());
                 fixture.sendMouseEvent(all, MouseEvent.MOUSE_RELEASED, 5, 5);
                 fixture.assertHistoryPane();
                 fixture.assertDraft();
@@ -437,6 +497,26 @@ public class LessonBoardNavigationTest {
                     fixture.assertDraft();
                     assertSame(fixture.input(), fixture.root().getScene().getFocusOwner());
                     assertFalse(all.isArmed());
+
+                    // A second button's press/release must not fire or cancel a held primary gesture.
+                    fixture.sendMouseEvent(all, MouseEvent.MOUSE_PRESSED, 5, 5);
+                    fixture.sendMouseEvent(all, MouseEvent.MOUSE_PRESSED, 5, 5, mouseButton,
+                            true, mouseButton == MouseButton.MIDDLE, mouseButton == MouseButton.SECONDARY);
+                    fixture.sendMouseEvent(all, MouseEvent.MOUSE_RELEASED, 5, 5, mouseButton,
+                            true, false, false);
+                    fixture.assertHistoryPane();
+                    fixture.assertDraft();
+                    assertTrue(all.isArmed());
+                    assertTrue(all.isPressed());
+                    assertSame(fixture.input(), fixture.root().getScene().getFocusOwner());
+                    fixture.sendMouseEvent(all, MouseEvent.MOUSE_RELEASED, 5, 5);
+                    fixture.assertLessonPane("lessonsButton");
+                    assertFalse(all.isArmed());
+                    assertFalse(all.isPressed());
+                    fixture.assertDraft();
+                    fixture.enter("history 4");
+                    fixture.input().requestFocus();
+                    fixture.draft();
                 }
 
                 for (String id : List.of("lessonsButton", "studentLessonsButton", "attendanceButton")) {
@@ -915,12 +995,22 @@ public class LessonBoardNavigationTest {
 
         private void sendMouseEvent(Button button, EventType<MouseEvent> type, double x, double y,
                 MouseButton mouseButton) {
+            sendMouseEvent(button, type, x, y, mouseButton, type == MouseEvent.MOUSE_PRESSED);
+        }
+
+        private void sendMouseEvent(Button button, EventType<MouseEvent> type, double x, double y,
+                MouseButton mouseButton, boolean isButtonDown) {
+            sendMouseEvent(button, type, x, y, mouseButton, isButtonDown && mouseButton == MouseButton.PRIMARY,
+                    isButtonDown && mouseButton == MouseButton.MIDDLE,
+                    isButtonDown && mouseButton == MouseButton.SECONDARY);
+        }
+
+        private void sendMouseEvent(Button button, EventType<MouseEvent> type, double x, double y,
+                MouseButton mouseButton, boolean isPrimaryDown, boolean isMiddleDown, boolean isSecondaryDown) {
             var point = button.localToScene(x, y);
             var pick = new PickResult(button, point.getX(), point.getY());
-            boolean isPress = type == MouseEvent.MOUSE_PRESSED;
             Event.fireEvent(button, new MouseEvent(type, point.getX(), point.getY(), point.getX(), point.getY(),
-                    mouseButton, 1, false, false, false, false, isPress && mouseButton == MouseButton.PRIMARY,
-                    isPress && mouseButton == MouseButton.MIDDLE, isPress && mouseButton == MouseButton.SECONDARY,
+                    mouseButton, 1, false, false, false, false, isPrimaryDown, isMiddleDown, isSecondaryDown,
                     false, false, true, pick));
         }
 

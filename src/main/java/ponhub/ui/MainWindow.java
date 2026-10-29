@@ -9,6 +9,8 @@ import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
 import javafx.css.PseudoClass;
 import javafx.event.ActionEvent;
+import javafx.event.EventDispatcher;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
@@ -291,24 +293,31 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Uses the contact Copy buttons' mouse pattern to retain the current editing focus and selection.
-     * Keyboard traversal and activation still use the standard Button behavior.
+     * Keeps mouse activation from taking editing focus while retaining the standard Button gesture lifecycle.
+     * Keyboard traversal and activation keep the button's configured focus behavior.
      */
     private static void preserveFocusOnMouseClick(Button button) {
-        button.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
-            if (event.getButton() == MouseButton.PRIMARY) {
-                button.arm();
+        EventHandler<MouseEvent> ignoreNonPrimary = event -> {
+            if (event.getButton() != MouseButton.PRIMARY) {
+                event.consume();
             }
-            event.consume();
-        });
-        button.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> {
-            if (event.getButton() == MouseButton.PRIMARY && button.isArmed()) {
-                button.disarm();
-                if (button.contains(event.getX(), event.getY())) {
-                    button.fire();
-                }
+        };
+        button.addEventFilter(MouseEvent.MOUSE_PRESSED, ignoreNonPrimary);
+        button.addEventFilter(MouseEvent.MOUSE_RELEASED, ignoreNonPrimary);
+        EventDispatcher dispatcher = button.getEventDispatcher();
+        button.setEventDispatcher((event, tail) -> {
+            if (event.getEventType() != MouseEvent.MOUSE_PRESSED) {
+                return dispatcher.dispatchEvent(event, tail);
             }
-            event.consume();
+
+            // Let JavaFX track pressed/armed state, but suppress its mouse-only focus request.
+            boolean wasFocusTraversable = button.isFocusTraversable();
+            button.setFocusTraversable(false);
+            try {
+                return dispatcher.dispatchEvent(event, tail);
+            } finally {
+                button.setFocusTraversable(wasFocusTraversable);
+            }
         });
     }
 
