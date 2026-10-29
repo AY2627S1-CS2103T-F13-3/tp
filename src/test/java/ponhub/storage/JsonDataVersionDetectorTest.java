@@ -16,6 +16,33 @@ import org.junit.jupiter.api.Test;
 
 public class JsonDataVersionDetectorTest {
     @Test
+    public void detect_numericTokenBoundary_checksIntegersFractionsAndExponents() {
+        int limit = JsonDataVersionDetector.MAX_NUMERIC_TOKEN_LENGTH;
+        for (String number : new String[]{"9".repeat(limit), "-" + "9".repeat(limit - 1),
+            "0." + "9".repeat(limit - 2), "1e" + "9".repeat(limit - 2)}) {
+            assertEquals(PONHUB_V1_CANDIDATE, JsonDataVersionDetector.detect(
+                    "{\"schemaVersion\":1,\"extra\":[" + number + "]}"));
+            assertEquals(MALFORMED_JSON, JsonDataVersionDetector.detect(
+                    "{\"schemaVersion\":1,\"extra\":[" + number + "9]}"));
+        }
+        assertEquals(LEGACY_AB3, JsonDataVersionDetector.detect(
+                "{\"persons\":[],\"_comment\":\"" + "9".repeat(100_000) + "\"}"));
+    }
+
+    @Test
+    public void detect_hugeNumbers_rejectsWithoutNumericConversionAndPreservesVersionMeaning() {
+        String huge = "9".repeat(1_000_000);
+        assertEquals(MALFORMED_JSON, JsonDataVersionDetector.detect(
+                "{\"schemaVersion\":1,\"personCounters\":{\"STUDENT\":" + huge + "}}"));
+        assertEquals(UNSUPPORTED_VERSION, JsonDataVersionDetector.detect("{\"schemaVersion\":" + huge + "}"));
+        assertEquals(INVALID_VERSION, JsonDataVersionDetector.detect("{\"schemaVersion\":-" + huge + "}"));
+        assertEquals(INVALID_VERSION, JsonDataVersionDetector.detect("{\"schemaVersion\":" + huge + ".0}"));
+        assertEquals(MALFORMED_JSON, JsonDataVersionDetector.detect(
+                "{\"schemaVersion\":" + huge + ",\"schemaVersion\":1}"));
+        assertEquals(MALFORMED_JSON, JsonDataVersionDetector.detect("{\"schemaVersion\":" + huge + "} {}"));
+    }
+
+    @Test
     public void detect_nestingBoundary_countsContainersIncludingRoot() {
         int limit = JsonDataVersionDetector.MAX_NESTING_DEPTH;
         String atLimit = "{\"schemaVersion\":1,\"extra\":" + "[".repeat(limit - 1)
