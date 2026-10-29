@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.Normalizer;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -149,5 +150,31 @@ public class CanonicalUnicodeNameIntegrationTest {
             assertSame(before, session.getDataSnapshot());
             assertArrayEquals(bytes, Files.readAllBytes(path));
         }
+    }
+
+    @Test
+    public void execute_excessiveCombiningRuns_preservesEveryNameCommandAndNormalReload() throws Exception {
+        Path path = directory.resolve("normalization-budget.json");
+        CanonicalPeopleSession session = new CanonicalPeopleSession(path);
+        session.execute("add r/tutor n/Mei Lim p/92345678");
+        session.execute("add r/student n/Alex Tan l/P1 pp/91234567");
+        session.execute("addlesson d/Mon st/0900 et/1000 s/Math tu/Mei Lim rm/R1");
+        var before = session.getDataSnapshot();
+        byte[] bytes = Files.readAllBytes(path);
+        String oversizedName = "A" + "\u0315\u0327".repeat(20_000);
+        for (String command : List.of("add r/student n/" + oversizedName + " l/P1 pp/91234568",
+                "add r/tutor n/" + oversizedName + " p/93456789",
+                "add r/parent n/" + oversizedName + " p/94567890", "edit 2 n/" + oversizedName,
+                "addlesson d/Tue st/0900 et/1000 s/Math rm/R2 tu/" + oversizedName,
+                "editlesson lid/L1 tu/" + oversizedName)) {
+            assertThrows(ParseException.class, () -> session.execute(command));
+            assertSame(before, session.getDataSnapshot());
+            assertArrayEquals(bytes, Files.readAllBytes(path));
+        }
+
+        String composedName = "\u1f82".repeat(100);
+        session.execute("edit 2 n/" + Normalizer.normalize(composedName, Normalizer.Form.NFD));
+        assertEquals(composedName, session.getPeople().get(1).getContactDetails().getName().fullName);
+        assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
     }
 }

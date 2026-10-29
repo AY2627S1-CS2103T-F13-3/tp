@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static ponhub.testutil.Assert.assertThrows;
 
+import java.text.Normalizer;
+
 import org.junit.jupiter.api.Test;
 
 public class NameTest {
@@ -85,6 +87,41 @@ public class NameTest {
         assertFalse(Name.isValidName("\uD801\uDC00".repeat(101)));
         assertFalse(Name.isValidName("A" + "\u0301".repeat(101)));
         assertEquals("A B", new Name(" ".repeat(100_000) + "A" + " ".repeat(100_000) + "B").fullName);
+    }
+
+    @Test
+    public void constructor_decomposedLengthBudget_preservesNormalizedBoundaryAndReordering() {
+        for (String composed : new String[] {"é", "각", "\u1f82"}) {
+            String boundary = composed.repeat(Name.MAX_LENGTH);
+            String decomposed = Normalizer.normalize(boundary, Normalizer.Form.NFD);
+            assertTrue(Name.isValidName(decomposed));
+            assertEquals(boundary, new Name(decomposed).fullName);
+            assertFalse(Name.isValidName(decomposed + composed));
+            assertThrows(IllegalArgumentException.class, () -> new Name(decomposed + composed));
+        }
+        assertEquals("A\u0327\u0315", new Name("A\u0315\u0327").fullName);
+        assertEquals("A" + "\u0315".repeat(99), new Name("A" + "\u0315".repeat(99)).fullName);
+    }
+
+    @Test
+    public void constructor_excessiveCombiningRuns_rejectsBothValidationRoutes() {
+        String reorderedMarks = "A" + "\u0315\u0327".repeat(100_000);
+        assertFalse(Name.isValidName(reorderedMarks));
+        assertThrows(IllegalArgumentException.class, Name.MESSAGE_CONSTRAINTS, () -> new Name(reorderedMarks));
+    }
+
+    @Test
+    public void normalizationBudget_supportedUnicodeScalars_expandToAtMostFourCanonicalCodePoints() {
+        int largestDecomposition = 0;
+        for (int codePoint = Character.MIN_CODE_POINT; codePoint <= Character.MAX_CODE_POINT; codePoint++) {
+            if (codePoint >= Character.MIN_SURROGATE && codePoint <= Character.MAX_SURROGATE) {
+                continue;
+            }
+            String decomposition = Normalizer.normalize(Character.toString(codePoint), Normalizer.Form.NFD);
+            largestDecomposition = Math.max(largestDecomposition,
+                    decomposition.codePointCount(0, decomposition.length()));
+        }
+        assertEquals(4, largestDecomposition, "Revisit the raw-input budget if Java's canonical expansion changes.");
     }
 
     @Test
