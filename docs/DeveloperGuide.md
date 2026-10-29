@@ -184,7 +184,9 @@ below `resultSplitPane`, spanning beneath both record columns; it does not move 
 shared feedback divider. The people sidebar starts at 32% of the records width and remains adjustable.
 The existing vertical result split retains its separate pane minima and session divider behavior.
 After populating the window, startup explicitly focuses the command input. Result Display remains
-focusable for text selection and copying; menu/F1 help preserves an unfinished command draft.
+focusable for text selection, copying and keyboard scrolling. Its border reserves the same space in both
+focus states and turns orange when focused; focus changes do not resize the reading viewport.
+Menu/F1 help preserves an unfinished command draft.
 
 `Logic.getCommandWords()` supplies the canonical definitions in session catalogue order, including the
 protected-startup restriction. `MainWindow` passes this immutable list to `CommandBox`.
@@ -2226,9 +2228,14 @@ Use the active catalogue in the tested build; these examples apply to canonical 
    `help editlesson` requires nonblank supplied values and `tu/` with `tp/`. In a protected session, both editing
    topics are unavailable, both mutation routes return recovery guidance before parsing, and menu/F1 list only
    help/list/exit while retaining the draft and original rejected bytes.
-4. At minimum width, run `help add` and scroll to the final example/back to the top. Text wraps
-   readably; a new topic resets scrolling. Record actual display conditions using the
-   [people-card/whole-window checks](#planned-people-card-display-checks).
+4. At minimum width and in a wider window, run `help` and `help add`. From the blank command field,
+   Tab past the three view buttons to Result Display; expect an orange focus outline without layout movement.
+   Use Up/Down and Page Up/Page Down to reach the final line and return to the top, then compare mouse or
+   trackpad scrolling. On Mac keyboards, Fn+Up/Down supplies Page Up/Page Down. Shift+Tab returns through
+   the view buttons. Replace long feedback with `list`, then another help topic; each new response starts
+   at the top and remains complete. Recheck [completion](#command-name-completion) and
+   [recall/draft restoration](#command-recall); command-box arrows must not scroll the response.
+   Record actual display conditions using the [whole-window checks](#planned-people-card-display-checks).
 5. `clear` and `find Alex` identify the unknown command and suggest `help` without changing data.
    `edit` and `editlesson` are active canonical routes; verify their guards with the edit checks above.
    `list extra`, an invalid `addlesson`, an invalid `mark`, an invalid `unmark`, `delete S1`,
@@ -2241,6 +2248,27 @@ Use the active catalogue in the tested build; these examples apply to canonical 
 Help checks do not establish the
 [active shared-lesson and attendance workflow](#active-shared-lesson-and-attendance-workflow)
 or final guide/site acceptance ([#102](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/102)).
+
+#### Keyboard menu access on macOS
+
+On the prescribed Mac runtime, `MenuBarSkin` supplies Control+F10 for the in-window menu bar;
+ordinary Tab traversal skips File and Help. Control+F2 targets the macOS system menu bar and does not
+establish access to these in-window menus. See the
+[UG key sequence](UserGuide.html#opening-file-and-help-with-the-keyboard-on-macos).
+
+1. In a disposable JAR folder, select a person card and leave an unfinished command with selected text.
+   Press Control+F10, adding Fn/Globe if needed to emit F10. Release all keys, then press Down to open File.
+   Expect a visible File selection and an Exit item. Right switches to Help; Down then Enter activates
+   its Help item. Expect the inline catalogue with the command draft, selected range and people selection retained.
+2. Repeat from an All lessons button focus, reached by Tab from an unmatched draft. Expect the same menu
+   route and retained draft text, with focus returning to the button. Returning to the command field by
+   ordinary Tab traversal may select its text; assess command-origin selection preservation separately.
+3. Use Left/Right and Escape to switch and dismiss menus without executing an item. Recheck F1 help from
+   the command field and Result Display, with Fn if needed. Test File > Exit only against the disposable
+   store, after the other checks; it must close the application.
+
+Record the actual JAR/runtime and physical-key versus automated coverage. A test through a diagnostic app
+launcher does not by itself establish the ordinary terminal launch or an untested platform.
 
 ### Lesson cards and result navigation (#320, #371)
 
