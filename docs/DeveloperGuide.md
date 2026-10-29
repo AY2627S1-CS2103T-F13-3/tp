@@ -2257,8 +2257,14 @@ are a manual checklist, not evidence that a display/scaling matrix has passed.
 2. Select one Student card, type an unfinished command and select part of its text, then click **Student lessons**,
    **Attendance history** and **All lessons**. Expect the same results as `lessons CURRENT_INDEX`,
    `history CURRENT_INDEX` and `lessons`.
-   Each click retains the draft, cursor/text selection and people filter/order/selection; **All lessons** needs
-   no selection. The visible guidance explains the purpose of selecting a Student card.
+   Each mouse click retains command focus, the draft, cursor/text selection and people filter/order/selection;
+   **All lessons** needs no selection. Repeat with a collapsed caret and selections in both directions.
+   For example, select `de` in `abcdefghi` with the caret at 5, click a shortcut, then press Shift+Left and type
+   `X`: expect `abcXefghi`. Reverse the selection and expect `abXfghi` from the same editing keys.
+   Press a shortcut, drag outside it and release: no view should run and the draft remains available.
+   Separately use Tab/Shift+Tab and Space; keyboard activation must keep focus on the button.
+   Recheck [recall](#command-recall) and [completion](#command-name-completion).
+   The visible guidance explains the purpose of selecting a Student card.
 3. Clear selection and click each Student shortcut. Repeat with a Tutor and Parent selected, and after a people
    filter or deletion removes the previously selected Student. Expect explanatory feedback, unchanged prior
    results and draft, and no fallback to another person at the old position. Select a visible Student and retry.

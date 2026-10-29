@@ -21,6 +21,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -283,7 +284,32 @@ public class MainWindow extends UiPart<Stage> {
 
         CommandBox commandBox = new CommandBox(this::executeCommand, logic.getCommandWords());
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
+        preserveFocusOnMouseClick(lessonsButton);
+        preserveFocusOnMouseClick(studentLessonsButton);
+        preserveFocusOnMouseClick(attendanceButton);
         commandBox.requestFocus();
+    }
+
+    /**
+     * Uses the contact Copy buttons' mouse pattern to retain the current editing focus and selection.
+     * Keyboard traversal and activation still use the standard Button behavior.
+     */
+    private static void preserveFocusOnMouseClick(Button button) {
+        button.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+            if (event.getButton() == MouseButton.PRIMARY) {
+                button.arm();
+            }
+            event.consume();
+        });
+        button.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> {
+            if (event.getButton() == MouseButton.PRIMARY && button.isArmed()) {
+                button.disarm();
+                if (button.contains(event.getX(), event.getY())) {
+                    button.fire();
+                }
+            }
+            event.consume();
+        });
     }
 
     private void updateNavigation() {
