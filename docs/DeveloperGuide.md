@@ -207,6 +207,18 @@ Use the [common window and layout checks](#common-window-and-layout-checks) to e
 on the actual platform and display configuration being assessed.
 The command box exposes the routes described in [command integration](#current-increment-and-command-integration).
 
+### Raw command input protection (#572)
+
+`CommandBox` filters raw replacements with a `TextFormatter` before JavaFX can silently remove controls.
+ISO controls and Unicode line/paragraph separators reject the entire replacement. A rejection blocks Enter
+until the text changes; caret movement alone cannot submit the preserved draft. This also covers the
+control's paste action and context menu. Parser validation remains a separate boundary.
+
+For a packaged native check in a disposable store, add a contact with an email. Paste a name containing
+a newline, then paste `edit 1 e/` followed by a newline. Expect rejection, unchanged stored contact data,
+and no execution on Enter. Repeat with a tab and CRLF, including replacement of a reversed selection.
+Correct the text and verify a normal command succeeds; an intentionally entered blank `e/` still clears email.
+
 ### Shared-lesson target contract
 
 The agreed design ([#60](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/60)) uses one canonical
