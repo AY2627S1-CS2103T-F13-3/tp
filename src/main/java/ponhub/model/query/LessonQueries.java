@@ -341,7 +341,8 @@ public final class LessonQueries implements LessonQuerySource {
     }
 
     /**
-     * Keeps the observable object held by callers stable while its immutable entries are replaced.
+     * Provides an identity token for weak retirement without using observable-list value equality.
+     * A held public list retains its token, allowing that same result to revive on model restore.
      */
     private static final class RetiredResult<T> {
         private final ResultList<T> result;
@@ -351,10 +352,13 @@ public final class LessonQueries implements LessonQuerySource {
         }
     }
 
+    /**
+     * Keeps the observable object held by callers stable while its immutable entries are replaced.
+     */
     private static final class ResultList<T> extends ObservableListBase<T> {
         private final RetiredResult<T> retirement = new RetiredResult<>(this);
         private List<T> values = List.of();
-        // Holding the public wrapper keeps this ResultList (the weak retirement key) alive.
+        // Holding the public wrapper keeps this ResultList and its weak retirement token alive.
         private final ObservableList<T> readOnly = FXCollections.unmodifiableObservableList(this);
 
         @Override
