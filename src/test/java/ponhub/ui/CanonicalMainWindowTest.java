@@ -135,7 +135,8 @@ public class CanonicalMainWindowTest {
                     }
                     Label hint = (Label) fixture.root().lookup("#filterResetHint");
                     assertEquals(overflows, hint.getText().contains("Tab"));
-                    assertFalse(hint.isTextTruncated());
+                    assertTrue(hint.getHeight() >= hint.prefHeight(hint.getWidth()),
+                            "The complete wrapped keyboard hint must fit its allocated height.");
                     assertTrue(fixture.people().getHeight() > 0);
                 }
                 fixture.enter("list");
