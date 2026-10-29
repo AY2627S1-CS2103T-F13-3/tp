@@ -214,6 +214,18 @@ Each new response starts at the top.
   and `help search`
   are unavailable.
 
+#### Opening File and Help with the keyboard on macOS
+
+1. Press **Control+F10** to select File. If the top row controls Mac features, hold **Fn/Globe+Control**
+   while tapping **F10** to send the function key.
+2. **Release all keys**, then press **Down** to open File's menu.
+3. Use **Left/Right** to switch between File and Help, **Down** to select an item, and **Enter** to activate it.
+   **Escape** dismisses the menu without running an item.
+
+Keep Control released while using the arrows: Control+Down is a macOS window-overview shortcut.
+The same [Mac function-key setting](https://support.apple.com/en-us/102439) determines whether F1 help
+needs **Fn+F1**. Menu help retains the unfinished command; choosing **File > Exit** closes PonHub.
+
 ### Adding a person: `add`
 {: id="1-adding-a-person-add"}
 
