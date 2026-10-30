@@ -3,16 +3,21 @@ package ponhub.model;
 import static java.util.Objects.requireNonNull;
 import static ponhub.commons.util.AppUtil.checkArgument;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
+import java.util.TreeMap;
 
 import ponhub.model.attendance.Attendance;
 import ponhub.model.attendance.AttendanceKey;
 import ponhub.model.lesson.Lesson;
+import ponhub.model.lesson.LessonDay;
 import ponhub.model.lesson.LessonId;
+import ponhub.model.lesson.LessonTime;
 import ponhub.model.person.PeopleRegistryState;
 import ponhub.model.person.PersonId;
 import ponhub.model.person.PersonRecord;
@@ -75,26 +80,83 @@ public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, 
     }
 
     /**
-     * Rejects overlapping bookings for the same tutor, normalized room or enrolled student.
+     * Checks only bookings sharing a weekday and resource, preserving creation-order conflict selection.
+     * Earlier bookings are conflict-free, so only the predecessor and starts within the new slot can overlap.
      */
     private static void validateLessonSchedules(List<Lesson> lessons) {
-        for (int i = 0; i < lessons.size(); i++) {
-            Lesson lesson = lessons.get(i);
-            for (int j = 0; j < i; j++) {
-                Lesson earlierLesson = lessons.get(j);
-                if (!lesson.getTimeSlot().overlaps(earlierLesson.getTimeSlot())) {
-                    continue;
+        Map<ScheduleKey, NavigableMap<LessonTime, Booking>> schedules = new HashMap<>();
+        for (int index = 0; index < lessons.size(); index++) {
+            Lesson lesson = lessons.get(index);
+            LessonTime start = lesson.getTimeSlot().getStartTime();
+            LessonTime end = lesson.getTimeSlot().getEndTime();
+            List<Object> resources = new ArrayList<>(lesson.getEnrolledStudentIds());
+            resources.add(lesson.getTutorId());
+            resources.add(lesson.getRoom());
+            List<NavigableMap<LessonTime, Booking>> currentSchedules = new ArrayList<>();
+            Booking firstConflict = null;
+            for (Object resource : resources) {
+                var bookings = schedules.computeIfAbsent(new ScheduleKey(lesson.getTimeSlot().getDay(), resource),
+                        unused -> new TreeMap<>());
+                currentSchedules.add(bookings);
+                var predecessor = bookings.lowerEntry(start);
+                if (predecessor != null
+                        && predecessor.getValue().lesson().getTimeSlot().getEndTime().compareTo(start) > 0) {
+                    firstConflict = earlier(firstConflict, predecessor.getValue());
                 }
-                checkArgument(!lesson.getTutorId().equals(earlierLesson.getTutorId()),
-                        "Tutor schedule overlap between " + earlierLesson.getId() + " and " + lesson.getId() + ".");
-                checkArgument(!lesson.getRoom().equals(earlierLesson.getRoom()),
-                        "Room schedule overlap between " + earlierLesson.getId() + " and " + lesson.getId() + ".");
-                for (PersonId student : lesson.getEnrolledStudentIds()) {
-                    checkArgument(!earlierLesson.hasEnrolledStudent(student),
-                            "Student " + student + " schedule overlap between " + earlierLesson.getId()
-                                    + " and " + lesson.getId() + ".");
+                for (Booking overlapping : bookings.subMap(start, true, end, false).values()) {
+                    firstConflict = earlier(firstConflict, overlapping);
                 }
             }
+            if (firstConflict != null) {
+                rejectOverlap(firstConflict.lesson(), lesson);
+            }
+            Booking current = new Booking(lesson, index);
+            currentSchedules.forEach(bookings -> bookings.put(start, current));
         }
+    }
+
+    /**
+     * Selects the first earlier lesson in canonical creation order, independently of time/resource order.
+     */
+    private static Booking earlier(Booking first, Booking candidate) {
+        return first == null || candidate.index() < first.index() ? candidate : first;
+    }
+
+    /**
+     * Retains the existing Tutor, room, then roster-order Student diagnostic precedence for a conflicting pair.
+     */
+    private static void rejectOverlap(Lesson earlier, Lesson lesson) {
+        if (lesson.getTutorId().equals(earlier.getTutorId())) {
+            throw new IllegalArgumentException("Tutor schedule overlap between " + earlier.getId()
+                    + " and " + lesson.getId() + ".");
+        }
+        if (lesson.getRoom().equals(earlier.getRoom())) {
+            throw new IllegalArgumentException("Room schedule overlap between " + earlier.getId()
+                    + " and " + lesson.getId() + ".");
+        }
+        for (PersonId student : lesson.getEnrolledStudentIds()) {
+            if (earlier.hasEnrolledStudent(student)) {
+                throw new IllegalArgumentException("Student " + student + " schedule overlap between "
+                        + earlier.getId() + " and " + lesson.getId() + ".");
+            }
+        }
+    }
+
+    /**
+     * Groups a weekday's bookings by normalized Room or role-qualified PersonId; those types cannot alias.
+     *
+     * @param day Booking weekday.
+     * @param resource Immutable Room or PersonId identifying the booked resource.
+     */
+    private record ScheduleKey(LessonDay day, Object resource) {
+    }
+
+    /**
+     * Retains the source position so diagnostic selection does not depend on chronological sorting.
+     *
+     * @param lesson Previously validated lesson.
+     * @param index Position in the canonical lesson list.
+     */
+    private record Booking(Lesson lesson, int index) {
     }
 }

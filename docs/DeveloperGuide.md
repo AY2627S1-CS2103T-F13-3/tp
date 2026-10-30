@@ -688,6 +688,15 @@ This tutor/room rule applies even to empty-roster lessons. Student clashes are d
 same Student ID appears in the rosters of overlapping lessons. Adjacent slots, different weekdays and overlapping
 lessons with different Tutors, rooms and enrolled Students remain valid.
 
+Schedule validation indexes bookings by weekday and resource (Tutor, normalized room and Student), with
+start times ordered inside each index. It processes the canonical creation order without changing the
+stored list. Previously accepted bookings are disjoint per resource, so only the predecessor and starts
+inside a candidate slot can overlap it. On rejection, the earliest previous creation position and existing
+Tutor/room/roster diagnostic precedence are retained; diagnostic strings are created only on failure.
+For `L` lessons and `E` total enrolments, validation uses `O((L + E) log L)` time and `O(L + E)` space,
+including at most one scan of actual conflicting bookings before rejection. The same checks still apply to
+loaded/restored snapshots and staged mutations; this does not add a capacity or response-time guarantee.
+
 One immutable `Lesson` owns each roster; Student records never copy lessons or membership. Read APIs derive the
 catalogue, rosters and per-Student lessons from that root, while attendance stays in its separate dated collection.
 The complete read/mutation surface and guard predicates are documented in the linked `PonHubData` source. Selector,
