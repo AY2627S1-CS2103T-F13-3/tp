@@ -708,7 +708,7 @@ deletion or failed save preserves the live schedule, allocation counter and curr
 invalid and blocked requests do not write; after a save failure, follow the
 [unsuccessful-save recovery steps](#checking-unsuccessful-saves-in-the-current-build) for the stored file.
 Use [`editlesson`](#editing-a-shared-lesson-editlesson) to change a shared Lesson's recurring details while
-preserving its stable ID, roster and retained attendance. Cancelling one occurrence remains future scope.
+preserving its stable ID, roster and retained attendance. Cancelling one occurrence remains future scope (**Coming soon**).
 
 For catalogue and current Student enrolments, see
 [Listing and searching shared lessons](#listing-and-searching-shared-lessons).
@@ -1060,9 +1060,11 @@ active syntax and examples.
 For active formats, use the [current command summary](#current-command-summary).
 Person and Lesson editing are active under the
 [editing contract](DeveloperGuide.html#planned-v14-editing-contract).
-Capacity, waiting lists, make-ups, fees, occurrence cancellation and undo/redo remain future proposals.
+The relationship-filter matrix above is active.
+
+**Coming soon:** Capacity, waiting lists, make-ups, fees, occurrence cancellation and undo/redo remain future proposals.
 So do exports, saved/guided searches, alternative/exclusion search conditions, archives, late/excused attendance,
-notes, bulk/clickable attendance and attendance percentages. The relationship-filter matrix above is active.
+notes, bulk/clickable attendance and attendance percentages.
 
 The following sections describe existing saved-file and recovery behavior. Manual file editing is separate
 from application edit commands.
