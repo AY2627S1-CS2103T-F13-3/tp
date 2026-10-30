@@ -296,9 +296,12 @@ The person list resets to show all roles, with the new record at the end. Rechec
 
 * A separate parent record is optional. You can add a student using their parent's phone number before creating a parent record.
 * A duplicate has the same role, normalized name and contact number. For students, the contact number used for this check is `pp/`; for tutors and parents, it is `p/`.
-* Duplicate name comparisons ignore letter case, repeated spaces and canonical Unicode spelling differences
+* Duplicate name comparisons ignore letter case (including Greek `Σ`/`σ`/`ς`), repeated spaces and canonical Unicode spelling differences
   (for example, `é` typed as one code point or as `e` plus an accent). Accents remain significant:
   `José` and `Jose` are different names.
+* Older saved people differing only by `ς`/`σ` remain separate records with their original IDs and relationships.
+  New additions or edits cannot create another duplicate. Existing records can still change unrelated fields;
+  give them distinct names or identifying phone numbers to resolve their duplicate identity.
 * Siblings with different names may share the same parent phone number.
 * Changing an optional email, address or student phone number does not make an otherwise duplicate record unique.
 
@@ -687,9 +690,13 @@ repeated hyphens are rejected.
 
 The tutor must already exist. `tu/` uses the same name rules as `n/` and matches the complete name,
 ignoring letter case, repeated spaces and canonical Unicode spelling differences. Accents remain significant.
+Greek `Σ`, `σ` and `ς` are equivalent for this comparison.
 If several tutors share that name, supply their exact phone number, for example `tu/Mei Lim tp/92345678`.
 An ambiguous name without `tp/` is rejected. A supplied phone must match the named tutor exactly,
 even when the name is unique; an unmatched name or phone is rejected.
+If older saved Tutors share both the equivalent name and exact phone, selection is still rejected.
+Use `list r/tutor` and `edit INDEX` to give one a distinct name or phone; existing lesson assignments
+remain attached to their IDs.
 
 Use `Mon` through `Sun` and four-digit 24-hour HHMM times. Start must be earlier than end on the same day. A successful addition returns a stable lesson ID, such as `L1`, with an empty roster. Creation does not select or enrol a student. Tutor and room bookings must not overlap another lesson on that weekday; adjacent intervals are allowed. Adding more students to this lesson does not book the tutor or room again.
 
@@ -811,8 +818,8 @@ A phone shared by differently named Tutors may match both; combine it with `tu/`
 
 Greek sigma forms `Σ`, `σ` and `ς` match one another, including fragments such as `n/Σ` in `ΝΊΚΟΣ`.
 Search preserves stored/displayed spellings and uses lowercase comparison with this sigma equivalence;
-it does not equate `ß` with `ss` or remove accents. Duplicate checks and full-name Tutor selection retain
-their existing rules; two saved people whose spellings differ only by `ς`/`σ` can both appear in a search.
+it does not equate `ß` with `ss` or remove accents. Duplicate checks and full-name Tutor selection also
+equate these sigma forms. Older saved people with `ς`/`σ` identities can both appear in a search.
 Search does not normalize canonical Unicode spelling differences. Copy the displayed spelling or use a
 fragment such as `n/Jos` to find `José Santos`. Slash-bearing full values remain unsupported in search:
 use `n/Ravi` for `Ravi s/o Kumar` or `a/#01` for `#01/02`.
