@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static ponhub.testutil.Assert.assertThrows;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -61,6 +62,22 @@ public class ContactDetailsTest {
 
         assertEquals("alex tan", details.getNormalizedName());
         assertEquals("Alex TAN", details.getName().fullName);
+    }
+
+    @Test
+    public void getNormalizedName_sigmaEquivalence_preservesOtherNameDistinctions() {
+        for (String name : List.of("Σ", "σ", "ς")) {
+            ContactDetails details = new ContactDetails(new Name(name));
+            assertEquals("σ", details.getNormalizedName());
+            assertEquals(name, details.getName().fullName);
+        }
+        for (String name : List.of("ΝΊΚΟΣ", "Νίκος", "Νίκοσ")) {
+            assertEquals("νίκοσ", new ContactDetails(new Name(name)).getNormalizedName());
+        }
+        assertNotEquals(new ContactDetails(new Name("Straße")).getNormalizedName(),
+                new ContactDetails(new Name("Strasse")).getNormalizedName());
+        assertNotEquals(new ContactDetails(new Name("Νίκος")).getNormalizedName(),
+                new ContactDetails(new Name("Νικος")).getNormalizedName());
     }
 
     @Test
