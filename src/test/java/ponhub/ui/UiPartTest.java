@@ -19,7 +19,7 @@ public class UiPartTest {
     private static final String INVALID_FILE_PATH = "UiPartTest/invalidFile.fxml";
     private static final String VALID_FILE_PATH = "UiPartTest/validFile.fxml";
     private static final String VALID_FILE_WITH_FX_ROOT_PATH = "UiPartTest/validFileWithFxRoot.fxml";
-    private static final TestFxmlObject VALID_FILE_ROOT = new TestFxmlObject("Hello World!");
+    private static final TestFxmlObject expectedFileRoot = new TestFxmlObject("Hello World!");
 
     @TempDir
     public Path testFolder;
@@ -47,14 +47,14 @@ public class UiPartTest {
     @Test
     public void constructor_validFileUrl_loadsFile() {
         URL validFileUrl = getTestFileUrl(VALID_FILE_PATH);
-        assertEquals(VALID_FILE_ROOT, new TestUiPart<TestFxmlObject>(validFileUrl).getRoot());
+        assertEquals(expectedFileRoot, new TestUiPart<TestFxmlObject>(validFileUrl).getRoot());
     }
 
     @Test
     public void constructor_validFileWithFxRootUrl_loadsFile() {
         URL validFileUrl = getTestFileUrl(VALID_FILE_WITH_FX_ROOT_PATH);
         TestFxmlObject root = new TestFxmlObject();
-        assertEquals(VALID_FILE_ROOT, new TestUiPart<TestFxmlObject>(validFileUrl, root).getRoot());
+        assertEquals(expectedFileRoot, new TestUiPart<TestFxmlObject>(validFileUrl, root).getRoot());
     }
 
     @Test
@@ -101,12 +101,12 @@ public class UiPartTest {
 
         TestUiPart(URL fxmlFileUrl) {
             super(fxmlFileUrl);
-            assertEquals(VALID_FILE_ROOT, validFileRoot);
+            assertEquals(expectedFileRoot, validFileRoot);
         }
 
         TestUiPart(String fxmlFileName) {
             super(fxmlFileName);
-            assertEquals(VALID_FILE_ROOT, validFileRoot);
+            assertEquals(expectedFileRoot, validFileRoot);
         }
 
     }
