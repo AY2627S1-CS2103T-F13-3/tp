@@ -268,8 +268,10 @@ Internal relationships and queries use stable IDs rather than displayed position
 #### Finding a tutor for a lesson
 
 `addlesson` and `editlesson` match `tu/TUTOR_NAME` against a tutor's full normalized name, ignoring case
-and repeated spaces. If `tp/TUTOR_PHONE` is supplied, it must match exactly, even when the name is unique.
-No match fails; multiple name matches require a phone. Never fall back to name-only matching after a phone mismatch.
+including Greek `Σ`/`σ`/`ς`, and repeated spaces. If `tp/TUTOR_PHONE` is supplied, it must match exactly,
+even when the name is unique. No match fails; multiple name matches require a phone. If older saved Tutors
+match both name and phone, require a name/phone correction rather than selecting the first record.
+Never fall back to name-only matching after a phone mismatch.
 
 Search is different: search `tu/` accepts a name fragment. To search tutors by their own name, use `n/`.
 
@@ -344,6 +346,9 @@ values and fields for the wrong role. Use the same validators as addition and lo
 
 Check duplicates against every other person, excluding the edited ID. For Students, compare normalized
 name and parent phone; for Tutors and Parents, compare normalized name and own phone within that role.
+Name matching lowercases with `Locale.ROOT` and unifies final sigma `ς` with `σ`, without expanding `ß` to
+`ss` or removing accents. Existing saved sigma-distinct identities remain loadable and may edit unrelated
+fields while retaining their business key; add/edit must not introduce a new collision.
 A tutor rename keeps lesson links because they use the Tutor ID.
 
 Changing a Parent's phone or a Student's parent phone changes the links derived from exact phone matches.
@@ -560,8 +565,11 @@ retained IDs and deleted allocations; never calculate them from surviving record
 have been allocated, and `Long.MAX_VALUE` means exhaustion. Discarding an uncommitted candidate can
 return to earlier counters, but committed IDs remain reserved.
 
-People validation uses temporary hash sets for IDs and duplicate keys instead of comparing every pair.
-For people validation alone, expected time and temporary memory grow linearly with record count.
+People validation uses temporary hash sets for IDs and legacy duplicate keys instead of comparing every pair.
+The legacy key uses the original lowercase-only name, role and identifying phone so pre-existing sigma-distinct
+records and relationships remain valid. New additions use `isDuplicateOf`; `replacePerson` separately checks
+changed business identities with sigma equivalence. For people validation alone, expected time and temporary
+memory grow linearly with record count.
 This does not promise the same cost for scheduling, complete-file saving or UI refresh.
 
 Snapshots and containers may share immutable records safely. Replacing one container cannot alter an older
@@ -1028,7 +1036,9 @@ The ID stays the same when contacts or displayed positions change.
 Record equality compares the ID and every stored field. Duplicate checking instead compares
 **role + normalized name + identifying phone**. Students use parent phone; Tutors/Parents use own phone.
 Name case, repeated spaces and canonically equivalent Unicode spelling do not distinguish duplicates.
-Duplicate keys use `Locale.ROOT` lowercase without transliteration or accent removal, so José and Jose differ.
+New/changed business identities use `Locale.ROOT` lowercase with `ς` folded to `σ`, without transliteration
+or accent removal, so José and Jose differ. Loading uses legacy lowercase-only keys to retain existing
+sigma-distinct records and their IDs; an unrelated edit may retain that existing business key.
 Another ID, level or optional contact does not bypass the rule. Different roles remain distinct.
 
 `PeopleRegistry` retains all roles in global creation order. Successful addition appends a person and
@@ -1195,7 +1205,8 @@ Text searches trim boundaries, collapse repeated spaces and use case-insensitive
 with `Locale.ROOT`. A fragment need not be a valid complete contact: `n/al` matches Sally Tan and
 `s/Math` matches Add Math. Search additionally maps final Greek sigma `ς` to `σ`, so Σ/σ/ς match across
 shared text fields. It does not expand ß to ss, remove accents or perform canonical Unicode normalization.
-This search rule does not change stored names, duplicate keys or tutor lookup. Existing ς/σ duplicate-key
+This search rule does not change stored names. Duplicate checking and full-name Tutor lookup also equate
+these sigma forms. Existing ς/σ duplicate-key
 distinctions remain loadable; search can return both records.
 
 Phones match complete 3–15-digit strings with zeros retained. Levels use the supported uppercase forms.

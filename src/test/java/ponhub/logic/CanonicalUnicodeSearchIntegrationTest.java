@@ -86,13 +86,14 @@ public class CanonicalUnicodeSearchIntegrationTest {
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("add r/tutor n/Στέλιος p/92345678");
         session.execute("add r/student n/ΝΊΚΟΣ l/P1 pp/91234569");
-        // The existing duplicate policy permits this spelling; search must not migrate it or reject loading it.
-        session.execute("add r/student n/Νίκοσ l/P1 pp/91234569");
+        session.execute("add r/student n/Legacy Sigma l/P1 pp/91234569");
         session.execute("add r/parent n/Σίγμα p/91234569");
         session.execute("addlesson d/Mon st/0900 et/1000 s/Math tu/Στέλιος rm/R1");
         session.execute("list r/student");
         session.execute("enrol 1 lid/L1");
         session.execute("enrol 2 lid/L1");
+        // Older saved versions allowed this pair; search must still load both without rewriting either identity.
+        Files.writeString(path, Files.readString(path).replace("Legacy Sigma", "Νίκοσ"));
         return path;
     }
 

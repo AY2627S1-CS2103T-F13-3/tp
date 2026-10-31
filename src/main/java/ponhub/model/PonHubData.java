@@ -26,6 +26,7 @@ import ponhub.model.person.PersonId;
 import ponhub.model.person.PersonRecord;
 import ponhub.model.person.PersonRole;
 import ponhub.model.person.Student;
+import ponhub.model.person.exceptions.DuplicatePersonException;
 
 /**
  * Canonical operational data root used by the active session and protected JSON storage.
@@ -122,6 +123,7 @@ public final class PonHubData {
      * The existing ID determines the target and role; complete registry and root validation precede installation.
      * Lessons, rosters, attendance and every allocation counter are retained. Equal complete values leave the
      * original snapshot installed and return the existing record without a state notification.
+     * Existing sigma-distinct identities may retain their business key when editing unrelated fields.
      *
      * @return the installed or unchanged immutable record.
      * @throws NullPointerException if the replacement is null.
@@ -134,6 +136,10 @@ public final class PonHubData {
                 new IllegalArgumentException("The person does not exist: " + replacement.getId()));
         if (original.equals(replacement)) {
             return original;
+        }
+        if (!original.isDuplicateOf(replacement) && getPeople().stream()
+                .filter(person -> !person.getId().equals(replacement.getId())).anyMatch(replacement::isDuplicateOf)) {
+            throw new DuplicatePersonException();
         }
         List<PersonRecord> people = new ArrayList<>(getPeople());
         people.set(people.indexOf(original), replacement);
