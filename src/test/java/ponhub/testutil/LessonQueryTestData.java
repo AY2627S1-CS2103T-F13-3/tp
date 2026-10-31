@@ -36,6 +36,7 @@ public final class LessonQueryTestData {
     }
 
     /**
+     * Creates the complete query fixture.
      * Catalogue order deliberately differs from numeric ID and schedule order.
      */
     public static PonHubData createData() {

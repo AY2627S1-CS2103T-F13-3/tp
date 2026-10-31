@@ -521,6 +521,7 @@ public class LessonQueriesTest {
     }
 
     /**
+     * Checks whether a lesson matches the criteria using an independent raw-record oracle.
      * Independent specification: scan raw records, resolve people, compare exact values or folded substrings.
      */
     private boolean scanMatches(SearchCriteria criteria, Lesson lesson) {
