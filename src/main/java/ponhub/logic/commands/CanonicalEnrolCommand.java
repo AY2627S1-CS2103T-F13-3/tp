@@ -13,7 +13,7 @@ import ponhub.model.lesson.Lesson;
 import ponhub.model.person.Student;
 
 /**
- * Enrols the Student selected from the current people list in one existing shared lesson.
+ * Enrolls the Student selected from the current people list in one existing shared lesson.
  */
 public final class CanonicalEnrolCommand implements CanonicalCommandExecutor.StagedCommand {
     public static final String MESSAGE_SUCCESS = "Student %s enrolled in lesson %s.";
@@ -21,7 +21,7 @@ public final class CanonicalEnrolCommand implements CanonicalCommandExecutor.Sta
     private final LessonMembershipInput input;
 
     /**
-     * Creates a staged enrolment command from validated selectors.
+     * Creates a staged enrollment command from validated selectors.
      */
     public CanonicalEnrolCommand(LessonMembershipInput input) {
         this.input = requireNonNull(input);

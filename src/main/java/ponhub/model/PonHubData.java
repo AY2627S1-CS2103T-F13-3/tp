@@ -255,7 +255,7 @@ public final class PonHubData {
 
     /**
      * Creates or corrects one dated attendance record. A new record requires current lesson membership, while an
-     * existing record can be corrected after unenrolment. Repeating the existing status changes no state.
+     * existing record can be corrected after unenrollment. Repeating the existing status changes no state.
      *
      * @return the created, corrected or unchanged attendance record.
      * @throws NullPointerException if an argument is null.
@@ -293,7 +293,7 @@ public final class PonHubData {
 
     /**
      * Removes one dated attendance record without changing the Student, Lesson or current membership.
-     * An existing historical record can be removed after unenrolment. A missing record changes no state.
+     * An existing historical record can be removed after unenrollment. A missing record changes no state.
      *
      * @return the removed record, or an empty optional if the attendance key was not recorded.
      * @throws NullPointerException if an argument is null.
