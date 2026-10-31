@@ -1688,6 +1688,7 @@ Use one row for each actual physical-display trial. Automated FXML bounds tests 
 simulations supplement these checks; they do not prove another platform or scale works.
 
 <!-- @@author ErnestChuaa -->
+
 | OS | Physical display | Scale | Result / evidence |
 | --- | --- | --- | --- |
 | Windows | 1280×720 | 150% | NOT RUN |
@@ -1699,6 +1700,7 @@ simulations supplement these checks; they do not prove another platform or scale
 | macOS | 1280×720 | 150% | NOT RUN |
 | macOS | 1920×1080 | 100% | NOT RUN |
 | macOS | 1920×1080 | 125% | NOT RUN |
+
 <!-- @@author -->
 
 Record extra configurations separately rather than relabelling them as a matrix row.
