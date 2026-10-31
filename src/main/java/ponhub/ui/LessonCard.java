@@ -27,7 +27,7 @@ public class LessonCard extends UiPart<Region> {
     private Label lessonRosterSize;
 
     /**
-     * Creates a wrapping card with schedule, tutor identity, room and current enrolment count.
+     * Creates a wrapping card with schedule, tutor identity, room and current enrollment count.
      */
     public LessonCard(LessonView lesson) {
         super(FXML);

@@ -27,7 +27,7 @@ import ponhub.model.person.PersonRole;
  *
  * @param people Ordered people and complete per-role allocation history.
  * @param lessons Ordered shared lessons, each owning its roster.
- * @param attendance Ordered dated records, including former enrolments.
+ * @param attendance Ordered dated records, including former enrollments.
  * @param lastAllocatedLessonSequence Last allocated lesson ID, or zero before the first allocation.
  */
 public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, List<Attendance> attendance,
@@ -35,7 +35,7 @@ public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, 
 
     /**
      * Copies incoming collections and validates identities, references, and global schedules before publishing state.
-     * Records are immutable and can be shared. Historical attendance does not require current enrolment.
+     * Records are immutable and can be shared. Historical attendance does not require current enrollment.
      */
     public PonHubDataState {
         requireNonNull(people);
