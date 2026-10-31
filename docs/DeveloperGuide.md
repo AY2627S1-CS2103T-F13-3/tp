@@ -1576,8 +1576,7 @@ Extra aliases, argument/value completion, spelling suggestions and paged help re
 
 ### Non-functional requirements
 
-These are product requirements and team targets. They are not a claim that every test or environment
-has already passed.
+These are product requirements and team targets.
 
 1. Run on Windows, Linux and macOS using Java 25. On macOS, use the prescribed Azul JavaFX runtime
    `25.0.3.fx-zulu` described in [Setting up](SettingUp.html#setting-up-the-project-on-your-computer).
@@ -1649,8 +1648,7 @@ See [Terms used in this guide](#terms-used-in-this-guide) for software terms.
 
 ## Appendix: Instructions for manual testing
 
-Use fictitious records in a disposable application folder. These instructions are a checklist,
-not a report that the tests have passed. Keep originals/backups outside selected test-data paths.
+Use fictitious records in a disposable application folder. Keep originals/backups outside selected test-data paths.
 Record PASS, FAIL or NOT RUN and the actual result; explain unavailable checks. Add exploratory testing
 beyond these examples.
 

@@ -5,8 +5,7 @@ title: Screenshot sources and credits
 
 ## Guide screenshots
 
-The images illustrate the development interface using fictitious records. They are
-not a claim of release or display-matrix acceptance.
+The images illustrate the development interface using fictitious records.
 
 Vincent Lin (`gugrusaurus`) created the original guide media. Zhu Zhi Yu
 (`ultramanarm`) refreshes the overview, navigation and attendance-history images. Both use OpenAI Codex

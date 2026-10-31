@@ -79,7 +79,7 @@ instead of the inherited AddressBook command path:
 
 The suite also covers lessons, enrolment, search and attendance. Follow the DG's
 [maintainer reading path](DeveloperGuide.html#maintainer-reading-path) and the affected feature's source/tests
-to choose relevant cases; these examples are not an acceptance checklist for the whole product.
+to choose relevant cases.
 
 After a Gradle run, open the local reports:
 
