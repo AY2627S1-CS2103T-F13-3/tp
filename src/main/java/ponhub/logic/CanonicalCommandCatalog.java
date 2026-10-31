@@ -90,7 +90,8 @@ public final class CanonicalCommandCatalog {
             + "DAY is Mon-Sun; times use four-digit 24-hour HHMM and start before end.\n"
             + "SUBJECT uses 1-50 letters or digits separated by single spaces or hyphens.\n"
             + "ROOM uses 1-10 total characters, including hyphens, and is displayed in upper case.\n"
-            + "Tutor matching uses the normalized full name. Supply the exact phone to disambiguate.\n"
+            + "Tutor matching uses the full name, ignoring case including Greek Σ/σ/ς. The exact phone is optional.\n"
+            + "If name and phone still match multiple saved tutors, edit a tutor's name or phone first.\n"
             + "Example: addlesson d/Mon st/1600 et/1730 s/A-Math tu/Mei Lim rm/B-01";
     public static final String MESSAGE_EDIT_LESSON_USAGE =
             "Usage: editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] "
@@ -99,7 +100,8 @@ public final class CanonicalCommandCatalog {
             + "Supplied values must be nonblank; Lesson fields cannot be cleared.\n"
             + "SUBJECT uses 1-50 letters or digits separated by single spaces or hyphens.\n"
             + "ROOM uses 1-10 total characters, including hyphens, and is displayed in upper case.\n"
-            + "Use tp/ only with tu/. Tutor matching uses normalized full name and optional exact phone.\n"
+            + "Use tp/ only with tu/. Tutor matching uses the full name, ignoring case including Greek Σ/σ/ς.\n"
+            + "The optional exact phone must select one tutor; otherwise edit a tutor's name or phone first.\n"
             + "The complete edited slot must have start before end and must not clash for its tutor, room "
                     + "or Students.\n"
             + "A weekday change cannot invalidate retained attendance. If blocked, inspect the reported date with "

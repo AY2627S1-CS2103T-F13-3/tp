@@ -54,10 +54,10 @@ public final class ContactDetails {
     }
 
     /**
-     * Returns the name normalized for duplicate matching while preserving its display spelling.
+     * Returns the lowercase name with equivalent Greek sigma forms unified, preserving display spelling.
      */
     public String getNormalizedName() {
-        return name.fullName.strip().replaceAll(" +", " ").toLowerCase(Locale.ROOT);
+        return name.fullName.strip().replaceAll(" +", " ").toLowerCase(Locale.ROOT).replace('ς', 'σ');
     }
 
     @Override
