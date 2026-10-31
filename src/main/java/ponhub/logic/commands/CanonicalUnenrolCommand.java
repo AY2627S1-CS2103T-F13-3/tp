@@ -13,7 +13,7 @@ import ponhub.model.lesson.Lesson;
 import ponhub.model.person.Student;
 
 /**
- * Unenrols the Student selected from the current people list while retaining dated attendance.
+ * Unenrolls the Student selected from the current people list while retaining dated attendance.
  */
 public final class CanonicalUnenrolCommand implements CanonicalCommandExecutor.StagedCommand {
     public static final String MESSAGE_SUCCESS = "Student %s unenrolled from lesson %s.";
@@ -21,7 +21,7 @@ public final class CanonicalUnenrolCommand implements CanonicalCommandExecutor.S
     private final LessonMembershipInput input;
 
     /**
-     * Creates a staged unenrolment command from validated selectors.
+     * Creates a staged unenrollment command from validated selectors.
      */
     public CanonicalUnenrolCommand(LessonMembershipInput input) {
         this.input = requireNonNull(input);
