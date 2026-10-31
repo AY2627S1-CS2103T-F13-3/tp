@@ -105,26 +105,45 @@ that writer to check save failures. The architecture arrows show calls and depen
 #### Follow an edit command
 {: id="canonical-command-collaboration"}
 
-Consider `edit 1 n/Jamie Tan`, with a valid person at position 1:
+**When does an edit become visible, and what if saving fails?** This overview follows
+`edit 1 n/Jamie Tan` in a writable session, where position 1 exists and the valid new name changes
+that person's details. The session has already checked command availability and parsed the input.
 
-1. `MainWindow` passes the text to `Logic.execute`.
-2. `CanonicalLogicManager` passes it to `CanonicalPeopleSession`.
-3. The session checks whether the command is allowed and parses its arguments.
-4. The executor prepares and validates the edit using a separate copy of the data and people view.
-5. If data changed, the executor saves the complete new snapshot.
-6. Only after saving succeeds does `commit()` update the live data and refresh the views.
+<figure class="dg-figure dg-edit-flow">
+<figcaption>Changed edit: prepare separately, save, then publish</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Edit flow diagram; scroll horizontally on narrow screens">
+<a href="images/ArchitectureSequenceDiagram.png"><img src="images/ArchitectureSequenceDiagram.png" alt="The executor prepares a separate candidate and result, saves the complete snapshot, and publishes only after success. A save failure returns an error without publishing live changes."></a>
+</div>
+</figure>
 
-[![Edit command: prepare and save](images/ArchitectureSequenceDiagram.png)](images/ArchitectureSequenceDiagram.png)
+On a narrow screen, scroll the diagram horizontally; keyboard users can focus it with Tab and use
+Left/Right. The numbered path below gives the same ordering without horizontal scrolling.
 
-[![Edit command continued: apply the result or report failure](images/ArchitectureSequenceDiagram_001.png)](images/ArchitectureSequenceDiagram_001.png)
+1. The **session** (`CanonicalPeopleSession`) sends the allowed, parsed edit to the **executor**
+   (`CanonicalCommandExecutor`). UI dispatch through `MainWindow` and `CanonicalLogicManager` is omitted.
+2. The executor uses an isolated `CanonicalTransaction` to prepare candidate data and the proposed
+   `CommandResult`. The transaction, staged model, people view and command are grouped into the
+   executor's self-call; live records and filters have not changed.
+3. The **writer** is the injected `CanonicalCommandExecutor.SnapshotWriter`, connected at runtime to
+   `ProtectedPonHubDataStorage.saveData`. It receives the complete candidate snapshot.
+4. After saving succeeds, `CanonicalTransaction.commit()` publishes the data and filter, refreshing
+   subscribed views. Only then does the executor return the prepared success result.
+5. If saving throws, the executor reports a `CommandException` and never commits. Live records,
+   ID counters and views retain their previous state. Disk recovery follows the
+   [safe-save and backup rules](#replacing-the-file-and-recovering-failures); a failure does not guarantee
+   unchanged disk bytes or power-loss durability.
 
-Read the diagrams in order. A parse, validation or save failure stops the command and leaves the live
-records, ID counters and views unchanged. Preparing an edit is not success. A no-op skips saving;
-a command that only changes a view can apply that view change without writing operational data.
+The sequence uses underlined instance/type headings, solid calls, dashed replies and guarded alternative
+paths. Message labels describe grouped responsibilities rather than literal Java methods. Activation bars
+and internal returns are omitted; the save reply and command outcome remain explicit.
+[Editable source](diagrams/ArchitectureSequenceDiagram.puml). Original command flow: Ernest Chua;
+earlier layout and this focused overview: Vincent Lin, with OpenAI Codex assistance.
 
-`editlesson` follows the same process through `LessonEditParser` and `CanonicalEditLessonCommand`.
-See [Editing records](#v14-editing-contract) for edit rules and
-[Command transactions](#command-transactions) for saving and failure handling.
+Parsing and domain rejection stop before saving or publication. A no-op skips saving; a command that
+only changes a view can commit that view without writing operational data. These paths are outside this
+changed-edit scenario. `editlesson` uses the same transaction boundary through `LessonEditParser` and
+`CanonicalEditLessonCommand`. See [Editing records](#v14-editing-contract) for validation/no-op rules and
+[Command transactions](#command-transactions) for the complete save/publication contract.
 
 ### Command integration
 {: id="current-increment-and-command-integration"}

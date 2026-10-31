@@ -67,3 +67,27 @@ h2, h3, h4, h5, h6 {
     object-fit: contain;
   }
 }
+
+// Preserve the edit overview's body-sized labels instead of shrinking it on phones.
+.dg-edit-flow-scroll {
+  overflow-x: auto;
+
+  &:focus {
+    outline: 2px solid #a65c00;
+    outline-offset: 2px;
+  }
+
+  img {
+    max-width: none;
+  }
+}
+
+@media print {
+  .dg-edit-flow-scroll {
+    overflow: visible;
+
+    img {
+      max-width: 100%;
+    }
+  }
+}
