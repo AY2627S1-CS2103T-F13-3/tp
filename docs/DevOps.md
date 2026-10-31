@@ -134,8 +134,8 @@ Set `candidate_ref` to the reviewed **team source SHA**, `expected_sha256` to th
 candidate defaults. The expected version must match the candidate source's `build.gradle` declaration;
 it is then checked against the JAR manifest and runtime startup version. Push and pull-request runs use
 the event SHA, its source-declared product version and freshly calculated checksum, so they check the
-verification tooling but do not establish the independently identified release handoff. Track the current
-v1.5 candidate's final verification in [#327](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/327).
+verification tooling but do not establish the independently identified release handoff. Track final candidate
+verification in the [delivery tracker](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/328).
 
 The hosted Ubuntu job rebuilds that source, rejects a different checksum and drives the real JAR's command
 box on a virtual display through person and Lesson edits, rejected conflicting edits, attendance correction,
