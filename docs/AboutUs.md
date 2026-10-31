@@ -12,7 +12,7 @@ We are a team based in the [School of Computing, National University of Singapor
 
 <img src="images/ultramanarm.png" width="200px" alt="Zhu Zhi Yu">
 
-[[github](https://github.com/ultramanarm)]
+[[github](https://github.com/ultramanarm)] [[PPP](team/ultramanarm.html)]
 
 * Role: Developer (People and Testing)
 * Responsibilities:
