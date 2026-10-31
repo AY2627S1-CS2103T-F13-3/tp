@@ -1657,6 +1657,7 @@ handling, not the behaviour of a real filesystem.
 Use one row for each actual physical-display trial. Automated FXML bounds tests and logical-size
 simulations supplement these checks; they do not prove another platform or scale works.
 
+<!-- @@author ErnestChuaa -->
 | OS | Physical display | Scale | Result / evidence |
 | --- | --- | --- | --- |
 | Windows | 1280×720 | 150% | NOT RUN |
@@ -1668,6 +1669,7 @@ simulations supplement these checks; they do not prove another platform or scale
 | macOS | 1280×720 | 150% | NOT RUN |
 | macOS | 1920×1080 | 100% | NOT RUN |
 | macOS | 1920×1080 | 125% | NOT RUN |
+<!-- @@author -->
 
 Record extra configurations separately rather than relabelling them as a matrix row.
 
@@ -2067,9 +2069,19 @@ For example, `2036-10-06` is suitable only while it remains future.
 ### Contacts, Unicode and slash values
 {: id="contact-validation-in-the-current-increment"}
 
-1. Add a Tutor with `n/  Anne-Marie   O'Neil`, phone `00123456`, email `anne.o'neil%school@example.com`
-   and address `  Blk 10,   #01-02  `. Expect normalized spacing with punctuation, case and zeros kept
-   after restart. Editing to `e/Anne.O'Neil@Example.COM` preserves that case/apostrophe on reload.
+1. In a fresh disposable store, add this Tutor. Enter each example as one line; the spaces before
+   the next prefix deliberately exercise boundary-space trimming.
+
+   ```text
+   add r/tutor n/  Anne-Marie   O'Neil a/  Blk 10,   #01-02  p/00123456 e/anne.o'neil%school@example.com
+   ```
+
+   Expect normalized name/address spacing with punctuation, case and phone zeros kept after restart.
+   The Tutor is position 1 in this fresh store. Edit the email, then reload and check its exact spelling:
+
+   ```text
+   edit 1 e/Anne.O'Neil@Example.COM
+   ```
 2. Reject a 16-digit phone, `test@localhost`, digits in a name and an address such as `Blk 10/Unit 2`.
    A very long repeated email must give constraints without crashing or adding a record.
 3. In a fresh store, add José Santos (Tutor), 李明 (Student) and தமிழ் (Parent). Reload all spellings;
