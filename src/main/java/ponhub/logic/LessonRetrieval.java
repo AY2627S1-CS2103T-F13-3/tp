@@ -163,7 +163,7 @@ public final class LessonRetrieval {
     }
 
     /**
-     * A committed replacement updates only the selected detail; a failed save publishes nothing.
+     * Refreshes only the selected detail after committed replacement; a failed save publishes nothing.
      */
     private void refreshDetail() {
         if (selected != detail) {

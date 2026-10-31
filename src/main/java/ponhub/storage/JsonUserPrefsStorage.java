@@ -35,7 +35,7 @@ public class JsonUserPrefsStorage {
     }
 
     /**
-     * Similar to {@link #readUserPrefs()}
+     * Reads UserPrefs data from the given path, as in {@link #readUserPrefs()}.
      *
      * @param prefsFilePath location of the data. Cannot be null.
      * @throws DataLoadingException if the file format is not as expected.
