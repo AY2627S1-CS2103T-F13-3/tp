@@ -12,6 +12,8 @@ import java.util.stream.Stream;
 public class CollectionUtil {
 
     /**
+     * Throws NullPointerException if {@code items} or any element of {@code items} is null.
+     *
      * @see #requireAllNonNull(Collection)
      */
     public static void requireAllNonNull(Object... items) {

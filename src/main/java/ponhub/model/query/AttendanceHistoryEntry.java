@@ -7,7 +7,7 @@ import ponhub.model.person.PersonId;
 
 /**
  * Read-only projection of one recorded student, lesson and date attendance key.
- * Current membership is derived separately from the lesson roster; retained history survives unenrolment.
+ * Current membership is derived separately from the lesson roster; retained history survives unenrollment.
  * An unrecorded occurrence has no history entry.
  * Implementations expose non-null, immutable values and a student-role ID. Changes replace the whole entry.
  */

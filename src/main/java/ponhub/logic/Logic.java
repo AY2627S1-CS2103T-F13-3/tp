@@ -128,7 +128,7 @@ public interface Logic {
     ObservableList<LessonView> getTutorSchedule(PersonId tutorId);
 
     /**
-     * Returns the student's recorded attendance, including entries retained after unenrolment.
+     * Returns the student's recorded attendance, including entries retained after unenrollment.
      * Results are ordered by date, newest first, then by lesson ID. Missing entries are unrecorded.
      *
      * @param studentId stable identity of an existing student.
@@ -138,7 +138,7 @@ public interface Logic {
     ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId);
 
     /**
-     * Returns the student's recorded attendance for one lesson, including former enrolments.
+     * Returns the student's recorded attendance for one lesson, including former enrollments.
      * An existing student and lesson with no matching records produce an empty list.
      *
      * @param studentId stable identity of an existing student.
@@ -169,7 +169,7 @@ public interface Logic {
     GuiSettings getGuiSettings();
 
     /**
-     * Set the user prefs' GUI settings.
+     * Sets the user prefs' GUI settings.
      */
     void setGuiSettings(GuiSettings guiSettings);
 }

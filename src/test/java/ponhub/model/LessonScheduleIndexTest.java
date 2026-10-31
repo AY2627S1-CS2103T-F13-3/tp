@@ -32,7 +32,7 @@ public class LessonScheduleIndexTest {
                 lesson("L2", FIRST_TUTOR, "Mon", "0900", "1000", "Math", "R1", Set.of()),
                 lesson("L3", FIRST_TUTOR, "Mon", "1000", "1100", "Math", "R1", Set.of()),
                 lesson("L4", FIRST_TUTOR, "Mon", "0830", "1230", "Math", "R2", Set.of()));
-        assertEquals("Tutor schedule overlap between L1 and L4.", rejection(lessons));
+        assertEquals("Tutor schedule overlap between L1 and L4.", getRejection(lessons));
     }
 
     @Test
@@ -41,7 +41,7 @@ public class LessonScheduleIndexTest {
                 lesson("L1", FIRST_TUTOR, "Mon", "0900", "1000", "Math", "R1", Set.of()),
                 lesson("L2", SECOND_TUTOR, "Mon", "0900", "1000", "Math", "R2", Set.of()),
                 lesson("L3", SECOND_TUTOR, "Mon", "0900", "1000", "Math", "r1", Set.of()));
-        assertEquals("Room schedule overlap between L1 and L3.", rejection(lessons));
+        assertEquals("Room schedule overlap between L1 and L3.", getRejection(lessons));
     }
 
     @Test
@@ -72,38 +72,39 @@ public class LessonScheduleIndexTest {
                 PersonId tutor = random.nextBoolean() ? FIRST_TUTOR : SECOND_TUTOR;
                 String day = random.nextBoolean() ? "Mon" : "Tue";
                 String room = (random.nextBoolean() ? "R" : "r") + random.nextInt(4);
-                lessons.add(lesson("L" + (i + 1), tutor, day, time(start), time(end), "Math", room, roster));
+                lessons.add(lesson("L" + (i + 1), tutor, day, formatTime(start), formatTime(end),
+                        "Math", room, roster));
             }
             Collections.shuffle(lessons, random);
             List<Lesson> original = List.copyOf(lessons);
-            String expected = pairwiseDiagnostic(lessons);
+            String expected = findPairwiseDiagnostic(lessons);
             if (expected == null) {
                 outcomes.add("valid");
                 assertEquals(original, new PonHubDataState(people, lessons, List.of(), count).lessons());
             } else {
                 outcomes.add(expected.split(" ")[0]);
-                assertEquals(expected, rejection(lessons), "trial=" + trial);
+                assertEquals(expected, getRejection(lessons), "trial=" + trial);
             }
             assertEquals(original, lessons);
         }
         assertEquals(Set.of("valid", "Tutor", "Room", "Student"), outcomes);
     }
 
-    private String rejection(List<Lesson> lessons) {
+    private String getRejection(List<Lesson> lessons) {
         IllegalArgumentException failure = assertThrows(IllegalArgumentException.class, () ->
                 new PonHubDataState(people, lessons, List.of(), lessons.size()));
         assertTrue(failure.getMessage().contains("schedule overlap"));
         return failure.getMessage();
     }
 
-    private static String time(int minutes) {
+    private static String formatTime(int minutes) {
         return String.format(java.util.Locale.ROOT, "%02d%02d", minutes / 60, minutes % 60);
     }
 
     /**
-     * Independent brute-force reference preserves the previous pair/type/roster diagnostic ordering.
+     * Returns the first conflict diagnostic using an independent scan in the previous pair/type/roster order.
      */
-    private static String pairwiseDiagnostic(List<Lesson> lessons) {
+    private static String findPairwiseDiagnostic(List<Lesson> lessons) {
         for (int i = 0; i < lessons.size(); i++) {
             Lesson current = lessons.get(i);
             for (int j = 0; j < i; j++) {

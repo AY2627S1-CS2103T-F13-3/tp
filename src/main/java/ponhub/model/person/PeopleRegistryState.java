@@ -5,6 +5,7 @@ import static ponhub.commons.util.AppUtil.checkArgument;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -108,7 +109,7 @@ public final class PeopleRegistryState {
             Phone duplicatePhone = person instanceof Student student
                     ? student.getParentPhone() : person.getContactDetails().getPhone().orElseThrow();
             DuplicateKey duplicateKey = new DuplicateKey(person.getRole(),
-                    person.getContactDetails().getNormalizedName(), duplicatePhone);
+                    person.getContactDetails().getName().fullName.toLowerCase(Locale.ROOT), duplicatePhone);
             if (!duplicateKeys.add(duplicateKey)) {
                 throw new DuplicatePersonException();
             }
@@ -118,7 +119,8 @@ public final class PeopleRegistryState {
     }
 
     /**
-     * A role-specific business identity using the same normalized name and phone as {@code isDuplicateOf}.
+     * Retains the original lowercase-only validation key so older sigma-distinct records remain loadable.
+     * New additions and identity changes separately reject sigma-equivalent duplicates; snapshots never merge IDs.
      * The validation-local set computes each key once without changing record order or retaining an index.
      */
     private record DuplicateKey(PersonRole role, String normalizedName, Phone phone) {
