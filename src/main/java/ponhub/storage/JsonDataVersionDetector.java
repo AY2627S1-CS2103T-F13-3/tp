@@ -118,6 +118,7 @@ public final class JsonDataVersionDetector {
     }
 
     /**
+     * Classifies the schema-version token without numeric conversion.
      * JSON syntax already excludes leading zeroes and plus signs; only literal 1 is supported.
      */
     private static Format classifyVersion(JsonParser parser, JsonToken token) throws IOException {

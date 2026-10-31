@@ -97,7 +97,7 @@ public final class AttendanceRetrieval {
     }
 
     /**
-     * Lesson retrieval restores the independent lesson view.
+     * Deactivates the attendance-history view, restoring the independent lesson view.
      */
     public void hide() {
         active.set(false);
