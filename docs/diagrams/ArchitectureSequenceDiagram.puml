@@ -1,71 +1,31 @@
 @startuml
-' Readability layout by Vincent with Codex assistance (#393); existing model/feature credit retained.
-' Updated by Ernest Chua with OpenAI Codex assistance (#220).
+' Original command flow by Ernest Chua with OpenAI Codex assistance (#220).
+' Earlier readability layout by Vincent with Codex assistance (#393).
+' Focused overview by Vincent Lin with OpenAI Codex assistance (#600).
+' Grouped operation descriptions; not literal Java method signatures.
 hide footbox
 skinparam defaultFontName Arial
+skinparam defaultFontSize 17
 skinparam shadowing false
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 175
-skinparam ParticipantPadding 5
-skinparam BoxPadding 5
-skinparam ArrowFontSize 16
-skinparam defaultFontSize 16
-skinparam ParticipantFontSize 14
-skinparam noteFontSize 15
-participant "session:\nCanonicalPeopleSession" as Session #E5E5FA
-participant "executor:\nCanonicalCommandExecutor" as Executor #E5E5FA
-participant "tx:\nCanonicalTransaction" as Tx #FBE3E6
-participant "writer:\nSnapshotWriter" as Writer #FFF0BD
-[-> Session : execute(commandText)
-Session -> Session : resolve definition, check protection,\nparse arguments and create command
-Session -> Executor : execute(command)
-Executor -> Executor : view.beginTransaction()
-note over Executor, Tx
-  PeopleView creates tx with isolated
-  model and filter copies.
-  staged / stagedView are obtained from tx.
-end note
-ref over Executor, Tx
-  command.execute(
-  staged, stagedView)
-  Resolve index; validate
-  and stage the edit.
-  Return a prepared
-  CommandResult.
-end ref
-Executor -> Tx : hasOperationalChanges()
-Tx --> Executor : changed
-alt changed operational snapshot
-  Executor -> Writer : save(staged.exportState())
-  note over Tx, Writer
-    Runtime writer:
-    ProtectedPonHubDataStorage.saveData
-  end note
-  alt save succeeds
-    Writer --> Executor : saved
-  else permission / I/O failure
-    Writer --> Executor : IOException
-  end
-else no operational change
-  note over Executor, Tx
-    Skip save; a view-only change
-    may still commit.
-  end note
+skinparam maxMessageSize 190
+skinparam sequence {
+  LifeLineBorderColor #64748B
+  ParticipantBorderColor #64748B
+  GroupBorderColor #64748B
+}
+participant "session :\nCanonicalPeopleSession" as Session #EDE9FE
+participant "executor :\nCanonicalCommandExecutor" as Executor #DBEAFE
+participant "writer :\nSnapshotWriter" as Writer #FEF3C7
+Session -> Executor : Run allowed, valid edit
+Executor -> Executor : Prepare candidate data\nand result separately
+Executor -> Writer : Save complete candidate
+alt save succeeds
+  Writer --> Executor : Saved
+  Executor -> Executor : Publish saved data\nand refresh views
+  Executor --> Session : Prepared success result
+else save fails
+  Writer --> Executor : I/O failure
+  Executor --> Session : Save error; live state unchanged
 end
-newpage Publication after the save outcome
-alt no operational change or save succeeded
-  Executor -> Tx : commit()
-  Tx -> Tx : publish changed root, then people filter;\nrefresh subscribed views
-  Tx --> Executor
-  Executor --> Session : CommandResult
-  [<-- Session : success feedback
-else save failed
-  Executor --> Session : CommandException
-  [<-- Session : failure feedback
-end
-legend bottom
-  Solid arrow: call; dashed arrow: return or exception
-  Parse/domain failures also return before save and publication.
-  Optional activation bars are omitted.
-endlegend
 @enduml
