@@ -14,9 +14,9 @@ skinparam sequence {
   ParticipantBorderColor #64748B
   GroupBorderColor #64748B
 }
-participant "<u>session :</u>\n<u>CanonicalPeopleSession</u>" as Session #EDE9FE
-participant "<u>executor :</u>\n<u>CanonicalCommandExecutor</u>" as Executor #DBEAFE
-participant "<u>writer :</u>\n<u>SnapshotWriter</u>" as Writer #FEF3C7
+participant "session :\nCanonicalPeopleSession" as Session #EDE9FE
+participant "executor :\nCanonicalCommandExecutor" as Executor #DBEAFE
+participant "writer :\nSnapshotWriter" as Writer #FEF3C7
 Session -> Executor : Run allowed, valid edit
 Executor -> Executor : Prepare candidate data\nand result separately
 Executor -> Writer : Save complete candidate

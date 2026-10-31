@@ -133,7 +133,7 @@ Left/Right. The numbered path below gives the same ordering without horizontal s
    [safe-save and backup rules](#replacing-the-file-and-recovering-failures); a failure does not guarantee
    unchanged disk bytes or power-loss durability.
 
-The sequence uses underlined instance/type headings, solid calls, dashed replies and guarded alternative
+The sequence uses instance/type headings, solid calls, dashed replies and guarded alternative
 paths. Message labels describe grouped responsibilities rather than literal Java methods. Activation bars
 and internal returns are omitted; the save reply and command outcome remain explicit.
 [Editable source](diagrams/ArchitectureSequenceDiagram.puml). Original command flow: Ernest Chua;
