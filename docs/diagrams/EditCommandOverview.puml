@@ -1,0 +1,53 @@
+@startuml
+' Simplified overview by Vincent Lin with OpenAI Codex assistance.
+' Based on ArchitectureSequenceDiagram.puml, including Ernest Chua's command-flow work.
+' This diagram groups internal calls; labels describe responsibilities, not Java method signatures.
+
+title Editing a person: save before showing success
+hide footbox
+skinparam defaultFontName Arial
+skinparam defaultFontSize 17
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam backgroundColor white
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantPadding 24
+skinparam sequenceBoxPadding 12
+skinparam maxMessageSize 220
+skinparam sequence {
+  ArrowColor #374151
+  LifeLineBorderColor #CBD5E1
+  ParticipantBorderColor #64748B
+  ParticipantFontColor #0F172A
+  GroupBorderColor #94A3B8
+  GroupHeaderFontColor #334155
+  GroupBackgroundColor #FFFFFF
+}
+
+participant "Session" as Session #EDE9FE
+participant "Command executor" as Executor #DBEAFE
+participant "File writer" as Writer #FEF3C7
+
+[-> Session : edit 1 n/Jamie Tan
+Session -> Executor : Run the validated command
+Executor -> Executor : Prepare the edit\non a separate copy
+
+note over Executor
+  Live records have not changed.
+end note
+
+Executor -> Writer : Save the complete snapshot
+
+alt Save succeeds
+  Writer --> Executor : Saved
+  Executor -> Executor : Apply the saved change\nand refresh the views
+  Executor --> Session : Success
+  [<-- Session : Show success feedback
+else Save fails
+  Writer --> Executor : Save error
+  Executor --> Session : Failure; live data unchanged
+  [<-- Session : Show failure feedback
+end
+
+caption Example: valid input that changes a person's details.\nInvalid input and unchanged edits are outside this overview.
+@enduml
