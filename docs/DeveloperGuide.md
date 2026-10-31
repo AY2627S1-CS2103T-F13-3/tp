@@ -242,9 +242,10 @@ their row positions are never person selectors. Existing lessons use stable `lid
 `lessons si/STUDENT_INDEX` syntax remains a compatibility alias. Stored relationships and internal query APIs
 use stable IDs, never displayed positions.
 
-**Tutor lookup.** `addlesson` matches `tu/TUTOR_NAME` by normalized full name, ignoring case and
-repeated spaces. If supplied, `tp/TUTOR_PHONE` must also match exactly; never ignore it. Reject zero
-matches or ambiguity without mutation, requesting a phone to disambiguate. Search `tu/` instead
+**Tutor lookup.** `addlesson` and `editlesson` match `tu/TUTOR_NAME` by normalized full name, ignoring case,
+including Greek `Σ`/`σ`/`ς`, and repeated spaces. If supplied, `tp/TUTOR_PHONE` must also match exactly;
+never ignore it. Reject zero matches or ambiguity without mutation. If older saved Tutors match both name
+and phone, require a name/phone correction rather than selecting the first record. Search `tu/` instead
 matches a case-insensitive name fragment; Tutor-category name search uses `n/`.
 
 The [UG command formats](UserGuide.html#planned-command-summary) and [search matrix](#supported-criteria)
@@ -316,7 +317,10 @@ and wrong-role fields before publication. Reuse the current field validators/nor
 than relaxing their character or length rules.
 
 Check duplicates against every other record, excluding the target ID: Student uses normalized name
-and parent phone; Tutor/Parent use normalized name and own phone within the same role. A Tutor rename
+and parent phone; Tutor/Parent use normalized name and own phone within the same role. Name matching
+lowercases with `Locale.ROOT` and unifies final sigma `ς` with `σ`, without expanding `ß` to `ss` or stripping accents.
+Existing saved sigma-distinct identities remain loadable and may edit unrelated fields while retaining their
+business key; add/edit must not introduce a new collision. A Tutor rename
 keeps every Lesson's Tutor ID. Changing a Parent's own phone or a Student's parent phone recomputes
 exact-phone derived links without changing another person's stored phone, creating a Parent or
 requiring a matching Parent. Before resetting the staged root, `CanonicalEditCommand` compares the edited
@@ -652,12 +656,14 @@ lists and validate the entire candidate against the [shared/domain contracts](#s
 before replacement: identities, roles, references, scheduling and attendance must all be consistent.
 Invalid construction or null replacement leaves the current state intact; no partial candidate is installed.
 
-People-registry validation builds temporary hash sets for stable IDs and role-specific duplicate keys.
-Each key uses the existing normalized name and the Student's parent phone or the Tutor/Parent's own phone,
+People-registry validation builds temporary hash sets for stable IDs and role-specific legacy duplicate keys.
+Each key uses the original lowercase-only name and the Student's parent phone or the Tutor/Parent's own phone,
 with the role kept distinct. Computing one key per record replaces pairwise person comparisons with
 expected linear-time duplicate validation and linear temporary memory. The sets do not reorder records
 or persist between snapshots. Loading and mutation candidates still validate all people, supported record
 types and allocation counters; the JSON format and protected-load/save guarantees are unchanged.
+The legacy key keeps pre-existing sigma-distinct records and their relationships valid. New additions use
+`isDuplicateOf`, and `replacePerson` separately checks changed business identities with sigma equivalence.
 This optimization does not establish a numeric person capacity or a whole-product latency guarantee;
 Lesson scheduling, relationships, complete-file saves and UI refresh have separate costs.
 
