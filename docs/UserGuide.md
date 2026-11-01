@@ -198,7 +198,7 @@ Notice that Jamie keeps `S2` throughout, even as her position shifts from `3` to
 
 Every command in PonHub follows the same safety rules when something goes wrong:
 * **Invalid input changes nothing:** If a command has a syntax error, fails a validation check, or is blocked by a clash or dependency, PonHub explains the problem, leaves all records and panels unchanged, and keeps your typed text in the command box so you can fix it.
-* **Read-only commands never write to disk:** `list`, `lessons`, `showlesson`, `history`, `search`, and `help` only read or filter in-memory records.
+* **Read-only commands do not save operational data:** `list`, `lessons`, `showlesson`, `history`, `search`, and `help` only read or filter in-memory records.
 * **Changes are reported only after saving:** Commands that modify data save to disk before reporting success. If a disk save fails, your live session data, ID counters, and views remain at their previous state; follow [If a save fails](#if-a-save-fails) to check the file on disk before continuing.
 
 --------------------------------------------------------------------------------------------------------------------
