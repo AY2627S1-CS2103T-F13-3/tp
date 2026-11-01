@@ -90,10 +90,6 @@ intended files with `git add` before running them. Review the staged diff before
 This procedure is for the release maintainer. Prepare notes and a demonstration plan while features are
 being implemented, then validate them against the reviewed candidate before publication. Keep dated
 coordination and acceptance records in the relevant issues rather than copying them into this runbook.
-For historical context only, the v1.3 release work is recorded in
-[#103](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/103),
-[#153](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/153) and
-[#154](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/154).
 
 ### Freeze and identify the candidate
 
