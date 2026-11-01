@@ -144,6 +144,7 @@ public class LessonQueriesListenerTest {
     }
 
     /**
+     * Publishes replacement state and checks that no listener errors occur.
      * JavaFX forwards callback errors to this handler instead of throwing them from resetData.
      */
     private void publishWithoutListenerErrors(PonHubDataState replacement) {
