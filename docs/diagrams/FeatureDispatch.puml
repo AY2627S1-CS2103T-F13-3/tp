@@ -1,0 +1,34 @@
+@startuml
+' Yang Shuo with OpenAI Codex assistance. #641; DG 5.1.
+' Trace: CanonicalPeopleSession.execute; RoleAwareAddParser.parse; FieldValueTokenizer.
+!include feature-sequence-style.iuml
+participant "session :\nCanonicalPeopleSession" as S
+participant "parser :\nRoleAwareAddParser" as P
+participant "<<class>>\nFieldValueTokenizer" as T
+
+S -> S : Consume and clear\npending deletion
+S -> S : Extract word; look up\ncommand definition
+alt protected and route unavailable
+  note over S : Reject before argument parsing.
+else allowed route, valid single-line input
+  S -> P : parse(arguments)\n[add example]
+  P -> T : tokenize role-aware fields
+  note over T
+    Lowercase prefixes; preserve name s/o, d/o
+    and digit-surrounded address slashes.
+  end note
+  T --> P : prefix boundaries
+  P -> P : Validate prefixes, required\nfields and domain values
+  alt invalid fields or values
+    P --> S : ParseException with guidance
+  else valid input
+    P --> S : PersonAdditionInput\n(no allocated ID)
+    ref over S : Execute the parsed command\n(5.2 and Figure 5.2a)
+  end
+end
+note over S, T
+  Empty, unknown and multiline input are rejected.
+  The enum switch selects the other typed parsers;
+  read queries route directly to their handlers.
+end note
+@enduml

@@ -1,0 +1,37 @@
+@startuml
+' Yang Shuo with OpenAI Codex assistance. #641; DG 5.4.
+' Trace: CanonicalEnrolCommand.execute, CanonicalUnenrolCommand.execute, PersonIndexResolver.
+!include feature-sequence-style.iuml
+participant "executor :\nCanonicalCommandExecutor" as E
+participant "command :\nStagedCommand" as C
+participant "stagedView :\nPeopleView" as V
+participant "staged :\nPonHubData" as D
+
+E -> C : execute(staged,\nstagedView)
+C -> V : getPeople()
+V --> C : displayed records
+note over C
+  PersonIndexResolver resolves
+  current position once to a Student.
+  Invalid selection stops here.
+end note
+alt enrol
+  C -> D : enrolStudent(studentId, lessonId)
+  note over D
+    Require Lesson, non-membership and
+    no overlapping enrolled Lesson.
+  end note
+else unenrol
+  C -> D : unenrolStudent(studentId, lessonId)
+  note over D
+    Require current membership;
+    remove roster ID. Retain all
+    dated attendance entries.
+  end note
+end
+D --> C : updated Lesson or validation error
+C --> E : prepared feedback\nor CommandException
+opt staging succeeded
+  ref over E : Persist and publish — Figure 5.2a
+end
+@enduml

@@ -1,0 +1,42 @@
+@startuml
+' Yang Shuo with OpenAI Codex assistance. #641; DG 5.3.
+' Trace: CanonicalAddLessonCommand, CanonicalEditLessonCommand,
+' TutorResolver, LessonEditCandidate, PonHubData and PonHubDataState.
+!include feature-sequence-style.iuml
+participant "executor :\nCanonicalCommandExecutor" as E
+participant "command :\nStagedCommand" as C
+participant "staged :\nPonHubData" as D
+
+E -> C : execute(staged, stagedView)\n[parsed Lesson input]
+alt addlesson
+  C -> D : Read Tutor candidates
+  note over C : TutorResolver matches name and optional exact phone.
+  note over C, D : Reject absent, ambiguous or mismatched Tutor.
+  C -> D : addLesson(...)
+  note over D : Allocate L-ID; validate Tutor/room clashes.
+else editlesson
+  C -> D : getLesson(id); inspect\nretained attendance
+  note over C, D
+    Reject incompatible weekday before Tutor lookup.
+    Resolve a replacement Tutor only when supplied.
+  end note
+  C -> D : exportState()
+  D --> C : current staged snapshot
+  note over C : LessonEditCandidate prepares a replacement.
+  opt replacement changed
+    C -> D : resetData(candidate state)
+  end
+  note over D
+    Validate combined slot and all other bookings.
+    Preserve ID, catalogue position, roster and history.
+  end note
+end
+C --> E : feedback or validation error
+opt valid candidate or no-op
+  ref over E : Persist and publish — Figure 5.2a
+end
+note over E, D
+  Retained-attendance display warning is prepared
+  for a changed Lesson with recorded attendance.
+end note
+@enduml

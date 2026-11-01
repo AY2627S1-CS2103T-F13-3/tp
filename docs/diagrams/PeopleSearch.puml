@@ -1,0 +1,30 @@
+@startuml
+' Yang Shuo with OpenAI Codex assistance. #641; Benjamin's relationship-search feature retained.
+' Trace: CanonicalSearchCommand.execute; PeopleView.setSearchCriteria;
+' PersonRelationshipSearch.search; PersonContactSearch.search;
+' LessonQueries.searchLessons/getStudentsByParentPhone.
+!include feature-sequence-style.iuml
+participant "command :\nCanonicalSearchCommand" as C
+participant "view :\nPeopleView" as V
+participant "<<class>>\nPersonRelationshipSearch" as R
+participant "queries :\nLessonQueries" as Q
+
+C -> V : setSearchCriteria(\ncriteria)
+V -> R : search(people, queries, criteria)
+R -> R : Filter category and own fields\nusing PersonContactSearch
+opt relationship criteria supplied
+  alt Student or Tutor
+    R -> Q : Find matching lessons;\nread current roster
+  else Parent
+    R -> Q : Use parent-phone index;\nread matching lessons
+  end
+  note over R, Q
+    Match own fields and all related
+    filters on the same Lesson/child.
+  end note
+end
+R --> V : distinct people in creation order\nand matching relationship contexts
+V -> V : Store criteria; publish people\nand result context
+V --> C : updated count
+note over C, Q : No operational save; right-pane selection is unchanged.
+@enduml

@@ -1,0 +1,38 @@
+@startuml
+' Yang Shuo with OpenAI Codex assistance. #641; Ernest's help and UI authors retained.
+' Trace: MainWindow.handleHelp/executeCommand; CanonicalPeopleSession.getHelp;
+' CanonicalCommandCatalog.getOverview/getUsage; ResultDisplay.setFeedbackToUser.
+!include feature-sequence-style.iuml
+participant "window :\nMainWindow" as W
+participant "session :\nCanonicalPeopleSession" as S
+participant "<<class>>\nCanonicalCommandCatalog" as C
+participant "feedback :\nResultDisplay" as F
+
+note over W, S
+  Typed help uses the command route.
+  F1 / Help menu call handleHelp().
+  Preserve draft; Logic delegates to session.
+end note
+W -> S : execute(help [topic])\nvia Logic
+S -> S : Normalize and validate topic
+alt no topic
+  S -> C : getOverview(load error)
+  C --> S : available-command overview
+else one known, available topic
+  S -> C : getUsage(topic,\nprotected flag)
+  C --> S : generated syntax and examples
+else malformed, unknown or unavailable topic
+  S -> S : Reject with usage guidance
+end
+S --> W : CommandResult or exception
+opt help succeeded
+  W -> W : Restore selected person by stable ID
+end
+W -> F : setFeedbackToUser(text)
+F -> F : setText(text)\nScroll to top
+note over S, F
+  Unknown, unavailable or malformed topics return
+  usage errors through the same feedback route.
+  No operational write or separate help window.
+end note
+@enduml

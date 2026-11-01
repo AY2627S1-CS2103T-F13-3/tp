@@ -1,0 +1,28 @@
+@startuml
+' Yang Shuo with OpenAI Codex assistance. #641; Benjamin's search/retrieval work retained.
+' Trace: CanonicalPeopleSession SEARCH; LessonRetrieval.search; LessonQueries.searchLessons.
+!include feature-sequence-style.iuml
+participant "session :\nCanonicalPeopleSession" as S
+participant "retrieval :\nLessonRetrieval" as R
+participant "queries :\nLessonQueries" as Q
+
+S -> S : SearchCriteriaParser parses\nc/lesson and valid filters
+S -> R : search(criteria)
+R -> Q : setLessonFilter(criteria)
+Q -> Q : Start with smallest exact\nweekday/time bucket
+loop each candidate Lesson
+  Q -> Q : Match all Lesson criteria\nand its current roster
+end
+Q -> Q : Apply creation or schedule order;\nreplace filtered result list
+Q --> R : query source updated
+R -> R : Set heading and select\nfiltered source
+ref over R : Source binding and refresh — 5.6
+R --> S : displayed results
+S -> S : Hide history panel
+note over S, Q
+  Worked example: [L1,L2] -> [L1].
+  Duplicate roster matches emit one Lesson.
+  Invalid criteria leave prior results unchanged.
+  No operational save; people filter is unchanged.
+end note
+@enduml
