@@ -70,7 +70,6 @@ For more detail, use the [Google developer documentation style guide](https://de
 The team uses the existing GitHub Pages deployment from `master` and `/docs`; merged source updates are
 published through that setup. The repository defines no automatic PR website-preview workflow. Build locally before
 merge, then check the deployment result and the affected [public pages](https://AY2627S1-CS2103T-F13-3.github.io/tp/).
-A successful Java CI run does not prove that the website built or that the rendered content is correct.
 See the [SE-EDU Jekyll guide](https://se-education.org/guides/tutorials/jekyll.html) for Pages settings.
 
 Site-wide changes belong in `docs/_config.yml`, `docs/_includes/`, `docs/_layouts/` or `docs/_sass/`, as appropriate.
