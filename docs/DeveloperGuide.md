@@ -175,7 +175,7 @@ PonHub follows a layered architecture inspired by Model-View-Controller (MVC), a
 
 [`Main`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/Main.java) starts the JavaFX runtime, and [`MainApp`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java) validates startup file paths, creates a single [`CanonicalPeopleSession`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalPeopleSession.java), wraps it in [`CanonicalLogicManager`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalLogicManager.java), and opens the UI.
 
-The UI interacts exclusively with the [`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/Logic.java) interface and never modifies stored records directly. `CanonicalPeopleSession` owns the single canonical model and query helpers, and injects a `SnapshotWriter` into [`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandExecutor.java) so tests can simulate disk failures cleanly. Arrows in the architecture diagram represent method calls and dependencies, not separate copies of the data.
+The UI interacts exclusively with the [`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/Logic.java) interface and never modifies stored records directly. `CanonicalPeopleSession` owns the single canonical model and query helpers, and injects a `SnapshotWriter` into [`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandExecutor.java) so tests can simulate disk failures cleanly.
 
 #### Follow an edit command
 
@@ -190,15 +190,15 @@ To see how the components work together during a data-changing command, trace `e
 </div>
 </figure>
 
-On a narrow screen, scroll the diagram horizontally (keyboard users can focus it with Tab and press Left/Right). The steps match the sequence below:
+The command executes as follows:
 
-1. **Dispatch:** After checking command availability and parsing the arguments, `CanonicalPeopleSession` passes the staged edit command to `CanonicalCommandExecutor` (UI dispatch through `MainWindow` and `CanonicalLogicManager` is omitted for clarity).
+1. **Dispatch:** After checking command availability and parsing the arguments, `CanonicalPeopleSession` passes the staged edit command to `CanonicalCommandExecutor`.
 2. **Stage in isolation:** The executor opens an isolated `CanonicalTransaction` to build the candidate `PonHubDataState` and proposed `CommandResult`. At this point, the live model and UI lists have not changed.
 3. **Save complete snapshot:** The executor passes the candidate snapshot to its injected `SnapshotWriter`, which calls `ProtectedPonHubDataStorage.saveData` at runtime.
 4. **Publish on success:** Once the file is safely written, `CanonicalTransaction.commit()` updates the live model and people filter, refreshing subscribed UI views, and the executor returns the success `CommandResult`.
 5. **Preserve state on failure:** If saving throws an exception, the executor catches it and throws a `CommandException` without committing. The live records, ID counters, and UI views remain untouched. (Disk-level recovery follows the [safe file replacement rules](#safe-json-saves).)
 
-Parsing errors and domain rule violations stop before step 3. Valid commands that make no operational change (no-ops) skip the disk write, and view-only commands (such as `list`) update the view filter without writing operational data. [Editable diagram source](diagrams/ArchitectureSequenceDiagram.puml) (original command flow by Ernest Chua; sequence layout and overview by Vincent Lin, with OpenAI Codex assistance).
+Parsing errors and domain rule violations stop before step 3. Valid commands that make no operational change (no-ops) skip the disk write, and view-only commands (such as `list`) update the view filter without writing operational data.
 
 ### 3.2 UI component
 
@@ -213,13 +213,22 @@ Parsing errors and domain rule violations stop before step 3. Valid commands tha
 </div>
 </figure>
 
-The diagram keeps its original size so class names and the inheritance legend remain readable.
-If it is wider than the page, scroll horizontally; keyboard users can focus it with Tab and use
-Left/Right. Open the image link to view the complete diagram separately.
+[`UiManager`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/UiManager.java) instantiates [`MainWindow`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/MainWindow.java), which assembles the people panel, lesson and history panels, viewing buttons, result display, command box, and status bar.
 
-[`UiManager`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/UiManager.java) instantiates [`MainWindow`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/MainWindow.java), which assembles the people panel, lesson and history panels, viewing buttons, result display, command box, and status bar. Every UI controller inherits from the abstract `UiPart` class, which handles loading FXML files. To keep the diagram readable, FXML node fields, JavaFX scene-graph containment, and small layout helpers are omitted.
+| UI element | What it renders or is responsible for |
+| --- | --- |
+| `PersonRecordListPanel` | Displays the current people list, active filter or search context, result count, and selected person. |
+| `PersonRecordCard` | Renders one person's role, stable ID, current list position, contact details, and matching relationship context. Provides contact-copy actions. |
+| `LessonListPanel` | Displays lesson results and their context. For lesson details, displays the current roster and retained attendance. |
+| `LessonCard` | Renders one lesson's subject, stable ID, schedule, tutor, room, and roster size. |
+| `HistoryListPanel` | Displays the selected Student's attendance-history results, context, and result count. |
+| `AttendanceHistoryCard` | Renders one recorded date, Student and Lesson IDs, attendance status, and current enrolment status. |
+| Viewing buttons in `MainWindow` | Request all lessons, the selected Student's lessons, or attendance history through the same command path as typed requests. |
+| `CommandBox` | Accepts and submits commands, with command-name completion and recall of previous submissions. |
+| `ResultDisplay` | Displays command feedback, errors, and inline help. |
+| `StatusBarFooter` | Displays the selected operational data-file path. |
 
-In the class diagram, solid arrows indicate stored object references, dashed arrows indicate creation or usage dependencies, and hollow triangles show inheritance or interface implementation. List cells inside `PersonRecordListPanel`, `LessonListPanel`, and `HistoryListPanel` create and recycle card controllers (`PersonRecordCard`, `LessonCard`, `AttendanceHistoryCard`) on demand through JavaFX list virtualisation rather than holding a permanent controller per record.
+Every UI controller inherits from the abstract `UiPart` class, which handles loading FXML files.
 
 The UI component depends on `Logic` to execute commands and observe read-only lists (`getPersonRecords()`, `getDisplayedLessons()`, `getDisplayedHistory()`) and mode properties. It renders `Model` records (`PersonRecord` adapted through `ponhub.ui.PersonRecordCardData`) and `Model` query view types (`LessonView`, `AttendanceHistoryEntry`) in its cards.
 
@@ -639,10 +648,6 @@ For bounded field lengths, an unsorted lesson search runs in `O(B + R_B + K)` ti
 <a href="images/LessonRetrieval.png"><img src="images/LessonRetrieval.png" alt="The UI binds to one read-only displayed list. Switching sources detaches the old listener, attaches the new listener, and refreshes that same list. Solid callback arrows notify the UI of list changes."></a>
 </div>
 </figure>
-
-The diagram retains its original label size. If it is wider than the page, focus it with Tab and
-use Left/Right to scroll, or open the image link. Solid arrows show calls and observer callbacks;
-the dashed reply returns the displayed list requested during setup.
 
 `LessonRetrieval` owns a single observable `displayedLessons` list that the UI binds to once. Switching between `lessons`, `lessons INDEX`, `search c/lesson`, and `showlesson` rebinds `LessonRetrieval` to the chosen query projection without modifying the left-hand `PeopleView`. Conversely, running `list` or `search c/student` updates the people panel without retargeting the right-hand lesson or history panel (which retains the resolved stable student `PersonId` or `LessonId`).
 
@@ -1767,6 +1772,7 @@ Terms are listed in alphabetical order:
 * **AddressBook-Level3:** PonHub evolved from [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) created by the [SE-EDU initiative](https://se-education.org); upstream licences and attribution are retained.
 * **Third-party libraries:** PonHub uses [JavaFX](https://openjfx.io/) for the graphical interface, [Jackson](https://github.com/FasterXML/jackson) for JSON processing, and [JUnit 5](https://junit.org/junit5/) for automated testing.
 * **Synthesised audio resource:** The optional header wordmark percussion cue was synthesised for PonHub at Vincent Lin's direction with OpenAI Codex assistance, using oscillators and seeded noise without third-party audio samples. The generator script, synthesis details, and MIT reuse notice are documented in [`src/main/resources/audio/README.md`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/resources/audio/README.md).
+* **Architecture command-flow diagram:** Original command flow by Ernest Chua; sequence layout and overview by Vincent Lin, with OpenAI Codex assistance.
 * **AI assistance:** OpenAI Codex was used by Ernest Chua (`ErnestChuaa`), Benjamin Ng (`ben58882`), Yang Shuo (`ys000009`), Vincent Lin (`gugrusaurus`), and Zhu Zhi Yu (`ultramanarm`) across implementation, refactoring, test development, documentation, code review support, integration/conflict resolution, and verification support. Each team member remains responsible for their submitted work and feature ownership.
 
 <!-- DG skeleton structure prepared by Vincent Lin (gugrusaurus, #620); reordered and rewritten by Ernest Chua (ErnestChuaa, #622) with AI assistance. -->
