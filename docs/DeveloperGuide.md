@@ -1510,7 +1510,7 @@ Using the baseline fixture with a Parent added (`add r/parent n/Pat Tan p/912345
    edit 1 n/ALEX TAN
    ```
 
-   *Expected:* The first edit updates Alex (`S1`) to level `P2` and clears optional own phone, email, and address while preserving `S1` and the Student filter. `edit 1 n/Alex  Tan` normalizes to `Alex Tan` and reports no change (no disk write). `edit 1 n/ALEX TAN` updates the displayed uppercase spelling and saves.
+   *Expected:* The first edit updates Alex (`S1`) to level `P2` and clears optional own phone, email, and address while preserving `S1` and the Student filter. `edit 1 n/Alex  Tan` normalizes to `Alex Tan` and reports no change (no operational save). `edit 1 n/ALEX TAN` updates the displayed uppercase spelling and saves.
 
 2. **Parent–student phone link warnings and tutor rename propagation:**
    * Run `search c/parent sn/ALEX`, then edit Pat Tan's phone (`list r/parent` → `edit 1 p/99998888`). Confirm the success message lists the disconnected `(P1, S1)` and `(P1, S2)` links while leaving the students' `parentPhone` values (`91234567`) untouched.
@@ -1625,7 +1625,7 @@ Record each physical display configuration you test in the matrix below (automat
 <a id="numeric-json-resource-boundary-573"></a>
 <a id="readable-protected-load-diagnostics-575"></a>
 
-1. **Read-only commands never touch disk:**
+1. **Read-only commands do not save operational data:**
    * Close PonHub and compute the SHA-256 hash of `manual/lesson-workflow.json`:
      * PowerShell: `Get-FileHash "manual/lesson-workflow.json" -Algorithm SHA256`
      * macOS/Linux: `shasum -a 256 "manual/lesson-workflow.json"`
