@@ -1,6 +1,103 @@
 // Placeholder to allow defining custom styles that override everything else.
 // (Use `_sass/minima/custom-variables.scss` to override variable defaults)
 
+a {
+  text-decoration: underline;
+  text-underline-offset: .15em;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid $ponhub-link;
+  outline-offset: 3px;
+}
+
+.site-header {
+  background: $ponhub-black;
+  border-top: 0;
+  border-bottom: 4px solid $ponhub-orange;
+
+  .wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 76px;
+
+    &::after {
+      display: none;
+    }
+  }
+
+  .site-title {
+    float: none;
+    padding-right: 0;
+    line-height: 1;
+  }
+
+  .site-logo {
+    display: block;
+    width: 183px;
+    height: auto;
+  }
+
+  a:focus-visible {
+    outline-color: $ponhub-orange;
+  }
+}
+
+.site-nav {
+  top: 18px;
+  background: $ponhub-black;
+  border-color: $ponhub-orange;
+  z-index: 1;
+
+  .page-link {
+    color: #fff;
+    text-decoration: none;
+
+    &:visited {
+      color: #fff;
+    }
+
+    &:hover,
+    &[aria-current="page"] {
+      color: $ponhub-orange;
+      text-decoration: underline;
+    }
+  }
+
+  .icon {
+    filter: invert(1);
+  }
+
+  .menu-icon > svg path {
+    fill: $ponhub-orange;
+  }
+
+  .nav-trigger:focus-visible + label {
+    outline: 3px solid $ponhub-orange;
+    outline-offset: 3px;
+  }
+}
+
+@media print {
+  .site-header .wrapper {
+    display: none;
+  }
+
+  .site-header {
+    background: transparent;
+    border-bottom: 1px solid $ponhub-black;
+  }
+
+  a,
+  a:visited {
+    color: $ponhub-black;
+  }
+}
+
 .guide-toc {
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -77,7 +174,7 @@
 }
 
 h2, h3, h4, h5, h6 {
-  color: #e46c0a;
+  color: $ponhub-link;
 }
 
 // Bootstrap style alerts

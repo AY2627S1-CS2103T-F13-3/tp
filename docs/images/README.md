@@ -40,5 +40,9 @@ media, including `LessonBoardShell.png`. Release-specific illustrations retain t
 credits in the [v1.3 media note](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/release/v1.3/media-plan.md)
 and [v1.4 media note](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/release/v1.4/media-provenance.md).
 Ernest Chua created the PonHub icon/wordmark with OpenAI Codex assistance.
+The website's [PonHub logo](ponhub-logo.svg) combines Ernest's original
+[people and lessons icon](ponhub-icon.svg) and wordmark styling. Benjamin Ng
+adapted it for the website with OpenAI Codex assistance. Both SVG assets retain
+their proportions and are original project artwork under the repository's MIT licence.
 Feature, diagram and portrait authorship remains with the contributors identified in
 [About Us](../AboutUs.html); existing upstream licences remain applicable.

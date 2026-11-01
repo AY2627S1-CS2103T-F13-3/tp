@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="244" height="64" viewBox="0 0 244 64">
+  <title>PonHub</title>
+  <desc>People and lessons icon with the PonHub wordmark. Original artwork by Ernest Chua
+    with OpenAI Codex assistance; website adaptation by Benjamin Ng with OpenAI Codex assistance, 2026.</desc>
+  <rect width="244" height="64" rx="8" fill="#101010"/>
+  <g fill="#ff9900">
+    <circle cx="22" cy="20" r="6"/>
+    <circle cx="42" cy="20" r="6"/>
+    <path d="M12 34 Q22 28 32 35 Q42 28 52 34 V51 Q42 45 32 52 Q22 45 12 51 Z"/>
+  </g>
+  <path d="M32 35 V51" fill="none" stroke="#101010" stroke-width="3"/>
+  <rect x="151" y="12" width="85" height="44" rx="4" fill="#ff9900"/>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="39" font-weight="700">
+    <text x="70" y="46" fill="#fff">Pon</text>
+    <text x="158" y="46" fill="#101010">hub</text>
+  </g>
+</svg>
