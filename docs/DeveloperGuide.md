@@ -173,9 +173,11 @@ PonHub follows a layered architecture inspired by Model-View-Controller (MVC), a
 | [**Storage**](#storage-component) | Reads and writes operational records (`data/ponhub.json`) and user preferences (`preferences.json`) safely on disk. | **Adapter / Codec** (`JsonPonHubDataCodec` and `ProtectedPonHubDataStorage` implementing storage interfaces). |
 | [**Commons**](#common-classes) | Supplies cross-cutting utilities for logging (`LogsCenter`), atomic file writes, path validation, settings, and exceptions. | Shared utility classes. |
 
-[`Main`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/Main.java) starts the JavaFX runtime, and [`MainApp`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java) validates startup file paths, creates a single [`CanonicalPeopleSession`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalPeopleSession.java), wraps it in [`CanonicalLogicManager`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalLogicManager.java), and opens the UI.
-
-The UI interacts exclusively with the [`Logic`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/Logic.java) interface and never modifies stored records directly. `CanonicalPeopleSession` owns the single canonical model and query helpers, and injects a `SnapshotWriter` into [`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandExecutor.java) so tests can simulate disk failures cleanly.
+[`Main`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/Main.java) starts JavaFX.
+[`MainApp`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java)
+validates startup file paths, creates one `CanonicalPeopleSession`, supplies it to
+[`CanonicalLogicManager`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalLogicManager.java),
+and opens the UI.
 
 #### Follow an edit command
 
@@ -230,7 +232,12 @@ Parsing errors and domain rule violations stop before step 3. Valid commands tha
 
 Every UI controller inherits from the abstract `UiPart` class, which handles loading FXML files.
 
-The UI component depends on `Logic` to execute commands and observe read-only lists (`getPersonRecords()`, `getDisplayedLessons()`, `getDisplayedHistory()`) and mode properties. It renders `Model` records (`PersonRecord` adapted through `ponhub.ui.PersonRecordCardData`) and `Model` query view types (`LessonView`, `AttendanceHistoryEntry`) in its cards.
+`MainWindow` forwards submitted command text through `Logic.execute(...)`, then uses the returned
+`CommandResult` for feedback and requested UI actions. It does not modify operational records directly.
+
+The UI observes the read-only lists (`getPersonRecords()`, `getDisplayedLessons()`, `getDisplayedHistory()`)
+and mode properties exposed by `Logic`. It renders `Model` records (`PersonRecord` adapted through
+`ponhub.ui.PersonRecordCardData`) and query view types (`LessonView`, `AttendanceHistoryEntry`) in its cards.
 
 ### 3.3 Logic component
 
@@ -240,7 +247,10 @@ The UI component depends on `Logic` to execute commands and observe read-only li
 
 [![Command handling classes](images/LogicClassDiagram.png)](images/LogicClassDiagram.png)
 
-`CanonicalLogicManager` adapts a single `CanonicalPeopleSession` to the `Logic` interface expected by the UI. Inside the session:
+`CanonicalLogicManager` delegates commands from the UI-facing `Logic` interface to the shared
+[`CanonicalPeopleSession`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalPeopleSession.java).
+The session owns the canonical model and query helpers, checks command availability during protected
+startup, and routes commands to their handlers. Its execution paths are:
 
 * **Catalogue and routing:** [`CanonicalCommandDefinition`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandDefinition.java) and [`CanonicalCommandCatalog`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandCatalog.java) declare every supported command word, its inline help text, and whether it is allowed during protected startup.
 * **Parsers:** Feature-specific parsers (`RoleAwareAddParser`, `PersonEditParser`, `AddLessonParser`, `LessonEditParser`, `SearchCriteriaParser`, etc.) validate raw command arguments and build typed input records without mutating state or using the retired AB3 parser hierarchy.
@@ -279,6 +289,12 @@ The `Storage` component manages two separate persistence paths:
 
 * **Operational tuition data (`data/ponhub.json`):** `ProtectedPonHubDataStorage` loads the file once at startup, uses `JsonDataVersionDetector` and `JsonPonHubDataCodec` to parse and validate a complete `PonHubDataState` snapshot, and arms `CanonicalDataFileGuard` only when the file is valid or confirmed missing. Subsequent saves pass through the file guard and `AtomicFileWriter`.
 * **User preferences (`preferences.json`):** `JsonUserPrefsStorage` loads and saves window dimensions and placement independently of tuition data.
+
+`CanonicalPeopleSession` supplies
+[`CanonicalCommandExecutor`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandExecutor.java)
+with a `SnapshotWriter` callback bound to `ProtectedPonHubDataStorage.saveData`. Tests can substitute a
+failing writer to verify that a save error prevents proposed changes from reaching live records,
+allocation counters and views.
 
 `JsonPonHubDataStorage` provides a standalone file wrapper for tests and utilities, whereas the running application always uses `ProtectedPonHubDataStorage` so that rejected startup files can never be overwritten.
 
