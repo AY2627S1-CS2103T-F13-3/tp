@@ -1883,6 +1883,11 @@ applies one change that reloads correctly. This is not a packaged-UI command for
 ### People positions, addition and listing
 {: id="person-index-integration-checks"}
 
+Use a separate, previously unused data file, for example `--data="manual/people-positions.json"`.
+Replay the [shared-lesson and attendance workflow](#active-shared-lesson-and-attendance-workflow)
+through **step 4** only. Stop before step 5 unenrolment and step 6 deletion: these checks need the four
+people T1, T2, S1 and S2, with L1 still present and both Students enrolled.
+
 1. In the workflow fixture, `list` shows Alex/Jamie at positions 3/4 with IDs S1/S2.
    `lessons` and `history 4 lid/L1` must not renumber people.
 2. Run `list r/student`, then `search c/student n/Jamie`. Jamie S2 is now position 1.
