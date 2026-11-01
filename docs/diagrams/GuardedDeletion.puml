@@ -1,0 +1,40 @@
+@startuml
+' Yang Shuo with OpenAI Codex assistance. #641; Zhi Yu's person deletion retained.
+' Trace: CanonicalPeopleSession.executeDelete; CanonicalDeleteCommand;
+' CanonicalDeleteLessonCommand; PonHubData.removePerson/removeLesson.
+!include feature-sequence-style.iuml
+participant "session :\nCanonicalPeopleSession" as S
+participant "checkCopy :\nPonHubData" as D
+participant "executor :\nCanonicalCommandExecutor" as E
+
+alt delete INDEX preview
+  S -> S : Resolve current position\nto immutable person record
+  S -> D : Test removePerson(id)\non disposable snapshot
+  alt referenced by Lesson or attendance
+    D --> S : dependency error
+  else eligible
+    D --> S : check passed
+    S -> S : Store pending target;\nreturn confirmation prompt
+  end
+else delete confirm
+  S -> S : Consume pending target
+  alt target absent
+    note over S : Reject; require a fresh delete INDEX.
+  else target present
+    S -> E : execute(CanonicalDeleteCommand)
+    ref over E : Revalidate staged target;\npersist and publish — Figure 5.2a
+  end
+else delete cancel
+  S -> S : Consume and clear pending target
+else deletelesson lid/L1
+  S -> E : execute(CanonicalDeleteLessonCommand)
+  ref over E : Require empty roster and no attendance;\npersist and publish — Figure 5.2a
+end
+note over S, E
+  Preview and cancellation do not save.
+  Every intervening submission clears the target,
+  including invalid input (dispatch in Figure 5.1).
+  Failed confirmation requires a fresh preview.
+  Committed IDs are never reused; no cascading deletion.
+end note
+@enduml

@@ -484,6 +484,18 @@ To preserve these links, PonHub never cascades deletions automatically. Instead,
 
 <a id="implementation"></a>
 
+<!-- @@author ys000009 -->
+
+The sequence diagrams below follow their feature explanations. They use the course's
+[minimal sequence notation](https://nus-cs2103-ay2627-s1.github.io/website/schedule/week6/topics.html#w6-1-modeling-sequence-diagrams):
+operation descriptions group helper work; activation bars and uninformative returns are omitted.
+Solid arrows are synchronous calls, dashed arrows are returns, and `alt`/`opt` guards select paths.
+Participants labelled `<<class>>` receive static calls; other typed participants are instances.
+`ref` frames identify the interaction explained elsewhere. On narrow screens, focus a diagram and
+scroll horizontally to retain its label size, or open its linked full-size image.
+
+<!-- @@author -->
+
 ### 5.1 Command parsing, validation, and dispatch
 
 <a id="current-increment-and-command-integration"></a>
@@ -496,6 +508,21 @@ All user commands enter through `CanonicalPeopleSession.execute(String)`. The in
 4. **Shared tokenization:** Add and edit parsers use [`FieldValueTokenizer`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/parser/FieldValueTokenizer.java) to scan lowercase `prefix/` markers while allowing standalone `s/o` and `d/o` inside `n/` and `tu/` values and digit-surrounded slashes (such as `#01/02`) inside `a/` values. Unknown or repeated prefixes, unexpected preambles, and control characters are rejected with usage guidance.
 
 When adding a new command, register it in `CanonicalCommandDefinition`, implement its parser and command/query handler, wire its case in `CanonicalPeopleSession`, and add unit, integration, and manual tests.
+
+<!-- @@author ys000009 -->
+
+<figure class="dg-figure">
+<figcaption>Figure 5.1: Dispatch and role-aware add parsing</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Dispatch and role-aware add parsing; scroll horizontally on narrow screens">
+<a href="images/FeatureDispatch.png"><img src="images/FeatureDispatch.png" alt="The session clears a pending deletion, checks the route and startup guard, then parses allowed add arguments. The parser rejects invalid fields before execution."></a>
+</div>
+</figure>
+
+This follows steps 1–4 above, with pending deletion consumed first as implemented by
+`CanonicalPeopleSession.execute`. The add route illustrates the tokenizer boundary; other catalogue
+routes choose their own typed parser. [Editable source](diagrams/FeatureDispatch.puml).
+
+<!-- @@author -->
 
 ### 5.2 Adding, listing, and editing people
 
@@ -528,6 +555,31 @@ edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [l/LEVEL] [pp/PARENT_PHONE]
 <!-- @@author ErnestChuaa -->
 
 `PersonEditParser.Input` captures the validated 1-based `INDEX` and `PersonEditInput`. Inside the transaction, `CanonicalEditCommand` resolves `INDEX` once from the staged `PeopleView`, prepares `PersonEditCandidate`, and hands the candidate snapshot to `CanonicalCommandExecutor` to save before publishing.
+
+<!-- @@author -->
+
+<!-- @@author ys000009 -->
+
+<figure class="dg-figure" id="save-publication-sequence">
+<figcaption>Figure 5.2a: Persist and publish a staged command</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Persist and publish a staged command; scroll horizontally on narrow screens">
+<a href="images/SavePublication.png"><img src="images/SavePublication.png" alt="The executor skips writes for no-ops or view-only changes. A changed snapshot is saved before commit; a failed save preserves live data, views and allocated IDs."></a>
+</div>
+</figure>
+
+All mutating feature diagrams refer to this executor boundary, detailed in
+[Section 6.3](#command-transactions). It starts after successful candidate preparation;
+validation failures never reach saving. [Editable source](diagrams/SavePublication.puml).
+
+<figure class="dg-figure">
+<figcaption>Figure 5.2b: Stage an addition, edit, or role-list change</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Stage an addition, edit, or role-list change; scroll horizontally on narrow screens">
+<a href="images/PeopleChanges.png"><img src="images/PeopleChanges.png" alt="Parsed people commands operate on isolated data and view copies. Add allocates an ID, edit resolves a current position and prepares a replacement, and list changes only the role filter."></a>
+</div>
+</figure>
+
+The alternatives correspond to the add, edit, and list paths above. The edit prepares disconnected-link
+feedback before returning to the executor. [Editable source](diagrams/PeopleChanges.puml).
 
 <!-- @@author -->
 
@@ -566,10 +618,39 @@ editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME 
 
 <!-- @@author -->
 
+<!-- @@author ys000009 -->
+
+<figure class="dg-figure">
+<figcaption>Figure 5.3: Prepare a new or edited Lesson</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Prepare a new or edited Lesson; scroll horizontally on narrow screens">
+<a href="images/LessonChanges.png"><img src="images/LessonChanges.png" alt="Creation resolves a Tutor then allocates and validates a Lesson. Editing checks retained attendance, optionally resolves a Tutor, and prepares a validated replacement before saving."></a>
+</div>
+</figure>
+
+The branches follow Tutor selection/allocation and retained-history/combined-slot validation above.
+Only valid staged results proceed to [Figure 5.2a](#save-publication-sequence).
+[Editable source](diagrams/LessonChanges.puml).
+
+<!-- @@author -->
+
 ### 5.4 Enrolling and unenrolling students
 
 * **`enrol STUDENT_INDEX lid/LESSON_ID`:** `LessonMembershipParser` parses the 1-based student index and target `LessonId`. Inside the staged transaction, `CanonicalEnrolCommand` resolves `STUDENT_INDEX` in the current people view (rejecting Tutors or Parents), verifies that the lesson exists, and calls `PonHubData.enrolStudent(lessonId, studentId)`. The model checks that the student is not already enrolled and has no overlapping lesson on that weekday before saving and committing.
 * **`unenrol STUDENT_INDEX lid/LESSON_ID`:** `CanonicalUnenrolCommand` resolves the student and calls `PonHubData.unenrolStudent(lessonId, studentId)`. Unenrolment removes the student's `PersonId` from `Lesson.enrolledStudentIds` while leaving all `Attendance` records for that student and lesson untouched. Attempting to unenrol a student who is not currently on the roster fails with a `CommandException`.
+
+<!-- @@author ys000009 -->
+
+<figure class="dg-figure">
+<figcaption>Figure 5.4: Change membership using a displayed Student position</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Change membership using a displayed Student position; scroll horizontally on narrow screens">
+<a href="images/MembershipChanges.png"><img src="images/MembershipChanges.png" alt="The command resolves a Student from the staged people view, then adds or removes their stable roster ID. Enrolment checks overlaps; unenrolment retains attendance."></a>
+</div>
+</figure>
+
+An invalid position, non-Student, or model rejection stops staging. Successful roster changes use
+[Figure 5.2a](#save-publication-sequence). [Editable source](diagrams/MembershipChanges.puml).
+
+<!-- @@author -->
 
 ### 5.5 Searching people and lessons
 
@@ -634,6 +715,32 @@ When executing `search c/lesson d/Mon st/1600 s/Math tu/mei rm/r1 sn/a`:
 
 For bounded field lengths, an unsorted lesson search runs in `O(B + R_B + K)` time (where `B` is the candidate bucket size, `R_B` is the roster links checked for `sn/`, and `K` is the matched lessons; `sort/schedule` adds `O(K log K)`). Student and Tutor relationship searches run in `O(P + B + R_B + K)` time, and Parent relationship searches run in `O(P + B + C + E + K)` time using the parent-phone index.
 
+<!-- @@author ys000009 -->
+
+<figure class="dg-figure">
+<figcaption>Figure 5.5a: Narrow and publish an indexed Lesson search</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Narrow and publish an indexed Lesson search; scroll horizontally on narrow screens">
+<a href="images/LessonSearch.png"><img src="images/LessonSearch.png" alt="LessonQueries starts with the smallest exact-match bucket, checks every remaining condition on the same Lesson and roster, orders distinct results and selects the filtered source."></a>
+</div>
+</figure>
+
+The bucket and candidate steps correspond to the `L1`–`L4` example above. Source selection uses
+[Section 5.6](#56-retrieving-and-displaying-lesson-results).
+[Editable source](diagrams/LessonSearch.puml).
+
+<figure class="dg-figure">
+<figcaption>Figure 5.5b: Match own fields and linked records in a people search</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Match own fields and linked records in a people search; scroll horizontally on narrow screens">
+<a href="images/PeopleSearch.png"><img src="images/PeopleSearch.png" alt="PeopleView calls the static relationship helper. Own-field matches combine with Student, Tutor or Parent relationship matches, then people and context are published in creation order."></a>
+</div>
+</figure>
+
+These paths implement the same-linked-record rules above. People searches execute directly on the
+live view, without an operational write or a change to the selected right-pane query.
+[Editable source](diagrams/PeopleSearch.puml).
+
+<!-- @@author -->
+
 ### 5.6 Retrieving and displaying lesson results
 
 <a id="read-only-retrieval-api-contract"></a>
@@ -690,12 +797,43 @@ Suppose the right panel is displaying a `Math` lesson search containing `L1`, an
   * **Future-present guard:** Using the session's injected `Clock`, if a new or changed entry marks a student `present` on a date strictly after `LocalDate.now(clock)`, the command requires `ack/future`; otherwise it throws a `CommandException` before saving. Marking `absent` on a future date or repeating an already-stored future `present` entry does not require `ack/future`.
 * **Removing an entry (`unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD`):** `AttendanceUnmarkParser` parses the student index, `LessonId`, and ISO date, and `CanonicalUnmarkAttendanceCommand` calls `PonHubData.unmarkAttendance` to remove the dated `AttendanceKey` so the occurrence returns to `unrecorded`. It works for both current and former roster members; unmarking an already-unrecorded date is a no-op.
 
+<!-- @@author ys000009 -->
+
+<figure class="dg-figure">
+<figcaption>Figure 5.7: Stage a dated attendance change</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Stage a dated attendance change; scroll horizontally on narrow screens">
+<a href="images/AttendanceChanges.png"><img src="images/AttendanceChanges.png" alt="The command resolves a Student and stages a mark or unmark. Identical marks skip the future guard; an unacknowledged future present change discards its isolated candidate before saving."></a>
+</div>
+</figure>
+
+The model validates the key and membership before the future-present check. Even if that check
+rejects a staged change, live data remains intact because [Figure 5.2a](#save-publication-sequence)
+is not entered. Valid no-ops enter the executor boundary but skip saving.
+[Editable source](diagrams/AttendanceChanges.puml).
+
+<!-- @@author -->
+
 ### 5.8 Viewing lesson details and attendance history
 
 * **Lesson details (`showlesson lid/LESSON_ID [d/YYYY-MM-DD]`):** Looks up `LESSON_ID` in the full catalogue (regardless of any active lesson filter). If `d/DATE` is supplied, it must be a valid calendar date matching the lesson's weekday. `LessonListPanel` switches to a virtualised detail list with two expanded sections:
   1. **Current roster:** Lists currently enrolled students in creation order. With `d/DATE`, shows each student's status on that date (`present`, `absent`, or `unrecorded`).
   2. **Former-member attendance:** Lists retained attendance entries for unenrolled students (for that date if `d/DATE` is given, or across all dates newest-first if undated) so historical records remain visible and auditable.
 * **Student attendance history (`history STUDENT_INDEX [lid/LESSON_ID] [d/YYYY-MM-DD] [s/present|absent]`):** Resolves `STUDENT_INDEX` once to a stable student `PersonId` and switches the right pane to `HistoryListPanel` (rendering each entry in an `AttendanceHistoryCard`). Each card shows the date, lesson details, recorded status (`present` or `absent`), and a separate **Enrolment Status:** badge (`currently enrolled` or `not currently enrolled`) reflecting current roster membership.
+
+<!-- @@author ys000009 -->
+
+<figure class="dg-figure">
+<figcaption>Figure 5.8: Select Lesson details or Student attendance history</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Select Lesson details or Student attendance history; scroll horizontally on narrow screens">
+<a href="images/AttendanceViews.png"><img src="images/AttendanceViews.png" alt="Details validate the full-catalogue Lesson and date before selecting current and former-member records. History resolves a stable Student ID, filters a query and activates the history pane."></a>
+</div>
+</figure>
+
+The alternatives select the views above. `MainWindow` binds pane visibility to history activation and
+each panel to its stable displayed list. Validation errors preserve the previous selection.
+[Editable source](diagrams/AttendanceViews.puml).
+
+<!-- @@author -->
 
 ### 5.9 Deleting people and lessons safely
 
@@ -706,6 +844,21 @@ Suppose the right panel is displaying a `Math` lesson search containing `L1`, an
   2. If eligible, the session stores the immutable target record as a pending confirmation and prompts the user with the person's name and stable ID without saving operational data or changing views.
   3. Running `delete confirm` re-validates the target in a normal staged transaction via `CanonicalDeleteCommand`, saves the updated snapshot, and removes the person. Any other command (including `delete cancel`, `help`, `list`, or an invalid command), a save failure, or an app restart clears the pending confirmation immediately.
 * **Lesson deletion (`deletelesson lid/LESSON_ID`):** `CanonicalDeleteLessonCommand` checks that the lesson exists, has an empty roster (`enrolledStudentIds.isEmpty()`), and has no retained attendance entries before removing it from `PonHubData`, saving, and committing.
+
+<!-- @@author ys000009 -->
+
+<figure class="dg-figure">
+<figcaption>Figure 5.9: Preview, confirm, cancel, or reject a deletion</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Preview, confirm, cancel, or reject a deletion; scroll horizontally on narrow screens">
+<a href="images/GuardedDeletion.png"><img src="images/GuardedDeletion.png" alt="Person deletion checks a disposable snapshot and stores an eligible target. Confirmation consumes and revalidates it; other submissions clear it. Lesson deletion separately checks roster and history dependencies."></a>
+</div>
+</figure>
+
+The alternatives show separate command submissions, following steps 1–3 above. The disposable check
+does not delete live records. Model-object lifelines continue after a business record is removed.
+[Editable source](diagrams/GuardedDeletion.puml).
+
+<!-- @@author -->
 
 ### 5.10 Window layout, panels, and navigation
 
@@ -728,6 +881,21 @@ The window enforces a minimum size of `450 × 360` logical pixels where the scre
 * **Overflowing headings:** Long search/filter headings become keyboard-focusable only when their text overflows, allowing users to scroll them with Arrow keys, Page Up/Down, and Home/End.
 * **Viewing shortcut buttons:** **All lessons**, **Student lessons**, and **Attendance history** dispatch `lessons`, `lessons CURRENT_INDEX`, and `history CURRENT_INDEX` through `Logic.execute` while preserving any unfinished command draft and selection. Active button indicators follow `LessonRetrieval.ResultKind` and `historyViewActiveProperty()`.
 
+<!-- @@author ys000009 -->
+
+<figure class="dg-figure">
+<figcaption>Figure 5.10: Place the window and route a Student viewing shortcut</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Place the window and route a Student viewing shortcut; scroll horizontally on narrow screens">
+<a href="images/WindowNavigation.png"><img src="images/WindowNavigation.png" alt="The window fits saved bounds, builds the panels and command entry, then maps a selected stable Student ID to its current displayed position for a viewing command."></a>
+</div>
+</figure>
+
+The first interaction follows startup placement; the second follows a later viewing-button action.
+The layout/copy-button details above complement this flow; the [UI class diagram](#ui-component)
+shows its structure. [Editable source](diagrams/WindowNavigation.puml).
+
+<!-- @@author -->
+
 ### 5.11 Keyboard input, completion, and recall
 
 <a id="command-completion-design"></a>
@@ -740,6 +908,28 @@ The window enforces a minimum size of `450 × 360` logical pixels where the scre
 2. **In-memory command recall:** `CommandBox` retains up to 50 non-blank submitted commands (including failed commands) for the current window session. Pressing `Up` saves the current unfinished draft, caret, and selection and steps backward through prior submissions; pressing `Down` steps forward and restores the saved draft when passing the newest entry. Closing the window clears this history.
 3. **Raw control-character protection:** A `TextFormatter` on the command field inspects every text replacement (including clipboard paste shortcuts and context-menu paste) before JavaFX can silently strip newline or control characters. Any replacement containing ISO control characters or Unicode line/paragraph separators is rejected in full, and `Enter` remains blocked until the user edits the text.
 
+<!-- @@author ys000009 -->
+
+<figure class="dg-figure">
+<figcaption>Figure 5.11a: Complete a command word or retain focus traversal</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Complete a command word or retain focus traversal; scroll horizontally on narrow screens">
+<a href="images/CommandCompletion.png"><img src="images/CommandCompletion.png" alt="Eligible Tab events request the next command-word match, update text and caret and consume the event. Other paths retain normal traversal, and external changes reset the cycle."></a>
+</div>
+</figure>
+
+<figure class="dg-figure">
+<figcaption>Figure 5.11b: Protect raw input, recall a draft, and submit a command</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Protect raw input, recall a draft, and submit a command; scroll horizontally on narrow screens">
+<a href="images/CommandRecallInput.png"><img src="images/CommandRecallInput.png" alt="The formatter rejects an entire unsafe replacement. Recall restores text, anchor and caret; Enter blocks rejected input until an edit, and valid submissions enter bounded session history."></a>
+</div>
+</figure>
+
+The labelled interactions correspond to input aids 1–3 above; they are separate user events in one
+window session. [Completion source](diagrams/CommandCompletion.puml) ·
+[Recall/input source](diagrams/CommandRecallInput.puml).
+
+<!-- @@author -->
+
 ### 5.12 Inline help and user feedback
 
 `CanonicalCommandCatalog` generates inline help directly from `CanonicalCommandDefinition` metadata:
@@ -747,6 +937,21 @@ The window enforces a minimum size of `450 × 360` logical pixels where the scre
 * Running `help` lists a concise summary of every currently available command and prompts the user to run `help COMMAND` for detailed syntax and copy-pasteable examples.
 * Running `help COMMAND` (case-insensitive, such as `help addlesson`) displays that command's usage and examples inside `ResultDisplay` and scrolls the feedback area to the top.
 * Pressing `F1` or choosing **Help** from the menu bar dispatches `help` through `MainWindow` while preserving the user's unfinished command draft and selected person card. No separate pop-up help window is opened.
+
+<!-- @@author ys000009 -->
+
+<figure class="dg-figure">
+<figcaption>Figure 5.12: Generate inline help through the command catalogue</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Generate inline help through the command catalogue; scroll horizontally on narrow screens">
+<a href="images/InlineHelp.png"><img src="images/InlineHelp.png" alt="Typed help, F1 and the menu reach the session through Logic. The catalogue supplies an overview or topic usage, then MainWindow restores selection and updates scrolling feedback."></a>
+</div>
+</figure>
+
+This maps the help entry points above onto the shared feedback path. F1/menu invocation leaves the
+command draft intact; typed submission follows ordinary CommandBox success/failure behavior
+in Figure 5.11b. [Editable source](diagrams/InlineHelp.puml).
+
+<!-- @@author -->
 
 ---
 
