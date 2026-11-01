@@ -9,10 +9,17 @@ layout: default
 
   <div class="post-content">
     {{ content }}
+    {% if page.command_lists %}
+      {% include command-list-panels.html %}
+    {% endif %}
   </div>
 
 </article>
 
 {% if page.expandable_toc %}
 <script src="{{ '/assets/js/expandable-toc.js' | relative_url }}" defer></script>
+{% endif %}
+
+{% if page.command_lists %}
+<script src="{{ '/assets/js/command-lists.js' | relative_url }}" defer></script>
 {% endif %}

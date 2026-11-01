@@ -1,0 +1,2 @@
+{%- assign command_group = site.data.command_lists[include.key] -%}
+<a class="command-list-trigger" data-command-list="{{ include.key | escape }}" href="#command-list-{{ include.key | escape }}">{{ include.label | default: command_group.title | escape }}<span aria-hidden="true"> ⓘ</span></a>

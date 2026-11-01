@@ -2,6 +2,7 @@
 layout: page
 title: Developer Guide
 expandable_toc: true
+command_lists: [operational-mutations, student-position-examples]
 ---
 
 * Table of Contents
@@ -244,7 +245,8 @@ The UI component depends on `Logic` to execute commands and observe read-only li
 
 * **Catalogue and routing:** [`CanonicalCommandDefinition`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandDefinition.java) and [`CanonicalCommandCatalog`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandCatalog.java) declare every supported command word, its inline help text, and whether it is allowed during protected startup.
 * **Parsers:** Feature-specific parsers (`RoleAwareAddParser`, `PersonEditParser`, `AddLessonParser`, `LessonEditParser`, `SearchCriteriaParser`, etc.) validate raw command arguments and build typed input records without mutating state or using the retired AB3 parser hierarchy.
-* **Transactional execution vs. direct people search:** Operational mutations (`add`, `edit`, `delete confirm`, `addlesson`, `editlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`, `unmark`) and `list` run through `CanonicalCommandExecutor`, which starts a `CanonicalTransaction` via `PeopleView.beginTransaction()`, executes a `StagedCommand` against the isolated candidate model, writes the snapshot to storage if operational data changed, and calls `commit()`. By contrast, people-category `search` (`c/student|parent|tutor`) calls `new CanonicalSearchCommand(criteria).execute(data, view)` directly in `CanonicalPeopleSession.execute()`, updating the live `PeopleView` search criteria without `CanonicalCommandExecutor`, `beginTransaction()`, or `commit()`.
+* **Transactional execution:** {% include command-list.html key="operational-mutations" label="Operational mutations" %} and `list` run through `CanonicalCommandExecutor`, which starts a `CanonicalTransaction` via `PeopleView.beginTransaction()`, executes a `StagedCommand` against the isolated candidate model, writes the snapshot to storage if operational data changed, and calls `commit()`.
+* **Direct people search:** People-category `search` (`c/student|parent|tutor`) calls `new CanonicalSearchCommand(criteria).execute(data, view)` directly in `CanonicalPeopleSession.execute()`, updating the live `PeopleView` search criteria without `CanonicalCommandExecutor`, `beginTransaction()`, or `commit()`.
 * **Read-only retrieval:** [`LessonRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/LessonRetrieval.java) and [`AttendanceRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/AttendanceRetrieval.java) coordinate right-pane queries over [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQueries.java) without staging a model copy or touching disk.
 
 ### 3.4 Model component
@@ -421,7 +423,7 @@ PonHub distinguishes between two ways of referring to records:
 * **Displayed people position (`INDEX` / `STUDENT_INDEX`):** A 1-based integer position in the **currently displayed people list** (`PeopleView.getPeople()`). Filtering by role (`list r/student`) or running a people `search` changes which person sits at position `1`. For example, if the current list displays `[S4, S9]`, running `edit 2 ...` or `enrol 2 lid/L1` targets `S9`, never `S2`.
 * **Stable ID (`S1`, `T1`, `P1`, `L1`):** A permanent identifier assigned when a record is created. Stable IDs never change across filtering, editing, or application restarts. Existing lessons are always selected by stable ID (`lid/L1`), and all internal references (lesson tutors, rosters, attendance keys, UI selection tracking) store stable IDs.
 
-Commands that accept a person position resolve it once through `PersonIndexResolver` against the current people view, verify the person's role if required (for example, `enrol`, `mark`, `lessons`, and `history` require a `Student`), and use the resolved `PersonId` for the rest of the transaction. Row numbers in lesson, roster, or attendance-history panels are never used as person command indices.
+Commands that accept a person position resolve it once through `PersonIndexResolver` against the current people view, verify the person's role if required, and use the resolved `PersonId` for the rest of the operation. See the {% include command-list.html key="student-position-examples" label="Student-only command examples" %}. Row numbers in lesson, roster, or attendance-history panels are never used as person command indices.
 
 ### 4.6 Validation, references, and deletion rules
 
@@ -811,7 +813,7 @@ Key schema rules enforced by `JsonPonHubDataCodec`:
 <a id="canonical-transaction-boundary-82"></a>
 <a id="example-candidate-saved-file-and-live-state"></a>
 
-Operational mutations (`add`, `edit`, `delete confirm`, `addlesson`, `editlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`, `unmark`) and `list` run through `CanonicalCommandExecutor` using a strict four-step transaction boundary (by contrast, people-category `search` calls `new CanonicalSearchCommand(criteria).execute(data, view)` directly in `CanonicalPeopleSession.execute()` to update the live `PeopleView` search criteria without `CanonicalCommandExecutor`, `beginTransaction()`, or `commit()`, and right-pane queries run directly through `LessonRetrieval` / `AttendanceRetrieval`):
+{% include command-list.html key="operational-mutations" label="Operational mutations" %} and `list` run through `CanonicalCommandExecutor` using the four-step transaction boundary below. People-category `search` instead calls `new CanonicalSearchCommand(criteria).execute(data, view)` directly in `CanonicalPeopleSession.execute()` to update live search criteria without `CanonicalCommandExecutor`, `beginTransaction()`, or `commit()`. Right-pane queries run directly through `LessonRetrieval` / `AttendanceRetrieval`.
 
 **Prepare candidate in isolation → Save complete snapshot → Commit to live model → Return feedback**
 
