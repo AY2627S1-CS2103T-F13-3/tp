@@ -209,9 +209,9 @@ Parsing errors and domain rule violations stop before step 3. Valid commands tha
 
 [`UiManager`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/UiManager.java) instantiates [`MainWindow`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/MainWindow.java), which assembles the people panel, lesson and history panels, viewing buttons, result display, command box, and status bar. Every UI controller inherits from the abstract `UiPart` class, which handles loading FXML files. To keep the diagram readable, FXML node fields, JavaFX scene-graph containment, and small layout helpers are omitted.
 
-In the class diagram, solid arrows indicate stored object references, dashed arrows indicate creation or usage dependencies, and hollow triangles show inheritance or interface implementation. List cells inside `PersonListPanel`, `LessonListPanel`, and `HistoryListPanel` create and recycle card controllers (`PersonCard`, `LessonCard`, `HistoryCard`) on demand through JavaFX list virtualisation rather than holding a permanent controller per record.
+In the class diagram, solid arrows indicate stored object references, dashed arrows indicate creation or usage dependencies, and hollow triangles show inheritance or interface implementation. List cells inside `PersonRecordListPanel`, `LessonListPanel`, and `HistoryListPanel` create and recycle card controllers (`PersonRecordCard`, `LessonCard`, `AttendanceHistoryCard`) on demand through JavaFX list virtualisation rather than holding a permanent controller per record.
 
-The UI component depends on `Logic` to execute commands and observe read-only lists (`getFilteredPersonList()`, `getDisplayedLessons()`, `getDisplayedHistory()`) and mode properties, and depends on `Model` view types (`PersonRecordCardData`, `LessonView`, `AttendanceHistoryEntry`) to render cards.
+The UI component depends on `Logic` to execute commands and observe read-only lists (`getPersonRecords()`, `getDisplayedLessons()`, `getDisplayedHistory()`) and mode properties. It renders `Model` records (`PersonRecord` adapted through `ponhub.ui.PersonRecordCardData`) and `Model` query view types (`LessonView`, `AttendanceHistoryEntry`) in its cards.
 
 ### 3.3 Logic component
 
@@ -225,7 +225,7 @@ The UI component depends on `Logic` to execute commands and observe read-only li
 
 * **Catalogue and routing:** [`CanonicalCommandDefinition`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandDefinition.java) and [`CanonicalCommandCatalog`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandCatalog.java) declare every supported command word, its inline help text, and whether it is allowed during protected startup.
 * **Parsers:** Feature-specific parsers (`RoleAwareAddParser`, `PersonEditParser`, `AddLessonParser`, `LessonEditParser`, `SearchCriteriaParser`, etc.) validate raw command arguments and build typed input records without mutating state or using the retired AB3 parser hierarchy.
-* **Transactional execution:** For commands that change state or people filters, `CanonicalCommandExecutor` starts a `CanonicalTransaction` via `PeopleView.beginTransaction()`, executes a `StagedCommand` against the isolated candidate model, writes the snapshot to storage if operational data changed, and calls `commit()`.
+* **Transactional execution vs. direct people search:** Operational mutations (`add`, `edit`, `delete confirm`, `addlesson`, `editlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`, `unmark`) and `list` run through `CanonicalCommandExecutor`, which starts a `CanonicalTransaction` via `PeopleView.beginTransaction()`, executes a `StagedCommand` against the isolated candidate model, writes the snapshot to storage if operational data changed, and calls `commit()`. By contrast, people-category `search` (`c/student|parent|tutor`) calls `new CanonicalSearchCommand(criteria).execute(data, view)` directly in `CanonicalPeopleSession.execute()`, updating the live `PeopleView` search criteria without `CanonicalCommandExecutor`, `beginTransaction()`, or `commit()`.
 * **Read-only retrieval:** [`LessonRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/LessonRetrieval.java) and [`AttendanceRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/AttendanceRetrieval.java) coordinate right-pane queries over [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQueries.java) without staging a model copy or touching disk.
 
 ### 3.4 Model component
@@ -240,7 +240,7 @@ The `Model` component is independent of `UI`, `Logic`, and `Storage` (relying on
 
 1. `PeopleRegistryState`: the ordered list of `PersonRecord` objects (`Student`, `Tutor`, `Parent`) and the three per-role ID allocation counters.
 2. Ordered `Lesson` records and `lastAllocatedLessonSequence`.
-3. Ordered `Attendance` entries mapping an `AttendanceKey` (`StudentId`, `LessonId`, `LocalDate`) to an `AttendanceStatus`.
+3. Ordered `Attendance` entries mapping an `AttendanceKey` (`studentId` as a student-role `PersonId`, `LessonId`, `LocalDate`) to an `AttendanceStatus`.
 
 Because `PersonRecord`, `Lesson`, `Attendance`, and `PonHubDataState` are all deeply immutable, snapshots can safely share unchanged record instances across transactions without any risk of one view mutating another's data. `PeopleView` wraps `PonHubData` to maintain the active role filter or people search criteria and expose the observable people list, while `LessonQueries` listens to `PonHubData.stateProperty()` to maintain in-memory lookup indexes and read-only lesson/history projections.
 
@@ -305,10 +305,10 @@ PonHub enforces a single set of domain rules across typed commands, JSON loading
 
 | Domain concept | Canonical representation |
 | --- | --- |
-| People | Immutable `Student`, `Tutor`, and `Parent` records implementing `PersonRecord` inside `PeopleRegistry`. |
-| Lesson | A shared weekly teaching slot (`Lesson`) with a `LessonId`, `tutorId`, `LessonDay`, `LessonTimeSlot`, `Subject`, `Room`, and roster of enrolled `StudentId`s. |
-| Enrolment | Stored solely in `Lesson.enrolledStudentIds`. Students do not hold their own copies of lessons. |
-| Attendance | Separate `Attendance` records keyed by `StudentId` + `LessonId` + `LocalDate`, with status `present` or `absent`. |
+| People | Immutable `Student`, `Tutor`, and `Parent` records implementing `PersonRecord` inside `PeopleRegistry`, each identified by a role-checked `PersonId`. |
+| Lesson | A shared weekly teaching slot (`Lesson`) with a `LessonId`, `tutorId` (`PersonId` with `PersonRole.TUTOR`), `LessonDay`, `LessonTimeSlot`, `Subject`, `Room`, and roster (`Set<PersonId>` of `PersonRole.STUDENT` IDs). |
+| Enrolment | Stored solely in `Lesson.enrolledStudentIds` (`Set<PersonId>`). Students do not hold their own copies of lessons. |
+| Attendance | Separate `Attendance` records keyed by `AttendanceKey` (student-role `PersonId`, `LessonId`, `LocalDate`), with status `present` or `absent`. |
 | Parent–student link | Derived dynamically whenever a `Parent`'s own phone exactly equals a `Student`'s `parentPhone` (including leading zeros). |
 | Displayed views | Read-only projections derived from canonical state, never edited directly as separate stores. |
 
@@ -367,9 +367,9 @@ Two different lessons on the same weekday cannot overlap if they share the same 
 
 [![Lesson identity and values](images/LessonValuesClassDiagram.png)](images/LessonValuesClassDiagram.png)
 
-A `Lesson` owns an unmodifiable list of `enrolledStudentIds`. An empty roster is valid so administrators can set up a timetable before enrolling students.
+A `Lesson` owns an unmodifiable `Set<PersonId>` (`enrolledStudentIds`), copied into a `LinkedHashSet` and exposed through `Collections.unmodifiableSet`. Both `tutorId` and every entry in `enrolledStudentIds` use `PersonId` with explicit role checks (`PersonRole.TUTOR` for `tutorId` and `PersonRole.STUDENT` for roster members; there are no separate `StudentId` or `TutorId` classes). An empty roster is valid so administrators can set up a timetable before enrolling students.
 
-* **Shared membership:** Enrolling a second student into `L1` appends their `StudentId` to `L1`'s roster without creating a duplicate lesson or re-checking `L1`'s own tutor and room against itself.
+* **Shared membership:** Enrolling a second student into `L1` adds their student-role `PersonId` to `L1`'s `enrolledStudentIds` set without creating a duplicate lesson or re-checking `L1`'s own tutor and room against itself.
 * **Student clash protection:** Before adding a student to a lesson, `PonHubData` verifies that the student is not already enrolled in `L1` and is not enrolled in another lesson whose weekday and `[start, end)` time slot overlap `L1`.
 * **Roster ordering:** `LessonQueries` presents a lesson's enrolled students in global people creation order.
 
@@ -379,9 +379,9 @@ A `Lesson` owns an unmodifiable list of `enrolledStudentIds`. An empty roster is
 
 [![Attendance key and status](images/AttendanceValuesClassDiagram.png)](images/AttendanceValuesClassDiagram.png)
 
-`Attendance` records are stored in `PonHubDataState` separately from lesson rosters. Each record maps an `AttendanceKey` (`StudentId`, `LessonId`, `LocalDate`) to an `AttendanceStatus` (`PRESENT` or `ABSENT`).
+`Attendance` records are stored in `PonHubDataState` separately from lesson rosters. Each record maps an `AttendanceKey` (`studentId` as a `PersonId` with `PersonRole.STUDENT`, `LessonId`, `LocalDate`) to an `AttendanceStatus` (`PRESENT` or `ABSENT`).
 
-* **Unrecorded vs. recorded:** The model stores at most one entry per `(StudentId, LessonId, LocalDate)`. If no entry exists for a date, that lesson occurrence is **unrecorded**, not absent.
+* **Unrecorded vs. recorded:** The model stores at most one entry per `(studentId, lessonId, date)` `AttendanceKey`. If no entry exists for a date, that lesson occurrence is **unrecorded**, not absent.
 * **Enrolment vs. retained history:** Creating a *new* attendance key requires the student to be currently enrolled in that lesson, and the date must be a valid calendar date (`YYYY-MM-DD`, years `0001`–`9999`) falling on the lesson's weekday. Once recorded, the attendance entry persists independently of roster membership:
 
 [![Changes to a lesson roster and dated attendance](images/LessonAttendanceStateDiagram.png)](images/LessonAttendanceStateDiagram.png)
@@ -399,7 +399,7 @@ For example, suppose Monday lesson `L1` has Alex (`S1`) and Jamie (`S2`) enrolle
 
 PonHub distinguishes between two ways of referring to records:
 
-* **Displayed people position (`INDEX` / `STUDENT_INDEX`):** A 1-based integer position in the **currently displayed people list** (`PeopleView.getDisplayedPeople()`). Filtering by role (`list r/student`) or running a people `search` changes which person sits at position `1`. For example, if the current list displays `[S4, S9]`, running `edit 2 ...` or `enrol 2 lid/L1` targets `S9`, never `S2`.
+* **Displayed people position (`INDEX` / `STUDENT_INDEX`):** A 1-based integer position in the **currently displayed people list** (`PeopleView.getPeople()`). Filtering by role (`list r/student`) or running a people `search` changes which person sits at position `1`. For example, if the current list displays `[S4, S9]`, running `edit 2 ...` or `enrol 2 lid/L1` targets `S9`, never `S2`.
 * **Stable ID (`S1`, `T1`, `P1`, `L1`):** A permanent identifier assigned when a record is created. Stable IDs never change across filtering, editing, or application restarts. Existing lessons are always selected by stable ID (`lid/L1`), and all internal references (lesson tutors, rosters, attendance keys, UI selection tracking) store stable IDs.
 
 Commands that accept a person position resolve it once through `PersonIndexResolver` against the current people view, verify the person's role if required (for example, `enrol`, `mark`, `lessons`, and `history` require a `Student`), and use the resolved `PersonId` for the rest of the transaction. Row numbers in lesson, roster, or attendance-history panels are never used as person command indices.
@@ -408,16 +408,16 @@ Commands that accept a person position resolve it once through `PersonIndexResol
 
 Every snapshot enforces referential integrity across all records:
 
-* Every `Lesson.tutorId` must reference an existing `Tutor` in `PeopleRegistry`.
-* Every ID in `Lesson.enrolledStudentIds` must reference an existing `Student`, with no duplicate IDs in the same roster.
-* Every `AttendanceKey` must reference an existing `Student` and `Lesson`, and its `LocalDate` must match the lesson's current `LessonDay`.
+* Every `Lesson.tutorId` (`PersonId` with `PersonRole.TUTOR`) must reference an existing `Tutor` in `PeopleRegistry`.
+* Every `PersonId` in `Lesson.enrolledStudentIds` (`Set<PersonId>` with `PersonRole.STUDENT`) must reference an existing `Student`, with no duplicate IDs in the same roster.
+* Every `AttendanceKey` must reference an existing `Student` (`studentId` `PersonId`) and `Lesson` (`lessonId` `LessonId`), and its `LocalDate` must match the lesson's current `LessonDay`.
 
 To preserve these links, PonHub never cascades deletions automatically. Instead, deletion is blocked whenever another record still depends on the target:
 
 | Target record | When deletion is blocked |
 | --- | --- |
-| `Student` | The student is currently enrolled in any lesson roster, or any retained `Attendance` entry still references their `StudentId`. |
-| `Tutor` | Any `Lesson` still references their `TutorId`, even if that lesson's roster is empty. |
+| `Student` | The student is currently enrolled in any lesson roster, or any retained `Attendance` entry still references their `PersonId`. |
+| `Tutor` | Any `Lesson` still references their `PersonId` as `tutorId`, even if that lesson's roster is empty. |
 | `Lesson` | Its `enrolledStudentIds` roster is non-empty, or any retained `Attendance` entry still references its `LessonId`. |
 | `Parent` | Never blocked by lessons or attendance. Deleting a `Parent` leaves students' `parentPhone` strings unchanged (removing only the derived parent link). |
 
@@ -431,7 +431,7 @@ To preserve these links, PonHub never cascades deletions automatically. Instead,
 
 * **ID counters and non-reuse:** Person IDs use three independent positive `long` sequences (`STUDENT`, `TUTOR`, `PARENT`), and lessons use `lastAllocatedLessonSequence`. Counters record the highest sequence ever committed, including deleted records, so **committed IDs are never reused**. A counter value of `0` means no IDs of that type have been allocated yet; `Long.MAX_VALUE` indicates sequence exhaustion. Discarding an uncommitted staged candidate restores the previous counter.
 * **No artificial record-count caps:** PonHub enforces no fixed class-size limit or total-record cap in the model; physical classroom limits remain an administrative decision.
-* **Validation complexity:** People registry validation uses hash sets over IDs and normalized identity keys, running in `O(P)` expected time and space for `P` people. Schedule clash validation indexes bookings by weekday and resource (`TutorId`, normalized `Room`, and `StudentId`) in start-time order (`TreeMap`), validating `L` lessons and `E` total enrolments in `O((L + E) log L)` time and `O(L + E)` space while reporting the earliest conflicting lesson in creation order.
+* **Validation complexity:** People registry validation uses hash sets over IDs and normalized identity keys, running in `O(P)` expected time and space for `P` people. Schedule clash validation indexes bookings by weekday and resource (tutor `PersonId`, normalized `Room`, and enrolled student `PersonId`) in start-time order (`TreeMap`), validating `L` lessons and `E` total enrolments in `O((L + E) log L)` time and `O(L + E)` space while reporting the earliest conflicting lesson in creation order.
 
 ---
 
@@ -474,7 +474,7 @@ edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [l/LEVEL] [pp/PARENT_PHONE]
 
 * **Keep, set, or clear fields:** `PersonEditInput` models each field as `Field.keep()`, `Field.set(value)`, or `Field.clear()`. At least one prefix must be supplied. Omitted prefixes keep their existing value. Supplying an empty value clears optional fields (`e/`, `a/`, and a student's own `p/`), but is rejected for required fields (`n/`, `l/`, `pp/`, and a tutor's or parent's `p/`) or student-only fields (`l/`, `pp/`) on a tutor or parent.
 * **Validation and no-op detection:** `PersonEditCandidate.prepare(source, targetId, input)` constructs the replacement `PersonRecord` and calls `PonHubData.replacePerson` on a staged copy. It checks duplicate identity against all other people (using sigma-folded normalized keys whenever the business key changes). If every stored field (including display case) is identical to the existing record—for example, `edit 1 n/Alex  Tan` when the stored name is `Alex Tan`—the candidate is marked unchanged (`isChanged() == false`) and skips saving. Changing display case (`edit 1 n/ALEX TAN`) is a real change and is saved.
-* **Parent–student link notifications:** Changing a `Parent`'s own phone or a `Student`'s `parentPhone` updates derived parent–student links automatically without modifying any other person's record. `CanonicalEditCommand` compares the linked `(ParentId, StudentId)` pairs before and after the edit and appends a warning to the success message listing any links that were disconnected.
+* **Parent–student link notifications:** Changing a `Parent`'s own phone or a `Student`'s `parentPhone` updates derived parent–student links automatically without modifying any other person's record. `CanonicalEditCommand` compares the linked `(parentId, studentId)` `PersonId` pairs before and after the edit and appends a warning to the success message listing any links that were disconnected.
 
 <!-- @@author ErnestChuaa -->
 
@@ -518,7 +518,7 @@ editlesson lid/LESSON_ID [d/DAY] [st/HHMM] [et/HHMM] [s/SUBJECT] [tu/TUTOR_NAME 
 ### 5.4 Enrolling and unenrolling students
 
 * **`enrol STUDENT_INDEX lid/LESSON_ID`:** `LessonMembershipParser` parses the 1-based student index and target `LessonId`. Inside the staged transaction, `CanonicalEnrolCommand` resolves `STUDENT_INDEX` in the current people view (rejecting Tutors or Parents), verifies that the lesson exists, and calls `PonHubData.enrolStudent(lessonId, studentId)`. The model checks that the student is not already enrolled and has no overlapping lesson on that weekday before saving and committing.
-* **`unenrol STUDENT_INDEX lid/LESSON_ID`:** `CanonicalUnenrolCommand` resolves the student and calls `PonHubData.unenrolStudent(lessonId, studentId)`. Unenrolment removes the `StudentId` from `Lesson.enrolledStudentIds` while leaving all `Attendance` records for that student and lesson untouched. Attempting to unenrol a student who is not currently on the roster fails with a `CommandException`.
+* **`unenrol STUDENT_INDEX lid/LESSON_ID`:** `CanonicalUnenrolCommand` resolves the student and calls `PonHubData.unenrolStudent(lessonId, studentId)`. Unenrolment removes the student's `PersonId` from `Lesson.enrolledStudentIds` while leaving all `Attendance` records for that student and lesson untouched. Attempting to unenrol a student who is not currently on the roster fails with a `CommandException`.
 
 ### 5.5 Searching people and lessons
 
@@ -599,7 +599,7 @@ For bounded field lengths, an unsorted lesson search runs in `O(B + R_B + K)` ti
 | Query view | Default ordering and contents |
 | --- | --- |
 | Full lesson catalogue (`lessons`) | All lessons in creation order, including empty rosters. |
-| Student lessons (`lessons INDEX`) | Lessons whose current roster contains the resolved `StudentId`. |
+| Student lessons (`lessons INDEX`) | Lessons whose current roster contains the resolved student's `PersonId`. |
 | Lesson search (`search c/lesson ...`) | Matching lessons in creation order (or `Mon`–`Sun`, start time, numeric `LessonId` when `sort/schedule` is used). |
 | Lesson roster (`showlesson`) | Currently enrolled students in people creation order, followed by former members' attendance newest-first. |
 | Tutor schedule | Assigned lessons ordered by weekday, start time, and numeric `LessonId`. |
@@ -609,7 +609,7 @@ For bounded field lengths, an unsorted lesson search runs in `O(B + R_B + K)` ti
 
 [![Lesson retrieval and displayed-result ownership](images/LessonRetrieval.png)](images/LessonRetrieval.png)
 
-`LessonRetrieval` owns a single observable `displayedLessons` list that the UI binds to once. Switching between `lessons`, `lessons INDEX`, `search c/lesson`, and `showlesson` rebinds `LessonRetrieval` to the chosen query projection without modifying the left-hand `PeopleView`. Conversely, running `list` or `search c/student` updates the people panel without retargeting the right-hand lesson or history panel (which retains the resolved stable `StudentId` or `LessonId`).
+`LessonRetrieval` owns a single observable `displayedLessons` list that the UI binds to once. Switching between `lessons`, `lessons INDEX`, `search c/lesson`, and `showlesson` rebinds `LessonRetrieval` to the chosen query projection without modifying the left-hand `PeopleView`. Conversely, running `list` or `search c/student` updates the people panel without retargeting the right-hand lesson or history panel (which retains the resolved stable student `PersonId` or `LessonId`).
 
 #### Refreshing subscribed views only after commit
 
@@ -628,18 +628,18 @@ Suppose the right panel is displaying a `Math` lesson search containing `L1`, an
 
 <a id="dated-attendance-records"></a>
 
-* **Marking and correcting (`mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent [ack/future]`):** `AttendanceCommandParser` parses the student index, `LessonId`, ISO date, status, and optional future acknowledgement. `CanonicalMarkAttendanceCommand` resolves the student in the staged people view and calls `PonHubData.markAttendance`.
-  * If no entry exists for `(StudentId, LessonId, date)`, the student must be currently enrolled in that lesson.
+* **Marking and correcting (`mark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD s/present|absent [ack/future]`):** `AttendanceMarkParser` parses the student index, `LessonId`, ISO date, status, and optional future acknowledgement. `CanonicalMarkAttendanceCommand` resolves the student in the staged people view and calls `PonHubData.markAttendance`.
+  * If no entry exists for `(studentId, lessonId, date)`, the student must be currently enrolled in that lesson.
   * If an entry already exists—even if the student has since been unenrolled—`mark` updates its status (or treats an identical status as a no-op that skips saving).
   * **Future-present guard:** Using the session's injected `Clock`, if a new or changed entry marks a student `present` on a date strictly after `LocalDate.now(clock)`, the command requires `ack/future`; otherwise it throws a `CommandException` before saving. Marking `absent` on a future date or repeating an already-stored future `present` entry does not require `ack/future`.
-* **Removing an entry (`unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD`):** `CanonicalUnmarkAttendanceCommand` calls `PonHubData.unmarkAttendance` to remove the dated `AttendanceKey` so the occurrence returns to `unrecorded`. It works for both current and former roster members; unmarking an already-unrecorded date is a no-op.
+* **Removing an entry (`unmark STUDENT_INDEX lid/LESSON_ID d/YYYY-MM-DD`):** `AttendanceUnmarkParser` parses the student index, `LessonId`, and ISO date, and `CanonicalUnmarkAttendanceCommand` calls `PonHubData.unmarkAttendance` to remove the dated `AttendanceKey` so the occurrence returns to `unrecorded`. It works for both current and former roster members; unmarking an already-unrecorded date is a no-op.
 
 ### 5.8 Viewing lesson details and attendance history
 
 * **Lesson details (`showlesson lid/LESSON_ID [d/YYYY-MM-DD]`):** Looks up `LESSON_ID` in the full catalogue (regardless of any active lesson filter). If `d/DATE` is supplied, it must be a valid calendar date matching the lesson's weekday. `LessonListPanel` switches to a virtualised detail list with two expanded sections:
   1. **Current roster:** Lists currently enrolled students in creation order. With `d/DATE`, shows each student's status on that date (`present`, `absent`, or `unrecorded`).
   2. **Former-member attendance:** Lists retained attendance entries for unenrolled students (for that date if `d/DATE` is given, or across all dates newest-first if undated) so historical records remain visible and auditable.
-* **Student attendance history (`history STUDENT_INDEX [lid/LESSON_ID] [d/YYYY-MM-DD] [s/present|absent]`):** Resolves `STUDENT_INDEX` once to a stable `StudentId` and switches the right pane to `HistoryListPanel`. Each card shows the date, lesson details, recorded status (`present` or `absent`), and a separate **Enrolment Status:** badge (`currently enrolled` or `not currently enrolled`) reflecting current roster membership.
+* **Student attendance history (`history STUDENT_INDEX [lid/LESSON_ID] [d/YYYY-MM-DD] [s/present|absent]`):** Resolves `STUDENT_INDEX` once to a stable student `PersonId` and switches the right pane to `HistoryListPanel` (rendering each entry in an `AttendanceHistoryCard`). Each card shows the date, lesson details, recorded status (`present` or `absent`), and a separate **Enrolment Status:** badge (`currently enrolled` or `not currently enrolled`) reflecting current roster membership.
 
 ### 5.9 Deleting people and lessons safely
 
@@ -665,8 +665,8 @@ Suppose the right panel is displaying a `Math` lesson search containing `L1`, an
 #### Layout structure and cards
 
 * **Header and feedback:** A compact header holds the wordmark (which plays an optional synthesised percussion cue on primary click without stealing focus) and `File` / `Help` menus. Below it, a resizable top pane contains the right-pane viewing buttons, context headings, and `ResultDisplay` (a focusable, read-only wrapping `TextArea` with a 50-pixel minimum height).
-* **Two-column split pane:** The left column (initially 32% width) holds `PersonListPanel`; the right column holds `LessonListPanel` or `HistoryListPanel`. The `CommandBox` sits below both columns outside the split pane so moving dividers never squeezes command entry into one column.
-* **People cards and contact copying:** `PersonCard` displays the person's name, 1-based command position, stable ID, role badge, and wrapping fields (`Not provided` for absent optional contacts). Every present contact value (`phone`, `parentPhone`, `email`, `address`) includes a keyboard-focusable **Copy** button that copies the exact value (preserving leading zeros and case) to the system clipboard without altering command focus, draft text, or card selection.
+* **Two-column split pane:** The left column (initially 32% width) holds `PersonRecordListPanel`; the right column holds `LessonListPanel` or `HistoryListPanel`. The `CommandBox` sits below both columns outside the split pane so moving dividers never squeezes command entry into one column.
+* **People cards and contact copying:** `PersonRecordCard` (backed by `PersonRecordCardData` in `ponhub.ui`) displays the person's name, 1-based command position, stable ID, role badge, and wrapping fields (`Not provided` for absent optional contacts). Every present contact value (`phone`, `parentPhone`, `email`, `address`) includes a keyboard-focusable **Copy** button that copies the exact value (preserving leading zeros and case) to the system clipboard without altering command focus, draft text, or card selection.
 * **Overflowing headings:** Long search/filter headings become keyboard-focusable only when their text overflows, allowing users to scroll them with Arrow keys, Page Up/Down, and Home/End.
 * **Viewing shortcut buttons:** **All lessons**, **Student lessons**, and **Attendance history** dispatch `lessons`, `lessons CURRENT_INDEX`, and `history CURRENT_INDEX` through `Logic.execute` while preserving any unfinished command draft and selection. Active button indicators follow `LessonRetrieval.ResultKind` and `historyViewActiveProperty()`.
 
@@ -787,7 +787,7 @@ Key schema rules enforced by `JsonPonHubDataCodec`:
 <a id="canonical-transaction-boundary-82"></a>
 <a id="example-candidate-saved-file-and-live-state"></a>
 
-Every command that can modify operational records or people filters runs through `CanonicalCommandExecutor` using a strict four-step transaction boundary:
+Operational mutations (`add`, `edit`, `delete confirm`, `addlesson`, `editlesson`, `deletelesson`, `enrol`, `unenrol`, `mark`, `unmark`) and `list` run through `CanonicalCommandExecutor` using a strict four-step transaction boundary (by contrast, people-category `search` calls `new CanonicalSearchCommand(criteria).execute(data, view)` directly in `CanonicalPeopleSession.execute()` to update the live `PeopleView` search criteria without `CanonicalCommandExecutor`, `beginTransaction()`, or `commit()`, and right-pane queries run directly through `LessonRetrieval` / `AttendanceRetrieval`):
 
 **Prepare candidate in isolation → Save complete snapshot → Commit to live model → Return feedback**
 
@@ -838,7 +838,7 @@ If a second PonHub window has modified the data file in the meantime, step 2 det
 
 ### 6.5 Failed saves and preservation of live state
 
-If `SnapshotWriter` throws an `IOException` or `DataSavingException` (for example, due to OS file permissions, a read-only directory, lock contention, or a concurrent modification from another window):
+If `SnapshotWriter` throws an `IOException` (for example, due to OS file permissions, a read-only directory, lock contention, or a concurrent modification from another window):
 
 * `CanonicalCommandExecutor` catches the failure, abandons the `CanonicalTransaction` without calling `commit()`, and throws a `CommandException` explaining the failure.
 * **In-memory state is untouched:** The live `PonHubDataState`, people list, active search/role filters, selected cards, right-pane lesson/history views, and ID allocation counters all retain their pre-command values.
@@ -1153,7 +1153,7 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
 
 **MSS:**
 1. The administrator enters `enrol STUDENT_INDEX lid/LESSON_ID`.
-2. PonHub verifies the student's role and schedule, adds their `StudentId` to the lesson's roster, saves the snapshot, and refreshes any open lesson/roster views.
+2. PonHub verifies the student's role and schedule, adds their student-role `PersonId` to the lesson's `enrolledStudentIds` set, saves the snapshot, and refreshes any open lesson/roster views.
    Use case ends.
 
 **Extensions:**
@@ -1540,11 +1540,14 @@ Using the baseline fixture while Monday attendance (`2026-10-05`) is recorded on
 
 #### Guarded deletion and non-reuse of IDs (`delete`, `deletelesson`)
 
-Continuing from the baseline fixture after Step 5 (`Alex` unenrolled from `L1` and `L3`, `Jamie` still enrolled in `L1`, and both having `2026-10-05` attendance on `L1`):
+Start with a fresh copy of the [shared baseline fixture](#active-shared-lesson-and-attendance-workflow) after **Step 4** (`T1` `Mei Lim`, `T2` `Ravi Kumar`, `S1` `Alex Tan` enrolled in `L1` and `L3`, `S2` `Jamie Tan` enrolled in `L1`, and only Monday `2026-10-05` attendance recorded on `L1` for `S1` and `S2`). Run the following sequence to unenrol Alex from `L1` and `L3` first, then test person and lesson deletion guards and ID non-reuse:
 
 ```text
 list r/student
+unenrol 1 lid/L1
+unenrol 1 lid/L3
 delete 1
+unmark 1 lid/L1 d/2026-10-05
 unmark 1 lid/L1 d/2026-10-05
 delete 1
 delete confirm
@@ -1553,15 +1556,16 @@ unenrol 1 lid/L1
 deletelesson lid/L1
 unmark 1 lid/L1 d/2026-10-05
 deletelesson lid/L1
-addlesson d/Mon st/1600 et/1730 s/Math tu/Dr Mei Lim tp/92345678 rm/R1
+addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim tp/92345678 rm/R1
 ```
 
 *Expected:*
-1. The first `delete 1` (targeting Alex `S1`) is blocked by Alex's retained `2026-10-05` attendance on `L1`.
-2. After `unmark 1 lid/L1 d/2026-10-05` removes that entry, `delete 1` prompts to confirm deleting `S1`, and `delete confirm` removes `S1` (leaving Jamie `S2` at position `1` of `list r/student`).
-3. `deletelesson lid/L1` is first blocked by Jamie's enrolment on `L1`'s roster, and after `unenrol 1 lid/L1` is still blocked by Jamie's `2026-10-05` attendance entry.
-4. Once `unmark 1 lid/L1 d/2026-10-05` removes Jamie's entry, `deletelesson lid/L1` succeeds.
-5. Adding a new lesson allocates **`L4`**, never reusing deleted `L1`.
+1. `unenrol 1 lid/L1` and `unenrol 1 lid/L3` remove Alex (`S1`, position `1`) from both rosters while keeping Alex's `2026-10-05` attendance on `L1`.
+2. The first `delete 1` (targeting Alex `S1`) is blocked by Alex's retained `2026-10-05` attendance on `L1`.
+3. The first `unmark 1 lid/L1 d/2026-10-05` removes that entry (repeating it reports no change). `delete 1` then prompts to confirm deleting `S1`, and `delete confirm` removes `S1`, moving Jamie (`S2`) to position `1` of `list r/student`.
+4. `deletelesson lid/L1` is first blocked by Jamie's enrolment on `L1`'s roster, and after `unenrol 1 lid/L1` (targeting Jamie at position `1`) is still blocked by Jamie's `2026-10-05` attendance entry.
+5. Once `unmark 1 lid/L1 d/2026-10-05` removes Jamie's entry, `deletelesson lid/L1` succeeds.
+6. Adding a new lesson with `tu/Mei Lim tp/92345678` allocates **`L4`**, never reusing deleted `L1`.
 
 ### B.7 UI, keyboard, and accessibility checks
 
@@ -1667,7 +1671,7 @@ Terms are listed in alphabetical order:
 | **Application home** | The directory containing `ponhub.jar` in a packaged launch, or the working directory in a development launch. All operational data paths must stay inside it. |
 | **Archived student (proposal)** | A withdrawn student hidden from default active lists while retaining past records (proposed for future work). |
 | **Atomic live update** | Updating the in-memory model and UI views together only after the complete candidate snapshot has been saved to disk. |
-| **Attendance key** | The composite key `(StudentId, LessonId, LocalDate)` that uniquely identifies one attendance record. |
+| **Attendance key** | The composite key `AttendanceKey` (`studentId` as a student-role `PersonId`, `LessonId`, `LocalDate`) that uniquely identifies one attendance record. |
 | **Attendance record / history** | A stored `present` or `absent` entry for one student, lesson, and date; retained in history even if the student is later unenrolled from the lesson. |
 | **Canonical data** | The single authoritative set of people, lessons, rosters, attendance, and ID counters held by `PonHubData`. |
 | **Capacity (proposal)** | A maximum student count for a lesson (proposed for future work; current lessons do not enforce a numeric cap). |
@@ -1675,7 +1679,7 @@ Terms are listed in alphabetical order:
 | **Command** | A structured text instruction entered by the user (such as `add`, `editlesson`, or `mark`). |
 | **Contact details** | A person's required `Name` together with their `Phone`, `Email`, and `Address` values. |
 | **Displayed person index (`INDEX`)** | A 1-based position in the currently displayed people list. It changes when the list is filtered or searched, and is never read from lesson or history rows. |
-| **Enrolment / roster** | Current student membership in a lesson, stored as ordered `StudentId`s in `Lesson.enrolledStudentIds`. |
+| **Enrolment / roster** | Current student membership in a lesson, stored as an unmodifiable `Set<PersonId>` (backed by `LinkedHashSet`, with `PersonRole.STUDENT` checks) in `Lesson.enrolledStudentIds`. |
 | **Exact duplicate person** | A person with the same role, normalized name (with `ς`/`σ` folded), and identifying phone (`parentPhone` for students; own `Phone` for tutors and parents) as an existing record. |
 | **Human-readable data file** | A local UTF-8 JSON file (`data/ponhub.json`) that can be inspected in a text editor without a database server. |
 | **Immutable** | An object whose fields and collections cannot be modified after construction. Edits create a replacement instance. |
@@ -1692,7 +1696,7 @@ Terms are listed in alphabetical order:
 | **Projection / derived view** | A read-only list or lookup index computed from canonical data (such as `LessonQueries` results). |
 | **Protected startup** | A read-only recovery mode entered when the operational data file cannot be safely loaded; preserves the file untouched and enables only `help`, `list`, and `exit`. |
 | **Publish / commit** | Replace the live `PonHubData` state and view filters with a staged transaction's saved candidate. |
-| **Referential integrity** | The rule that every stored `TutorId`, `StudentId`, and `LessonId` reference must point to an existing record of the matching role or type. |
+| **Referential integrity** | The rule that every stored tutor `PersonId`, student `PersonId`, and `LessonId` reference must point to an existing record of the matching role or type. |
 | **Role** | `STUDENT`, `TUTOR`, or `PARENT`; determines a person's ID prefix, required fields, and allowed commands. |
 | **Rollback** | Discarding an uncommitted staged transaction (or restoring a `.bak` file on fallback move failure) so failed operations leave live state unchanged. |
 | **Root / aggregate** | `PonHubData`, the single model container owning the current `PonHubDataState` snapshot. |
