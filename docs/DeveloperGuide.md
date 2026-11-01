@@ -609,6 +609,15 @@ Empty lessons still reserve their tutor and room. Student clashes apply when the
 to overlapping rosters. Different days, adjacent slots, and overlaps with different tutors, rooms and
 students are valid.
 
+Schedule validation indexes bookings by weekday and resource (Tutor, normalized room and Student), with
+start times ordered inside each index. It processes the canonical creation order without changing the
+stored list. Previously accepted bookings are disjoint per resource, so only the predecessor and starts
+inside a candidate slot can overlap it. On rejection, the earliest previous creation position and existing
+Tutor/room/roster diagnostic precedence are retained; diagnostic strings are created only on failure.
+For `L` lessons and `E` total enrolments, validation uses `O((L + E) log L)` time and `O(L + E)` space,
+including at most one scan of actual conflicting bookings before rejection. The same checks still apply to
+loaded/restored snapshots and staged mutations; this does not add a capacity or response-time guarantee.
+
 <a id="shared-lesson-creation-command"></a>
 
 #### Creating a lesson through a command
