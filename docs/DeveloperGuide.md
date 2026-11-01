@@ -1077,6 +1077,7 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
 #### UC-01: Add a person record
 
 **Related stories:** US-01, US-02, US-03, US-14, US-15.
+
 **Preconditions:** The administrator knows the person's role (`student`, `tutor`, or `parent`) and required contact details.
 
 **MSS:**
@@ -1093,6 +1094,7 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
 #### UC-02: Edit an existing person record
 
 **Related story:** US-55.
+
 **Preconditions:** The target person is visible in the current people list, and the administrator has checked their 1-based displayed position.
 
 **MSS:**
@@ -1137,6 +1139,7 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
 #### UC-05: Create a shared recurring lesson
 
 **Related stories:** US-08, US-09.
+
 **Preconditions:** The assigned tutor already exists in PonHub.
 
 **MSS:**
@@ -1153,6 +1156,7 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
 #### UC-06: Edit an existing lesson
 
 **Related story:** US-37.
+
 **Preconditions:** The target lesson (`lid/LESSON_ID`) exists.
 
 **MSS:**
@@ -1167,6 +1171,7 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
 #### UC-07: Enrol a student in a shared lesson
 
 **Related stories:** US-18, US-20.
+
 **Preconditions:** The target Student is visible in the current people list at `STUDENT_INDEX`, and the Lesson (`lid/LESSON_ID`) exists.
 
 **MSS:**
@@ -1181,6 +1186,7 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
 #### UC-08: Unenrol a student from a shared lesson
 
 **Related story:** US-18.
+
 **Preconditions:** The target Student is visible in the current people list at `STUDENT_INDEX` and is currently enrolled in `lid/LESSON_ID`.
 
 **MSS:**
@@ -1204,6 +1210,7 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
 #### UC-10: View lesson details and dated attendance
 
 **Related stories:** US-17, US-52.
+
 **Preconditions:** The target lesson (`lid/LESSON_ID`) exists.
 
 **MSS:**
@@ -1218,6 +1225,7 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
 #### UC-11: Record or correct dated attendance
 
 **Related stories:** US-11, US-12.
+
 **Preconditions:** The target Student is visible in the current people list at `STUDENT_INDEX`, and `lid/LESSON_ID` exists.
 
 **MSS:**
@@ -1234,6 +1242,7 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
 #### UC-12: Remove a dated attendance entry
 
 **Related stories:** US-12, US-52.
+
 **Preconditions:** The target Student is visible in the current people list at `STUDENT_INDEX`, and `lid/LESSON_ID` exists.
 
 **MSS:**
@@ -1248,6 +1257,7 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
 #### UC-13: Retrieve a student's attendance history
 
 **Related story:** US-51.
+
 **Preconditions:** The target Student is visible in the current people list at `STUDENT_INDEX`.
 
 **MSS:**
