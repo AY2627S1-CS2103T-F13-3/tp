@@ -12,3 +12,7 @@ layout: default
   </div>
 
 </article>
+
+{% if page.expandable_toc %}
+<script src="{{ '/assets/js/expandable-toc.js' | relative_url }}" defer></script>
+{% endif %}

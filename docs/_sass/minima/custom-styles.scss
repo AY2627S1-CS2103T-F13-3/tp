@@ -1,5 +1,81 @@
 // Placeholder to allow defining custom styles that override everything else.
 // (Use `_sass/minima/custom-variables.scss` to override variable defaults)
+
+.guide-toc {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+
+  .toc-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .75rem;
+  }
+
+  .toc-title {
+    font-weight: bold;
+    margin-right: auto;
+  }
+
+  .toc-controls button {
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: .875rem;
+    padding: .25rem .5rem;
+    cursor: pointer;
+  }
+
+  ul, ol {
+    list-style: none;
+    margin: 0;
+  }
+
+  li {
+    position: relative;
+    padding-left: 1.6rem;
+    margin-top: .3rem;
+  }
+
+  .toc-toggle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1.4rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  button:focus-visible {
+    outline: 2px solid #a65c00;
+    outline-offset: 2px;
+  }
+}
+
+@media print {
+  .guide-toc {
+    border: 0;
+    padding: 0;
+
+    .toc-controls, .toc-toggle {
+      display: none;
+    }
+
+    .toc-children[hidden] {
+      display: block;
+    }
+  }
+}
+
 h2, h3, h4, h5, h6 {
   color: #e46c0a;
 }

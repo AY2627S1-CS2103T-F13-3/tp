@@ -1,6 +1,7 @@
 ---
 layout: page
 title: Developer Guide
+expandable_toc: true
 ---
 
 * Table of Contents
