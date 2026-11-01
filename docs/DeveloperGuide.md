@@ -616,7 +616,16 @@ For bounded field lengths, an unsorted lesson search runs in `O(B + R_B + K)` ti
 
 #### Keeping the left and right panels independent
 
-[![Lesson retrieval and displayed-result ownership](images/LessonRetrieval.png)](images/LessonRetrieval.png)
+<figure class="dg-figure">
+<figcaption>Lesson retrieval: one UI binding and switchable sources</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Lesson retrieval sequence diagram; scroll horizontally on narrow screens">
+<a href="images/LessonRetrieval.png"><img src="images/LessonRetrieval.png" alt="The UI binds to one read-only displayed list. Switching sources detaches the old listener, attaches the new listener, and refreshes that same list. Solid callback arrows notify the UI of list changes."></a>
+</div>
+</figure>
+
+The diagram retains its original label size. If it is wider than the page, focus it with Tab and
+use Left/Right to scroll, or open the image link. Solid arrows show calls and observer callbacks;
+the dashed reply returns the displayed list requested during setup.
 
 `LessonRetrieval` owns a single observable `displayedLessons` list that the UI binds to once. Switching between `lessons`, `lessons INDEX`, `search c/lesson`, and `showlesson` rebinds `LessonRetrieval` to the chosen query projection without modifying the left-hand `PeopleView`. Conversely, running `list` or `search c/student` updates the people panel without retargeting the right-hand lesson or history panel (which retains the resolved stable student `PersonId` or `LessonId`).
 
