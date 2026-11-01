@@ -12,6 +12,7 @@ public class FileUtil {
     private static final String CHARSET = "UTF-8";
 
     /**
+     * Reads and returns the UTF-8 contents of the given file.
      * Assumes file exists
      */
     public static String readFromFile(Path file) throws IOException {
