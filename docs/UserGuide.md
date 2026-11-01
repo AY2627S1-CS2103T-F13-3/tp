@@ -33,7 +33,7 @@ Follow these steps to go from download to a working PonHub window in a few minut
 
 1. **Install Java 25** on your computer.<br>
    **Mac users:** Install Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) as prescribed by the [course Mac advisory](https://nus-cs2103-ay2627-s1.github.io/website/admin/programmingLanguages.html) and [Mac installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html). Launch PonHub from a terminal that uses this installation.
-2. **Download `ponhub.jar`** from the [PonHub v1.6 release page](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.6).
+2. **Download `ponhub.jar`** from the [latest published PonHub release (v1.5)](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.5) (or the v1.6 release once published).
 3. **Place `ponhub.jar` in its own dedicated folder.** PonHub saves your data next to the JAR file, so keep this entire folder together when moving or backing up your records.
 4. **Open a terminal in that folder**, check that `java -version` reports Java `25`, and run:
    ```text
@@ -862,7 +862,7 @@ java -jar ponhub.jar --data="separate store/ponhub.json"
 For safety, PonHub rejects blank paths, paths outside the JAR folder (including via symbolic links), and reserved filenames (`preferences.json`, `ponhub.log*`, legacy `addressbook.log*`, and any name ending in `.ponhub-lock`).
 
 **Backing up your data:**
-Close PonHub first, then copy `data/ponhub.json` (or the entire JAR folder) to your backup location.
+Close PonHub first, then copy your selected operational data file (`data/ponhub.json` by default, or the custom `--data=PATH` file you selected) or the entire JAR folder to your backup location.
 
 ### If PonHub shows "Data file protected"
 
@@ -887,12 +887,12 @@ If your selected data file is unreadable, corrupted, modified with invalid JSON 
 
 ### If a save fails
 
-When a command reports a save error, the change is **not** applied to your open PonHub session—your on-screen lists and ID counters stay at their previous state. However, you should check the file on disk before continuing:
+When a command reports a save error, the change is **not** applied to your open PonHub session—your on-screen lists and ID counters stay at their previous state. However, do not assume the selected data file on disk is unchanged; check where writing failed before continuing or restarting:
 
-* If the error happened while preparing a temporary file before replacement, your previous data file on disk is still intact.
-* On file systems without atomic file replacement, PonHub first saves a `.ponhub-backup-*.bak` copy of your previous file and normally restores it automatically if writing fails.
-* **If the error message names a `.ponhub-backup-*.bak` file** (meaning automatic restoration also failed), close PonHub immediately, keep copies of both files, and copy the named backup file back to your data-file path before restarting.
-* If your **very first save** in a brand-new store fails and warns of a partial file, close PonHub and inspect or remove that partial file before retrying.
+* **Preparation or backup-creation failure:** Failures that happen while preparing the temporary file or while copying the recovery backup (`.ponhub-backup-*.bak`) occur before file replacement and leave your previous data file intact. Do not overwrite your data file with a `.ponhub-backup-*.bak` file if an error happened while creating the backup itself, as that backup copy may be incomplete.
+* **Non-atomic replacement and automatic recovery:** On a file system that does not support atomic replacement, PonHub first saves your existing complete file in a sibling `.ponhub-backup-*.bak` file and tries an ordinary replacement. If that replacement fails, PonHub normally restores the previous file automatically.
+* **When automatic recovery also fails:** Only when the save error explicitly reports `Save failed and automatic recovery failed ... Previous complete data is retained at ...` is that named `.ponhub-backup-*.bak` file guaranteed to hold your previous complete data. In that case, close PonHub immediately, keep copies of both files, and restore the backup identified by that message to the reported data-file path before continuing or restarting. Keep the backup until you have verified your records, relationships, attendance, and allocation counters.
+* **Failed first save:** A failed first save has no previous file or recovery backup; if its error warns of a partial file, close PonHub and inspect or remove the reported path before retrying.
 
 ### Using more than one window
 
@@ -927,7 +927,11 @@ If you must edit the file directly, **close PonHub and make a backup copy first*
 **A:** PonHub enforces no fixed cap on class size, lessons, people, or attendance records, and never trims or hides valid records as your file grows; all field, duplicate, clash, and ID-counter rules still apply. Note that this is a data-retention rule rather than a performance guarantee—response times depend on your computer and the mix of records stored.
 
 **Q: How do I move my data to another computer?**<br>
-**A:** Close PonHub on both computers, install Java 25 and a compatible version of PonHub on the new computer, and copy your `data` folder (or your custom `--data` file) into the new `ponhub.jar` folder. Keep your original copy as a backup until you have launched PonHub on the new computer and verified your records.
+**A:** Close PonHub on both computers. Install Java 25 and the same version of PonHub (or one that supports your data format) on the new computer, then copy your operational data file into the new `ponhub.jar` folder while preserving its relative path, or select its new location inside that folder with `--data=PATH`:
+* If you use the default location, copy the `data` folder (containing `data/ponhub.json`) and launch PonHub normally.
+* If you use a custom store (such as `separate store/ponhub.json`), preserve its relative path inside the new JAR folder and launch with the matching `--data="separate store/ponhub.json"` argument (or pass `--data=PATH` for its new relative location), because PonHub opens `data/ponhub.json` unless `--data=PATH` is supplied.
+
+Keep a backup of the original folder until you have opened PonHub on the new computer and checked your records. Moving a legacy AddressBook contact file does not migrate it automatically; follow [If PonHub shows "Data file protected"](#if-ponhub-shows-data-file-protected).
 
 **Q: When do I type a position (`1`, `2`) versus a stable ID (`S1`, `L1`)?**<br>
 **A:** Always use the current 1-based people-list position (`INDEX` or `STUDENT_INDEX`) to select a person, and always use `lid/LESSON_ID` (such as `lid/L1`) to select a lesson; see [Positions and stable IDs](#positions-and-stable-ids).
