@@ -1,0 +1,33 @@
+@startuml
+' Yang Shuo with OpenAI Codex assistance. #641; Benjamin's retrieval/views retained.
+' Trace: LessonRetrieval.show/buildDetail; AttendanceRetrieval.show/refreshDisplayed;
+' MainWindow.fillInnerParts; LessonListPanel; HistoryListPanel.
+!include feature-sequence-style.iuml
+participant "session :\nCanonicalPeopleSession" as S
+participant "lessons :\nLessonRetrieval" as L
+participant "history :\nAttendanceRetrieval" as H
+participant "window :\nMainWindow" as W
+
+alt showlesson lid/L1 [d/DATE]
+  S -> L : show(parsed input)
+  L -> L : Find L1 in full catalogue;\nvalidate optional weekday
+  L -> L : Build current roster plus\nretained former-member records
+  note over L : Missing current-roster status is unrecorded.
+  L --> S : detail view; select detail source
+  S -> H : hide()
+else history STUDENT_INDEX [filters]
+  S -> H : show(parsed input)
+  H -> H : Resolve displayed Student once;\nselect stable-ID query
+  H -> H : Rebind listener if needed;\napply date/status filters
+  H -> H : Set context and active = true
+  H --> S : newest-first recorded history
+end
+opt history active flag changed
+  H -> W : active-property listener\nand bound pane visibility update
+end
+note over L, W
+  LessonListPanel or HistoryListPanel renders results.
+  Cards distinguish recorded status from current
+  enrolment. No save; people scope stays intact.
+end note
+@enduml

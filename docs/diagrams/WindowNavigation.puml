@@ -1,0 +1,36 @@
+@startuml
+' Yang Shuo with OpenAI Codex assistance. #641; original UI authors retained.
+' Trace: MainWindow.setWindowDefaultSize/fillInnerParts/executeStudentViewingCommand;
+' WindowPlacement.fit; PersonRecordCard copy handling.
+!include feature-sequence-style.iuml
+participant "window :\nMainWindow" as W
+participant "<<class>>\nWindowPlacement" as P
+participant "peoplePanel :\nPersonRecordListPanel" as V
+participant "logic :\nLogic" as L
+
+W -> P : fit(saved settings,\nwork areas, primary area)
+P --> W : fitted bounds
+W -> W : Apply bounds/minimums;\nassemble split panes and CommandBox
+note over W
+  Command entry stays below both columns.
+  Bind result lists once; headings/feedback can scroll.
+end note
+== Student viewing shortcut ==
+W -> V : getSelectedPersonId()
+V --> W : stable selected ID, if any
+W -> L : getPersonRecords()
+L --> W : current displayed people
+alt selected record is a current Student
+  W -> L : execute(lessons INDEX\nor history INDEX)
+  L --> W : result
+  W -> V : restoreSelection(stable ID)
+  W -> W : Show feedback and update\nactive navigation indicators
+else absent or wrong-role selection
+  W -> W : Show selection guidance
+end
+note over W, L
+  Shortcuts preserve the command draft and focus.
+  Card Copy buttons copy exact contact text while
+  preserving draft, focus and person selection.
+end note
+@enduml
