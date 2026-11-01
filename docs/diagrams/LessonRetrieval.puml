@@ -1,57 +1,60 @@
 @startuml
-!pragma layout smetana
 !include style.puml
-skinparam classBackgroundColor LOGIC_COLOR
-skinparam nodesep 30
-skinparam ranksep 40
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 14
+skinparam ArrowFontStyle normal
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 280
+skinparam BoxPadding 10
+skinparam NoteBackgroundColor #FFFBE6
+skinparam NoteBorderColor #777777
+skinparam sequenceLifeLineBorderColor #999999
+skinparam sequenceParticipantBorderColor #FFFFFF
+skinparam sequenceParticipantFontColor #FFFFFF
+hide footbox
 
-package UI as UiPackage {
-    class MainWindow UI_COLOR
-    class PersonRecordListPanel UI_COLOR
-    class LessonListPanel UI_COLOR
-    class LessonCard UI_COLOR
-}
-package Logic as LogicPackage {
-    class "<<interface>>\nLogic" as LogicApi
-    class CanonicalLogicManager
-    class CanonicalPeopleSession
-    class LessonRetrieval
-    note as SelectorNote
-      <b>LessonRetrieval</b>
-      One stable read-only displayed list.
-      Context: Student / filters / Lesson and date.
-      Source: catalogue / Student / search / detail.
-      No writes; people indices stay unchanged.
-    end note
-}
-package Model as ModelPackage {
-    class PeopleView MODEL_COLOR
-    class "<<interface>>\nLessonQuerySource" as LessonQuerySource MODEL_COLOR
-    class LessonQueries MODEL_COLOR
-    class PonHubData MODEL_COLOR
-    note as PublicationNote
-      <b>PonHubData</b>
-      Lesson-owned rosters are authoritative.
-      Staged writes do not publish.
-    end note
-}
+title Lesson retrieval: one UI binding, switchable sources
 
-MainWindow --> PersonRecordListPanel
-MainWindow ..> LessonListPanel : creates
-LessonListPanel ..> LessonCard : creates
-MainWindow -down-> LogicApi
-CanonicalLogicManager ..|> LogicApi
-CanonicalLogicManager --> CanonicalPeopleSession
-CanonicalPeopleSession --> LessonRetrieval
-CanonicalPeopleSession --> LessonQuerySource
-LessonQueries ..|> LessonQuerySource
-CanonicalPeopleSession --> PeopleView
-CanonicalPeopleSession --> PonHubData
-LessonRetrieval --> PeopleView : resolves student
-LessonRetrieval --> LessonQueries : selects source
-LessonRetrieval --> PonHubData : reads detail
-LessonQueries ..> PonHubData : reads / subscribes
-PeopleView --> PonHubData
-PeopleView --> LessonQueries
+participant "UI\n(MainWindow / LessonListPanel)" as UI UI_COLOR
+participant "Displayed lessons" as Displayed LOGIC_COLOR
+participant LessonRetrieval as Retrieval LOGIC_COLOR
+participant "Previous source" as Previous MODEL_COLOR
+participant "New source" as Next MODEL_COLOR
 
+== Bind once at UI setup ==
+UI -> Retrieval : getDisplayedLessons()\n(via Logic and session)
+Retrieval --> UI : same read-only observable list
+UI -> UI : Set list items once\nand bind heading
+note over Displayed, Retrieval
+  LessonRetrieval owns the backing list and exposes
+  one stable read-only wrapper to the UI.
+end note
+
+== Choose a result source ==
+UI -> Retrieval : Request lessons, search or lesson details\n(via Logic and commands)
+Retrieval -> Retrieval : Resolve request; set heading context
+note over Retrieval, Next
+  Source: catalogue, student's lessons, search results,
+  or LessonRetrieval's own lesson-detail list.
+  Student index is resolved once to a stable ID.
+end note
+
+opt Selected source changes
+    Retrieval -> Previous : removeListener(refresh)
+    Retrieval -> Retrieval : selected = new source
+    Retrieval -> Next : addListener(refresh)
+end
+
+Retrieval -> Displayed : Refresh backing contents\nfrom selected source
+Displayed --> UI : Update existing list view
+
+== Later changes ==
+Next -> Retrieval : Selected source changes\n(refresh listener)
+Retrieval -> Displayed : Refresh backing contents
+Displayed --> UI : Update existing list view
+
+note over UI, Next
+  People-list changes do not retarget the lesson selection or heading.
+  Context retains the selected stable IDs or filters independently.
+end note
 @enduml
