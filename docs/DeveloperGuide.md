@@ -213,9 +213,22 @@ Parsing errors and domain rule violations stop before step 3. Valid commands tha
 </div>
 </figure>
 
-[`UiManager`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/UiManager.java) instantiates [`MainWindow`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/MainWindow.java), which assembles the people panel, lesson and history panels, viewing buttons, result display, command box, and status bar. Every UI controller inherits from the abstract `UiPart` class, which handles loading FXML files.
+[`UiManager`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/UiManager.java) instantiates [`MainWindow`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/MainWindow.java), which assembles the people panel, lesson and history panels, viewing buttons, result display, command box, and status bar.
 
-List cells inside `PersonRecordListPanel`, `LessonListPanel`, and `HistoryListPanel` create and recycle card controllers (`PersonRecordCard`, `LessonCard`, `AttendanceHistoryCard`) on demand through JavaFX list virtualisation rather than holding a permanent controller per record.
+| UI element | What it renders or is responsible for |
+| --- | --- |
+| `PersonRecordListPanel` | Displays the current people list, active filter or search context, result count, and selected person. |
+| `PersonRecordCard` | Renders one person's role, stable ID, current list position, contact details, and matching relationship context. Provides contact-copy actions. |
+| `LessonListPanel` | Displays lesson results and their context. For lesson details, displays the current roster and retained attendance. |
+| `LessonCard` | Renders one lesson's subject, stable ID, schedule, tutor, room, and roster size. |
+| `HistoryListPanel` | Displays the selected Student's attendance-history results, context, and result count. |
+| `AttendanceHistoryCard` | Renders one recorded date, Student and Lesson IDs, attendance status, and current enrolment status. |
+| Viewing buttons in `MainWindow` | Request all lessons, the selected Student's lessons, or attendance history through the same command path as typed requests. |
+| `CommandBox` | Accepts and submits commands, with command-name completion and recall of previous submissions. |
+| `ResultDisplay` | Displays command feedback, errors, and inline help. |
+| `StatusBarFooter` | Displays the selected operational data-file path. |
+
+Every UI controller inherits from the abstract `UiPart` class, which handles loading FXML files.
 
 The UI component depends on `Logic` to execute commands and observe read-only lists (`getPersonRecords()`, `getDisplayedLessons()`, `getDisplayedHistory()`) and mode properties. It renders `Model` records (`PersonRecord` adapted through `ponhub.ui.PersonRecordCardData`) and `Model` query view types (`LessonView`, `AttendanceHistoryEntry`) in its cards.
 
