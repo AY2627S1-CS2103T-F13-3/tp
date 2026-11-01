@@ -1,4 +1,7 @@
 @startuml
+' Renderer: PlantUML 1.2025.3, using the committed style.puml unchanged.
+' From the repository root:
+' java -jar plantuml-1.2025.3.jar -charset UTF-8 -tpng -o ../images docs/diagrams/LessonRetrieval.puml
 !include style.puml
 skinparam DefaultFontName Arial
 skinparam DefaultFontSize 14
@@ -46,12 +49,12 @@ opt Selected source changes
 end
 
 Retrieval -> Displayed : Refresh backing contents\nfrom selected source
-Displayed --> UI : Update existing list view
+Displayed -> UI : Notify registered list-change listener
 
 == Later changes ==
 Next -> Retrieval : Selected source changes\n(refresh listener)
 Retrieval -> Displayed : Refresh backing contents
-Displayed --> UI : Update existing list view
+Displayed -> UI : Notify registered list-change listener
 
 note over UI, Next
   People-list changes do not retarget the lesson selection or heading.

@@ -674,7 +674,16 @@ These costs exclude index rebuilding, writes and UI work.
 
 ##### Keeping the two panels independent
 
-[![Lesson retrieval and displayed-result ownership](images/LessonRetrieval.png)](images/LessonRetrieval.png)
+<figure class="dg-figure">
+<figcaption>Lesson retrieval: one UI binding and switchable sources</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Lesson retrieval sequence diagram; scroll horizontally on narrow screens">
+<a href="images/LessonRetrieval.png"><img src="images/LessonRetrieval.png" alt="The UI binds to one read-only displayed list. Switching sources detaches the old listener, attaches the new listener, and refreshes that same list. Solid callback arrows notify the UI of list changes."></a>
+</div>
+</figure>
+
+The diagram retains its original label size. If it is wider than the page, focus it with Tab and
+use Left/Right to scroll, or open the image link. Solid arrows show calls and observer callbacks;
+the dashed reply returns the displayed list requested during setup.
 
 `LessonRetrieval` owns one read-only displayed list. The UI binds to it once. Choosing another source
 detaches the previous listener and uses the catalogue, a student's lessons, a search or lesson details.
