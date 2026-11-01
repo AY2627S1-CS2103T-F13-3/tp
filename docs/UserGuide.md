@@ -1,7 +1,20 @@
 ---
 layout: page
 title: User Guide
+expandable_toc: true
 ---
+
+<a id="how-to-use-this-guide"></a>
+
+## Table of Contents
+{:.no_toc}
+
+* Table of Contents
+{:toc}
+
+* **New users:** Start with [Quick start](#quick-start), walk through a full session in [First-session walkthrough](#first-session-walkthrough), and read [PonHub basics](#ponhub-basics) once to learn how positions, stable IDs, and command formats work.
+* **Returning users:** Jump straight to the [Command summary](#command-summary) and follow the link to the command you need.
+* **Warnings or save errors:** Go to [Saving and protecting your data](#saving-and-protecting-your-data) before making changes or deleting files.
 
 ## Introduction
 
@@ -13,15 +26,6 @@ PonHub is a desktop application for tuition-centre administrators. You can use i
 * Track dated attendance and review a student's attendance history.
 
 PonHub is designed for fast keyboard work. You type a command in the box at the bottom of the window and press **Enter**, while the window shows people and lesson results side by side.
-
-### How to use this guide
-
-* **New users:** Start with [Quick start](#quick-start), walk through a full session in [First-session walkthrough](#first-session-walkthrough), and read [PonHub basics](#ponhub-basics) once to learn how positions, stable IDs, and command formats work.
-* **Returning users:** Jump straight to the [Command summary](#command-summary) and follow the link to the command you need.
-* **Warnings or save errors:** Go to [Saving and protecting your data](#saving-and-protecting-your-data) before making changes or deleting files.
-
-* Table of Contents
-{:toc}
 
 --------------------------------------------------------------------------------------------------------------------
 
