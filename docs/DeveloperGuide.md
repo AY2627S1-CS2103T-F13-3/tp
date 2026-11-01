@@ -32,13 +32,16 @@ PonHub organises tuition centre operations around four connected areas:
 
 This guide progresses from high-level setup and architecture to domain rules, feature implementation, persistence, and verification:
 
-1. **[2. Getting started](#2-getting-started):** Set up JDK 25, build and run the app, enable development assertions, and navigate the repository.
-2. **[3. Architecture and component design](#architecture):** Understand the five main components (`UI`, `Logic`, `Model`, `Storage`, `Commons`), their design patterns, and how a command flows from input to saved state.
-3. **[4. Domain model and data rules](#shared-lesson-target-contract):** Learn the invariants governing people, lessons, rosters, attendance, displayed positions, stable IDs, and immutable snapshots.
-4. **[5. Feature implementation](#implementation):** Trace how individual commands, search indexes, read-only views, and UI controls work.
-5. **[6. Persistence and recovery](#6-persistence-and-recovery):** Understand JSON storage, transactional saves, concurrent-window locking, and protected startup recovery.
-6. **[7. Testing and maintenance](#documentation-logging-testing-dev-ops):** Run unit, integration, and UI tests, use sample fixtures, check logs, and manage releases.
-7. **Appendices:** Review the [Requirements](#appendix-requirements), run the [Manual Testing](#appendix-instructions-for-manual-testing) workflows, or look up terms in the [Glossary](#terms-used-in-this-guide).
+* **[Section 2: Getting started](#2-getting-started):** Set up JDK 25, build and run the app, enable development assertions, and navigate the repository.
+* **[Section 3: Architecture and component design](#architecture):** Understand the five main components (`UI`, `Logic`, `Model`, `Storage`, `Commons`), their design patterns, and how a command flows from input to saved state.
+* **[Section 4: Domain model and data rules](#shared-lesson-target-contract):** Learn the invariants governing people, lessons, rosters, attendance, displayed positions, stable IDs, and immutable snapshots.
+* **[Section 5: Feature implementation](#implementation):** Trace how individual commands, search indexes, read-only views, and UI controls work.
+* **[Section 6: Persistence and recovery](#6-persistence-and-recovery):** Understand JSON storage, transactional saves, concurrent-window locking, and protected startup recovery.
+* **[Section 7: Testing and maintenance](#documentation-logging-testing-dev-ops):** Run unit, integration, and UI tests, use sample fixtures, check logs, and manage releases.
+* **Appendices:** Use these references as needed:
+  * **[Appendix: Requirements](#appendix-requirements):** Review the requirements.
+  * **[Appendix: Instructions for Manual Testing](#appendix-instructions-for-manual-testing):** Run the manual testing workflows.
+  * **[Appendix: Glossary](#terms-used-in-this-guide):** Look up terms used in this guide.
 
 Before diving into the code, note these core software terms used throughout PonHub's class names and documentation (full definitions appear in the [Glossary](#terms-used-in-this-guide)):
 
