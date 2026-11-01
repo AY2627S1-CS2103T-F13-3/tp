@@ -445,7 +445,16 @@ failed saves, retries and reloads. See the manual edit checks below for packaged
 
 The UI interface is `src/main/java/ponhub/ui/Ui.java`. Layout files are in `src/main/resources/view`.
 
-[![UI controllers, panels and cards](images/UiClassDiagram.png)](images/UiClassDiagram.png)
+<figure class="dg-figure">
+<figcaption>UI controllers, panels and cards</figcaption>
+<div class="dg-ui-class-scroll" tabindex="0" role="region" aria-label="UI class diagram; scroll horizontally to see all classes">
+<a href="images/UiClassDiagram.png"><img src="images/UiClassDiagram.png" alt="UiManager implements Ui and creates MainWindow. MainWindow connects the UI components through Logic; each list panel creates its cards. The legend summarizes shared UiPart inheritance."></a>
+</div>
+</figure>
+
+The diagram keeps its original size so class names and the inheritance legend remain readable.
+If it is wider than the page, scroll horizontally; keyboard users can focus it with Tab and use
+Left/Right. Open the image link to view the complete diagram separately.
 
 `UiManager` creates `MainWindow`. The window connects the people panel, result display and other controls.
 Panel cells create cards as needed. `UiPart` is the abstract base for the window, panels, cards and controls.

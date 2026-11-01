@@ -1,4 +1,7 @@
 @startuml
+' Renderer: PlantUML 1.2025.3, using the committed style.puml unchanged.
+' From the repository root:
+' java -jar plantuml-1.2025.3.jar -charset UTF-8 -tpng -o ../images docs/diagrams/UiClassDiagram.puml
 !include style.puml
 skinparam arrowThickness 1.1
 skinparam arrowColor UI_COLOR_T4
