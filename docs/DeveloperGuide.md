@@ -205,7 +205,16 @@ Parsing errors and domain rule violations stop before step 3. Valid commands tha
 
 **API:** [`src/main/java/ponhub/ui/Ui.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/Ui.java) (FXML layouts live in `src/main/resources/view/`).
 
-[![UI controllers, panels and cards](images/UiClassDiagram.png)](images/UiClassDiagram.png)
+<figure class="dg-figure">
+<figcaption>UI controllers, panels and cards</figcaption>
+<div class="dg-ui-class-scroll" tabindex="0" role="region" aria-label="UI class diagram; scroll horizontally to see all classes">
+<a href="images/UiClassDiagram.png"><img src="images/UiClassDiagram.png" alt="UiManager implements Ui and creates MainWindow. MainWindow connects the UI components through Logic; each list panel creates its cards. The legend summarizes shared UiPart inheritance."></a>
+</div>
+</figure>
+
+The diagram keeps its original size so class names and the inheritance legend remain readable.
+If it is wider than the page, scroll horizontally; keyboard users can focus it with Tab and use
+Left/Right. Open the image link to view the complete diagram separately.
 
 [`UiManager`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/UiManager.java) instantiates [`MainWindow`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/ui/MainWindow.java), which assembles the people panel, lesson and history panels, viewing buttons, result display, command box, and status bar. Every UI controller inherits from the abstract `UiPart` class, which handles loading FXML files. To keep the diagram readable, FXML node fields, JavaFX scene-graph containment, and small layout helpers are omitted.
 

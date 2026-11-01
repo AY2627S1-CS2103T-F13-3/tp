@@ -68,8 +68,9 @@ h2, h3, h4, h5, h6 {
   }
 }
 
-// Preserve the edit overview's body-sized labels instead of shrinking it on phones.
-.dg-edit-flow-scroll {
+// Preserve diagram labels at their original size when the page is narrower.
+.dg-edit-flow-scroll,
+.dg-ui-class-scroll {
   overflow-x: auto;
 
   &:focus {
@@ -83,7 +84,8 @@ h2, h3, h4, h5, h6 {
 }
 
 @media print {
-  .dg-edit-flow-scroll {
+  .dg-edit-flow-scroll,
+  .dg-ui-class-scroll {
     overflow: visible;
 
     img {

@@ -1,54 +1,52 @@
 @startuml
-!pragma layout smetana
+' Renderer: PlantUML 1.2025.3, using the committed style.puml unchanged.
+' From the repository root:
+' java -jar plantuml-1.2025.3.jar -charset UTF-8 -tpng -o ../images docs/diagrams/UiClassDiagram.puml
 !include style.puml
 skinparam arrowThickness 1.1
 skinparam arrowColor UI_COLOR_T4
 skinparam classBackgroundColor UI_COLOR
-skinparam nodesep 25
-skinparam ranksep 40
+skinparam nodesep 30
+skinparam ranksep 45
+skinparam linetype polyline
 
 package UI as UiPackage {
     class "<<interface>>\nUi" as UiApi
-    abstract class UiPart
     class UiManager
     class MainWindow
     class ResultDisplay
-    class PersonRecordListPanel
-    class PersonRecordCard
-    class LessonListPanel
-    class LessonCard
-    class HistoryListPanel
-    class AttendanceHistoryCard
-    class StatusBarFooter
     class CommandBox
+    class StatusBarFooter
+    class PersonRecordListPanel
+    class LessonListPanel
+    class HistoryListPanel
+    class PersonRecordCard
+    class LessonCard
+    class AttendanceHistoryCard
 }
 package Logic as LogicPackage {
     class "<<interface>>\nLogic" as LogicApi LOGIC_COLOR
 }
 
-UiManager ..|> UiApi
-UiManager ..> MainWindow : creates
-UiManager --> LogicApi
-MainWindow --> LogicApi
+UiManager .left.|> UiApi
+UiManager .down.> MainWindow
+UiManager -[norank]-> LogicApi
+MainWindow -[norank]-> LogicApi
+
 MainWindow --> ResultDisplay
+MainWindow ..> CommandBox
+MainWindow ..> StatusBarFooter
 MainWindow --> PersonRecordListPanel
-MainWindow ..> CommandBox : creates
-MainWindow ..> LessonListPanel : creates
-MainWindow ..> HistoryListPanel : creates
-MainWindow ..> StatusBarFooter : creates
+MainWindow ..> LessonListPanel
+MainWindow ..> HistoryListPanel
 
-PersonRecordListPanel ..> PersonRecordCard : creates
-LessonListPanel ..> LessonCard : creates
-HistoryListPanel ..> AttendanceHistoryCard : creates
+PersonRecordListPanel ..> PersonRecordCard
+LessonListPanel ..> LessonCard
+HistoryListPanel ..> AttendanceHistoryCard
 
-MainWindow --|> UiPart
-ResultDisplay --|> UiPart
-CommandBox --|> UiPart
-PersonRecordListPanel --|> UiPart
-PersonRecordCard --|> UiPart
-LessonListPanel --|> UiPart
-LessonCard --|> UiPart
-HistoryListPanel --|> UiPart
-AttendanceHistoryCard --|> UiPart
-StatusBarFooter --|> UiPart
+legend bottom left
+  Dashed dependencies: creates
+  MainWindow, its six components, and the three cards
+  all extend abstract UiPart (inheritance arrows omitted).
+endlegend
 @enduml
