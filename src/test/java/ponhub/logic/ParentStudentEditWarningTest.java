@@ -32,7 +32,7 @@ public class ParentStudentEditWarningTest {
 
     @Test
     public void edit_parentPhone_reportsAllLinkedStudentsEvenOutsideSearchAndPersists() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         session.execute("search c/parent sn/Alex");
         var before = session.getDataSnapshot();
         String feedback = session.execute("edit 1 p/90000000").getFeedbackToUser();
@@ -51,7 +51,7 @@ public class ParentStudentEditWarningTest {
 
     @Test
     public void edit_studentParentPhone_reportsEachOldParentEvenWhenNewParentMatches() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         session.execute("add r/parent n/Other Parent p/00123456");
         session.execute("add r/parent n/New Parent p/90000000");
         session.execute("search c/student n/Alex");
@@ -66,7 +66,7 @@ public class ParentStudentEditWarningTest {
 
     @Test
     public void edit_unchangedPhonesAndUnrelatedFields_doNotWarnOrWriteForNoOp() throws Exception {
-        CanonicalPeopleSession setup = fixture();
+        CanonicalPeopleSession setup = createSession();
         Path path = setup.getDataFilePath();
         AtomicInteger saves = new AtomicInteger();
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
@@ -91,7 +91,7 @@ public class ParentStudentEditWarningTest {
 
     @Test
     public void edit_previouslyUnlinkedPhones_doesNotWarnForNewLinkOrDifferentUnlinkedValue() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         session.execute("add r/parent n/Unlinked Parent p/99999999");
         session.execute("search c/parent n/Unlinked");
         assertEquals("Edited parent: Unlinked Parent (P2).",
@@ -106,7 +106,7 @@ public class ParentStudentEditWarningTest {
 
     @Test
     public void edit_failedSaveAndValidation_doNotReturnWarningOrPublishUntilSuccessfulRetry() throws Exception {
-        CanonicalPeopleSession setup = fixture();
+        CanonicalPeopleSession setup = createSession();
         Path path = setup.getDataFilePath();
         AtomicBoolean shouldFailSave = new AtomicBoolean(true);
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
@@ -132,7 +132,7 @@ public class ParentStudentEditWarningTest {
         assertTrue(session.getPeople().isEmpty());
     }
 
-    private CanonicalPeopleSession fixture() throws Exception {
+    private CanonicalPeopleSession createSession() throws Exception {
         CanonicalPeopleSession session = new CanonicalPeopleSession(directory.resolve("ponhub.json"));
         session.execute("add r/tutor n/Mei Lim p/92345678");
         session.execute("add r/student n/Alex Tan l/P1 pp/00123456");

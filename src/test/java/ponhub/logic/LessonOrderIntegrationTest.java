@@ -25,7 +25,7 @@ public class LessonOrderIntegrationTest {
 
     @Test
     public void lessonsAndSearch_orderByWeekdayTimeAndNumericIdAndRestoreCreationOrder() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         var displayed = session.getDisplayedLessons();
         var state = session.getDataSnapshot();
         session.execute("list r/student");
@@ -49,7 +49,7 @@ public class LessonOrderIntegrationTest {
 
     @Test
     public void search_scheduleOrderComposesWithTutorPhoneAndOverlap() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         byte[] bytes = Files.readAllBytes(directory.resolve("data.json"));
         session.execute("search c/lesson tp/00112233 from/0900 to/1000 sort/schedule");
         assertIds(session, "L10", "L2");
@@ -62,7 +62,7 @@ public class LessonOrderIntegrationTest {
 
     @Test
     public void scheduleOrder_usesMondayFirstWeekdaysRatherThanAlphabeticalNames() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         session.execute("addlesson d/Fri st/0900 et/1000 s/English tu/Mei Lim tp/00112233 rm/R1");
         session.execute("addlesson d/Sun st/0900 et/1000 s/English tu/Mei Lim tp/00112233 rm/R1");
         session.execute("lessons sort/schedule");
@@ -71,7 +71,7 @@ public class LessonOrderIntegrationTest {
 
     @Test
     public void activeOrder_refreshesAfterSavedEditsAndNewRequestsResetToCreation() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         session.execute("lessons sort/schedule");
         session.execute("editlesson lid/L2 d/Mon st/0800 et/0900");
         assertIds(session, "L2", "L3", "L10", "L4", "L11");
@@ -87,7 +87,7 @@ public class LessonOrderIntegrationTest {
 
     @Test
     public void invalidOrder_preservesExistingResultAndContext() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         session.execute("lessons sort/schedule");
         String context = session.lessonResultContextProperty().get();
         for (String command : List.of("lessons sort/name", "lessons sort/schedule sort/creation",
@@ -98,7 +98,7 @@ public class LessonOrderIntegrationTest {
         }
     }
 
-    private CanonicalPeopleSession fixture() throws Exception {
+    private CanonicalPeopleSession createSession() throws Exception {
         Path path = directory.resolve("data.json");
         new JsonPonHubDataStorage(path).saveData(createData().exportState());
         return new CanonicalPeopleSession(path);

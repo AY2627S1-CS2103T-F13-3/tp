@@ -165,7 +165,7 @@ public class CanonicalPeopleSessionTest {
     public void execute_readCommands_preservesSnapshotBytesAndStableReadOnlyViews() throws Exception {
         Path path = directory.resolve("canonical.json");
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
-        PonHubDataState before = peopleState();
+        PonHubDataState before = createPeopleState();
         storage.saveData(before);
         byte[] original = Files.readAllBytes(path);
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
@@ -178,10 +178,10 @@ public class CanonicalPeopleSessionTest {
         assertEquals(LoadStatus.LOADED, session.getLoadStatus());
         assertEquals(before, session.getDataSnapshot());
         assertEquals(List.of(new PersonId("T7"), new PersonId("S9"), new PersonId("P2"), new PersonId("S3")),
-                visibleIds(session));
+                getVisibleIds(session));
         assertEquals("Showing 2 student(s).", session.execute("list r/StUdEnT").getFeedbackToUser());
         assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
-        assertEquals(List.of(new PersonId("S9"), new PersonId("S3")), visibleIds(session));
+        assertEquals(List.of(new PersonId("S9"), new PersonId("S3")), getVisibleIds(session));
         assertEquals(new PersonId("S3"), PersonIndexResolver.resolve(Index.fromOneBased(2), visible).getId());
         assertEquals("Showing 1 tutor(s).", session.execute("list r/tutor").getFeedbackToUser());
         assertEquals("Showing 1 parent(s).", session.execute("list r/parent").getFeedbackToUser());
@@ -289,7 +289,7 @@ public class CanonicalPeopleSessionTest {
         for (PersonRole role : PersonRole.values()) {
             Path path = directory.resolve(role.getValue() + ".json");
             JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
-            PonHubDataState before = peopleState();
+            PonHubDataState before = createPeopleState();
             storage.saveData(before);
             CanonicalPeopleSession[] current = new CanonicalPeopleSession[1];
             int[] writes = {0};
@@ -383,7 +383,7 @@ public class CanonicalPeopleSessionTest {
     public void execute_failedSaveThenRetry_retainsBytesCountersFilterIndicesAndViewIdentity() throws Exception {
         Path path = directory.resolve("canonical.json");
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
-        PonHubDataState before = peopleState();
+        PonHubDataState before = createPeopleState();
         storage.saveData(before);
         byte[] original = Files.readAllBytes(path);
         CanonicalPeopleSession[] current = new CanonicalPeopleSession[1];
@@ -428,7 +428,7 @@ public class CanonicalPeopleSessionTest {
     @Test
     public void execute_invalidUnknownAndDuplicateCommands_doesNotSaveOrChangeCurrentView() throws Exception {
         Path path = directory.resolve("canonical.json");
-        new JsonPonHubDataStorage(path).saveData(peopleState());
+        new JsonPonHubDataStorage(path).saveData(createPeopleState());
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
             throw new AssertionError("Rejected commands must not save");
         });
@@ -449,7 +449,7 @@ public class CanonicalPeopleSessionTest {
                 session.execute("add r/student n/ALICE  tan l/S2 pp/00123456"));
         assertEquals(before, session.getDataSnapshot());
         assertEquals(Optional.of(PersonRole.PARENT), session.getRoleFilter());
-        assertEquals(List.of(new PersonId("P2")), visibleIds(session));
+        assertEquals(List.of(new PersonId("P2")), getVisibleIds(session));
         assertArrayEquals(original, Files.readAllBytes(path));
     }
 
@@ -498,7 +498,7 @@ public class CanonicalPeopleSessionTest {
         Files.writeString(path, "broken");
         CanonicalPeopleSession rejected = new CanonicalPeopleSession(path);
         String originalGuidance = rejected.getDataLoadError().orElseThrow();
-        new JsonPonHubDataStorage(path).saveData(peopleState());
+        new JsonPonHubDataStorage(path).saveData(createPeopleState());
         byte[] repaired = Files.readAllBytes(path);
 
         assertEquals(originalGuidance, rejected.getDataLoadError().orElseThrow());
@@ -511,7 +511,7 @@ public class CanonicalPeopleSessionTest {
         CanonicalPeopleSession restarted = new CanonicalPeopleSession(path);
         assertEquals(LoadStatus.LOADED, restarted.getLoadStatus());
         assertTrue(restarted.getDataLoadError().isEmpty());
-        assertEquals(peopleState(), restarted.getDataSnapshot());
+        assertEquals(createPeopleState(), restarted.getDataSnapshot());
         assertEquals("New student added: New Person (S10).",
                 restarted.execute(addCommand(PersonRole.STUDENT)).getFeedbackToUser());
         assertEquals(restarted.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
@@ -531,7 +531,7 @@ public class CanonicalPeopleSessionTest {
         assertFalse(Files.exists(path));
     }
 
-    private static List<PersonId> visibleIds(CanonicalPeopleSession session) {
+    private static List<PersonId> getVisibleIds(CanonicalPeopleSession session) {
         return session.getPeople().stream().map(PersonRecord::getId).toList();
     }
 
@@ -545,11 +545,11 @@ public class CanonicalPeopleSessionTest {
         return required + " e/New@example.com a/Block 2";
     }
 
-    private static PonHubDataState peopleState() {
-        Tutor tutor = new Tutor(new PersonId("T7"), contacts("Tutor Tan", "00234567"));
+    private static PonHubDataState createPeopleState() {
+        Tutor tutor = new Tutor(new PersonId("T7"), createContacts("Tutor Tan", "00234567"));
         Student first = new Student(new PersonId("S9"), new ContactDetails(new Name("Alice Tan")),
                 new EducationLevel("P1"), new Phone("00123456"));
-        Parent parent = new Parent(new PersonId("P2"), contacts("Parent Tan", "00345678"));
+        Parent parent = new Parent(new PersonId("P2"), createContacts("Parent Tan", "00345678"));
         Student second = new Student(new PersonId("S3"), new ContactDetails(new Name("Bob Tan")),
                 new EducationLevel("P2"), new Phone("00123456"));
         return new PonHubDataState(new PeopleRegistryState(List.of(tutor, first, parent, second),
@@ -557,7 +557,7 @@ public class CanonicalPeopleSessionTest {
                 List.of(), List.of(), 12);
     }
 
-    private static ContactDetails contacts(String name, String phone) {
+    private static ContactDetails createContacts(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.of(new Phone(phone)), Optional.empty(), Optional.empty());
     }
 }

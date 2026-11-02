@@ -166,10 +166,10 @@ public class CanonicalMembershipBoundaryTest {
     }
 
     private static PonHubDataState state(boolean isEnrolled) {
-        Tutor tutor = new Tutor(TUTOR, contacts("Mei Lim", "00123456"));
-        Student other = student(OTHER_STUDENT, "Alice Student");
-        Parent parent = new Parent(new PersonId("P2"), contacts("Pat Parent", "60000002"));
-        Student selected = student(SELECTED_STUDENT, "Bob Student");
+        Tutor tutor = new Tutor(TUTOR, createContacts("Mei Lim", "00123456"));
+        Student other = createStudent(OTHER_STUDENT, "Alice Student");
+        Parent parent = new Parent(new PersonId("P2"), createContacts("Pat Parent", "60000002"));
+        Student selected = createStudent(SELECTED_STUDENT, "Bob Student");
         PeopleRegistryState people = new PeopleRegistryState(List.of(tutor, other, parent, selected),
                 Map.of(PersonRole.STUDENT, 9L, PersonRole.TUTOR, 7L, PersonRole.PARENT, 2L));
         Lesson lesson = new Lesson(LESSON, TUTOR,
@@ -178,11 +178,11 @@ public class CanonicalMembershipBoundaryTest {
         return new PonHubDataState(people, List.of(lesson), List.of(RETAINED_ATTENDANCE), 12);
     }
 
-    private static Student student(PersonId id, String name) {
+    private static Student createStudent(PersonId id, String name) {
         return new Student(id, new ContactDetails(new Name(name)), new EducationLevel("P1"), new Phone("60000002"));
     }
 
-    private static ContactDetails contacts(String name, String phone) {
+    private static ContactDetails createContacts(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.of(new Phone(phone)), Optional.empty(), Optional.empty());
     }
 
