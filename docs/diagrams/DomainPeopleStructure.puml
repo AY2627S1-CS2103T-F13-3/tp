@@ -21,7 +21,7 @@ interface PersonRecord <<interface>> {
   + getContactDetails() : ContactDetails
 }
 class Student {
-  educationLevel : EducationLevel
+  level : EducationLevel
   parentPhone : Phone
 }
 class Tutor
