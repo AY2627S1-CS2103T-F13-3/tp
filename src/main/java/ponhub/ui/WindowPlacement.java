@@ -23,8 +23,8 @@ final class WindowPlacement {
      */
     static Rectangle2D fit(GuiSettings settings, List<Rectangle2D> workAreas, Rectangle2D primaryWorkArea) {
         GuiSettings defaults = new GuiSettings();
-        double requestedWidth = validDimension(settings.getWindowWidth(), defaults.getWindowWidth());
-        double requestedHeight = validDimension(settings.getWindowHeight(), defaults.getWindowHeight());
+        double requestedWidth = resolveDimension(settings.getWindowWidth(), defaults.getWindowWidth());
+        double requestedHeight = resolveDimension(settings.getWindowHeight(), defaults.getWindowHeight());
         Point coordinates = settings.getWindowCoordinates();
         Rectangle2D workArea = primaryWorkArea;
         double largestOverlap = 0;
@@ -33,7 +33,7 @@ final class WindowPlacement {
             Rectangle2D savedBounds = new Rectangle2D(coordinates.getX(), coordinates.getY(),
                     requestedWidth, requestedHeight);
             for (Rectangle2D candidate : workAreas) {
-                double overlap = intersectionArea(savedBounds, candidate);
+                double overlap = computeIntersectionArea(savedBounds, candidate);
                 if (overlap > largestOverlap) {
                     workArea = candidate;
                     largestOverlap = overlap;
@@ -55,14 +55,14 @@ final class WindowPlacement {
     /**
      * Replaces invalid saved dimensions with the default dimension.
      */
-    private static double validDimension(double dimension, double fallback) {
+    private static double resolveDimension(double dimension, double fallback) {
         return Double.isFinite(dimension) && dimension > 0 ? dimension : fallback;
     }
 
     /**
      * Returns the shared area of two rectangles, or zero when they do not overlap.
      */
-    private static double intersectionArea(Rectangle2D first, Rectangle2D second) {
+    private static double computeIntersectionArea(Rectangle2D first, Rectangle2D second) {
         double width = Math.max(0, Math.min(first.getMaxX(), second.getMaxX())
                 - Math.max(first.getMinX(), second.getMinX()));
         double height = Math.max(0, Math.min(first.getMaxY(), second.getMaxY())

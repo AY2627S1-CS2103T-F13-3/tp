@@ -65,14 +65,14 @@ public class CanonicalPeopleCommandIntegrationTest {
     @Test
     public void execute_addEachRoleAndOptionalContacts_savesBeforePublishingAndReloads() throws Exception {
         for (PersonRole role : PersonRole.values()) {
-            for (boolean withOptionalContacts : new boolean[]{false, true}) {
+            for (boolean hasOptionalContacts : new boolean[]{false, true}) {
                 PonHubData live = new PonHubData(peopleState());
                 PeopleView view = new PeopleView(live);
                 view.setRoleFilter(Optional.of(PersonRole.STUDENT));
                 var visible = view.getPeople();
                 PonHubDataState before = live.exportState();
                 JsonPonHubDataStorage storage = new JsonPonHubDataStorage(directory.resolve(
-                        role.getValue() + withOptionalContacts + ".json"));
+                        role.getValue() + hasOptionalContacts + ".json"));
                 storage.saveData(before);
                 int[] writes = {0};
                 CanonicalCommandExecutor executor = new CanonicalCommandExecutor(view, state -> {
@@ -81,7 +81,7 @@ public class CanonicalPeopleCommandIntegrationTest {
                     writes[0]++;
                     storage.saveData(state);
                 }, Optional::empty);
-                var input = addParser.parse(addArguments(role, withOptionalContacts));
+                var input = addParser.parse(addArguments(role, hasOptionalContacts));
                 CommandResult result = executor.execute(new CanonicalAddCommand(input));
                 PersonRecord added = live.getPeople().getLast();
                 PersonId expectedId = PersonId.of(role, before.people().getLastAllocatedSequences().get(role) + 1);
@@ -293,11 +293,11 @@ public class CanonicalPeopleCommandIntegrationTest {
         return view.getPeople().stream().map(PersonRecord::getId).toList();
     }
 
-    private static String addArguments(PersonRole role, boolean withOptionalContacts) {
+    private static String addArguments(PersonRole role, boolean hasOptionalContacts) {
         String required = role == PersonRole.STUDENT ? "r/StUdEnT n/New Person l/p2 pp/00123456"
                 : "r/" + role.getValue() + " n/New Person p/00012345";
-        String optional = withOptionalContacts ? " e/New@example.com a/Block 2" : "";
-        if (role == PersonRole.STUDENT && withOptionalContacts) {
+        String optional = hasOptionalContacts ? " e/New@example.com a/Block 2" : "";
+        if (role == PersonRole.STUDENT && hasOptionalContacts) {
             optional += " p/00456789";
         }
         return required + optional;

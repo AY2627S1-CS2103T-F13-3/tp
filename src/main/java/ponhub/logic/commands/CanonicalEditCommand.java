@@ -44,14 +44,14 @@ public final class CanonicalEditCommand implements CanonicalCommandExecutor.Stag
             PersonEditCandidate candidate = PersonEditCandidate.prepare(staged.exportState(), original.getId(),
                     input.edit());
             PersonRecord edited = candidate.getEditedPerson();
-            List<String> disconnected = findDisconnectedLinks(staged.getPeople(), original, edited);
+            List<String> disconnectedLinks = findDisconnectedLinks(staged.getPeople(), original, edited);
             if (candidate.isChanged()) {
                 staged.resetData(candidate.getCandidateState());
             }
             String feedback = String.format(candidate.isChanged() ? MESSAGE_SUCCESS : MESSAGE_NO_CHANGE,
                     edited.getRole().getValue(), edited.getName(), edited.getId());
-            if (!disconnected.isEmpty()) {
-                feedback += "\n" + String.format(MESSAGE_DISCONNECTED_LINKS, String.join(", ", disconnected));
+            if (!disconnectedLinks.isEmpty()) {
+                feedback += "\n" + String.format(MESSAGE_DISCONNECTED_LINKS, String.join(", ", disconnectedLinks));
             }
             return new CommandResult(feedback);
         } catch (DuplicatePersonException failure) {
