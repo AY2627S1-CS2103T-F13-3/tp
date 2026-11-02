@@ -33,24 +33,24 @@ public class ContactValidationStartupTest {
     @Test
     public void startup_previouslyAcceptedContacts_preservesOriginals() throws Exception {
         String[][] rejectedRecords = {
-            {personJson("P1", "123", "123", "alex@example.com", "Somewhere"), Name.MESSAGE_CONSTRAINTS},
-            {personJson("P1", "Alex", "1234567890123456", "alex@example.com", "Somewhere"),
+            {createPersonJson("P1", "123", "123", "alex@example.com", "Somewhere"), Name.MESSAGE_CONSTRAINTS},
+            {createPersonJson("P1", "Alex", "1234567890123456", "alex@example.com", "Somewhere"),
                 Phone.MESSAGE_CONSTRAINTS},
-            {personJson("P1", "Alex", "123", "alex@example.com", "Blk 10/Unit 2"), Address.MESSAGE_CONSTRAINTS},
-            {personJson("P1", "Alex", "123", "alex@localhost", "Somewhere"), Email.MESSAGE_CONSTRAINTS},
-            {personJson("P1", "Alex", "123", "a.".repeat(5000) + "a@example.com", "Somewhere"),
+            {createPersonJson("P1", "Alex", "123", "alex@example.com", "Blk 10/Unit 2"), Address.MESSAGE_CONSTRAINTS},
+            {createPersonJson("P1", "Alex", "123", "alex@localhost", "Somewhere"), Email.MESSAGE_CONSTRAINTS},
+            {createPersonJson("P1", "Alex", "123", "a.".repeat(5000) + "a@example.com", "Somewhere"),
                 Email.MESSAGE_CONSTRAINTS}
         };
         for (String[] rejectedRecord : rejectedRecords) {
-            assertProtectedLifecycle(versionedPeopleJson(rejectedRecord[0]), rejectedRecord[1]);
+            assertProtectedLifecycle(createVersionedPeopleJson(rejectedRecord[0]), rejectedRecord[1]);
         }
     }
 
     @Test
     public void startup_normalizationCreatesDuplicateIdentity_preservesOriginals() throws Exception {
-        String document = versionedPeopleJson(
-                personJson("P1", "Alex  Tan", "123", "alex@example.com", "Somewhere"),
-                personJson("P2", "Alex Tan", "123", "other@example.com", "Elsewhere"));
+        String document = createVersionedPeopleJson(
+                createPersonJson("P1", "Alex  Tan", "123", "alex@example.com", "Somewhere"),
+                createPersonJson("P2", "Alex Tan", "123", "other@example.com", "Elsewhere"));
         assertProtectedLifecycle(document, "Operation would result in duplicate persons");
     }
 
@@ -86,7 +86,7 @@ public class ContactValidationStartupTest {
         restarted.stop();
         assertArrayEquals(originalBytes, Files.readAllBytes(data));
 
-        Files.writeString(data, versionedPeopleJson(personJson("P1", "Anne-Marie  O'Neil", "00123456",
+        Files.writeString(data, createVersionedPeopleJson(createPersonJson("P1", "Anne-Marie  O'Neil", "00123456",
                 "Anne%School@Example.COM", "Blk 10,  #01-02")));
         MainApp repaired = new MainApp();
         repaired.initialize(data, prefs);
@@ -103,12 +103,12 @@ public class ContactValidationStartupTest {
         assertEquals(repaired.canonicalSession.getDataSnapshot(), reloaded.canonicalSession.getDataSnapshot());
     }
 
-    private String personJson(String id, String name, String phone, String email, String address) {
+    private String createPersonJson(String id, String name, String phone, String email, String address) {
         return "{\"id\":\"" + id + "\",\"role\":\"PARENT\",\"name\":\"" + name + "\",\"phone\":\"" + phone
                 + "\",\"email\":\"" + email + "\",\"address\":\"" + address + "\"}";
     }
 
-    private String versionedPeopleJson(String... people) {
+    private String createVersionedPeopleJson(String... people) {
         return "{\"schemaVersion\":1,\"people\":[" + String.join(",", people) + "],"
                 + "\"personCounters\":{\"STUDENT\":0,\"TUTOR\":0,\"PARENT\":" + people.length + "},"
                 + "\"lastAllocatedLessonSequence\":0,\"lessons\":[],\"attendance\":[]}";

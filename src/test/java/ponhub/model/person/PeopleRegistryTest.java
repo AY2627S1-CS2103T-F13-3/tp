@@ -23,21 +23,21 @@ public class PeopleRegistryTest {
     public void add_mixedRoles_preservesGlobalOrderAndAllocatesPerRole() {
         PeopleRegistry registry = new PeopleRegistry();
         assertTrue(registry.getPeople().isEmpty());
-        assertEquals(counters(0, 0, 0), registry.exportState().getLastAllocatedSequences());
+        assertEquals(createCounters(0, 0, 0), registry.exportState().getLastAllocatedSequences());
 
-        Tutor tutor = registry.addTutor(details("Alex Tan", "00012345"));
-        Student student = registry.addStudent(details("Bob Tan", null), new EducationLevel("P1"),
+        Tutor tutor = registry.addTutor(createContactDetails("Alex Tan", "00012345"));
+        Student student = registry.addStudent(createContactDetails("Bob Tan", null), new EducationLevel("P1"),
                 new Phone("00987654"));
-        Parent parent = registry.addParent(details("Carol Tan", "00987654"));
-        Student sibling = registry.addStudent(details("Dan Tan", null), new EducationLevel("S2"),
+        Parent parent = registry.addParent(createContactDetails("Carol Tan", "00987654"));
+        Student sibling = registry.addStudent(createContactDetails("Dan Tan", null), new EducationLevel("S2"),
                 new Phone("00987654"));
-        Tutor secondTutor = registry.addTutor(details("Eve Tan", "00123456"));
+        Tutor secondTutor = registry.addTutor(createContactDetails("Eve Tan", "00123456"));
 
         assertEquals(List.of(tutor, student, parent, sibling, secondTutor), registry.getPeople());
         List<PersonId> ids = registry.getPeople().stream().map(PersonRecord::getId).toList();
         assertEquals(List.of(new PersonId("T1"), new PersonId("S1"), new PersonId("P1"),
                 new PersonId("S2"), new PersonId("T2")), ids);
-        assertEquals(counters(2, 2, 1), registry.exportState().getLastAllocatedSequences());
+        assertEquals(createCounters(2, 2, 1), registry.exportState().getLastAllocatedSequences());
         for (PersonRecord record : registry.getPeople()) {
             assertEquals(Optional.of(record), registry.getPerson(record.getId()));
         }
@@ -48,9 +48,9 @@ public class PeopleRegistryTest {
     @Test
     public void add_businessDuplicates_rejectsOptionalChangesWithoutConsumingIds() {
         PeopleRegistry registry = new PeopleRegistry();
-        registry.addStudent(details("Alex Tan", null), new EducationLevel("P1"), new Phone("00012345"));
-        registry.addTutor(details("Alex Tan", "00012345"));
-        registry.addParent(details("Alex Tan", "00012345"));
+        registry.addStudent(createContactDetails("Alex Tan", null), new EducationLevel("P1"), new Phone("00012345"));
+        registry.addTutor(createContactDetails("Alex Tan", "00012345"));
+        registry.addParent(createContactDetails("Alex Tan", "00012345"));
         PeopleRegistryState before = registry.exportState();
         ContactDetails changedOptionalFields = new ContactDetails(new Name("Alex  TAN "),
                 Optional.of(new Phone("00012345")), Optional.of(new Email("alex@example.com")),
@@ -62,12 +62,12 @@ public class PeopleRegistryTest {
         assertThrows(DuplicatePersonException.class, () -> registry.addParent(changedOptionalFields));
         assertEquals(before, registry.exportState());
 
-        Student sibling = registry.addStudent(details("Bob Tan", null), new EducationLevel("P1"),
+        Student sibling = registry.addStudent(createContactDetails("Bob Tan", null), new EducationLevel("P1"),
                 new Phone("00012345"));
-        Student otherParentPhone = registry.addStudent(details("Alex Tan", null), new EducationLevel("P1"),
+        Student otherParentPhone = registry.addStudent(createContactDetails("Alex Tan", null), new EducationLevel("P1"),
                 new Phone("0012345"));
-        Tutor otherTutorPhone = registry.addTutor(details("Alex Tan", "0012345"));
-        Parent otherParent = registry.addParent(details("Alex Tan", "0012345"));
+        Tutor otherTutorPhone = registry.addTutor(createContactDetails("Alex Tan", "0012345"));
+        Parent otherParent = registry.addParent(createContactDetails("Alex Tan", "0012345"));
 
         assertEquals(new PersonId("S2"), sibling.getId());
         assertEquals(new PersonId("S3"), otherParentPhone.getId());
@@ -79,7 +79,7 @@ public class PeopleRegistryTest {
     public void add_invalidRequiredFields_leavesRecordsAndCountersUnchanged() {
         PeopleRegistry registry = new PeopleRegistry();
         PeopleRegistryState before = registry.exportState();
-        ContactDetails noPhone = details("Alex Tan", null);
+        ContactDetails noPhone = createContactDetails("Alex Tan", null);
 
         assertThrows(IllegalArgumentException.class, () -> registry.addTutor(noPhone));
         assertThrows(IllegalArgumentException.class, () -> registry.addParent(noPhone));
@@ -95,15 +95,15 @@ public class PeopleRegistryTest {
 
         assertEquals(new PersonId("S1"), registry.addStudent(noPhone,
                 new EducationLevel("S2"), new Phone("00012345")).getId());
-        assertEquals(new PersonId("T1"), registry.addTutor(details("Alex Tan", "00012345")).getId());
-        assertEquals(new PersonId("P1"), registry.addParent(details("Alex Tan", "00012345")).getId());
+        assertEquals(new PersonId("T1"), registry.addTutor(createContactDetails("Alex Tan", "00012345")).getId());
+        assertEquals(new PersonId("P1"), registry.addParent(createContactDetails("Alex Tan", "00012345")).getId());
     }
 
     @Test
     public void remove_referencesAndCheckerFailure_preservesCompleteState() {
         PeopleRegistry registry = new PeopleRegistry();
-        Tutor tutor = registry.addTutor(details("Alex Tan", "00012345"));
-        Parent parent = registry.addParent(details("Bob Tan", "00987654"));
+        Tutor tutor = registry.addTutor(createContactDetails("Alex Tan", "00012345"));
+        Parent parent = registry.addParent(createContactDetails("Bob Tan", "00987654"));
         PeopleRegistryState before = registry.exportState();
 
         assertThrows(ReferencedPersonException.class, () -> registry.remove(tutor.getId(), record -> {
@@ -127,9 +127,9 @@ public class PeopleRegistryTest {
     @Test
     public void remove_existingRecord_retainsOrderAndNeverReusesCommittedId() {
         PeopleRegistry registry = new PeopleRegistry();
-        Tutor first = registry.addTutor(details("Alex Tan", "00012345"));
-        Parent parent = registry.addParent(details("Bob Tan", "00987654"));
-        Tutor second = registry.addTutor(details("Carol Tan", "00123456"));
+        Tutor first = registry.addTutor(createContactDetails("Alex Tan", "00012345"));
+        Parent parent = registry.addParent(createContactDetails("Bob Tan", "00987654"));
+        Tutor second = registry.addTutor(createContactDetails("Carol Tan", "00123456"));
 
         assertEquals(first, registry.remove(first.getId(), record -> false));
         assertEquals(List.of(parent, second), registry.getPeople());
@@ -145,8 +145,8 @@ public class PeopleRegistryTest {
     @Test
     public void snapshotsAndCopies_laterMutations_preservesIndependentState() {
         PeopleRegistry original = new PeopleRegistry();
-        Tutor tutor = original.addTutor(details("Alex Tan", "00012345"));
-        Student student = original.addStudent(details("Bob Tan", null), new EducationLevel("S2"),
+        Tutor tutor = original.addTutor(createContactDetails("Alex Tan", "00012345"));
+        Student student = original.addStudent(createContactDetails("Bob Tan", null), new EducationLevel("S2"),
                 new Phone("00987654"));
         List<PersonRecord> snapshot = original.getPeople();
         PeopleRegistryState exported = original.exportState();
@@ -162,8 +162,8 @@ public class PeopleRegistryTest {
                 List.of(student, tutor), exported.getLastAllocatedSequences())));
 
         copied.remove(tutor.getId(), record -> false);
-        original.addParent(details("Carol Tan", "00123456"));
-        imported.addTutor(details("Dan Tan", "00111111"));
+        original.addParent(createContactDetails("Carol Tan", "00123456"));
+        imported.addTutor(createContactDetails("Dan Tan", "00111111"));
 
         assertEquals(List.of(tutor, student), snapshot);
         assertEquals(List.of(tutor, student), exported.getPeople());
@@ -176,26 +176,26 @@ public class PeopleRegistryTest {
 
     @Test
     public void import_deletedIdsAndArbitraryRowOrder_preservesAllocationAndGlobalOrder() {
-        Student laterId = new Student(new PersonId("S8"), details("Alex Tan", null),
+        Student laterId = new Student(new PersonId("S8"), createContactDetails("Alex Tan", null),
                 new EducationLevel("S2"), new Phone("00012345"));
-        Tutor tutor = new Tutor(new PersonId("T2"), details("Bob Tan", "00987654"));
-        Student earlierId = new Student(new PersonId("S2"), details("Carol Tan", null),
+        Tutor tutor = new Tutor(new PersonId("T2"), createContactDetails("Bob Tan", "00987654"));
+        Student earlierId = new Student(new PersonId("S2"), createContactDetails("Carol Tan", null),
                 new EducationLevel("P1"), new Phone("00012345"));
         PeopleRegistry registry = new PeopleRegistry(new PeopleRegistryState(
-                List.of(laterId, tutor, earlierId), counters(10, 4, 7)));
+                List.of(laterId, tutor, earlierId), createCounters(10, 4, 7)));
 
         assertEquals(List.of(laterId, tutor, earlierId), registry.getPeople());
-        assertEquals(new PersonId("S11"), registry.addStudent(details("Dan Tan", null),
+        assertEquals(new PersonId("S11"), registry.addStudent(createContactDetails("Dan Tan", null),
                 new EducationLevel("S2"), new Phone("00012345")).getId());
-        assertEquals(new PersonId("T5"), registry.addTutor(details("Eve Tan", "00123456")).getId());
-        assertEquals(new PersonId("P8"), registry.addParent(details("Frank Tan", "00234567")).getId());
-        assertEquals(counters(11, 5, 8), registry.exportState().getLastAllocatedSequences());
+        assertEquals(new PersonId("T5"), registry.addTutor(createContactDetails("Eve Tan", "00123456")).getId());
+        assertEquals(new PersonId("P8"), registry.addParent(createContactDetails("Frank Tan", "00234567")).getId());
+        assertEquals(createCounters(11, 5, 8), registry.exportState().getLastAllocatedSequences());
     }
 
     @Test
     public void allocation_lastLongIdAndDeletion_preservesExhaustionAcrossImports() {
         for (PersonRole role : PersonRole.values()) {
-            Map<PersonRole, Long> highWaterMarks = counters(0, 0, 0);
+            Map<PersonRole, Long> highWaterMarks = createCounters(0, 0, 0);
             highWaterMarks.put(role, Long.MAX_VALUE - 1);
             PeopleRegistry registry = new PeopleRegistry(new PeopleRegistryState(List.of(), highWaterMarks));
             PersonRecord last = addRecord(registry, role);
@@ -217,10 +217,10 @@ public class PeopleRegistryTest {
     @Test
     public void equality_samePeopleDifferentAllocationState_distinguishesDeletedIdHistory() {
         PeopleRegistry original = new PeopleRegistry();
-        original.addTutor(details("Alex Tan", "00012345"));
+        original.addTutor(createContactDetails("Alex Tan", "00012345"));
         PeopleRegistry same = new PeopleRegistry(original.exportState());
         PeopleRegistry differentCounters = new PeopleRegistry(new PeopleRegistryState(
-                original.getPeople(), counters(0, 2, 0)));
+                original.getPeople(), createCounters(0, 2, 0)));
 
         assertEquals(original, original);
         assertEquals(original, same);
@@ -234,7 +234,7 @@ public class PeopleRegistryTest {
     }
 
     private static PersonRecord addRecord(PeopleRegistry registry, PersonRole role) {
-        ContactDetails contactDetails = details("Alex Tan", "00012345");
+        ContactDetails contactDetails = createContactDetails("Alex Tan", "00012345");
         return switch (role) {
             case STUDENT -> registry.addStudent(contactDetails, new EducationLevel("S2"), new Phone("00987654"));
             case TUTOR -> registry.addTutor(contactDetails);
@@ -242,12 +242,12 @@ public class PeopleRegistryTest {
         };
     }
 
-    private static ContactDetails details(String name, String phone) {
+    private static ContactDetails createContactDetails(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.ofNullable(phone).map(Phone::new),
                 Optional.empty(), Optional.empty());
     }
 
-    private static Map<PersonRole, Long> counters(long student, long tutor, long parent) {
+    private static Map<PersonRole, Long> createCounters(long student, long tutor, long parent) {
         Map<PersonRole, Long> highWaterMarks = new EnumMap<>(PersonRole.class);
         highWaterMarks.put(PersonRole.STUDENT, student);
         highWaterMarks.put(PersonRole.TUTOR, tutor);

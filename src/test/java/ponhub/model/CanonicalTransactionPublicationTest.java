@@ -48,8 +48,8 @@ import ponhub.model.search.SearchField;
 public class CanonicalTransactionPublicationTest {
     @Test
     public void execute_changedAggregate_savesBeforeOneCompletePublication() throws Exception {
-        PonHubDataState before = fixture(false);
-        PonHubDataState candidate = fixture(true);
+        PonHubDataState before = createState(false);
+        PonHubDataState candidate = createState(true);
         PonHubData live = new PonHubData(before);
         PeopleView view = new PeopleView(live);
         view.setRoleFilter(Optional.of(PersonRole.STUDENT));
@@ -76,8 +76,8 @@ public class CanonicalTransactionPublicationTest {
 
     @Test
     public void execute_equalRebuiltSnapshot_keepsRootAndHeldListSilent() throws Exception {
-        PonHubDataState before = fixture(false);
-        PonHubDataState rebuilt = fixture(false);
+        PonHubDataState before = createState(false);
+        PonHubDataState rebuilt = createState(false);
         assertEquals(before, rebuilt);
         assertNotSame(before, rebuilt);
         assertNotSame(before.people(), rebuilt.people());
@@ -106,7 +106,7 @@ public class CanonicalTransactionPublicationTest {
 
     @Test
     public void execute_roleFilterOnly_refreshesHeldListAndSkipsIdenticalFilter() throws Exception {
-        PonHubDataState before = fixture(false);
+        PonHubDataState before = createState(false);
         PonHubData live = new PonHubData(before);
         PeopleView view = new PeopleView(live);
         PublicationProbe probe = new PublicationProbe(live, view);
@@ -132,7 +132,7 @@ public class CanonicalTransactionPublicationTest {
 
     @Test
     public void execute_searchFilterOnly_refreshesHeldListAndSkipsEqualCriteria() throws Exception {
-        PonHubDataState before = fixture(false);
+        PonHubDataState before = createState(false);
         PonHubData live = new PonHubData(before);
         PeopleView view = new PeopleView(live);
         view.setRoleFilter(Optional.of(PersonRole.STUDENT));
@@ -165,7 +165,7 @@ public class CanonicalTransactionPublicationTest {
 
     @Test
     public void execute_clearSearchKeepingRole_refreshesHeldListWithoutPublishingRoot() throws Exception {
-        PonHubDataState before = fixture(false);
+        PonHubDataState before = createState(false);
         PonHubData live = new PonHubData(before);
         PeopleView view = new PeopleView(live);
         view.setSearchCriteria(searchAlex());
@@ -194,7 +194,7 @@ public class CanonicalTransactionPublicationTest {
     /**
      * Builds independent snapshots; the changed snapshot replaces a person, roster, attendance and both counters.
      */
-    private static PonHubDataState fixture(boolean isChanged) {
+    private static PonHubDataState createState(boolean isChanged) {
         Tutor tutor = new Tutor(new PersonId("T2"), new ContactDetails(new Name("Tutor"),
                 Optional.of(new Phone("92345678")), Optional.empty(), Optional.empty()));
         Student alex = new Student(new PersonId("S7"),
@@ -231,12 +231,12 @@ public class CanonicalTransactionPublicationTest {
             live.stateProperty().addListener((InvalidationListener) observable ->
                     invalidatedStates.add(live.exportState()));
             live.stateProperty().addListener((observable, previous, current) -> {
-                rootPublications.add(new RootPublication(previous, current, live.exportState(), lastSavedState()));
+                rootPublications.add(new RootPublication(previous, current, live.exportState(), getLastSavedState()));
                 events.add("root");
             });
             heldPeople.addListener((ListChangeListener<PersonRecord>) change -> {
                 viewPublications.add(new ViewPublication(List.copyOf(change.getList()),
-                        live.exportState(), lastSavedState()));
+                        live.exportState(), getLastSavedState()));
                 events.add("people");
             });
             executor = new CanonicalCommandExecutor(view, state -> {
@@ -246,7 +246,7 @@ public class CanonicalTransactionPublicationTest {
             }, Optional::empty);
         }
 
-        private PonHubDataState lastSavedState() {
+        private PonHubDataState getLastSavedState() {
             return savedStates.isEmpty() ? null : savedStates.getLast();
         }
 
