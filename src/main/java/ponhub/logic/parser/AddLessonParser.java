@@ -33,7 +33,8 @@ public final class AddLessonParser {
     private static final Pattern PREFIX_PATTERN = Pattern.compile("(?<!\\S)([^\\s/]+/)",
             Pattern.UNICODE_CHARACTER_CLASS);
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
-    private static final Pattern SUBJECT_MARKER_PATTERN = Pattern.compile("\\s+s/(?=o(\\s|$))");
+    private static final Pattern SUBJECT_MARKER_PATTERN = Pattern.compile("\\s+s/(?=o(\\s|$))",
+            Pattern.UNICODE_CHARACTER_CLASS);
 
     /**
      * Parses arguments after {@code addlesson} into validated lesson-creation input.

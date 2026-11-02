@@ -90,6 +90,13 @@ public class SlashContactParserTest {
             assertEquals(new Name("Bob Ong"), input.tutorName(), arguments);
             assertEquals(new Subject("o level math"), input.subject(), arguments);
         }
+        // Supported horizontal Unicode spaces between prefixes behave like an ordinary space.
+        for (String space : List.of("\u00a0", "\u2003", "\u202f")) {
+            LessonCreationInput input = new AddLessonParser()
+                    .parse("d/Wed st/1100 et/1200 tu/Bob Ong" + space + "s/o level math rm/R3");
+            assertEquals(new Name("Bob Ong"), input.tutorName(), space);
+            assertEquals(new Subject("o level math"), input.subject(), space);
+        }
         // Boundary: a single-letter subject directly before the next prefix.
         LessonCreationInput shortSubject = new AddLessonParser().parse("d/Thu st/1100 et/1200 tu/Bob Ong s/o rm/R5");
         assertEquals(new Name("Bob Ong"), shortSubject.tutorName());
