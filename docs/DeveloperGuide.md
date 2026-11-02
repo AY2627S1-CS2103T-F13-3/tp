@@ -46,6 +46,7 @@ This guide progresses from high-level setup and architecture to domain rules, fe
   * **[Appendix A: Requirements](#appendix-requirements):** Review the requirements.
   * **[Appendix B: Instructions for Manual Testing](#appendix-instructions-for-manual-testing):** Run the manual testing workflows.
   * **[Appendix C: Glossary](#terms-used-in-this-guide):** Look up terms used in this guide.
+  * **[Appendix D: Acknowledgements](#appendix-acknowledgements):** See reused work, libraries and AI-assistance credits.
 
 Before diving into the code, note these core software terms used throughout PonHub's class names and documentation (full definitions appear in the [Glossary](#terms-used-in-this-guide)):
 
@@ -126,7 +127,7 @@ Run the automated test suite and style checks from the repository root:
   ```
 
 **Enabling development assertions:**
-Both `./gradlew run` and `./gradlew test` enable Java assertions (`-ea`) automatically. If you launch `ponhub.Main` directly through an IntelliJ **Application** or **JUnit** run configuration instead of delegating to Gradle, add `-ea` to **VM options**.
+Both `./gradlew run` and `./gradlew test` enable Java assertions (`-ea`) automatically. If you launch `ponhub.Main` through an IntelliJ **Application** run configuration, or run tests with IntelliJ's own JUnit runner, instead of delegating to Gradle, add `-ea` to **VM options**.
 
 Use `assert` statements to catch internal programming bugs (such as an unexpected null reference or a mutated live state during a staged transaction). Always use normal runtime checks and exceptions to validate user input and external files, because end users run `java -jar ponhub.jar` with assertions disabled. See the [Testing guide](Testing.html#running-tests) for report locations.
 
@@ -424,7 +425,7 @@ A `Lesson` is one shared weekly booking with a stable ID, Tutor, time slot, subj
 | Lesson ID | `L` followed by a positive `long` sequence, such as `L1`. | Zero, leading zeros, missing prefix or an out-of-range sequence. |
 | Weekday | `Mon` through `Sun`, matched case-insensitively. | Unknown weekday values. |
 | Time slot | Four-digit times from `0000` to `2359`, with the start before the end on the same day. | Invalid clock times, equal endpoints, reversed or overnight slots. |
-| Subject | 1–50 Unicode letters or digits after space normalisation, separated by single spaces or hyphens, such as `A-Math`. | Empty or overlong values, other punctuation, repeated hyphens or mixed separators. |
+| Subject | 1–50 characters after space normalisation, counting separators: Unicode letters or digits separated by single spaces or hyphens, such as `A-Math`. | Empty or overlong values, other punctuation, repeated hyphens or mixed separators. |
 | Room | 1–10 ASCII letters or digits with optional single internal hyphens. Surrounding spaces are trimmed and letters stored in uppercase: `b-01` becomes `B-01`. | Empty or overlong values, internal spaces, other punctuation, or leading, trailing or repeated hyphens. |
 
 #### Tutor selection
@@ -721,7 +722,7 @@ feedback before returning to the executor. [Editable source](diagrams/PeopleChan
 #### Creating a lesson (`addlesson`)
 
 ```text
-addlesson d/DAY st/START_TIME et/END_TIME s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM
+addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM
 ```
 
 1. **Parse:** `AddLessonParser` validates the weekday, time slot, subject, tutor name/phone, and room into a `LessonCreationInput` without reading model state or allocating a `LessonId`.
