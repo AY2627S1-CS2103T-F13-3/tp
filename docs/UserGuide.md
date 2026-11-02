@@ -16,9 +16,13 @@ expandable_toc: true
 * **Returning users:** Jump straight to the [Command summary](#command-summary) and follow the link to the command you need.
 * **Warnings or save errors:** Go to [Saving and protecting your data](#saving-and-protecting-your-data) before making changes or deleting files.
 
-## Introduction
+<a id="introduction"></a>
 
-### What PonHub does
+## 1. Introduction
+
+<a id="what-ponhub-does"></a>
+
+### 1.1 What PonHub does
 
 PonHub is a desktop application for tuition-centre administrators. You can use it to:
 * Keep contact records for students, tutors, and parents.
@@ -31,7 +35,7 @@ PonHub is designed for fast keyboard work. You type a command in the box at the 
 
 <a id="quick-start"></a>
 
-## Quick start
+## 2. Quick start
 
 Follow these steps to go from download to a working PonHub window in a few minutes.
 
@@ -52,7 +56,9 @@ Next, follow the [First-session walkthrough](#first-session-walkthrough) to try 
 <a id="planned-quick-start"></a>
 <a id="shared-lesson-example"></a>
 
-## First-session walkthrough
+<a id="first-session-walkthrough"></a>
+
+## 3. First-session walkthrough
 
 This walkthrough takes you through a complete session: adding people, creating a shared lesson, enrolling students, marking attendance, unenrolling while keeping history, testing deletion guards, and checking that everything is saved on restart.
 
@@ -123,11 +129,15 @@ This walkthrough takes you through a complete session: adding people, creating a
 
 --------------------------------------------------------------------------------------------------------------------
 
-## PonHub basics
+<a id="ponhub-basics"></a>
+
+## 4. PonHub basics
 
 Read this section once before diving into the individual commands. It explains the window layout and the three rules every command relies on.
 
-### The main window
+<a id="the-main-window"></a>
+
+### 4.1 The main window
 
 The PonHub window is split into four areas:
 * **People panel (left):** Shows student, tutor, and parent cards.
@@ -148,7 +158,9 @@ Above the lists sit three shortcut buttons (**All lessons**, **Student lessons**
 <a id="reading-the-command-formats"></a>
 <a id="reading-the-planned-command-formats"></a>
 
-### Reading command formats
+<a id="reading-command-formats"></a>
+
+### 4.2 Reading command formats
 
 Throughout this guide, command formats use these conventions:
 * **`UPPERCASE` words** are placeholders you replace with your own values (for example, `NAME` or `LESSON_ID`). **Lowercase words** such as `r/student` are typed exactly as shown.
@@ -164,7 +176,9 @@ Throughout this guide, command formats use these conventions:
 <a id="selecting-people-and-lessons"></a>
 <a id="people-positions-and-stable-ids"></a>
 
-### Positions and stable IDs
+<a id="positions-and-stable-ids"></a>
+
+### 4.3 Positions and stable IDs
 
 PonHub uses two different kinds of identifiers. Knowing when to use each avoids targeting the wrong record:
 
@@ -180,7 +194,9 @@ PonHub uses two different kinds of identifiers. Knowing when to use each avoids 
 
 **Good habit:** Always check the current people list on the left before running any command that takes `INDEX` or `STUDENT_INDEX`.
 
-#### Example: how positions change while stable IDs stay fixed
+<a id="example-how-positions-change-while-stable-ids-stay-fixed"></a>
+
+#### 4.3.1 Example: how positions change while stable IDs stay fixed
 
 In a fresh, empty data file, running these seven commands in order produces the following positions and stable IDs:
 
@@ -198,7 +214,9 @@ Notice that Jamie keeps `S2` throughout, even as her position shifts from `3` to
 
 <a id="planned-failure-and-data-behavior"></a>
 
-### When a command fails or cannot save
+<a id="when-a-command-fails-or-cannot-save"></a>
+
+### 4.4 When a command fails or cannot save
 
 Every command in PonHub follows the same safety rules when something goes wrong:
 * **Invalid input changes nothing:** If a command has a syntax error, fails a validation check, or is blocked by a clash or dependency, PonHub explains the problem, leaves all records and panels unchanged, and keeps your typed text in the command box so you can fix it.
@@ -211,7 +229,9 @@ Every command in PonHub follows the same safety rules when something goes wrong:
 <a id="planned-command-summary"></a>
 <a id="command-format-reference"></a>
 
-## Command summary
+<a id="command-summary"></a>
+
+## 5. Command summary
 
 Use this table as a quick lookup. Click any action to read its full rules and examples.
 
@@ -243,13 +263,17 @@ Use this table as a quick lookup. Click any action to read its full rules and ex
 
 --------------------------------------------------------------------------------------------------------------------
 
-## Managing people
+<a id="managing-people"></a>
+
+## 6. Managing people
 
 Add, view, copy, edit, and delete student, tutor, and parent records. Remember to check the current people list before running any command that uses `INDEX`.
 
 <a id="1-adding-a-person-add"></a>
 
-### Adding a person: `add`
+<a id="adding-a-person-add"></a>
+
+### 6.1 Adding a person: `add`
 
 Creates a new student, tutor, or parent record and assigns it a permanent ID (`S1`, `T1`, or `P1`).
 
@@ -281,7 +305,9 @@ Creates a new student, tutor, or parent record and assigns it a permanent ID (`S
 
 <a id="2-listing-people-list"></a>
 
-### Listing people: `list`
+<a id="listing-people-list"></a>
+
+### 6.2 Listing people: `list`
 
 Shows everyone in PonHub, or filters the people panel to a single role.
 
@@ -303,7 +329,9 @@ Use the singular role name `student`, `tutor`, or `parent` (case-insensitive). T
 **Notes:**
 * Listing only changes what is displayed; it never modifies or saves data.
 
-### Copying contact details
+<a id="copying-contact-details"></a>
+
+### 6.3 Copying contact details
 
 You can copy a person's phone number, parent phone, email, or address directly from their card without selecting text manually.
 
@@ -317,7 +345,7 @@ You can copy a person's phone number, parent phone, email, or address directly f
 <a id="editing-a-person-edit"></a>
 
 <!-- @@author ErnestChuaa -->
-### Editing a person: `edit`
+### 6.4 Editing a person: `edit`
 
 Updates one student, tutor, or parent while keeping their role, stable ID, lessons, and attendance history intact.
 
@@ -341,7 +369,9 @@ Supply at least one field to change. Omitted fields stay as they are. All values
 
 <a id="3-deleting-a-person-delete"></a>
 
-### Deleting a person: `delete`
+<a id="deleting-a-person-delete"></a>
+
+### 6.5 Deleting a person: `delete`
 
 Permanently removes one unreferenced person using a two-step preview and confirmation.
 
@@ -376,13 +406,17 @@ After `delete confirm`, PonHub saves the change, reports `Deleted parent: Pat Ta
 <a id="planned-shared-lesson-workflow"></a>
 <a id="shared-lesson-workflow"></a>
 
-## Managing lessons
+<a id="managing-lessons"></a>
+
+## 7. Managing lessons
 
 A **shared lesson** is one recurring weekly slot—defined by a weekday, start and end time, subject, tutor, and room—with a roster of enrolled students and a permanent ID such as `L1`. Multiple students enrol in the same shared lesson rather than creating separate lesson records.
 
 <a id="4-creating-shared-lessons-and-other-lesson-operations"></a>
 
-### Creating a lesson: `addlesson`
+<a id="creating-a-lesson-addlesson"></a>
+
+### 7.1 Creating a lesson: `addlesson`
 
 Creates a new weekly shared lesson with an empty student roster.
 
@@ -406,8 +440,10 @@ See [Field reference](#field-reference) for the exact format of `d/`, `st/`, `et
 
 <a id="editing-a-shared-lesson-editlesson"></a>
 
+<a id="editing-a-lesson-editlesson"></a>
+
 <!-- @@author ys000009 -->
-### Editing a lesson: `editlesson`
+### 7.2 Editing a lesson: `editlesson`
 
 Updates an existing lesson's schedule, subject, tutor, or room while keeping its stable ID, catalogue position, roster, and attendance history.
 
@@ -434,7 +470,9 @@ Supply `lid/LESSON_ID` and at least one field to change. You can edit `st/` or `
 
 <a id="5-enrolling-and-unenrolling-students"></a>
 
-### Enrolling a student: `enrol`
+<a id="enrolling-a-student-enrol"></a>
+
+### 7.3 Enrolling a student: `enrol`
 
 Adds a student to a shared lesson's current roster.
 
@@ -453,7 +491,9 @@ Adds a student to a shared lesson's current roster.
 * PonHub rejects the command if the student is already enrolled in `lid/LESSON_ID` or if the lesson overlaps another lesson the student is enrolled in on the same weekday. Back-to-back lessons and lessons at the same time on different weekdays are fine.
 * **No automatic class-size cap:** PonHub does not enforce a maximum room capacity. Check your room's physical limit before enrolling; **Students enrolled** shows the number of current members, not remaining seats.
 
-### Unenrolling a student: `unenrol`
+<a id="unenrolling-a-student-unenrol"></a>
+
+### 7.4 Unenrolling a student: `unenrol`
 
 Removes a student from a lesson's current roster while keeping their past attendance records.
 
@@ -471,7 +511,9 @@ Removes a student from a lesson's current roster while keeping their past attend
 * Unenrolling a student who is not currently on that lesson's roster is rejected without changes.
 * **Positions can shift in a relationship search:** Both `enrol` and `unenrol` keep your active people filter and refresh relationship searches. For example, if Alex (`1`) and Jamie (`2`) are listed by `search c/student d/Mon s/Math`, unenrolling Alex from his only Monday Math lesson removes him from the search results and moves Jamie to position `1`. Always recheck the people list before your next indexed command.
 
-### Deleting a lesson: `deletelesson`
+<a id="deleting-a-lesson-deletelesson"></a>
+
+### 7.5 Deleting a lesson: `deletelesson`
 
 Permanently removes an unreferenced shared lesson.
 
@@ -492,13 +534,17 @@ Use the stable lesson ID shown on the lesson card (such as `lid/L1`), never a li
 
 --------------------------------------------------------------------------------------------------------------------
 
-## Viewing lessons
+<a id="viewing-lessons"></a>
+
+## 8. Viewing lessons
 
 Use the right-hand panel to browse the full lesson catalogue, check one student's timetable, or inspect a single lesson's roster and dated attendance.
 
 <a id="listing-and-searching-shared-lessons"></a>
 
-### Listing lessons: `lessons`
+<a id="listing-lessons-lessons"></a>
+
+### 8.1 Listing lessons: `lessons`
 
 Displays either the complete lesson catalogue or the lessons a single student is currently enrolled in.
 
@@ -523,7 +569,9 @@ Displays either the complete lesson catalogue or the lessons a single student is
 
 <a id="lesson-details"></a>
 
-### Viewing lesson details: `showlesson`
+<a id="viewing-lesson-details-showlesson"></a>
+
+### 8.2 Viewing lesson details: `showlesson`
 
 Opens a read-only detail view for one lesson, showing its current roster and (optionally) attendance statuses for a specific date.
 
@@ -548,7 +596,9 @@ The `lid/` and `d/` prefixes can appear in either order. When `d/` is supplied, 
 
 <a id="moving-between-results"></a>
 
-### Switching result views
+<a id="switching-result-views"></a>
+
+### 8.3 Switching result views
 
 You can switch the right-hand panel at any time either by typing a command (`lessons`, `lessons STUDENT_INDEX`, `history STUDENT_INDEX`, `showlesson`, or `search c/lesson`) or by clicking the shortcut buttons above the panels:
 
@@ -566,7 +616,9 @@ You can switch the right-hand panel at any time either by typing a command (`les
 
 --------------------------------------------------------------------------------------------------------------------
 
-## Tracking attendance
+<a id="tracking-attendance"></a>
+
+## 9. Tracking attendance
 
 PonHub keeps **current enrolment** (who is on a lesson's roster right now) separate from **dated attendance** (what happened on a specific date):
 * Unenrolling a student removes them from the current roster, but keeps all of their dated attendance records.
@@ -574,7 +626,9 @@ PonHub keeps **current enrolment** (who is on a lesson's roster right now) separ
 
 <a id="7-recording-attendance-and-retrieving-history"></a>
 
-### Marking attendance: `mark`
+<a id="marking-attendance-mark"></a>
+
+### 9.1 Marking attendance: `mark`
 
 Records or corrects a student's `present` or `absent` status for one dated occurrence of a lesson.
 
@@ -594,7 +648,9 @@ Records or corrects a student's `present` or `absent` status for one dated occur
 * **Correcting existing records:** Running `mark` again on the same student, lesson, and date with the opposite status updates that record in place—even if the student has since been unenrolled. Running `mark` with the status already stored reports that nothing changed and does not save.
 * **Future dates:** You can mark `s/absent` on a future date right away (for example, for a planned absence). Marking `s/present` on a future date requires adding `ack/future` to confirm that the future date is intentional; `ack/future` does not bypass any other check.
 
-### Removing an attendance record: `unmark`
+<a id="removing-an-attendance-record-unmark"></a>
+
+### 9.2 Removing an attendance record: `unmark`
 
 Deletes one dated attendance record so that the occurrence becomes `unrecorded` again.
 
@@ -615,7 +671,9 @@ Do not include `s/` in `unmark`.
 
 <a id="attendance-history"></a>
 
-### Viewing attendance history: `history`
+<a id="viewing-attendance-history-history"></a>
+
+### 9.3 Viewing attendance history: `history`
 
 Displays a student's recorded attendance entries in the right-hand panel, with optional filters for lesson, date, and status.
 
@@ -643,13 +701,17 @@ Optional filters can appear in any order, once each, and must all match. Run `hi
 
 --------------------------------------------------------------------------------------------------------------------
 
-## Searching
+<a id="searching"></a>
+
+## 10. Searching
 
 Find people or lessons by their own fields or by how they are connected (such as finding parents through a child's lesson, or tutors through the students they teach).
 
 <a id="searching-people-search"></a>
 
-### Searching people
+<a id="searching-people"></a>
+
+### 10.1 Searching people
 
 Searches students, parents, or tutors and displays the matches in the left-hand people panel.
 
@@ -671,7 +733,9 @@ See the [Search filter reference](#search-filter-reference) for every filter acc
 * **Reading long search headings with the keyboard:** When a search heading is too long to fit on one line, press **Tab** or **Shift+Tab** to focus the heading (shown by an orange border), scroll through all criteria with **Up/Down**, **Page Up/Page Down**, or **Home/End**, then press **Tab** to move on.
 * **Ending a search:** Run `list` or `list r/ROLE` to return to the full or role-filtered people list.
 
-### Searching lessons
+<a id="searching-lessons"></a>
+
+### 10.2 Searching lessons
 
 Searches the shared lesson catalogue and displays matches in the right-hand panel without changing the people list on the left.
 
@@ -691,7 +755,9 @@ Searches the shared lesson catalogue and displays matches in the right-hand pane
 
 <a id="relationship-search-rules"></a>
 
-### How filters match
+<a id="how-filters-match"></a>
+
+### 10.3 How filters match
 
 Every `search` starts from the full catalogue (not by narrowing the previous search), and **all supplied filters must match together**:
 
@@ -715,8 +781,10 @@ Every `search` starts from the full catalogue (not by narrowing the previous sea
 <a id="6-searching-people-and-shared-lessons"></a>
 <a id="searching-people-and-shared-lessons"></a>
 
+<a id="search-filter-reference"></a>
+
 <!-- @@author ErnestChuaa -->
-### Search filter reference
+### 10.4 Search filter reference
 
 Use this matrix to see which prefixes are supported for each search category (`c/student`, `c/parent`, `c/tutor`, and `c/lesson`):
 
@@ -744,7 +812,7 @@ Any unsupported, category-incompatible, blank, or repeated prefix—or any value
 
 <a id="worked-search-example"></a>
 
-### Worked search example
+### 10.5 Worked search example
 
 To try these searches with reproducible IDs and positions, launch PonHub with a fresh data file:
 ```text
@@ -783,13 +851,17 @@ Now try two quick follow-ups on the same data:
 
 --------------------------------------------------------------------------------------------------------------------
 
-## Help and keyboard shortcuts
+<a id="help-and-keyboard-shortcuts"></a>
+
+## 11. Help and keyboard shortcuts
 
 Look up command syntax inside the app and navigate panels, history, and menus without leaving the keyboard.
 
 <a id="viewing-command-help-help"></a>
 
-### Getting help: `help`
+<a id="getting-help-help"></a>
+
+### 11.1 Getting help: `help`
 
 Displays built-in command summaries and detailed command usage right in the top feedback area.
 
@@ -811,7 +883,9 @@ Displays built-in command summaries and detailed command usage right in the top 
 <a id="completing-command-names-with-tab"></a>
 <a id="recalling-submitted-commands-with-up-and-down"></a>
 
-### Typing commands faster
+<a id="typing-commands-faster"></a>
+
+### 11.2 Typing commands faster
 
 * **Tab completion:** Type the start of a lowercase command word in the command box and press **Tab**—for example, `sho` completes to `showlesson`. When several commands match (such as `ad`), press **Tab** repeatedly to cycle through them (`add` → `addlesson` → `add`).
   * Only command words complete (never prefixes or values), and only when the cursor is inside or right after the command word with no text selected.
@@ -823,7 +897,9 @@ Displays built-in command summaries and detailed command usage right in the top 
 
 <a id="reading-long-responses-with-the-keyboard"></a>
 
-### Reading long responses
+<a id="reading-long-responses"></a>
+
+### 11.3 Reading long responses
 
 When `help` or another command displays a long message in the top response area:
 1. Leave the command box blank and press **Tab** past the result shortcut buttons (**All lessons**, **Student lessons**, **Attendance history**) until the response area shows an **orange focus outline**. (If you have an unfinished command in the box and **Tab** triggers command completion, press **Shift+Tab** to move focus out instead.)
@@ -832,7 +908,9 @@ When `help` or another command displays a long message in the top response area:
 
 You can also drag the horizontal divider below the response area downwards to give it more room, or select and copy text directly from it. Each new response automatically scrolls back to the top.
 
-### Using the menus from the keyboard on macOS
+<a id="using-the-menus-from-the-keyboard-on-macos"></a>
+
+### 11.4 Using the menus from the keyboard on macOS
 
 To open the **File** and **Help** menus from the keyboard on macOS:
 1. Press **Control+F10** to highlight **File** on the menu bar. (If your Mac's top row is set to control system features like brightness or volume, hold **Fn/Globe+Control** and tap **F10**.)
@@ -845,13 +923,17 @@ Keep **Control** released while pressing the arrow keys, because **Control+Down*
 
 <a id="data-protection-and-recovery"></a>
 
-## Saving and protecting your data
+<a id="saving-and-protecting-your-data"></a>
+
+## 12. Saving and protecting your data
 
 Learn where PonHub stores your files, how to back them up, and what to do if PonHub warns you about a protected data file or a failed save.
 
 <a id="data-protection-in-the-current-build"></a>
 
-### Where PonHub saves your data
+<a id="where-ponhub-saves-your-data"></a>
+
+### 12.1 Where PonHub saves your data
 
 All operational records—people, shared lessons, rosters, attendance history, and ID allocation counters—are saved together in one JSON file inside the folder containing `ponhub.jar`:
 * **Default data file:** `data/ponhub.json` (created automatically upon your first successful change; read-only commands never create or write to it).
@@ -868,7 +950,9 @@ For safety, PonHub rejects blank paths, paths outside the JAR folder (including 
 **Backing up your data:**
 Close PonHub first, then copy your selected operational data file (`data/ponhub.json` by default, or the custom `--data=PATH` file you selected) or the entire JAR folder to your backup location.
 
-### If PonHub shows "Data file protected"
+<a id="if-ponhub-shows-data-file-protected"></a>
+
+### 12.2 If PonHub shows "Data file protected"
 
 If your selected data file is unreadable, corrupted, modified with invalid JSON or broken links, from an unsupported version, or an unversioned legacy file, PonHub starts in a **protected session** and shows a **Data file protected** warning.
 
@@ -889,7 +973,9 @@ If your selected data file is unreadable, corrupted, modified with invalid JSON 
 
 <a id="checking-unsuccessful-saves-in-the-current-build"></a>
 
-### If a save fails
+<a id="if-a-save-fails"></a>
+
+### 12.3 If a save fails
 
 When a command reports a save error, the change is **not** applied to your open PonHub session—your on-screen lists and ID counters stay at their previous state. However, do not assume the selected data file on disk is unchanged; check where writing failed before continuing or restarting:
 
@@ -898,7 +984,9 @@ When a command reports a save error, the change is **not** applied to your open 
 * **When automatic recovery also fails:** Only when the save error explicitly reports `Save failed and automatic recovery failed ... Previous complete data is retained at ...` is that named `.ponhub-backup-*.bak` file guaranteed to hold your previous complete data. In that case, close PonHub immediately, keep copies of both files, and restore the backup identified by that message to the reported data-file path before continuing or restarting. Keep the backup until you have verified your records, relationships, attendance, and allocation counters.
 * **Failed first save:** A failed first save has no previous file or recovery backup; if its error warns of a partial file, close PonHub and inspect or remove the reported path before retrying.
 
-### Using more than one window
+<a id="using-more-than-one-window"></a>
+
+### 12.4 Using more than one window
 
 We recommend running **one PonHub window at a time**. If you accidentally open two windows on the same data file:
 * **Stale-window protection:** Once another window saves a change to the data file, your current window blocks its next save rather than overwriting the newer data on disk. Close the other windows, back up the data file, and restart PonHub so you see the latest records before re-entering your command.
@@ -908,7 +996,9 @@ We recommend running **one PonHub window at a time**. If you accidentally open t
 
 <a id="planned-scope-and-saved-file-reference"></a>
 
-### Editing the data file directly (advanced)
+<a id="editing-the-data-file-directly-advanced"></a>
+
+### 12.5 Editing the data file directly (advanced)
 
 `data/ponhub.json` is stored in human-readable JSON. We strongly recommend using PonHub's commands rather than editing the file by hand, because PonHub validates the **entire file** on startup—any mistake will start a [protected session](#if-ponhub-shows-data-file-protected).
 
@@ -925,7 +1015,9 @@ If you must edit the file directly, **close PonHub and make a backup copy first*
 
 <a id="capacity-and-large-datasets"></a>
 
-## FAQ
+<a id="faq"></a>
+
+## 13. FAQ
 
 **Q: Is there a maximum class size or a limit on total records?**<br>
 **A:** PonHub enforces no fixed cap on class size, lessons, people, or attendance records, and never trims or hides valid records as your file grows; all field, duplicate, clash, and ID-counter rules still apply. Note that this is a data-retention rule rather than a performance guarantee—response times depend on your computer and the mix of records stored.
@@ -951,7 +1043,9 @@ Keep a backup of the original folder until you have opened PonHub on the new com
 
 --------------------------------------------------------------------------------------------------------------------
 
-## Known issues
+<a id="known-issues"></a>
+
+## 14. Known issues
 
 1. **Some non-Latin characters in names may display as boxes (`□`):** If your operating system lacks a font glyph for a script you entered, the character may render as a box on screen. The exact Unicode name is still saved properly in `data/ponhub.json`.
 2. **macOS function keys and `Control+Down` in keyboard menu navigation:** On Mac keyboards where the top row defaults to media/system controls, pressing `F1` or `Control+F10` requires holding **Fn/Globe**, and pressing `Control+Down` triggers macOS Mission Control / App Exposé instead of opening a menu. Release `Control` before pressing the arrow keys (see [Using the menus from the keyboard on macOS](#using-the-menus-from-the-keyboard-on-macos)).
@@ -961,8 +1055,10 @@ Keep a backup of the original folder until you have opened PonHub on the new com
 
 <a id="future-proposals-coming-soon"></a>
 
+<a id="coming-soon"></a>
+
 <!-- @@author ErnestChuaa -->
-## Coming soon
+## 15. Coming soon
 
 The following features are planned for future versions and are not in PonHub v1.6:
 * **Scheduling:** Room capacity limits, waiting lists, make-up lessons, and cancelling a single dated occurrence of a weekly lesson.
@@ -973,7 +1069,9 @@ The following features are planned for future versions and are not in PonHub v1.
 
 --------------------------------------------------------------------------------------------------------------------
 
-## Field reference
+<a id="field-reference"></a>
+
+## 16. Field reference
 
 Every command that creates or edits a record (`add`, `edit`, `addlesson`, `editlesson`, `mark`, `unmark`) and PonHub's startup file loader validate values against the rules below.
 
@@ -994,7 +1092,9 @@ Every command that creates or edits a record (`add`, `edit`, `addlesson`, `editl
 
 --------------------------------------------------------------------------------------------------------------------
 
-## Glossary
+<a id="glossary"></a>
+
+## 17. Glossary
 
 * **Data file:** The JSON file on disk (by default `data/ponhub.json` next to `ponhub.jar`) that stores all people, shared lessons, rosters, attendance records, and ID allocation counters.
 * **Position (`INDEX` / `STUDENT_INDEX`):** The 1-based number (`1`, `2`, `3`, ...) shown on a card in the currently displayed people list on the left. Positions change when you filter, search, add, or delete people.
