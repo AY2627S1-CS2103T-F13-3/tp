@@ -982,7 +982,7 @@ If your selected data file is unreadable, corrupted, modified with invalid JSON 
 
 ### 12.3 If a save fails
 
-When a command reports a save error, the change is **not** applied to your open PonHub session—your on-screen lists and ID counters stay at their previous state. However, do not assume the selected data file on disk is unchanged; check where writing failed before continuing or restarting:
+When a command reports a save error, the change is **not** applied to your open PonHub session—your on-screen lists and ID counters stay at their previous state. To retry a person deletion, run `delete INDEX` again and then `delete confirm`; other commands can simply be entered again. However, do not assume the selected data file on disk is unchanged; check where writing failed before continuing or restarting:
 
 * **Preparation or backup-creation failure:** Failures that happen while preparing the temporary file or while copying the recovery backup (`.ponhub-backup-*.bak`) occur before file replacement and leave your previous data file intact. Do not overwrite your data file with a `.ponhub-backup-*.bak` file if an error happened while creating the backup itself, as that backup copy may be incomplete.
 * **Non-atomic replacement and automatic recovery:** On a file system that does not support atomic replacement, PonHub first saves your existing complete file in a sibling `.ponhub-backup-*.bak` file and tries an ordinary replacement. If that replacement fails, PonHub normally restores the previous file automatically.

@@ -1340,7 +1340,7 @@ Failure-injection tests verify that when a save fails during `add`, `edit`, `add
 
 1. The command throws a `CommandException` and does not publish the candidate state.
 2. Live records, ID counters, people filters, and right-pane query views remain identical to their pre-command state.
-3. Restoring a working writer and retrying the exact same command commits the change once using the expected next ID.
+3. Restoring a working writer and retrying commits the change exactly once; `add` and `addlesson` then use the expected next ID. A person-deletion retry repeats `delete INDEX` and then `delete confirm`, because the failed confirmation has already cleared the pending deletion; `deletelesson` and the other commands are retried unchanged.
 
 `AtomicFileWriter` and `CanonicalDataFileGuard` have separate filesystem tests covering atomic-move fallback backups (`.ponhub-backup-*.bak`) and concurrent-window lock detection (`.ponhub-lock`).
 
