@@ -74,6 +74,32 @@ public class ApplicationStartupTest {
     }
 
     @Test
+    public void main_reservedLockPath_rejectsMissingAndExistingFilesWithoutWrites() throws Exception {
+        for (String selected : List.of("x.ponhub-lock", "nested/X.PONHUB-LOCK")) {
+            Path folder = Files.createTempDirectory(directory, "reserved-lock-");
+            Path data = folder.resolve(selected);
+            Files.createDirectories(data.getParent());
+            for (String contents : List.of("missing", "", VALID_DATA)) {
+                if (!contents.equals("missing")) {
+                    Files.writeString(data, contents);
+                }
+                String output = runMain(folder, "--data=" + selected);
+                assertEquals(1, output.lines().count(), output);
+                assertTrue(output.startsWith("Cannot start PonHub with --data="), output);
+                assertTrue(output.contains("reserved for save coordination files"), output);
+                assertFalse(Files.exists(folder.resolve("preferences.json")));
+                assertFalse(Files.exists(folder.resolve("ponhub.log.0")));
+                assertFalse(Files.exists(data.resolveSibling(data.getFileName() + ".ponhub-lock")));
+                if (contents.equals("missing")) {
+                    assertFalse(Files.exists(data));
+                } else {
+                    assertEquals(contents, Files.readString(data));
+                }
+            }
+        }
+    }
+
+    @Test
     public void main_uncheckableDataPath_preservesUnexpectedFailureDiagnostics() throws Exception {
         Path folder = Files.createTempDirectory(directory, "uncheckable-path-");
         try {
@@ -150,6 +176,8 @@ public class ApplicationStartupTest {
     public void init_rejectedData_preservesOriginalAcrossCommandsShutdownAndRestart() throws Exception {
         List<RejectedData> rejected = List.of(new RejectedData("{broken", LoadStatus.CORRUPT),
                 new RejectedData("null", LoadStatus.CORRUPT),
+                new RejectedData("\uFEFF" + VALID_DATA, LoadStatus.CORRUPT),
+                new RejectedData(VALID_DATA.replace("\"role\":\"TUTOR\"", "\"role\":\"tutor\""), LoadStatus.CORRUPT),
                 new RejectedData("{\"persons\":[null]}", LoadStatus.LEGACY),
                 new RejectedData(VALID_DATA.replace("\"schemaVersion\":1", "\"schemaVersion\":99"),
                         LoadStatus.UNSUPPORTED_VERSION),

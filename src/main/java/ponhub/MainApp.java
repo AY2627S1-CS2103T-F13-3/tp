@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -86,6 +87,12 @@ public class MainApp extends Application {
      * Rejects data, preferences and log aliases before any application file can be changed.
      */
     private static void validateStoragePaths(Path dataPath, Path prefsPath) throws IOException {
+        for (Path path : new Path[] {dataPath.toAbsolutePath(), resolveStoragePath(dataPath.toAbsolutePath(), 0)}) {
+            if (path.getFileName() != null
+                    && path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".ponhub-lock")) {
+                throw new IllegalArgumentException("The .ponhub-lock suffix is reserved for save coordination files.");
+            }
+        }
         if (resolveStoragePath(dataPath.toAbsolutePath(), 0).equals(resolveStoragePath(prefsPath.toAbsolutePath(), 0))
                 || (Files.exists(dataPath) && Files.exists(prefsPath) && Files.isSameFile(dataPath, prefsPath))) {
             throw new IllegalArgumentException("Canonical data and preferences must use separate files.");

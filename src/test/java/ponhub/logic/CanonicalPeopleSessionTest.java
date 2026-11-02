@@ -235,8 +235,10 @@ public class CanonicalPeopleSessionTest {
             assertFalse(overview.contains("mark -"));
             assertFalse(overview.contains("unmark -"));
             assertFalse(overview.contains("lessons -"));
-            assertThrows(ParseException.class, () -> session.execute("help add"));
-            assertThrows(ParseException.class, () -> session.execute("help EDIT"));
+            assertEquals(String.format(CanonicalPeopleSession.MESSAGE_HELP_PROTECTED_TOPIC, "add"),
+                    assertThrows(ParseException.class, () -> session.execute("help add")).getMessage());
+            assertEquals(String.format(CanonicalPeopleSession.MESSAGE_HELP_PROTECTED_TOPIC, "edit"),
+                    assertThrows(ParseException.class, () -> session.execute("help EDIT")).getMessage());
             assertThrows(ParseException.class, () -> session.execute("help addlesson"));
             assertThrows(ParseException.class, () -> session.execute("help editlesson"));
             assertThrows(ParseException.class, () -> session.execute("help EDITLESSON"));

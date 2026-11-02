@@ -4,6 +4,7 @@ import static ponhub.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import ponhub.logic.commands.exceptions.CommandException;
 import ponhub.model.PonHubData;
@@ -17,12 +18,15 @@ import ponhub.model.person.Tutor;
  */
 final class TutorResolver {
     static final String MESSAGE_TUTOR_NOT_FOUND = "No tutor found with the full name '%s'.";
+    static final String MESSAGE_SUBJECT_MARKER_HINT =
+            " If the text from 's/o' is a subject, enter s/ before tu/.";
     static final String MESSAGE_TUTOR_PHONE_NOT_FOUND = "No tutor named '%s' has the exact phone '%s'.";
     static final String MESSAGE_AMBIGUOUS_TUTOR =
             "More than one tutor is named '%s'. Supply tp/TUTOR_PHONE to select one.";
     private static final String MESSAGE_AMBIGUOUS_TUTOR_PHONE =
             "More than one tutor matches the name '%s' and phone '%s'. "
                     + "Edit a tutor's name or phone to distinguish them.";
+    private static final Pattern SUBJECT_MARKER_PATTERN = Pattern.compile("\\ss/o(\\s|$)");
 
     private TutorResolver() {
     }
@@ -39,7 +43,9 @@ final class TutorResolver {
                 .filter(tutor -> tutor.getContactDetails().getNormalizedName().equals(normalizedName))
                 .toList();
         if (nameMatches.isEmpty()) {
-            throw new CommandException(String.format(MESSAGE_TUTOR_NOT_FOUND, name));
+            String hint = SUBJECT_MARKER_PATTERN.matcher(name.toString()).find()
+                    ? MESSAGE_SUBJECT_MARKER_HINT : "";
+            throw new CommandException(String.format(MESSAGE_TUTOR_NOT_FOUND, name) + hint);
         }
         if (phone.isPresent()) {
             Phone exactPhone = phone.orElseThrow();

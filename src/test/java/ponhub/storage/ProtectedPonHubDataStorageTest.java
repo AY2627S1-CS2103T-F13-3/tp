@@ -163,6 +163,47 @@ public class ProtectedPonHubDataStorageTest {
     }
 
     @Test
+    public void load_utf8Bom_explainsRecoveryAndPreservesProtectedFile() throws Exception {
+        Path path = directory.resolve("bom.json");
+        Files.writeString(path, "\uFEFF" + JsonPonHubDataCodec.encode(new PonHubData().exportState()));
+        byte[] original = Files.readAllBytes(path);
+        ProtectedPonHubDataStorage storage = new ProtectedPonHubDataStorage(path);
+        assertThrows(DataLoadingException.class, storage::load);
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.CORRUPT, storage.getLoadStatus());
+        String error = storage.getDataLoadError().orElseThrow();
+        assertTrue(error.contains("(invalid file contents)"));
+        assertTrue(error.contains("byte-order mark (BOM)"));
+        assertTrue(error.contains("UTF-8 without BOM"));
+        assertThrows(IOException.class, () -> storage.saveData(new PonHubData().exportState()));
+        assertThrows(IllegalStateException.class, storage::load);
+        assertArrayEquals(original, Files.readAllBytes(path));
+    }
+
+    @Test
+    public void load_invalidRole_listsUppercaseValuesAndPreservesProtectedFile() throws Exception {
+        PonHubDataState sample = new PonHubDataState(PeopleSampleDataUtil.getSamplePeopleRegistry().exportState(),
+                List.of(), List.of(), 0);
+        String valid = JsonPonHubDataCodec.encode(sample);
+        for (String role : List.of("tutor", "Tutor", "UNKNOWN", "")) {
+            var root = new com.fasterxml.jackson.databind.ObjectMapper().readTree(valid);
+            var person = (com.fasterxml.jackson.databind.node.ObjectNode) root.get("people").get(0);
+            person.put("role", role);
+            Path path = directory.resolve("role.json");
+            Files.writeString(path, root.toString());
+            byte[] original = Files.readAllBytes(path);
+            ProtectedPonHubDataStorage storage = new ProtectedPonHubDataStorage(path);
+            assertThrows(DataLoadingException.class, storage::load);
+            assertEquals(ProtectedPonHubDataStorage.LoadStatus.CORRUPT, storage.getLoadStatus());
+            String error = storage.getDataLoadError().orElseThrow();
+            assertTrue(error.contains("people[0]: role must be one of STUDENT, TUTOR, PARENT (uppercase)."));
+            assertFalse(error.contains("No enum constant"));
+            assertThrows(IOException.class, () -> storage.saveData(sample));
+            assertThrows(IllegalStateException.class, storage::load);
+            assertArrayEquals(original, Files.readAllBytes(path));
+        }
+    }
+
+    @Test
     public void load_invalidUtf8_blocksWritesAndPreservesOriginalBytes() throws Exception {
         Path path = directory.resolve("invalid-utf8.json");
         byte[] original = {(byte) 0xc3, (byte) 0x28};
@@ -170,7 +211,9 @@ public class ProtectedPonHubDataStorageTest {
         ProtectedPonHubDataStorage storage = new ProtectedPonHubDataStorage(path);
 
         assertThrows(DataLoadingException.class, storage::load);
-        assertEquals(ProtectedPonHubDataStorage.LoadStatus.UNREADABLE, storage.getLoadStatus());
+        assertEquals(ProtectedPonHubDataStorage.LoadStatus.CORRUPT, storage.getLoadStatus());
+        assertTrue(storage.getDataLoadError().orElseThrow().contains("(invalid file contents)"));
+        assertTrue(storage.getDataLoadError().orElseThrow().contains("not valid UTF-8"));
         assertTrue(storage.getDataLoadError().orElseThrow().contains(path.toAbsolutePath().toString()));
         assertThrows(IOException.class, () -> storage.saveData(new PonHubData().exportState()));
         assertArrayEquals(original, Files.readAllBytes(path));

@@ -26,6 +26,10 @@ import ponhub.commons.util.ApplicationPaths;
  * to be the entry point of the application, we avoid this issue.
  */
 public class Main {
+    private static final String DATA_OPTION = "--data=";
+    /** Prefix of the process serial number that older macOS Finder launches may append. */
+    private static final String MAC_PROCESS_SERIAL_PREFIX = "-psn_";
+
     private static Logger logger = LogsCenter.getLogger(Main.class);
 
     /**
@@ -34,11 +38,13 @@ public class Main {
      * @throws IOException if startup file paths cannot be inspected safely.
      */
     public static void main(String[] args) throws IOException {
-        Map<String, String> namedParameters = new HashMap<>();
-        for (String argument : args) {
-            if (argument != null && argument.startsWith("--data=")) {
-                namedParameters.put("data", argument.substring("--data=".length()));
-            }
+        Map<String, String> namedParameters;
+        try {
+            namedParameters = parseLaunchArguments(args);
+        } catch (IllegalArgumentException failure) {
+            System.err.println("Cannot start PonHub: " + failure.getMessage());
+            System.exit(1);
+            return;
         }
         try {
             MainApp.validateStartupPaths(namedParameters, ApplicationPaths.getHomeDirectory());
@@ -54,5 +60,25 @@ public class Main {
         logger.warning("The warnings about a 'restricted method in java.lang.System' "
             + "and 'enabling native access' appearing below (if any) can be ignored.");
         Application.launch(MainApp.class, args);
+    }
+
+    /**
+     * Returns the named launch parameters, accepting only {@code --data=PATH}.
+     * A mistyped option is rejected so that PonHub never silently opens the default data file instead.
+     *
+     * @throws IllegalArgumentException if any argument is not a {@code --data=PATH} option.
+     */
+    static Map<String, String> parseLaunchArguments(String... args) {
+        Map<String, String> namedParameters = new HashMap<>();
+        for (String argument : args) {
+            if (argument.startsWith(DATA_OPTION)) {
+                namedParameters.put("data", argument.substring(DATA_OPTION.length()));
+            } else if (!argument.startsWith(MAC_PROCESS_SERIAL_PREFIX)) {
+                throw new IllegalArgumentException(("Unrecognized launch argument \"" + argument + "\". "
+                        + "Use --data=PATH (with an equals sign) to choose a data file, "
+                        + "or launch without arguments to use data/ponhub.json.").replaceAll("\\R", " "));
+            }
+        }
+        return namedParameters;
     }
 }
