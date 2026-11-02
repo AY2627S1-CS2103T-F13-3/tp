@@ -24,10 +24,10 @@ try { $nativeReader=[IO.StreamReader]::new($nativeZip.GetEntry('META-INF/MANIFES
 @{SourceCommit=(& git rev-parse HEAD);Source=$nativeJarSource;Bytes=(Get-Item -LiteralPath $nativeJar).Length;
   SHA256=$nativeHash;Manifest=$nativeManifest;JavaHome=$nativeJavaHome;FreshFolder=$nativeApp} |
  ConvertTo-Json | Set-Content -LiteralPath (Join-Path $nativeOutput 'identity.json')
-& "$nativeJavaHome\bin\javac.exe" -cp $nativeJar -d $nativeClasses (Join-Path $PSScriptRoot 'Round1Agent.java')
+& "$nativeJavaHome\bin\javac.exe" -cp $nativeJar -d $nativeClasses (Join-Path $PSScriptRoot 'CommandRecallAgent.java')
 if ($LASTEXITCODE -ne 0) {throw 'Agent compilation failed'}
 $nativeManifestPath=Join-Path $nativeRun 'agent.mf'
-Set-Content -LiteralPath $nativeManifestPath -Value "Premain-Class: Round1Agent`n" -Encoding ascii
+Set-Content -LiteralPath $nativeManifestPath -Value "Premain-Class: CommandRecallAgent`n" -Encoding ascii
 $nativeAgent=Join-Path $nativeRun 'agent.jar'
 & "$nativeJavaHome\bin\jar.exe" cfm $nativeAgent $nativeManifestPath -C $nativeClasses .
 if ($LASTEXITCODE -ne 0) {throw 'Agent packaging failed'}

@@ -32,17 +32,16 @@ checkout SHA; verify the supplied JAR's source separately instead of assuming th
 
 | Agent | Scenario |
 | --- | --- |
-| `command-recall/Round1Agent.java` | Up/Down order and boundaries, draft/selection restoration, failed submissions, Tab, Enter, and empty recall after restart. |
+| `command-recall/CommandRecallAgent.java` | Up/Down order and boundaries, draft/selection restoration, failed submissions, Tab, Enter, and empty recall after restart. |
 | `command-completion/CompletionAgent.java` | Tab completion and cycling, draft/caret changes, keyboard traversal, Help/F1, and protected-session command availability. |
-| `duplicate-feedback/Round1Agent.java` | Duplicate Student, Tutor and Parent feedback and unchanged stored data. |
-| `panel-borders/Round1Agent.java` | Divider dragging, independent scrolling, focus/draft preservation and unchanged stored data. |
+| `duplicate-feedback/DuplicateFeedbackAgent.java` | Duplicate Student, Tutor and Parent feedback and unchanged stored data. |
+| `panel-borders/PanelBordersAgent.java` | Divider dragging, independent scrolling, focus/draft preservation and unchanged stored data. |
 | `compact-feedback/CompactFeedbackAgent.java` | Compact startup feedback, resizing, long help, divider persistence and Help/F1 draft preservation. |
 
 The compact-feedback agent can be compiled and packaged as a Java agent using the same
 `javac -cp CANDIDATE_JAR` and `jar cfm` steps as the supplied launchers, with a manifest
 containing `Premain-Class: CompactFeedbackAgent`. Launch it from a fresh writable folder
 with `java -javaagent:AGENT_JAR=ABSOLUTE_OUTPUT_DIRECTORY -jar CANDIDATE_JAR`.
-Compile each agent separately; several intentionally share the `Round1Agent` class name.
 
 Inspect reported failures, screenshots and runtime details before drawing conclusions.
 Store necessary results in the relevant issue description/comments; do not commit generated logs,
