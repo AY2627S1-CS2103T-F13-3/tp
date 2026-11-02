@@ -3,8 +3,6 @@ package ponhub.model.person;
 import static java.util.Objects.requireNonNull;
 import static ponhub.commons.util.AppUtil.checkArgument;
 
-import ponhub.commons.util.StringUtil;
-
 /**
  * Represents a person's postal address in PonHub contact details.
  * Guarantees: immutable; is valid as declared in {@link #isValidAddress(String)}
@@ -27,8 +25,8 @@ public final class Address {
      */
     public Address(String address) {
         requireNonNull(address);
-        checkArgument(!hasForbiddenCodePoints(address), MESSAGE_CONSTRAINTS);
-        String normalizedAddress = normalize(address);
+        checkArgument(!ContactText.hasForbiddenCodePoints(address), MESSAGE_CONSTRAINTS);
+        String normalizedAddress = ContactText.normalizeSpaces(address);
         checkArgument(isValidNormalizedAddress(normalizedAddress), MESSAGE_CONSTRAINTS);
         value = normalizedAddress;
     }
@@ -38,19 +36,8 @@ public final class Address {
      */
     public static boolean isValidAddress(String test) {
         requireNonNull(test);
-        return !hasForbiddenCodePoints(test) && isValidNormalizedAddress(normalize(test));
-    }
-
-    private static String normalize(String address) {
-        return StringUtil.normalizeSpaces(StringUtil.stripUnicodeBoundaryWhitespace(address));
-    }
-
-    private static boolean hasForbiddenCodePoints(String address) {
-        return address.codePoints().anyMatch(codePoint -> Character.isISOControl(codePoint)
-                || Character.getType(codePoint) == Character.FORMAT
-                || Character.getType(codePoint) == Character.SURROGATE
-                || Character.getType(codePoint) == Character.LINE_SEPARATOR
-                || Character.getType(codePoint) == Character.PARAGRAPH_SEPARATOR);
+        return !ContactText.hasForbiddenCodePoints(test)
+                && isValidNormalizedAddress(ContactText.normalizeSpaces(test));
     }
 
     private static boolean isValidNormalizedAddress(String address) {
