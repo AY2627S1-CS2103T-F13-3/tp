@@ -4,6 +4,7 @@
 skinparam defaultFontName Arial
 skinparam defaultFontSize 15
 skinparam shadowing false
+skinparam style strictuml
 skinparam classAttributeIconSize 0
 skinparam classBackgroundColor #FFF2F3
 skinparam classBorderColor #9D0012
@@ -34,8 +35,9 @@ PonHubData "0..*" -down-> "1" PonHubDataState : current state
 PonHubDataState "0..*" -down-> "0..*" Lesson : lessons
 LessonQueries .left.> PonHubData : observes changes
 
-note right of Lesson
+note as RosterRule
   Zero or more unique Student IDs.
   The set is unmodifiable.
 end note
+Lesson .right. RosterRule
 @enduml

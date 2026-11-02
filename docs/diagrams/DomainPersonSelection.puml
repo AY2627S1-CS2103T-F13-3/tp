@@ -19,7 +19,7 @@ skinparam sequenceParticipantBorderColor #9D0012
 hide footbox
 participant Command
 participant PeopleView as View
-participant PersonIndexResolver as Resolver
+participant PersonIndexResolver as Resolver <<class>>
 Command -> View : getPeople()
 View --> Command : [S4, S9]
 Command -> Resolver : resolveStudent(2, people)

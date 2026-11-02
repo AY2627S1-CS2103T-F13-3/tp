@@ -17,11 +17,12 @@ title Deletion checks stored references
 skinparam activityBackgroundColor #FFF2F3
 skinparam activityBorderColor #9D0012
 skinparam activityDiamondBackgroundColor #FFFBE6
+skinparam conditionStyle diamond
 start
-:Find target record;
-if (Referenced by a roster,\nlesson or attendance?) then (yes)
+:Check target for stored references;
+if () then ([referenced])
   :Reject deletion;
-else (no)
+else ([else])
   :Allow staged deletion;
 endif
 stop
