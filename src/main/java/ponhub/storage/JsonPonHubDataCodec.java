@@ -198,7 +198,12 @@ public final class JsonPonHubDataCodec {
 
     private static PersonRecord decodePerson(JsonNode node) throws IOException {
         checkObject(node, STUDENT_FIELDS, "person");
-        PersonRole role = PersonRole.valueOf(readRequiredText(node, "role"));
+        PersonRole role;
+        try {
+            role = PersonRole.valueOf(readRequiredText(node, "role"));
+        } catch (IllegalArgumentException failure) {
+            throw new IOException("role must be one of STUDENT, TUTOR, PARENT (uppercase).", failure);
+        }
         checkObject(node, role == PersonRole.STUDENT ? STUDENT_FIELDS : PERSON_FIELDS, "person");
         PersonId id = new PersonId(readRequiredText(node, "id"));
         ContactDetails contact = new ContactDetails(new Name(readRequiredText(node, "name")),
