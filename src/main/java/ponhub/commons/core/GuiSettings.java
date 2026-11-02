@@ -26,7 +26,7 @@ public class GuiSettings implements Serializable {
     public GuiSettings() {
         windowWidth = DEFAULT_WIDTH;
         windowHeight = DEFAULT_HEIGHT;
-        windowCoordinates = null; // null represent no coordinates
+        windowCoordinates = null; // null represents no coordinates
     }
 
     /**
