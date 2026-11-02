@@ -16,8 +16,7 @@ import ponhub.model.person.Phone;
 public class ParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer from 1 to 2147483647.";
-    public static final String MESSAGE_CONTACT_PHONE_CONSTRAINTS =
-            "Contact phone numbers must contain between " + Phone.MIN_LENGTH + " and " + Phone.MAX_LENGTH + " digits.";
+    public static final String MESSAGE_CONTACT_PHONE_CONSTRAINTS = Phone.MESSAGE_CONSTRAINTS;
 
     /**
      * Removes boundary code points for which {@link Character#isWhitespace(int)} or

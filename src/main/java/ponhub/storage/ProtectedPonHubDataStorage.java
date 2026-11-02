@@ -3,6 +3,7 @@ package ponhub.storage;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
@@ -83,8 +84,15 @@ public final class ProtectedPonHubDataStorage {
                 return loadedState;
             }
             throw reject(LoadStatus.UNREADABLE, missing);
+        } catch (CharacterCodingException failure) {
+            throw reject(LoadStatus.CORRUPT, new IOException("The data file is not valid UTF-8."
+                    + " Back it up, then save a corrected copy using UTF-8 encoding and restart.", failure));
         } catch (IOException failure) {
             throw reject(LoadStatus.UNREADABLE, failure);
+        }
+        if (json.startsWith("\uFEFF")) {
+            throw reject(LoadStatus.CORRUPT, new IOException("The data file starts with a byte-order mark (BOM)."
+                    + " Back it up, then save a corrected copy as UTF-8 without BOM and restart."));
         }
         JsonDataVersionDetector.Format format = JsonDataVersionDetector.detect(json);
         switch (format) {
