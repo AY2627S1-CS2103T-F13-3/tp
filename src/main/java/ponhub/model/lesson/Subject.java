@@ -79,7 +79,8 @@ public final class Subject {
     }
 
     private static boolean isValidStoredSubject(String subject) {
-        return subject.matches(VALIDATION_REGEX)
+        // The saved value must also fit the next load's normalization budget, so it can be reopened.
+        return isWithinNormalizationBudget(subject) && subject.matches(VALIDATION_REGEX)
                 && STORED_CHARACTER_PATTERN.matcher(subject).results().count() <= MAX_LENGTH;
     }
 

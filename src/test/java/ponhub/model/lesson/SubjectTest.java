@@ -69,7 +69,8 @@ public class SubjectTest {
         assertEquals(stored, Subject.fromStoredValue(stored.getValue()));
         assertEquals("\u0915\u093c".repeat(50), Subject.fromStoredValue("\u0958".repeat(50)).getValue());
         assertEquals(new Subject("Math"), Subject.fromStoredValue(" Math "));
-        for (String invalid : new String[] {"\u0958".repeat(51), "A".repeat(51), "", "\u0301Math", "Math/Science"}) {
+        for (String invalid : new String[] {"\u0958".repeat(51), "A".repeat(51), "", "\u0301Math", "Math/Science",
+            "\u0958\u0301\u0301\u0301".repeat(50)}) {
             assertThrows(IllegalArgumentException.class, () -> Subject.fromStoredValue(invalid), invalid);
         }
     }

@@ -168,6 +168,8 @@ public class JsonLessonStorageTest {
             assertEquals(loaded, new ProtectedPonHubDataStorage(path).load());
         }
         reject(root -> getLessonNode(root, 0).put("subject", "\u0958".repeat(51)));
+        // 200 code points before NFC, 250 after: loading it would save a value the next load rejects.
+        reject(root -> getLessonNode(root, 0).put("subject", "\u0958\u0301\u0301\u0301".repeat(50)));
     }
 
     private ObjectNode createJson() throws IOException {
