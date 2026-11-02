@@ -276,6 +276,83 @@ public class PersonContactCopyTest {
     }
 
     @Test
+    public void mouseCopy_primaryDragReentry_copiesOnceAndPreservesDraftSelection() throws Exception {
+        runOnFxThread(() -> {
+            Student student = new Student(new PersonId("S1"), new ContactDetails(new Name("Alex Tan")),
+                    new EducationLevel("P1"), new Phone("00987654"));
+            Region card = new PersonRecordCard(student, 1).getRoot();
+            TextField input = new TextField("Unfinished command");
+            Region root = new VBox(card, input);
+            layout(root);
+            Button button = copyButton(card, "Parent phone", "Alex Tan");
+            int[] actions = {0};
+            button.addEventHandler(ActionEvent.ACTION, event -> actions[0]++);
+
+            // Forward/reversed selections and a collapsed caret must all survive mouse activation.
+            for (int[] selection : List.of(new int[] {3, 8}, new int[] {8, 3}, new int[] {4, 4})) {
+                input.requestFocus();
+                input.selectRange(selection[0], selection[1]);
+                setClipboard("unchanged");
+                int actionsBefore = actions[0];
+
+                dragOutAndBack(button);
+
+                assertEquals(actionsBefore + 1, actions[0]);
+                assertEquals("00987654", Clipboard.getSystemClipboard().getString());
+                assertFalse(button.isArmed());
+                assertTrue(button.isFocusTraversable());
+                assertSame(input, root.getScene().getFocusOwner());
+                assertEquals("Unfinished command", input.getText());
+                assertEquals(selection[0], input.getAnchor());
+                assertEquals(selection[1], input.getCaretPosition());
+
+                setClipboard("released sentinel");
+                fireMouse(button, MouseEvent.MOUSE_RELEASED, MouseButton.PRIMARY, 2, 2);
+                assertEquals(actionsBefore + 1, actions[0]);
+                assertEquals("released sentinel", Clipboard.getSystemClipboard().getString());
+            }
+        });
+    }
+
+    @Test
+    public void mouseCopy_otherButtonsDuringPrimaryDrag_doNotActivateOrLeaveCancelledGestureArmed() throws Exception {
+        runOnFxThread(() -> {
+            Student student = new Student(new PersonId("S1"), new ContactDetails(new Name("Alex Tan")),
+                    new EducationLevel("P1"), new Phone("00987654"));
+            Region card = new PersonRecordCard(student, 1).getRoot();
+            layout(card);
+            Button button = copyButton(card, "Parent phone", "Alex Tan");
+            int[] actions = {0};
+            button.addEventHandler(ActionEvent.ACTION, event -> actions[0]++);
+            setClipboard("unchanged");
+            fireMouse(button, MouseEvent.MOUSE_PRESSED, MouseButton.PRIMARY, 2, 2);
+
+            // Releasing another button must neither copy nor complete the held primary gesture.
+            for (MouseButton other : List.of(MouseButton.SECONDARY, MouseButton.MIDDLE)) {
+                fireMouse(button, MouseEvent.MOUSE_PRESSED, other, 2, 2,
+                        true, other == MouseButton.MIDDLE, other == MouseButton.SECONDARY);
+                fireMouse(button, MouseEvent.MOUSE_RELEASED, other, 2, 2, true, false, false);
+                assertTrue(button.isArmed());
+                assertEquals(0, actions[0]);
+                assertEquals("unchanged", Clipboard.getSystemClipboard().getString());
+            }
+
+            // An outside primary release cancels; re-entry without a fresh press cannot revive it.
+            fireMouse(button, MouseEvent.MOUSE_EXITED, MouseButton.NONE, -2, -2, true, false, false);
+            fireMouse(button, MouseEvent.MOUSE_RELEASED, MouseButton.PRIMARY, -2, -2);
+            fireMouse(button, MouseEvent.MOUSE_ENTERED, MouseButton.NONE, 2, 2, false, false, false);
+            fireMouse(button, MouseEvent.MOUSE_RELEASED, MouseButton.PRIMARY, 2, 2);
+            assertFalse(button.isArmed());
+            assertEquals(0, actions[0]);
+            assertEquals("unchanged", Clipboard.getSystemClipboard().getString());
+
+            click(button);
+            assertEquals(1, actions[0]);
+            assertEquals("00987654", Clipboard.getSystemClipboard().getString());
+        });
+    }
+
+    @Test
     public void mouseCopy_filteredWindow_preservesSelectionDraftFeedbackAndSavedData() throws Exception {
         callOnFxThread(() -> {
             AppHarness app = new AppHarness();
@@ -306,7 +383,7 @@ public class PersonContactCopyTest {
                 TextArea feedback = (TextArea) root.lookup("#resultDisplay");
                 String feedbackBefore = feedback.getText();
                 Button copy = copyButton(root, "Parent phone", "Alex Tan");
-                click(copy);
+                dragOutAndBack(copy);
 
                 assertEquals("00987654", Clipboard.getSystemClipboard().getString());
                 assertSame(selected, people.getSelectionModel().getSelectedItem());
@@ -438,11 +515,26 @@ public class PersonContactCopyTest {
         fireMouse(button, MouseEvent.MOUSE_RELEASED, MouseButton.PRIMARY, 2, 2);
     }
 
+    private static void dragOutAndBack(Button button) {
+        fireMouse(button, MouseEvent.MOUSE_PRESSED, MouseButton.PRIMARY, 2, 2);
+        assertTrue(button.isArmed());
+        fireMouse(button, MouseEvent.MOUSE_EXITED, MouseButton.NONE, -2, -2, true, false, false);
+        assertFalse(button.isArmed());
+        fireMouse(button, MouseEvent.MOUSE_ENTERED, MouseButton.NONE, 2, 2, true, false, false);
+        assertTrue(button.isArmed(), "A held primary gesture must rearm after pointer re-entry");
+        fireMouse(button, MouseEvent.MOUSE_RELEASED, MouseButton.PRIMARY, 2, 2);
+    }
+
     private static void fireMouse(Button button, EventType<MouseEvent> type, MouseButton mouse, double x, double y) {
         boolean isPressed = type == MouseEvent.MOUSE_PRESSED;
+        fireMouse(button, type, mouse, x, y, isPressed && mouse == MouseButton.PRIMARY,
+                isPressed && mouse == MouseButton.MIDDLE, isPressed && mouse == MouseButton.SECONDARY);
+    }
+
+    private static void fireMouse(Button button, EventType<MouseEvent> type, MouseButton mouse, double x, double y,
+                                  boolean primaryDown, boolean middleDown, boolean secondaryDown) {
         Event.fireEvent(button, new MouseEvent(type, x, y, x, y, mouse, 1,
-                false, false, false, false, isPressed && mouse == MouseButton.PRIMARY, false,
-                isPressed && mouse == MouseButton.SECONDARY, true, false, true,
+                false, false, false, false, primaryDown, middleDown, secondaryDown, true, false, true,
                 new PickResult(button, new Point3D(x, y, 0), 0)));
     }
 
