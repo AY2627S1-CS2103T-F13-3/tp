@@ -119,6 +119,59 @@ public class CommandBoxTest {
     }
 
     @Test
+    public void tab_horizontalSpaces_preservesSurroundingsWhileCyclingAndReplacingSuffix() throws Exception {
+        runOnFxThread(() -> {
+            List<String> commands = new ArrayList<>();
+            TextField input = createInput(command -> {
+                commands.add(command);
+                return new CommandResult("Success");
+            });
+            // Include existing ordinary/em-space behavior and every omitted no-break space category.
+            for (String space : List.of(" ", "\u2003", "\u00a0", "\u2007", "\u202f")) {
+                String leading = space + " ";
+                String arguments = space + "r/student n/Alex" + space + "  ";
+                input.setText(leading + "adxxx" + arguments);
+                input.positionCaret(leading.length() + 2);
+                assertTab(input, leading + "add" + arguments, leading.length() + 3);
+                assertTab(input, leading + "addlesson" + arguments, leading.length() + 9);
+                assertTab(input, leading + "add" + arguments, leading.length() + 3);
+                // Moving within the completed word resets the cycle but still preserves the entire suffix.
+                input.positionCaret(leading.length() + 1);
+                input.positionCaret(leading.length() + 3);
+                assertTab(input, leading + "add" + arguments, leading.length() + 3);
+                assertTrue(commands.isEmpty(), "Tab must not submit any completed draft.");
+                enter(input);
+                assertEquals(leading + "add" + arguments, commands.getLast());
+                commands.clear();
+            }
+        });
+    }
+
+    @Test
+    public void tab_horizontalSpaces_outsideCommandLeavesDraftForTraversal() throws Exception {
+        runOnFxThread(() -> {
+            TextField input = createInput(command -> {
+                throw new AssertionError("Tab must never execute");
+            });
+            for (String space : List.of("\u00a0", "\u2007", "\u202f")) {
+                String draft = space + "li" + space + "r/student";
+                input.setText(draft);
+                // Caret at the command's start or after its separator must leave focus traversal available.
+                for (int caret : List.of(0, 1, 4, draft.length())) {
+                    input.positionCaret(caret);
+                    assertFalse(tab(input, false, false, false, false));
+                    assertEquals(draft, input.getText());
+                    assertEquals(caret, input.getCaretPosition());
+                    assertEquals(caret, input.getAnchor());
+                }
+                // The last command-word position completes while preserving its following separator.
+                input.positionCaret(3);
+                assertTab(input, space + "list" + space + "r/student", 5);
+            }
+        });
+    }
+
+    @Test
     public void tab_ineligibleInputAndModifiers_leaveDraftAndEventForTraversal() throws Exception {
         runOnFxThread(() -> {
             TextField input = createInput(command -> {
