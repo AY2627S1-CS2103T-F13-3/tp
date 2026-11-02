@@ -3,15 +3,16 @@
 ' Trace: CanonicalPeopleSession.execute; RoleAwareAddParser.parse; FieldValueTokenizer.
 !include feature-sequence-style.iuml
 participant "session :\nCanonicalPeopleSession" as S
-participant "parser :\nRoleAwareAddParser" as P
-participant "<<class>>\nFieldValueTokenizer" as T
 
 S -> S : Consume and clear\npending deletion
 S -> S : Extract word; look up\ncommand definition
 alt protected and route unavailable
   note over S : Reject before argument parsing.
 else allowed route, valid single-line input
-  S -> P : parse(arguments)\n[add example]
+  create participant "parser :\nRoleAwareAddParser" as P
+  S -> P : new RoleAwareAddParser()\n(add example)
+  participant "<<class>>\nFieldValueTokenizer" as T
+  S -> P : parse(arguments)
   P -> T : tokenize role-aware fields
   note over T
     Lowercase prefixes; preserve name s/o, d/o
