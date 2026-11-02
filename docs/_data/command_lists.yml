@@ -35,7 +35,7 @@ lesson-retrieval:
 
 record-validation:
   title: Commands that create or edit records
-  description: Commands listed in the field-reference introduction; supplied values use the shared validation rules.
+  description: Create or update people, lessons, and attendance using the accepted field formats below.
   groups:
     - title: People
       commands: [add, edit]
