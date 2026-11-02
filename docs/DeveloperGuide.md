@@ -5,6 +5,9 @@ expandable_toc: true
 command_lists: [operational-mutations, student-position-examples]
 ---
 
+## Table of Contents
+{:.no_toc}
+
 * Table of Contents
 {:toc}
 
