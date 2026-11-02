@@ -1,5 +1,6 @@
 package ponhub;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
@@ -23,6 +24,13 @@ import org.junit.jupiter.api.io.TempDir;
 public class MainAppPathResolutionTest {
     @TempDir
     Path directory;
+
+    @Test
+    public void validateStartupPaths_filesystemRoot_doesNotRequireFileName() throws IOException {
+        Path root = directory.toRealPath().getRoot();
+        // A filesystem root has no filename. Preflight must leave directory-content errors to storage loading.
+        assertDoesNotThrow(() -> MainApp.validateStartupPaths(Map.of("data", root.toString()), root));
+    }
 
     @Test
     public void validateStartupPaths_lockSymbolicAlias_rejectsWithoutChangingTarget() throws IOException {
