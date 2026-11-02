@@ -122,9 +122,9 @@ public final class JsonPonHubDataCodec {
         checkObject(counters, Set.of("STUDENT", "TUTOR", "PARENT"), "personCounters");
         var allocation = new EnumMap<PersonRole, Long>(PersonRole.class);
         for (PersonRole role : PersonRole.values()) {
-            allocation.put(role, counter(counters, role.name(), "personCounters." + role.name()));
+            allocation.put(role, readCounter(counters, role.name(), "personCounters." + role.name()));
         }
-        long lessonCounter = counter(root, "lastAllocatedLessonSequence", "lastAllocatedLessonSequence");
+        long lessonCounter = readCounter(root, "lastAllocatedLessonSequence", "lastAllocatedLessonSequence");
         JsonNode array = root.get("people");
         if (array == null || !array.isArray()) {
             throw new IOException("people must be an array.");
@@ -158,8 +158,9 @@ public final class JsonPonHubDataCodec {
             try {
                 JsonNode node = attendanceArray.get(i);
                 checkObject(node, ATTENDANCE_FIELDS, "attendance record");
-                attendance.add(Attendance.fromStrings(new PersonId(text(node, "studentId")),
-                        new LessonId(text(node, "lessonId")), text(node, "date"), text(node, "status")));
+                attendance.add(Attendance.fromStrings(new PersonId(readRequiredText(node, "studentId")),
+                        new LessonId(readRequiredText(node, "lessonId")), readRequiredText(node, "date"),
+                        readRequiredText(node, "status")));
             } catch (IOException | IllegalArgumentException failure) {
                 throw new IOException("attendance[" + i + "]: " + failure.getMessage(), failure);
             }
@@ -188,29 +189,30 @@ public final class JsonPonHubDataCodec {
                 throw new IOException("Duplicate roster ID: " + id);
             }
         }
-        return new Lesson(new LessonId(text(node, "id")), new PersonId(text(node, "tutorId")),
-                new LessonTimeSlot(LessonDay.fromString(text(node, "day")),
-                        new LessonTime(text(node, "startTime")), new LessonTime(text(node, "endTime"))),
-                new Subject(text(node, "subject")), new Room(text(node, "room")), students);
+        return new Lesson(new LessonId(readRequiredText(node, "id")), new PersonId(readRequiredText(node, "tutorId")),
+                new LessonTimeSlot(LessonDay.fromString(readRequiredText(node, "day")),
+                        new LessonTime(readRequiredText(node, "startTime")),
+                        new LessonTime(readRequiredText(node, "endTime"))),
+                new Subject(readRequiredText(node, "subject")), new Room(readRequiredText(node, "room")), students);
     }
 
     private static PersonRecord decodePerson(JsonNode node) throws IOException {
         checkObject(node, STUDENT_FIELDS, "person");
-        PersonRole role = PersonRole.valueOf(text(node, "role"));
+        PersonRole role = PersonRole.valueOf(readRequiredText(node, "role"));
         checkObject(node, role == PersonRole.STUDENT ? STUDENT_FIELDS : PERSON_FIELDS, "person");
-        PersonId id = new PersonId(text(node, "id"));
-        ContactDetails contact = new ContactDetails(new Name(text(node, "name")),
-                optionalText(node, "phone").map(Phone::new), optionalText(node, "email").map(Email::new),
-                optionalText(node, "address").map(Address::new));
+        PersonId id = new PersonId(readRequiredText(node, "id"));
+        ContactDetails contact = new ContactDetails(new Name(readRequiredText(node, "name")),
+                readOptionalText(node, "phone").map(Phone::new), readOptionalText(node, "email").map(Email::new),
+                readOptionalText(node, "address").map(Address::new));
         return switch (role) {
-            case STUDENT -> new Student(id, contact, new EducationLevel(text(node, "level")),
-                    new Phone(text(node, "parentPhone")));
+            case STUDENT -> new Student(id, contact, new EducationLevel(readRequiredText(node, "level")),
+                    new Phone(readRequiredText(node, "parentPhone")));
             case TUTOR -> new Tutor(id, contact);
             case PARENT -> new Parent(id, contact);
         };
     }
 
-    private static String text(JsonNode node, String field) throws IOException {
+    private static String readRequiredText(JsonNode node, String field) throws IOException {
         JsonNode value = node.get(field);
         if (value == null || !value.isTextual()) {
             throw new IOException(field + " must be a JSON string.");
@@ -218,11 +220,11 @@ public final class JsonPonHubDataCodec {
         return value.textValue();
     }
 
-    private static Optional<String> optionalText(JsonNode node, String field) throws IOException {
-        return node.has(field) ? Optional.of(text(node, field)) : Optional.empty();
+    private static Optional<String> readOptionalText(JsonNode node, String field) throws IOException {
+        return node.has(field) ? Optional.of(readRequiredText(node, field)) : Optional.empty();
     }
 
-    private static long counter(JsonNode node, String field, String label) throws IOException {
+    private static long readCounter(JsonNode node, String field, String label) throws IOException {
         JsonNode value = node.get(field);
         if (value == null || !value.isIntegralNumber() || !value.canConvertToLong() || value.longValue() < 0) {
             throw new IOException(label + " must be an integer between 0 and " + Long.MAX_VALUE + ".");
@@ -230,14 +232,14 @@ public final class JsonPonHubDataCodec {
         return value.longValue();
     }
 
-    private static void checkObject(JsonNode node, Set<String> allowed, String label) throws IOException {
+    private static void checkObject(JsonNode node, Set<String> allowedFields, String label) throws IOException {
         if (node == null || !node.isObject()) {
             throw new IOException(label + " must be an object.");
         }
         var fields = node.fieldNames();
         while (fields.hasNext()) {
             String field = fields.next();
-            if (!allowed.contains(field)) {
+            if (!allowedFields.contains(field)) {
                 throw new IOException("Unknown field " + label + "." + field + ".");
             }
         }
