@@ -25,7 +25,9 @@ alt unmodified Tab, no selection
 else modified Tab or selected text
   note over B, F : Do not consume as command completion.
 end
-== Later external text / caret / selection / focus change ==
+note over B, F
+  Later external text, caret, selection or focus change
+end note
 F -> B : property listener
 B -> C : reset()
 @enduml
