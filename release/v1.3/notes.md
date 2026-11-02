@@ -59,4 +59,4 @@ This version does not provide the inherited `edit`, `clear` or `find` routes. Pe
 
 ## Credits
 
-PonHub builds on AddressBook-Level3 from the SE-EDU initiative. Feature authors retain credit for their implementation and documentation. Benjamin Ng supplied the search/retrieval facts and existing Lesson-results media, including `docs/images/LessonResults.png`. Vincent Lin supplied the Windows screenshots above and coordinated these release notes with OpenAI Codex assistance. See [About Us](../../docs/AboutUs.md) for team responsibilities.
+PonHub builds on AddressBook-Level3 from the SE-EDU initiative. Feature authors retain credit for their implementation and documentation. Benjamin Ng supplied the search/retrieval facts and existing Lesson-results media, including `docs/images/LessonResults.png`. Vincent Lin supplied the Windows screenshots above and prepared these release notes with OpenAI Codex assistance. See [About Us](../../docs/AboutUs.md) for team responsibilities.

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import ponhub.logic.parser.exceptions.ParseException;
 
 /**
- * Checks the audited command grammars' horizontal Unicode boundaries without changing field interiors.
+ * Checks command grammars' horizontal Unicode boundaries without changing field interiors.
  */
 public class UnicodeCommandBoundaryTest {
     @Test
