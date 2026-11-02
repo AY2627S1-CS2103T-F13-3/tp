@@ -15,7 +15,6 @@ skinparam ranksep 40
 hide circle
 hide empty members
 
-title Attendance has its own dated key
 class PonHubDataState
 class Attendance <<immutable>> {
   status : AttendanceStatus

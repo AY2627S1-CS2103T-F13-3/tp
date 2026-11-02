@@ -3,6 +3,7 @@
 ' From the repository root:
 ' java -jar plantuml-1.2025.3.jar -charset UTF-8 -tpng -o ../images docs/diagrams/UiClassDiagram.puml
 !include style.puml
+skinparam packageStyle Folder
 skinparam arrowThickness 1.1
 skinparam arrowColor UI_COLOR_T4
 skinparam classBackgroundColor UI_COLOR
@@ -44,9 +45,8 @@ PersonRecordListPanel ..> PersonRecordCard
 LessonListPanel ..> LessonCard
 HistoryListPanel ..> AttendanceHistoryCard
 
-legend bottom left
-  Dashed dependencies: creates
+note bottom of UiPackage
   MainWindow, its six components, and the three cards
   all extend abstract UiPart (inheritance arrows omitted).
-endlegend
+end note
 @enduml

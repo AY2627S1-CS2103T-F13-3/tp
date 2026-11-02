@@ -60,6 +60,17 @@ Before requesting review:
 5. Keep detailed source/build/preview records in the corresponding issue description/comments. Include a concise
    validation summary and any outstanding checks in the PR.
 
+Use **PlantUML 1.2025.3** for diagram updates (Java 25); Graphviz is needed for class diagrams.
+From the repository root, render each changed source and commit its PNG output together:
+
+```sh
+java -jar /path/to/plantuml-1.2025.3.jar -charset UTF-8 -tpng -o ../images docs/diagrams/NAME.puml
+```
+
+Multiple diagrams in one source also produce numbered images such as `NAME_001.png`.
+Inspect every output in its guide context. Existing unchanged PNGs may have been rendered with older
+versions; regenerate them with the pinned version when their source changes.
+
 For more detail, use the [Google developer documentation style guide](https://developers.google.com/style),
 [SE-EDU Markdown conventions](https://se-education.org/guides/conventions/markdown.html),
 [PlantUML guide](https://se-education.org/guides/tutorials/plantUml.html) and

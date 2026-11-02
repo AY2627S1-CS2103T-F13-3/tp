@@ -15,7 +15,6 @@ skinparam ranksep 40
 hide circle
 hide empty members
 
-title One lesson, one weekly time slot
 class Lesson <<immutable>> {
   id : LessonId
   tutorId : PersonId
