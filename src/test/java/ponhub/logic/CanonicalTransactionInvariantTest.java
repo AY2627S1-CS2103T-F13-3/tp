@@ -125,7 +125,7 @@ public class CanonicalTransactionInvariantTest {
             }
         }
 
-        private static void verifyFailure(boolean protectedSession) throws Exception {
+        private static void verifyFailure(boolean isProtectedSession) throws Exception {
             PonHubData live = new PonHubData();
             PeopleView view = new PeopleView(live);
             PonHubDataState before = live.exportState();
@@ -133,7 +133,7 @@ public class CanonicalTransactionInvariantTest {
             CanonicalCommandExecutor executor = new CanonicalCommandExecutor(view, state -> {
                 saves[0]++;
                 throw new IOException("Synthetic save failure");
-            }, () -> protectedSession ? Optional.of("Protected session") : Optional.empty());
+            }, () -> isProtectedSession ? Optional.of("Protected session") : Optional.empty());
             try {
                 executor.execute((staged, stagedView) -> {
                     staged.resetData(withCounter(before, 1));
@@ -142,10 +142,10 @@ public class CanonicalTransactionInvariantTest {
                 });
                 throw new AssertionError("Expected runtime rejection with either assertion mode");
             } catch (CommandException expected) {
-                check(protectedSession ? expected.getMessage().equals("Protected session")
+                check(isProtectedSession ? expected.getMessage().equals("Protected session")
                         : expected.getCause() instanceof IOException, "Wrong failure category");
             }
-            check(saves[0] == (protectedSession ? 0 : 1), "Incorrect save attempt count");
+            check(saves[0] == (isProtectedSession ? 0 : 1), "Incorrect save attempt count");
             check(before.equals(live.exportState()) && view.getRoleFilter().isEmpty(), "Published failed staging");
         }
 
@@ -187,8 +187,8 @@ public class CanonicalTransactionInvariantTest {
             return new PonHubDataState(before.people(), List.of(), List.of(), counter);
         }
 
-        private static void check(boolean condition, String message) {
-            if (!condition) {
+        private static void check(boolean isSatisfied, String message) {
+            if (!isSatisfied) {
                 throw new AssertionError(message);
             }
         }
