@@ -912,7 +912,7 @@ live view, without an operational write or a change to the selected right-pane q
 <figure class="dg-figure">
 <figcaption>Lesson query refresh: prepare and save</figcaption>
 <div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Lesson query refresh: prepare and save">
-<a href="images/LessonQueryRefresh.png"><img src="images/LessonQueryRefresh.png" alt="The executor prepares an isolated edit and saves the candidate. Save failure leaves the live lesson and query results unchanged. Jamie is the matching Student in the worked example."></a>
+<a href="images/LessonQueryRefresh.png"><img src="images/LessonQueryRefresh.png" alt="The staged edit command prepares English L1 on the transaction's isolated root, then the executor saves the candidate. Save failure leaves the live lesson and query results unchanged. Jamie is the matching Student in the worked example."></a>
 </div>
 </figure>
 
@@ -2149,7 +2149,7 @@ Terms are listed in alphabetical order:
 | **Snapshot** | `PonHubDataState`, a complete, self-contained, immutable copy of all operational records and counters at one point in time. |
 | **Stable ID** | A permanent identifier (`S1`, `T1`, `P1`, `L1`) assigned at creation; never changes across filtering, editing, or restarts, and is never reused after deletion. |
 | **Staged change / candidate** | A proposed snapshot prepared inside an isolated transaction before saving to disk. |
-| **Transaction** | The execution unit (`CanonicalTransaction`) that prepares a candidate change, saves it to disk, and commits it to the live model together. |
+| **Transaction** | The prepare-save-publish sequence run by `CanonicalCommandExecutor`: a staged command prepares a candidate in an isolated `CanonicalTransaction`, the executor saves it, and `CanonicalTransaction.commit()` publishes it to the live model. |
 | **Tutor lookup** | Matching a tutor by full normalized name (plus optional exact phone `tp/`) during `addlesson` and `editlesson`. |
 | **Tutor / room / student clash** | Two lessons on the same weekday whose `[start, end)` time intervals overlap while sharing a tutor, room, or enrolled student. |
 | **Unrecorded** | A lesson occurrence for which no `AttendanceKey` exists yet (distinct from a recorded `absent` entry). |

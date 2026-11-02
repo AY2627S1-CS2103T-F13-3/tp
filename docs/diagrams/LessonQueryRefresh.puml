@@ -25,9 +25,10 @@ note over live, retrieval
   Jamie matches L1; L2 fails the weekday.
 end note
 
-executor -> transaction : prepare editlesson lid/L1 s/English
+executor -> transaction : get staged root and view
 note over transaction
-  Staged root: English L1.
+  Staged editlesson lid/L1 s/English
+  command prepares English L1.
   Live root and results: Math L1.
 end note
 executor -> writer : save changed candidate snapshot
