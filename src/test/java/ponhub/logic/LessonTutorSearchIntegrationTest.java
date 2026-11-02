@@ -22,7 +22,7 @@ public class LessonTutorSearchIntegrationTest {
 
     @Test
     public void search_exactTutorPhoneCombinesWithPartialNameAndOtherLessonFilters() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         session.execute("search c/lesson tu/mEI");
         assertIds(session, "L1", "L2", "L3");
         session.execute("search c/lesson tu/mEI tp/0012345 d/Mon");
@@ -39,7 +39,7 @@ public class LessonTutorSearchIntegrationTest {
 
     @Test
     public void search_invalidPhoneOrCategoryPreservesCurrentResultsPeopleAndSavedBytes() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         session.execute("search c/tutor n/Mei");
         var people = List.copyOf(session.getPeople());
         byte[] bytes = Files.readAllBytes(directory.resolve("people.json"));
@@ -57,7 +57,7 @@ public class LessonTutorSearchIntegrationTest {
 
     @Test
     public void activeSearch_refreshesAfterTutorPhoneEditAndReloadUsesCurrentPhone() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         session.execute("search c/lesson tp/0012345");
         session.execute("list r/tutor");
         session.execute("edit 1 p/0098765");
@@ -69,7 +69,7 @@ public class LessonTutorSearchIntegrationTest {
         assertIds(reloaded, "L1", "L2");
     }
 
-    private CanonicalPeopleSession fixture() throws Exception {
+    private CanonicalPeopleSession createSession() throws Exception {
         CanonicalPeopleSession session = new CanonicalPeopleSession(directory.resolve("people.json"));
         session.execute("add r/tutor n/Mei Lim p/0012345");
         session.execute("add r/tutor n/Mei Lim p/93456789");

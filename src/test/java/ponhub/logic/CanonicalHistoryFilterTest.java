@@ -32,7 +32,7 @@ public class CanonicalHistoryFilterTest {
     @Test
     public void history_filtersCombineWithoutWritingOrChangingPeople() throws Exception {
         Path path = createFixture();
-        CanonicalPeopleSession session = studentSession(path);
+        CanonicalPeopleSession session = createStudentSession(path);
         var people = session.getPeople();
         byte[] bytes = Files.readAllBytes(path);
 
@@ -53,7 +53,7 @@ public class CanonicalHistoryFilterTest {
 
     @Test
     public void history_sameSourceReplacesFiltersAndClearsOmittedFilters() throws Exception {
-        CanonicalPeopleSession session = studentSession(createFixture());
+        CanonicalPeopleSession session = createStudentSession(createFixture());
         assertRecords(session, "history 1 s/absent", "L10:2026-10-12", "L2:2026-10-06");
         var history = session.getDisplayedHistory();
         assertRecords(session, "history 1 s/present", "L10:2026-10-05");
@@ -65,33 +65,33 @@ public class CanonicalHistoryFilterTest {
     @Test
     public void history_filteredResultsRefreshOnCorrectionUnenrolmentAndRemoval() throws Exception {
         Path path = createFixture();
-        CanonicalPeopleSession session = studentSession(path);
+        CanonicalPeopleSession session = createStudentSession(path);
         assertRecords(session, "history 1 s/absent", "L10:2026-10-12", "L2:2026-10-06");
         var history = session.getDisplayedHistory();
         session.execute("mark 1 lid/L10 d/2026-10-05 s/absent");
         assertEquals(3, history.size());
         session.execute("mark 1 lid/L10 d/2026-10-12 s/present");
-        assertEquals(List.of("L2:2026-10-06", "L10:2026-10-05"), keys(history));
+        assertEquals(List.of("L2:2026-10-06", "L10:2026-10-05"), getHistoryKeys(history));
         session.execute("unenrol 1 lid/L2");
         assertFalse(history.getFirst().isCurrentlyEnrolled());
         session.execute("unmark 1 lid/L2 d/2026-10-06");
-        assertEquals(List.of("L10:2026-10-05"), keys(history));
+        assertEquals(List.of("L10:2026-10-05"), getHistoryKeys(history));
         session.execute("list r/parent");
         assertSame(history, session.getDisplayedHistory());
-        assertEquals(List.of("L10:2026-10-05"), keys(history));
+        assertEquals(List.of("L10:2026-10-05"), getHistoryKeys(history));
         assertTrue(session.historyViewActiveProperty().get());
-        assertRecords(studentSession(path), "history 1 s/absent", "L10:2026-10-05");
+        assertRecords(createStudentSession(path), "history 1 s/absent", "L10:2026-10-05");
     }
 
     @Test
     public void history_invalidFiltersPreservePriorSelectionAndBytes() throws Exception {
         Path path = createFixture();
-        CanonicalPeopleSession session = studentSession(path);
+        CanonicalPeopleSession session = createStudentSession(path);
         assertRecords(session, "history 1 s/absent", "L10:2026-10-12", "L2:2026-10-06");
         byte[] bytes = Files.readAllBytes(path);
         String context = session.historyResultContextProperty().get();
         var history = session.getDisplayedHistory();
-        List<String> original = keys(history);
+        List<String> original = getHistoryKeys(history);
         for (String command : List.of("history 1 d/2026-02-29", "history 1 s/unrecorded",
                 "history 1 s/absent s/present", "history 1 d/2026-10-05 x/value")) {
             assertThrows(ParseException.class, () -> session.execute(command));
@@ -99,7 +99,7 @@ public class CanonicalHistoryFilterTest {
         assertThrows(CommandException.class, () -> session.execute("history 1 lid/L99 s/present"));
         assertThrows(CommandException.class, () -> session.execute("history 99 d/2026-10-05"));
         assertEquals(context, session.historyResultContextProperty().get());
-        assertEquals(original, keys(history));
+        assertEquals(original, getHistoryKeys(history));
         assertTrue(session.historyViewActiveProperty().get());
         assertArrayEquals(bytes, Files.readAllBytes(path));
     }
@@ -121,7 +121,7 @@ public class CanonicalHistoryFilterTest {
         var original = session.getDataSnapshot();
         assertThrows(CommandException.class, () -> session.execute("mark 1 lid/L10 d/2026-10-05 s/absent"));
         assertSame(original, session.getDataSnapshot());
-        assertEquals(List.of("L10:2026-10-05"), keys(session.getDisplayedHistory()));
+        assertEquals(List.of("L10:2026-10-05"), getHistoryKeys(session.getDisplayedHistory()));
         assertArrayEquals(before, Files.readAllBytes(path));
         session.execute("mark 1 lid/L10 d/2026-10-05 s/absent");
         assertTrue(session.getDisplayedHistory().isEmpty());
@@ -143,7 +143,7 @@ public class CanonicalHistoryFilterTest {
         return path;
     }
 
-    private CanonicalPeopleSession studentSession(Path path) throws Exception {
+    private CanonicalPeopleSession createStudentSession(Path path) throws Exception {
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("search c/student n/Alex l/P3");
         return session;
@@ -152,10 +152,10 @@ public class CanonicalHistoryFilterTest {
     private void assertRecords(CanonicalPeopleSession session, String command, String... expected) throws Exception {
         assertEquals("Showing " + expected.length + " attendance record(s).",
                 session.execute(command).getFeedbackToUser());
-        assertEquals(List.of(expected), keys(session.getDisplayedHistory()));
+        assertEquals(List.of(expected), getHistoryKeys(session.getDisplayedHistory()));
     }
 
-    private List<String> keys(List<AttendanceHistoryEntry> history) {
+    private List<String> getHistoryKeys(List<AttendanceHistoryEntry> history) {
         return history.stream().map(entry -> entry.getLessonId() + ":" + entry.getDate()).toList();
     }
 }

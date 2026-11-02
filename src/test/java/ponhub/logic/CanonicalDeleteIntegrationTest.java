@@ -61,7 +61,7 @@ public class CanonicalDeleteIntegrationTest {
 
     @Test
     public void execute_previewAndCancellation_preserveBytesSnapshotAndAllViewsWithoutSaving() throws Exception {
-        Path path = savedData(Set.of(FIRST_STUDENT));
+        Path path = saveFixtureData(Set.of(FIRST_STUDENT));
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
             throw new AssertionError("Preview and cancellation must not save");
         });
@@ -90,7 +90,7 @@ public class CanonicalDeleteIntegrationTest {
         assertSame(before, session.getDataSnapshot());
         assertArrayEquals(bytes, Files.readAllBytes(path));
         assertSame(people, session.getPeople());
-        assertEquals(List.of(SECOND_STUDENT), visibleIds(session));
+        assertEquals(List.of(SECOND_STUDENT), getVisibleIds(session));
         assertSame(contexts, session.personSearchContextProperty().get());
         assertSame(lessons, session.getDisplayedLessons());
         assertEquals(List.of(LESSON), lessons.stream().map(lesson -> lesson.getLessonId()).toList());
@@ -104,7 +104,7 @@ public class CanonicalDeleteIntegrationTest {
 
     @Test
     public void execute_interveningCommandsIncludingRejectedInput_cancelThePendingTarget() throws Exception {
-        Path path = savedData(Set.of());
+        Path path = saveFixtureData(Set.of());
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
             throw new AssertionError("An expired confirmation must not save");
         });
@@ -131,14 +131,14 @@ public class CanonicalDeleteIntegrationTest {
 
     @Test
     public void execute_newPreviewReplacesOldTarget_andConfirmationCannotBeRepeatedOrRestarted() throws Exception {
-        Path path = savedData(Set.of());
+        Path path = saveFixtureData(Set.of());
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("list r/parent");
         session.execute("delete 1");
         assertTrue(session.execute("delete 2").getFeedbackToUser().contains("Other Parent (P5)"));
         assertEquals("Deleted parent: Other Parent (P5).",
                 session.execute("delete\tconfirm\t").getFeedbackToUser());
-        assertEquals(List.of(new PersonId("P2")), visibleIds(session));
+        assertEquals(List.of(new PersonId("P2")), getVisibleIds(session));
         assertThrows(CommandException.class, () -> session.execute("delete confirm"));
         session.execute("delete 1");
         CanonicalPeopleSession restarted = new CanonicalPeopleSession(path);
@@ -150,11 +150,11 @@ public class CanonicalDeleteIntegrationTest {
 
     @Test
     public void execute_confirmedCommand_rechecksRecordAndDependencies() throws Exception {
-        Path path = savedData(Set.of());
+        Path path = saveFixtureData(Set.of());
         PonHubData data = new PonHubData(new JsonPonHubDataStorage(path).readData().orElseThrow());
         PersonRecord parent = data.getPerson(new PersonId("P2")).orElseThrow();
         CanonicalDeleteCommand deletion = new CanonicalDeleteCommand(parent);
-        data.replacePerson(new Parent(parent.getId(), contacts("Changed Parent", "60000001")));
+        data.replacePerson(new Parent(parent.getId(), createContacts("Changed Parent", "60000001")));
         var changed = data.exportState();
         assertThrows(CommandException.class, () -> deletion.execute(data, new PeopleView(data)));
         assertSame(changed, data.exportState());
@@ -173,7 +173,7 @@ public class CanonicalDeleteIntegrationTest {
 
     @Test
     public void execute_searchFilteredStudent_preservesFilterCountersAndReload() throws Exception {
-        Path path = savedData(Set.of(FIRST_STUDENT));
+        Path path = saveFixtureData(Set.of(FIRST_STUDENT));
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("search c/student n/Student");
         var visible = session.getPeople();
@@ -183,7 +183,7 @@ public class CanonicalDeleteIntegrationTest {
 
         assertEquals("Deleted student: Bob Student (S3).", confirmDeletion(session, "delete 2").getFeedbackToUser());
         assertSame(visible, session.getPeople());
-        assertEquals(List.of(FIRST_STUDENT), visibleIds(session));
+        assertEquals(List.of(FIRST_STUDENT), getVisibleIds(session));
         assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
         assertTrue(emptyLessons.isEmpty());
         assertSame(roster, session.getLessonQueries().getLessonRoster(LESSON));
@@ -197,7 +197,7 @@ public class CanonicalDeleteIntegrationTest {
 
     @Test
     public void execute_deletedStudentWithSelectedLessons_keepsStableEmptySubscription() throws Exception {
-        Path path = savedData(Set.of(FIRST_STUDENT));
+        Path path = saveFixtureData(Set.of(FIRST_STUDENT));
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("lessons si/4");
         var displayed = session.getDisplayedLessons();
@@ -208,7 +208,7 @@ public class CanonicalDeleteIntegrationTest {
         assertSame(displayed, session.getDisplayedLessons());
         assertTrue(displayed.isEmpty());
         assertEquals("Student S3 · current lessons", session.lessonResultContextProperty().get());
-        assertEquals(List.of(FIRST_STUDENT, new PersonId("S10")), visibleIds(session));
+        assertEquals(List.of(FIRST_STUDENT, new PersonId("S10")), getVisibleIds(session));
 
         session.execute("lessons si/1");
         assertSame(displayed, session.getDisplayedLessons());
@@ -219,11 +219,11 @@ public class CanonicalDeleteIntegrationTest {
 
     @Test
     public void execute_parentsAndUnassignedTutor_preservesStudentPhonesAndRenumbers() throws Exception {
-        Path path = savedData(Set.of(FIRST_STUDENT));
+        Path path = saveFixtureData(Set.of(FIRST_STUDENT));
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("list r/parent");
         assertEquals("Deleted parent: Pat Parent (P2).", confirmDeletion(session, "delete 1").getFeedbackToUser());
-        assertEquals(List.of(new PersonId("P5")), visibleIds(session));
+        assertEquals(List.of(new PersonId("P5")), getVisibleIds(session));
         assertEquals(Optional.of(PersonRole.PARENT), session.getRoleFilter());
         assertEquals("Deleted parent: Other Parent (P5).", confirmDeletion(session, "delete 1").getFeedbackToUser());
         assertTrue(session.getPeople().isEmpty());
@@ -234,7 +234,7 @@ public class CanonicalDeleteIntegrationTest {
         }
         session.execute("list r/tutor");
         assertEquals("Deleted tutor: Free Tutor (T2).", confirmDeletion(session, "delete 2").getFeedbackToUser());
-        assertEquals(List.of(new PersonId("T7")), visibleIds(session));
+        assertEquals(List.of(new PersonId("T7")), getVisibleIds(session));
         assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
         assertTrue(session.execute("add r/parent n/New Parent p/60000003").getFeedbackToUser().contains("P6"));
         assertTrue(session.execute("add r/tutor n/New Tutor p/70000003").getFeedbackToUser().contains("T8"));
@@ -242,7 +242,7 @@ public class CanonicalDeleteIntegrationTest {
 
     @Test
     public void execute_enrolledStudentAndEmptyLessonTutor_rejectsUntilDependencyRemoved() throws Exception {
-        Path path = savedData(Set.of(FIRST_STUDENT));
+        Path path = saveFixtureData(Set.of(FIRST_STUDENT));
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("lessons si/2");
         var displayed = session.getDisplayedLessons();
@@ -272,7 +272,7 @@ public class CanonicalDeleteIntegrationTest {
 
     @Test
     public void execute_retainedAttendanceAfterUnenrol_blocksStudentDeletion() throws Exception {
-        Path path = savedData(Set.of());
+        Path path = saveFixtureData(Set.of());
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("enrol 2 lid/L10");
         session.execute("mark 2 lid/L10 d/2026-10-05 s/present");
@@ -287,14 +287,14 @@ public class CanonicalDeleteIntegrationTest {
         assertTrue(failure.getMessage().contains("lesson L10 on 2026-10-05"));
         assertSame(before, session.getDataSnapshot());
         assertSame(visible, session.getPeople());
-        assertEquals(List.of(FIRST_STUDENT, SECOND_STUDENT), visibleIds(session));
+        assertEquals(List.of(FIRST_STUDENT, SECOND_STUDENT), getVisibleIds(session));
         assertArrayEquals(original, Files.readAllBytes(path));
         assertEquals(before, new CanonicalPeopleSession(path).getDataSnapshot());
     }
 
     @Test
     public void execute_invalidSelectorsAndMissingModelRecord_preservesDataWithoutSaving() throws Exception {
-        Path path = savedData(Set.of());
+        Path path = saveFixtureData(Set.of());
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
             throw new AssertionError("Invalid deletion must not save");
         });
@@ -317,7 +317,7 @@ public class CanonicalDeleteIntegrationTest {
 
     @Test
     public void execute_controlBearingSelectors_preservesBytesSnapshotAndSearchPositions() throws Exception {
-        Path path = savedData(Set.of());
+        Path path = saveFixtureData(Set.of());
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
         int[] writes = {0};
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
@@ -344,7 +344,7 @@ public class CanonicalDeleteIntegrationTest {
                 assertSame(visible, session.getPeople());
                 assertEquals(Optional.of(PersonRole.PARENT), session.getRoleFilter());
                 assertSame(searchContext, session.personSearchContextProperty().get());
-                assertEquals(List.of(new PersonId("P5")), visibleIds(session));
+                assertEquals(List.of(new PersonId("P5")), getVisibleIds(session));
                 assertSame(selected, PersonIndexResolver.resolve(Index.fromOneBased(1), visible));
                 assertEquals(0, events[0]);
             }
@@ -361,7 +361,7 @@ public class CanonicalDeleteIntegrationTest {
 
     @Test
     public void execute_lineBreakWithControl_keepsSingleLineErrorPrecedence() throws Exception {
-        Path path = savedData(Set.of());
+        Path path = saveFixtureData(Set.of());
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
             throw new AssertionError("Rejected deletion must not save");
         });
@@ -375,7 +375,7 @@ public class CanonicalDeleteIntegrationTest {
 
     @Test
     public void execute_failedSaveHidesDeletionAndRetryCommitsOnce() throws Exception {
-        Path path = savedData(Set.of(FIRST_STUDENT));
+        Path path = saveFixtureData(Set.of(FIRST_STUDENT));
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
         CanonicalPeopleSession[] current = new CanonicalPeopleSession[1];
         PonHubDataState before = storage.readData().orElseThrow();
@@ -407,7 +407,7 @@ public class CanonicalDeleteIntegrationTest {
         assertTrue(failure.getMessage().contains("Injected deletion save failure"));
         assertSame(originalSnapshot, session.getDataSnapshot());
         assertSame(visible, session.getPeople());
-        assertEquals(List.of(new PersonId("P2")), visibleIds(session));
+        assertEquals(List.of(new PersonId("P2")), getVisibleIds(session));
         assertSame(queries, session.getLessonQueries());
         assertSame(lessons, queries.getLessonList());
         assertEquals(0, events[0]);
@@ -421,7 +421,7 @@ public class CanonicalDeleteIntegrationTest {
         assertEquals(1, writes[0]);
         confirmDeletion(session, "delete 1");
         assertEquals(2, writes[0]);
-        assertTrue(visibleIds(session).isEmpty());
+        assertTrue(getVisibleIds(session).isEmpty());
         assertEquals(Optional.of(PersonRole.PARENT), session.getRoleFilter());
         assertTrue(events[0] > 0);
         assertSame(displayed, session.getDisplayedLessons());
@@ -435,17 +435,17 @@ public class CanonicalDeleteIntegrationTest {
         return session.execute("delete confirm");
     }
 
-    private Path savedData(Set<PersonId> roster) throws IOException {
+    private Path saveFixtureData(Set<PersonId> roster) throws IOException {
         Path path = directory.resolve("canonical.json");
         List<PersonRecord> people = List.of(
-                new Tutor(new PersonId("T7"), contacts("Assigned Tutor", "70000001")),
+                new Tutor(new PersonId("T7"), createContacts("Assigned Tutor", "70000001")),
                 new Student(FIRST_STUDENT, new ContactDetails(new Name("Alice Student")),
                         new EducationLevel("P1"), new Phone("60000001")),
-                new Parent(new PersonId("P2"), contacts("Pat Parent", "60000001")),
+                new Parent(new PersonId("P2"), createContacts("Pat Parent", "60000001")),
                 new Student(SECOND_STUDENT, new ContactDetails(new Name("Bob Student")),
                         new EducationLevel("P2"), new Phone("60000001")),
-                new Tutor(new PersonId("T2"), contacts("Free Tutor", "70000002")),
-                new Parent(new PersonId("P5"), contacts("Other Parent", "60000002")));
+                new Tutor(new PersonId("T2"), createContacts("Free Tutor", "70000002")),
+                new Parent(new PersonId("P5"), createContacts("Other Parent", "60000002")));
         PeopleRegistryState registry = new PeopleRegistryState(people,
                 Map.of(PersonRole.STUDENT, 9L, PersonRole.TUTOR, 7L, PersonRole.PARENT, 5L));
         Lesson lesson = new Lesson(LESSON, new PersonId("T7"),
@@ -455,11 +455,11 @@ public class CanonicalDeleteIntegrationTest {
         return path;
     }
 
-    private static List<PersonId> visibleIds(CanonicalPeopleSession session) {
+    private static List<PersonId> getVisibleIds(CanonicalPeopleSession session) {
         return session.getPeople().stream().map(PersonRecord::getId).toList();
     }
 
-    private static ContactDetails contacts(String name, String phone) {
+    private static ContactDetails createContacts(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.of(new Phone(phone)), Optional.empty(), Optional.empty());
     }
 }
