@@ -260,7 +260,7 @@ Use this table as a quick lookup. Click any action to read its full rules and ex
 
 **Notes:**
 * See [Positions and stable IDs](#positions-and-stable-ids) for how to choose `INDEX`, `STUDENT_INDEX`, and `lid/LESSON_ID`.
-* If PonHub starts in a [protected session](#if-ponhub-shows-data-file-protected), only `help`, `list`, and `exit` are available. Inherited AB3 commands such as `clear` and `find` are not used in PonHub.
+* If PonHub starts in a [protected session](#if-ponhub-shows-data-file-protected), only `help`, `list`, and `exit` are available. Commands such as `clear` and `find` are not supported.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -364,7 +364,7 @@ Supply at least one field to change. Omitted fields stay as they are. All values
 
 **Notes:**
 * **Clearing optional fields:** Supply an empty `e/` or `a/` to clear an email or address, or an empty `p/` to clear a student's own phone. Required fields (names, student levels, student parent phones, and tutor or parent phones) cannot be cleared, and a person's role and stable ID cannot be changed.
-* **Duplicates and no-op edits:** If your edit would match another person's role, normalized name, and identifying phone (`pp/` for students, `p/` for tutors and parents), the error message names the fields you need to change (`n/` or the identifying phone). An edit that changes nothing after space normalization (such as `edit 1 n/Alex  Tan`) reports no change and does not save, whereas changing capitalization (such as `edit 1 n/ALEX TAN`) saves the new display casing.
+* **Duplicates and no-op edits:** If your edit would match another person's role, normalized name, and identifying phone (`pp/` for students, `p/` for tutors and parents), the error message names the fields you need to change (`n/` or the identifying phone). An edit that changes nothing after space normalization (for example, `edit 1 n/Alex  Tan` with two spaces between `Alex` and `Tan`) reports no change and does not save, whereas changing capitalization (such as `edit 1 n/ALEX TAN`) saves the new display casing.
 * **Linked records:** Renaming a tutor automatically updates the tutor name shown on their lessons. Changing a student's `pp/` or a parent's `p/` recomputes parent–student links by exact phone match without altering anyone else's phone number; if any existing parent–student link is broken, the confirmation message lists the affected Parent–Student ID pairs.
 <!-- @@author -->
 
@@ -956,7 +956,7 @@ Close PonHub first, then copy your selected operational data file (`data/ponhub.
 
 ### 12.2 If PonHub shows "Data file protected"
 
-If your selected data file is unreadable, corrupted, modified with invalid JSON or broken links, from an unsupported version, or an unversioned legacy file, PonHub starts in a **protected session** and shows a **Data file protected** warning.
+If your selected data file is unreadable, corrupted, modified with invalid JSON or broken links, from an unsupported version, or an unversioned legacy file, PonHub starts in a **protected session** and opens a **Data file protected** warning dialog. Dismissing the dialog does not unlock the session.
 
 * **Your data has not been deleted:** The empty people and lesson lists on screen only mean PonHub refused to load or overwrite the damaged file.
 * **Writes are locked:** Only `help`, `list`, and `exit` work in a protected session, so the original file on disk stays untouched.
@@ -1038,7 +1038,7 @@ Keep a backup of the original folder until you have opened PonHub on the new com
 **A:** Supply the tutor's full name with `tu/TUTOR_NAME`, and add `tp/TUTOR_PHONE` if two tutors share the same name; see the tutor lookup rules in [Creating a lesson: `addlesson`](#creating-a-lesson-addlesson).
 
 **Q: Why is my people list empty after starting PonHub?**<br>
-**A:** On a brand-new installation (or when `--data` points to a new path), PonHub starts with an empty dataset until your first change is saved. If you already had data and see a **Data file protected** banner at the top, your saved file was not deleted—PonHub locked writes to protect the file; follow [If PonHub shows "Data file protected"](#if-ponhub-shows-data-file-protected).
+**A:** On a brand-new installation (or when `--data` points to a new path), PonHub starts with an empty dataset until your first change is saved. If you already had data and saw a **Data file protected** warning dialog at startup, your saved file was not deleted—PonHub locked writes to protect the file; follow [If PonHub shows "Data file protected"](#if-ponhub-shows-data-file-protected).
 
 **Q: If a student has no attendance marked for a lesson date, are they counted as absent?**<br>
 **A:** No. A date with no attendance entry is **unrecorded**, never `absent`. Only dates explicitly marked with `s/absent` count as absences.
@@ -1087,7 +1087,7 @@ The {% include command-list.html key="record-validation" label="commands that cr
 | **Education level** | `l/` | `P1`–`P6`, `S1`–`S5`, `JC1`, or `JC2` (case-insensitive, displayed in uppercase). Students only. |
 | **Subject** | `s/` | 1–50 characters using Unicode letters or digits, with single spaces or single hyphens between non-empty parts (e.g., `Math`, `Primary 5 Math`, `A-Math`). No leading, trailing, or repeated hyphens. |
 | **Room** | `rm/` | 1–10 characters in total (including hyphens), using letters or digits with optional single hyphens between parts (e.g., `R1`, `B-01`). Stored and displayed in uppercase, so `b-01` and `B-01` refer to the same room. No spaces. |
-| **Weekday** | `d/` | `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, or `Sun` (case-insensitive in search). |
+| **Weekday** | `d/` | `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, or `Sun` (case-insensitive). |
 | **Start / End time** | `st/`, `et/`, `from/`, `to/` | 4-digit, 24-hour `HHMM` time (`0000`–`2359`), with start earlier than end on the same day. |
 | **Attendance date** | `d/` | Real calendar date in `YYYY-MM-DD` format (years `0001`–`9999`). For `mark`, `unmark`, and `showlesson`, the date must fall on the lesson's weekday. |
 | **Attendance status** | `s/` | `present` or `absent` (case-insensitive). |

@@ -528,7 +528,7 @@ edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [l/LEVEL] [pp/PARENT_PHONE]
 
 * **Keep, set, or clear fields:** `PersonEditInput` models each field as `Field.keep()`, `Field.set(value)`, or `Field.clear()`. At least one prefix must be supplied. Omitted prefixes keep their existing value. Supplying an empty value clears optional fields (`e/`, `a/`, and a student's own `p/`), but is rejected for required fields (`n/`, `l/`, `pp/`, and a tutor's or parent's `p/`) or student-only fields (`l/`, `pp/`) on a tutor or parent.
 * **Validation and no-op detection:** `PersonEditCandidate.prepare(source, targetId, input)` constructs the replacement `PersonRecord` and calls `PonHubData.replacePerson` on a staged copy, checking duplicate identity against all other people (using sigma-folded normalized keys whenever the business key changes).
-  * If every stored field (including display case) matches the existing record—for example, `edit 1 n/Alex  Tan` when the stored name is `Alex Tan`—the candidate is marked unchanged (`isChanged() == false`) and skips saving.
+  * If every stored field (including display case) matches the existing record—for example, `edit 1 n/Alex  Tan` with two spaces between `Alex` and `Tan`, when the stored name is `Alex Tan`—the candidate is marked unchanged (`isChanged() == false`) and skips saving.
   * Changing display case (`edit 1 n/ALEX TAN`) is a real change and is saved.
 * **Parent–student link notifications:** Changing a `Parent`'s own phone or a `Student`'s `parentPhone` updates derived parent–student links automatically without modifying any other person's record. `CanonicalEditCommand` compares the linked `(parentId, studentId)` `PersonId` pairs before and after the edit and appends a warning to the success message listing any links that were disconnected.
 
@@ -1596,7 +1596,7 @@ Using the baseline fixture with a Parent added (`add r/parent n/Pat Tan p/912345
    edit 1 n/ALEX TAN
    ```
 
-   *Expected:* The first edit updates Alex (`S1`) to level `P2` and clears optional own phone, email, and address while preserving `S1` and the Student filter. `edit 1 n/Alex  Tan` normalizes to `Alex Tan` and reports no change (no operational save). `edit 1 n/ALEX TAN` updates the displayed uppercase spelling and saves.
+   *Expected:* The first edit updates Alex (`S1`) to level `P2` and clears optional own phone, email, and address while preserving `S1` and the Student filter. The edit with two spaces between `Alex` and `Tan` normalizes to `Alex Tan` and reports no change (no operational save). `edit 1 n/ALEX TAN` updates the displayed uppercase spelling and saves.
 
 2. **Parent–student phone link warnings and tutor rename propagation:**
    * Run `search c/parent sn/ALEX`, then edit Pat Tan's phone (`list r/parent` → `edit 1 p/99998888`). Confirm the success message lists the disconnected `(P1, S1)` and `(P1, S2)` links while leaving the students' `parentPhone` values (`91234567`) untouched.
