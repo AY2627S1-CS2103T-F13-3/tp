@@ -513,7 +513,7 @@ Attendance records an outcome for one Student, one lesson and one date. It is st
 
 <figure class="dg-figure">
 <figcaption>Membership and dated attendance transitions</figcaption>
-<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Unenrolment retains dated attendance">
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Membership and dated attendance transitions">
 <a href="images/DomainAttendanceHistory.png"><img src="images/DomainAttendanceHistory.png" alt="For one existing Student, lesson and date, enrolment and attendance change independently. Unenrolment retains attendance, unmark removes it, and retained dates remain correctable."></a>
 </div>
 </figure>

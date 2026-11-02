@@ -30,7 +30,7 @@ C -up-> B : enrol
 C -left-> D : unmark
 B --> B : mark / correct existing date
 C --> C : mark / correct existing date
-note bottom of D
+note as AttendanceScope
   Membership and attendance for one existing Student,
   Lesson and matching-weekday date, initially unenrolled.
   Guards such as schedule clashes still apply.
