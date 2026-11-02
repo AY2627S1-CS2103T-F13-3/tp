@@ -127,7 +127,7 @@ public class LessonDetailListTest {
                     List.of(rosterEntry(1, Optional.of(AttendanceStatus.PRESENT))), List.of());
             Region panel = panel(original, 420, 900);
             LessonDetailList view = (LessonDetailList) detailList(panel);
-            ListCell<?> entryCell = cellAt(view, 2);
+            ListCell<?> entryCell = findCellAt(view, 2);
             Region oldRow = (Region) entryCell.getGraphic();
             assertNotNull(oldRow);
             assertTrue(oldRow.prefWidthProperty().isBound());
@@ -135,7 +135,7 @@ public class LessonDetailListTest {
             // The inherited ListView API permits null items, which are distinct from empty cells.
             view.getItems().set(2, null);
             settleLayout(panel, view);
-            ListCell<?> nullCell = cellAt(view, 2);
+            ListCell<?> nullCell = findCellAt(view, 2);
             assertFalse(nullCell.isEmpty());
             assertNull(nullCell.getItem());
             assertNull(nullCell.getText());
@@ -321,7 +321,7 @@ public class LessonDetailListTest {
     @Test
     public void detail_endThenWheelBeforeLayout_preservesNewerViewportPosition() throws Exception {
         runOnFxThread(() -> {
-            Region panel = largeHistoryPanel();
+            Region panel = createLargeHistoryPanel();
             ListView<?> view = detailList(panel);
             fireKey(view, KeyCode.END);
             Event.fireEvent(view.lookup(".virtual-flow"), new ScrollEvent(ScrollEvent.SCROLL,
@@ -335,7 +335,7 @@ public class LessonDetailListTest {
     @Test
     public void detail_endThenScrollbarBeforeLayout_preservesNewerViewportPosition() throws Exception {
         runOnFxThread(() -> {
-            Region panel = largeHistoryPanel();
+            Region panel = createLargeHistoryPanel();
             ListView<?> view = detailList(panel);
             fireKey(view, KeyCode.END);
             ScrollBar bar = verticalScrollBar(view);
@@ -351,7 +351,7 @@ public class LessonDetailListTest {
         });
     }
 
-    private static Region largeHistoryPanel() {
+    private static Region createLargeHistoryPanel() {
         var records = new ArrayList<LessonDetailView.FormerAttendance>();
         for (int index = 0; index < 1000; index++) {
             records.add(formerEntry(1, index));
@@ -505,7 +505,7 @@ public class LessonDetailListTest {
         return (ListView<?>) panel.lookup("#lessonDetailList");
     }
 
-    private static ListCell<?> cellAt(ListView<?> view, int index) {
+    private static ListCell<?> findCellAt(ListView<?> view, int index) {
         return view.lookupAll(".list-cell").stream().map(node -> (ListCell<?>) node)
                 .filter(cell -> cell.getIndex() == index).findFirst().orElseThrow();
     }

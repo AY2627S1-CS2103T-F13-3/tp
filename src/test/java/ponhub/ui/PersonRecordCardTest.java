@@ -85,7 +85,7 @@ public class PersonRecordCardTest {
 
     @Test
     public void constructor_populatedStudent_rendersOwnAndParentContactsSeparately() throws Exception {
-        ContactDetails contacts = populatedContacts();
+        ContactDetails contacts = createPopulatedContacts();
         Student student = new Student(new PersonId("S12"), contacts, new EducationLevel("S2"),
                 new Phone("00987654"));
 
@@ -102,7 +102,7 @@ public class PersonRecordCardTest {
 
     @Test
     public void constructor_populatedTutor_rendersOwnContactsWithoutStudentFields() throws Exception {
-        ContactDetails contacts = populatedContacts();
+        ContactDetails contacts = createPopulatedContacts();
         Tutor tutor = new Tutor(new PersonId("T41"), contacts);
 
         runOnFxThread(() -> {
@@ -178,7 +178,7 @@ public class PersonRecordCardTest {
 
     @Test
     public void constructor_invalidInput_rejectsBeforeLoadingControls() {
-        Tutor tutor = new Tutor(new PersonId("T1"), populatedContacts());
+        Tutor tutor = new Tutor(new PersonId("T1"), createPopulatedContacts());
 
         assertThrows(NullPointerException.class, () -> new PersonRecordCard(null, 1));
         assertThrows(IllegalArgumentException.class, () -> new PersonRecordCard(tutor, 0));
@@ -220,7 +220,7 @@ public class PersonRecordCardTest {
 
     @Test
     public void panel_roleFiltering_rendersTheSamePeopleUsedByCommandIndices() throws Exception {
-        PonHubData data = peopleData(PeopleSampleDataUtil.getSamplePeopleRegistry().exportState());
+        PonHubData data = createPeopleData(PeopleSampleDataUtil.getSamplePeopleRegistry().exportState());
         PonHubDataState originalState = data.exportState();
         PeopleView peopleView = new PeopleView(data);
         peopleView.setRoleFilter(new PeopleListParser().parse("r/student"));
@@ -255,7 +255,7 @@ public class PersonRecordCardTest {
     public void panel_failedCanonicalSave_preservesActualSelectionAndFilteredIndex() throws Exception {
         Student student = new Student(new PersonId("S7"), new ContactDetails(new Name("Selected Student")),
                 new EducationLevel("P1"), new Phone("91234567"));
-        PonHubData data = peopleData(new PeopleRegistryState(List.of(student),
+        PonHubData data = createPeopleData(new PeopleRegistryState(List.of(student),
                 Map.of(PersonRole.STUDENT, 7L, PersonRole.TUTOR, 0L, PersonRole.PARENT, 0L)));
         PeopleView view = new PeopleView(data);
         view.setRoleFilter(Optional.of(PersonRole.STUDENT));
@@ -285,7 +285,7 @@ public class PersonRecordCardTest {
     @Test
     public void panel_rootRefresh_keepsBindingAndClearsCardsForEmptyRole() throws Exception {
         PeopleRegistry registry = PeopleSampleDataUtil.getSamplePeopleRegistry();
-        PonHubData data = peopleData(registry.exportState());
+        PonHubData data = createPeopleData(registry.exportState());
         PeopleView peopleView = new PeopleView(data);
         peopleView.setRoleFilter(Optional.of(PersonRole.PARENT));
 
@@ -296,7 +296,7 @@ public class PersonRecordCardTest {
             assertNotNull(findCard(list, "Parent · ID: P1"));
 
             registry.remove(new PersonId("P1"), person -> false);
-            data.resetData(peopleData(registry.exportState()).exportState());
+            data.resetData(createPeopleData(registry.exportState()).exportState());
             peopleView.refresh();
             panel.layout();
             assertTrue(list.getItems() == peopleView.getPeople());
@@ -314,7 +314,7 @@ public class PersonRecordCardTest {
 
         runOnFxThread(() -> {
             for (int width : new int[] {320, 853, 1536, 1920}) {
-                Region panel = new PersonRecordListPanel(new PeopleView(peopleData(state))).getRoot();
+                Region panel = new PersonRecordListPanel(new PeopleView(createPeopleData(state))).getRoot();
                 layoutScene(panel, width, 420);
                 ListView<PersonRecord> list = getRecordList(panel);
                 list.scrollTo(1);
@@ -427,7 +427,7 @@ public class PersonRecordCardTest {
         }
     }
 
-    private static PonHubData peopleData(PeopleRegistryState people) {
+    private static PonHubData createPeopleData(PeopleRegistryState people) {
         return new PonHubData(new PonHubDataState(people, List.of(), List.of(), 0));
     }
 
@@ -478,7 +478,7 @@ public class PersonRecordCardTest {
                 .orElseThrow(() -> new AssertionError("Card is not reachable: " + identity));
     }
 
-    private static ContactDetails populatedContacts() {
+    private static ContactDetails createPopulatedContacts() {
         return new ContactDetails(new Name("Alex  TAN "), Optional.of(new Phone("00012345")),
                 Optional.of(new Email("Alex.Tan@Example.com")), Optional.of(new Address("12  Main Street ")));
     }

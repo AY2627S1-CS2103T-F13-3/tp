@@ -62,13 +62,13 @@ public class MainWindowResultResizeTest {
             Fixture fixture = callOnFxThread(() -> createFixture(
                     LessonQueryTestData.createData().exportState(), size[0], size[1]));
             runOnFxThread(() -> {
-                double height = fixture.resultPane().getHeight();
+                double height = fixture.getResultPane().getHeight();
                 assertTrue(height >= 96 && height <= 116,
                         "Startup feedback must stay compact at " + size[0] + "x" + size[1]
                                 + "; actual height=" + height);
-                assertTrue(fixture.records().getHeight() >= 100);
+                assertTrue(fixture.getRecordsPane().getHeight() >= 100);
                 fixture.enter("list");
-                assertEquals(height, fixture.resultPane().getHeight(), 1);
+                assertEquals(height, fixture.getResultPane().getHeight(), 1);
                 ScrollPane scroll = (ScrollPane) fixture.result().lookup(".scroll-pane");
                 assertTrue(scroll.getViewportBounds().getHeight() >= fixture.result().getFont().getSize() + 2,
                         "Short feedback must have room for a complete line.");
@@ -93,13 +93,13 @@ public class MainWindowResultResizeTest {
                     fixture.split().setDividerPositions(0.5);
                     fixture.layout();
                 }
-                double height = fixture.resultPane().getHeight();
+                double height = fixture.getResultPane().getHeight();
                 for (int contentHeight : new int[] {1020, 1440, 600}) {
                     fixture.resize(853, contentHeight);
-                    assertEquals(height, fixture.resultPane().getHeight(), 1,
+                    assertEquals(height, fixture.getResultPane().getHeight(), 1,
                             "Window resizing must leave feedback height under the user's control.");
                     fixture.enter("help search");
-                    assertEquals(height, fixture.resultPane().getHeight(), 1);
+                    assertEquals(height, fixture.getResultPane().getHeight(), 1);
                 }
             }
         });
@@ -108,11 +108,11 @@ public class MainWindowResultResizeTest {
     @Test
     public void longHelp_atCompactStartup_scrollsToTheCompleteEndWithoutMovingDivider() throws Exception {
         Fixture fixture = callOnFxThread(this::createFixture);
-        double height = callOnFxThread(() -> fixture.resultPane().getHeight());
+        double height = callOnFxThread(() -> fixture.getResultPane().getHeight());
         runOnFxThread(() -> fixture.enter("help search"));
         runOnFxThread(fixture::layout);
         runOnFxThread(() -> {
-            assertEquals(height, fixture.resultPane().getHeight(), 1);
+            assertEquals(height, fixture.getResultPane().getHeight(), 1);
             ScrollBar vertical = fixture.result().lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
                     .filter(bar -> bar.getOrientation() == Orientation.VERTICAL).findFirst().orElseThrow();
             assertTrue(vertical.isVisible());
@@ -127,7 +127,7 @@ public class MainWindowResultResizeTest {
             assertTrue(fixture.result().getScrollTop() > 0);
             assertTrue(content.getMaxY() >= viewport.getMinY() && content.getMaxY() <= viewport.getMaxY() + 2,
                     "The complete search help must remain reachable from the compact startup height.");
-            assertEquals(height, fixture.resultPane().getHeight(), 1);
+            assertEquals(height, fixture.getResultPane().getHeight(), 1);
         });
     }
 
@@ -141,7 +141,7 @@ public class MainWindowResultResizeTest {
                 fixture.split().setDividerPositions(0.5);
                 fixture.layout();
                 double splitHeight = fixture.split().getHeight();
-                double resultHeight = fixture.resultPane().getHeight();
+                double resultHeight = fixture.getResultPane().getHeight();
                 Region footer = (Region) fixture.root().lookup("#statusbarPlaceholder");
                 double footerHeight = footer.getHeight();
                 double inputY = fixture.input().localToScene(0, 0).getY();
@@ -160,7 +160,7 @@ public class MainWindowResultResizeTest {
                             assertTrue(fixture.root().lookup("#historyListView").getParent().isManaged(), context);
                         }
                         assertEquals(splitHeight, fixture.split().getHeight(), 0.01, context);
-                        assertEquals(resultHeight, fixture.resultPane().getHeight(), 0.01, context);
+                        assertEquals(resultHeight, fixture.getResultPane().getHeight(), 0.01, context);
                         assertEquals(footerHeight, footer.getHeight(), 0.01, context);
                         assertEquals(inputY, fixture.input().localToScene(0, 0).getY(), 0.01, context);
                         assertEquals(position, fixture.split().getDividerPositions()[0], 0.000001, context);
@@ -192,27 +192,27 @@ public class MainWindowResultResizeTest {
         for (int[] size : new int[][] {{853, 600}, {450, 330}, {1536, 800}}) {
             runOnFxThread(() -> {
                 fixture.resize(size[0], size[1]);
-                fixture.records().setDividerPositions(0.55);
+                fixture.getRecordsPane().setDividerPositions(0.55);
                 fixture.split().setDividerPositions(0.25);
                 fixture.layout();
-                double initialHeight = fixture.resultPane().getHeight();
+                double initialHeight = fixture.getResultPane().getHeight();
                 fixture.split().setDividerPositions(0.75);
                 fixture.layout();
                 if (size[1] == 330) {
                     // Only a small amount of divider movement remains in the compact workspace.
-                    assertTrue(fixture.resultPane().getHeight() >= initialHeight);
-                    assertTrue(fixture.records().getHeight() >= 100);
+                    assertTrue(fixture.getResultPane().getHeight() >= initialHeight);
+                    assertTrue(fixture.getRecordsPane().getHeight() >= 100);
                 } else {
-                    assertTrue(fixture.resultPane().getHeight() > initialHeight + 1,
+                    assertTrue(fixture.getResultPane().getHeight() > initialHeight + 1,
                             "Moving the divider down must enlarge the actual result area.");
                 }
-                assertEquals(0.55, fixture.records().getDividerPositions()[0], 0.01);
+                assertEquals(0.55, fixture.getRecordsPane().getDividerPositions()[0], 0.01);
                 for (double position : new double[] {0, 1, 0.4}) {
                     fixture.split().setDividerPositions(position);
                     fixture.layout();
-                    assertTrue(fixture.resultPane().getHeight() >= 96);
+                    assertTrue(fixture.getResultPane().getHeight() >= 96);
                     assertTrue(fixture.root().lookup("#resultDisplayPlaceholder").getBoundsInLocal().getHeight() >= 50);
-                    assertTrue(fixture.records().getHeight() >= 100);
+                    assertTrue(fixture.getRecordsPane().getHeight() >= 100);
                     assertTrue(fixture.root().lookup("#personListView").getBoundsInLocal().getHeight() >= 50);
                     assertTrue(fixture.root().lookup("#lessonListView").getBoundsInLocal().getHeight() >= 50);
                     for (String selector : List.of("#commandTextField", "#resultDisplay", "#personListView",
@@ -244,8 +244,8 @@ public class MainWindowResultResizeTest {
                         fixture.layout();
                         Region frame = (Region) fixture.root().lookup("#resultDisplayPlaceholder");
                         Bounds frameBounds = frame.localToScene(frame.getLayoutBounds());
-                        Bounds sectionBounds = fixture.resultPane().localToScene(
-                                fixture.resultPane().getLayoutBounds());
+                        Bounds sectionBounds = fixture.getResultPane().localToScene(
+                                fixture.getResultPane().getLayoutBounds());
                         Node content = frame.getChildrenUnmodifiable().getFirst();
                         Bounds contentBounds = content.localToScene(content.getLayoutBounds());
                         String context = size[0] + "x" + size[1] + "; divider=" + position;
@@ -257,7 +257,7 @@ public class MainWindowResultResizeTest {
                                 && contentBounds.getMaxY() <= frameBounds.getMaxY() - frame.getInsets().getBottom() + 1,
                                 "Feedback must stay within the padded frame: " + context);
                         fixture.assertFeedbackBorder(frameBounds, context);
-                        assertTrue(fixture.records().getHeight() >= 100, context);
+                        assertTrue(fixture.getRecordsPane().getHeight() >= 100, context);
                     }
                 }
             });
@@ -275,10 +275,10 @@ public class MainWindowResultResizeTest {
             Object selected = people.getSelectionModel().getSelectedItem();
             fixture.split().setDividerPositions(0.6);
             fixture.layout();
-            double height = fixture.resultPane().getHeight();
+            double height = fixture.getResultPane().getHeight();
             for (String command : List.of("help", "help search", "add", "list r/student")) {
                 fixture.enter(command);
-                assertEquals(height, fixture.resultPane().getHeight(), 1);
+                assertEquals(height, fixture.getResultPane().getHeight(), 1);
             }
             // Select after the explicit list command; help must preserve this exact selection and draft.
             people.getSelectionModel().select(people.getItems().indexOf(selected));
@@ -288,13 +288,13 @@ public class MainWindowResultResizeTest {
             fixture.layout();
             assertEquals("add r/student n/Unfinished", fixture.input().getText());
             assertSame(selected, people.getSelectionModel().getSelectedItem());
-            assertEquals(height, fixture.resultPane().getHeight(), 1);
+            assertEquals(height, fixture.getResultPane().getHeight(), 1);
             MenuBar menu = (MenuBar) fixture.root().lookup("#menuBar");
             menu.getMenus().get(1).getItems().getFirst().fire();
             fixture.layout();
             assertEquals("add r/student n/Unfinished", fixture.input().getText());
             assertSame(selected, people.getSelectionModel().getSelectedItem());
-            assertEquals(height, fixture.resultPane().getHeight(), 1);
+            assertEquals(height, fixture.getResultPane().getHeight(), 1);
             assertFalse(fixture.result().isEditable());
             assertTrue(fixture.result().isWrapText());
             fixture.result().selectRange(0, 4);
@@ -331,10 +331,10 @@ public class MainWindowResultResizeTest {
                     "The end of the complete message must be reachable.");
             fixture.resize(853, 600);
             fixture.enter("help search");
-            double height = fixture.resultPane().getHeight();
+            double height = fixture.getResultPane().getHeight();
             fixture.enter("add");
             fixture.enter("help");
-            assertEquals(height, fixture.resultPane().getHeight(), 1);
+            assertEquals(height, fixture.getResultPane().getHeight(), 1);
         });
     }
 
@@ -391,11 +391,11 @@ public class MainWindowResultResizeTest {
             return (SplitPane) root.lookup("#resultSplitPane");
         }
 
-        private SplitPane records() {
+        private SplitPane getRecordsPane() {
             return (SplitPane) root.lookup("#recordsSplitPane");
         }
 
-        private Region resultPane() {
+        private Region getResultPane() {
             return (Region) root.lookup("#feedbackSection");
         }
 

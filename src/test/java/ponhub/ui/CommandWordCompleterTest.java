@@ -12,7 +12,7 @@ import ponhub.logic.CanonicalCommandCatalog;
 public class CommandWordCompleterTest {
     @Test
     public void complete_uniqueMatch_replacesOnlyWordAndPreservesArguments() {
-        CommandWordCompleter completer = normalCompleter();
+        CommandWordCompleter completer = createNormalCompleter();
         assertEquals(new CommandWordCompleter.Completion("  showlesson  lid/L1  ", 12),
                 completer.complete("  sho  lid/L1  ", 5).orElseThrow());
         completer.reset();
@@ -23,7 +23,7 @@ public class CommandWordCompleterTest {
 
     @Test
     public void complete_ambiguousPrefix_cyclesOriginalMatchesInCatalogueOrder() {
-        CommandWordCompleter completer = normalCompleter();
+        CommandWordCompleter completer = createNormalCompleter();
         assertEquals(new CommandWordCompleter.Completion("add r/student", 3),
                 completer.complete("ad r/student", 2).orElseThrow());
         assertEquals(new CommandWordCompleter.Completion("addlesson r/student", 9),
@@ -48,7 +48,8 @@ public class CommandWordCompleterTest {
             String leading = space + " ";
             String arguments = space + "r/student" + space + "  ";
             assertEquals(new CommandWordCompleter.Completion(leading + "list" + arguments, leading.length() + 4),
-                    normalCompleter().complete(leading + "lixxx" + arguments, leading.length() + 2).orElseThrow());
+                    createNormalCompleter().complete(leading + "lixxx" + arguments, leading.length() + 2)
+                            .orElseThrow());
         }
     }
 
@@ -58,16 +59,16 @@ public class CommandWordCompleterTest {
             String draft = space + "li" + space + "r/student";
             // The leading boundary and the first argument position are outside the command word.
             for (int caret : List.of(0, 1, 4, draft.length())) {
-                assertTrue(normalCompleter().complete(draft, caret).isEmpty());
+                assertTrue(createNormalCompleter().complete(draft, caret).isEmpty());
             }
-            assertTrue(normalCompleter().complete(space + space, 2).isEmpty());
+            assertTrue(createNormalCompleter().complete(space + space, 2).isEmpty());
         }
     }
 
     @Test
     public void complete_horizontalSpaces_cyclesAndResetsWithoutChangingArguments() {
         for (String space : List.of("\u00a0", "\u2007", "\u202f")) {
-            CommandWordCompleter completer = normalCompleter();
+            CommandWordCompleter completer = createNormalCompleter();
             String arguments = space + "r/student";
             assertEquals(new CommandWordCompleter.Completion("add" + arguments, 3),
                     completer.complete("ad" + arguments, 2).orElseThrow());
@@ -84,10 +85,10 @@ public class CommandWordCompleterTest {
     @Test
     public void complete_emptyUnmatchedUppercaseAndArgumentPositions_hasNoCompletion() {
         for (String draft : new String[] {"", "  ", "unknown", "SHO", "sho ", "help sho"}) {
-            assertTrue(normalCompleter().complete(draft, draft.length()).isEmpty(), draft);
+            assertTrue(createNormalCompleter().complete(draft, draft.length()).isEmpty(), draft);
         }
-        assertTrue(normalCompleter().complete("sho", 0).isEmpty());
-        assertTrue(normalCompleter().complete("  sho", 2).isEmpty());
+        assertTrue(createNormalCompleter().complete("sho", 0).isEmpty());
+        assertTrue(createNormalCompleter().complete("  sho", 2).isEmpty());
     }
 
     @Test
@@ -103,7 +104,7 @@ public class CommandWordCompleterTest {
                 completer.complete("li r/student", 2).orElseThrow());
     }
 
-    private static CommandWordCompleter normalCompleter() {
+    private static CommandWordCompleter createNormalCompleter() {
         return new CommandWordCompleter(CanonicalCommandCatalog.getCommandWords(false));
     }
 }
