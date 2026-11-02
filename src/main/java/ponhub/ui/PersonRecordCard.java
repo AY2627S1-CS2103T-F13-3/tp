@@ -4,6 +4,8 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.List;
 
+import javafx.event.EventDispatcher;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -111,24 +113,43 @@ public class PersonRecordCard extends UiPart<Region> {
                 event.consume();
             }
         });
-        // Keep mouse copying from moving focus and clearing a TextField's draft selection.
-        // Keyboard traversal still focuses the standard button normally.
-        copy.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
-            if (event.getButton() == MouseButton.PRIMARY) {
-                copy.arm();
-            }
-            event.consume();
-        });
-        copy.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> {
-            if (event.getButton() == MouseButton.PRIMARY && copy.isArmed()) {
-                copy.disarm();
-                if (copy.contains(event.getX(), event.getY())) {
-                    copy.fire();
-                }
-            }
-            event.consume();
-        });
+        preserveEditingFocus(copy);
         return copy;
+    }
+
+    /**
+     * Retains JavaFX's primary-button gesture tracking without moving focus away from a command draft.
+     * Keyboard traversal can still focus and activate the button normally.
+     */
+    private static void preserveEditingFocus(Button copy) {
+        EventHandler<MouseEvent> ignoreNonPrimary = event -> {
+            if (event.getButton() != MouseButton.PRIMARY) {
+                event.consume();
+            }
+        };
+        copy.addEventFilter(MouseEvent.MOUSE_PRESSED, ignoreNonPrimary);
+        copy.addEventFilter(MouseEvent.MOUSE_RELEASED, ignoreNonPrimary);
+        copy.addEventFilter(MouseEvent.MOUSE_RELEASED, event -> {
+            if (event.getButton() == MouseButton.PRIMARY && !copy.contains(event.getX(), event.getY())) {
+                // Cancel an outside release even if no exit event was delivered.
+                copy.disarm();
+            }
+        });
+        EventDispatcher dispatcher = copy.getEventDispatcher();
+        copy.setEventDispatcher((event, tail) -> {
+            if (event.getEventType() != MouseEvent.MOUSE_PRESSED) {
+                return dispatcher.dispatchEvent(event, tail);
+            }
+
+            // Suppress only the mouse focus request; JavaFX still handles arming, re-entry and activation.
+            boolean wasFocusTraversable = copy.isFocusTraversable();
+            copy.setFocusTraversable(false);
+            try {
+                return dispatcher.dispatchEvent(event, tail);
+            } finally {
+                copy.setFocusTraversable(wasFocusTraversable);
+            }
+        });
     }
 
     private static Label createLabel(String text, String styleClass) {
