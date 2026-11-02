@@ -242,7 +242,7 @@ public class CanonicalDataFileGuardTest {
         Path path = directory.resolve("data.json");
         Path ready = directory.resolve("holder-ready");
         Path log = directory.resolve("holder.log");
-        Process holder = new ProcessBuilder(javaExecutable(), "-cp",
+        Process holder = new ProcessBuilder(getJavaExecutable(), "-cp",
                 System.getProperty("ponhub.test.runtimeClasspath"), LockProbe.class.getName(),
                 directory.resolve("data.json.ponhub-lock").toString(), ready.toString())
                 .redirectErrorStream(true).redirectOutput(log.toFile()).start();
@@ -298,13 +298,13 @@ public class CanonicalDataFileGuardTest {
     }
 
     private Process launch(Path path, Path ready, Path start, Path log, String value) throws IOException {
-        return new ProcessBuilder(javaExecutable(),
+        return new ProcessBuilder(getJavaExecutable(),
                 "-cp", System.getProperty("ponhub.test.runtimeClasspath"), SaveProbe.class.getName(),
                 path.toString(), ready.toString(), start.toString(), value)
                 .redirectErrorStream(true).redirectOutput(log.toFile()).start();
     }
 
-    private static String javaExecutable() {
+    private static String getJavaExecutable() {
         return Path.of(System.getProperty("java.home"), "bin", "java").toString();
     }
 

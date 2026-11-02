@@ -157,12 +157,12 @@ public class MainWindowTest {
                 command.selectRange(9, 2);
                 byte[] before = Files.readAllBytes(tempDirectory.resolve("contacts.json"));
                 for (int click = 0; click < 68; click++) {
-                    logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                    logo.getOnMouseClicked().handle(createLogoClick(MouseButton.PRIMARY));
                     assertEquals(Integer.toString(click + 1), badge.getText());
                     root.layout();
                     assertEquals(badgeWidth, badge.getWidth());
                 }
-                logo.getOnMouseClicked().handle(logoClick(MouseButton.SECONDARY));
+                logo.getOnMouseClicked().handle(createLogoClick(MouseButton.SECONDARY));
                 assertEquals("68", badge.getText());
                 assertTrue(Window.getWindows().stream().noneMatch(candidate -> candidate.getScene() != null
                         && candidate.getScene().getRoot() instanceof DialogPane));
@@ -172,7 +172,7 @@ public class MainWindowTest {
                         thresholdChanges.add(current);
                 badge.textProperty().addListener(counterListener);
                 try {
-                    logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                    logo.getOnMouseClicked().handle(createLogoClick(MouseButton.PRIMARY));
                 } finally {
                     badge.textProperty().removeListener(counterListener);
                 }
@@ -200,7 +200,7 @@ public class MainWindowTest {
                 assertTrue(confetti.getChildren().isEmpty());
                 assertEquals("hub", badge.getText());
                 for (int click = 0; click < 69; click++) {
-                    logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                    logo.getOnMouseClicked().handle(createLogoClick(MouseButton.PRIMARY));
                     if (click == 0) {
                         assertEquals("1", badge.getText());
                     }
@@ -226,14 +226,14 @@ public class MainWindowTest {
                 navigation.requestFocus();
                 Node logo = root.lookup("#ponhubWordmark");
                 for (int click = 0; click < 69; click++) {
-                    logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                    logo.getOnMouseClicked().handle(createLogoClick(MouseButton.PRIMARY));
                 }
                 Window creditsWindow = Window.getWindows().stream()
                         .filter(candidate -> candidate.getScene() != null
                                 && candidate.getScene().getRoot() instanceof DialogPane)
                         .findFirst().orElseThrow();
                 for (int click = 0; click < 69; click++) {
-                    logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                    logo.getOnMouseClicked().handle(createLogoClick(MouseButton.PRIMARY));
                 }
                 assertEquals(1, Window.getWindows().stream().filter(candidate -> candidate.getScene() != null
                         && candidate.getScene().getRoot() instanceof DialogPane).count());
@@ -261,7 +261,7 @@ public class MainWindowTest {
                 Node logo = root.lookup("#ponhubWordmark");
                 Label badge = (Label) root.lookup(".wordmark-hub");
                 for (int click = 0; click < 69; click++) {
-                    logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                    logo.getOnMouseClicked().handle(createLogoClick(MouseButton.PRIMARY));
                 }
                 DialogPane credits = (DialogPane) Window.getWindows().stream()
                         .filter(candidate -> candidate.getScene() != null
@@ -299,21 +299,21 @@ public class MainWindowTest {
                 Region root = layoutWindow(window, 1000, 700);
                 Node logo = root.lookup("#ponhubWordmark");
                 Label badge = (Label) root.lookup(".wordmark-hub");
-                logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                logo.getOnMouseClicked().handle(createLogoClick(MouseButton.PRIMARY));
                 assertEquals("1", badge.getText());
                 PauseTransition firstReset = new PauseTransition(Duration.millis(1900));
                 firstReset.setOnFinished(event -> {
                     try {
                         assertEquals("hub", badge.getText());
-                        logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                        logo.getOnMouseClicked().handle(createLogoClick(MouseButton.PRIMARY));
                         assertEquals("2", badge.getText());
-                        logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                        logo.getOnMouseClicked().handle(createLogoClick(MouseButton.PRIMARY));
                         assertEquals("3", badge.getText());
                         PauseTransition nextReset = new PauseTransition(Duration.millis(1900));
                         nextReset.setOnFinished(resetEvent -> {
                             try {
                                 assertEquals("hub", badge.getText());
-                                logo.getOnMouseClicked().handle(logoClick(MouseButton.PRIMARY));
+                                logo.getOnMouseClicked().handle(createLogoClick(MouseButton.PRIMARY));
                                 assertEquals("4", badge.getText());
                                 finished.complete(null);
                             } catch (Throwable failure) {
@@ -353,12 +353,12 @@ public class MainWindowTest {
                 assertSame(command, focus);
                 assertFalse(logo.isMouseTransparent());
                 assertEquals(Cursor.HAND, logo.getCursor());
-                logo.getOnMouseClicked().handle(logoClick(MouseButton.SECONDARY));
-                assertEquals(0, worker.taskCount());
-                MouseEvent primary = logoClick(MouseButton.PRIMARY);
+                logo.getOnMouseClicked().handle(createLogoClick(MouseButton.SECONDARY));
+                assertEquals(0, worker.getTaskCount());
+                MouseEvent primary = createLogoClick(MouseButton.PRIMARY);
                 logo.getOnMouseClicked().handle(primary);
                 assertTrue(primary.isConsumed());
-                assertEquals(1, worker.taskCount());
+                assertEquals(1, worker.getTaskCount());
                 worker.runAll();
                 assertEquals("unfinished draft", command.getText());
                 assertEquals(2, command.getSelection().getStart());
@@ -377,7 +377,7 @@ public class MainWindowTest {
         });
     }
 
-    private static MouseEvent logoClick(MouseButton button) {
+    private static MouseEvent createLogoClick(MouseButton button) {
         return new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, 0, 0, button, 1,
                 false, false, false, false, false, false, false, false, false, true, null);
     }

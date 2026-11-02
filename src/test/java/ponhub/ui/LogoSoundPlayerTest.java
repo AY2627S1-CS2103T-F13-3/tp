@@ -275,7 +275,7 @@ public class LogoSoundPlayerTest {
         private final Queue<Runnable> tasks = new ArrayDeque<>();
         private boolean shutdown;
 
-        int taskCount() {
+        int getTaskCount() {
             return tasks.size();
         }
 

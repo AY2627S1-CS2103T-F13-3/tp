@@ -34,7 +34,7 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_partialTemporaryWriteFailure_preservesDestination() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         byte[] original = Files.readAllBytes(target);
         AtomicFileWriter writer = new AtomicFileWriter() {
             @Override
@@ -66,7 +66,7 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_replacementFailures_preserveDestinationAndException() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         byte[] original = Files.readAllBytes(target);
         for (IOException failure : List.of(new IOException("Move failed"),
                 new AccessDeniedException(target.toString()))) {
@@ -87,7 +87,7 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_cleanupFailure_preservesPrimaryException() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         IOException primary = new IOException("Write failed");
         IOException cleanup = new IOException("Cleanup failed");
         AtomicFileWriter writer = new AtomicFileWriter() {
@@ -125,7 +125,7 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_uncheckedStagingFailure_preservesBytesAndRemovesTemporary() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         byte[] original = Files.readAllBytes(target);
         RuntimeException primary = new IllegalStateException("Staging failed");
         AtomicFileWriter writer = new AtomicFileWriter() {
@@ -143,7 +143,7 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_uncheckedCleanupFailure_keepsPrimaryAndSuppressesCleanup() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         byte[] original = Files.readAllBytes(target);
         RuntimeException primary = new IllegalStateException("Staging failed");
         RuntimeException cleanup = new SecurityException("Cleanup denied");
@@ -172,14 +172,14 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_parentIsFile_preservesExistingFile() throws IOException {
-        Path parent = existingTarget();
+        Path parent = createExistingTarget();
         assertThrows(IOException.class, () -> new AtomicFileWriter().write(parent.resolve("child"), "new"));
         assertEquals("original", Files.readString(parent));
     }
 
     @Test
     public void write_symbolicLink_preservesLinkAndUpdatesTarget() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         Path link = directory.resolve("link.json");
         createLink(link, target.getFileName());
         FileUtil.writeToFile(link, "new data");
@@ -229,7 +229,7 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_linkWithFailedMove_preservesTargetAndLink() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         Path link = directory.resolve("link.json");
         createLink(link, target);
         AtomicFileWriter writer = new AtomicFileWriter() {
@@ -255,7 +255,7 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_backupFailure_doesNotAttemptReplacement() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         AtomicFileWriter writer = new FallbackWriter() {
             @Override
             void copyFile(Path source, Path destination) throws IOException {
@@ -275,7 +275,7 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_fallbackMoveDamagesTarget_restoresOldBytes() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         AtomicFileWriter writer = new FallbackWriter() {
             @Override
             void moveNormally(Path temporary, Path destination) throws IOException {
@@ -307,7 +307,7 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_restoreFails_retainsCompleteBackupAndReportsPath() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         AtomicFileWriter writer = new FallbackWriter() {
             @Override
             void moveNormally(Path temporary, Path destination) throws IOException {
@@ -335,7 +335,7 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_backupCleanupFails_stillReportsSaveSuccess() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         AtomicFileWriter writer = new FallbackWriter() {
             @Override
             void deleteTemporary(Path path) throws IOException {
@@ -373,7 +373,7 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_uncheckedBackupFailure_preservesBytesWithoutMoving() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         byte[] original = Files.readAllBytes(target);
         RuntimeException primary = new SecurityException("Backup denied");
         AtomicFileWriter writer = new FallbackWriter() {
@@ -396,7 +396,7 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_uncheckedFallbackFailure_restoresOldBytes() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         byte[] original = Files.readAllBytes(target);
         RuntimeException primary = new IllegalStateException("Move failed");
         AtomicFileWriter writer = new FallbackWriter() {
@@ -414,7 +414,7 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_uncheckedRecoveryFailure_retainsBackupAndReportsBothFailures() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         byte[] original = Files.readAllBytes(target);
         RuntimeException primary = new IllegalStateException("Move failed");
         RuntimeException recovery = new SecurityException("Restore denied");
@@ -451,7 +451,7 @@ public class AtomicFileWriterTest {
 
     @Test
     public void write_uncheckedBackupCleanupFailure_reportsCommittedSave() throws IOException {
-        Path target = existingTarget();
+        Path target = createExistingTarget();
         byte[] original = Files.readAllBytes(target);
         AtomicFileWriter writer = new FallbackWriter() {
             @Override
@@ -485,7 +485,7 @@ public class AtomicFileWriterTest {
         }
     }
 
-    private Path existingTarget() throws IOException {
+    private Path createExistingTarget() throws IOException {
         Path target = directory.resolve("book.json");
         Files.writeString(target, "original");
         return target;

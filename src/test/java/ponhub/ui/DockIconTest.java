@@ -112,7 +112,7 @@ public class DockIconTest {
 
     @Test
     public void install_schedulerFailure_isNonfatal() {
-        for (Throwable failure : failures()) {
+        for (Throwable failure : createFailures()) {
             assertDoesNotThrow(() -> DockIcon.install("Mac OS X", ICON,
                     task -> raise(failure), null, null));
         }
@@ -120,7 +120,7 @@ public class DockIconTest {
 
     @Test
     public void apply_supportOrAcquisitionFailure_isNonfatal() {
-        for (Throwable failure : failures()) {
+        for (Throwable failure : createFailures()) {
             Harness unsupported = new Harness();
             unsupported.supported = () -> {
                 raise(failure);
@@ -140,7 +140,7 @@ public class DockIconTest {
 
     @Test
     public void apply_setIconFailure_isNonfatal() {
-        for (Throwable failure : failures()) {
+        for (Throwable failure : createFailures()) {
             Harness harness = new Harness();
             harness.setFailure = failure;
             harness.run();
@@ -148,7 +148,7 @@ public class DockIconTest {
         }
     }
 
-    private static List<Throwable> failures() {
+    private static List<Throwable> createFailures() {
         return List.of(new UnsupportedOperationException("unsupported"), new SecurityException("denied"),
                 new UnsatisfiedLinkError("native unavailable"), new AWTError("desktop unavailable"));
     }
