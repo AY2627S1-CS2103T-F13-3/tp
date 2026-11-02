@@ -1,9 +1,13 @@
 package ponhub;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javafx.application.Application;
 import ponhub.commons.core.LogsCenter;
+import ponhub.commons.util.ApplicationPaths;
 
 /**
  * The main entry point to the application.
@@ -26,8 +30,26 @@ public class Main {
 
     /**
      * Launches the JavaFX application with the supplied command-line arguments.
+     *
+     * @throws IOException if startup file paths cannot be inspected safely.
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        Map<String, String> namedParameters = new HashMap<>();
+        for (String argument : args) {
+            if (argument != null && argument.startsWith("--data=")) {
+                namedParameters.put("data", argument.substring("--data=".length()));
+            }
+        }
+        try {
+            MainApp.validateStartupPaths(namedParameters, ApplicationPaths.getHomeDirectory());
+        } catch (IllegalArgumentException failure) {
+            String selected = namedParameters.getOrDefault("data", "data/ponhub.json");
+            System.err.println(("Cannot start PonHub with --data=\"" + selected + "\": "
+                    + failure.getMessage() + " Choose a different data file within the application folder.")
+                    .replaceAll("\\R", " "));
+            System.exit(1);
+            return;
+        }
 
         logger.warning("The warnings about a 'restricted method in java.lang.System' "
             + "and 'enabling native access' appearing below (if any) can be ignored.");
