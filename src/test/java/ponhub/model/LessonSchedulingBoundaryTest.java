@@ -40,8 +40,8 @@ public class LessonSchedulingBoundaryTest {
     @BeforeEach
     public void setUp() {
         registry = new PeopleRegistry();
-        firstTutor = registry.addTutor(details("First Tutor", "90000001"));
-        secondTutor = registry.addTutor(details("Second Tutor", "90000002"));
+        firstTutor = registry.addTutor(createContactDetails("First Tutor", "90000001"));
+        secondTutor = registry.addTutor(createContactDetails("Second Tutor", "90000002"));
         firstStudent = registry.addStudent(new ContactDetails(new Name("First Student")),
                 new EducationLevel("P1"), new Phone("80000001"));
         secondStudent = registry.addStudent(new ContactDetails(new Name("Second Student")),
@@ -83,9 +83,9 @@ public class LessonSchedulingBoundaryTest {
 
     @Test
     public void restore_sharedStudentContainmentInEitherCatalogueOrder_rejectsAtomically() {
-        Lesson outer = lesson("L1", firstTutor, slot("0900", "1200"), "R1")
+        Lesson outer = createLesson("L1", firstTutor, slot("0900", "1200"), "R1")
                 .withEnrolledStudent(firstStudent.getId());
-        Lesson inner = lesson("L2", secondTutor, slot("1000", "1100"), "R2")
+        Lesson inner = createLesson("L2", secondTutor, slot("1000", "1100"), "R2")
                 .withEnrolledStudent(firstStudent.getId());
         PonHubData data = new PonHubData(new PonHubDataState(registry.exportState(),
                 List.of(outer), List.of(), 1));
@@ -106,7 +106,7 @@ public class LessonSchedulingBoundaryTest {
     public void addLesson_containmentWithSameTutorOrNormalizedRoom_rejectsAtomically() {
         for (List<LessonTimeSlot> slots : List.of(List.of(slot("0900", "1200"), slot("1000", "1100")),
                 List.of(slot("1000", "1100"), slot("0900", "1200")))) {
-            Lesson existing = lesson("L1", firstTutor, slots.get(0), "R1")
+            Lesson existing = createLesson("L1", firstTutor, slots.get(0), "R1")
                     .withEnrolledStudent(firstStudent.getId());
             PonHubData data = new PonHubData(new PonHubDataState(registry.exportState(),
                     List.of(existing), List.of(), 1));
@@ -125,8 +125,8 @@ public class LessonSchedulingBoundaryTest {
     }
 
     private void assertSharedStudentRejected(LessonTimeSlot sourceSlot, LessonTimeSlot targetSlot) {
-        Lesson source = lesson("L1", firstTutor, sourceSlot, "R1").withEnrolledStudent(firstStudent.getId());
-        Lesson target = lesson("L2", secondTutor, targetSlot, "R2").withEnrolledStudent(secondStudent.getId());
+        Lesson source = createLesson("L1", firstTutor, sourceSlot, "R1").withEnrolledStudent(firstStudent.getId());
+        Lesson target = createLesson("L2", secondTutor, targetSlot, "R2").withEnrolledStudent(secondStudent.getId());
         Attendance retained = new Attendance(firstStudent.getId(), source.getId(), LocalDate.of(2026, 10, 5),
                 AttendanceStatus.PRESENT);
         PonHubData data = new PonHubData(new PonHubDataState(registry.exportState(),
@@ -148,7 +148,7 @@ public class LessonSchedulingBoundaryTest {
         assertEquals(new LessonId("L3"), next.getId());
     }
 
-    private Lesson lesson(String id, Tutor tutor, LessonTimeSlot timeSlot, String room) {
+    private Lesson createLesson(String id, Tutor tutor, LessonTimeSlot timeSlot, String room) {
         return new Lesson(new LessonId(id), tutor.getId(), timeSlot, new Subject("Mathematics"),
                 new Room(room), Set.of());
     }
@@ -157,7 +157,7 @@ public class LessonSchedulingBoundaryTest {
         return new LessonTimeSlot(LessonDay.MONDAY, new LessonTime(start), new LessonTime(end));
     }
 
-    private ContactDetails details(String name, String phone) {
+    private ContactDetails createContactDetails(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.of(new Phone(phone)), Optional.empty(), Optional.empty());
     }
 }

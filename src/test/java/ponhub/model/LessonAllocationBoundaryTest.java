@@ -66,7 +66,7 @@ public class LessonAllocationBoundaryTest {
 
     @Test
     public void restore_removedLatestLesson_allocatesAboveHistoryInsteadOfRetainedIds() {
-        Lesson retained = retainedLesson();
+        Lesson retained = createRetainedLesson();
         PonHubDataState removedLatest = new PonHubDataState(people, List.of(retained), List.of(), 7);
         PonHubData data = new PonHubData(removedLatest);
         PonHubData restored = new PonHubData(data.exportState());
@@ -82,7 +82,7 @@ public class LessonAllocationBoundaryTest {
 
     @Test
     public void restore_removedMaximumLesson_keepsExhaustionDespiteLowerRetainedId() {
-        Lesson retained = retainedLesson();
+        Lesson retained = createRetainedLesson();
         PonHubData data = new PonHubData(new PonHubDataState(people, List.of(retained), List.of(), Long.MAX_VALUE - 1));
         Lesson finalLesson = addLesson(data, LessonDay.TUESDAY);
         PonHubDataState allocated = data.exportState();
@@ -107,7 +107,7 @@ public class LessonAllocationBoundaryTest {
         return data.addLesson(tutor.getId(), slot(day), new Subject("Mathematics"), new Room("R1"));
     }
 
-    private Lesson retainedLesson() {
+    private Lesson createRetainedLesson() {
         return new Lesson(new LessonId("L1"), tutor.getId(), slot(LessonDay.MONDAY),
                 new Subject("Mathematics"), new Room("R1"), Set.of());
     }
