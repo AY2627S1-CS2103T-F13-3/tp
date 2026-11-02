@@ -1363,11 +1363,11 @@ PonHub's documentation site is built with Jekyll from `docs/`. See the [Document
 
 ### 7.7 CI, releases, and DevOps
 
-GitHub Actions runs automated checks on every push and pull request (see the [DevOps guide](DevOps.html)):
+GitHub Actions runs these checks (see the [DevOps guide](DevOps.html)):
 
-* **Java CI (`.github/workflows/gradle.yml`):** Runs `./gradlew check coverage` on Windows and Linux (with `xvfb-run`) on JDK 25, and uploads coverage reports to Codecov. macOS is checked locally with the prescribed Azul JDK 25 with JavaFX (see [Running tests](Testing.html#running-tests)).
-* **Repository-wide file checks (`.github/run-checks.sh`):** Checks tracked files for trailing whitespace, DOS line endings, and missing final newlines.
-* **Linux package verification (`.github/workflows/linux-package.yml`):** Rebuilds `build/libs/ponhub.jar`, verifies its SHA-256 checksum and manifest version, and drives the packaged JAR on a virtual X11 display through core workflows and restart persistence.
+* **Java CI (`.github/workflows/gradle.yml`):** On every push and pull request, runs `./gradlew check coverage` on Windows and Linux (with `xvfb-run`) on JDK 25, and uploads coverage reports to Codecov. macOS is checked locally with the prescribed Azul JDK 25 with JavaFX (see [Running tests](Testing.html#running-tests)).
+* **Repository-wide file checks (`.github/run-checks.sh`):** Run by Java CI on Linux; checks tracked files for trailing whitespace, DOS line endings, and missing final newlines.
+* **Linux package verification (`.github/workflows/linux-package.yml`):** Runs only when this workflow or its scripts change, or when started manually for a release candidate; rebuilds `build/libs/ponhub.jar`, verifies its SHA-256 checksum and manifest version, and drives the packaged JAR on a virtual X11 display through core workflows and restart persistence.
 * **Versioning:** When preparing a release, update both `version` in [`build.gradle`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/build.gradle) and `MainApp.VERSION` in [`MainApp.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java).
 
 ### 7.8 Known limitations and future work
