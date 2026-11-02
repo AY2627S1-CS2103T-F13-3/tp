@@ -3,6 +3,8 @@ package ponhub.ui;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import ponhub.logic.CanonicalCommandCatalog;
@@ -37,6 +39,46 @@ public class CommandWordCompleterTest {
                 completer.complete("editlesson", 10).orElseThrow());
         assertEquals(new CommandWordCompleter.Completion("exit", 4),
                 completer.complete("enrol", 5).orElseThrow());
+    }
+
+    @Test
+    public void complete_horizontalSpaces_preservesSurroundingsWhenReplacingSuffix() {
+        // Ordinary/em spaces already work; no-break, figure and narrow no-break spaces must behave alike.
+        for (String space : List.of(" ", "\u2003", "\u00a0", "\u2007", "\u202f")) {
+            String leading = space + " ";
+            String arguments = space + "r/student" + space + "  ";
+            assertEquals(new CommandWordCompleter.Completion(leading + "list" + arguments, leading.length() + 4),
+                    normalCompleter().complete(leading + "lixxx" + arguments, leading.length() + 2).orElseThrow());
+        }
+    }
+
+    @Test
+    public void complete_horizontalSpaces_caretOutsideCommandHasNoCompletion() {
+        for (String space : List.of(" ", "\u2003", "\u00a0", "\u2007", "\u202f")) {
+            String draft = space + "li" + space + "r/student";
+            // The leading boundary and the first argument position are outside the command word.
+            for (int caret : List.of(0, 1, 4, draft.length())) {
+                assertTrue(normalCompleter().complete(draft, caret).isEmpty());
+            }
+            assertTrue(normalCompleter().complete(space + space, 2).isEmpty());
+        }
+    }
+
+    @Test
+    public void complete_horizontalSpaces_cyclesAndResetsWithoutChangingArguments() {
+        for (String space : List.of("\u00a0", "\u2007", "\u202f")) {
+            CommandWordCompleter completer = normalCompleter();
+            String arguments = space + "r/student";
+            assertEquals(new CommandWordCompleter.Completion("add" + arguments, 3),
+                    completer.complete("ad" + arguments, 2).orElseThrow());
+            assertEquals(new CommandWordCompleter.Completion("addlesson" + arguments, 9),
+                    completer.complete("add" + arguments, 3).orElseThrow());
+            assertEquals(new CommandWordCompleter.Completion("add" + arguments, 3),
+                    completer.complete("addlesson" + arguments, 9).orElseThrow());
+            completer.reset();
+            assertEquals(new CommandWordCompleter.Completion("list" + arguments, 4),
+                    completer.complete("li" + arguments, 2).orElseThrow());
+        }
     }
 
     @Test
