@@ -76,7 +76,7 @@ public class JsonUtilTest {
 
     private static class UnserializableValue {
         @JsonValue
-        public String value() {
+        public String getValue() {
             throw new IllegalStateException("Cannot serialize");
         }
     }

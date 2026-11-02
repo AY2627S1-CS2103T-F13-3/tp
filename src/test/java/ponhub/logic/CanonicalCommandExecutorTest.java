@@ -53,7 +53,7 @@ public class CanonicalCommandExecutorTest {
 
     @Test
     public void execute_validationFailureAfterStaging_preservesDataViewAndNotifications() {
-        PonHubDataState before = fixture(true);
+        PonHubDataState before = createState(true);
         PonHubData live = new PonHubData(before);
         PeopleView view = new PeopleView(live);
         view.setRoleFilter(Optional.of(PersonRole.STUDENT));
@@ -78,7 +78,7 @@ public class CanonicalCommandExecutorTest {
         assertEquals(0, notifications[0]);
     }
 
-    private PonHubDataState fixture(boolean hasLesson) {
+    private PonHubDataState createState(boolean hasLesson) {
         Student student = new Student(new PersonId("S7"), new ContactDetails(new Name("Student")),
                 new EducationLevel("P1"), new Phone("91234567"));
         Tutor tutor = new Tutor(new PersonId("T2"), new ContactDetails(new Name("Tutor"),
@@ -96,7 +96,7 @@ public class CanonicalCommandExecutorTest {
 
     @Test
     public void execute_failedAggregateSave_preservesFilterIdentityCountersAndRelationships() throws Exception {
-        PonHubDataState before = fixture(true);
+        PonHubDataState before = createState(true);
         PonHubData live = new PonHubData(before);
         PeopleView view = new PeopleView(live);
         view.setRoleFilter(Optional.of(PersonRole.STUDENT));
@@ -132,7 +132,7 @@ public class CanonicalCommandExecutorTest {
 
     @Test
     public void execute_permissionDeniedSave_preservesStateAndReportsOriginalCause() throws Exception {
-        PonHubDataState before = fixture(true);
+        PonHubDataState before = createState(true);
         PonHubData live = new PonHubData(before);
         PeopleView view = new PeopleView(live);
         view.setRoleFilter(Optional.of(PersonRole.STUDENT));
@@ -174,7 +174,7 @@ public class CanonicalCommandExecutorTest {
 
     @Test
     public void execute_failedAdditionThenRetry_reusesUncommittedIdAndReloads() throws Exception {
-        PonHubData live = new PonHubData(fixture(false));
+        PonHubData live = new PonHubData(createState(false));
         PeopleView view = new PeopleView(live);
         view.setRoleFilter(Optional.of(PersonRole.TUTOR));
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(directory.resolve("canonical.json"));
@@ -212,7 +212,7 @@ public class CanonicalCommandExecutorTest {
 
     @Test
     public void execute_failureProtectionAndNoOps_neverWriteOrPublishRejectedChanges() throws Exception {
-        PonHubData live = new PonHubData(fixture(false));
+        PonHubData live = new PonHubData(createState(false));
         PeopleView view = new PeopleView(live);
         PonHubDataState before = live.exportState();
         CanonicalCommandExecutor executor = new CanonicalCommandExecutor(view, state -> {
@@ -239,7 +239,7 @@ public class CanonicalCommandExecutorTest {
 
     @Test
     public void execute_aggregateCommitAndNoOp_publishesCompleteSnapshotOnce() throws Exception {
-        PonHubDataState before = fixture(true);
+        PonHubDataState before = createState(true);
         PonHubData live = new PonHubData(before);
         PeopleView view = new PeopleView(live);
         PonHubDataState[] saved = {before};
@@ -278,15 +278,15 @@ public class CanonicalCommandExecutorTest {
     @Test
     public void execute_attendanceChange_savesAndPublishesCompleteSnapshot() throws Exception {
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(directory.resolve("canonical.json"));
-        PonHubData live = new PonHubData(fixture(false));
+        PonHubData live = new PonHubData(createState(false));
         storage.saveData(live.exportState());
         CanonicalCommandExecutor executor = new CanonicalCommandExecutor(new PeopleView(live),
                 storage::saveData, Optional::empty);
         executor.execute((staged, view) -> {
-            staged.resetData(fixture(true));
+            staged.resetData(createState(true));
             return new CommandResult("Attendance saved");
         });
-        assertEquals(fixture(true), live.exportState());
-        assertEquals(fixture(true), storage.readData().orElseThrow());
+        assertEquals(createState(true), live.exportState());
+        assertEquals(createState(true), storage.readData().orElseThrow());
     }
 }

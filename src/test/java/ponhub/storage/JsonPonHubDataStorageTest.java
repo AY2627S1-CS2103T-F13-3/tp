@@ -120,22 +120,22 @@ public class JsonPonHubDataStorageTest {
         assertRejected(root -> root.putNull("attendance"));
         assertRejected(root -> root.withArray("lessons").addObject());
         assertRejected(root -> root.withArray("attendance").addObject());
-        assertRejected(root -> person(root, 0).put("phone", 123456));
-        assertRejected(root -> person(root, 1).putNull("email"));
-        assertRejected(root -> person(root, 0).put("level", "P1"));
+        assertRejected(root -> getPerson(root, 0).put("phone", 123456));
+        assertRejected(root -> getPerson(root, 1).putNull("email"));
+        assertRejected(root -> getPerson(root, 0).put("level", "P1"));
     }
 
     @Test
     public void decode_invalidPeopleAndCounters_reusesDomainValidation() throws Exception {
-        assertRejected(root -> person(root, 1).remove("parentPhone"));
-        assertRejected(root -> person(root, 0).remove("phone"));
-        assertRejected(root -> person(root, 0).put("id", "S1"));
-        assertRejected(root -> person(root, 1).put("level", "P9"));
-        assertRejected(root -> person(root, 1).put("name", ""));
-        assertRejected(root -> person(root, 1).put("name", "A" + "\u0315\u0327".repeat(20_000)));
-        assertRejected(root -> person(root, 1).put("role", "UNKNOWN"));
-        assertRejected(root -> root.withArray("people").add(person(root, 1).deepCopy()));
-        assertRejected(root -> root.withArray("people").add(person(root, 1).deepCopy().put("id", "S2")));
+        assertRejected(root -> getPerson(root, 1).remove("parentPhone"));
+        assertRejected(root -> getPerson(root, 0).remove("phone"));
+        assertRejected(root -> getPerson(root, 0).put("id", "S1"));
+        assertRejected(root -> getPerson(root, 1).put("level", "P9"));
+        assertRejected(root -> getPerson(root, 1).put("name", ""));
+        assertRejected(root -> getPerson(root, 1).put("name", "A" + "\u0315\u0327".repeat(20_000)));
+        assertRejected(root -> getPerson(root, 1).put("role", "UNKNOWN"));
+        assertRejected(root -> root.withArray("people").add(getPerson(root, 1).deepCopy()));
+        assertRejected(root -> root.withArray("people").add(getPerson(root, 1).deepCopy().put("id", "S2")));
         assertRejected(root -> root.with("personCounters").put("STUDENT", 0));
         assertRejected(root -> root.with("personCounters").put("PARENT", -1));
         assertRejected(root -> root.with("personCounters").put("TUTOR", "1"));
@@ -169,7 +169,7 @@ public class JsonPonHubDataStorageTest {
     @Test
     public void decode_humanEditedOptionalContacts_acceptsValidValues() throws Exception {
         ObjectNode root = (ObjectNode) mapper.readTree(JsonPonHubDataCodec.encode(original));
-        person(root, 1).put("phone", "00012345").put("email", "student@example.com").put("address", "New home");
+        getPerson(root, 1).put("phone", "00012345").put("email", "student@example.com").put("address", "New home");
         PonHubDataState edited = JsonPonHubDataCodec.decode(root.toString());
         assertEquals("00012345", edited.people().getPeople().get(1).getContactDetails().getPhone().orElseThrow().value);
         assertEquals(edited, JsonPonHubDataCodec.decode(JsonPonHubDataCodec.encode(edited)));
@@ -178,9 +178,9 @@ public class JsonPonHubDataStorageTest {
     @Test
     public void decode_humanEditedUnicodeNames_normalizesWithoutChangingIdentityOrRelationships() throws Exception {
         ObjectNode root = (ObjectNode) mapper.readTree(JsonPonHubDataCodec.encode(original));
-        person(root, 0).put("name", "\u00a0Jose\u0301   Santos\u2003");
-        person(root, 1).put("name", "李明");
-        person(root, 2).put("name", "தமிழ்");
+        getPerson(root, 0).put("name", "\u00a0Jose\u0301   Santos\u2003");
+        getPerson(root, 1).put("name", "李明");
+        getPerson(root, 2).put("name", "தமிழ்");
         Files.createDirectories(storage.getDataFilePath().getParent());
         Files.writeString(storage.getDataFilePath(), root.toString());
         byte[] before = Files.readAllBytes(storage.getDataFilePath());
@@ -203,14 +203,14 @@ public class JsonPonHubDataStorageTest {
     public void decode_invalidUnicodeNamesAndCanonicalDuplicates_protectsOriginalFile() throws Exception {
         for (String name : List.of("\u0301José", "José\u0000", "José\t", "\u2028José", "José\u2029",
                 "\u202eJosé", "José\u200b", "José\ud800", "José\udc00", "José\u00a0Santos", "José😀")) {
-            assertProtectedNameRejection(root -> person(root, 0).put("name", name));
+            assertProtectedNameRejection(root -> getPerson(root, 0).put("name", name));
         }
         for (int index : new int[]{0, 1, 2}) {
             assertProtectedNameRejection(root -> {
                 var role = original.people().getPeople().get(index).getRole();
                 long nextSequence = original.people().getLastAllocatedSequences().get(role) + 1;
-                person(root, index).put("name", "José Santos");
-                ObjectNode duplicate = person(root, index).deepCopy();
+                getPerson(root, index).put("name", "José Santos");
+                ObjectNode duplicate = getPerson(root, index).deepCopy();
                 duplicate.put("id", PersonId.of(role, nextSequence).toString())
                         .put("name", "\u00a0JOSE\u0301   SANTOS\u2003")
                         .put("email", "changed@example.com").put("address", "Changed address");
@@ -228,9 +228,9 @@ public class JsonPonHubDataStorageTest {
     @Test
     public void decode_humanEditedSlashContacts_normalizesWithoutSchemaOrIdentityChanges() throws Exception {
         ObjectNode root = (ObjectNode) mapper.readTree(JsonPonHubDataCodec.encode(original));
-        person(root, 0).put("name", "\u00a0Jose\u0301   s/o   Santos\u2003")
+        getPerson(root, 0).put("name", "\u00a0Jose\u0301   s/o   Santos\u2003")
                 .put("address", "\u00a0Blk 10,   #01/02\u2003");
-        person(root, 1).put("name", "Anita d/o Kumar");
+        getPerson(root, 1).put("name", "Anita d/o Kumar");
         PonHubDataState edited = JsonPonHubDataCodec.decode(root.toString());
         var contacts = edited.people().getPeople().getFirst().getContactDetails();
         assertEquals("José s/o Santos", contacts.getName().fullName);
@@ -246,15 +246,15 @@ public class JsonPonHubDataStorageTest {
     @Test
     public void decode_invalidSlashContactsAndNormalizedDuplicates_protectsOriginalFile() throws Exception {
         for (String name : List.of("s/o", "Ravi s/o", "Ravi/Kumar", "Ravi s/other Kumar")) {
-            assertProtectedNameRejection(root -> person(root, 0).put("name", name));
+            assertProtectedNameRejection(root -> getPerson(root, 0).put("name", name));
         }
         for (String address : List.of("A/B", "#01//02", "1/", "/2", "Block\t", "\u2028Block",
                 "Block\u2029", "Block\u200b", "Block\ud800", "Block\u00a0A", "A".repeat(201))) {
-            assertProtectedNameRejection(root -> person(root, 0).put("address", address));
+            assertProtectedNameRejection(root -> getPerson(root, 0).put("address", address));
         }
         assertProtectedNameRejection(root -> {
-            person(root, 0).put("name", "José s/o Santos");
-            ObjectNode duplicate = person(root, 0).deepCopy();
+            getPerson(root, 0).put("name", "José s/o Santos");
+            ObjectNode duplicate = getPerson(root, 0).deepCopy();
             duplicate.put("id", "T2").put("name", "\u00a0JOSE\u0301   s/o   SANTOS\u2003");
             ArrayNode people = (ArrayNode) root.get("people");
             people.add(duplicate);
@@ -282,7 +282,7 @@ public class JsonPonHubDataStorageTest {
     public void decode_largeSpaceRuns_normalizesCanonicalContacts() throws Exception {
         String spaces = " ".repeat(100_000);
         ObjectNode root = (ObjectNode) mapper.readTree(JsonPonHubDataCodec.encode(original));
-        person(root, 0).put("name", spaces + "Anne-Marie" + spaces + "O'Neil" + spaces)
+        getPerson(root, 0).put("name", spaces + "Anne-Marie" + spaces + "O'Neil" + spaces)
                 .put("address", spaces + "Blk 10," + spaces + "#01-02" + spaces);
         Files.createDirectories(storage.getDataFilePath().getParent());
         Files.writeString(storage.getDataFilePath(), root.toString());
@@ -295,15 +295,15 @@ public class JsonPonHubDataStorageTest {
     @Test
     public void decode_largeInvalidContacts_preservesFileAndLiveData() throws Exception {
         String spaces = " ".repeat(100_000);
-        assertRejected(root -> person(root, 0).put("name", "Anne-Marie" + spaces + "O'Neil\t"));
-        assertRejected(root -> person(root, 0).put("address", "Blk 10," + spaces + "#01-02\n"));
-        assertRejected(root -> person(root, 0).put("name", "A".repeat(101)));
-        assertRejected(root -> person(root, 0).put("phone", "1234567890123456"));
+        assertRejected(root -> getPerson(root, 0).put("name", "Anne-Marie" + spaces + "O'Neil\t"));
+        assertRejected(root -> getPerson(root, 0).put("address", "Blk 10," + spaces + "#01-02\n"));
+        assertRejected(root -> getPerson(root, 0).put("name", "A".repeat(101)));
+        assertRejected(root -> getPerson(root, 0).put("phone", "1234567890123456"));
         for (String email : new String[]{"a.".repeat(5000) + "a@example.com",
             "a@" + "a-".repeat(5000) + "ab", "a@" + "a.".repeat(5000) + "ab",
             "a@" + "a".repeat(10000), "a.".repeat(5000) + "a!@example.com",
             "a@" + "a-".repeat(5000) + "a", "a@" + "a.".repeat(5000) + "a"}) {
-            assertRejected(root -> person(root, 0).put("email", email));
+            assertRejected(root -> getPerson(root, 0).put("email", email));
         }
     }
 
@@ -321,7 +321,7 @@ public class JsonPonHubDataStorageTest {
         assertArrayEquals(before, Files.readAllBytes(storage.getDataFilePath()));
     }
 
-    private static ObjectNode person(ObjectNode root, int index) {
+    private static ObjectNode getPerson(ObjectNode root, int index) {
         return (ObjectNode) root.get("people").get(index);
     }
 }

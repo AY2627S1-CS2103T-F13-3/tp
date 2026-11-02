@@ -82,7 +82,7 @@ public class LessonQueriesTest {
         }
         for (String field : List.of("studentSubscriptions", "tutorSubscriptions", "rosterSubscriptions",
                 "historySubscriptions", "lessonHistorySubscriptions")) {
-            assertEquals(0, subscriptionCount(queries, field));
+            assertEquals(0, getSubscriptionCount(queries, field));
         }
         data.resetData(original);
         assertSame(studentOne, queries.getStudentLessons(STUDENT_ONE));
@@ -123,15 +123,15 @@ public class LessonQueriesTest {
             session.execute("delete 1");
             session.execute("delete confirm");
             LessonQueries source = (LessonQueries) session.getLessonQueries();
-            assertEquals(0, subscriptionCount(source, "studentSubscriptions"));
-            assertEquals(0, subscriptionCount(source, "historySubscriptions"));
+            assertEquals(0, getSubscriptionCount(source, "studentSubscriptions"));
+            assertEquals(0, getSubscriptionCount(source, "historySubscriptions"));
         }
         assertTrue(session.getPeople().isEmpty());
         assertEquals(100, session.getDataSnapshot().people().getLastAllocatedSequences()
                 .get(ponhub.model.person.PersonRole.STUDENT));
     }
 
-    private static int subscriptionCount(LessonQueries source, String name) throws Exception {
+    private static int getSubscriptionCount(LessonQueries source, String name) throws Exception {
         var field = LessonQueries.class.getDeclaredField(name);
         field.setAccessible(true);
         return ((Map<?, ?>) field.get(source)).size();
