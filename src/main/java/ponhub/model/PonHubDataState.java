@@ -37,6 +37,7 @@ import ponhub.model.person.PersonRole;
  */
 public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, List<Attendance> attendance,
         long lastAllocatedLessonSequence) {
+    private static final int MAX_ATTENDANCE_YEAR = 9999;
 
     /**
      * Copies incoming collections and validates identities, references, and global schedules before publishing state.
@@ -66,7 +67,7 @@ public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, 
             requireRole(peopleById, record.getStudentId(), PersonRole.STUDENT);
             Lesson lesson = lessonsById.get(record.getLessonId());
             checkArgument(lesson != null, "Attendance refers to a missing lesson.");
-            checkArgument(record.getDate().getYear() >= 1 && record.getDate().getYear() <= 9999,
+            checkArgument(record.getDate().getYear() >= 1 && record.getDate().getYear() <= MAX_ATTENDANCE_YEAR,
                     "Attendance date must have a year between 0001 and 9999.");
             checkArgument(lesson.getTimeSlot().getDay().matches(record.getDate()),
                     "Attendance date does not match lesson weekday.");

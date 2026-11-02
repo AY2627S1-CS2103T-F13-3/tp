@@ -34,6 +34,7 @@ import ponhub.model.search.PersonSearchMatch;
  * Commands, person cards, lesson retrieval and attendance history share the session's canonical data root.
  */
 public final class CanonicalLogicManager implements Logic {
+    private static final int MAX_LOGGED_CAUSES = 8;
     private static final Pattern COMMAND_WORD = Pattern.compile("[\\p{javaWhitespace}\\p{Zs}]*(?<word>\\S+).*",
             Pattern.DOTALL | Pattern.UNICODE_CHARACTER_CLASS);
     private final Logger logger = LogsCenter.getLogger(CanonicalLogicManager.class);
@@ -77,7 +78,7 @@ public final class CanonicalLogicManager implements Logic {
         Level level = Level.INFO;
         Throwable cause = failure;
         // Bound traversal even if a programmer has accidentally constructed a cyclic cause chain.
-        for (int depth = 0; cause != null && depth < 8; depth++, cause = cause.getCause()) {
+        for (int depth = 0; cause != null && depth < MAX_LOGGED_CAUSES; depth++, cause = cause.getCause()) {
             causes.add(cause.getClass().getSimpleName());
             if (cause instanceof java.io.IOException) {
                 level = Level.WARNING;

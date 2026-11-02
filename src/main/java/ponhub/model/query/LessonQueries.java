@@ -81,12 +81,12 @@ public final class LessonQueries implements LessonQuerySource {
 
     @Override
     public ObservableList<LessonView> getLessonList() {
-        return catalogue.readOnly;
+        return catalogue.readOnlyValues;
     }
 
     @Override
     public ObservableList<LessonView> getFilteredLessonList() {
-        return filtered.readOnly;
+        return filtered.readOnlyValues;
     }
 
     @Override
@@ -308,27 +308,27 @@ public final class LessonQueries implements LessonQuerySource {
             ResultList<T> result = new ResultList<>();
             result.replace(index.getOrDefault(key, List.of()));
             return result;
-        }).readOnly;
+        }).readOnlyValues;
     }
 
     /**
      * Drops ownership of deleted identities while allowing externally held results to revive on restore.
      * Weak identity tokens avoid list-value equality; unreferenced retired results cannot retain their IDs.
      */
-    private static <K, T> void reconcileSubscriptions(Map<K, ResultList<T>> active,
-            Map<RetiredResult<T>, K> retired, Predicate<K> exists) {
+    private static <K, T> void reconcileSubscriptions(Map<K, ResultList<T>> activeSubscriptions,
+            Map<RetiredResult<T>, K> retiredSubscriptions, Predicate<K> exists) {
         // Retain actual weak keys during reconciliation, rather than weak Map.Entry objects.
-        List.copyOf(retired.keySet()).forEach(result -> {
-            K key = retired.get(result);
+        List.copyOf(retiredSubscriptions.keySet()).forEach(result -> {
+            K key = retiredSubscriptions.get(result);
             if (exists.test(key)) {
-                retired.remove(result);
-                active.put(key, result.result);
+                retiredSubscriptions.remove(result);
+                activeSubscriptions.put(key, result.result);
             }
         });
-        List.copyOf(active.entrySet()).forEach(entry -> {
+        List.copyOf(activeSubscriptions.entrySet()).forEach(entry -> {
             if (!exists.test(entry.getKey())) {
-                active.remove(entry.getKey());
-                retired.put(entry.getValue().retirement, entry.getKey());
+                activeSubscriptions.remove(entry.getKey());
+                retiredSubscriptions.put(entry.getValue().retirement, entry.getKey());
                 entry.getValue().replace(List.of());
             }
         });
@@ -359,7 +359,7 @@ public final class LessonQueries implements LessonQuerySource {
         private final RetiredResult<T> retirement = new RetiredResult<>(this);
         private List<T> values = List.of();
         // Holding the public wrapper keeps this ResultList and its weak retirement token alive.
-        private final ObservableList<T> readOnly = FXCollections.unmodifiableObservableList(this);
+        private final ObservableList<T> readOnlyValues = FXCollections.unmodifiableObservableList(this);
 
         @Override
         public T get(int index) {
