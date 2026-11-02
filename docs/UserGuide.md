@@ -774,7 +774,7 @@ Every `search` starts from the full catalogue (not by narrowing the previous sea
   * In `c/parent`, if you supply `sn/` without lesson filters, the matching child does not need to be enrolled in any lesson.
   * In `c/tutor` or `c/lesson`, if you omit `sn/`, lessons with empty rosters can match.
   * Retained attendance after unenrolment never counts as current roster membership.
-* **No duplicate cards:** Each matching person or lesson appears at most once, with the matching student and lesson context shown on its card. Zero matches is a valid result (`Found 0 ...`). Active search results refresh automatically whenever you save a change.
+* **No duplicate cards:** Each matching person or lesson appears at most once. Person cards show the matching student and lesson context; lesson cards show the lesson's own details, and the lesson panel heading shows the filters used. Zero matches is a valid result (`Found 0 ...`). Active search results refresh automatically whenever you save a change.
 * **Special characters in text searches:**
   * Greek sigma forms (`Σ`, `σ`, `ς`) match one another. Search does not fold `ß` to `ss` or strip accents (`José` and `Jose` differ).
   * Search does not normalize different Unicode compositions—copy the displayed spelling or search by an ASCII fragment such as `n/Jos`.
@@ -1079,6 +1079,8 @@ The following features are planned for future versions and are not in PonHub v1.
 ## 16. Field reference
 
 The {% include command-list.html key="record-validation" label="commands that create or edit records" %} and PonHub's startup file loader validate values against the rules below.
+
+Subjects read from a data file get a wider limit so that files from earlier versions still open: up to 50 letters (each with its combining marks), digits, spaces or hyphens. Such a subject is kept when you edit the lesson's other fields, but typing it in a command must meet the **Subject** rule below.
 
 In `editlesson`, a standalone lowercase `s/o` inside `tu/` is read as a legal-name marker. When the subject begins with lowercase `o` followed by a space (or is just `o`), put `s/` before `tu/`; for example, `editlesson lid/L1 s/o level math tu/Bob Ong`.
 
