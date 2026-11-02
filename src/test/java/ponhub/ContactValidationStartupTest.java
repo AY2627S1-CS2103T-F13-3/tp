@@ -51,7 +51,7 @@ public class ContactValidationStartupTest {
         String document = createVersionedPeopleJson(
                 createPersonJson("P1", "Alex  Tan", "123", "alex@example.com", "Somewhere"),
                 createPersonJson("P2", "Alex Tan", "123", "other@example.com", "Elsewhere"));
-        assertProtectedLifecycle(document, "Operation would result in duplicate persons");
+        assertProtectedLifecycle(document, "Operation would result in duplicate persons.");
     }
 
     private void assertProtectedLifecycle(String document, String expectedCause) throws Exception {

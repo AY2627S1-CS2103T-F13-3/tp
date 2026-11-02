@@ -425,7 +425,7 @@ public final class PonHubData {
                     .map(PersonId::toString).toList());
             return Optional.of("Lesson " + lesson.getId()
                     + " cannot be deleted while its roster contains these Student IDs: " + studentIds
-                    + ". Unenrol all Students first.");
+                    + ". Unenrol all students first.");
         }
         Optional<Attendance> attendance = getAttendance().stream()
                 .filter(record -> record.getLessonId().equals(lesson.getId())).findFirst();

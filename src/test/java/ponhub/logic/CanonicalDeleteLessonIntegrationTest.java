@@ -107,7 +107,7 @@ public class CanonicalDeleteLessonIntegrationTest {
         CommandException rosterFailure = assertThrows(CommandException.class, () ->
                 session.execute("deletelesson lid/L10"));
         assertEquals("Lesson L10 cannot be deleted while its roster contains these Student IDs: S9, S3. "
-                + "Unenrol all Students first.", rosterFailure.getMessage());
+                + "Unenrol all students first.", rosterFailure.getMessage());
         assertSame(original, session.getDataSnapshot());
         assertArrayEquals(originalBytes, Files.readAllBytes(path));
 

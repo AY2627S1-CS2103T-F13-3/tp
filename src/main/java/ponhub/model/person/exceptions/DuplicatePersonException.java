@@ -6,6 +6,6 @@ package ponhub.model.person.exceptions;
  */
 public class DuplicatePersonException extends RuntimeException {
     public DuplicatePersonException() {
-        super("Operation would result in duplicate persons");
+        super("Operation would result in duplicate persons.");
     }
 }

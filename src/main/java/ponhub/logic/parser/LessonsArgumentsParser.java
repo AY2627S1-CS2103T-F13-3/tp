@@ -16,7 +16,7 @@ public final class LessonsArgumentsParser {
     public static final String MESSAGE_USAGE =
             "Format: lessons [STUDENT_INDEX] [sort/creation|schedule] (legacy selector: si/STUDENT_INDEX)";
 
-    private static final Pattern STUDENT_INDEX_FORMAT = Pattern.compile("(?:si/)?([0-9]+)");
+    private static final Pattern STUDENT_INDEX_FORMAT = Pattern.compile("(?:si/)?(\\p{javaDigit}+)");
     private static final Pattern LINE_BREAK = Pattern.compile("\\R");
 
     /**
