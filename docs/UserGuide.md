@@ -42,7 +42,7 @@ Follow these steps to go from download to a working PonHub window in a few minut
 
 1. **Install Java 25** on your computer.<br>
    **Mac users:** Install Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) as prescribed by the [course Mac advisory](https://nus-cs2103-ay2627-s1.github.io/website/admin/programmingLanguages.html) and [Mac installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html). Launch PonHub from a terminal that uses this installation.
-2. **Download `ponhub.jar`** from the [latest published PonHub release (v1.5)](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.5) (or the v1.6 release once published).
+2. **Download `ponhub.jar`** from the [PonHub v1.6 release](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.6).
 3. **Place `ponhub.jar` in its own dedicated folder.** PonHub saves your data next to the JAR file, so keep this entire folder together when moving or backing up your records.
 4. **Open a terminal in that folder**, check that `java -version` reports Java `25`, and run:
    ```text

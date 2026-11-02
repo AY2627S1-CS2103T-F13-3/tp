@@ -9,17 +9,17 @@ dated attendance through a keyboard-focused desktop interface.
 
 *[Screenshot sources and credits](docs/images/README.md).*
 
-The Lesson board above uses fictitious records. Released v1.5 supports creating, editing and
+The Lesson board above uses fictitious records. Released v1.6 supports creating, editing and
 searching people and shared lessons, enrolment/unenrolment, attendance marking/removal and guarded deletion.
 Roster and attendance-history views retain dated records after unenrolment. Person and Lesson edits retain
 stable IDs and linked records, with validation and schedule checks protecting changes.
 
 Download **`ponhub.jar`** from the latest published release,
-[v1.5](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.5), and follow its
-[version-matched User Guide](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/f76be6739317dc07dad7bb60f621703d67c113a0/docs/UserGuide.md#quick-start).
+[v1.6](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.6), and follow its
+[v1.6 User Guide](https://ay2627s1-cs2103t-f13-3.github.io/tp/UserGuide.html#quick-start).
 Use Java 25 and launch it with `java -jar ponhub.jar` in a writable application folder.
 Contributors can [build the current source](docs/DevOps.md#build-automation) to try later development changes.
-Use the version-matched guide above when running the released JAR.
+Use the v1.6 guide above when running the released JAR.
 
 * [Current source User Guide and command summary](docs/UserGuide.md#current-command-summary) — commands and examples;
   use `help` or `help COMMAND` in the app for inline guidance.
