@@ -230,7 +230,7 @@ public class LessonListPanelTest {
         }
         view.scrollTo(1);
         view.layout();
-        Optional<ScrollBar> vertical = visibleScrollBar(view, Orientation.VERTICAL);
+        Optional<ScrollBar> vertical = findVisibleScrollBar(view, Orientation.VERTICAL);
         if (vertical.isPresent()) {
             ScrollBar bar = vertical.orElseThrow();
             double previousMaximum;
@@ -266,7 +266,7 @@ public class LessonListPanelTest {
 
     private static void assertCatalogueFits(Region panel, double scale, double width) {
         ListView<LessonView> view = list(panel);
-        assertTrue(visibleScrollBar(view, Orientation.HORIZONTAL).isEmpty(),
+        assertTrue(findVisibleScrollBar(view, Orientation.HORIZONTAL).isEmpty(),
                 "Horizontal overflow at scale=" + scale + ", width=" + width);
         for (var node : view.lookupAll(".list-cell")) {
             ListCell<?> cell = (ListCell<?>) node;
@@ -298,7 +298,7 @@ public class LessonListPanelTest {
         }
     }
 
-    private static Optional<ScrollBar> visibleScrollBar(ListView<?> view, Orientation orientation) {
+    private static Optional<ScrollBar> findVisibleScrollBar(ListView<?> view, Orientation orientation) {
         return view.lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
                 .filter(bar -> bar.getOrientation() == orientation && bar.isVisible()).findFirst();
     }

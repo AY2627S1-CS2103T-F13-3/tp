@@ -64,7 +64,7 @@ public class CanonicalLessonMembershipIntegrationTest {
     @Test
     public void execute_enrolUsesCurrentIndexAndRefreshesCanonicalQueries() throws Exception {
         Path path = directory.resolve("canonical.json");
-        PonHubDataState before = membershipState(Set.of(), List.of());
+        PonHubDataState before = createMembershipState(Set.of(), List.of());
         new JsonPonHubDataStorage(path).saveData(before);
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         assertEquals("Found 2 student(s).", session.execute("search c/student").getFeedbackToUser());
@@ -92,7 +92,7 @@ public class CanonicalLessonMembershipIntegrationTest {
         assertSame(lessonList, queries.getLessonList());
         assertSame(roster, queries.getLessonRoster(TARGET_LESSON));
         assertSame(studentLessons, queries.getStudentLessons(STUDENT_TWO));
-        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), visibleIds(session));
+        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), getVisibleIds(session));
         assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
         assertEquals(List.of(STUDENT_TWO), roster.stream().map(StudentView::getStudentId).toList());
         assertEquals(List.of(TARGET_LESSON), studentLessons.stream().map(LessonView::getLessonId).toList());
@@ -109,7 +109,7 @@ public class CanonicalLessonMembershipIntegrationTest {
     @Test
     public void execute_enrolRejectsInvalidSelectionAndClashButAllowsAdjacentSlots() throws Exception {
         Path path = directory.resolve("canonical.json");
-        PonHubDataState before = membershipState(Set.of(), List.of());
+        PonHubDataState before = createMembershipState(Set.of(), List.of());
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
         storage.saveData(before);
         int[] writes = {0};
@@ -148,7 +148,7 @@ public class CanonicalLessonMembershipIntegrationTest {
         Path path = directory.resolve("canonical.json");
         Attendance historicalAttendance = new Attendance(STUDENT_TWO, TARGET_LESSON,
                 LocalDate.of(2026, 10, 5), AttendanceStatus.PRESENT);
-        PonHubDataState before = membershipState(Set.of(STUDENT_TWO), List.of(historicalAttendance));
+        PonHubDataState before = createMembershipState(Set.of(STUDENT_TWO), List.of(historicalAttendance));
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
         storage.saveData(before);
         int[] writes = {0};
@@ -188,7 +188,7 @@ public class CanonicalLessonMembershipIntegrationTest {
     @Test
     public void execute_enrolSaveFailureRestoresAllStateAndRetryCommitsOnce() throws Exception {
         Path path = directory.resolve("canonical.json");
-        PonHubDataState before = membershipState(Set.of(), List.of());
+        PonHubDataState before = createMembershipState(Set.of(), List.of());
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
         storage.saveData(before);
         byte[] original = Files.readAllBytes(path);
@@ -217,7 +217,7 @@ public class CanonicalLessonMembershipIntegrationTest {
         assertSame(lessonList, session.getLessonQueries().getLessonList());
         assertSame(roster, session.getLessonQueries().getLessonRoster(TARGET_LESSON));
         assertSame(studentLessons, session.getLessonQueries().getStudentLessons(STUDENT_TWO));
-        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), visibleIds(session));
+        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), getVisibleIds(session));
         assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
         assertTrue(roster.isEmpty());
         assertTrue(studentLessons.isEmpty());
@@ -230,37 +230,37 @@ public class CanonicalLessonMembershipIntegrationTest {
         assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
     }
 
-    private static List<PersonId> visibleIds(CanonicalPeopleSession session) {
+    private static List<PersonId> getVisibleIds(CanonicalPeopleSession session) {
         return session.getPeople().stream().map(PersonRecord::getId).toList();
     }
 
-    private static PonHubDataState membershipState(Set<PersonId> targetRoster, List<Attendance> attendance) {
-        Tutor firstTutor = new Tutor(TUTOR_ONE, contacts("Tutor One", "70000001"));
+    private static PonHubDataState createMembershipState(Set<PersonId> targetRoster, List<Attendance> attendance) {
+        Tutor firstTutor = new Tutor(TUTOR_ONE, createContacts("Tutor One", "70000001"));
         Student firstStudent = new Student(STUDENT_ONE, new ContactDetails(new Name("Alice Student")),
                 new EducationLevel("P1"), new Phone("60000001"));
-        Parent parent = new Parent(new PersonId("P2"), contacts("Parent Two", "60000002"));
+        Parent parent = new Parent(new PersonId("P2"), createContacts("Parent Two", "60000002"));
         Student secondStudent = new Student(STUDENT_TWO, new ContactDetails(new Name("Bob Student")),
                 new EducationLevel("P2"), new Phone("60000002"));
-        Tutor secondTutor = new Tutor(TUTOR_TWO, contacts("Tutor Two", "70000002"));
+        Tutor secondTutor = new Tutor(TUTOR_TWO, createContacts("Tutor Two", "70000002"));
         PeopleRegistryState people = new PeopleRegistryState(
                 List.of(firstTutor, firstStudent, parent, secondStudent, secondTutor),
                 Map.of(PersonRole.STUDENT, 9L, PersonRole.TUTOR, 8L, PersonRole.PARENT, 2L));
         List<Lesson> lessons = List.of(
-                lesson(TARGET_LESSON, TUTOR_ONE, LessonDay.MONDAY, "0900", "1000", "R1", targetRoster),
-                lesson(EXISTING_LESSON, TUTOR_TWO, LessonDay.MONDAY, "0930", "1030", "R2",
+                createLesson(TARGET_LESSON, TUTOR_ONE, LessonDay.MONDAY, "0900", "1000", "R1", targetRoster),
+                createLesson(EXISTING_LESSON, TUTOR_TWO, LessonDay.MONDAY, "0930", "1030", "R2",
                         Set.of(STUDENT_ONE)),
-                lesson(ADJACENT_LESSON, TUTOR_TWO, LessonDay.MONDAY, "1030", "1130", "R2", Set.of()),
-                lesson(DIFFERENT_DAY_LESSON, TUTOR_TWO, LessonDay.TUESDAY, "0930", "1030", "R2", Set.of()));
+                createLesson(ADJACENT_LESSON, TUTOR_TWO, LessonDay.MONDAY, "1030", "1130", "R2", Set.of()),
+                createLesson(DIFFERENT_DAY_LESSON, TUTOR_TWO, LessonDay.TUESDAY, "0930", "1030", "R2", Set.of()));
         return new PonHubDataState(people, lessons, attendance, 13);
     }
 
-    private static Lesson lesson(LessonId id, PersonId tutorId, LessonDay day, String start, String end,
+    private static Lesson createLesson(LessonId id, PersonId tutorId, LessonDay day, String start, String end,
             String room, Set<PersonId> roster) {
         return new Lesson(id, tutorId, new LessonTimeSlot(day, new LessonTime(start), new LessonTime(end)),
                 new Subject("Mathematics"), new Room(room), roster);
     }
 
-    private static ContactDetails contacts(String name, String phone) {
+    private static ContactDetails createContacts(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.of(new Phone(phone)), Optional.empty(), Optional.empty());
     }
 }

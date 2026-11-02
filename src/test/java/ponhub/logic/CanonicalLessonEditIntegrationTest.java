@@ -45,7 +45,7 @@ public class CanonicalLessonEditIntegrationTest {
 
     @Test
     public void execute_allFields_preservesIdentityRosterHistoryPositionAndCounters() throws Exception {
-        CanonicalPeopleSession session = baseline("all-fields.json");
+        CanonicalPeopleSession session = createBaselineSession("all-fields.json");
         session.execute("mark 1 lid/L1 d/2026-10-05 s/present");
         session.execute("enrol 2 lid/L1");
         session.execute("mark 2 lid/L1 d/2026-10-05 s/absent");
@@ -76,7 +76,7 @@ public class CanonicalLessonEditIntegrationTest {
 
     @Test
     public void execute_formerAttendance_warnsForChangedDetailsButNotNoOpOrRemovedHistory() throws Exception {
-        CanonicalPeopleSession session = baseline("former-warning.json");
+        CanonicalPeopleSession session = createBaselineSession("former-warning.json");
         session.execute("mark 1 lid/L1 d/2026-10-05 s/present");
         session.execute("unenrol 1 lid/L1");
         PonHubDataState before = session.getDataSnapshot();
@@ -98,7 +98,7 @@ public class CanonicalLessonEditIntegrationTest {
 
     @Test
     public void execute_emptyAndPopulatedLessons_refreshesRosterDetailAndHistoryResults() throws Exception {
-        CanonicalPeopleSession session = baseline("result-views.json");
+        CanonicalPeopleSession session = createBaselineSession("result-views.json");
         session.execute("addlesson d/Wed st/1400 et/1500 s/English tu/Tutor One rm/R4");
         session.execute("lessons");
         var displayedLessons = session.getDisplayedLessons();
@@ -165,7 +165,7 @@ public class CanonicalLessonEditIntegrationTest {
 
     @Test
     public void execute_singleEndpointsAndSelfExclusion_allowValidPartialChanges() throws Exception {
-        CanonicalPeopleSession session = baseline("endpoints.json");
+        CanonicalPeopleSession session = createBaselineSession("endpoints.json");
 
         assertEquals("Edited lesson: L2.",
                 session.execute("editlesson lid/L2 st/1000").getFeedbackToUser());
@@ -182,7 +182,7 @@ public class CanonicalLessonEditIntegrationTest {
 
     @Test
     public void execute_noOpAndRejectedConflicts_doNotSaveOrPublish() throws Exception {
-        Path noOpPath = baseline("no-op.json").getDataFilePath();
+        Path noOpPath = createBaselineSession("no-op.json").getDataFilePath();
         AtomicInteger saves = new AtomicInteger();
         CanonicalPeopleSession noOp = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(noOpPath), state -> {
             saves.incrementAndGet();
@@ -211,7 +211,7 @@ public class CanonicalLessonEditIntegrationTest {
                 "Student S1 schedule overlap between L1 and L2."}
         };
         for (String[] testCase : conflicts) {
-            CanonicalPeopleSession session = baseline(testCase[0]);
+            CanonicalPeopleSession session = createBaselineSession(testCase[0]);
             PonHubDataState unchanged = session.getDataSnapshot();
             byte[] unchangedBytes = Files.readAllBytes(session.getDataFilePath());
             CommandException failure = assertThrows(CommandException.class, () -> session.execute(testCase[1]));
@@ -223,7 +223,7 @@ public class CanonicalLessonEditIntegrationTest {
 
     @Test
     public void execute_wrongAndMissingSelectors_preserveResultsStateAndSavedBytes() throws Exception {
-        CanonicalPeopleSession session = baseline("selectors.json");
+        CanonicalPeopleSession session = createBaselineSession("selectors.json");
         session.execute("lessons");
         PonHubDataState before = session.getDataSnapshot();
         var displayed = session.getDisplayedLessons();
@@ -248,7 +248,7 @@ public class CanonicalLessonEditIntegrationTest {
 
     @Test
     public void execute_retainedAttendanceRejectsDayChangeThenClearsObsoleteSelectedDate() throws Exception {
-        CanonicalPeopleSession session = baseline("weekday.json");
+        CanonicalPeopleSession session = createBaselineSession("weekday.json");
         session.execute("mark 1 lid/L1 d/2026-10-05 s/present");
         session.execute("enrol 2 lid/L1");
         session.execute("mark 2 lid/L1 d/2026-10-05 s/absent");
@@ -280,16 +280,16 @@ public class CanonicalLessonEditIntegrationTest {
 
     @Test
     public void execute_failedSavesAndProtectedStartup_preserveStateAndHideRoute() throws Exception {
-        CanonicalPeopleSession seeded = baseline("save-failure.json");
+        CanonicalPeopleSession seeded = createBaselineSession("save-failure.json");
         seeded.execute("mark 1 lid/L1 d/2026-10-05 s/present");
         Path path = seeded.getDataFilePath();
         for (IOException injected : List.of(new IOException("disk failure"),
                 new AccessDeniedException(path.toString()))) {
-            AtomicBoolean failSave = new AtomicBoolean(true);
+            AtomicBoolean shouldFailSave = new AtomicBoolean(true);
             AtomicInteger saves = new AtomicInteger();
             CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
                 saves.incrementAndGet();
-                if (failSave.get()) {
+                if (shouldFailSave.get()) {
                     throw injected;
                 }
                 new JsonPonHubDataStorage(path).saveData(state);
@@ -319,7 +319,7 @@ public class CanonicalLessonEditIntegrationTest {
             assertArrayEquals(unchangedBytes, Files.readAllBytes(path));
             assertEquals(1, saves.get());
 
-            failSave.set(false);
+            shouldFailSave.set(false);
             assertEquals(getEditedWithAttendance(),
                     session.execute("editlesson lid/L1 s/Changed Subject").getFeedbackToUser());
             assertEquals(2, saves.get());
@@ -346,7 +346,7 @@ public class CanonicalLessonEditIntegrationTest {
                 + "for future occurrences.";
     }
 
-    private CanonicalPeopleSession baseline(String filename) throws Exception {
+    private CanonicalPeopleSession createBaselineSession(String filename) throws Exception {
         CanonicalPeopleSession session = new CanonicalPeopleSession(directory.resolve(filename));
         session.execute("add r/tutor n/Tutor One p/00111111");
         session.execute("add r/tutor n/Tutor Two p/00222222");

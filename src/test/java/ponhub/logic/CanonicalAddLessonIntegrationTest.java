@@ -127,11 +127,11 @@ public class CanonicalAddLessonIntegrationTest {
         CanonicalPeopleSession session = createSessionWithoutWrites(createState(List.of(), 12));
         PonHubDataState before = session.getDataSnapshot();
 
-        assertCommandFailure(session, "addlesson " + lessonArguments("Mei Lim", "", "R2"),
+        assertCommandFailure(session, "addlesson " + createLessonArguments("Mei Lim", "", "R2"),
                 "More than one tutor is named 'Mei Lim'. Supply tp/TUTOR_PHONE to select one.");
-        assertCommandFailure(session, "addlesson " + lessonArguments("Unique Tutor", " tp/99999999", "R2"),
+        assertCommandFailure(session, "addlesson " + createLessonArguments("Unique Tutor", " tp/99999999", "R2"),
                 "No tutor named 'Unique Tutor' has the exact phone '99999999'.");
-        assertCommandFailure(session, "addlesson " + lessonArguments("Missing Tutor", "", "R2"),
+        assertCommandFailure(session, "addlesson " + createLessonArguments("Missing Tutor", "", "R2"),
                 "No tutor found with the full name 'Missing Tutor'.");
         assertEquals(before, session.getDataSnapshot());
     }
@@ -224,7 +224,7 @@ public class CanonicalAddLessonIntegrationTest {
         ObservableList<PersonRecord> people = session.getPeople();
         var queries = session.getLessonQueries();
         ObservableList<LessonView> lessons = queries.getLessonList();
-        String command = "addlesson " + lessonArguments("Unique Tutor", " tp/00011122", "R2");
+        String command = "addlesson " + createLessonArguments("Unique Tutor", " tp/00011122", "R2");
 
         CommandException failure = assertThrows(CommandException.class, () -> session.execute(command));
         assertTrue(failure.getMessage().contains("Injected lesson save failure"));
@@ -255,7 +255,7 @@ public class CanonicalAddLessonIntegrationTest {
         assertEquals(message, failure.getMessage());
     }
 
-    private static String lessonArguments(String tutorName, String tutorPhone, String room) {
+    private static String createLessonArguments(String tutorName, String tutorPhone, String room) {
         return "d/Tue st/1200 et/1300 s/Math tu/" + tutorName + tutorPhone + " rm/" + room;
     }
 
