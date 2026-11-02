@@ -59,6 +59,22 @@ public class SubjectTest {
     }
 
     @Test
+    public void fromStoredValue_nfcExpandedOlderSubject_acceptedOnlyFromStorage() {
+        // New input keeps the 50-code-point limit after NFC; saved values count a letter with its marks once.
+        String olderSubject = "\u0958".repeat(26);
+        assertFalse(Subject.isValidSubject(olderSubject));
+        assertThrows(IllegalArgumentException.class, () -> new Subject(olderSubject));
+        Subject stored = Subject.fromStoredValue(olderSubject);
+        assertEquals("\u0915\u093c".repeat(26), stored.getValue());
+        assertEquals(stored, Subject.fromStoredValue(stored.getValue()));
+        assertEquals("\u0915\u093c".repeat(50), Subject.fromStoredValue("\u0958".repeat(50)).getValue());
+        assertEquals(new Subject("Math"), Subject.fromStoredValue(" Math "));
+        for (String invalid : new String[] {"\u0958".repeat(51), "A".repeat(51), "", "\u0301Math", "Math/Science"}) {
+            assertThrows(IllegalArgumentException.class, () -> Subject.fromStoredValue(invalid), invalid);
+        }
+    }
+
+    @Test
     public void constructor_excessiveDecomposedInput_rejectsBeforeCanonicalReordering() {
         String subject = "a" + "\u0315".repeat(20_000) + "\u0300".repeat(20_000);
         assertFalse(Subject.isValidSubject(subject));

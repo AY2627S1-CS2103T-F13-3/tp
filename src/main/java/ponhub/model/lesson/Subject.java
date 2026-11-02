@@ -4,6 +4,8 @@ import static java.util.Objects.requireNonNull;
 import static ponhub.commons.util.AppUtil.checkArgument;
 
 import java.text.Normalizer;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  * Represents the subject taught in a lesson.
@@ -21,6 +23,8 @@ public final class Subject {
     // A Unicode scalar decomposes into at most four code points in Java 25.
     // Bound canonical reordering work without rejecting a valid NFC subject's decomposed spelling.
     private static final int MAX_NORMALIZATION_CODE_POINTS = MAX_LENGTH * 4;
+    // One letter with its attached marks, one digit, or one separator.
+    private static final Pattern STORED_CHARACTER_PATTERN = Pattern.compile("\\p{L}\\p{M}*|\\p{N}|[ -]");
 
     private final String value;
 
@@ -28,12 +32,28 @@ public final class Subject {
      * Constructs an NFC-normalized {@code Subject}. Leading, trailing and repeated spaces are normalized.
      */
     public Subject(String subject) {
+        this(subject, Subject::isNormalizedSubjectValid);
+    }
+
+    private Subject(String subject, Predicate<String> isValidNormalizedSubject) {
         requireNonNull(subject);
         String spacedSubject = normalizeSpaces(subject);
         checkArgument(isWithinNormalizationBudget(spacedSubject), MESSAGE_CONSTRAINTS);
         String normalizedSubject = Normalizer.normalize(spacedSubject, Normalizer.Form.NFC);
-        checkArgument(isNormalizedSubjectValid(normalizedSubject), MESSAGE_CONSTRAINTS);
+        checkArgument(isValidNormalizedSubject.test(normalizedSubject), MESSAGE_CONSTRAINTS);
         value = normalizedSubject;
+    }
+
+    /**
+     * Returns a subject read from a saved data file.
+     * Earlier builds allowed 50 letters or digits before NFC, which can expand one letter into a letter with
+     * attached marks. A saved value may therefore hold 50 letters (each with its attached marks), digits, spaces
+     * or hyphens, so those stores still load and re-save stably. New input keeps the constructor's limit.
+     *
+     * @throws IllegalArgumentException if the saved value is not a valid subject under that rule.
+     */
+    public static Subject fromStoredValue(String subject) {
+        return new Subject(subject, Subject::isValidStoredSubject);
     }
 
     /**
@@ -56,6 +76,11 @@ public final class Subject {
 
     private static boolean isNormalizedSubjectValid(String subject) {
         return subject.codePointCount(0, subject.length()) <= MAX_LENGTH && subject.matches(VALIDATION_REGEX);
+    }
+
+    private static boolean isValidStoredSubject(String subject) {
+        return subject.matches(VALIDATION_REGEX)
+                && STORED_CHARACTER_PATTERN.matcher(subject).results().count() <= MAX_LENGTH;
     }
 
     public String getValue() {
