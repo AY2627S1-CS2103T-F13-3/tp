@@ -27,5 +27,5 @@ class LessonTimeSlot {
   startTime : LessonTime
   endTime : LessonTime
 }
-Lesson "0..*" -down-> "1" LessonTimeSlot : timeSlot
+Lesson "0..*" -down-> "1<U+00A0><U+00A0>" LessonTimeSlot : timeSlot
 @enduml
