@@ -264,7 +264,7 @@ startup, and routes commands to their handlers. Its execution paths are:
 * **Transactional execution vs. direct people search:**
   * {% include command-list.html key="operational-mutations" label="Operational mutations" %} and `list` run through `CanonicalCommandExecutor`. It starts a `CanonicalTransaction` via `PeopleView.beginTransaction()`, runs a `StagedCommand` on the isolated candidate model, saves the snapshot if operational data changed, and calls `commit()`.
   * People-category `search` (`c/student|parent|tutor`) runs `new CanonicalSearchCommand(criteria).execute(data, view)` directly in `CanonicalPeopleSession.execute()`, updating the live `PeopleView` search criteria without `CanonicalCommandExecutor`, `beginTransaction()`, or `commit()`.
-* **Read-only retrieval:** [`LessonRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/LessonRetrieval.java) and [`AttendanceRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/AttendanceRetrieval.java) coordinate right-pane queries over [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQueries.java) without staging a model copy or touching disk.
+* **Read-only retrieval:** [`LessonRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/LessonRetrieval.java) and [`AttendanceRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/AttendanceRetrieval.java) coordinate right-pane queries over [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQueries.java) (and, for `showlesson` details, `PonHubData`) without staging a model copy or saving operational data. Like every command, they still record their outcome in the application log.
 
 ### 3.4 Model component
 
@@ -448,11 +448,11 @@ For `enrol 1 lid/L1`, the command resolves position `1` in the current people li
 <figure class="dg-figure">
 <figcaption>Enrolling a Student in an existing shared Lesson</figcaption>
 <div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Student enrolment sequence">
-<a href="images/StudentEnrolmentSequenceDiagram.png"><img src="images/StudentEnrolmentSequenceDiagram.png" alt="An enrol command resolves a displayed Student, validates and replaces the candidate lesson, then saves the snapshot. Only after saving succeeds is live data published and read-only roster queries refreshed."></a>
+<a href="images/StudentEnrolmentSequenceDiagram.png"><img src="images/StudentEnrolmentSequenceDiagram.png" alt="An enrol command validates and replaces the candidate lesson, then saves the snapshot. Only after saving succeeds is live data published; LessonRetrieval then rebuilds any displayed lesson details from the published roster."></a>
 </div>
 </figure>
 
-The command validates enrolment against isolated candidate data and creates a replacement lesson with the updated roster. Logic saves the complete snapshot before publishing it. `LessonQueries` then refreshes the roster results. A validation or save failure leaves live data and results unchanged.
+The command validates enrolment against isolated candidate data and creates a replacement lesson with the updated roster. Logic saves the complete snapshot before publishing it. If `showlesson` is displaying that lesson, `LessonRetrieval` observes the published state and rebuilds the details from `PonHubData.getLessonRoster()`. A validation or save failure leaves live data and results unchanged.
 
 See [Section 5.4](#54-enrolling-and-unenrolling-students) for the command implementation.
 
@@ -461,7 +461,7 @@ See [Section 5.4](#54-enrolling-and-unenrolling-students) for the command implem
 <figure class="dg-figure">
 <figcaption>Stored enrolment and derived roster views</figcaption>
 <div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Student enrolment class relationships">
-<a href="images/StudentEnrolmentClassDiagram.png"><img src="images/StudentEnrolmentClassDiagram.png" alt="PonHubData exposes its current immutable PonHubDataState, whose ordered lesson catalogue contains Lesson records. Each Lesson stores student PersonIds. LessonQueries observes publications and derives read-only rosters from the shared snapshot."></a>
+<a href="images/StudentEnrolmentClassDiagram.png"><img src="images/StudentEnrolmentClassDiagram.png" alt="PonHubData exposes its current immutable PonHubDataState, whose ordered lesson catalogue contains Lesson records. Each Lesson stores student PersonIds. LessonRetrieval reads the roster from PonHubData for displayed lesson details and observes publications."></a>
 </div>
 </figure>
 
@@ -482,7 +482,7 @@ Enrolment replaces the existing lesson rather than adding another booking. Tutor
 
 #### Roster display and unenrolment
 
-`LessonQueries.getLessonRoster()` lists members in global people creation order, regardless of enrolment order or set insertion order. Filtering the people panel does not change the lesson's membership.
+`PonHubData.getLessonRoster()`, which `showlesson` uses, lists members in global people creation order, regardless of enrolment order or set insertion order. Filtering the people panel does not change the lesson's membership.
 
 Unenrolment removes current membership but retains dated attendance. See [Section 4.4](#44-dated-attendance-and-retained-history).
 
@@ -890,9 +890,11 @@ live view, without an operational write or a change to the selected right-pane q
 | Full lesson catalogue (`lessons`) | All lessons in creation order, including empty rosters. |
 | Student lessons (`lessons INDEX`) | Lessons whose current roster contains the resolved student's `PersonId`. |
 | Lesson search (`search c/lesson ...`) | Matching lessons in creation order (or `Mon`–`Sun`, start time, numeric `LessonId` when `sort/schedule` is used). |
-| Lesson roster (`showlesson`) | Currently enrolled students in people creation order, followed by former members' attendance newest-first. |
+| Lesson roster | Currently enrolled students in people creation order. Student searches with lesson filters and Tutor searches with `sn/` read it. |
 | Tutor schedule | Assigned lessons ordered by weekday, start time, and numeric `LessonId`. |
 | Attendance history (`history`) | Recorded entries for a student (and optional lesson/date/status) ordered newest date first, then numeric `LessonId`. |
+
+`showlesson` does not use these projections. `LessonRetrieval.buildDetail` reads `PonHubData.getLessonRoster()` and `PonHubData.getAttendanceForLesson()` to list current members in people creation order, followed by former members' attendance newest-first. Its own `PonHubData.stateProperty()` listener rebuilds the displayed details after each commit.
 
 #### Keeping the left and right panels independent
 
@@ -1199,7 +1201,7 @@ Key schema rules enforced by `JsonPonHubDataCodec`:
 1. **Begin transaction:** `PeopleView.beginTransaction()` creates a `CanonicalTransaction` holding an isolated copy of `PonHubData` and `PeopleView` initialised with the current snapshot, role filter, and search criteria.
 2. **Stage changes:** The command resolves any displayed people indices against the staged view and mutates only the staged `PonHubData` and staged `PeopleView`. Before saving, a development assertion verifies that the live `PonHubDataState` and live filter have not been mutated during staging.
 3. **Conditional persistence:** If the staged `PonHubDataState` differs from the starting snapshot, the executor passes the complete candidate snapshot to `SnapshotWriter` (`ProtectedPonHubDataStorage.saveData`). Read-only commands, filter-only commands (`list`), and operational no-ops (such as an `edit` or `mark` that leaves state unchanged) skip disk I/O.
-4. **Commit:** Only after `saveData` returns without error does `CanonicalTransaction.commit()` replace the live `PonHubData` root and apply the staged people filter, triggering `LessonQueries` and UI panel listeners.
+4. **Commit:** Only after `saveData` returns without error does `CanonicalTransaction.commit()` replace the live `PonHubData` root and apply the staged people filter, triggering `LessonQueries`, `LessonRetrieval` and UI panel listeners.
 
 #### Example: adding a parent record
 
