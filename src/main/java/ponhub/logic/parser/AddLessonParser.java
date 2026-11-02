@@ -33,6 +33,8 @@ public final class AddLessonParser {
     private static final Pattern PREFIX_PATTERN = Pattern.compile("(?<!\\S)([^\\s/]+/)",
             Pattern.UNICODE_CHARACTER_CLASS);
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
+    private static final Pattern SUBJECT_MARKER_PATTERN = Pattern.compile("\\s+s/(?=o(\\s|$))",
+            Pattern.UNICODE_CHARACTER_CLASS);
 
     /**
      * Parses arguments after {@code addlesson} into validated lesson-creation input.
@@ -97,7 +99,30 @@ public final class AddLessonParser {
             }
             values.put(prefix, value);
         } while (hasNext);
+        separateSubjectFromTutor(values);
         return values;
+    }
+
+    /**
+     * Reads the last lowercase {@code s/o} in a tutor value as the subject prefix when no other subject is given.
+     * A legal-name reading could not form a valid command, because {@code s/} is required.
+     */
+    private static void separateSubjectFromTutor(Map<String, String> values) {
+        String tutor = values.get("tu/");
+        if (values.containsKey("s/") || tutor == null) {
+            return;
+        }
+        Matcher marker = SUBJECT_MARKER_PATTERN.matcher(tutor);
+        int markerStart = -1;
+        int subjectStart = -1;
+        while (marker.find()) {
+            markerStart = marker.start();
+            subjectStart = marker.end();
+        }
+        if (markerStart >= 0) {
+            values.put("tu/", tutor.substring(0, markerStart));
+            values.put("s/", tutor.substring(subjectStart));
+        }
     }
 
     /**

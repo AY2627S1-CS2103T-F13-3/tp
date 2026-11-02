@@ -1,5 +1,6 @@
 package ponhub;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
@@ -23,6 +24,34 @@ import org.junit.jupiter.api.io.TempDir;
 public class MainAppPathResolutionTest {
     @TempDir
     Path directory;
+
+    @Test
+    public void validateStartupPaths_filesystemRoot_doesNotRequireFileName() throws IOException {
+        Path root = directory.toRealPath().getRoot();
+        // A filesystem root has no filename. Preflight must leave directory-content errors to storage loading.
+        assertDoesNotThrow(() -> MainApp.validateStartupPaths(Map.of("data", root.toString()), root));
+    }
+
+    @Test
+    public void validateStartupPaths_lockSymbolicAlias_rejectsWithoutChangingTarget() throws IOException {
+        Path target = directory.resolve("data.ponhub-lock");
+        Path alias = directory.resolve("data.json");
+        createLink(alias, target.getFileName());
+        for (boolean exists : List.of(false, true)) {
+            if (exists) {
+                Files.writeString(target, "preserve lock");
+            }
+            IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () ->
+                    MainApp.validateStartupPaths(Map.of("data", "data.json"), directory));
+            assertTrue(error.getMessage().contains("reserved"));
+            assertEquals(target.getFileName(), Files.readSymbolicLink(alias));
+            if (exists) {
+                assertEquals("preserve lock", Files.readString(target));
+            } else {
+                assertTrue(Files.notExists(target, LinkOption.NOFOLLOW_LINKS));
+            }
+        }
+    }
 
     @Test
     public void selectDataPath_cyclicLinks_rejectsDirectAndMissingDescendantPaths() throws IOException {

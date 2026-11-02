@@ -6,7 +6,7 @@ import javafx.util.Duration;
 
 /**
  * Keeps shortened result headings inspectable without taking space from the records.
- * Developed by Ernest Chua with OpenAI Codex assistance for #369.
+ * Developed by Ernest Chua with OpenAI Codex assistance.
  */
 final class ResultHeadingTooltip {
     private static final double MAX_WIDTH = 320;

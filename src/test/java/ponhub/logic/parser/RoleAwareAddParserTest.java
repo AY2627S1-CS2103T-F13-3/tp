@@ -261,7 +261,7 @@ public class RoleAwareAddParserTest {
 
     @Test
     public void parse_invalidPhoneValues_preservesOwnAndParentErrorText() {
-        String lengthMessage = "Contact phone numbers must contain between 3 and 15 digits.";
+        String lengthMessage = "Phone numbers must contain 3 to 15 digits, without spaces or punctuation.";
         String phoneMessage = "Phone numbers must contain 3 to 15 digits, without spaces or punctuation.";
         String[][] cases = {
             {"1234567890123456", lengthMessage}, {"123456789012345x", lengthMessage},
@@ -284,7 +284,7 @@ public class RoleAwareAddParserTest {
         String longPhone = "1234567890123456";
         assertThrows(ParseException.class, Name.MESSAGE_CONSTRAINTS, () ->
                 parser.parse("r/student n/@Alex l/P7 pp/" + longPhone + " p/" + longPhone));
-        assertThrows(ParseException.class, "Contact phone numbers must contain between 3 and 15 digits.", () ->
+        assertThrows(ParseException.class, Phone.MESSAGE_CONSTRAINTS, () ->
                 parser.parse("r/student n/Alex Tan l/P7 e/invalid pp/12 p/" + longPhone));
         assertThrows(ParseException.class, Email.MESSAGE_CONSTRAINTS, () ->
                 parser.parse("r/student n/Alex Tan l/P7 e/invalid pp/" + longPhone));
