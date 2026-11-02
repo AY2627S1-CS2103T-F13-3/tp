@@ -55,25 +55,27 @@ public class LessonDetailListTest {
     @Test
     public void detail_datedAndUndated_preservesLabelsStatusesAndOrder() throws Exception {
         runOnFxThread(() -> {
-            var roster = List.of(rosterEntry(1, Optional.of(AttendanceStatus.PRESENT)),
-                    rosterEntry(2, Optional.of(AttendanceStatus.ABSENT)), rosterEntry(3, Optional.empty()));
-            var former = List.of(formerEntry(4, 0), formerEntry(5, 1));
+            var roster = List.of(createRosterEntry(1, Optional.of(AttendanceStatus.PRESENT)),
+                    createRosterEntry(2, Optional.of(AttendanceStatus.ABSENT)), createRosterEntry(3, Optional.empty()));
+            var former = List.of(createFormerEntry(4, 0), createFormerEntry(5, 1));
             for (var date : List.of(Optional.of(SELECTED_DATE), Optional.<LocalDate>empty())) {
                 var detail = detail(date, roster, former);
                 Region panel = panel(detail, 420, 1600);
-                ListView<?> view = detailList(panel);
+                ListView<?> view = getDetailList(panel);
                 assertNotNull(view.getSelectionModel());
                 assertTrue(view.isFocusTraversable());
                 assertEquals(List.of("Current roster", "Former members' retained attendance"),
                         labelsInOrder(view, ".card_section_heading"));
-                assertEquals(List.of(primary(1), primary(2), primary(3), primary(4), primary(5)),
+                assertEquals(List.of(getPrimaryText(1), getPrimaryText(2), getPrimaryText(3), getPrimaryText(4),
+                        getPrimaryText(5)),
                         labelsInOrder(view, ".card_entry_primary"));
                 List<String> expectedSecondary = new ArrayList<>();
                 if (date.isPresent()) {
                     expectedSecondary.addAll(List.of("Attendance: present", "Attendance: absent",
                             "Attendance: unrecorded"));
                 }
-                expectedSecondary.addAll(List.of(formerSecondary(former.get(0)), formerSecondary(former.get(1))));
+                expectedSecondary.addAll(List.of(getFormerSecondaryText(former.get(0)),
+                        getFormerSecondaryText(former.get(1))));
                 assertEquals(expectedSecondary, labelsInOrder(view, ".card_entry_secondary"));
                 assertTrue(view.lookupAll(".card_empty_label").isEmpty());
                 Region summary = new LessonCard(detail).getRoot();
@@ -87,22 +89,22 @@ public class LessonDetailListTest {
     public void detail_historicalContext_labelsCurrentInformationAndClearsItForPlainRoster() throws Exception {
         runOnFxThread(() -> {
             Region panel = panel(detail(Optional.of(SELECTED_DATE), List.of(), List.of()), 210, 900);
-            LessonDetailList view = (LessonDetailList) detailList(panel);
+            LessonDetailList view = (LessonDetailList) getDetailList(panel);
             String note = "Current Lesson information";
             assertEquals(List.of(note), labelsInOrder(view, ".card_context_label"));
             assertWrapping(view, 210);
             assertNoHorizontalScroll(view);
 
-            view.showDetail(detail(Optional.empty(), List.of(), List.of(formerEntry(1, 0))));
+            view.showDetail(detail(Optional.empty(), List.of(), List.of(createFormerEntry(1, 0))));
             settleLayout(panel, view);
             assertEquals(List.of(note), labelsInOrder(view, ".card_context_label"));
             assertWrapping(view, 210);
             assertNoHorizontalScroll(view);
 
-            view.showDetail(detail(Optional.empty(), List.of(rosterEntry(1, Optional.empty())), List.of()));
+            view.showDetail(detail(Optional.empty(), List.of(createRosterEntry(1, Optional.empty())), List.of()));
             settleLayout(panel, view);
             assertTrue(labelsInOrder(view, ".card_context_label").isEmpty());
-            assertEquals(List.of(primary(1)), labelsInOrder(view, ".card_entry_primary"));
+            assertEquals(List.of(getPrimaryText(1)), labelsInOrder(view, ".card_entry_primary"));
         });
     }
 
@@ -111,7 +113,7 @@ public class LessonDetailListTest {
         runOnFxThread(() -> {
             for (var date : List.of(Optional.of(SELECTED_DATE), Optional.<LocalDate>empty())) {
                 Region panel = panel(detail(date, List.of(), List.of()), 420, 900);
-                ListView<?> view = detailList(panel);
+                ListView<?> view = getDetailList(panel);
                 assertEquals(List.of("No students currently enrolled.",
                         "No retained attendance for former members."), labelsInOrder(view, ".card_empty_label"));
                 assertTrue(view.lookupAll(".card_entry_primary").isEmpty());
@@ -124,9 +126,9 @@ public class LessonDetailListTest {
     public void detail_nullListItem_clearsRecycledCellAndRestoresNextSnapshot() throws Exception {
         runOnFxThread(() -> {
             var original = detail(Optional.of(SELECTED_DATE),
-                    List.of(rosterEntry(1, Optional.of(AttendanceStatus.PRESENT))), List.of());
+                    List.of(createRosterEntry(1, Optional.of(AttendanceStatus.PRESENT))), List.of());
             Region panel = panel(original, 420, 900);
-            LessonDetailList view = (LessonDetailList) detailList(panel);
+            LessonDetailList view = (LessonDetailList) getDetailList(panel);
             ListCell<?> entryCell = findCellAt(view, 2);
             Region oldRow = (Region) entryCell.getGraphic();
             assertNotNull(oldRow);
@@ -143,11 +145,11 @@ public class LessonDetailListTest {
             assertFalse(oldRow.prefWidthProperty().isBound(), "Recycled content must release its width binding");
 
             var refreshed = detail(Optional.of(SELECTED_DATE),
-                    List.of(rosterEntry(2, Optional.of(AttendanceStatus.ABSENT))), List.of());
+                    List.of(createRosterEntry(2, Optional.of(AttendanceStatus.ABSENT))), List.of());
             view.showDetail(refreshed);
             settleLayout(panel, view);
-            assertEntry(view, primary(2), "Attendance: absent");
-            assertFalse(labelsInOrder(view, ".card_entry_primary").contains(primary(1)));
+            assertEntry(view, getPrimaryText(2), "Attendance: absent");
+            assertFalse(labelsInOrder(view, ".card_entry_primary").contains(getPrimaryText(1)));
             assertWrapping(view, 420);
         });
     }
@@ -157,25 +159,25 @@ public class LessonDetailListTest {
         runOnFxThread(() -> {
             var records = new ArrayList<LessonDetailView.FormerAttendance>();
             for (int index = 0; index < LARGE_ROW_COUNT; index++) {
-                records.add(formerEntry(1, index));
+                records.add(createFormerEntry(1, index));
             }
             var detail = detail(Optional.empty(), List.of(), records);
             for (int width : new int[] {210, 420}) {
                 Region panel = panel(detail, width, 320);
-                ListView<?> view = detailList(panel);
+                ListView<?> view = getDetailList(panel);
                 assertEquals(LARGE_ROW_COUNT + 4, view.getItems().size());
                 assertTrue(view.lookupAll(".card_entry").size() < 50,
                         "Opening detail must instantiate visible rows instead of the complete history");
-                assertEquals(1, catalogue(panel).getItems().size());
-                assertTrue(catalogue(panel).lookupAll(".card_entry").isEmpty());
-                assertFalse(catalogue(panel).isVisible());
+                assertEquals(1, getCatalogue(panel).getItems().size());
+                assertTrue(getCatalogue(panel).lookupAll(".card_entry").isEmpty());
+                assertFalse(getCatalogue(panel).isVisible());
                 for (int index : new int[] {0, LARGE_ROW_COUNT / 2}) {
                     scrollTo(panel, view, index + 4);
-                    assertEntry(view, primary(1), formerSecondary(records.get(index)));
+                    assertEntry(view, getPrimaryText(1), getFormerSecondaryText(records.get(index)));
                     assertWrapping(view, width);
                 }
                 scrollToEnd(panel, view);
-                Node finalEntry = assertEntry(view, primary(1), formerSecondary(records.getLast()));
+                Node finalEntry = assertEntry(view, getPrimaryText(1), getFormerSecondaryText(records.getLast()));
                 assertEndVisible(view, finalEntry);
                 assertNoHorizontalScroll(view);
                 assertTrue(view.lookupAll(".card_entry").size() < 50);
@@ -188,16 +190,16 @@ public class LessonDetailListTest {
         runOnFxThread(() -> {
             var roster = new ArrayList<LessonDetailView.RosterStatus>();
             for (int index = 1; index <= LARGE_ROW_COUNT; index++) {
-                roster.add(rosterEntry(index, Optional.of(AttendanceStatus.PRESENT)));
+                roster.add(createRosterEntry(index, Optional.of(AttendanceStatus.PRESENT)));
             }
             Region panel = panel(detail(Optional.of(SELECTED_DATE), roster, List.of()), 210, 320);
-            ListView<?> view = detailList(panel);
+            ListView<?> view = getDetailList(panel);
             assertEquals(LARGE_ROW_COUNT + 4, view.getItems().size());
             assertTrue(view.lookupAll(".card_entry").size() < 50,
                     "Opening detail must instantiate visible rows instead of the complete current roster");
             for (int index : new int[] {1, LARGE_ROW_COUNT / 2, LARGE_ROW_COUNT}) {
                 scrollTo(panel, view, index + 1);
-                assertEntry(view, primary(index), "Attendance: present");
+                assertEntry(view, getPrimaryText(index), "Attendance: present");
                 assertWrapping(view, 210);
             }
             scrollToEnd(panel, view);
@@ -212,39 +214,39 @@ public class LessonDetailListTest {
         runOnFxThread(() -> {
             var records = new ArrayList<LessonDetailView.FormerAttendance>();
             for (int index = 0; index < 1000; index++) {
-                records.add(formerEntry(1, index));
+                records.add(createFormerEntry(1, index));
             }
             var detail = detail(Optional.empty(), List.of(), records);
             var results = FXCollections.observableArrayList((LessonView) detail);
             Region panel = new LessonListPanel(results).getRoot();
             layout(panel, 210, 320);
-            ListView<?> view = detailList(panel);
+            ListView<?> view = getDetailList(panel);
             assertTrue(view.isFocusTraversable());
             assertNotNull(view.getSelectionModel());
 
             pressKey(panel, view, KeyCode.END);
             assertEquals(view.getItems().size() - 1, view.getSelectionModel().getSelectedIndex());
-            Node finalEntry = assertEntry(view, primary(1), formerSecondary(records.getLast()));
+            Node finalEntry = assertEntry(view, getPrimaryText(1), getFormerSecondaryText(records.getLast()));
             assertEndVisible(view, finalEntry);
 
             pressKey(panel, view, KeyCode.HOME);
             assertEquals(0, view.getSelectionModel().getSelectedIndex());
             assertNotNull(view.lookup("#lessonCardPane"));
-            double topPosition = verticalScrollBar(view).getValue();
+            double topPosition = findVerticalScrollBar(view).getValue();
             pressKey(panel, view, KeyCode.PAGE_DOWN);
             pressKey(panel, view, KeyCode.PAGE_DOWN);
             assertTrue(view.getSelectionModel().getSelectedIndex() > 0,
                     "Two Page Down presses must advance the active row");
-            assertTrue(verticalScrollBar(view).getValue() > topPosition,
+            assertTrue(findVerticalScrollBar(view).getValue() > topPosition,
                     "Page Down must move the viewport beyond its initial position");
 
             int selectedBeforeDown = view.getSelectionModel().getSelectedIndex();
-            double pagePosition = verticalScrollBar(view).getValue();
+            double pagePosition = findVerticalScrollBar(view).getValue();
             for (int index = 0; index < 12; index++) {
                 pressKey(panel, view, KeyCode.DOWN);
             }
             assertEquals(selectedBeforeDown + 12, view.getSelectionModel().getSelectedIndex());
-            assertTrue(verticalScrollBar(view).getValue() > pagePosition,
+            assertTrue(findVerticalScrollBar(view).getValue() > pagePosition,
                     "Arrow navigation must keep advancing the viewport after moving beyond the visible rows");
             fireKey(view, KeyCode.END);
             fireKey(view, KeyCode.HOME);
@@ -257,7 +259,7 @@ public class LessonDetailListTest {
             assertTrue(summaryBounds.getMinY() >= viewportBounds.getMinY()
                             && summaryBounds.getMinY() <= viewportBounds.getMinY() + 2,
                     "Home before the next layout must keep the viewport at the summary");
-            assertSame(results, catalogue(panel).getItems());
+            assertSame(results, getCatalogue(panel).getItems());
             assertEquals(List.of(detail), results);
             assertSame(detail, results.getFirst());
         });
@@ -266,23 +268,23 @@ public class LessonDetailListTest {
     @Test
     public void panel_refreshAndCatalogueTransitions_replacesRowsAndPreservesListIdentity() throws Exception {
         runOnFxThread(() -> {
-            var originalRoster = List.of(rosterEntry(1, Optional.of(AttendanceStatus.ABSENT)));
-            var originalRecords = List.of(formerEntry(2, 0));
+            var originalRoster = List.of(createRosterEntry(1, Optional.of(AttendanceStatus.ABSENT)));
+            var originalRecords = List.of(createFormerEntry(2, 0));
             var original = detail(Optional.of(SELECTED_DATE), originalRoster, originalRecords);
             var results = FXCollections.observableArrayList((LessonView) original);
             Region panel = new LessonListPanel(results).getRoot();
             layout(panel, 420, 1200);
-            ListView<?> view = detailList(panel);
-            assertEntry(view, primary(1), "Attendance: absent");
-            assertEntry(view, primary(2), formerSecondary(originalRecords.getFirst()));
+            ListView<?> view = getDetailList(panel);
+            assertEntry(view, getPrimaryText(1), "Attendance: absent");
+            assertEntry(view, getPrimaryText(2), getFormerSecondaryText(originalRecords.getFirst()));
 
             var refreshed = detail(Optional.of(SELECTED_DATE),
-                    List.of(rosterEntry(3, Optional.empty())), List.of());
+                    List.of(createRosterEntry(3, Optional.empty())), List.of());
             results.setAll(refreshed);
             settleLayout(panel, view);
-            assertEntry(view, primary(3), "Attendance: unrecorded");
-            assertFalse(labelsInOrder(view, ".card_entry_primary").contains(primary(1)));
-            assertFalse(labelsInOrder(view, ".card_entry_primary").contains(primary(2)));
+            assertEntry(view, getPrimaryText(3), "Attendance: unrecorded");
+            assertFalse(labelsInOrder(view, ".card_entry_primary").contains(getPrimaryText(1)));
+            assertFalse(labelsInOrder(view, ".card_entry_primary").contains(getPrimaryText(2)));
             assertEquals(originalRoster, original.currentRoster());
             assertEquals(originalRecords, original.formerAttendance());
 
@@ -290,31 +292,31 @@ public class LessonDetailListTest {
             settleLayout(panel, view);
             assertFalse(view.isVisible());
             assertTrue(view.getItems().isEmpty());
-            assertTrue(catalogue(panel).isVisible());
-            assertSame(results, catalogue(panel).getItems());
-            assertEquals(5, catalogue(panel).getItems().size());
+            assertTrue(getCatalogue(panel).isVisible());
+            assertSame(results, getCatalogue(panel).getItems());
+            assertEquals(5, getCatalogue(panel).getItems().size());
             var catalogueResults = List.copyOf(results);
             pressKey(panel, view, KeyCode.END);
             assertTrue(view.getItems().isEmpty());
-            assertSame(results, catalogue(panel).getItems());
+            assertSame(results, getCatalogue(panel).getItems());
             assertEquals(catalogueResults, results);
             results.clear();
-            settleLayout(panel, catalogue(panel));
-            assertSame(results, catalogue(panel).getItems());
-            assertEquals("No lessons to display.", ((Label) catalogue(panel).getPlaceholder()).getText());
+            settleLayout(panel, getCatalogue(panel));
+            assertSame(results, getCatalogue(panel).getItems());
+            assertEquals("No lessons to display.", ((Label) getCatalogue(panel).getPlaceholder()).getText());
             pressKey(panel, view, KeyCode.END);
             assertTrue(view.getItems().isEmpty());
             assertTrue(results.isEmpty());
-            assertSame(results, catalogue(panel).getItems());
+            assertSame(results, getCatalogue(panel).getItems());
 
             results.setAll(original);
             settleLayout(panel, view);
             assertTrue(view.isVisible());
-            assertSame(results, catalogue(panel).getItems());
-            assertEquals(1, catalogue(panel).getItems().size());
-            assertEntry(view, primary(1), "Attendance: absent");
-            assertEntry(view, primary(2), formerSecondary(originalRecords.getFirst()));
-            assertFalse(labelsInOrder(view, ".card_entry_primary").contains(primary(3)));
+            assertSame(results, getCatalogue(panel).getItems());
+            assertEquals(1, getCatalogue(panel).getItems().size());
+            assertEntry(view, getPrimaryText(1), "Attendance: absent");
+            assertEntry(view, getPrimaryText(2), getFormerSecondaryText(originalRecords.getFirst()));
+            assertFalse(labelsInOrder(view, ".card_entry_primary").contains(getPrimaryText(3)));
         });
     }
 
@@ -322,7 +324,7 @@ public class LessonDetailListTest {
     public void detail_endThenWheelBeforeLayout_preservesNewerViewportPosition() throws Exception {
         runOnFxThread(() -> {
             Region panel = createLargeHistoryPanel();
-            ListView<?> view = detailList(panel);
+            ListView<?> view = getDetailList(panel);
             fireKey(view, KeyCode.END);
             Event.fireEvent(view.lookup(".virtual-flow"), new ScrollEvent(ScrollEvent.SCROLL,
                     20, 20, 20, 20, false, false, false, false, false, false,
@@ -336,9 +338,9 @@ public class LessonDetailListTest {
     public void detail_endThenScrollbarBeforeLayout_preservesNewerViewportPosition() throws Exception {
         runOnFxThread(() -> {
             Region panel = createLargeHistoryPanel();
-            ListView<?> view = detailList(panel);
+            ListView<?> view = getDetailList(panel);
             fireKey(view, KeyCode.END);
-            ScrollBar bar = verticalScrollBar(view);
+            ScrollBar bar = findVerticalScrollBar(view);
             Node thumb = bar.lookup(".thumb");
             Event.fireEvent(thumb, new MouseEvent(MouseEvent.MOUSE_PRESSED,
                     2, 2, 2, 2, MouseButton.PRIMARY, 1, false, false, false, false,
@@ -354,23 +356,24 @@ public class LessonDetailListTest {
     private static Region createLargeHistoryPanel() {
         var records = new ArrayList<LessonDetailView.FormerAttendance>();
         for (int index = 0; index < 1000; index++) {
-            records.add(formerEntry(1, index));
+            records.add(createFormerEntry(1, index));
         }
         return panel(detail(Optional.empty(), List.of(), records), 210, 320);
     }
 
     private static void assertInterruptedViewport(Region panel, ListView<?> view) {
-        double interruptedPosition = verticalScrollBar(view).getValue();
+        double interruptedPosition = findVerticalScrollBar(view).getValue();
         assertTrue(interruptedPosition > 0 && interruptedPosition < 1,
                 "New input must move the viewport away from End before the correction layout: "
                         + interruptedPosition);
         settleLayout(panel, view);
-        assertTrue(verticalScrollBar(view).getValue() < 1,
+        assertTrue(findVerticalScrollBar(view).getValue() < 1,
                 "The deferred End correction must not override the newer viewport position");
         assertEquals(view.getItems().size() - 1, view.getSelectionModel().getSelectedIndex(),
                 "Scrolling the viewport must not replace the keyboard-selected row");
         assertEquals(1004, view.getItems().size(), "Interruption must retain every history row");
-        assertFalse(labelsInOrder(view, ".card_entry_secondary").contains(formerSecondary(formerEntry(1, 999))),
+        assertFalse(labelsInOrder(view, ".card_entry_secondary")
+                .contains(getFormerSecondaryText(createFormerEntry(1, 999))),
                 "The viewport must stay away from the final retained record");
     }
 
@@ -380,26 +383,26 @@ public class LessonDetailListTest {
         return new LessonDetailView(lesson, "Mei Lim", date, roster, records);
     }
 
-    private static LessonDetailView.RosterStatus rosterEntry(int studentId, Optional<AttendanceStatus> status) {
-        return new LessonDetailView.RosterStatus(student(studentId), status);
+    private static LessonDetailView.RosterStatus createRosterEntry(int studentId, Optional<AttendanceStatus> status) {
+        return new LessonDetailView.RosterStatus(createStudent(studentId), status);
     }
 
-    private static LessonDetailView.FormerAttendance formerEntry(int studentId, int week) {
-        return new LessonDetailView.FormerAttendance(student(studentId), SELECTED_DATE.minusWeeks(week),
+    private static LessonDetailView.FormerAttendance createFormerEntry(int studentId, int week) {
+        return new LessonDetailView.FormerAttendance(createStudent(studentId), SELECTED_DATE.minusWeeks(week),
                 week % 2 == 0 ? AttendanceStatus.ABSENT : AttendanceStatus.PRESENT);
     }
 
-    private static Student student(int studentId) {
+    private static Student createStudent(int studentId) {
         return new Student(new PersonId("S" + studentId),
                 new ContactDetails(new Name("Alexandra Catherine Montgomery Wellington")),
                 new EducationLevel("S2"), new Phone("91234567"));
     }
 
-    private static String primary(int studentId) {
+    private static String getPrimaryText(int studentId) {
         return "S" + studentId + " · Alexandra Catherine Montgomery Wellington";
     }
 
-    private static String formerSecondary(LessonDetailView.FormerAttendance record) {
+    private static String getFormerSecondaryText(LessonDetailView.FormerAttendance record) {
         String status = record.status() == AttendanceStatus.ABSENT ? "absent" : "present";
         return "Date: " + record.date() + " · Status: " + status;
     }
@@ -414,7 +417,7 @@ public class LessonDetailListTest {
         Scene scene = new Scene(panel, width, height);
         scene.getStylesheets().add(MainApp.class.getResource("/view/DarkTheme.css").toExternalForm());
         panel.resize(width, height);
-        settleLayout(panel, detailList(panel));
+        settleLayout(panel, getDetailList(panel));
     }
 
     private static void settleLayout(Region panel, ListView<?> view) {
@@ -435,7 +438,7 @@ public class LessonDetailListTest {
                 false, false, false, false));
     }
 
-    private static ScrollBar verticalScrollBar(ListView<?> view) {
+    private static ScrollBar findVerticalScrollBar(ListView<?> view) {
         return view.lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
                 .filter(bar -> bar.getOrientation() == Orientation.VERTICAL && bar.isVisible())
                 .findFirst().orElseThrow();
@@ -501,7 +504,7 @@ public class LessonDetailListTest {
                 .anyMatch(bar -> bar.getOrientation() == Orientation.HORIZONTAL && bar.isVisible()));
     }
 
-    private static ListView<?> detailList(Region panel) {
+    private static ListView<?> getDetailList(Region panel) {
         return (ListView<?>) panel.lookup("#lessonDetailList");
     }
 
@@ -510,7 +513,7 @@ public class LessonDetailListTest {
                 .filter(cell -> cell.getIndex() == index).findFirst().orElseThrow();
     }
 
-    private static ListView<?> catalogue(Region panel) {
+    private static ListView<?> getCatalogue(Region panel) {
         return (ListView<?>) panel.lookup("#lessonListView");
     }
 }
