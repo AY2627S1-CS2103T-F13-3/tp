@@ -25,7 +25,7 @@ We are a team based in the [School of Computing, National University of Singapor
 
 <img src="images/gugrusaurus.png" width="200px" alt="Vincent Lin">
 
-[[github](https://github.com/gugrusaurus)]
+[[github](https://github.com/gugrusaurus)] [[PPP](team/gugrusaurus.html)]
 
 * Role: Developer, Deliverables and Deadlines, Documentation
 * Responsibilities:
@@ -65,7 +65,7 @@ We are a team based in the [School of Computing, National University of Singapor
 
 <img src="images/ys000009.png" width="200px" alt="Yang Shuo">
 
-[[github](https://github.com/ys000009)]
+[[github](https://github.com/ys000009)] [[PPP](team/ys000009.html)]
 
 * Role: Developer (Lessons, Enrolment and Attendance)
 * Responsibilities:

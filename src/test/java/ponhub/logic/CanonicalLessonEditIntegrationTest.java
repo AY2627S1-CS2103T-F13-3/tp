@@ -53,7 +53,7 @@ public class CanonicalLessonEditIntegrationTest {
         PonHubDataState before = session.getDataSnapshot();
         List<LessonId> ids = before.lessons().stream().map(Lesson::getId).toList();
 
-        assertEquals(editedWithAttendance(), session.execute("editlesson rm/r4 tp/00333333 tu/tutor   TWO "
+        assertEquals(getEditedWithAttendance(), session.execute("editlesson rm/r4 tp/00333333 tu/tutor   TWO "
                 + "s/Advanced Math et/1045 lid/l1 st/0915 d/mon").getFeedbackToUser());
 
         PonHubDataState after = session.getDataSnapshot();
@@ -81,7 +81,7 @@ public class CanonicalLessonEditIntegrationTest {
         session.execute("unenrol 1 lid/L1");
         PonHubDataState before = session.getDataSnapshot();
         session.execute("showlesson lid/L1 d/2026-10-05");
-        assertEquals(editedWithAttendance(), session.execute("editlesson lid/L1 s/Science").getFeedbackToUser());
+        assertEquals(getEditedWithAttendance(), session.execute("editlesson lid/L1 s/Science").getFeedbackToUser());
         LessonDetailView detail = (LessonDetailView) session.getDisplayedLessons().getFirst();
         assertEquals(new Subject("Science"), detail.getSubject());
         assertEquals(AttendanceStatus.PRESENT, detail.formerAttendance().getFirst().status());
@@ -125,7 +125,7 @@ public class CanonicalLessonEditIntegrationTest {
         session.execute("showlesson lid/L1 d/2026-10-05");
         var displayedDetail = session.getDisplayedLessons();
 
-        assertEquals(editedWithAttendance(), session.execute("editlesson lid/L1 st/0915 et/1045 "
+        assertEquals(getEditedWithAttendance(), session.execute("editlesson lid/L1 st/0915 et/1045 "
                 + "s/Advanced Math tu/Tutor Two tp/00333333 rm/R6").getFeedbackToUser());
         assertSame(displayedDetail, session.getDisplayedLessons());
         LessonDetailView detail = (LessonDetailView) displayedDetail.getFirst();
@@ -203,16 +203,19 @@ public class CanonicalLessonEditIntegrationTest {
         assertEquals(0, notifications.get());
 
         String[][] conflicts = {
-            {"tutor.json", "editlesson lid/L2 st/0930 et/1030 tu/Tutor One", "Tutor schedule overlap"},
-            {"room.json", "editlesson lid/L2 st/0930 et/1030 rm/R1", "Room schedule overlap"},
-            {"student.json", "editlesson lid/L2 st/0930 et/1030", "Student S1 schedule overlap"}
+            {"tutor.json", "editlesson lid/L2 st/0930 et/1030 tu/Tutor One",
+                "Tutor schedule overlap between L1 and L2."},
+            {"room.json", "editlesson lid/L2 st/0930 et/1030 rm/R1",
+                "Room schedule overlap between L1 and L2."},
+            {"student.json", "editlesson lid/L2 st/0930 et/1030",
+                "Student S1 schedule overlap between L1 and L2."}
         };
         for (String[] testCase : conflicts) {
             CanonicalPeopleSession session = baseline(testCase[0]);
             PonHubDataState unchanged = session.getDataSnapshot();
             byte[] unchangedBytes = Files.readAllBytes(session.getDataFilePath());
             CommandException failure = assertThrows(CommandException.class, () -> session.execute(testCase[1]));
-            assertTrue(failure.getMessage().contains(testCase[2]));
+            assertEquals(testCase[2], failure.getMessage());
             assertSame(unchanged, session.getDataSnapshot());
             assertArrayEquals(unchangedBytes, Files.readAllBytes(session.getDataFilePath()));
         }
@@ -317,7 +320,7 @@ public class CanonicalLessonEditIntegrationTest {
             assertEquals(1, saves.get());
 
             failSave.set(false);
-            assertEquals(editedWithAttendance(),
+            assertEquals(getEditedWithAttendance(),
                     session.execute("editlesson lid/L1 s/Changed Subject").getFeedbackToUser());
             assertEquals(2, saves.get());
             assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
@@ -337,7 +340,7 @@ public class CanonicalLessonEditIntegrationTest {
         assertEquals("{", Files.readString(rejectedPath));
     }
 
-    private static String editedWithAttendance() {
+    private static String getEditedWithAttendance() {
         return "Edited lesson: L1.\nWarning: retained attendance for L1 is displayed with current Lesson details. "
                 + "Dates and statuses are unchanged. Create a new Lesson for changes intended only "
                 + "for future occurrences.";

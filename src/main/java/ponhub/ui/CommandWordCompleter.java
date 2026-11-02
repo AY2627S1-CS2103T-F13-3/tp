@@ -25,11 +25,11 @@ final class CommandWordCompleter {
     Optional<Completion> complete(String draft, int caret) {
         if (matches.isEmpty()) {
             int start = 0;
-            while (start < draft.length() && Character.isWhitespace(draft.charAt(start))) {
+            while (start < draft.length() && isWordSeparator(draft.charAt(start))) {
                 start++;
             }
             int end = start;
-            while (end < draft.length() && !Character.isWhitespace(draft.charAt(end))) {
+            while (end < draft.length() && !isWordSeparator(draft.charAt(end))) {
                 end++;
             }
             if (caret <= start || caret > end) {
@@ -48,6 +48,10 @@ final class CommandWordCompleter {
         String word = matches.get(nextMatch);
         nextMatch = (nextMatch + 1) % matches.size();
         return Optional.of(new Completion(leadingText + word + arguments, leadingText.length() + word.length()));
+    }
+
+    private static boolean isWordSeparator(char character) {
+        return Character.isWhitespace(character) || Character.isSpaceChar(character);
     }
 
     void reset() {

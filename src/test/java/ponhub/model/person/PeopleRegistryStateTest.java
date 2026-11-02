@@ -18,17 +18,17 @@ public class PeopleRegistryStateTest {
 
     @Test
     public void constructor_mutableInputsAndReturnedCollections_cannotChangeSnapshot() {
-        Student student = student("S2", "Alex Tan");
-        Tutor tutor = new Tutor(new PersonId("T1"), details("Bob Tan"));
+        Student student = createStudent("S2", "Alex Tan");
+        Tutor tutor = new Tutor(new PersonId("T1"), createContactDetails("Bob Tan"));
         List<PersonRecord> rows = new ArrayList<>(List.of(student, tutor));
-        Map<PersonRole, Long> highWaterMarks = counters(5, 2, 3);
+        Map<PersonRole, Long> highWaterMarks = createCounters(5, 2, 3);
         PeopleRegistryState state = new PeopleRegistryState(rows, highWaterMarks);
 
         rows.clear();
         highWaterMarks.put(PersonRole.STUDENT, 99L);
 
         assertEquals(List.of(student, tutor), state.getPeople());
-        assertEquals(counters(5, 2, 3), state.getLastAllocatedSequences());
+        assertEquals(createCounters(5, 2, 3), state.getLastAllocatedSequences());
         assertThrows(UnsupportedOperationException.class, () -> state.getPeople().clear());
         assertThrows(UnsupportedOperationException.class, () ->
                 state.getLastAllocatedSequences().put(PersonRole.TUTOR, 99L));
@@ -36,42 +36,42 @@ public class PeopleRegistryStateTest {
 
     @Test
     public void constructor_invalidHighWaterMarks_rejectsIncompleteNegativeAndUnderstatedState() {
-        Student student = student("S2", "Alex Tan");
-        Map<PersonRole, Long> incomplete = counters(2, 0, 0);
+        Student student = createStudent("S2", "Alex Tan");
+        Map<PersonRole, Long> incomplete = createCounters(2, 0, 0);
         incomplete.remove(PersonRole.PARENT);
 
         assertThrows(IllegalArgumentException.class, () -> new PeopleRegistryState(List.of(student), incomplete));
         assertThrows(IllegalArgumentException.class, () ->
-                new PeopleRegistryState(List.of(), counters(0, -1, 0)));
+                new PeopleRegistryState(List.of(), createCounters(0, -1, 0)));
         assertThrows(IllegalArgumentException.class, () ->
-                new PeopleRegistryState(List.of(student), counters(1, 0, 0)));
+                new PeopleRegistryState(List.of(student), createCounters(1, 0, 0)));
 
-        Map<PersonRole, Long> nullCounter = counters(2, 0, 0);
+        Map<PersonRole, Long> nullCounter = createCounters(2, 0, 0);
         nullCounter.put(PersonRole.PARENT, null);
         assertThrows(NullPointerException.class, () -> new PeopleRegistryState(List.of(student), nullCounter));
     }
 
     @Test
     public void constructor_nullInputsAndRows_rejectsMissingRequiredState() {
-        assertThrows(NullPointerException.class, () -> new PeopleRegistryState(null, counters(0, 0, 0)));
+        assertThrows(NullPointerException.class, () -> new PeopleRegistryState(null, createCounters(0, 0, 0)));
         assertThrows(NullPointerException.class, () -> new PeopleRegistryState(List.of(), null));
         List<PersonRecord> missingRow = new ArrayList<>();
         missingRow.add(null);
-        assertThrows(NullPointerException.class, () -> new PeopleRegistryState(missingRow, counters(0, 0, 0)));
+        assertThrows(NullPointerException.class, () -> new PeopleRegistryState(missingRow, createCounters(0, 0, 0)));
     }
 
     @Test
     public void constructor_duplicateIdsOrBusinessKeys_rejectsAmbiguousRecords() {
-        Student first = student("S1", "Alex Tan");
-        Student sameIdDifferentContact = student("S1", "Bob Tan");
+        Student first = createStudent("S1", "Alex Tan");
+        Student sameIdDifferentContact = createStudent("S1", "Bob Tan");
         assertThrows(DuplicatePersonException.class, () -> new PeopleRegistryState(
-                List.of(first, sameIdDifferentContact), counters(1, 0, 0)));
+                List.of(first, sameIdDifferentContact), createCounters(1, 0, 0)));
 
         for (PersonRole role : PersonRole.values()) {
             PersonRecord original = record(role, 1, "Alex Tan");
             PersonRecord duplicate = record(role, 2, "Alex  TAN ");
             assertThrows(DuplicatePersonException.class, () -> new PeopleRegistryState(
-                    List.of(original, duplicate), counters(2, 2, 2)));
+                    List.of(original, duplicate), createCounters(2, 2, 2)));
         }
     }
 
@@ -80,7 +80,7 @@ public class PeopleRegistryStateTest {
         List<PersonRecord> records = List.of(record(PersonRole.PARENT, 1, "Alex Tan"),
                 record(PersonRole.STUDENT, 1, "Alex Tan"), record(PersonRole.TUTOR, 1, "Alex Tan"));
 
-        assertEquals(records, new PeopleRegistryState(records, counters(1, 1, 1)).getPeople());
+        assertEquals(records, new PeopleRegistryState(records, createCounters(1, 1, 1)).getPeople());
     }
 
     @Test
@@ -98,23 +98,23 @@ public class PeopleRegistryStateTest {
             };
 
             assertThrows(DuplicatePersonException.class, () -> new PeopleRegistryState(
-                    List.of(original, duplicate), counters(2, 2, 2)), role.toString());
+                    List.of(original, duplicate), createCounters(2, 2, 2)), role.toString());
             PersonRecord unaccented = record(role, 2, "Jose Santos");
             List<PersonRecord> distinctNames = List.of(original, unaccented);
-            assertEquals(distinctNames, new PeopleRegistryState(distinctNames, counters(2, 2, 2)).getPeople());
+            assertEquals(distinctNames, new PeopleRegistryState(distinctNames, createCounters(2, 2, 2)).getPeople());
         }
     }
 
     @Test
     public void constructor_studentOwnPhoneAndLevel_doNotDistinguishDuplicateIdentity() {
-        Student original = student("S1", "Alex Tan");
+        Student original = createStudent("S1", "Alex Tan");
         ContactDetails changedContacts = new ContactDetails(new Name("Alex Tan"),
                 Optional.of(new Phone("99912345")), Optional.empty(), Optional.empty());
         Student duplicate = new Student(new PersonId("S2"), changedContacts,
                 new EducationLevel("JC2"), original.getParentPhone());
 
         assertThrows(DuplicatePersonException.class, () -> new PeopleRegistryState(
-                List.of(original, duplicate), counters(2, 0, 0)));
+                List.of(original, duplicate), createCounters(2, 0, 0)));
     }
 
     @Test
@@ -124,14 +124,14 @@ public class PeopleRegistryStateTest {
             ContactDetails changedContacts = new ContactDetails(new Name("Alex Tan"),
                     Optional.of(new Phone("12345")), Optional.empty(), Optional.empty());
             PersonRecord differentPhone = switch (role) {
-                case STUDENT -> new Student(PersonId.of(role, 2), details("Alex Tan"),
+                case STUDENT -> new Student(PersonId.of(role, 2), createContactDetails("Alex Tan"),
                         new EducationLevel("S2"), new Phone("12345"));
                 case TUTOR -> new Tutor(PersonId.of(role, 2), changedContacts);
                 case PARENT -> new Parent(PersonId.of(role, 2), changedContacts);
             };
             List<PersonRecord> distinctPhones = List.of(original, differentPhone);
 
-            assertEquals(distinctPhones, new PeopleRegistryState(distinctPhones, counters(2, 2, 2)).getPeople());
+            assertEquals(distinctPhones, new PeopleRegistryState(distinctPhones, createCounters(2, 2, 2)).getPeople());
         }
     }
 
@@ -145,7 +145,7 @@ public class PeopleRegistryStateTest {
                 rows.add(record(role, sequence, "Load Test " + suffix));
             }
         }
-        Map<PersonRole, Long> allocationHistory = counters(2000, 3000, 4000);
+        Map<PersonRole, Long> allocationHistory = createCounters(2000, 3000, 4000);
         PeopleRegistryState state = new PeopleRegistryState(rows, allocationHistory);
         assertEquals(rows, state.getPeople());
         assertEquals(allocationHistory, state.getLastAllocatedSequences());
@@ -158,52 +158,54 @@ public class PeopleRegistryStateTest {
 
     @Test
     public void constructor_customMutableImplementation_rejectsUntrustedRecord() {
-        MutableRecord custom = new MutableRecord(new PersonId("S1"), details("Alex Tan"));
+        MutableRecord custom = new MutableRecord(new PersonId("S1"), createContactDetails("Alex Tan"));
 
         assertThrows(IllegalArgumentException.class, () ->
-                new PeopleRegistryState(List.of(custom), counters(1, 0, 0)));
+                new PeopleRegistryState(List.of(custom), createCounters(1, 0, 0)));
     }
 
     @Test
     public void equals_persistedRowsOrderAndCounters_comparesCompleteState() {
-        Student student = student("S1", "Alex Tan");
-        Tutor tutor = new Tutor(new PersonId("T1"), details("Bob Tan"));
-        PeopleRegistryState state = new PeopleRegistryState(List.of(student, tutor), counters(2, 2, 1));
+        Student student = createStudent("S1", "Alex Tan");
+        Tutor tutor = new Tutor(new PersonId("T1"), createContactDetails("Bob Tan"));
+        PeopleRegistryState state = new PeopleRegistryState(List.of(student, tutor), createCounters(2, 2, 1));
         PeopleRegistryState same = new PeopleRegistryState(
-                List.of(student("S1", "Alex Tan"), new Tutor(new PersonId("T1"), details("Bob Tan"))),
-                counters(2, 2, 1));
+                List.of(createStudent("S1", "Alex Tan"),
+                        new Tutor(new PersonId("T1"), createContactDetails("Bob Tan"))),
+                createCounters(2, 2, 1));
 
         assertEquals(state, state);
         assertEquals(state, same);
         assertEquals(same, state);
         assertEquals(state.hashCode(), same.hashCode());
-        assertNotEquals(state, new PeopleRegistryState(List.of(tutor, student), counters(2, 2, 1)));
-        assertNotEquals(state, new PeopleRegistryState(List.of(student, tutor), counters(3, 2, 1)));
+        assertNotEquals(state, new PeopleRegistryState(List.of(tutor, student), createCounters(2, 2, 1)));
+        assertNotEquals(state, new PeopleRegistryState(List.of(student, tutor), createCounters(3, 2, 1)));
         assertNotEquals(state, new PeopleRegistryState(
-                List.of(student("S1", "Carol Tan"), tutor), counters(2, 2, 1)));
+                List.of(createStudent("S1", "Carol Tan"), tutor), createCounters(2, 2, 1)));
         assertNotEquals(state, null);
         assertNotEquals(state, state.getPeople());
     }
 
-    private static Student student(String id, String name) {
-        return new Student(new PersonId(id), details(name), new EducationLevel("S2"), new Phone("00012345"));
+    private static Student createStudent(String id, String name) {
+        return new Student(new PersonId(id), createContactDetails(name), new EducationLevel("S2"),
+                new Phone("00012345"));
     }
 
     private static PersonRecord record(PersonRole role, long sequence, String name) {
         PersonId id = PersonId.of(role, sequence);
         return switch (role) {
-            case STUDENT -> student(id.toString(), name);
-            case TUTOR -> new Tutor(id, details(name));
-            case PARENT -> new Parent(id, details(name));
+            case STUDENT -> createStudent(id.toString(), name);
+            case TUTOR -> new Tutor(id, createContactDetails(name));
+            case PARENT -> new Parent(id, createContactDetails(name));
         };
     }
 
-    private static ContactDetails details(String name) {
+    private static ContactDetails createContactDetails(String name) {
         return new ContactDetails(new Name(name), Optional.of(new Phone("00012345")),
                 Optional.empty(), Optional.empty());
     }
 
-    private static Map<PersonRole, Long> counters(long student, long tutor, long parent) {
+    private static Map<PersonRole, Long> createCounters(long student, long tutor, long parent) {
         Map<PersonRole, Long> highWaterMarks = new EnumMap<>(PersonRole.class);
         highWaterMarks.put(PersonRole.STUDENT, student);
         highWaterMarks.put(PersonRole.TUTOR, tutor);

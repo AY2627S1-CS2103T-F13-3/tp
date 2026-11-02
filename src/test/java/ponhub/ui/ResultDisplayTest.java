@@ -174,7 +174,7 @@ public class ResultDisplayTest {
         runOnFxThread(fixture::layout);
         runOnFxThread(() -> {
             fixture.layout();
-            ScrollBar bar = fixture.verticalScrollBar();
+            ScrollBar bar = fixture.findVerticalScrollBar();
             assertTrue(bar.isVisible(), "The fixture must have overflowing feedback.");
             fixture.area.positionCaret(LONG_FEEDBACK.length());
             bar.setValue(bar.getMax());
@@ -197,7 +197,7 @@ public class ResultDisplayTest {
             assertEquals(0, fixture.area.getCaretPosition());
             assertEquals(0, fixture.area.getScrollTop(), 0.01,
                     "Deferred layout must keep the new feedback at the top.");
-            ScrollBar bar = fixture.verticalScrollBar();
+            ScrollBar bar = fixture.findVerticalScrollBar();
             assertTrue(bar.isVisible(), "The new feedback must still overflow the viewport.");
             assertEquals(bar.getMin(), bar.getValue(), 0.01);
         });
@@ -210,7 +210,7 @@ public class ResultDisplayTest {
             area.layout();
         }
 
-        private ScrollBar verticalScrollBar() {
+        private ScrollBar findVerticalScrollBar() {
             return area.lookupAll(".scroll-bar").stream()
                     .filter(ScrollBar.class::isInstance)
                     .map(ScrollBar.class::cast)

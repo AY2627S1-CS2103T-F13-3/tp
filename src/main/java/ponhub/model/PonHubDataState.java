@@ -37,6 +37,7 @@ import ponhub.model.person.PersonRole;
  */
 public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, List<Attendance> attendance,
         long lastAllocatedLessonSequence) {
+    private static final int MAX_ATTENDANCE_YEAR = 9999;
 
     /**
      * Copies incoming collections and validates identities, references, and global schedules before publishing state.
@@ -66,7 +67,7 @@ public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, 
             requireRole(peopleById, record.getStudentId(), PersonRole.STUDENT);
             Lesson lesson = lessonsById.get(record.getLessonId());
             checkArgument(lesson != null, "Attendance refers to a missing lesson.");
-            checkArgument(record.getDate().getYear() >= 1 && record.getDate().getYear() <= 9999,
+            checkArgument(record.getDate().getYear() >= 1 && record.getDate().getYear() <= MAX_ATTENDANCE_YEAR,
                     "Attendance date must have a year between 0001 and 9999.");
             checkArgument(lesson.getTimeSlot().getDay().matches(record.getDate()),
                     "Attendance date does not match lesson weekday.");
@@ -127,18 +128,35 @@ public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, 
      */
     private static void rejectOverlap(Lesson earlier, Lesson lesson) {
         if (lesson.getTutorId().equals(earlier.getTutorId())) {
-            throw new IllegalArgumentException("Tutor schedule overlap between " + earlier.getId()
-                    + " and " + lesson.getId() + ".");
+            throw new ScheduleClashException("Tutor", earlier.getId(), lesson.getId());
         }
         if (lesson.getRoom().equals(earlier.getRoom())) {
-            throw new IllegalArgumentException("Room schedule overlap between " + earlier.getId()
-                    + " and " + lesson.getId() + ".");
+            throw new ScheduleClashException("Room", earlier.getId(), lesson.getId());
         }
         for (PersonId student : lesson.getEnrolledStudentIds()) {
             if (earlier.hasEnrolledStudent(student)) {
-                throw new IllegalArgumentException("Student " + student + " schedule overlap between "
-                        + earlier.getId() + " and " + lesson.getId() + ".");
+                throw new ScheduleClashException("Student " + student, earlier.getId(), lesson.getId());
             }
+        }
+    }
+
+    /**
+     * Retains the conflicting resource and existing lesson for creation-specific feedback.
+     * Other validation paths keep the normal diagnostic naming both lessons.
+     */
+    static final class ScheduleClashException extends IllegalArgumentException {
+        private final String creationMessage;
+
+        private ScheduleClashException(String resource, LessonId earlierId, LessonId laterId) {
+            super(resource + " schedule overlap between " + earlierId + " and " + laterId + ".");
+            creationMessage = resource + " schedule overlap with " + earlierId + ".";
+        }
+
+        /**
+         * Returns feedback for a new lesson, excluding its uncommitted candidate ID.
+         */
+        String getCreationMessage() {
+            return creationMessage;
         }
     }
 

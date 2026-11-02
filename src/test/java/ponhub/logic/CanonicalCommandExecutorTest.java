@@ -78,7 +78,7 @@ public class CanonicalCommandExecutorTest {
         assertEquals(0, notifications[0]);
     }
 
-    private PonHubDataState fixture(boolean withLesson) {
+    private PonHubDataState fixture(boolean hasLesson) {
         Student student = new Student(new PersonId("S7"), new ContactDetails(new Name("Student")),
                 new EducationLevel("P1"), new Phone("91234567"));
         Tutor tutor = new Tutor(new PersonId("T2"), new ContactDetails(new Name("Tutor"),
@@ -90,8 +90,8 @@ public class CanonicalCommandExecutorTest {
                 Set.of(student.getId()));
         Attendance attendance = new Attendance(student.getId(), lesson.getId(), LocalDate.of(2026, 10, 5),
                 AttendanceStatus.PRESENT);
-        return new PonHubDataState(people, withLesson ? List.of(lesson) : List.of(),
-                withLesson ? List.of(attendance) : List.of(), 3);
+        return new PonHubDataState(people, hasLesson ? List.of(lesson) : List.of(),
+                hasLesson ? List.of(attendance) : List.of(), 3);
     }
 
     @Test

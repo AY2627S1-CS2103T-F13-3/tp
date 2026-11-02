@@ -9,7 +9,7 @@ title: PonHub
 PonHub helps tuition centre administrators manage students, tutors, parents, shared recurring lessons and
 dated attendance through a keyboard-focused desktop interface.
 
-![Student lessons active beside a filtered Student list, with the bottom command box](images/LessonBoardNavigation.png)
+![Student lessons active beside a filtered Tutor list, with the bottom command box](images/LessonBoardNavigation.png)
 
 *[Screenshot sources and credits](images/README.html).*
 

@@ -45,7 +45,7 @@ public class PersonAdditionCandidateTest {
 
     @Test
     public void prepare_allRolesAndOptionalContacts_returnsAppendedCandidateWithoutChangingSource() throws Exception {
-        PonHubData liveData = new PonHubData(sourceWithHistory());
+        PonHubData liveData = new PonHubData(createSourceWithHistory());
         PonHubDataState source = liveData.exportState();
         for (PersonRole role : PersonRole.values()) {
             for (String optionalContacts : new String[]{"", " e/New@example.com a/Block 2"}) {
@@ -76,7 +76,7 @@ public class PersonAdditionCandidateTest {
 
     @Test
     public void prepare_studentsWithSharedParentPhone_doesNotRequireParentRecord() throws Exception {
-        PonHubDataState source = sourceWithHistory();
+        PonHubDataState source = createSourceWithHistory();
         assertTrue(source.people().getPeople().stream().noneMatch(person -> person.getRole() == PersonRole.PARENT));
         PersonAdditionCandidate candidate = PersonAdditionCandidate.prepare(source,
                 parser.parse("r/student n/Bob Tan l/P2 pp/00123456"));
@@ -91,7 +91,7 @@ public class PersonAdditionCandidateTest {
 
     @Test
     public void prepare_nearDuplicateNamesAndDifferentIdentityPhones_remainDistinct() throws Exception {
-        PonHubDataState source = sourceWithHistory();
+        PonHubDataState source = createSourceWithHistory();
         for (String arguments : new String[]{"r/student n/Alice Tang l/P1 pp/00123456",
             "r/student n/Alice Tan l/P1 pp/00123457", "r/tutor n/Mei Lim p/00987655"}) {
             PersonAdditionCandidate candidate = PersonAdditionCandidate.prepare(source, parser.parse(arguments));
@@ -102,8 +102,8 @@ public class PersonAdditionCandidateTest {
 
     @Test
     public void prepare_normalizedDuplicatesAndOptionalChanges_preservesSourceAndCounters() throws Exception {
-        PeopleRegistry people = new PeopleRegistry(sourceWithHistory().people());
-        people.addParent(contacts("Pat Tan", "00098765"));
+        PeopleRegistry people = new PeopleRegistry(createSourceWithHistory().people());
+        people.addParent(createContacts("Pat Tan", "00098765"));
         PonHubDataState source = new PonHubDataState(people.exportState(), List.of(), List.of(), 7);
         PonHubData liveData = new PonHubData(source);
         for (String arguments : new String[]{"r/student n/ALICE  tan l/S2 pp/00123456 p/00345678",
@@ -126,7 +126,7 @@ public class PersonAdditionCandidateTest {
         PonHubDataState source = new PonHubDataState(new PeopleRegistryState(List.of(), counters),
                 List.of(), List.of(), 30);
         for (PersonRole role : PersonRole.values()) {
-            PersonAdditionCandidate candidate = PersonAdditionCandidate.prepare(source, inputFor(role));
+            PersonAdditionCandidate candidate = PersonAdditionCandidate.prepare(source, parseInputFor(role));
             assertEquals(PersonId.of(role, counters.get(role) + 1), candidate.getAddedPerson().getId());
             for (PersonRole counterRole : PersonRole.values()) {
                 assertEquals(counters.get(counterRole) + (counterRole == role ? 1 : 0),
@@ -145,21 +145,21 @@ public class PersonAdditionCandidateTest {
             }
             PonHubDataState source = new PonHubDataState(new PeopleRegistryState(List.of(), counters),
                     List.of(), List.of(), Long.MAX_VALUE);
-            PersonAdditionInput input = inputFor(role);
+            PersonAdditionInput input = parseInputFor(role);
             PersonAdditionCandidate last = PersonAdditionCandidate.prepare(source, input);
             assertEquals(PersonId.of(role, Long.MAX_VALUE), last.getAddedPerson().getId());
             assertThrows(PersonIdExhaustedException.class, () ->
                     PersonAdditionCandidate.prepare(last.getCandidateState(), input));
             PersonRole otherRole = role == PersonRole.STUDENT ? PersonRole.TUTOR : PersonRole.STUDENT;
             assertEquals(PersonId.of(otherRole, 1), PersonAdditionCandidate.prepare(last.getCandidateState(),
-                    inputFor(otherRole)).getAddedPerson().getId());
+                    parseInputFor(otherRole)).getAddedPerson().getId());
             assertEquals(counters, source.people().getLastAllocatedSequences());
         }
     }
 
     @Test
     public void prepare_retainedRelationshipsAndSnapshots_remainImmutableAndIndependent() throws Exception {
-        PonHubData liveData = new PonHubData(sourceWithHistory());
+        PonHubData liveData = new PonHubData(createSourceWithHistory());
         PonHubDataState source = liveData.exportState();
         PersonAdditionInput input = parser.parse("r/student n/Bob Tan l/P2 pp/00123456");
         PersonAdditionCandidate candidate = PersonAdditionCandidate.prepare(source, input);
@@ -185,22 +185,22 @@ public class PersonAdditionCandidateTest {
 
     @Test
     public void prepare_nullSourceOrInput_rejectsWithoutChangingLiveData() throws Exception {
-        PonHubData liveData = new PonHubData(sourceWithHistory());
+        PonHubData liveData = new PonHubData(createSourceWithHistory());
         PonHubDataState source = liveData.exportState();
-        PersonAdditionInput input = inputFor(PersonRole.STUDENT);
+        PersonAdditionInput input = parseInputFor(PersonRole.STUDENT);
         assertThrows(NullPointerException.class, () -> PersonAdditionCandidate.prepare(null, input));
         assertThrows(NullPointerException.class, () -> PersonAdditionCandidate.prepare(source, null));
         assertEquals(source, liveData.exportState());
     }
 
-    private PersonAdditionInput inputFor(PersonRole role) throws Exception {
+    private PersonAdditionInput parseInputFor(PersonRole role) throws Exception {
         return parser.parse(role == PersonRole.STUDENT ? "r/student n/New Person l/P1 pp/00012345"
                 : "r/" + role.getValue() + " n/New Person p/00012345");
     }
 
-    private static PonHubDataState sourceWithHistory() {
+    private static PonHubDataState createSourceWithHistory() {
         PeopleRegistry people = new PeopleRegistry();
-        var tutor = people.addTutor(contacts("Mei Lim", "00987654"));
+        var tutor = people.addTutor(createContacts("Mei Lim", "00987654"));
         var student = people.addStudent(new ContactDetails(new Name("Alice Tan")),
                 new EducationLevel("P1"), new Phone("00123456"));
         Lesson lesson = new Lesson(new LessonId("L3"), tutor.getId(), new LessonTimeSlot(LessonDay.MONDAY,
@@ -214,7 +214,7 @@ public class PersonAdditionCandidateTest {
         return new PonHubDataState(people.exportState(), List.of(lesson, enrolledLesson), List.of(retained), 7);
     }
 
-    private static ContactDetails contacts(String name, String phone) {
+    private static ContactDetails createContacts(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.of(new Phone(phone)), Optional.empty(), Optional.empty());
     }
 }

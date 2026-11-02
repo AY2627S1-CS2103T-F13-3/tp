@@ -168,15 +168,15 @@ public class CanonicalLessonCreationBoundaryTest {
     }
 
     private static PonHubDataState state(long counter) {
-        Tutor first = new Tutor(FIRST_TUTOR, contacts("Mei Lim", "00123456"));
-        Tutor second = new Tutor(SECOND_TUTOR, contacts("MEI LIM", "00987654"));
-        Tutor other = new Tutor(new PersonId("T9"), contacts("Another Tutor", "00011122"));
+        Tutor first = new Tutor(FIRST_TUTOR, createContacts("Mei Lim", "00123456"));
+        Tutor second = new Tutor(SECOND_TUTOR, createContacts("MEI LIM", "00987654"));
+        Tutor other = new Tutor(new PersonId("T9"), createContacts("Another Tutor", "00011122"));
         PeopleRegistryState people = new PeopleRegistryState(List.of(first, second, other),
                 Map.of(PersonRole.STUDENT, 0L, PersonRole.TUTOR, 9L, PersonRole.PARENT, 0L));
         return new PonHubDataState(people, List.of(), List.of(), counter);
     }
 
-    private static ContactDetails contacts(String name, String phone) {
+    private static ContactDetails createContacts(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.of(new Phone(phone)), Optional.empty(), Optional.empty());
     }
 

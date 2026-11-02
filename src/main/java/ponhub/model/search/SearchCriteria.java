@@ -25,30 +25,30 @@ public final class SearchCriteria {
     public SearchCriteria(SearchCategory category, Map<SearchField, String> filters) {
         this.category = requireNonNull(category);
         requireNonNull(filters);
-        Map<SearchField, String> normalized = new EnumMap<>(SearchField.class);
+        Map<SearchField, String> normalizedFilters = new EnumMap<>(SearchField.class);
         filters.forEach((field, value) -> {
             requireNonNull(field);
             if (!field.isSupportedBy(category)) {
                 throw new IllegalArgumentException("Search prefix '" + field.getPrefix()
                         + "' is not supported for " + category + ".");
             }
-            normalized.put(field, field.normalizeValue(value));
+            normalizedFilters.put(field, field.normalizeValue(value));
         });
-        String start = normalized.get(SearchField.START_TIME);
-        String end = normalized.get(SearchField.END_TIME);
+        String start = normalizedFilters.get(SearchField.START_TIME);
+        String end = normalizedFilters.get(SearchField.END_TIME);
         // Validated four-digit HHMM values have the same lexicographic and chronological order.
         if (start != null && end != null && end.compareTo(start) <= 0) {
             throw new IllegalArgumentException("Search end time must be later than start time on the same day.");
         }
-        String from = normalized.get(SearchField.FROM_TIME);
-        String to = normalized.get(SearchField.TO_TIME);
+        String from = normalizedFilters.get(SearchField.FROM_TIME);
+        String to = normalizedFilters.get(SearchField.TO_TIME);
         if ((from == null) != (to == null)) {
             throw new IllegalArgumentException("Lesson time-window search requires both from/ and to/.");
         }
         if (from != null && to.compareTo(from) <= 0) {
             throw new IllegalArgumentException("Search to/ time must be later than from/ on the same day.");
         }
-        this.filters = Collections.unmodifiableMap(normalized);
+        this.filters = Collections.unmodifiableMap(normalizedFilters);
     }
 
     public SearchCategory getCategory() {

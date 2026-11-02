@@ -58,8 +58,8 @@ public class HistoryListPanelTest {
                         layout(panel);
                         assertSame(history, list.getItems());
                         assertEquals(history.getFirst(), list.getSelectionModel().getSelectedItem());
-                        assertTrue(scrollBar(list, Orientation.VERTICAL).isVisible());
-                        assertFalse(scrollBar(list, Orientation.HORIZONTAL).isVisible(),
+                        assertTrue(findScrollBar(list, Orientation.VERTICAL).isVisible());
+                        assertFalse(findScrollBar(list, Orientation.HORIZONTAL).isVisible(),
                                 "History must wrap without horizontal scrolling at width " + width
                                         + ", scale " + scale);
                         assertWrappedCard(list, history.getFirst());
@@ -95,7 +95,7 @@ public class HistoryListPanelTest {
         }
     }
 
-    private static ScrollBar scrollBar(ListView<?> list, Orientation orientation) {
+    private static ScrollBar findScrollBar(ListView<?> list, Orientation orientation) {
         return list.lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
                 .filter(bar -> bar.getOrientation() == orientation).findFirst().orElseThrow();
     }

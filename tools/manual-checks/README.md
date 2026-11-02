@@ -1,8 +1,12 @@
-# Optional packaged UI checks
+# Optional manual checks
 
-These standalone JavaFX agents exercise a supplied PonHub JAR in disposable folders.
-They supplement the [Developer Guide's manual procedures](../../docs/DeveloperGuide.md#appendix-instructions-for-manual-testing).
-They are optional diagnostics, not additional release gates or a record of acceptance.
+Use the standalone JavaFX agents below to exercise a supplied PonHub JAR in disposable folders.
+For the website, use the [command-list popover browser check](command-list-popovers/README.md).
+The [Developer Guide](../../docs/DeveloperGuide.md#appendix-instructions-for-manual-testing) covers
+packaged application workflows and physical display checks.
+
+## Packaged UI agents
+
 Ernest Chua created the agents and Windows launchers with OpenAI Codex assistance.
 
 Use a graphical Windows session with Java 25 available as `java.exe`, `javac.exe` and
@@ -41,6 +45,5 @@ with `java -javaagent:AGENT_JAR=ABSOLUTE_OUTPUT_DIRECTORY -jar CANDIDATE_JAR`.
 Compile each agent separately; several intentionally share the `Round1Agent` class name.
 
 Inspect reported failures, screenshots and runtime details before drawing conclusions.
-Programmatic resizing, a Robot action or a successful assertion does not establish human
-acceptance or another platform/display combination. Store necessary results in the relevant
-issue description/comments; do not commit generated logs, screenshots or result files.
+Store necessary results in the relevant issue description/comments; do not commit generated logs,
+screenshots or result files.

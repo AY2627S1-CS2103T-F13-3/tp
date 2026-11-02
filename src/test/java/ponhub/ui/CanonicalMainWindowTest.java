@@ -79,8 +79,8 @@ public class CanonicalMainWindowTest {
                 fixture.enter("add r/student n/Alex Tan l/P1 pp/91234567");
                 fixture.enter("add r/student n/Jamie Tan l/P1 pp/91234568");
                 fixture.enter("search c/student n/ALEX");
-                Label heading = (Label) fixture.root().lookup("#peopleContext");
-                Label reset = (Label) fixture.root().lookup("#filterResetHint");
+                Label heading = (Label) fixture.getRoot().lookup("#peopleContext");
+                Label reset = (Label) fixture.getRoot().lookup("#filterResetHint");
                 assertEquals("Student search: c/student n/alex", heading.getText());
                 assertTrue(reset.isVisible());
                 assertEquals("Use list to show all people.", reset.getText());
@@ -88,13 +88,14 @@ public class CanonicalMainWindowTest {
                 fixture.enter("help add");
                 fixture.enter("lessons");
                 assertEquals("Student search: c/student n/alex", heading.getText());
-                assertEquals("Alex Tan", fixture.people().getItems().getFirst().getContactDetails().getName().fullName);
+                assertEquals("Alex Tan",
+                        fixture.getPeople().getItems().getFirst().getContactDetails().getName().fullName);
                 fixture.enter("search c/student n/JAMIE");
                 assertEquals("Student search: c/student n/jamie", heading.getText());
-                assertEquals(1, fixture.people().getItems().size());
+                assertEquals(1, fixture.getPeople().getItems().size());
                 fixture.enter("search c/student n/Nobody");
                 assertEquals("Student search: c/student n/nobody", heading.getText());
-                assertTrue(fixture.people().getItems().isEmpty());
+                assertTrue(fixture.getPeople().getItems().isEmpty());
                 fixture.enter("search c/student n/");
                 assertEquals("Student search: c/student n/nobody", heading.getText());
                 fixture.enter("list r/student");
@@ -117,11 +118,11 @@ public class CanonicalMainWindowTest {
                         + " l/JC2 pp/91234567 e/alexandra.montgomery.wellington@example.com"
                         + " a/Block 123 Clementi Avenue Four Tuition Centre West Wing Level Three");
                 for (double width : new double[] {450, 1180}) {
-                    fixture.root().resize(width, 330);
+                    fixture.getRoot().resize(width, 330);
                     for (int pass = 0; pass < 3; pass++) {
-                        fixture.root().layout();
+                        fixture.getRoot().layout();
                     }
-                    ScrollPane pane = (ScrollPane) fixture.root().lookup("#peopleContextPane");
+                    ScrollPane pane = (ScrollPane) fixture.getRoot().lookup("#peopleContextPane");
                     ScrollBar bar = (ScrollBar) pane.lookupAll(".scroll-bar").stream()
                             .filter(node -> ((ScrollBar) node).getOrientation() == Orientation.VERTICAL)
                             .findFirst().orElseThrow();
@@ -133,17 +134,17 @@ public class CanonicalMainWindowTest {
                     if (overflows) {
                         assertTrue(bar.lookup(".thumb").isVisible(), "The compact track must paint its thumb.");
                     }
-                    Label hint = (Label) fixture.root().lookup("#filterResetHint");
+                    Label hint = (Label) fixture.getRoot().lookup("#filterResetHint");
                     assertEquals(overflows, hint.getText().contains("Tab"));
                     assertTrue(hint.getHeight() >= hint.prefHeight(hint.getWidth()),
                             "The complete wrapped keyboard hint must fit its allocated height.");
-                    assertTrue(fixture.people().getHeight() > 0);
+                    assertTrue(fixture.getPeople().getHeight() > 0);
                 }
                 fixture.enter("list");
                 for (int pass = 0; pass < 3; pass++) {
-                    fixture.root().layout();
+                    fixture.getRoot().layout();
                 }
-                ScrollPane pane = (ScrollPane) fixture.root().lookup("#peopleContextPane");
+                ScrollPane pane = (ScrollPane) fixture.getRoot().lookup("#peopleContextPane");
                 assertFalse(pane.isFocusTraversable());
                 assertTrue(pane.getHeight() <= 64);
                 assertFalse(Files.exists(fixture.dataPath()));
@@ -157,14 +158,14 @@ public class CanonicalMainWindowTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow(); LogCapture capture = new LogCapture()) {
                 fixture.enter("add r/tutor n/Privacy Canary p/99887766 e/privacy378@example.com a/378 Canary Avenue");
-                assertEquals("New tutor added: Privacy Canary (T1).", fixture.feedback());
+                assertEquals("New tutor added: Privacy Canary (T1).", fixture.getFeedback());
                 fixture.enter("delete 1");
                 fixture.enter("delete confirm");
-                assertEquals("Deleted tutor: Privacy Canary (T1).", fixture.feedback());
+                assertEquals("Deleted tutor: Privacy Canary (T1).", fixture.getFeedback());
                 String rejected = "privacy378@example.com a/378 Canary Avenue";
                 fixture.enter(rejected);
                 assertEquals(rejected, fixture.input().getText());
-                assertTrue(fixture.feedback().contains("privacy378@example.com"));
+                assertTrue(fixture.getFeedback().contains("privacy378@example.com"));
                 assertEquals(List.of("Command type=add outcome=success", "Command type=delete outcome=success",
                         "Command type=delete outcome=success",
                         "Command type=unknown outcome=parse_rejected cause=ParseException"),
@@ -219,24 +220,24 @@ public class CanonicalMainWindowTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("search c/student n/Jamie s/Math d/Mon");
-                fixture.people().getSelectionModel().select(0);
-                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.getPeople().getSelectionModel().select(0);
+                var selected = fixture.getPeople().getSelectionModel().getSelectedItem();
                 byte[] before = Files.readAllBytes(path);
                 fixture.enter("history 1 lid/L10");
                 assertTrue(fixture.history().getParent().isVisible());
                 assertFalse(fixture.lessons().getParent().isVisible());
-                Label context = (Label) fixture.root().lookup("#historyContext");
-                Label summary = (Label) fixture.root().lookup("#historySummary");
+                Label context = (Label) fixture.getRoot().lookup("#historyContext");
+                Label summary = (Label) fixture.getRoot().lookup("#historySummary");
                 assertEquals("Student S2 · attendance history · L10", context.getText());
                 assertEquals("Showing 1 attendance record(s).", summary.getText());
                 assertEquals(AttendanceHistoryEntry.Status.PRESENT, fixture.history().getItems().get(0).getStatus());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertArrayEquals(before, Files.readAllBytes(path));
-                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                assertTrue(fixture.getRoot().lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("Student S2 · Lesson L10")));
                 fixture.enter("search c/student n/Jamie d/Invalid");
                 assertTrue(fixture.history().getParent().isVisible());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 fixture.enter("search c/parent");
                 fixture.enter("history 1");
                 assertTrue(fixture.history().getParent().isVisible());
@@ -245,18 +246,18 @@ public class CanonicalMainWindowTest {
                 assertTrue(fixture.history().getParent().isVisible());
                 assertEquals(AttendanceHistoryEntry.Status.PRESENT, fixture.history().getItems().get(0).getStatus());
                 fixture.enter("search c/student n/Jamie");
-                fixture.people().getSelectionModel().select(0);
+                fixture.getPeople().getSelectionModel().select(0);
                 fixture.enter("unenrol 1 lid/L10");
                 assertFalse(fixture.history().getItems().get(0).isCurrentlyEnrolled());
                 fixture.enter("mark 1 lid/L10 d/2026-10-05 s/absent");
                 assertEquals(AttendanceHistoryEntry.Status.ABSENT, fixture.history().getItems().get(0).getStatus());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 captureRegion(fixture, "PONHUB_CAPTURE_ATTENDANCE_HISTORY", 1480, 1200, "jpg",
                         (Region) fixture.history().getParent().getParent().getParent(), 230);
                 fixture.enter("showlesson lid/L99");
                 assertTrue(fixture.history().getParent().isVisible());
                 fixture.enter("showlesson lid/L10 d/2026-10-05");
-                ListView<?> detail = (ListView<?>) fixture.root().lookup("#lessonDetailList");
+                ListView<?> detail = (ListView<?>) fixture.getRoot().lookup("#lessonDetailList");
                 assertFalse(fixture.history().getParent().isVisible());
                 assertTrue(fixture.lessons().getParent().isVisible());
                 assertTrue(detail.isVisible());
@@ -268,7 +269,7 @@ public class CanonicalMainWindowTest {
                 fixture.enter("unmark 1 lid/L10 d/2026-10-05");
                 assertTrue(fixture.history().getItems().isEmpty());
                 assertEquals("Showing 0 attendance record(s).", summary.getText());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 fixture.enter("lessons");
                 assertFalse(fixture.history().getParent().isVisible());
                 assertTrue(fixture.lessons().getParent().isVisible());
@@ -284,15 +285,15 @@ public class CanonicalMainWindowTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("search c/student");
-                fixture.people().getSelectionModel().select(1);
-                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.getPeople().getSelectionModel().select(1);
+                var selected = fixture.getPeople().getSelectionModel().getSelectedItem();
                 fixture.enter("history 2 lid/L3");
                 assertTrue(fixture.history().getParent().isVisible());
                 fixture.enter("deletelesson lid/L3");
-                assertEquals("Deleted lesson: L3.", fixture.feedback());
+                assertEquals("Deleted lesson: L3.", fixture.getFeedback());
                 assertFalse(fixture.history().getParent().isVisible());
                 assertTrue(fixture.lessons().getParent().isVisible());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertTrue(fixture.lessons().getItems().stream()
                         .noneMatch(lesson -> lesson.getLessonId().equals(LessonQueryTestData.EMPTY_LESSON)));
                 fixture.enter("history 3");
@@ -301,11 +302,11 @@ public class CanonicalMainWindowTest {
                 fixture.enter("delete confirm");
                 assertFalse(fixture.history().getParent().isVisible());
                 assertTrue(fixture.lessons().getParent().isVisible());
-                assertEquals("Attendance history", ((Label) fixture.root().lookup("#historyContext")).getText());
+                assertEquals("Attendance history", ((Label) fixture.getRoot().lookup("#historyContext")).getText());
                 fixture.enter("history 2 lid/L10");
                 fixture.enter("delete 2");
                 assertTrue(fixture.history().getParent().isVisible());
-                Label historyContext = (Label) fixture.root().lookup("#historyContext");
+                Label historyContext = (Label) fixture.getRoot().lookup("#historyContext");
                 assertEquals("Student S2 · attendance history · L10", historyContext.getText());
             }
             return null;
@@ -320,11 +321,11 @@ public class CanonicalMainWindowTest {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("search c/tutor sn/Alex d/Mon s/Math");
                 assertCard(fixture, "Tutor · ID: T1", "Mei Lim", 1);
-                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                assertTrue(fixture.getRoot().lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("Student: Alex Tan (S1) · Lesson: L10")));
                 fixture.enter("search c/tutor d/Mon s/Science");
                 assertCard(fixture, "Tutor · ID: T2", "Mei Lim", 1);
-                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                assertTrue(fixture.getRoot().lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().startsWith("Lesson: L3")));
             }
             return null;
@@ -339,12 +340,12 @@ public class CanonicalMainWindowTest {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("search c/parent n/Pat sn/Alex d/Mon s/Math");
                 assertCard(fixture, "Parent · ID: P1", "Pat Tan", 1);
-                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                assertTrue(fixture.getRoot().lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("Student: Alex Tan (S1) · Lesson: L10")));
                 fixture.enter("search c/parent sn/Alex d/Wed s/中文");
-                assertEquals("Found 0 parent(s).", fixture.feedback());
+                assertEquals("Found 0 parent(s).", fixture.getFeedback());
                 fixture.enter("search c/parent n/Unassigned sn/Alex");
-                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                assertTrue(fixture.getRoot().lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().equals("Student: Alex Tan (S3)")));
             }
             return null;
@@ -358,18 +359,18 @@ public class CanonicalMainWindowTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("search c/student p/00012345 s/Math d/Mon");
-                assertEquals(1, fixture.people().getItems().size());
+                assertEquals(1, fixture.getPeople().getItems().size());
                 assertCard(fixture, "Student · ID: S2", "Jamie Tan", 1);
-                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                assertTrue(fixture.getRoot().lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("Lesson: L10")));
                 fixture.enter("enrol 1 lid/L4");
-                assertTrue(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                assertTrue(fixture.getRoot().lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("Lesson: L4")));
                 fixture.enter("unenrol 1 lid/L4");
-                assertFalse(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                assertFalse(fixture.getRoot().lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("Lesson: L4")));
                 fixture.enter("search c/student n/Jamie");
-                assertFalse(fixture.root().lookupAll(".label").stream().map(Label.class::cast)
+                assertFalse(fixture.getRoot().lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().startsWith("Lesson:")));
             }
             return null;
@@ -383,25 +384,25 @@ public class CanonicalMainWindowTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("search c/student n/Jamie");
-                fixture.people().getSelectionModel().select(0);
-                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.getPeople().getSelectionModel().select(0);
+                var selected = fixture.getPeople().getSelectionModel().getSelectedItem();
                 fixture.enter("lessons si/1");
                 var displayed = fixture.lessons().getItems();
                 fixture.enter("list r/tutor");
-                assertEquals("Student S2 · current lessons", ((Label) fixture.root()
+                assertEquals("Student S2 · current lessons", ((Label) fixture.getRoot()
                         .lookup("#lessonContext")).getText());
                 fixture.enter("search c/student n/Jamie");
-                fixture.people().getSelectionModel().select(0);
+                fixture.getPeople().getSelectionModel().select(0);
                 fixture.enter("enrol 1 lid/L4");
                 assertEquals(List.of("L10", "L4", "L11"), lessonIds(fixture));
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 fixture.enter("search c/lesson sn/Jamie s/Math");
                 assertEquals(List.of("L10", "L4"), lessonIds(fixture));
                 fixture.enter("unenrol 1 lid/L4");
                 assertEquals(List.of("L10"), lessonIds(fixture));
                 assertSame(displayed, fixture.lessons().getItems());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
-                assertEquals("Lesson search: sn/jamie, s/math", ((Label) fixture.root()
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
+                assertEquals("Lesson search: sn/jamie, s/math", ((Label) fixture.getRoot()
                         .lookup("#lessonContext")).getText());
                 assertCard(fixture, "Student · ID: S2", "Jamie Tan", 1);
             }
@@ -419,29 +420,29 @@ public class CanonicalMainWindowTest {
                 var results = fixture.lessons().getItems();
                 assertEquals(5, results.size());
                 fixture.enter("search c/student n/Jamie");
-                fixture.people().getSelectionModel().select(0);
-                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.getPeople().getSelectionModel().select(0);
+                var selected = fixture.getPeople().getSelectionModel().getSelectedItem();
                 fixture.enter("lessons si/1");
                 assertEquals(List.of("L10", "L11"), lessonIds(fixture));
                 fixture.enter("search c/lesson d/Mon s/Math sn/Alex");
-                assertEquals("Found 1 lesson(s).", fixture.feedback());
+                assertEquals("Found 1 lesson(s).", fixture.getFeedback());
                 assertEquals(List.of("L10"), lessonIds(fixture));
-                assertEquals("2", ((Label) fixture.root()
+                assertEquals("2", ((Label) fixture.getRoot()
                         .lookup("#lessonRosterSize")).getText());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertCard(fixture, "Student · ID: S2", "Jamie Tan", 1);
                 fixture.enter("lessons si/2");
                 assertEquals(List.of("L10"), lessonIds(fixture));
                 fixture.enter("search c/lesson s/Math s/Science");
                 assertEquals(List.of("L10"), lessonIds(fixture));
                 fixture.enter("search c/lesson sn/Nobody");
-                assertEquals("Found 0 lesson(s).", fixture.feedback());
+                assertEquals("Found 0 lesson(s).", fixture.getFeedback());
                 assertTrue(fixture.lessons().getItems().isEmpty());
                 assertEquals("No lessons to display.", ((Label) fixture.lessons().getPlaceholder()).getText());
                 fixture.enter("lessons");
                 assertSame(results, fixture.lessons().getItems());
                 assertEquals(5, results.size());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertArrayEquals(bytes, Files.readAllBytes(path));
                 captureWindow(fixture, "PONHUB_CAPTURE_UI", 1000, 720, "png");
             }
@@ -464,10 +465,10 @@ public class CanonicalMainWindowTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("search c/student n/Jamie");
-                fixture.people().getSelectionModel().select(0);
-                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.getPeople().getSelectionModel().select(0);
+                var selected = fixture.getPeople().getSelectionModel().getSelectedItem();
                 fixture.enter("showlesson lid/L10 d/2026-10-05");
-                ListView<?> detail = (ListView<?>) fixture.root().lookup("#lessonDetailList");
+                ListView<?> detail = (ListView<?>) fixture.getRoot().lookup("#lessonDetailList");
                 assertTrue(detail.isVisible());
                 assertFalse(fixture.lessons().isVisible());
                 assertEquals("Math", ((Label) detail.lookup("#lessonHeading")).getText());
@@ -483,13 +484,13 @@ public class CanonicalMainWindowTest {
                         .anyMatch(label -> label.getText().contains("S2 · Jamie Tan")));
                 assertTrue(detail.lookupAll(".label").stream().map(Label.class::cast)
                         .anyMatch(label -> label.getText().contains("Status: absent")));
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertCard(fixture, "Student · ID: S2", "Jamie Tan", 1);
                 captureWindow(fixture, "PONHUB_CAPTURE_ATTENDANCE_DETAILS", 1480, 1200, "jpg");
                 fixture.enter("lessons si/1");
                 assertTrue(fixture.lessons().isVisible());
                 assertFalse(detail.isVisible());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertArrayEquals(bytes, Files.readAllBytes(path));
             }
             return null;
@@ -504,17 +505,17 @@ public class CanonicalMainWindowTest {
                 fixture.enter("search c/lesson s/Math");
                 fixture.enter("addlesson d/Mon st/0900 et/1000 s/Math tu/Mei Lim rm/R1");
                 assertEquals(List.of("L1"), lessonIds(fixture));
-                assertEquals("0", ((Label) fixture.root()
+                assertEquals("0", ((Label) fixture.getRoot()
                         .lookup("#lessonRosterSize")).getText());
                 fixture.enter("addlesson d/Tue st/0900 et/1000 s/Science tu/Mei Lim rm/R1");
                 assertEquals(List.of("L1"), lessonIds(fixture));
                 fixture.enter("lessons");
                 assertEquals(List.of("L1", "L2"), lessonIds(fixture));
-                fixture.root().resize(450, 360);
-                fixture.root().layout();
-                assertTrue(fixture.people().getWidth() > 100);
+                fixture.getRoot().resize(450, 360);
+                fixture.getRoot().layout();
+                assertTrue(fixture.getPeople().getWidth() > 100);
                 assertTrue(fixture.lessons().getWidth() > 100);
-                assertTrue(fixture.people().getHeight() > 50);
+                assertTrue(fixture.getPeople().getHeight() > 50);
                 assertTrue(fixture.lessons().getHeight() > 50);
             }
             return null;
@@ -530,7 +531,7 @@ public class CanonicalMainWindowTest {
      */
     private static void captureWindow(WindowFixture fixture, String environmentVariable,
             int width, int height, String format) throws IOException {
-        captureRegion(fixture, environmentVariable, width, height, format, fixture.root());
+        captureRegion(fixture, environmentVariable, width, height, format, fixture.getRoot());
     }
 
     private static void captureRegion(WindowFixture fixture, String environmentVariable,
@@ -544,11 +545,11 @@ public class CanonicalMainWindowTest {
         if (destination == null) {
             return;
         }
-        fixture.root().setPrefSize(width, height);
-        fixture.root().resize(width, height);
+        fixture.getRoot().setPrefSize(width, height);
+        fixture.getRoot().resize(width, height);
         for (int pass = 0; pass < 3; pass++) {
-            fixture.root().layout();
-            fixture.people().layout();
+            fixture.getRoot().layout();
+            fixture.getPeople().layout();
             fixture.lessons().layout();
             fixture.history().layout();
         }
@@ -568,33 +569,33 @@ public class CanonicalMainWindowTest {
     public void commandBox_roleAdditions_publishCardsAndPersistOptionalContacts() throws Exception {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
-                assertTrue(fixture.people().getItems().isEmpty());
+                assertTrue(fixture.getPeople().getItems().isEmpty());
                 assertFalse(Files.exists(fixture.dataPath));
                 fixture.enter("add r/STUDENT n/Alex Tan l/p1 pp/91234567");
-                assertEquals("New student added: Alex Tan (S1).", fixture.feedback());
+                assertEquals("New student added: Alex Tan (S1).", fixture.getFeedback());
                 assertCard(fixture, "Student · ID: S1", "Alex Tan", 1);
                 fixture.enter("add r/student n/Amelia Tan l/P2 pp/91234567 p/00012345"
                         + " e/amelia@example.com a/12 Main Road");
                 fixture.enter("add r/tutor n/Mei Lee p/81234567");
                 fixture.enter("list r/TUTOR");
-                assertEquals("Showing 1 tutor(s).", fixture.feedback());
+                assertEquals("Showing 1 tutor(s).", fixture.getFeedback());
                 assertCard(fixture, "Tutor · ID: T1", "Mei Lee", 1);
                 fixture.enter("add r/parent n/Sam Tan p/91234567");
-                assertEquals("New parent added: Sam Tan (P1).", fixture.feedback());
-                assertEquals(4, fixture.people().getItems().size());
-                fixture.people().scrollTo(3);
+                assertEquals("New parent added: Sam Tan (P1).", fixture.getFeedback());
+                assertEquals(4, fixture.getPeople().getItems().size());
+                fixture.getPeople().scrollTo(3);
                 fixture.layout();
                 // Variable-height cells can leave the last card below the viewport after scrollTo on Linux.
                 // Drive the actual scrollbar to the bottom, as in the dedicated card-scrolling regressions.
-                for (var node : fixture.people().lookupAll(".scroll-bar")) {
+                for (var node : fixture.getPeople().lookupAll(".scroll-bar")) {
                     if (node instanceof ScrollBar bar && bar.isVisible()
                             && bar.getOrientation() == Orientation.VERTICAL) {
                         bar.setValue(bar.getMax());
                     }
                 }
-                fixture.people().layout();
+                fixture.getPeople().layout();
                 assertCard(fixture, "Parent · ID: P1", "Sam Tan", 4);
-                assertSame(fixture.app.getLogic().getPersonRecords(), fixture.people().getItems());
+                assertSame(fixture.app.getLogic().getPersonRecords(), fixture.getPeople().getItems());
                 PonHubDataState saved = new JsonPonHubDataStorage(fixture.dataPath).readData().orElseThrow();
                 assertEquals(fixture.app.snapshot(), saved);
                 assertTrue(saved.people().getPeople().getFirst().getContactDetails().getPhone().isEmpty());
@@ -616,22 +617,22 @@ public class CanonicalMainWindowTest {
             try (WindowFixture fixture = createWindow()) {
                 byte[] original = Files.readAllBytes(fixture.dataPath);
                 fixture.enter("search c/student n/Selected");
-                assertEquals("Found 1 student(s).", fixture.feedback());
+                assertEquals("Found 1 student(s).", fixture.getFeedback());
                 assertCard(fixture, "Student · ID: S3", "Selected Student", 1);
-                assertSame(fixture.app.getLogic().getPersonRecords(), fixture.people().getItems());
-                fixture.people().getSelectionModel().select(0);
+                assertSame(fixture.app.getLogic().getPersonRecords(), fixture.getPeople().getItems());
+                fixture.getPeople().getSelectionModel().select(0);
                 fixture.enter("help SEARCH");
-                assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
+                assertEquals(new PersonId("S3"), fixture.getPeople().getSelectionModel().getSelectedItem().getId());
                 fixture.enter("search c/tutor tu/First");
-                assertTrue(fixture.feedback().contains("not supported"));
-                assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
+                assertTrue(fixture.getFeedback().contains("not supported"));
+                assertEquals(new PersonId("S3"), fixture.getPeople().getSelectionModel().getSelectedItem().getId());
                 assertCard(fixture, "Student · ID: S3", "Selected Student", 1);
                 fixture.enter("search c/student n/No Match");
-                assertEquals("Found 0 student(s).", fixture.feedback());
-                assertTrue(fixture.people().getItems().isEmpty());
+                assertEquals("Found 0 student(s).", fixture.getFeedback());
+                assertTrue(fixture.getPeople().getItems().isEmpty());
                 fixture.enter("list r/student");
                 assertEquals(List.of(new PersonId("S9"), new PersonId("S3")),
-                        fixture.people().getItems().stream().map(PersonRecord::getId).toList());
+                        fixture.getPeople().getItems().stream().map(PersonRecord::getId).toList());
                 assertArrayEquals(original, Files.readAllBytes(fixture.dataPath));
             }
             return null;
@@ -644,21 +645,21 @@ public class CanonicalMainWindowTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 byte[] original = Files.readAllBytes(fixture.dataPath);
-                fixture.people().scrollTo(1);
+                fixture.getPeople().scrollTo(1);
                 fixture.layout();
                 assertCard(fixture, "Student · ID: S9", "Older Student", 2);
                 fixture.enter("list r/student");
                 assertEquals(List.of(new PersonId("S9"), new PersonId("S3")),
-                        fixture.people().getItems().stream().map(PersonRecord::getId).toList());
+                        fixture.getPeople().getItems().stream().map(PersonRecord::getId).toList());
                 assertCard(fixture, "Student · ID: S3", "Selected Student", 2);
-                fixture.people().getSelectionModel().select(1);
+                fixture.getPeople().getSelectionModel().select(1);
                 PonHubDataState originalState = fixture.app.snapshot();
                 for (String command : List.of("list r/all", "list r/student r/tutor", "delete S3", "edit 2",
                         "find Selected", "clear", "search n/Selected", "lessons sid/S3", "help clear")) {
                     fixture.enter(command);
                     assertEquals(command, fixture.input().getText());
                     assertTrue(fixture.input().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
-                    assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
+                    assertEquals(new PersonId("S3"), fixture.getPeople().getSelectionModel().getSelectedItem().getId());
                     assertEquals(originalState, fixture.app.snapshot());
                     assertArrayEquals(original, Files.readAllBytes(fixture.dataPath));
                 }
@@ -673,20 +674,20 @@ public class CanonicalMainWindowTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("list r/student");
-                fixture.people().getSelectionModel().select(1);
+                fixture.getPeople().getSelectionModel().select(1);
                 fixture.enter("edit 2 n/Corrected Student");
-                assertEquals("Edited student: Corrected Student (S3).", fixture.feedback());
-                assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
+                assertEquals("Edited student: Corrected Student (S3).", fixture.getFeedback());
+                assertEquals(new PersonId("S3"), fixture.getPeople().getSelectionModel().getSelectedItem().getId());
                 assertCard(fixture, "Student · ID: S3", "Corrected Student", 2);
                 fixture.enter("search c/student n/Student");
-                fixture.people().getSelectionModel().select(0);
+                fixture.getPeople().getSelectionModel().select(0);
                 fixture.enter("edit 1 n/Changed Person");
                 assertEquals(List.of(new PersonId("S3")),
-                        fixture.people().getItems().stream().map(PersonRecord::getId).toList());
-                assertTrue(fixture.people().getSelectionModel().isEmpty());
+                        fixture.getPeople().getItems().stream().map(PersonRecord::getId).toList());
+                assertTrue(fixture.getPeople().getSelectionModel().isEmpty());
                 assertCard(fixture, "Student · ID: S3", "Corrected Student", 1);
                 fixture.enter("help edit");
-                assertTrue(fixture.feedback().contains("Usage: edit INDEX"));
+                assertTrue(fixture.getFeedback().contains("Usage: edit INDEX"));
                 assertEquals(fixture.app.snapshot(),
                         new JsonPonHubDataStorage(fixture.dataPath).readData().orElseThrow());
             }
@@ -703,8 +704,8 @@ public class CanonicalMainWindowTest {
                 fixture.enter("list r/student");
                 fixture.enter("enrol 1 lid/L1");
                 fixture.enter("showlesson lid/L1");
-                fixture.people().getSelectionModel().select(0);
-                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.getPeople().getSelectionModel().select(0);
+                var selected = fixture.getPeople().getSelectionModel().getSelectedItem();
                 var detail = fixture.lessons().getItems().getFirst();
                 var original = fixture.app.snapshot();
                 Path backup = directory.resolve("edit-original.json");
@@ -712,15 +713,15 @@ public class CanonicalMainWindowTest {
                 Files.createDirectory(fixture.dataPath);
                 fixture.enter("edit 1 n/Corrected Student");
                 assertEquals("edit 1 n/Corrected Student", fixture.input().getText());
-                assertTrue(fixture.feedback().contains("Could not save"));
+                assertTrue(fixture.getFeedback().contains("Could not save"));
                 assertEquals(original, fixture.app.snapshot());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertSame(detail, fixture.lessons().getItems().getFirst());
                 Files.delete(fixture.dataPath);
                 Files.move(backup, fixture.dataPath);
                 fixture.enter("edit 1 n/Corrected Student");
-                assertEquals("Edited student: Corrected Student (S9).", fixture.feedback());
-                assertEquals(new PersonId("S9"), fixture.people().getSelectionModel().getSelectedItem().getId());
+                assertEquals("Edited student: Corrected Student (S9).", fixture.getFeedback());
+                assertEquals(new PersonId("S9"), fixture.getPeople().getSelectionModel().getSelectedItem().getId());
                 assertEquals(List.of("L1"), lessonIds(fixture));
                 assertEquals(fixture.app.snapshot(),
                         new JsonPonHubDataStorage(fixture.dataPath).readData().orElseThrow());
@@ -736,23 +737,23 @@ public class CanonicalMainWindowTest {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("list r/student");
                 fixture.enter("history 1");
-                fixture.people().getSelectionModel().select(0);
-                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.getPeople().getSelectionModel().select(0);
+                var selected = fixture.getPeople().getSelectionModel().getSelectedItem();
                 var before = fixture.app.snapshot();
                 byte[] bytes = Files.readAllBytes(fixture.dataPath);
                 fixture.enter("delete 1");
-                assertTrue(fixture.feedback().contains("Delete student: Older Student (S9)?"));
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertTrue(fixture.getFeedback().contains("Delete student: Older Student (S9)?"));
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertEquals(before, fixture.app.snapshot());
                 assertArrayEquals(bytes, Files.readAllBytes(fixture.dataPath));
                 assertTrue(fixture.history().getParent().isVisible());
                 fixture.enter("delete cancel");
-                assertEquals("Person deletion cancelled. No records were changed.", fixture.feedback());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertEquals("Person deletion cancelled. No records were changed.", fixture.getFeedback());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertEquals(before, fixture.app.snapshot());
                 assertArrayEquals(bytes, Files.readAllBytes(fixture.dataPath));
                 assertTrue(fixture.history().getParent().isVisible());
-                assertEquals("Student S9 · attendance history", ((Label) fixture.root()
+                assertEquals("Student S9 · attendance history", ((Label) fixture.getRoot()
                         .lookup("#historyContext")).getText());
                 assertTrue(fixture.input().getText().isEmpty());
             }
@@ -766,16 +767,16 @@ public class CanonicalMainWindowTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("list r/student");
-                var visible = fixture.people().getItems();
-                fixture.people().getSelectionModel().select(0);
+                var visible = fixture.getPeople().getItems();
+                fixture.getPeople().getSelectionModel().select(0);
                 fixture.enter("delete 1");
                 fixture.enter("delete confirm");
-                assertEquals("Deleted student: Older Student (S9).", fixture.feedback());
+                assertEquals("Deleted student: Older Student (S9).", fixture.getFeedback());
                 assertTrue(fixture.input().getText().isEmpty());
-                assertSame(visible, fixture.people().getItems());
+                assertSame(visible, fixture.getPeople().getItems());
                 assertEquals(List.of(new PersonId("S3")),
                         visible.stream().map(PersonRecord::getId).toList());
-                assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.roleFilter());
+                assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.getRoleFilter());
                 fixture.layout();
                 assertCard(fixture, "Student · ID: S3", "Selected Student", 1);
                 assertEquals(fixture.app.snapshot(),
@@ -795,12 +796,12 @@ public class CanonicalMainWindowTest {
                 fixture.enter("enrol 1 lid/L1");
                 fixture.enter("lessons si/1");
                 assertEquals(List.of("L1"), lessonIds(fixture));
-                fixture.people().getSelectionModel().select(0);
-                var selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.getPeople().getSelectionModel().select(0);
+                var selected = fixture.getPeople().getSelectionModel().getSelectedItem();
                 var displayed = fixture.lessons().getItems();
                 fixture.enter("delete 1");
-                assertTrue(fixture.feedback().contains("enrolled in lesson L1"));
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertTrue(fixture.getFeedback().contains("enrolled in lesson L1"));
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertEquals(List.of("L1"), lessonIds(fixture));
 
                 fixture.enter("unenrol 1 lid/L1");
@@ -813,27 +814,27 @@ public class CanonicalMainWindowTest {
                 assertEquals("delete confirm", fixture.input().getText());
                 assertTrue(fixture.input().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
                 assertEquals(original, fixture.app.snapshot());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertSame(displayed, fixture.lessons().getItems());
                 assertTrue(displayed.isEmpty());
-                assertEquals("Student S9 · current lessons", ((Label) fixture.root()
+                assertEquals("Student S9 · current lessons", ((Label) fixture.getRoot()
                         .lookup("#lessonContext")).getText());
 
                 Files.delete(fixture.dataPath);
                 Files.move(backup, fixture.dataPath);
                 fixture.enter("delete 1");
                 fixture.enter("delete confirm");
-                assertEquals("Deleted student: Older Student (S9).", fixture.feedback());
+                assertEquals("Deleted student: Older Student (S9).", fixture.getFeedback());
                 assertCard(fixture, "Student · ID: S3", "Selected Student", 1);
-                assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.roleFilter());
+                assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.getRoleFilter());
                 assertSame(displayed, fixture.lessons().getItems());
                 assertTrue(displayed.isEmpty());
-                assertEquals("Student S9 · current lessons", ((Label) fixture.root()
+                assertEquals("Student S9 · current lessons", ((Label) fixture.getRoot()
                         .lookup("#lessonContext")).getText());
                 fixture.enter("lessons");
                 assertSame(displayed, fixture.lessons().getItems());
                 assertEquals(List.of("L1"), lessonIds(fixture));
-                assertEquals("0", ((Label) fixture.root()
+                assertEquals("0", ((Label) fixture.getRoot()
                         .lookup("#lessonRosterSize")).getText());
                 assertEquals(fixture.app.snapshot(),
                         new JsonPonHubDataStorage(fixture.dataPath).readData().orElseThrow());
@@ -848,7 +849,7 @@ public class CanonicalMainWindowTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("list r/student");
-                fixture.people().getSelectionModel().select(1);
+                fixture.getPeople().getSelectionModel().select(1);
                 PonHubDataState original = fixture.app.snapshot();
                 Path backup = directory.resolve("original.json");
                 Files.move(fixture.dataPath, backup);
@@ -857,28 +858,28 @@ public class CanonicalMainWindowTest {
                 fixture.enter(addition);
                 assertEquals(addition, fixture.input().getText());
                 assertEquals(original, fixture.app.snapshot());
-                assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
-                assertEquals(1, fixture.people().getSelectionModel().getSelectedIndex());
-                assertEquals(2, fixture.people().getItems().size());
-                assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.roleFilter());
+                assertEquals(new PersonId("S3"), fixture.getPeople().getSelectionModel().getSelectedItem().getId());
+                assertEquals(1, fixture.getPeople().getSelectionModel().getSelectedIndex());
+                assertEquals(2, fixture.getPeople().getItems().size());
+                assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.getRoleFilter());
                 assertCard(fixture, "Student · ID: S3", "Selected Student", 2);
                 assertTrue(Files.isDirectory(fixture.dataPath));
                 Files.delete(fixture.dataPath);
                 Files.move(backup, fixture.dataPath);
                 fixture.enter(addition);
-                assertEquals("New student added: New Student (S10).", fixture.feedback());
-                assertEquals(Optional.empty(), fixture.app.roleFilter());
-                assertEquals(5, fixture.people().getItems().size());
-                fixture.people().scrollTo(4);
+                assertEquals("New student added: New Student (S10).", fixture.getFeedback());
+                assertEquals(Optional.empty(), fixture.app.getRoleFilter());
+                assertEquals(5, fixture.getPeople().getItems().size());
+                fixture.getPeople().scrollTo(4);
                 fixture.layout();
                 // Drive the actual scrollbar after layout measures the variable-height cards.
-                for (var node : fixture.people().lookupAll(".scroll-bar")) {
+                for (var node : fixture.getPeople().lookupAll(".scroll-bar")) {
                     if (node instanceof ScrollBar bar && bar.isVisible()
                             && bar.getOrientation() == Orientation.VERTICAL) {
                         bar.setValue(bar.getMax());
                     }
                 }
-                fixture.people().layout();
+                fixture.getPeople().layout();
                 assertCard(fixture, "Student · ID: S10", "New Student", 5);
                 assertEquals(fixture.app.snapshot(), new JsonPonHubDataStorage(fixture.dataPath)
                         .readData().orElseThrow());
@@ -895,31 +896,31 @@ public class CanonicalMainWindowTest {
                 byte[] original = Files.readAllBytes(fixture.dataPath);
                 fixture.enter("search c/student");
                 var snapshot = fixture.app.snapshot();
-                var visible = List.copyOf(fixture.people().getItems());
+                var visible = List.copyOf(fixture.getPeople().getItems());
                 var settings = fixture.app.getLogic().getGuiSettings();
-                fixture.people().getSelectionModel().select(1);
+                fixture.getPeople().getSelectionModel().select(1);
                 String draft = "editlesson lid/L1 s/Unfinished";
                 fixture.input().setText(draft);
-                MenuBar menu = (MenuBar) fixture.root().lookup("#menuBar");
+                MenuBar menu = (MenuBar) fixture.getRoot().lookup("#menuBar");
                 menu.getMenus().get(1).getItems().get(0).fire();
                 String overview = CanonicalCommandCatalog.getOverview(Optional.empty());
-                assertEquals(overview, fixture.feedback());
-                for (var target : List.of(fixture.input(), fixture.root().lookup("#resultDisplay"))) {
+                assertEquals(overview, fixture.getFeedback());
+                for (var target : List.of(fixture.input(), fixture.getRoot().lookup("#resultDisplay"))) {
                     Event.fireEvent(target, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F1,
                             false, false, false, false));
-                    assertEquals(overview, fixture.feedback());
+                    assertEquals(overview, fixture.getFeedback());
                     assertEquals(draft, fixture.input().getText());
-                    assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
+                    assertEquals(new PersonId("S3"), fixture.getPeople().getSelectionModel().getSelectedItem().getId());
                 }
                 for (String topic : List.of("edit", "EDIT", "editlesson", "EDITLESSON")) {
                     fixture.enter("help " + topic);
                     assertEquals(CanonicalCommandCatalog.getUsage(topic.toLowerCase(Locale.ROOT), false)
-                            .orElseThrow(), fixture.feedback());
+                            .orElseThrow(), fixture.getFeedback());
                     assertTrue(fixture.input().getText().isEmpty());
-                    assertEquals(new PersonId("S3"), fixture.people().getSelectionModel().getSelectedItem().getId());
+                    assertEquals(new PersonId("S3"), fixture.getPeople().getSelectionModel().getSelectedItem().getId());
                 }
-                assertEquals(visible, fixture.people().getItems());
-                assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.roleFilter());
+                assertEquals(visible, fixture.getPeople().getItems());
+                assertEquals(Optional.of(PersonRole.STUDENT), fixture.app.getRoleFilter());
                 assertEquals(snapshot, fixture.app.snapshot());
                 assertEquals(settings, fixture.app.getLogic().getGuiSettings());
                 assertArrayEquals(original, Files.readAllBytes(fixture.dataPath));
@@ -942,33 +943,33 @@ public class CanonicalMainWindowTest {
             try (WindowFixture fixture = createWindow()) {
                 String draft = "add r/student n/Unfinished";
                 fixture.input().setText(draft);
-                MenuBar menu = (MenuBar) fixture.root().lookup("#menuBar");
+                MenuBar menu = (MenuBar) fixture.getRoot().lookup("#menuBar");
                 menu.getMenus().get(1).getItems().get(0).fire();
-                String guidance = fixture.feedback();
-                assertTrue(fixture.feedback().contains("Operational writes are blocked"));
-                assertFalse(fixture.feedback().contains("add -"));
-                for (var target : List.of(fixture.input(), fixture.root().lookup("#resultDisplay"))) {
+                String guidance = fixture.getFeedback();
+                assertTrue(fixture.getFeedback().contains("Changes cannot be saved in this session"));
+                assertFalse(fixture.getFeedback().contains("add -"));
+                for (var target : List.of(fixture.input(), fixture.getRoot().lookup("#resultDisplay"))) {
                     Event.fireEvent(target, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F1,
                             false, false, false, false));
-                    assertEquals(guidance, fixture.feedback());
+                    assertEquals(guidance, fixture.getFeedback());
                     assertEquals(draft, fixture.input().getText());
                     assertArrayEquals(original, Files.readAllBytes(dataPath));
                 }
                 fixture.enter("list");
-                assertTrue(fixture.feedback().contains("Showing 0 person(s)."));
-                assertTrue(fixture.feedback().contains("An empty view is not your saved data"));
-                assertTrue(fixture.people().getItems().isEmpty());
+                assertTrue(fixture.getFeedback().contains("Showing 0 person(s)."));
+                assertTrue(fixture.getFeedback().contains("An empty view is not your saved data"));
+                assertTrue(fixture.getPeople().getItems().isEmpty());
                 fixture.enter("add r/student n/Rejected Student l/P1 pp/91234567");
-                assertTrue(fixture.feedback().contains("Operational writes are blocked"));
+                assertTrue(fixture.getFeedback().contains("Changes cannot be saved in this session"));
                 for (String command : List.of("help EDIT", "help EDITLESSON", "edit invalid", "editlesson invalid")) {
                     fixture.enter(command);
                     assertEquals(command, fixture.input().getText());
                     assertTrue(fixture.input().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
-                    assertFalse(fixture.feedback().isBlank());
+                    assertFalse(fixture.getFeedback().isBlank());
                     if (!command.startsWith("help")) {
-                        assertTrue(fixture.feedback().contains("Operational writes are blocked"));
+                        assertTrue(fixture.getFeedback().contains("Changes cannot be saved in this session"));
                     }
-                    assertTrue(fixture.people().getItems().isEmpty());
+                    assertTrue(fixture.getPeople().getItems().isEmpty());
                     assertArrayEquals(original, Files.readAllBytes(dataPath));
                 }
                 fixture.enter("exit");
@@ -987,7 +988,7 @@ public class CanonicalMainWindowTest {
             }
             callOnFxThread(() -> {
                 try (WindowFixture fixture = createWindow()) {
-                    String originalFeedback = fixture.feedback();
+                    String originalFeedback = fixture.getFeedback();
                     for (String prefix : List.of("h", "li", "e", "sho")) {
                         fixture.input().setText(prefix);
                         fixture.input().end();
@@ -1000,8 +1001,8 @@ public class CanonicalMainWindowTest {
                             default -> isProtected ? "sho" : "showlesson";
                         };
                         assertEquals(expected, fixture.input().getText());
-                        assertEquals(originalFeedback, fixture.feedback());
-                        assertTrue(fixture.people().getItems().isEmpty());
+                        assertEquals(originalFeedback, fixture.getFeedback());
+                        assertTrue(fixture.getPeople().getItems().isEmpty());
                     }
                     fixture.input().setText("he");
                     fixture.input().end();
@@ -1009,7 +1010,7 @@ public class CanonicalMainWindowTest {
                             false, false, false, false));
                     Event.fireEvent(fixture.input(), new ActionEvent());
                     assertTrue(fixture.input().getText().isEmpty());
-                    assertTrue(fixture.feedback().contains("PonHub commands"));
+                    assertTrue(fixture.getFeedback().contains("PonHub commands"));
                 }
                 return null;
             });
@@ -1051,10 +1052,10 @@ public class CanonicalMainWindowTest {
 
     private static void assertCard(WindowFixture fixture, String identity, String heading, int position) {
         fixture.layout();
-        Region card = fixture.root().lookupAll("#cardPane").stream()
+        Region card = fixture.getRoot().lookupAll("#cardPane").stream()
                 .filter(node -> identity.equals(((Label) node.lookup("#identity")).getText()))
                 .map(Region.class::cast).findFirst().orElseThrow(() -> new AssertionError(
-                        "Missing visible card " + identity + "; rendered=" + fixture.root().lookupAll("#identity")
+                        "Missing visible card " + identity + "; rendered=" + fixture.getRoot().lookupAll("#identity")
                                 .stream().map(node -> ((Label) node).getText()).toList()));
         assertEquals(heading, ((Label) card.lookup("#heading")).getText());
         assertEquals("Position: " + position, ((Label) card.lookup("#position")).getText());
@@ -1063,47 +1064,47 @@ public class CanonicalMainWindowTest {
 
     private record WindowFixture(AppHarness app, MainWindow window, Path dataPath, Path prefsPath)
             implements AutoCloseable {
-        private Region root() {
+        private Region getRoot() {
             return (Region) window.getPrimaryStage().getScene().getRoot();
         }
 
         private void layout() {
-            root().applyCss();
-            root().resize(853, 600);
-            root().layout();
+            getRoot().applyCss();
+            getRoot().resize(853, 600);
+            getRoot().layout();
             // Offscreen tests have no native pulse to finish a virtualized list's pending scroll/layout.
-            people().layout();
+            getPeople().layout();
             lessons().layout();
             history().layout();
             for (String id : List.of("lessonContext", "lessonSummary", "historyContext", "historySummary",
                     "peopleContext")) {
-                Label heading = (Label) root().lookup("#" + id);
+                Label heading = (Label) getRoot().lookup("#" + id);
                 assertNotNull(heading.getTooltip(), id);
                 assertEquals(heading.getText(), heading.getTooltip().getText(), id);
             }
         }
 
         private TextField input() {
-            return (TextField) root().lookup("#commandTextField");
+            return (TextField) getRoot().lookup("#commandTextField");
         }
 
-        private String feedback() {
-            return ((TextArea) root().lookup("#resultDisplay")).getText();
+        private String getFeedback() {
+            return ((TextArea) getRoot().lookup("#resultDisplay")).getText();
         }
 
         @SuppressWarnings("unchecked")
-        private ListView<PersonRecord> people() {
-            return (ListView<PersonRecord>) root().lookup("#personListView");
+        private ListView<PersonRecord> getPeople() {
+            return (ListView<PersonRecord>) getRoot().lookup("#personListView");
         }
 
         @SuppressWarnings("unchecked")
         private ListView<LessonView> lessons() {
-            return (ListView<LessonView>) root().lookup("#lessonListView");
+            return (ListView<LessonView>) getRoot().lookup("#lessonListView");
         }
 
         @SuppressWarnings("unchecked")
         private ListView<AttendanceHistoryEntry> history() {
-            return (ListView<AttendanceHistoryEntry>) root().lookup("#historyListView");
+            return (ListView<AttendanceHistoryEntry>) getRoot().lookup("#historyListView");
         }
 
         private void enter(String command) {
@@ -1135,7 +1136,7 @@ public class CanonicalMainWindowTest {
             return canonicalSession.getDataSnapshot();
         }
 
-        private Optional<PersonRole> roleFilter() {
+        private Optional<PersonRole> getRoleFilter() {
             return canonicalSession.getRoleFilter();
         }
     }

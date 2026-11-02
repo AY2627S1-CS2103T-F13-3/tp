@@ -36,7 +36,7 @@ If opening a file log fails, startup retains console logging and emits
 Inspect that cause and the application folder's permissions and existing log paths.
 Symbolic `ponhub.log*` paths or new log files aliased to legacy logs also trigger this fallback to preserve
 their targets. Do not delete or overwrite an unknown file to silence the warning; resolve the path problem
-on a backed-up working copy and restart. Missing file output alone does not mean no diagnostic was recorded.
+on a backed-up working copy and restart.
 
 When reporting a problem, include the source commit or packaged artifact, OS/JDK, launch command,
 resolved application/data paths and relevant warning/exception. Logs and paths may contain personal information;
@@ -59,7 +59,7 @@ Success, parse rejection and command rejection have distinct outcomes. Storage-r
 exception messages, stack traces, raw input or result bodies, which can contain contact values.
 Detailed feedback stays in the application. When investigating a save failure, inspect that feedback
 locally and check the selected data path and permissions; redact private values before sharing it.
-This change leaves existing log files untouched; older logs may still contain command payloads.
+Older log files may contain command payloads; inspect and redact them before sharing.
 
 The Linux package checker copies feedback from the visible result control using `xclip` on its disposable
 X11 display. Its retained command/feedback transcript contains only its explicit synthetic fixtures;

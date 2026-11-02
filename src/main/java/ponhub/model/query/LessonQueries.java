@@ -49,7 +49,7 @@ public final class LessonQueries implements LessonQuerySource {
             .thenComparing(AttendanceHistoryEntry::getLessonId);
 
     private final ResultList<LessonView> catalogue = new ResultList<>();
-    private final ResultList<LessonView> filtered = new ResultList<>();
+    private final ResultList<LessonView> filteredLessons = new ResultList<>();
     private final Map<PersonId, PersonRecord> peopleById = new HashMap<>();
     private final Map<LessonId, LessonView> lessonsById = new HashMap<>();
     private final Map<PersonId, List<LessonView>> studentLessons = new HashMap<>();
@@ -81,12 +81,12 @@ public final class LessonQueries implements LessonQuerySource {
 
     @Override
     public ObservableList<LessonView> getLessonList() {
-        return catalogue.readOnly;
+        return catalogue.readOnlyValues;
     }
 
     @Override
     public ObservableList<LessonView> getFilteredLessonList() {
-        return filtered.readOnly;
+        return filteredLessons.readOnlyValues;
     }
 
     @Override
@@ -97,26 +97,26 @@ public final class LessonQueries implements LessonQuerySource {
     @Override
     public ObservableList<LessonView> getStudentLessons(PersonId studentId) {
         requirePerson(studentId, PersonRole.STUDENT);
-        return subscribed(studentId, studentSubscriptions, studentLessons);
+        return getSubscribedResults(studentId, studentSubscriptions, studentLessons);
     }
 
     @Override
     public ObservableList<StudentView> getLessonRoster(LessonId lessonId) {
         requireNonNull(lessonId);
         checkArgument(lessonsById.containsKey(lessonId), "The lesson does not exist: " + lessonId);
-        return subscribed(lessonId, rosterSubscriptions, rosters);
+        return getSubscribedResults(lessonId, rosterSubscriptions, rosters);
     }
 
     @Override
     public ObservableList<LessonView> getTutorSchedule(PersonId tutorId) {
         requirePerson(tutorId, PersonRole.TUTOR);
-        return subscribed(tutorId, tutorSubscriptions, tutorSchedules);
+        return getSubscribedResults(tutorId, tutorSubscriptions, tutorSchedules);
     }
 
     @Override
     public ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId) {
         requirePerson(studentId, PersonRole.STUDENT);
-        return subscribed(studentId, historySubscriptions, histories);
+        return getSubscribedResults(studentId, historySubscriptions, histories);
     }
 
     @Override
@@ -125,7 +125,7 @@ public final class LessonQueries implements LessonQuerySource {
         requireNonNull(lessonId);
         checkArgument(lessonsById.containsKey(lessonId), "The lesson does not exist: " + lessonId);
         HistoryKey key = new HistoryKey(studentId, lessonId);
-        return subscribed(key, lessonHistorySubscriptions, Map.of(key, historyForLesson(key)));
+        return getSubscribedResults(key, lessonHistorySubscriptions, Map.of(key, getHistoryForLesson(key)));
     }
 
     /**
@@ -145,7 +145,7 @@ public final class LessonQueries implements LessonQuerySource {
     public void setLessonFilter(SearchCriteria criteria) {
         List<LessonView> matches = searchLessons(criteria);
         activeFilter = criteria;
-        filtered.replace(matches);
+        filteredLessons.replace(matches);
     }
 
     /**
@@ -283,11 +283,11 @@ public final class LessonQueries implements LessonQuerySource {
         refreshSubscriptions(rosterSubscriptions, rosters);
         refreshSubscriptions(historySubscriptions, histories);
         List.copyOf(lessonHistorySubscriptions.entrySet()).forEach(entry ->
-                entry.getValue().replace(historyForLesson(entry.getKey())));
-        filtered.replace(searchLessons(activeFilter));
+                entry.getValue().replace(getHistoryForLesson(entry.getKey())));
+        filteredLessons.replace(searchLessons(activeFilter));
     }
 
-    private List<AttendanceHistoryEntry> historyForLesson(HistoryKey key) {
+    private List<AttendanceHistoryEntry> getHistoryForLesson(HistoryKey key) {
         return histories.getOrDefault(key.studentId(), List.of()).stream()
                 .filter(entry -> entry.getLessonId().equals(key.lessonId())).toList();
     }
@@ -302,33 +302,33 @@ public final class LessonQueries implements LessonQuerySource {
         exactIndexes.get(field).computeIfAbsent(value, unused -> new ArrayList<>()).add(entry);
     }
 
-    private static <K, T> ObservableList<T> subscribed(K key, Map<K, ResultList<T>> subscriptions,
+    private static <K, T> ObservableList<T> getSubscribedResults(K key, Map<K, ResultList<T>> subscriptions,
             Map<K, List<T>> index) {
         return subscriptions.computeIfAbsent(key, unused -> {
             ResultList<T> result = new ResultList<>();
             result.replace(index.getOrDefault(key, List.of()));
             return result;
-        }).readOnly;
+        }).readOnlyValues;
     }
 
     /**
      * Drops ownership of deleted identities while allowing externally held results to revive on restore.
      * Weak identity tokens avoid list-value equality; unreferenced retired results cannot retain their IDs.
      */
-    private static <K, T> void reconcileSubscriptions(Map<K, ResultList<T>> active,
-            Map<RetiredResult<T>, K> retired, Predicate<K> exists) {
+    private static <K, T> void reconcileSubscriptions(Map<K, ResultList<T>> activeSubscriptions,
+            Map<RetiredResult<T>, K> retiredSubscriptions, Predicate<K> exists) {
         // Retain actual weak keys during reconciliation, rather than weak Map.Entry objects.
-        List.copyOf(retired.keySet()).forEach(result -> {
-            K key = retired.get(result);
+        List.copyOf(retiredSubscriptions.keySet()).forEach(result -> {
+            K key = retiredSubscriptions.get(result);
             if (exists.test(key)) {
-                retired.remove(result);
-                active.put(key, result.result);
+                retiredSubscriptions.remove(result);
+                activeSubscriptions.put(key, result.result);
             }
         });
-        List.copyOf(active.entrySet()).forEach(entry -> {
+        List.copyOf(activeSubscriptions.entrySet()).forEach(entry -> {
             if (!exists.test(entry.getKey())) {
-                active.remove(entry.getKey());
-                retired.put(entry.getValue().retirement, entry.getKey());
+                activeSubscriptions.remove(entry.getKey());
+                retiredSubscriptions.put(entry.getValue().retirement, entry.getKey());
                 entry.getValue().replace(List.of());
             }
         });
@@ -359,7 +359,7 @@ public final class LessonQueries implements LessonQuerySource {
         private final RetiredResult<T> retirement = new RetiredResult<>(this);
         private List<T> values = List.of();
         // Holding the public wrapper keeps this ResultList and its weak retirement token alive.
-        private final ObservableList<T> readOnly = FXCollections.unmodifiableObservableList(this);
+        private final ObservableList<T> readOnlyValues = FXCollections.unmodifiableObservableList(this);
 
         @Override
         public T get(int index) {

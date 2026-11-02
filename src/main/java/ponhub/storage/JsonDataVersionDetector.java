@@ -67,7 +67,7 @@ public final class JsonDataVersionDetector {
     private static Format scanDocument(JsonParser parser) throws IOException {
         int depth = 0;
         int roots = 0;
-        boolean rootObject = false;
+        boolean isRootObject = false;
         String field = null;
         Map<String, JsonToken> fields = new HashMap<>();
         Format version = null;
@@ -77,19 +77,19 @@ public final class JsonDataVersionDetector {
                 if (++roots > 1) {
                     return Format.MALFORMED_JSON;
                 }
-                rootObject = token == JsonToken.START_OBJECT;
+                isRootObject = token == JsonToken.START_OBJECT;
             }
-            boolean rootValue = rootObject && depth == 1 && token != JsonToken.FIELD_NAME
+            boolean isRootFieldValue = isRootObject && depth == 1 && token != JsonToken.FIELD_NAME
                     && token != JsonToken.END_OBJECT;
-            if (rootObject && depth == 1 && token == JsonToken.FIELD_NAME) {
+            if (isRootObject && depth == 1 && token == JsonToken.FIELD_NAME) {
                 field = parser.getCurrentName();
-            } else if (rootValue) {
+            } else if (isRootFieldValue) {
                 fields.put(field, token);
                 if (VERSION_FIELD.equals(field)) {
                     version = classifyVersion(parser, token);
                 }
             }
-            if (token.isNumeric() && !(rootValue && VERSION_FIELD.equals(field))
+            if (token.isNumeric() && !(isRootFieldValue && VERSION_FIELD.equals(field))
                     && parser.getTextLength() > MAX_NUMERIC_TOKEN_LENGTH) {
                 return Format.MALFORMED_JSON;
             }
@@ -105,15 +105,15 @@ public final class JsonDataVersionDetector {
         if (roots != 1) {
             return Format.MALFORMED_JSON;
         }
-        if (!rootObject) {
+        if (!isRootObject) {
             return Format.UNRECOGNIZED_FORMAT;
         }
         if (version != null) {
             return version;
         }
-        boolean legacyFields = fields.size() == 1
+        boolean hasLegacyFields = fields.size() == 1
                 || (fields.size() == 2 && fields.get("_comment") == JsonToken.VALUE_STRING);
-        return legacyFields && fields.get("persons") == JsonToken.START_ARRAY
+        return hasLegacyFields && fields.get("persons") == JsonToken.START_ARRAY
                 ? Format.LEGACY_AB3 : Format.UNRECOGNIZED_FORMAT;
     }
 

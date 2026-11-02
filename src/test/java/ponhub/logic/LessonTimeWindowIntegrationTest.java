@@ -22,7 +22,7 @@ public class LessonTimeWindowIntegrationTest {
 
     @Test
     public void search_overlapHandlesContainedContainingAndTouchingIntervals() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         session.execute("search c/lesson d/Mon from/1630 to/1730");
         assertIds(session, "L1", "L2");
         session.execute("search c/lesson d/Mon from/1700 to/1800");
@@ -39,7 +39,7 @@ public class LessonTimeWindowIntegrationTest {
 
     @Test
     public void search_otherFiltersRemainConjunctiveAndExactTimeBehaviorIsUnchanged() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         session.execute("search c/lesson d/Mon from/1630 to/1730 s/Science tu/Mei rm/R1");
         assertIds(session, "L2");
         session.execute("search c/lesson d/Mon from/1630 to/1730 st/1600 et/1700");
@@ -54,7 +54,7 @@ public class LessonTimeWindowIntegrationTest {
 
     @Test
     public void search_invalidWindowsRetainViewsContextAndStoredBytes() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         session.execute("search c/tutor n/Mei");
         var people = List.copyOf(session.getPeople());
         session.execute("search c/lesson d/Mon from/1630 to/1730");
@@ -74,7 +74,7 @@ public class LessonTimeWindowIntegrationTest {
 
     @Test
     public void activeWindow_refreshesAfterEditAndReloadRetainsOperationalData() throws Exception {
-        CanonicalPeopleSession session = fixture();
+        CanonicalPeopleSession session = createSession();
         session.execute("search c/lesson d/Mon from/1630 to/1730");
         session.execute("editlesson lid/L2 st/1800 et/1900");
         assertIds(session, "L1");
@@ -84,7 +84,7 @@ public class LessonTimeWindowIntegrationTest {
         assertEquals(session.getDataSnapshot(), reloaded.getDataSnapshot());
     }
 
-    private CanonicalPeopleSession fixture() throws Exception {
+    private CanonicalPeopleSession createSession() throws Exception {
         CanonicalPeopleSession session = new CanonicalPeopleSession(directory.resolve("data.json"));
         session.execute("add r/tutor n/Mei Lim p/92345678");
         session.execute("addlesson d/Mon st/1600 et/1700 s/Math tu/Mei Lim rm/R1");

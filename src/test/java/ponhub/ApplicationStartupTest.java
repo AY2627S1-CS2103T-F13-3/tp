@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -46,6 +48,73 @@ public class ApplicationStartupTest {
 
     @TempDir
     Path directory;
+
+    @Test
+    public void main_invalidDataPath_rejectsBeforeStartupWithoutChangingFiles() throws Exception {
+        Path outside = directory.resolve("outside.json");
+        Files.writeString(outside, "preserve outside data");
+        // Blank, escaping and reserved paths cover the documented rejection categories.
+        for (String selected : List.of("", "   ", "../outside.json", outside.toString(),
+                "preferences.json", "ponhub.log.0", "addressbook.log.1")) {
+            Path folder = Files.createTempDirectory(directory, "rejected-path-");
+            Path preferences = folder.resolve("preferences.json");
+            Files.writeString(preferences, "preserve preferences");
+            String output = runMain(folder, "--data=data/valid.json", "--data=" + selected);
+            assertEquals(1, output.lines().count(), output);
+            assertTrue(output.startsWith("Cannot start PonHub with --data=\"" + selected + "\":"), output);
+            assertTrue(output.contains("Choose a different data file within the application folder."), output);
+            assertFalse(output.contains("Exception"), output);
+            assertFalse(output.contains("at ponhub."), output);
+            assertEquals("preserve preferences", Files.readString(preferences));
+            try (var files = Files.list(folder)) {
+                assertEquals(List.of(preferences), files.toList());
+            }
+            assertEquals("preserve outside data", Files.readString(outside));
+        }
+    }
+
+    @Test
+    public void main_uncheckableDataPath_preservesUnexpectedFailureDiagnostics() throws Exception {
+        Path folder = Files.createTempDirectory(directory, "uncheckable-path-");
+        try {
+            Files.createSymbolicLink(folder.resolve("cycle"), Path.of("cycle"));
+        } catch (IOException | UnsupportedOperationException | SecurityException failure) {
+            assumeTrue(false, "Symbolic links unavailable: " + failure);
+        }
+        // A filesystem inspection failure must not be disguised as ordinary invalid input.
+        String output = runMain(folder, "--data=cycle");
+        assertTrue(output.contains("java.io.IOException: Too many symbolic links"), output);
+        assertFalse(output.contains("Cannot start PonHub with --data="), output);
+        assertFalse(Files.exists(folder.resolve("preferences.json")));
+    }
+
+    /**
+     * Runs the real entry point in an isolated folder; captures rejection before native UI startup.
+     */
+    private String runMain(Path folder, String... arguments) throws Exception {
+        String runtimeClasspath = System.getProperty("ponhub.test.runtimeClasspath");
+        assertNotNull(runtimeClasspath, "Run this integration test through the Gradle test task.");
+        String executable = System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java";
+        Path java = Path.of(System.getProperty("java.home"), "bin", executable);
+        Path log = Files.createTempFile(directory, "entry-point-", ".log");
+        List<String> command = new ArrayList<>(List.of(java.toString(), "-cp", runtimeClasspath,
+                Main.class.getName()));
+        command.addAll(List.of(arguments));
+        Process process = new ProcessBuilder(command)
+                .directory(folder.toFile()).redirectErrorStream(true).redirectOutput(log.toFile()).start();
+        try {
+            boolean hasExited = process.waitFor(30, TimeUnit.SECONDS);
+            String output = Files.readString(log);
+            assertTrue(hasExited, "Entry point timed out; see " + log + "\n" + output);
+            assertEquals(1, process.exitValue(), output);
+            return output;
+        } finally {
+            if (process.isAlive()) {
+                process.destroyForcibly();
+                process.waitFor(10, TimeUnit.SECONDS);
+            }
+        }
+    }
 
     @Test
     public void init_excessiveNesting_opensProtectedStageAndRecoversAfterRestart() throws Exception {
@@ -141,7 +210,7 @@ public class ApplicationStartupTest {
     /**
      * Runs real initialization in a child JVM so relative application paths cannot touch the checkout.
      */
-    private void runBootstrap(Path folder, LoadStatus status, int peopleCount, boolean restoreGui,
+    private void runBootstrap(Path folder, LoadStatus status, int peopleCount, boolean shouldRestoreGui,
             String... arguments) throws Exception {
         String runtimeClasspath = System.getProperty("ponhub.test.runtimeClasspath");
         assertNotNull(runtimeClasspath, "Run this integration test through the Gradle test task.");
@@ -150,7 +219,7 @@ public class ApplicationStartupTest {
         Path log = folder.resolve("bootstrap.log");
         List<String> command = new ArrayList<>(List.of(java.toString(), "-cp", runtimeClasspath,
                 StartupProbe.class.getName(), "--status=" + status, "--people=" + peopleCount,
-                "--restore=" + restoreGui));
+                "--restore=" + shouldRestoreGui));
         command.addAll(List.of(arguments));
         Process process = new ProcessBuilder(command)
                 .directory(folder.toFile()).redirectErrorStream(true).redirectOutput(log.toFile()).start();
@@ -231,12 +300,12 @@ public class ApplicationStartupTest {
         private void verifySession() throws Exception {
             LoadStatus status = LoadStatus.valueOf(getParameters().getNamed().get("status"));
             int peopleCount = Integer.parseInt(getParameters().getNamed().get("people"));
-            boolean restoreGui = Boolean.parseBoolean(getParameters().getNamed().get("restore"));
-            boolean protectedSession = status != LoadStatus.MISSING && status != LoadStatus.LOADED;
+            boolean shouldRestoreGui = Boolean.parseBoolean(getParameters().getNamed().get("restore"));
+            boolean isProtectedSession = status != LoadStatus.MISSING && status != LoadStatus.LOADED;
             assertNotNull(ui);
             assertEquals(data, canonicalSession.getDataFilePath());
             assertEquals(status, canonicalSession.getLoadStatus());
-            assertEquals(protectedSession, canonicalSession.getDataLoadError().isPresent());
+            assertEquals(isProtectedSession, canonicalSession.getDataLoadError().isPresent());
             assertEquals(peopleCount, logic.getPersonRecords().size());
             assertEquals(peopleCount, canonicalSession.getDataSnapshot().people().getPeople().size());
             if (peopleCount == 1) {
@@ -247,13 +316,13 @@ public class ApplicationStartupTest {
                 assertEquals("00123456", person.getContactDetails().getPhone().orElseThrow().value);
                 assertEquals("Blk 10, #01-02", person.getContactDetails().getAddress().orElseThrow().value);
             }
-            if (restoreGui) {
+            if (shouldRestoreGui) {
                 assertEquals(SAVED_GUI, logic.getGuiSettings());
             }
             String help = logic.execute("help").getFeedbackToUser();
             String list = logic.execute("list").getFeedbackToUser();
             assertTrue(logic.execute("exit").isExit());
-            if (protectedSession) {
+            if (isProtectedSession) {
                 String guidance = canonicalSession.getDataLoadError().orElseThrow();
                 assertTrue(guidance.contains(data.toAbsolutePath().toString()));
                 assertTrue(guidance.contains("restart"));

@@ -5,8 +5,6 @@ import static ponhub.commons.util.AppUtil.checkArgument;
 
 import java.text.Normalizer;
 
-import ponhub.commons.util.StringUtil;
-
 /**
  * Represents a person's name in PonHub contact details.
  * Guarantees: immutable; is valid as declared in {@link #isValidName(String)}
@@ -23,6 +21,7 @@ public final class Name {
     // Every Unicode scalar has at most four code points in its full canonical decomposition in Java 25.
     // Canonically equivalent input cannot exceed the NFD length of a valid 100-code-point NFC name.
     private static final int MAX_NORMALIZATION_CODE_POINTS = MAX_LENGTH * 4;
+    private static final int NAME_MARKER_LENGTH = 3;
 
     public final String fullName;
 
@@ -34,8 +33,8 @@ public final class Name {
      */
     public Name(String name) {
         requireNonNull(name);
-        checkArgument(!hasForbiddenCodePoints(name), MESSAGE_CONSTRAINTS);
-        String spacedName = normalizeSpaces(name);
+        checkArgument(!ContactText.hasForbiddenCodePoints(name), MESSAGE_CONSTRAINTS);
+        String spacedName = ContactText.normalizeSpaces(name);
         checkArgument(isWithinNormalizationBudget(spacedName), MESSAGE_CONSTRAINTS);
         String normalizedName = Normalizer.normalize(spacedName, Normalizer.Form.NFC);
         checkArgument(isValidNormalizedName(normalizedName), MESSAGE_CONSTRAINTS);
@@ -47,28 +46,16 @@ public final class Name {
      */
     public static boolean isValidName(String test) {
         requireNonNull(test);
-        if (hasForbiddenCodePoints(test)) {
+        if (ContactText.hasForbiddenCodePoints(test)) {
             return false;
         }
-        String spacedName = normalizeSpaces(test);
+        String spacedName = ContactText.normalizeSpaces(test);
         return isWithinNormalizationBudget(spacedName)
                 && isValidNormalizedName(Normalizer.normalize(spacedName, Normalizer.Form.NFC));
     }
 
-    private static String normalizeSpaces(String name) {
-        return StringUtil.normalizeSpaces(StringUtil.stripUnicodeBoundaryWhitespace(name));
-    }
-
     private static boolean isWithinNormalizationBudget(String name) {
         return name.codePointCount(0, name.length()) <= MAX_NORMALIZATION_CODE_POINTS;
-    }
-
-    private static boolean hasForbiddenCodePoints(String name) {
-        return name.codePoints().anyMatch(codePoint -> Character.isISOControl(codePoint)
-                || Character.getType(codePoint) == Character.FORMAT
-                || Character.getType(codePoint) == Character.SURROGATE
-                || Character.getType(codePoint) == Character.LINE_SEPARATOR
-                || Character.getType(codePoint) == Character.PARAGRAPH_SEPARATOR);
     }
 
     private static boolean isValidNormalizedName(String name) {
@@ -84,7 +71,7 @@ public final class Name {
                 }
                 hasLetterSinceMarker = false;
                 canAttachMark = false;
-                offset += 3;
+                offset += NAME_MARKER_LENGTH;
                 continue;
             }
             int codePoint = name.codePointAt(offset);
@@ -107,8 +94,9 @@ public final class Name {
     }
 
     private static boolean isNameMarkerAt(String name, int offset) {
-        return offset > 0 && name.charAt(offset - 1) == ' ' && offset + 3 < name.length()
-                && name.charAt(offset + 3) == ' '
+        return offset > 0 && name.charAt(offset - 1) == ' '
+                && offset + NAME_MARKER_LENGTH < name.length()
+                && name.charAt(offset + NAME_MARKER_LENGTH) == ' '
                 && (name.startsWith("s/o", offset) || name.startsWith("d/o", offset));
     }
 

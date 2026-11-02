@@ -65,14 +65,14 @@ public class CanonicalPeopleCommandIntegrationTest {
     @Test
     public void execute_addEachRoleAndOptionalContacts_savesBeforePublishingAndReloads() throws Exception {
         for (PersonRole role : PersonRole.values()) {
-            for (boolean withOptionalContacts : new boolean[]{false, true}) {
-                PonHubData live = new PonHubData(peopleState());
+            for (boolean hasOptionalContacts : new boolean[]{false, true}) {
+                PonHubData live = new PonHubData(createPeopleState());
                 PeopleView view = new PeopleView(live);
                 view.setRoleFilter(Optional.of(PersonRole.STUDENT));
                 var visible = view.getPeople();
                 PonHubDataState before = live.exportState();
                 JsonPonHubDataStorage storage = new JsonPonHubDataStorage(directory.resolve(
-                        role.getValue() + withOptionalContacts + ".json"));
+                        role.getValue() + hasOptionalContacts + ".json"));
                 storage.saveData(before);
                 int[] writes = {0};
                 CanonicalCommandExecutor executor = new CanonicalCommandExecutor(view, state -> {
@@ -81,7 +81,7 @@ public class CanonicalPeopleCommandIntegrationTest {
                     writes[0]++;
                     storage.saveData(state);
                 }, Optional::empty);
-                var input = addParser.parse(addArguments(role, withOptionalContacts));
+                var input = addParser.parse(addArguments(role, hasOptionalContacts));
                 CommandResult result = executor.execute(new CanonicalAddCommand(input));
                 PersonRecord added = live.getPeople().getLast();
                 PersonId expectedId = PersonId.of(role, before.people().getLastAllocatedSequences().get(role) + 1);
@@ -105,7 +105,7 @@ public class CanonicalPeopleCommandIntegrationTest {
 
     @Test
     public void execute_failedSaveThenRetry_preservesBytesFilterIndicesAndUncommittedId() throws Exception {
-        PonHubData live = new PonHubData(peopleState());
+        PonHubData live = new PonHubData(createPeopleState());
         PeopleView view = new PeopleView(live);
         view.setRoleFilter(Optional.of(PersonRole.STUDENT));
         var visible = view.getPeople();
@@ -144,11 +144,11 @@ public class CanonicalPeopleCommandIntegrationTest {
 
     @Test
     public void execute_normalizedDuplicates_returnsRoleSpecificErrorsWithoutWritesOrViewChanges() throws Exception {
-        PonHubData live = new PonHubData(peopleState());
+        PonHubData live = new PonHubData(createPeopleState());
         PeopleView view = new PeopleView(live);
         view.setRoleFilter(Optional.of(PersonRole.TUTOR));
         PonHubDataState before = live.exportState();
-        CanonicalCommandExecutor executor = noWriteExecutor(view);
+        CanonicalCommandExecutor executor = createNoWriteExecutor(view);
         Map<PersonRole, String> duplicates = Map.of(
                 PersonRole.STUDENT, "r/student n/ALICE  tan l/S2 pp/00123456 p/00456789",
                 PersonRole.TUTOR, "r/tutor n/TUTOR  tan p/00234567 e/Changed@example.com",
@@ -161,63 +161,66 @@ public class CanonicalPeopleCommandIntegrationTest {
                     failure.getMessage());
             assertEquals(before, live.exportState());
             assertEquals(Optional.of(PersonRole.TUTOR), view.getRoleFilter());
-            assertEquals(List.of(new PersonId("T7")), visibleIds(view));
+            assertEquals(List.of(new PersonId("T7")), getVisibleIds(view));
         }
     }
 
     @Test
     public void execute_exhaustedRole_returnsCheckedErrorWithoutConsumingOtherIds() throws Exception {
         for (PersonRole role : PersonRole.values()) {
-            EnumMap<PersonRole, Long> counters = new EnumMap<>(peopleState().people().getLastAllocatedSequences());
+            EnumMap<PersonRole, Long> counters =
+                    new EnumMap<>(createPeopleState().people().getLastAllocatedSequences());
             counters.put(role, Long.MAX_VALUE);
-            PonHubDataState before = new PonHubDataState(new PeopleRegistryState(peopleState().people().getPeople(),
-                    counters), List.of(), List.of(), 12);
+            PonHubDataState before = new PonHubDataState(
+                    new PeopleRegistryState(createPeopleState().people().getPeople(), counters),
+                    List.of(), List.of(), 12);
             PonHubData live = new PonHubData(before);
             PeopleView view = new PeopleView(live);
             view.setRoleFilter(Optional.of(PersonRole.PARENT));
-            CanonicalCommandExecutor executor = noWriteExecutor(view);
+            CanonicalCommandExecutor executor = createNoWriteExecutor(view);
             CanonicalAddCommand command = new CanonicalAddCommand(addParser.parse(addArguments(role, false)));
             CommandException failure = assertThrows(CommandException.class, () -> executor.execute(command));
             assertEquals("No more person IDs are available for role " + role.getValue() + ".", failure.getMessage());
             assertEquals(before, live.exportState());
             assertEquals(Optional.of(PersonRole.PARENT), view.getRoleFilter());
-            assertEquals(List.of(new PersonId("P2")), visibleIds(view));
+            assertEquals(List.of(new PersonId("P2")), getVisibleIds(view));
         }
     }
 
     @Test
     public void execute_listRolesAndAll_preservesGlobalOrderAndDataWithoutSaving() throws Exception {
-        PonHubData live = new PonHubData(peopleState());
+        PonHubData live = new PonHubData(createPeopleState());
         PeopleView view = new PeopleView(live);
         var visible = view.getPeople();
         PonHubDataState before = live.exportState();
-        CanonicalCommandExecutor executor = noWriteExecutor(view);
+        CanonicalCommandExecutor executor = createNoWriteExecutor(view);
         assertEquals("Showing 4 person(s).", executor.execute(new CanonicalListCommand(listParser.parse("")))
                 .getFeedbackToUser());
         assertEquals(List.of(new PersonId("T7"), new PersonId("S9"), new PersonId("P2"), new PersonId("S3")),
-                visibleIds(view));
+                getVisibleIds(view));
         assertEquals(new PersonId("S9"), PersonIndexResolver.resolve(Index.fromOneBased(2), visible).getId());
         assertEquals("Showing 2 student(s).", executor.execute(new CanonicalListCommand(listParser.parse("r/student")))
                 .getFeedbackToUser());
-        assertEquals(List.of(new PersonId("S9"), new PersonId("S3")), visibleIds(view));
+        assertEquals(List.of(new PersonId("S9"), new PersonId("S3")), getVisibleIds(view));
         assertEquals(new PersonId("S3"), PersonIndexResolver.resolve(Index.fromOneBased(2), visible).getId());
         assertEquals("Showing 1 tutor(s).", executor.execute(new CanonicalListCommand(listParser.parse("r/TUTOR")))
                 .getFeedbackToUser());
-        assertEquals(List.of(new PersonId("T7")), visibleIds(view));
+        assertEquals(List.of(new PersonId("T7")), getVisibleIds(view));
         assertEquals("Showing 1 parent(s).", executor.execute(new CanonicalListCommand(listParser.parse("r/parent")))
                 .getFeedbackToUser());
-        assertEquals(List.of(new PersonId("P2")), visibleIds(view));
+        assertEquals(List.of(new PersonId("P2")), getVisibleIds(view));
         assertSame(visible, view.getPeople());
         assertEquals(before, live.exportState());
     }
 
     @Test
     public void execute_emptyRoleAndInvalidArguments_preservesDataAndLastSuccessfulView() throws Exception {
-        PonHubDataState before = new PonHubDataState(new PeopleRegistryState(List.of(peopleState().people()
-                .getPeople().get(1)), peopleState().people().getLastAllocatedSequences()), List.of(), List.of(), 12);
+        PonHubDataState before = new PonHubDataState(new PeopleRegistryState(List.of(createPeopleState().people()
+                .getPeople().get(1)), createPeopleState().people().getLastAllocatedSequences()),
+                List.of(), List.of(), 12);
         PonHubData live = new PonHubData(before);
         PeopleView view = new PeopleView(live);
-        CanonicalCommandExecutor executor = noWriteExecutor(view);
+        CanonicalCommandExecutor executor = createNoWriteExecutor(view);
         assertEquals("Showing 0 tutor(s).", executor.execute(new CanonicalListCommand(listParser.parse("r/tutor")))
                 .getFeedbackToUser());
         assertTrue(view.getPeople().isEmpty());
@@ -238,7 +241,7 @@ public class CanonicalPeopleCommandIntegrationTest {
 
     @Test
     public void execute_protectedAddition_rejectsWithoutPublishingWhileListStillWorks() throws Exception {
-        PonHubData live = new PonHubData(peopleState());
+        PonHubData live = new PonHubData(createPeopleState());
         PeopleView view = new PeopleView(live);
         view.setRoleFilter(Optional.of(PersonRole.PARENT));
         PonHubDataState before = live.exportState();
@@ -257,7 +260,7 @@ public class CanonicalPeopleCommandIntegrationTest {
 
     @Test
     public void execute_addWithAttendance_preservesRelationshipsInSavedSnapshot() throws Exception {
-        PonHubDataState peopleOnly = peopleState();
+        PonHubDataState peopleOnly = createPeopleState();
         Lesson lesson = new Lesson(new LessonId("L12"), new PersonId("T7"), new LessonTimeSlot(LessonDay.MONDAY,
                 new LessonTime("0900"), new LessonTime("1000")), new Subject("Math"), new Room("R1"),
                 Set.of(new PersonId("S9")));
@@ -283,31 +286,31 @@ public class CanonicalPeopleCommandIntegrationTest {
         assertEquals(live.exportState(), storage.readData().orElseThrow());
     }
 
-    private static CanonicalCommandExecutor noWriteExecutor(PeopleView view) {
+    private static CanonicalCommandExecutor createNoWriteExecutor(PeopleView view) {
         return new CanonicalCommandExecutor(view, state -> {
             throw new AssertionError("Read-only or rejected commands must never save");
         }, Optional::empty);
     }
 
-    private static List<PersonId> visibleIds(PeopleView view) {
+    private static List<PersonId> getVisibleIds(PeopleView view) {
         return view.getPeople().stream().map(PersonRecord::getId).toList();
     }
 
-    private static String addArguments(PersonRole role, boolean withOptionalContacts) {
+    private static String addArguments(PersonRole role, boolean hasOptionalContacts) {
         String required = role == PersonRole.STUDENT ? "r/StUdEnT n/New Person l/p2 pp/00123456"
                 : "r/" + role.getValue() + " n/New Person p/00012345";
-        String optional = withOptionalContacts ? " e/New@example.com a/Block 2" : "";
-        if (role == PersonRole.STUDENT && withOptionalContacts) {
+        String optional = hasOptionalContacts ? " e/New@example.com a/Block 2" : "";
+        if (role == PersonRole.STUDENT && hasOptionalContacts) {
             optional += " p/00456789";
         }
         return required + optional;
     }
 
-    private static PonHubDataState peopleState() {
-        Tutor tutor = new Tutor(new PersonId("T7"), contacts("Tutor Tan", "00234567"));
+    private static PonHubDataState createPeopleState() {
+        Tutor tutor = new Tutor(new PersonId("T7"), createContacts("Tutor Tan", "00234567"));
         Student first = new Student(new PersonId("S9"), new ContactDetails(new Name("Alice Tan")),
                 new EducationLevel("P1"), new Phone("00123456"));
-        Parent parent = new Parent(new PersonId("P2"), contacts("Parent Tan", "00345678"));
+        Parent parent = new Parent(new PersonId("P2"), createContacts("Parent Tan", "00345678"));
         Student second = new Student(new PersonId("S3"), new ContactDetails(new Name("Bob Tan")),
                 new EducationLevel("P2"), new Phone("00123456"));
         return new PonHubDataState(new PeopleRegistryState(List.of(tutor, first, parent, second),
@@ -315,7 +318,7 @@ public class CanonicalPeopleCommandIntegrationTest {
                 List.of(), List.of(), 12);
     }
 
-    private static ContactDetails contacts(String name, String phone) {
+    private static ContactDetails createContacts(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.of(new Phone(phone)), Optional.empty(), Optional.empty());
     }
 }

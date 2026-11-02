@@ -40,7 +40,7 @@ public class CanonicalEditIntegrationTest {
 
     @Test
     public void execute_partialStudentEdit_clearsOptionalFieldsAndPersistsStableIdentity() throws Exception {
-        Path path = fixture();
+        Path path = createPeopleFile();
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("list r/student");
         var before = session.getDataSnapshot();
@@ -68,7 +68,7 @@ public class CanonicalEditIntegrationTest {
 
     @Test
     public void execute_normalizedNoOp_doesNotSavePublishOrTreatCapitalizationAsUnchanged() throws Exception {
-        Path path = fixture();
+        Path path = createPeopleFile();
         AtomicInteger saves = new AtomicInteger();
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
             saves.incrementAndGet();
@@ -94,7 +94,7 @@ public class CanonicalEditIntegrationTest {
 
     @Test
     public void execute_rejections_preserveVisibleMappingsAndSavedBytes() throws Exception {
-        Path path = fixture();
+        Path path = createPeopleFile();
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("list r/student");
         var before = session.getDataSnapshot();
@@ -181,14 +181,14 @@ public class CanonicalEditIntegrationTest {
 
     @Test
     public void execute_failedSaves_preserveAllLiveViewsUntilSuccessfulRetry() throws Exception {
-        Path path = fixture();
+        Path path = createPeopleFile();
         for (IOException failure : List.of(new IOException("disk failure"),
                 new AccessDeniedException(path.toString()))) {
-            AtomicBoolean failSave = new AtomicBoolean(true);
+            AtomicBoolean shouldFailSave = new AtomicBoolean(true);
             AtomicInteger saves = new AtomicInteger();
             CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
                 saves.incrementAndGet();
-                if (failSave.get()) {
+                if (shouldFailSave.get()) {
                     throw failure;
                 }
                 new JsonPonHubDataStorage(path).saveData(state);
@@ -207,7 +207,7 @@ public class CanonicalEditIntegrationTest {
             assertSame(person, session.getPeople().getFirst());
             assertSame(contexts, session.personSearchContextProperty().get());
             assertArrayEquals(bytes, Files.readAllBytes(path));
-            failSave.set(false);
+            shouldFailSave.set(false);
             session.execute("edit 1 n/Changed Student");
             assertTrue(session.getPeople().isEmpty());
             assertEquals(2, saves.get());
@@ -219,7 +219,7 @@ public class CanonicalEditIntegrationTest {
 
     @Test
     public void execute_populatedHistoryAndTutorRename_refreshStableDetailAndSearchSubscriptions() throws Exception {
-        CanonicalPeopleSession session = linkedSession();
+        CanonicalPeopleSession session = createLinkedSession();
         session.execute("history 1 lid/L1");
         var history = session.getDisplayedHistory();
         var entries = List.copyOf(history);
@@ -258,7 +258,7 @@ public class CanonicalEditIntegrationTest {
 
     @Test
     public void execute_parentAndStudentPhoneEdits_recomputeExactLinksWithoutCascading() throws Exception {
-        CanonicalPeopleSession session = linkedSession();
+        CanonicalPeopleSession session = createLinkedSession();
         session.execute("search c/parent sn/Alex");
         assertEquals(1, session.getPeople().size());
         session.execute("edit 1 p/90000000");
@@ -278,8 +278,8 @@ public class CanonicalEditIntegrationTest {
         assertEquals(4, session.getDataSnapshot().people().getPeople().size());
     }
 
-    private CanonicalPeopleSession linkedSession() throws Exception {
-        CanonicalPeopleSession session = new CanonicalPeopleSession(fixture());
+    private CanonicalPeopleSession createLinkedSession() throws Exception {
+        CanonicalPeopleSession session = new CanonicalPeopleSession(createPeopleFile());
         session.execute("addlesson d/Mon st/1600 et/1700 s/Math tu/Mei Lim rm/R1");
         session.execute("list r/student");
         session.execute("enrol 1 lid/L1");
@@ -290,7 +290,7 @@ public class CanonicalEditIntegrationTest {
         return session;
     }
 
-    private Path fixture() throws Exception {
+    private Path createPeopleFile() throws Exception {
         Path path = directory.resolve("ponhub.json");
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("add r/tutor n/Mei Lim p/92345678");
