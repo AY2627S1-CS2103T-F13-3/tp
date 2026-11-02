@@ -15,7 +15,7 @@ import javafx.scene.robot.Robot;
 import javafx.stage.*;
 
 /** Diagnostic only. Ernest Chua's alpha session, with OpenAI Codex assistance. */
-public class Round1Agent {
+public class CommandRecallAgent {
     static Path out;
     static Stage stage;
     static Robot robot;
@@ -23,7 +23,7 @@ public class Round1Agent {
     static Map<DataFormat,Object> oldClipboard;
     public static void premain(String arg, Instrumentation ignored) {
         out=Path.of(arg);
-        Thread worker=new Thread(Round1Agent::run,"round1-native");
+        Thread worker=new Thread(CommandRecallAgent::run,"command-recall-native");
         worker.setDaemon(true); worker.start();
     }
     static void run() {

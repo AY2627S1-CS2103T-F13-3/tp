@@ -15,7 +15,7 @@ import javafx.scene.robot.Robot;
 import javafx.stage.*;
 
 /** Diagnostic only. Ernest Chua's alpha session, with OpenAI Codex assistance. */
-public class Round1Agent {
+public class PanelBordersAgent {
     static Path out;
     static Stage stage;
     static Robot robot;
@@ -23,7 +23,7 @@ public class Round1Agent {
     static Map<DataFormat,Object> oldClipboard;
     public static void premain(String arg, Instrumentation ignored) {
         out=Path.of(arg);
-        Thread worker=new Thread(Round1Agent::run,"round1-native");
+        Thread worker=new Thread(PanelBordersAgent::run,"panel-borders-native");
         worker.setDaemon(true); worker.start();
     }
     static void run() {
