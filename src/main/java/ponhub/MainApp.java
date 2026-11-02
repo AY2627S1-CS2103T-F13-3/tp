@@ -32,6 +32,7 @@ public class MainApp extends Application {
     private static final Logger logger = LogsCenter.getLogger(MainApp.class);
     private static final Path USER_PREFS_FILE_PATH = Paths.get("preferences.json");
     private static final Path CANONICAL_DATA_FILE_PATH = Paths.get("data", "ponhub.json");
+    private static final int MAX_FOLLOWED_SYMBOLIC_LINKS = 40;
 
     protected Ui ui;
     protected Logic logic;
@@ -152,7 +153,7 @@ public class MainApp extends Application {
      */
     private static Path resolveStoragePath(Path path, int followedLinks) throws IOException {
         if (Files.isSymbolicLink(path)) {
-            if (followedLinks >= 40) {
+            if (followedLinks >= MAX_FOLLOWED_SYMBOLIC_LINKS) {
                 throw new IOException("Too many symbolic links while checking storage path " + path);
             }
             Path target = Files.readSymbolicLink(path);
