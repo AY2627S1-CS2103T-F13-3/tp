@@ -1079,7 +1079,9 @@ The following features are planned for future versions and are not in PonHub v1.
 
 The {% include command-list.html key="record-validation" label="commands that create or edit records" %} and PonHub's startup file loader validate values against the rules below.
 
-In `addlesson` and `editlesson`, put `s/` before `tu/` when the subject begins with lowercase `o` followed by a space (or is just `o`). For example, use `editlesson lid/L1 s/o level math tu/Bob Ong`. This keeps `s/o` separate from a legal-name marker inside the tutor's name.
+In `editlesson`, a standalone lowercase `s/o` inside `tu/` is read as a legal-name marker. When the subject begins with lowercase `o` followed by a space (or is just `o`), put `s/` before `tu/`; for example, `editlesson lid/L1 s/o level math tu/Bob Ong`.
+
+In `addlesson`, when no separate `s/` is supplied, the last standalone lowercase `s/o` inside `tu/` starts the required subject. With a separate `s/` prefix, `s/o` and `d/o` remain part of the tutor's name.
 
 | Field | Prefix | Accepted values and rules |
 | --- | --- | --- |
