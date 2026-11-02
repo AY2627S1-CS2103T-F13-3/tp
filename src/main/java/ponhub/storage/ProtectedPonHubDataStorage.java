@@ -127,13 +127,19 @@ public final class ProtectedPonHubDataStorage {
     private DataLoadingException reject(LoadStatus reason, IOException failure) {
         status = reason;
         String recovery = reason == LoadStatus.LEGACY
-                ? "Back up the original file. Configure a separate, previously unused canonical data path and"
+                ? "Back up the original file. Configure a separate, previously unused data file path and"
                     + " restart, then manually re-enter records with explicit roles. Automatic import is unavailable."
                 : "Back up the original file. Restore a known-good supported file, correct its JSON/access permissions,"
                     + " or use a compatible build on a separate copy, then restart.";
-        loadError = "Could not load canonical data at " + path.toAbsolutePath() + " (" + reason + "). "
-                + "The original file has not been changed. Operational writes are blocked for this session;"
-                + " only help, list and exit should be available. An empty view is not your saved data. "
+        String problem = switch (reason) {
+            case LEGACY -> "legacy file format";
+            case UNSUPPORTED_VERSION -> "unsupported file version";
+            case CORRUPT -> "invalid file contents";
+            default -> "file access problem";
+        };
+        loadError = "Could not load data file at " + path.toAbsolutePath() + " (" + problem + "). "
+                + "The original file has not been changed. Changes cannot be saved in this session;"
+                + " only help, list and exit are available. An empty view is not your saved data. "
                 + recovery + " Do not delete the original to bypass protection. Cause: " + failure.getMessage();
         return new DataLoadingException(new IOException(loadError, failure));
     }

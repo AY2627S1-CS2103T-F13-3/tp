@@ -49,22 +49,6 @@ public class StringUtil {
     }
 
     /**
-     * Returns {@code value} with surrounding ASCII spaces removed, preserving other characters.
-     */
-    public static String trimSpaces(String value) {
-        requireNonNull(value);
-        int start = 0;
-        int end = value.length();
-        while (start < end && value.charAt(start) == ' ') {
-            start++;
-        }
-        while (end > start && value.charAt(end - 1) == ' ') {
-            end--;
-        }
-        return value.substring(start, end);
-    }
-
-    /**
      * Returns {@code value} with surrounding ASCII spaces removed and interior runs collapsed.
      * Preserves all other characters, including controls, for subsequent field validation.
      */

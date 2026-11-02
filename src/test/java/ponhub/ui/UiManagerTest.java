@@ -101,7 +101,7 @@ public class UiManagerTest {
     private void assertFatalAlert(Throwable failure) {
         assertNull(uiManager.alertOwner);
         assertEquals(AlertType.ERROR, uiManager.alertType);
-        assertEquals("Fatal error during initializing", uiManager.alertTitle);
+        assertEquals("Fatal error during initialization", uiManager.alertTitle);
         assertEquals(failure.getMessage(), uiManager.alertHeader);
         assertEquals(failure.toString(), uiManager.alertContent);
     }

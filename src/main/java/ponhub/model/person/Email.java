@@ -21,6 +21,8 @@ public final class Email {
             "[A-Za-z0-9_'%+-]+(?:\\.[A-Za-z0-9_'%+-]+)*@"
             + "(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\\.)+[A-Za-z]{2,63}";
 
+    private static final int MAX_FINAL_LABEL_LENGTH = 63;
+
     public final String value;
 
     /**
@@ -79,7 +81,7 @@ public final class Email {
         }
 
         int finalLabelLength = test.length() - labelStart;
-        if (!hasDomainPeriod || finalLabelLength < 2 || finalLabelLength > 63) {
+        if (!hasDomainPeriod || finalLabelLength < 2 || finalLabelLength > MAX_FINAL_LABEL_LENGTH) {
             return false;
         }
         for (int i = labelStart; i < test.length(); i++) {

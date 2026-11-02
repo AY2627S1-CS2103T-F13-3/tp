@@ -178,7 +178,7 @@ public final class CanonicalCommandCatalog {
                         .append('\n'));
         overview.append("\nType help COMMAND for syntax and an example, e.g. help list.\n\n");
         loadError.ifPresent(error -> overview.append(error).append("\n\n"));
-        return overview.append("Scroll the Result Display if needed.").toString();
+        return overview.append("Scroll the feedback area if needed.").toString();
     }
 
 }

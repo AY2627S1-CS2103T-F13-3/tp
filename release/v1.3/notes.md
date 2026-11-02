@@ -1,8 +1,5 @@
 # PonHub v1.3 — What's New
 
-The illustrations show v1.3 application source `b513d313d1ba219df662d401bc0949e5afb49309`;
-see [media sources and credits](media-plan.md).
-
 PonHub adapts AddressBook-Level3 into a desktop workspace for tuition centre administrators. Manage Students, Tutors and Parents, enrol multiple Students in one recurring Lesson, and keep dated attendance even after a Student leaves. Commands remain keyboard-driven, with separate people and lesson/history views.
 
 ## People suited to tuition administration
@@ -62,4 +59,4 @@ This version does not provide the inherited `edit`, `clear` or `find` routes. Pe
 
 ## Credits
 
-PonHub builds on AddressBook-Level3 from the SE-EDU initiative. Feature authors retain credit for their implementation and documentation. Benjamin Ng supplied the search/retrieval facts and existing Lesson-results media; Vincent Lin coordinated these release notes and the final media plan with OpenAI Codex assistance. See [About Us](../../docs/AboutUs.md) for team responsibilities.
+PonHub builds on AddressBook-Level3 from the SE-EDU initiative. Feature authors retain credit for their implementation and documentation. Benjamin Ng supplied the search/retrieval facts and existing Lesson-results media, including `docs/images/LessonResults.png`. Vincent Lin supplied the Windows screenshots above and coordinated these release notes with OpenAI Codex assistance. See [About Us](../../docs/AboutUs.md) for team responsibilities.

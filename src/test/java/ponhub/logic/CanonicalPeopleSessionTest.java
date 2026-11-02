@@ -52,6 +52,30 @@ public class CanonicalPeopleSessionTest {
     Path directory;
 
     @Test
+    public void execute_helpList_describesRunnableExampleInNormalAndProtectedSessions() throws Exception {
+        // Missing and rejected files cover both sessions where list guidance is available, without writing data.
+        for (boolean isProtected : List.of(false, true)) {
+            Path path = directory.resolve("help-list-" + isProtected + ".json");
+            if (isProtected) {
+                Files.writeString(path, "{");
+            }
+            CanonicalPeopleSession session = new CanonicalPeopleSession(path);
+            String guidance = session.execute("help list").getFeedbackToUser();
+            assertTrue(guidance.startsWith("Usage: list [r/student|tutor|parent]\n"));
+            assertTrue(guidance.contains("at most one lowercase r/ filter; role names ignore case"));
+            String example = guidance.substring(guidance.indexOf("Example: ") + "Example: ".length());
+            assertEquals("list r/student", example);
+            assertTrue(session.execute(example).getFeedbackToUser().startsWith("Showing 0 student(s)."));
+            assertTrue(session.getPeople().isEmpty());
+            if (isProtected) {
+                assertEquals("{", Files.readString(path));
+            } else {
+                assertFalse(Files.exists(path));
+            }
+        }
+    }
+
+    @Test
     public void execute_secondWindowCannotOverwrite_preservesLiveStateAndRestartsWithWinner() throws Exception {
         Path path = directory.resolve("concurrent-test.json");
         CanonicalPeopleSession first = new CanonicalPeopleSession(path);
@@ -254,7 +278,7 @@ public class CanonicalPeopleSessionTest {
         assertEquals(LoadStatus.UNREADABLE, session.getLoadStatus());
         assertTrue(session.getPeople().isEmpty());
         assertThrows(CommandException.class, () -> session.execute(addCommand(PersonRole.TUTOR)));
-        assertTrue(session.execute("list").getFeedbackToUser().contains("UNREADABLE"));
+        assertTrue(session.execute("list").getFeedbackToUser().contains("file access problem"));
         assertTrue(Files.isDirectory(path));
         assertEquals("Retain this directory", Files.readString(marker));
     }

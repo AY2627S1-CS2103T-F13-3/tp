@@ -3,21 +3,28 @@ package ponhub.storage;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import ponhub.logic.CanonicalCommandExecutor;
+import ponhub.logic.commands.CommandResult;
+import ponhub.logic.commands.exceptions.CommandException;
+import ponhub.model.PeopleView;
 import ponhub.model.PonHubData;
 import ponhub.model.PonHubDataState;
 
@@ -27,6 +34,47 @@ import ponhub.model.PonHubDataState;
 public class CanonicalDataFileGuardTest {
     @TempDir
     Path directory;
+
+    @Test
+    public void save_permissionFailure_reportsDataPathPreservesStateAndAllowsRetry() throws Exception {
+        // A first save and replacement both need the configured destination, even if an intermediate file fails.
+        for (boolean existing : List.of(false, true)) {
+            Path path = directory.resolve("permission-" + existing + ".json");
+            PonHubData live = new PonHubData();
+            PonHubDataState before = live.exportState();
+            String original = existing ? JsonPonHubDataCodec.encode(before) : null;
+            if (existing) {
+                Files.writeString(path, original);
+            }
+            AccessDeniedException denied = new AccessDeniedException(directory.resolve(".ponhub-staged.tmp")
+                    .toString());
+            int[] attempts = {0};
+            CanonicalDataFileGuard guard = new CanonicalDataFileGuard(path, original, target -> {
+                if (attempts[0]++ == 0) {
+                    throw denied;
+                }
+                return () -> { };
+            });
+            CanonicalCommandExecutor executor = new CanonicalCommandExecutor(new PeopleView(live),
+                    state -> guard.save(JsonPonHubDataCodec.encode(state)), Optional::empty);
+            CanonicalCommandExecutor.StagedCommand change = (staged, view) -> {
+                staged.resetData(new PonHubDataState(before.people(), List.of(), List.of(), 1));
+                return new CommandResult("Saved");
+            };
+            CommandException failure = assertThrows(CommandException.class, () -> executor.execute(change));
+            assertEquals("Could not save data to file " + path.toAbsolutePath()
+                    + " due to insufficient permissions to write to the file or the folder.", failure.getMessage());
+            assertSame(denied, failure.getCause().getCause());
+            assertSame(before, live.exportState());
+            if (existing) {
+                assertEquals(original, Files.readString(path));
+            } else {
+                assertFalse(Files.exists(path));
+            }
+            assertEquals("Saved", executor.execute(change).getFeedbackToUser());
+            assertEquals(live.exportState(), new ProtectedPonHubDataStorage(path).load());
+        }
+    }
 
     @Test
     public void save_cleanupFailureAfterCommit_retainsSuccessAndAdvancesBaseline() throws Exception {
