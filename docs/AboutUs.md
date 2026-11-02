@@ -23,7 +23,7 @@ We are a team based in the [School of Computing, National University of Singapor
 ### Vincent Lin
 {: .team-member-name}
 
-<img src="images/gugrusaurus.png" width="200px" alt="Vincent Lin">
+<img src="images/gugrusaurus.jpg" width="200px" alt="Vincent Lin">
 
 [[github](https://github.com/gugrusaurus)] [[PPP](team/gugrusaurus.html)]
 
@@ -63,7 +63,7 @@ We are a team based in the [School of Computing, National University of Singapor
 ### Yang Shuo
 {: .team-member-name}
 
-<img src="images/ys000009.png" width="200px" alt="Yang Shuo">
+<img src="images/ys000009.jpg" width="200px" alt="Yang Shuo">
 
 [[github](https://github.com/ys000009)] [[PPP](team/ys000009.html)]
 

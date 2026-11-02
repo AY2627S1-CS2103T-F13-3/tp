@@ -82,6 +82,11 @@ public final class CanonicalPeopleSession {
     public static final String MESSAGE_HELP_USAGE = CanonicalCommandCatalog.MESSAGE_HELP_USAGE;
     public static final String MESSAGE_UNKNOWN_COMMAND_FORMAT =
             "Unknown command: '%s'. Type 'help' to see available commands.";
+    public static final String MESSAGE_DELETE_KEYWORD_CASE =
+            "Enter delete confirm or delete cancel in lowercase. Any pending deletion was cancelled; "
+                    + "run delete INDEX again before confirming.";
+    public static final String MESSAGE_HELP_PROTECTED_TOPIC =
+            "Command '%s' is unavailable while the data file is protected. Only help, list and exit can be used.";
 
     private static final Pattern BASIC_COMMAND_FORMAT =
             Pattern.compile("[\\p{javaWhitespace}\\p{Zs}]*(?<commandWord>\\S+)(?<arguments>.*)",
@@ -306,6 +311,14 @@ public final class CanonicalPeopleSession {
     private CommandResult executeDelete(String arguments, PersonRecord confirmationTarget)
             throws ParseException, CommandException {
         String action = StringUtil.stripUnicodeBoundaryWhitespace(arguments);
+        if (action.isEmpty() || action.chars().anyMatch(Character::isWhitespace)) {
+            throw new ParseException(String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT,
+                    CanonicalCommandCatalog.MESSAGE_DELETE_USAGE));
+        }
+        if (!action.equals("confirm") && !action.equals("cancel")
+                && (action.equalsIgnoreCase("confirm") || action.equalsIgnoreCase("cancel"))) {
+            throw new ParseException(MESSAGE_DELETE_KEYWORD_CASE);
+        }
         if (action.equals("confirm")) {
             if (confirmationTarget == null) {
                 throw new CommandException("No person deletion is awaiting confirmation. Run delete INDEX first.");
@@ -340,6 +353,11 @@ public final class CanonicalPeopleSession {
         }
         if (topic.chars().anyMatch(Character::isWhitespace)) {
             throw new ParseException(String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, MESSAGE_HELP_USAGE));
+        }
+        boolean isDisabledTopic = getDataLoadError().isPresent() && CanonicalCommandDefinition.fromWord(topic)
+                .filter(definition -> !definition.isAllowedWhenProtected()).isPresent();
+        if (isDisabledTopic) {
+            throw new ParseException(String.format(MESSAGE_HELP_PROTECTED_TOPIC, topic));
         }
         return CanonicalCommandCatalog.getUsage(topic, getDataLoadError().isPresent()).orElseThrow(() ->
                 new ParseException(String.format(CanonicalCommandCatalog.MESSAGE_UNKNOWN_HELP_TOPIC, topic)));
