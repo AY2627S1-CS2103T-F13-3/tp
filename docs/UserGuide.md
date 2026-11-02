@@ -166,7 +166,7 @@ Above the lists sit three shortcut buttons (**All lessons**, **Student lessons**
 Throughout this guide, command formats use these conventions:
 * **`UPPERCASE` words** are placeholders you replace with your own values (for example, `NAME` or `LESSON_ID`). **Lowercase words** such as `r/student` are typed exactly as shown.
 * **Square brackets `[ ]`** mark optional fields. **Vertical bars `|`** separate choices (for example, `s/present|absent` means type `s/present` or `s/absent`). **Three dots `...`** mean you can supply several filters. Never type `[ ]`, `|`, or `...` in your command.
-* **Prefixes** label each field, such as `n/Alex Tan` for a name. Always type command words and prefixes in lowercase. Prefixed fields can appear in any order, at most once per command, with two exceptions: the [search name-marker exception](#search-name-marker-exception), and [`lessons`](#listing-lessons-lessons), where the optional student selector—including its legacy `si/STUDENT_INDEX` form—must come before `sort/creation|schedule`. Unknown or repeated prefixes are rejected, and there is no quoting or escaping syntax.
+* **Prefixes** label each field, such as `n/Alex Tan` for a name. Always type command words and prefixes in lowercase. Prefixed fields can appear in any order, at most once per command, with three exceptions: the [search name-marker exception](#search-name-marker-exception); [`lessons`](#listing-lessons-lessons), where the optional student selector—including its legacy `si/STUDENT_INDEX` form—must come before `sort/creation|schedule`; and `editlesson`, where a subject beginning with the word `o` (such as `s/o level math`) must come before `tu/` (see the [Field reference](#field-reference)). Unknown or repeated prefixes are rejected, and there is no quoting or escaping syntax.
 * **Blank values:** If you do not have an optional value when adding a record, leave its prefix out altogether. Only `edit` accepts an empty prefix (such as `e/` or `a/`) to clear an existing optional field.
 * **Prefixes whose meaning depends on the command:**
   * `d/` takes a weekday (`Mon`–`Sun`) when creating, editing, or searching lessons, but takes a real `YYYY-MM-DD` calendar date in `mark`, `unmark`, `showlesson`, and `history`.
@@ -1008,6 +1008,7 @@ We recommend running **one PonHub window at a time**. If you accidentally open t
 `data/ponhub.json` is stored in human-readable JSON. We strongly recommend using PonHub's commands rather than editing the file by hand, because PonHub validates the **entire file** on startup—any mistake will start a [protected session](#if-ponhub-shows-data-file-protected).
 
 If you must edit the file directly, **close PonHub and make a backup copy first**, then follow these rules:
+* **People:** Each person's `role` must be `STUDENT`, `TUTOR`, or `PARENT` in uppercase; a lowercase role such as `tutor` starts a protected session.
 * **Lessons:** Each lesson entry stores its stable ID (`L1`), tutor ID (`T1`), weekday (`Mon`–`Sun`), 4-digit start and end time strings (such as `"0900"` and `"1030"`), subject, room, and array of enrolled student IDs. Every referenced tutor and student ID must exist in the same file, IDs must not repeat, and no tutor, room, or enrolled student may have overlapping lessons on the same weekday (back-to-back times are allowed).
 * **Attendance records:** Each entry in the root `attendance` array must contain only the four string fields `studentId`, `lessonId`, `date`, and `status`—for example:
   ```json
@@ -1088,7 +1089,7 @@ In `addlesson`, when no separate `s/` is supplied, the last standalone lowercase
 
 | Field | Prefix | Accepted values and rules |
 | --- | --- | --- |
-| **Role** | `r/` | `student`, `tutor`, or `parent` (case-insensitive). |
+| **Role** | `r/` | `student`, `tutor`, or `parent` (case-insensitive in commands). In the data file, `role` must be stored in uppercase: `STUDENT`, `TUTOR`, or `PARENT`. |
 | **Name / Tutor name** | `n/`, `tu/` | 1–100 Unicode code points (stored in NFC form). May contain letters, attached combining marks (must follow a letter), ordinary spaces, apostrophes (`'` or `’`), hyphens (`-`), and periods (`.`), with at least one letter. Standalone lowercase `s/o` and `d/o` are allowed between name parts (e.g., `Ravi s/o Kumar`, `Anita d/o Kumar`). Letter case is preserved. Digits, other slashes, emoji, control characters, and internal non-ASCII spaces are rejected. |
 | **Phone / Parent phone / Tutor phone** | `p/`, `pp/`, `tp/` | 3–15 ASCII digits (`0`–`9`), with no spaces or punctuation. Leading zeros are preserved. `pp/` is for students only; `p/` is required for tutors and parents and optional for students. |
 | **Email** | `e/` | Up to 254 characters (`local-part@domain`), with no spaces. The local part may use English letters, digits, `.`, `_`, `'`, `%`, `+`, and `-` (cannot start/end with `.` or have `..`). The domain must have at least two dot-separated labels of letters, digits, and internal hyphens, ending with a 2–63-letter top-level label (e.g., `sean.o'connor@example.com`). Case is preserved. |
