@@ -1878,9 +1878,29 @@ Using the [shared baseline fixture](#active-shared-lesson-and-attendance-workflo
    * Verify that unpaired `from/`, reversed windows (`from/1800 to/1700`), time windows on people categories (`search c/student from/1600 to/1700`), and unknown sort modes are rejected without changing the displayed view.
 
 2. **Conjunctive people relationship searches:**
-   * Enrol a student in Tuesday Math and Monday Science (with no Monday Math lesson). Confirm that `search c/student d/Mon s/Math` does **not** match that student.
-   * Link a Parent (`p/91234567`) to two children (`Alex Tan` and `Jamie Tan`) where only Jamie takes Math. Confirm that `search c/parent sn/Alex s/Math` does **not** match the parent (one single child must satisfy both `sn/` and the lesson filters).
-   * Confirm that `list` or `list r/student` clears the active people search heading and context.
+   Start with a separate, previously unused data file (for example, `--data="manual/relationship-search.json"`) and replay the [shared baseline fixture setup](#active-shared-lesson-and-attendance-workflow) through **Step 4**. Then add a Student who takes Tuesday Math and Monday Science, and a Parent linked to Alex and Jamie:
+
+   ```text
+   add r/student n/Casey Lim l/P3 pp/94567890
+   addlesson d/Tue st/1600 et/1730 s/Math tu/Mei Lim tp/92345678 rm/R1
+   list r/student
+   enrol 3 lid/L4
+   enrol 3 lid/L2
+   search c/student d/Mon s/Math
+   search c/student d/Tue s/Math
+   add r/parent n/Pat Tan p/91234567
+   list r/student
+   unenrol 1 lid/L1
+   search c/parent sn/Alex s/Math
+   search c/parent sn/Jamie s/Math
+   list
+   ```
+
+   *Expected:*
+   * The new lesson is `L4`, and Casey (`S3`, position `3` of `list r/student`) is enrolled in Tuesday Math `L4` and Monday Science `L2`.
+   * `search c/student d/Mon s/Math` finds Alex and Jamie (both in Monday Math `L1`) but **not** Casey, whose Monday lesson and Math lesson are different lessons. `search c/student d/Tue s/Math` finds only Casey.
+   * Pat Tan (`P1`) is linked to Alex and Jamie through phone `91234567`. After Alex leaves `L1`, only Jamie takes Math, so `search c/parent sn/Alex s/Math` finds `0` parents (one single child must satisfy both `sn/` and the lesson filters), while `search c/parent sn/Jamie s/Math` finds Pat Tan.
+   * `list` clears the active people search heading and context.
 
 ### B.5 Attendance and history workflows
 
@@ -1947,12 +1967,13 @@ Using the baseline fixture with a Parent added (`add r/parent n/Pat Tan p/912345
 
    ```text
    list r/student
+   edit 1 p/81234567 e/alex@example.com a/Blk 10, #01-02
    edit 1 l/P2 p/ e/ a/
    edit 1 n/Alex  Tan
    edit 1 n/ALEX TAN
    ```
 
-   *Expected:* The first edit updates Alex (`S1`) to level `P2` and clears optional own phone, email, and address while preserving `S1` and the Student filter. The edit with two spaces between `Alex` and `Tan` normalizes to `Alex Tan` and reports no change (no operational save). `edit 1 n/ALEX TAN` updates the displayed uppercase spelling and saves.
+   *Expected:* The first edit gives Alex (`S1`) an own phone, email, and address. The second updates Alex to level `P2` and clears those optional fields while preserving `S1` and the Student filter. The edit with two spaces between `Alex` and `Tan` normalizes to `Alex Tan` and reports no change (no operational save). `edit 1 n/ALEX TAN` updates the displayed uppercase spelling and saves.
 
 2. **Parent–student phone link warnings and tutor rename propagation:**
    * Run `search c/parent sn/ALEX`, then edit Pat Tan's phone (`list r/parent` → `edit 1 p/99998888`). Confirm the success message lists the disconnected `(P1, S1)` and `(P1, S2)` links while leaving the students' `parentPhone` values (`91234567`) untouched.
@@ -2034,9 +2055,12 @@ Run the following window and layout checks on these physical display configurati
 | Linux | 1280×720 | 150% |
 | Linux | 1920×1080 | 100% |
 | Linux | 1920×1080 | 125% |
-| macOS | 1280×720 | 150% |
-| macOS | 1920×1080 | 100% |
-| macOS | 1920×1080 | 125% |
+| macOS | Built-in or external display | **Larger Text** |
+| macOS | Same display | **Default** |
+| macOS | Same display | **More Space** |
+
+macOS offers scaled resolution options instead of percentage scaling. In **System Settings → Displays**, select
+each option in turn and record the display's physical resolution and the resolution macOS reports for the option.
 
 <!-- @@author -->
 
