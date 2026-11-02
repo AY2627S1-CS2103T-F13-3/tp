@@ -47,7 +47,7 @@ public class CommandBoxTest {
                 enter(input);
                 enter(input);
                 assertTrue(commands.isEmpty(), "Rejected paste must not submit the preserved clearing draft.");
-                assertFalse(arrow(input, KeyCode.UP, false), "Rejected input must not enter history.");
+                assertFalse(isArrowPressConsumed(input, KeyCode.UP, false), "Rejected input must not enter history.");
                 input.appendText("corrected@example.com");
                 enter(input);
                 assertEquals(List.of("edit 1 e/corrected@example.com"), commands);
@@ -159,7 +159,7 @@ public class CommandBoxTest {
                 // Caret at the command's start or after its separator must leave focus traversal available.
                 for (int caret : List.of(0, 1, 4, draft.length())) {
                     input.positionCaret(caret);
-                    assertFalse(tab(input, false, false, false, false));
+                    assertFalse(isTabPressConsumed(input, false, false, false, false));
                     assertEquals(draft, input.getText());
                     assertEquals(caret, input.getCaretPosition());
                     assertEquals(caret, input.getAnchor());
@@ -180,18 +180,18 @@ public class CommandBoxTest {
             for (String draft : List.of("", "  ", "unknown", "SHO", "sho ", "help sho")) {
                 input.setText(draft);
                 input.end();
-                assertFalse(tab(input, false, false, false, false));
+                assertFalse(isTabPressConsumed(input, false, false, false, false));
                 assertEquals(draft, input.getText());
             }
             input.setText("sho");
             input.end();
-            assertFalse(tab(input, true, false, false, false));
-            assertFalse(tab(input, false, true, false, false));
-            assertFalse(tab(input, false, false, true, false));
-            assertFalse(tab(input, false, false, false, true));
+            assertFalse(isTabPressConsumed(input, true, false, false, false));
+            assertFalse(isTabPressConsumed(input, false, true, false, false));
+            assertFalse(isTabPressConsumed(input, false, false, true, false));
+            assertFalse(isTabPressConsumed(input, false, false, false, true));
             assertEquals("sho", input.getText());
             input.selectAll();
-            assertFalse(tab(input, false, false, false, false));
+            assertFalse(isTabPressConsumed(input, false, false, false, false));
             assertEquals("sho", input.getSelectedText());
         });
     }
@@ -211,20 +211,25 @@ public class CommandBoxTest {
             input.setText("unknown");
             input.end();
             enter(input);
-            assertFalse(tab(input, false, false, false, false));
+            assertFalse(isTabPressConsumed(input, false, false, false, false));
             assertEquals("unknown", input.getText());
             assertTrue(input.getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
         });
     }
 
     private static void assertTab(TextField input, String expected, int caret) {
-        assertTrue(tab(input, false, false, false, false), "A completion must consume Tab before focus traversal.");
+        assertTrue(isTabPressConsumed(input, false, false, false, false),
+                "A completion must consume Tab before focus traversal.");
         assertEquals(expected, input.getText());
         assertEquals(caret, input.getCaretPosition());
         assertEquals(caret, input.getAnchor());
     }
 
-    private static boolean tab(TextField input, boolean shift, boolean control, boolean alt, boolean meta) {
+    /**
+     * Fires a Tab press and returns whether the command box consumes it.
+     */
+    private static boolean isTabPressConsumed(TextField input, boolean shift, boolean control, boolean alt,
+            boolean meta) {
         // Record consumption after CommandBox's filter but before the control's default traversal behavior.
         boolean[] consumed = {false};
         javafx.event.EventHandler<KeyEvent> observer = event -> consumed[0] = event.isConsumed();
@@ -249,19 +254,19 @@ public class CommandBoxTest {
             }
             input.setText("  unfinished draft  ");
             input.selectRange(12, 3);
-            assertTrue(arrow(input, KeyCode.UP, false));
+            assertTrue(isArrowPressConsumed(input, KeyCode.UP, false));
             assertEquals("list r/student", input.getText());
             assertEquals(input.getLength(), input.getCaretPosition());
-            arrow(input, KeyCode.UP, false);
-            arrow(input, KeyCode.UP, false);
+            isArrowPressConsumed(input, KeyCode.UP, false);
+            isArrowPressConsumed(input, KeyCode.UP, false);
             assertEquals("help", input.getText());
-            arrow(input, KeyCode.DOWN, false);
-            arrow(input, KeyCode.DOWN, false);
+            isArrowPressConsumed(input, KeyCode.DOWN, false);
+            isArrowPressConsumed(input, KeyCode.DOWN, false);
             assertEquals("  unfinished draft  ", input.getText());
             assertEquals(12, input.getAnchor());
             assertEquals(3, input.getCaretPosition());
             assertEquals(List.of("help", "list r/student"), commands);
-            assertFalse(arrow(input, KeyCode.DOWN, false));
+            assertFalse(isArrowPressConsumed(input, KeyCode.DOWN, false));
         });
     }
 
@@ -280,21 +285,21 @@ public class CommandBoxTest {
             enter(input);
             input.setText("sho");
             input.end();
-            assertFalse(arrow(input, KeyCode.UP, true));
-            assertFalse(arrow(input, KeyCode.UP, false, true, false, false));
-            assertFalse(arrow(input, KeyCode.UP, false, false, true, false));
-            assertFalse(arrow(input, KeyCode.UP, false, false, false, true));
+            assertFalse(isArrowPressConsumed(input, KeyCode.UP, true));
+            assertFalse(isArrowPressConsumed(input, KeyCode.UP, false, true, false, false));
+            assertFalse(isArrowPressConsumed(input, KeyCode.UP, false, false, true, false));
+            assertFalse(isArrowPressConsumed(input, KeyCode.UP, false, false, false, true));
             assertEquals("sho", input.getText());
-            arrow(input, KeyCode.UP, false);
+            isArrowPressConsumed(input, KeyCode.UP, false);
             assertEquals("invalid", input.getText());
-            arrow(input, KeyCode.DOWN, false);
+            isArrowPressConsumed(input, KeyCode.DOWN, false);
             assertTab(input, "showlesson", 10);
-            arrow(input, KeyCode.UP, false);
+            isArrowPressConsumed(input, KeyCode.UP, false);
             input.setText("help");
-            assertFalse(arrow(input, KeyCode.DOWN, false));
-            arrow(input, KeyCode.UP, false);
+            assertFalse(isArrowPressConsumed(input, KeyCode.DOWN, false));
+            isArrowPressConsumed(input, KeyCode.UP, false);
             assertEquals("invalid", input.getText());
-            arrow(input, KeyCode.DOWN, false);
+            isArrowPressConsumed(input, KeyCode.DOWN, false);
             assertEquals("help", input.getText());
             enter(input);
             assertEquals(List.of("invalid", "help"), commands);
@@ -306,29 +311,35 @@ public class CommandBoxTest {
     public void arrows_historyIsBoundedAndSessionLocal() throws Exception {
         runOnFxThread(() -> {
             TextField input = createInput(command -> new CommandResult("Success"));
-            assertFalse(arrow(input, KeyCode.UP, false));
+            assertFalse(isArrowPressConsumed(input, KeyCode.UP, false));
             input.setText("   ");
             enter(input);
-            assertFalse(arrow(input, KeyCode.UP, false));
+            assertFalse(isArrowPressConsumed(input, KeyCode.UP, false));
             for (int i = 0; i <= CommandBox.HISTORY_LIMIT; i++) {
                 input.setText("help " + i);
                 enter(input);
             }
             for (int i = 0; i <= CommandBox.HISTORY_LIMIT; i++) {
-                arrow(input, KeyCode.UP, false);
+                isArrowPressConsumed(input, KeyCode.UP, false);
             }
             assertEquals("help 1", input.getText());
             TextField another = createInput(command -> new CommandResult("Success"));
-            assertFalse(arrow(another, KeyCode.UP, false));
+            assertFalse(isArrowPressConsumed(another, KeyCode.UP, false));
             assertEquals("", another.getText());
         });
     }
 
-    private static boolean arrow(TextField input, KeyCode code, boolean shift) {
-        return arrow(input, code, shift, false, false, false);
+    /**
+     * Fires an arrow press with optional Shift and returns whether the command box consumes it.
+     */
+    private static boolean isArrowPressConsumed(TextField input, KeyCode code, boolean shift) {
+        return isArrowPressConsumed(input, code, shift, false, false, false);
     }
 
-    private static boolean arrow(TextField input, KeyCode code, boolean shift, boolean control,
+    /**
+     * Fires an arrow press with the supplied modifiers and returns whether the command box consumes it.
+     */
+    private static boolean isArrowPressConsumed(TextField input, KeyCode code, boolean shift, boolean control,
             boolean alt, boolean meta) {
         boolean[] consumed = {false};
         javafx.event.EventHandler<KeyEvent> observer = event -> consumed[0] = event.isConsumed();

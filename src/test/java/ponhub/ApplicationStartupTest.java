@@ -210,7 +210,7 @@ public class ApplicationStartupTest {
     /**
      * Runs real initialization in a child JVM so relative application paths cannot touch the checkout.
      */
-    private void runBootstrap(Path folder, LoadStatus status, int peopleCount, boolean restoreGui,
+    private void runBootstrap(Path folder, LoadStatus status, int peopleCount, boolean shouldRestoreGui,
             String... arguments) throws Exception {
         String runtimeClasspath = System.getProperty("ponhub.test.runtimeClasspath");
         assertNotNull(runtimeClasspath, "Run this integration test through the Gradle test task.");
@@ -219,7 +219,7 @@ public class ApplicationStartupTest {
         Path log = folder.resolve("bootstrap.log");
         List<String> command = new ArrayList<>(List.of(java.toString(), "-cp", runtimeClasspath,
                 StartupProbe.class.getName(), "--status=" + status, "--people=" + peopleCount,
-                "--restore=" + restoreGui));
+                "--restore=" + shouldRestoreGui));
         command.addAll(List.of(arguments));
         Process process = new ProcessBuilder(command)
                 .directory(folder.toFile()).redirectErrorStream(true).redirectOutput(log.toFile()).start();
@@ -300,12 +300,12 @@ public class ApplicationStartupTest {
         private void verifySession() throws Exception {
             LoadStatus status = LoadStatus.valueOf(getParameters().getNamed().get("status"));
             int peopleCount = Integer.parseInt(getParameters().getNamed().get("people"));
-            boolean restoreGui = Boolean.parseBoolean(getParameters().getNamed().get("restore"));
-            boolean protectedSession = status != LoadStatus.MISSING && status != LoadStatus.LOADED;
+            boolean shouldRestoreGui = Boolean.parseBoolean(getParameters().getNamed().get("restore"));
+            boolean isProtectedSession = status != LoadStatus.MISSING && status != LoadStatus.LOADED;
             assertNotNull(ui);
             assertEquals(data, canonicalSession.getDataFilePath());
             assertEquals(status, canonicalSession.getLoadStatus());
-            assertEquals(protectedSession, canonicalSession.getDataLoadError().isPresent());
+            assertEquals(isProtectedSession, canonicalSession.getDataLoadError().isPresent());
             assertEquals(peopleCount, logic.getPersonRecords().size());
             assertEquals(peopleCount, canonicalSession.getDataSnapshot().people().getPeople().size());
             if (peopleCount == 1) {
@@ -316,13 +316,13 @@ public class ApplicationStartupTest {
                 assertEquals("00123456", person.getContactDetails().getPhone().orElseThrow().value);
                 assertEquals("Blk 10, #01-02", person.getContactDetails().getAddress().orElseThrow().value);
             }
-            if (restoreGui) {
+            if (shouldRestoreGui) {
                 assertEquals(SAVED_GUI, logic.getGuiSettings());
             }
             String help = logic.execute("help").getFeedbackToUser();
             String list = logic.execute("list").getFeedbackToUser();
             assertTrue(logic.execute("exit").isExit());
-            if (protectedSession) {
+            if (isProtectedSession) {
                 String guidance = canonicalSession.getDataLoadError().orElseThrow();
                 assertTrue(guidance.contains(data.toAbsolutePath().toString()));
                 assertTrue(guidance.contains("restart"));
