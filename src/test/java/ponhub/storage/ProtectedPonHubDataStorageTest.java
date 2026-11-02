@@ -188,6 +188,9 @@ public class ProtectedPonHubDataStorageTest {
             ProtectedPonHubDataStorage storage = new ProtectedPonHubDataStorage(path);
             assertThrows(DataLoadingException.class, storage::load);
             assertEquals(entry.getValue(), storage.getLoadStatus());
+            assertTrue(storage.getDataLoadError().orElseThrow().startsWith("Could not load data file at "));
+            assertFalse(storage.getDataLoadError().orElseThrow().contains("(" + entry.getValue() + ")"));
+            assertTrue(storage.getDataLoadError().orElseThrow().contains("only help, list and exit are available"));
         }
         byte[] before = Files.readAllBytes(path);
         ProtectedPonHubDataStorage denied = new ProtectedPonHubDataStorage(path, file -> {
@@ -195,6 +198,7 @@ public class ProtectedPonHubDataStorageTest {
         });
         assertThrows(DataLoadingException.class, denied::load);
         assertEquals(ProtectedPonHubDataStorage.LoadStatus.UNREADABLE, denied.getLoadStatus());
+        assertTrue(denied.getDataLoadError().orElseThrow().contains("(file access problem)."));
         assertThrows(IOException.class, () -> denied.saveData(new PonHubData().exportState()));
         assertArrayEquals(before, Files.readAllBytes(path));
     }

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -70,6 +71,11 @@ final class CanonicalDataFileGuard {
             hasSaved = true;
         } catch (IOException failure) {
             if (!hasSaved) {
+                if (failure instanceof AccessDeniedException) {
+                    AccessDeniedException denied = new AccessDeniedException(path.toAbsolutePath().toString());
+                    denied.initCause(failure);
+                    throw denied;
+                }
                 throw failure;
             }
             // Closing a lock/channel after committed replacement must not discard the live transaction.
