@@ -1347,8 +1347,8 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
 ### Non-functional requirements
 
 1. **Cross-platform Java 25 compatibility:** Run on Windows, Linux, and macOS using Java 25 (on macOS, using the prescribed Azul JDK 25 with JavaFX `25.0.3.fx-zulu` for the machine's architecture).
-2. **Data scale:** Support at least `1,000` people, `1,000` recurring lessons, and `10,000` attendance records in one local data file. (Large-people stress benchmarks also exercise `5,000` people as a primary benchmark workload and `20,000`/`50,000` people as stress workloads.)
-3. **Responsiveness:** At the standard `1,000`-person / `1,000`-lesson / `10,000`-attendance workload, complete common command-to-GUI updates within `2` seconds on the reference hardware (Apple M4 Pro MacBook Pro, 24 GB RAM, macOS 15.7.7, Azul Java/JavaFX 25.0.3; see [benchmark evidence in #101](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/101#issuecomment-6194333977)).
+2. **Data scale:** Support at least `1,000` people, `1,000` recurring lessons, and `10,000` attendance records in one local data file.
+3. **Responsiveness:** At the standard `1,000`-person / `1,000`-lesson / `10,000`-attendance workload, complete common command-to-GUI updates within `2` seconds on the reference environment (Apple M4 Pro MacBook Pro, 24 GB RAM, macOS 15.7.7, Azul Java/JavaFX 25.0.3).
 4. **Keyboard efficiency:** Allow an administrator with above-average English typing speed to complete recurring contact, scheduling, and attendance tasks faster via typed commands than with mouse-only interactions.
 5. **Single-user local operation:** Serve a single user against a local file store without requiring user accounts, network connectivity, or a remote server.
 6. **Distribution size:** Package the application as a single executable fat JAR (`ponhub.jar`) under `100 MB` without requiring an external installer.
@@ -1666,21 +1666,21 @@ addlesson d/Mon st/1600 et/1730 s/Math tu/Mei Lim tp/92345678 rm/R1
 
 #### Display and window checks
 
-Record each physical display configuration you test in the matrix below (automated headless/JavaFX bounds tests supplement these checks but do not replace physical display verification):
+Run the following window and layout checks on these physical display configurations:
 
 <!-- @@author ErnestChuaa -->
 
-| OS | Physical display | Scale | Result / evidence |
-| --- | --- | --- | --- |
-| Windows | 1280×720 | 150% | NOT RUN |
-| Windows | 1920×1080 | 100% | NOT RUN |
-| Windows | 1920×1080 | 125% | NOT RUN |
-| Linux | 1280×720 | 150% | NOT RUN |
-| Linux | 1920×1080 | 100% | NOT RUN |
-| Linux | 1920×1080 | 125% | NOT RUN |
-| macOS | 1280×720 | 150% | NOT RUN |
-| macOS | 1920×1080 | 100% | NOT RUN |
-| macOS | 1920×1080 | 125% | NOT RUN |
+| OS | Physical display | Scale |
+| --- | --- | --- |
+| Windows | 1280×720 | 150% |
+| Windows | 1920×1080 | 100% |
+| Windows | 1920×1080 | 125% |
+| Linux | 1280×720 | 150% |
+| Linux | 1920×1080 | 100% |
+| Linux | 1920×1080 | 125% |
+| macOS | 1280×720 | 150% |
+| macOS | 1920×1080 | 100% |
+| macOS | 1920×1080 | 125% |
 
 <!-- @@author -->
 
