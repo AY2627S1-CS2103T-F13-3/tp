@@ -2,6 +2,7 @@
 layout: page
 title: User Guide
 expandable_toc: true
+command_lists: [lesson-retrieval, record-validation]
 ---
 
 <a id="how-to-use-this-guide"></a>
@@ -600,7 +601,7 @@ The `lid/` and `d/` prefixes can appear in either order. When `d/` is supplied, 
 
 ### 8.3 Switching result views
 
-You can switch the right-hand panel at any time either by typing a command (`lessons`, `lessons STUDENT_INDEX`, `history STUDENT_INDEX`, `showlesson`, or `search c/lesson`) or by clicking the shortcut buttons above the panels:
+You can switch the right-hand panel at any time by typing one of the {% include command-list.html key="lesson-retrieval" label="lesson and attendance retrieval commands" %} or by clicking the shortcut buttons above the panels:
 
 | Button | Equivalent command | Selection needed |
 | --- | --- | --- |
@@ -1073,7 +1074,7 @@ The following features are planned for future versions and are not in PonHub v1.
 
 ## 16. Field reference
 
-Every command that creates or edits a record (`add`, `edit`, `addlesson`, `editlesson`, `mark`, `unmark`) and PonHub's startup file loader validate values against the rules below.
+The {% include command-list.html key="record-validation" label="commands that create or edit records" %} and PonHub's startup file loader validate values against the rules below.
 
 | Field | Prefix | Accepted values and rules |
 | --- | --- | --- |

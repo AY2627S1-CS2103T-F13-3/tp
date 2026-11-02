@@ -266,3 +266,156 @@ h2, h3, h4, h5, h6 {
     }
   }
 }
+
+// Inline command-group references remain normal links when enhancement is unavailable.
+.command-list-trigger {
+  color: #b84c00;
+  text-decoration: underline dotted;
+  text-underline-offset: .2em;
+
+  &:visited {
+    color: #b84c00;
+  }
+}
+
+button.command-list-trigger {
+  appearance: none;
+  border: 0;
+  border-radius: 2px;
+  padding: 1px 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  text-align: inherit;
+
+  &[aria-expanded="true"] {
+    text-decoration-style: solid;
+  }
+}
+
+.command-list-trigger:focus-visible,
+.command-list-close:focus-visible {
+  outline: 2px solid #a65c00;
+  outline-offset: 3px;
+}
+
+.command-list-panel {
+  margin: 1.5em 0;
+
+  .command-list-panel-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: .25rem;
+  }
+
+  h3 {
+    margin: 0;
+    color: inherit;
+    font-size: 1rem;
+    line-height: 1.5;
+    font-weight: bold;
+  }
+
+  .command-list-description {
+    margin-bottom: 1rem;
+    font-size: .875rem;
+  }
+}
+
+.command-list-panel[popover] {
+  position: fixed;
+  inset: auto;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 16px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  margin: 0;
+  border: 1px solid $brand-color-light;
+  border-radius: 10px;
+  padding: 18px;
+  color: $text-color;
+  background: $background-color;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, .14);
+}
+
+.command-list-close {
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 3px;
+  padding: 0 2px;
+  background: transparent;
+  color: #b84c00;
+  font: inherit;
+  cursor: pointer;
+}
+
+.command-list-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+
+  dt {
+    margin-bottom: .35rem;
+    font-weight: bold;
+  }
+
+  dd {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    margin: 0;
+  }
+
+  code {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media screen {
+  .command-list-reference-enhanced > .command-list-reference-heading {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 420px) {
+  .command-list-groups {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (pointer: coarse) {
+  button.command-list-trigger {
+    display: inline-block;
+    min-height: 44px;
+  }
+
+  .command-list-close {
+    min-height: 44px;
+  }
+}
+
+@media print {
+  .command-list-panel,
+  .command-list-panel[popover] {
+    display: block !important;
+    position: static !important;
+    width: auto;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+    margin: 1.5em 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  .command-list-close,
+  .command-list-trigger span[aria-hidden] {
+    display: none !important;
+  }
+}
