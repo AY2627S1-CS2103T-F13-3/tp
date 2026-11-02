@@ -193,7 +193,8 @@ public final class JsonPonHubDataCodec {
                 new LessonTimeSlot(LessonDay.fromString(readRequiredText(node, "day")),
                         new LessonTime(readRequiredText(node, "startTime")),
                         new LessonTime(readRequiredText(node, "endTime"))),
-                new Subject(readRequiredText(node, "subject")), new Room(readRequiredText(node, "room")), students);
+                Subject.fromStoredValue(readRequiredText(node, "subject")), new Room(readRequiredText(node, "room")),
+                students);
     }
 
     private static PersonRecord decodePerson(JsonNode node) throws IOException {

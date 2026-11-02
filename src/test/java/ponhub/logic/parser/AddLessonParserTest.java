@@ -121,16 +121,20 @@ public class AddLessonParserTest {
     @Test
     public void parse_invalidDomainValues_throwsParseException() {
         String[][] replacements = {
-            {"d/Mon", "d/Someday"},
-            {"st/0900", "st/900"},
-            {"st/0900", "st/2400"},
-            {"et/1030", "et/0900"},
-            {"s/Primary Math", "s/Math!"},
-            {"tu/Mei Lim", "tu/123"},
-            {"rm/r1", "rm/bad room"}
+            {"d/Mon", "d/Someday", "Lesson days should be one of Mon, Tue, Wed, Thu, Fri, Sat or Sun."},
+            {"st/0900", "st/900", "Lesson times should use four-digit 24-hour HHMM format from 0000 to 2359."},
+            {"st/0900", "st/2400", "Lesson times should use four-digit 24-hour HHMM format from 0000 to 2359."},
+            {"et/1030", "et/0900", "A lesson end time should be later than its start time on the same day."},
+            {"s/Primary Math", "s/Math!",
+                "Subjects should contain 1 to 50 Unicode code points after normalization, "
+                        + "including spaces and hyphens, using letters with attached combining marks or digits, "
+                        + "separated by single spaces or hyphens."},
+            {"tu/Mei Lim", "tu/123", Name.MESSAGE_CONSTRAINTS},
+            {"rm/r1", "rm/bad room", "Rooms should contain 1 to 10 characters in total, including any hyphens, "
+                    + "using English letters (A-Z, a-z) or digits (0-9) optionally separated by single hyphens."}
         };
         for (String[] replacement : replacements) {
-            assertThrows(ParseException.class, () ->
+            assertThrows(ParseException.class, replacement[2], () ->
                     parser.parse(REQUIRED_ARGUMENTS.replace(replacement[0], replacement[1])));
         }
         for (String phone : new String[]{"00", "001 234", "+001234", "0001234567890123"}) {

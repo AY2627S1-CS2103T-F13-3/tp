@@ -151,6 +151,27 @@ public class JsonLessonStorageTest {
         assertEquals(subject, loaded.lessons().getFirst().getSubject().toString());
     }
 
+    @Test
+    public void loadSaveReopen_olderSubjectExpandedByNfc_keepsStoreUsable() throws Exception {
+        // Earlier builds saved up to 50 raw letters; NFC turns each U+0958 QA into two code points.
+        // 25 stays within the new code-point limit, 26 and 50 exceed it after NFC, and 51 was never valid.
+        for (int count : new int[] {25, 26, 50}) {
+            ObjectNode root = createJson();
+            getLessonNode(root, 0).put("subject", "\u0958".repeat(count));
+            Path path = directory.resolve("older-subject-" + count + ".json");
+            Files.writeString(path, root.toString());
+
+            ProtectedPonHubDataStorage storage = new ProtectedPonHubDataStorage(path);
+            PonHubDataState loaded = storage.load();
+            assertEquals("\u0915\u093c".repeat(count), loaded.lessons().getFirst().getSubject().getValue());
+            storage.saveData(loaded);
+            assertEquals(loaded, new ProtectedPonHubDataStorage(path).load());
+        }
+        reject(root -> getLessonNode(root, 0).put("subject", "\u0958".repeat(51)));
+        // 200 code points before NFC, 250 after: loading it would save a value the next load rejects.
+        reject(root -> getLessonNode(root, 0).put("subject", "\u0958\u0301\u0301\u0301".repeat(50)));
+    }
+
     private ObjectNode createJson() throws IOException {
         return (ObjectNode) mapper.readTree(JsonPonHubDataCodec.encode(original));
     }
