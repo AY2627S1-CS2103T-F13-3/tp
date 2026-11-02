@@ -68,13 +68,13 @@ public class LessonBoardNavigationTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.assertLessonPane("lessonsButton");
-                assertEquals("All lessons", ((Button) fixture.root().lookup("#lessonsButton")).getText());
-                assertEquals("Student lessons", ((Button) fixture.root().lookup("#studentLessonsButton")).getText());
-                assertEquals("Attendance history", ((Button) fixture.root().lookup("#attendanceButton")).getText());
-                Label guidance = (Label) fixture.root().lookup("#studentSelectionGuidance");
+                assertEquals("All lessons", ((Button) fixture.getRoot().lookup("#lessonsButton")).getText());
+                assertEquals("Student lessons", ((Button) fixture.getRoot().lookup("#studentLessonsButton")).getText());
+                assertEquals("Attendance history", ((Button) fixture.getRoot().lookup("#attendanceButton")).getText());
+                Label guidance = (Label) fixture.getRoot().lookup("#studentSelectionGuidance");
                 assertEquals("Select a Student card for Student lessons or Attendance history.", guidance.getText());
                 assertTrue(guidance.isWrapText());
-                assertWithinScene(guidance, fixture.root().getWidth(), fixture.root().getHeight());
+                assertWithinScene(guidance, fixture.getRoot().getWidth(), fixture.getRoot().getHeight());
             }
             return null;
         });
@@ -115,9 +115,9 @@ public class LessonBoardNavigationTest {
                 for (String id : List.of("lessonsButton", "studentLessonsButton", "attendanceButton",
                         "studentSelectionGuidance", "commandTextField", "statusbarPlaceholder",
                         "personListView", "lessonListView")) {
-                    assertWithinScene(fixture.root().lookup("#" + id), contentWidth, contentHeight);
+                    assertWithinScene(fixture.getRoot().lookup("#" + id), contentWidth, contentHeight);
                 }
-                for (ListView<?> list : List.of(fixture.people(), fixture.lessons())) {
+                for (ListView<?> list : List.of(fixture.getPeople(), fixture.getLessons())) {
                     Node viewport = list.lookup(".clipped-container");
                     assertWithinScene(viewport, contentWidth, contentHeight);
                     Bounds bounds = viewport.localToScene(viewport.getBoundsInLocal());
@@ -139,36 +139,36 @@ public class LessonBoardNavigationTest {
         seedRecordedData();
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
-                fixture.people().getSelectionModel().select(3);
-                PersonRecord selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.getPeople().getSelectionModel().select(3);
+                PersonRecord selected = fixture.getPeople().getSelectionModel().getSelectedItem();
                 byte[] original = Files.readAllBytes(fixture.dataPath());
                 PonHubDataState originalState = fixture.app().snapshot();
-                List<PersonRecord> people = List.copyOf(fixture.people().getItems());
+                List<PersonRecord> people = List.copyOf(fixture.getPeople().getItems());
 
                 fixture.enter("history 4");
                 fixture.assertHistoryPane();
                 fixture.enter("lessons si/2");
                 fixture.assertLessonPane("studentLessonsButton");
-                assertEquals(List.of("L2", "L10"), fixture.lessonIds());
+                assertEquals(List.of("L2", "L10"), fixture.getLessonIds());
                 assertEquals("Student S1 · current lessons", fixture.label("lessonContext"));
 
                 fixture.enter("history 4");
                 fixture.enter("search c/lesson s/Science");
                 fixture.assertLessonPane("");
-                assertEquals(List.of("L2", "L3"), fixture.lessonIds());
+                assertEquals(List.of("L2", "L3"), fixture.getLessonIds());
                 assertEquals("Lesson search: s/science", fixture.label("lessonContext"));
 
                 fixture.enter("history 4");
                 fixture.enter("showlesson lid/L10 d/2026-10-12");
                 fixture.assertLessonPane("");
                 assertTrue(fixture.detail().isVisible());
-                assertEquals(List.of("L10"), fixture.lessonIds());
+                assertEquals(List.of("L10"), fixture.getLessonIds());
                 assertEquals("Math", ((Label) fixture.detail().lookup("#lessonHeading")).getText());
                 assertEquals("Lesson L10", ((Label) fixture.detail().lookup("#lessonIdentity")).getText());
                 Label schedule = (Label) fixture.detail().lookup("#lessonSchedule");
                 assertEquals("Mon 0900-1000", schedule.getText());
-                assertEquals(people, fixture.people().getItems());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertEquals(people, fixture.getPeople().getItems());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertEquals(originalState, fixture.app().snapshot());
                 assertArrayEquals(original, Files.readAllBytes(fixture.dataPath()));
             }
@@ -181,8 +181,8 @@ public class LessonBoardNavigationTest {
         seedRecordedData();
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
-                fixture.people().getSelectionModel().select(1);
-                PersonRecord selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.getPeople().getSelectionModel().select(1);
+                PersonRecord selected = fixture.getPeople().getSelectionModel().getSelectedItem();
                 byte[] original = Files.readAllBytes(fixture.dataPath());
 
                 fixture.enter("showlesson lid/L2");
@@ -190,21 +190,21 @@ public class LessonBoardNavigationTest {
                 fixture.assertHistoryPane();
                 assertEquals("Student S2 · attendance history", fixture.label("historyContext"));
                 assertEquals(List.of("S2/L11/2026-10-07/PRESENT", "S2/L10/2026-10-05/ABSENT"),
-                        fixture.historyKeys());
+                        fixture.getHistoryKeys());
                 fixture.enter("history 4 lid/L10");
-                assertEquals(List.of("S2/L10/2026-10-05/ABSENT"), fixture.historyKeys());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertEquals(List.of("S2/L10/2026-10-05/ABSENT"), fixture.getHistoryKeys());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
 
                 fixture.enter("search c/student n/Alex");
-                fixture.people().getSelectionModel().select(0);
-                assertEquals(List.of("S1", "S3"), fixture.peopleIds());
+                fixture.getPeople().getSelectionModel().select(0);
+                assertEquals(List.of("S1", "S3"), fixture.getPeopleIds());
                 fixture.enter("showlesson lid/L10");
                 fixture.enter("history 2");
                 fixture.assertHistoryPane();
                 assertEquals("Student S3 · attendance history", fixture.label("historyContext"));
-                assertTrue(fixture.history().getItems().isEmpty());
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
-                assertEquals(List.of("S1", "S3"), fixture.peopleIds());
+                assertTrue(fixture.getHistory().getItems().isEmpty());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
+                assertEquals(List.of("S1", "S3"), fixture.getPeopleIds());
                 assertArrayEquals(original, Files.readAllBytes(fixture.dataPath()));
             }
             return null;
@@ -218,27 +218,27 @@ public class LessonBoardNavigationTest {
             try (WindowFixture fixture = createWindow()) {
                 byte[] original = Files.readAllBytes(fixture.dataPath());
                 fixture.enter("list r/student");
-                fixture.people().getSelectionModel().select(0);
-                PersonRecord selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.getPeople().getSelectionModel().select(0);
+                PersonRecord selected = fixture.getPeople().getSelectionModel().getSelectedItem();
                 fixture.enter("history 2");
                 fixture.enter("lessons si/3");
                 fixture.assertLessonPane("studentLessonsButton");
-                assertTrue(fixture.lessons().getItems().isEmpty());
+                assertTrue(fixture.getLessons().getItems().isEmpty());
                 assertEquals("Student S3 · current lessons", fixture.label("lessonContext"));
-                assertEquals("No lessons to display.", ((Label) fixture.lessons().getPlaceholder()).getText());
+                assertEquals("No lessons to display.", ((Label) fixture.getLessons().getPlaceholder()).getText());
 
                 fixture.enter("history 2 lid/L3");
                 fixture.assertHistoryPane();
-                assertTrue(fixture.history().getItems().isEmpty());
+                assertTrue(fixture.getHistory().getItems().isEmpty());
                 assertEquals("Student S2 · attendance history · L3", fixture.label("historyContext"));
-                Label placeholder = (Label) fixture.history().getPlaceholder();
+                Label placeholder = (Label) fixture.getHistory().getPlaceholder();
                 assertEquals("No recorded attendance. Missing dates are unrecorded.",
                         placeholder.getText());
                 fixture.enter("search c/lesson s/Nonexistent");
                 fixture.assertLessonPane("");
-                assertTrue(fixture.lessons().getItems().isEmpty());
+                assertTrue(fixture.getLessons().getItems().isEmpty());
                 assertEquals("Lesson search: s/nonexistent", fixture.label("lessonContext"));
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertArrayEquals(original, Files.readAllBytes(fixture.dataPath()));
             }
             return null;
@@ -256,7 +256,7 @@ public class LessonBoardNavigationTest {
                         "2026-10-05", "absent"),
                 Attendance.fromStrings(LessonQueryTestData.STUDENT_TWO, LessonQueryTestData.SHARED_LESSON,
                         "2026-09-28", "present"));
-        new JsonPonHubDataStorage(dataPath()).saveData(
+        new JsonPonHubDataStorage(getDataPath()).saveData(
                 new PonHubDataState(source.people(), lessons, attendance, source.lastAllocatedLessonSequence()));
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
@@ -264,23 +264,23 @@ public class LessonBoardNavigationTest {
                 fixture.enter("history 4 lid/L10");
                 fixture.enter("showlesson lid/L10 d/2026-10-05");
                 fixture.assertLessonPane("");
-                LessonDetailView dated = (LessonDetailView) fixture.lessons().getItems().getFirst();
+                LessonDetailView dated = (LessonDetailView) fixture.getLessons().getItems().getFirst();
                 assertEquals(1, dated.currentRoster().size());
                 assertEquals(LessonQueryTestData.STUDENT_ONE, dated.currentRoster().getFirst().student().getId());
                 assertTrue(dated.currentRoster().getFirst().status().isEmpty());
                 assertEquals(1, dated.formerAttendance().size());
                 assertEquals(AttendanceStatus.ABSENT, dated.formerAttendance().getFirst().status());
-                assertTrue(fixture.detailLabels().stream()
+                assertTrue(fixture.getDetailLabels().stream()
                         .anyMatch(text -> text.contains("S1 · Alex Tan")));
-                assertTrue(fixture.detailLabels().stream()
+                assertTrue(fixture.getDetailLabels().stream()
                         .anyMatch(text -> text.contains("Attendance: unrecorded")));
-                assertTrue(fixture.detailLabels().stream()
+                assertTrue(fixture.getDetailLabels().stream()
                         .anyMatch(text -> text.contains("S2 · Jamie Tan")));
-                assertTrue(fixture.detailLabels().stream()
+                assertTrue(fixture.getDetailLabels().stream()
                         .anyMatch(text -> text.contains("Status: absent")));
 
                 fixture.enter("showlesson lid/L10");
-                LessonDetailView undated = (LessonDetailView) fixture.lessons().getItems().getFirst();
+                LessonDetailView undated = (LessonDetailView) fixture.getLessons().getItems().getFirst();
                 assertEquals(List.of(LocalDate.of(2026, 10, 5), LocalDate.of(2026, 9, 28)),
                         undated.formerAttendance().stream().map(LessonDetailView.FormerAttendance::date).toList());
                 assertArrayEquals(original, Files.readAllBytes(fixture.dataPath()));
@@ -297,25 +297,25 @@ public class LessonBoardNavigationTest {
                 fixture.enter("search c/lesson s/Math");
                 fixture.enter("editlesson lid/L4 s/Geometry");
                 fixture.assertLessonPane("");
-                assertEquals(List.of("L10"), fixture.lessonIds());
+                assertEquals(List.of("L10"), fixture.getLessonIds());
                 assertEquals("Lesson search: s/math", fixture.label("lessonContext"));
 
                 fixture.enter("search c/tutor p/00112233");
-                fixture.people().getSelectionModel().select(0);
+                fixture.getPeople().getSelectionModel().select(0);
                 fixture.enter("edit 1 n/Mei Updated");
-                assertEquals("Mei Updated", fixture.lessons().getItems().getFirst().getTutorName());
+                assertEquals("Mei Updated", fixture.getLessons().getItems().getFirst().getTutorName());
                 fixture.enter("showlesson lid/L10 d/2026-10-05");
                 fixture.enter("list r/student");
-                fixture.people().getSelectionModel().select(0);
+                fixture.getPeople().getSelectionModel().select(0);
                 fixture.enter("edit 1 n/Alex Updated");
                 fixture.assertLessonPane("");
-                LessonDetailView detail = (LessonDetailView) fixture.lessons().getItems().getFirst();
+                LessonDetailView detail = (LessonDetailView) fixture.getLessons().getItems().getFirst();
                 assertEquals(LessonQueryTestData.SHARED_LESSON, detail.getLessonId());
                 assertEquals("Mei Updated", detail.getTutorName());
                 assertTrue(detail.currentRoster().stream().anyMatch(member ->
                         member.student().getId().equals(LessonQueryTestData.STUDENT_ONE)
                                 && member.student().getName().fullName.equals("Alex Updated")));
-                assertEquals("S1", fixture.people().getSelectionModel().getSelectedItem().getId().toString());
+                assertEquals("S1", fixture.getPeople().getSelectionModel().getSelectedItem().getId().toString());
                 byte[] afterEdits = Files.readAllBytes(fixture.dataPath());
                 PonHubDataState editedState = fixture.app().snapshot();
                 fixture.enter("history 1 lid/L10");
@@ -334,7 +334,7 @@ public class LessonBoardNavigationTest {
         try {
             callOnFxThread(() -> {
                 fixture.window().show();
-                fixture.people().getSelectionModel().select(3);
+                fixture.getPeople().getSelectionModel().select(3);
                 return null;
             });
             byte[] original = Files.readAllBytes(fixture.dataPath());
@@ -351,7 +351,7 @@ public class LessonBoardNavigationTest {
                         assertEquals(WindowFixture.DRAFT, fixture.input().getText());
                         assertEquals(range[0], fixture.input().getAnchor(), id);
                         assertEquals(range[1], fixture.input().getCaretPosition(), id);
-                        assertSame(fixture.input(), fixture.root().getScene().getFocusOwner());
+                        assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
                         fixture.assertActiveOnly(id);
                         return null;
                     });
@@ -373,7 +373,7 @@ public class LessonBoardNavigationTest {
         try {
             callOnFxThread(() -> {
                 fixture.window().show();
-                fixture.people().getSelectionModel().select(3);
+                fixture.getPeople().getSelectionModel().select(3);
                 return null;
             });
             byte[] original = Files.readAllBytes(fixture.dataPath());
@@ -383,7 +383,7 @@ public class LessonBoardNavigationTest {
                         fixture.input().requestFocus();
                         fixture.input().setText(WindowFixture.DRAFT);
                         fixture.input().selectRange(range[0], range[1]);
-                        Button button = (Button) fixture.root().lookup("#" + id);
+                        Button button = (Button) fixture.getRoot().lookup("#" + id);
                         var actions = new ArrayList<ActionEvent>();
                         EventHandler<ActionEvent> actionCounter = actions::add;
                         button.addEventHandler(ActionEvent.ACTION, actionCounter);
@@ -407,7 +407,7 @@ public class LessonBoardNavigationTest {
                         assertEquals(WindowFixture.DRAFT, fixture.input().getText());
                         assertEquals(range[0], fixture.input().getAnchor(), id);
                         assertEquals(range[1], fixture.input().getCaretPosition(), id);
-                        assertSame(fixture.input(), fixture.root().getScene().getFocusOwner());
+                        assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
                         return null;
                     });
                 }
@@ -435,9 +435,9 @@ public class LessonBoardNavigationTest {
             for (int index : List.of(-1, 0, 2)) {
                 for (String id : List.of("studentLessonsButton", "attendanceButton")) {
                     callOnFxThread(() -> {
-                        fixture.people().getSelectionModel().clearSelection();
+                        fixture.getPeople().getSelectionModel().clearSelection();
                         if (index >= 0) {
-                            fixture.people().getSelectionModel().select(index);
+                            fixture.getPeople().getSelectionModel().select(index);
                         }
                         fixture.input().requestFocus();
                         fixture.draft();
@@ -446,10 +446,10 @@ public class LessonBoardNavigationTest {
                     });
                     callOnFxThread(() -> {
                         fixture.assertDraft();
-                        assertSame(fixture.input(), fixture.root().getScene().getFocusOwner());
+                        assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
                         fixture.assertHistoryPane();
                         assertEquals("Student S2 · attendance history · L10", fixture.label("historyContext"));
-                        assertTrue(fixture.feedback().toLowerCase(Locale.ROOT).contains("student"));
+                        assertTrue(fixture.getFeedback().toLowerCase(Locale.ROOT).contains("student"));
                         return null;
                     });
                 }
@@ -469,17 +469,17 @@ public class LessonBoardNavigationTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.window().show();
-                fixture.people().getSelectionModel().select(3);
+                fixture.getPeople().getSelectionModel().select(3);
                 fixture.enter("history 4");
                 fixture.input().requestFocus();
                 fixture.draft();
-                Button all = (Button) fixture.root().lookup("#lessonsButton");
+                Button all = (Button) fixture.getRoot().lookup("#lessonsButton");
                 fixture.sendMouseEvent(all, MouseEvent.MOUSE_PRESSED, 5, 5);
                 fixture.sendMouseEvent(all, MouseEvent.MOUSE_EXITED, -5, -5, MouseButton.PRIMARY, true);
                 fixture.sendMouseEvent(all, MouseEvent.MOUSE_RELEASED, -5, -5);
                 fixture.assertHistoryPane();
                 fixture.assertDraft();
-                assertSame(fixture.input(), fixture.root().getScene().getFocusOwner());
+                assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
                 assertFalse(all.isArmed());
 
                 // A release without a fresh press must not reactivate the cancelled shortcut.
@@ -489,13 +489,13 @@ public class LessonBoardNavigationTest {
                 fixture.sendMouseEvent(all, MouseEvent.MOUSE_RELEASED, 5, 5);
                 fixture.assertHistoryPane();
                 fixture.assertDraft();
-                assertSame(fixture.input(), fixture.root().getScene().getFocusOwner());
+                assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
                 for (MouseButton mouseButton : List.of(MouseButton.SECONDARY, MouseButton.MIDDLE)) {
                     fixture.sendMouseEvent(all, MouseEvent.MOUSE_PRESSED, 5, 5, mouseButton);
                     fixture.sendMouseEvent(all, MouseEvent.MOUSE_RELEASED, 5, 5, mouseButton);
                     fixture.assertHistoryPane();
                     fixture.assertDraft();
-                    assertSame(fixture.input(), fixture.root().getScene().getFocusOwner());
+                    assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
                     assertFalse(all.isArmed());
 
                     // A second button's press/release must not fire or cancel a held primary gesture.
@@ -508,7 +508,7 @@ public class LessonBoardNavigationTest {
                     fixture.assertDraft();
                     assertTrue(all.isArmed());
                     assertTrue(all.isPressed());
-                    assertSame(fixture.input(), fixture.root().getScene().getFocusOwner());
+                    assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
                     fixture.sendMouseEvent(all, MouseEvent.MOUSE_RELEASED, 5, 5);
                     fixture.assertLessonPane("lessonsButton");
                     assertFalse(all.isArmed());
@@ -520,7 +520,7 @@ public class LessonBoardNavigationTest {
                 }
 
                 for (String id : List.of("lessonsButton", "studentLessonsButton", "attendanceButton")) {
-                    Button button = (Button) fixture.root().lookup("#" + id);
+                    Button button = (Button) fixture.getRoot().lookup("#" + id);
                     assertTrue(button.isFocusTraversable());
                     button.requestFocus();
                     Event.fireEvent(button, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.SPACE,
@@ -528,7 +528,7 @@ public class LessonBoardNavigationTest {
                     Event.fireEvent(button, new KeyEvent(KeyEvent.KEY_RELEASED, "", "", KeyCode.SPACE,
                             false, false, false, false));
                     fixture.assertActiveOnly(id);
-                    assertSame(button, fixture.root().getScene().getFocusOwner());
+                    assertSame(button, fixture.getRoot().getScene().getFocusOwner());
                     assertEquals(WindowFixture.DRAFT, fixture.input().getText());
                 }
             }
@@ -541,56 +541,56 @@ public class LessonBoardNavigationTest {
         seedRecordedData();
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
-                fixture.people().getSelectionModel().select(3);
-                PersonRecord selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.getPeople().getSelectionModel().select(3);
+                PersonRecord selected = fixture.getPeople().getSelectionModel().getSelectedItem();
                 byte[] original = Files.readAllBytes(fixture.dataPath());
                 fixture.enter("lessons si/4");
-                List<String> expectedLessons = fixture.lessonIds();
+                List<String> expectedLessons = fixture.getLessonIds();
                 String studentContext = fixture.label("lessonContext");
-                String studentFeedback = fixture.feedback();
+                String studentFeedback = fixture.getFeedback();
                 fixture.enter("history 4");
                 fixture.draft();
                 fixture.click("studentLessonsButton");
                 fixture.assertLessonPane("studentLessonsButton");
-                assertEquals(expectedLessons, fixture.lessonIds());
+                assertEquals(expectedLessons, fixture.getLessonIds());
                 assertEquals(studentContext, fixture.label("lessonContext"));
-                assertEquals(studentFeedback, fixture.feedback());
+                assertEquals(studentFeedback, fixture.getFeedback());
                 fixture.assertDraft();
 
                 fixture.enter("history 4");
-                List<String> expectedHistory = fixture.historyKeys();
+                List<String> expectedHistory = fixture.getHistoryKeys();
                 String historyContext = fixture.label("historyContext");
-                String historyFeedback = fixture.feedback();
+                String historyFeedback = fixture.getFeedback();
                 fixture.enter("showlesson lid/L2");
                 fixture.draft();
                 fixture.click("attendanceButton");
                 fixture.assertHistoryPane();
-                assertEquals(expectedHistory, fixture.historyKeys());
+                assertEquals(expectedHistory, fixture.getHistoryKeys());
                 assertEquals(historyContext, fixture.label("historyContext"));
-                assertEquals(historyFeedback, fixture.feedback());
+                assertEquals(historyFeedback, fixture.getFeedback());
                 fixture.assertDraft();
 
                 fixture.enter("lessons");
-                List<String> allLessons = fixture.lessonIds();
-                String allFeedback = fixture.feedback();
+                List<String> allLessons = fixture.getLessonIds();
+                String allFeedback = fixture.getFeedback();
                 fixture.enter("history 4");
                 fixture.draft();
                 fixture.click("lessonsButton");
                 fixture.assertLessonPane("lessonsButton");
-                assertEquals(allLessons, fixture.lessonIds());
+                assertEquals(allLessons, fixture.getLessonIds());
                 assertEquals("All lessons", fixture.label("lessonContext"));
-                assertEquals(allFeedback, fixture.feedback());
+                assertEquals(allFeedback, fixture.getFeedback());
                 fixture.assertDraft();
-                assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
 
                 fixture.enter("search c/student n/Jamie");
-                fixture.people().getSelectionModel().select(0);
+                fixture.getPeople().getSelectionModel().select(0);
                 fixture.click("studentLessonsButton");
                 fixture.assertLessonPane("studentLessonsButton");
-                assertEquals(expectedLessons, fixture.lessonIds());
+                assertEquals(expectedLessons, fixture.getLessonIds());
                 fixture.click("attendanceButton");
                 fixture.assertHistoryPane();
-                assertEquals(expectedHistory, fixture.historyKeys());
+                assertEquals(expectedHistory, fixture.getHistoryKeys());
                 assertArrayEquals(original, Files.readAllBytes(fixture.dataPath()));
             }
             return null;
@@ -603,35 +603,35 @@ public class LessonBoardNavigationTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("history 4 lid/L10");
-                List<String> expectedHistory = fixture.historyKeys();
+                List<String> expectedHistory = fixture.getHistoryKeys();
                 byte[] original = Files.readAllBytes(fixture.dataPath());
                 for (int index : List.of(-1, 0, 2)) {
                     if (index < 0) {
-                        fixture.people().getSelectionModel().clearSelection();
+                        fixture.getPeople().getSelectionModel().clearSelection();
                     } else {
-                        fixture.people().getSelectionModel().select(index);
+                        fixture.getPeople().getSelectionModel().select(index);
                     }
                     for (String button : List.of("studentLessonsButton", "attendanceButton")) {
                         fixture.draft();
                         fixture.click(button);
                         fixture.assertHistoryPane();
-                        assertEquals(expectedHistory, fixture.historyKeys());
+                        assertEquals(expectedHistory, fixture.getHistoryKeys());
                         assertEquals("Student S2 · attendance history · L10", fixture.label("historyContext"));
-                        assertTrue(fixture.feedback().toLowerCase(Locale.ROOT).contains("student"));
+                        assertTrue(fixture.getFeedback().toLowerCase(Locale.ROOT).contains("student"));
                         fixture.assertDraft();
                     }
                 }
 
-                PersonRecord stale = fixture.people().getItems().get(3);
+                PersonRecord stale = fixture.getPeople().getItems().get(3);
                 fixture.enter("list r/tutor");
-                fixture.people().getSelectionModel().select(stale);
-                assertEquals(-1, fixture.people().getSelectionModel().getSelectedIndex());
+                fixture.getPeople().getSelectionModel().select(stale);
+                assertEquals(-1, fixture.getPeople().getSelectionModel().getSelectedIndex());
                 for (String button : List.of("studentLessonsButton", "attendanceButton")) {
                     fixture.draft();
                     fixture.click(button);
                     fixture.assertHistoryPane();
-                    assertEquals(expectedHistory, fixture.historyKeys());
-                    assertTrue(fixture.feedback().toLowerCase(Locale.ROOT).contains("student"));
+                    assertEquals(expectedHistory, fixture.getHistoryKeys());
+                    assertTrue(fixture.getFeedback().toLowerCase(Locale.ROOT).contains("student"));
                     fixture.assertDraft();
                 }
                 assertArrayEquals(original, Files.readAllBytes(fixture.dataPath()));
@@ -642,8 +642,8 @@ public class LessonBoardNavigationTest {
 
     @Test
     public void navigationButtons_protectedSession_preservesRejectedBytesAndDraft() throws Exception {
-        Files.writeString(dataPath(), "{broken json");
-        byte[] original = Files.readAllBytes(dataPath());
+        Files.writeString(getDataPath(), "{broken json");
+        byte[] original = Files.readAllBytes(getDataPath());
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.window().show();
@@ -651,23 +651,23 @@ public class LessonBoardNavigationTest {
                 fixture.assertLessonPane("lessonsButton");
                 fixture.enter("lessons");
                 fixture.assertLessonPane("lessonsButton");
-                String protectedFeedback = fixture.feedback();
+                String protectedFeedback = fixture.getFeedback();
                 assertTrue(protectedFeedback.contains("Changes cannot be saved in this session"));
                 fixture.draft();
                 fixture.mouseClick("lessonsButton");
-                assertEquals(protectedFeedback, fixture.feedback());
+                assertEquals(protectedFeedback, fixture.getFeedback());
                 fixture.assertLessonPane("lessonsButton");
                 fixture.assertDraft();
                 for (String button : List.of("studentLessonsButton", "attendanceButton")) {
                     fixture.mouseClick(button);
-                    assertFalse(fixture.feedback().isBlank());
+                    assertFalse(fixture.getFeedback().isBlank());
                     fixture.assertLessonPane("lessonsButton");
                     fixture.assertDraft();
-                    assertSame(fixture.input(), fixture.root().getScene().getFocusOwner());
+                    assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
                 }
-                assertTrue(fixture.people().getItems().isEmpty());
-                assertTrue(fixture.lessons().getItems().isEmpty());
-                assertTrue(fixture.history().getItems().isEmpty());
+                assertTrue(fixture.getPeople().getItems().isEmpty());
+                assertTrue(fixture.getLessons().getItems().isEmpty());
+                assertTrue(fixture.getHistory().getItems().isEmpty());
                 assertArrayEquals(original, Files.readAllBytes(fixture.dataPath()));
             }
             return null;
@@ -680,32 +680,32 @@ public class LessonBoardNavigationTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 byte[] original = Files.readAllBytes(fixture.dataPath());
-                fixture.people().getSelectionModel().select(3);
+                fixture.getPeople().getSelectionModel().select(3);
                 fixture.assertLessonPane("lessonsButton");
                 fixture.enter("lessons si/2");
-                List<String> lessons = fixture.lessonIds();
+                List<String> lessons = fixture.getLessonIds();
                 fixture.assertLessonPane("studentLessonsButton");
                 assertEquals("Student S1 · current lessons", fixture.label("lessonContext"));
 
-                fixture.people().getSelectionModel().select(5);
-                fixture.people().getSelectionModel().clearSelection();
+                fixture.getPeople().getSelectionModel().select(5);
+                fixture.getPeople().getSelectionModel().clearSelection();
                 fixture.enter("list r/tutor");
-                fixture.people().getSelectionModel().select(0);
+                fixture.getPeople().getSelectionModel().select(0);
                 fixture.enter("help");
                 fixture.assertLessonPane("studentLessonsButton");
-                assertEquals(lessons, fixture.lessonIds());
+                assertEquals(lessons, fixture.getLessonIds());
                 assertEquals("Student S1 · current lessons", fixture.label("lessonContext"));
 
                 fixture.enter("search c/student n/Jamie");
-                fixture.people().getSelectionModel().select(0);
+                fixture.getPeople().getSelectionModel().select(0);
                 fixture.assertLessonPane("studentLessonsButton");
-                assertEquals(lessons, fixture.lessonIds());
+                assertEquals(lessons, fixture.getLessonIds());
                 fixture.draft();
                 fixture.click("studentLessonsButton");
                 fixture.assertLessonPane("studentLessonsButton");
-                assertEquals(List.of("L10", "L11"), fixture.lessonIds());
+                assertEquals(List.of("L10", "L11"), fixture.getLessonIds());
                 assertEquals("Student S2 · current lessons", fixture.label("lessonContext"));
-                assertEquals(List.of("S2"), fixture.peopleIds());
+                assertEquals(List.of("S2"), fixture.getPeopleIds());
                 fixture.assertDraft();
                 assertArrayEquals(original, Files.readAllBytes(fixture.dataPath()));
             }
@@ -719,8 +719,8 @@ public class LessonBoardNavigationTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 byte[] original = Files.readAllBytes(fixture.dataPath());
-                fixture.people().getSelectionModel().select(3);
-                PersonRecord selected = fixture.people().getSelectionModel().getSelectedItem();
+                fixture.getPeople().getSelectionModel().select(3);
+                PersonRecord selected = fixture.getPeople().getSelectionModel().getSelectedItem();
                 List<String> routes = List.of("lessons", "lessons si/4", "search c/lesson",
                         "search c/lesson s/Math", "showlesson lid/L3", "history 4 lid/L10");
                 List<String> activeButtons = List.of("lessonsButton", "studentLessonsButton", "", "", "",
@@ -729,8 +729,8 @@ public class LessonBoardNavigationTest {
                     fixture.enter(routes.get(route));
                     String activeButton = activeButtons.get(route);
                     fixture.assertActiveOnly(activeButton);
-                    List<String> lessons = fixture.lessonIds();
-                    List<String> history = fixture.historyKeys();
+                    List<String> lessons = fixture.getLessonIds();
+                    List<String> history = fixture.getHistoryKeys();
                     String lessonContext = fixture.label("lessonContext");
                     String historyContext = fixture.label("historyContext");
                     for (String command : List.of("lessons si/1", "lessons si/3", "lessons si/99", "lessons si/x",
@@ -738,11 +738,11 @@ public class LessonBoardNavigationTest {
                             "history 1", "history 3", "history 99", "history 4 lid/L99")) {
                         fixture.enter(command);
                         fixture.assertActiveOnly(activeButton);
-                        assertEquals(lessons, fixture.lessonIds());
-                        assertEquals(history, fixture.historyKeys());
+                        assertEquals(lessons, fixture.getLessonIds());
+                        assertEquals(history, fixture.getHistoryKeys());
                         assertEquals(lessonContext, fixture.label("lessonContext"));
                         assertEquals(historyContext, fixture.label("historyContext"));
-                        assertSame(selected, fixture.people().getSelectionModel().getSelectedItem());
+                        assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                     }
                     fixture.enter("help");
                     fixture.assertActiveOnly(activeButton);
@@ -755,24 +755,24 @@ public class LessonBoardNavigationTest {
 
     @Test
     public void committedStudentRefresh_retainsStudentIndicatorWhenResultBecomesNonempty() throws Exception {
-        new JsonPonHubDataStorage(dataPath()).saveData(LessonQueryTestData.createData().exportState());
+        new JsonPonHubDataStorage(getDataPath()).saveData(LessonQueryTestData.createData().exportState());
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("list r/student");
                 fixture.enter("lessons si/3");
                 fixture.assertLessonPane("studentLessonsButton");
-                assertTrue(fixture.lessonIds().isEmpty());
+                assertTrue(fixture.getLessonIds().isEmpty());
                 fixture.enter("enrol 3 lid/L3");
                 fixture.assertLessonPane("studentLessonsButton");
-                assertEquals(List.of("L3"), fixture.lessonIds());
+                assertEquals(List.of("L3"), fixture.getLessonIds());
                 assertEquals("Student S3 · current lessons", fixture.label("lessonContext"));
                 fixture.enter("unenrol 3 lid/L3");
                 fixture.assertLessonPane("studentLessonsButton");
-                assertTrue(fixture.lessonIds().isEmpty());
+                assertTrue(fixture.getLessonIds().isEmpty());
                 fixture.enter("delete 3");
                 fixture.enter("delete confirm");
                 fixture.assertLessonPane("studentLessonsButton");
-                assertTrue(fixture.lessonIds().isEmpty());
+                assertTrue(fixture.getLessonIds().isEmpty());
                 assertEquals("Student S3 · current lessons", fixture.label("lessonContext"));
             }
             return null;
@@ -785,7 +785,7 @@ public class LessonBoardNavigationTest {
             List<String> routes = List.of("lessons", "lessons si/6", "search c/lesson", "showlesson lid/L3");
             List<String> activeButtons = List.of("lessonsButton", "studentLessonsButton", "", "");
             for (int route = 0; route < routes.size(); route++) {
-                new JsonPonHubDataStorage(dataPath()).saveData(LessonQueryTestData.createData().exportState());
+                new JsonPonHubDataStorage(getDataPath()).saveData(LessonQueryTestData.createData().exportState());
                 try (WindowFixture fixture = createWindow()) {
                     fixture.enter(routes.get(route));
                     String lessonContext = fixture.label("lessonContext");
@@ -796,17 +796,17 @@ public class LessonBoardNavigationTest {
                     fixture.assertLessonPane(activeButtons.get(route));
                     assertEquals(lessonContext, fixture.label("lessonContext"));
                     assertEquals("Attendance history", fixture.label("historyContext"));
-                    assertTrue(fixture.historyKeys().isEmpty());
+                    assertTrue(fixture.getHistoryKeys().isEmpty());
                 }
             }
-            new JsonPonHubDataStorage(dataPath()).saveData(LessonQueryTestData.createData().exportState());
+            new JsonPonHubDataStorage(getDataPath()).saveData(LessonQueryTestData.createData().exportState());
             try (WindowFixture fixture = createWindow()) {
                 fixture.enter("showlesson lid/L3");
                 fixture.enter("history 6 lid/L3");
                 fixture.assertHistoryPane();
                 fixture.enter("deletelesson lid/L3");
                 fixture.assertLessonPane("");
-                assertTrue(fixture.lessonIds().isEmpty());
+                assertTrue(fixture.getLessonIds().isEmpty());
                 assertEquals("Lesson L3 is no longer available", fixture.label("lessonContext"));
             }
             return null;
@@ -818,7 +818,7 @@ public class LessonBoardNavigationTest {
         seedRecordedData();
         callOnFxThread(() -> {
             AppHarness app = new AppHarness();
-            app.initializePaths(dataPath(), directory.resolve("help-failure-preferences.json"));
+            app.initializePaths(getDataPath(), directory.resolve("help-failure-preferences.json"));
             Logic actual = app.getLogic();
             Logic rejectingHelp = (Logic) Proxy.newProxyInstance(Logic.class.getClassLoader(),
                     new Class<?>[] {Logic.class}, (proxy, method, arguments) -> {
@@ -827,34 +827,34 @@ public class LessonBoardNavigationTest {
                         }
                         return method.invoke(actual, arguments);
                     });
-            MainWindow window = new MainWindow(new Stage(), rejectingHelp, dataPath());
+            MainWindow window = new MainWindow(new Stage(), rejectingHelp, getDataPath());
             window.fillInnerParts();
-            try (WindowFixture fixture = new WindowFixture(app, window, dataPath())) {
+            try (WindowFixture fixture = new WindowFixture(app, window, getDataPath())) {
                 fixture.layout();
                 fixture.enter("lessons si/2");
-                List<String> lessons = fixture.lessonIds();
+                List<String> lessons = fixture.getLessonIds();
                 String context = fixture.label("lessonContext");
                 fixture.draft();
                 window.handleHelp();
-                assertEquals("Help is temporarily unavailable", fixture.feedback());
+                assertEquals("Help is temporarily unavailable", fixture.getFeedback());
                 fixture.assertLessonPane("studentLessonsButton");
                 fixture.assertDraft();
                 fixture.input().setText("Unrelated key draft");
-                for (Node target : List.of(fixture.input(), fixture.root())) {
+                for (Node target : List.of(fixture.input(), fixture.getRoot())) {
                     Event.fireEvent(target, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F2,
                             false, false, false, false));
                 }
                 assertEquals("Unrelated key draft", fixture.input().getText());
-                assertEquals("Help is temporarily unavailable", fixture.feedback());
+                assertEquals("Help is temporarily unavailable", fixture.getFeedback());
                 fixture.assertLessonPane("studentLessonsButton");
-                assertEquals(lessons, fixture.lessonIds());
+                assertEquals(lessons, fixture.getLessonIds());
                 assertEquals(context, fixture.label("lessonContext"));
             }
             return null;
         });
     }
 
-    private Path dataPath() {
+    private Path getDataPath() {
         return directory.resolve("navigation.json");
     }
 
@@ -875,15 +875,15 @@ public class LessonBoardNavigationTest {
                 LocalDate.of(2026, 10, 5), AttendanceStatus.ABSENT);
         data.markAttendance(LessonQueryTestData.STUDENT_TWO, new LessonId("L11"),
                 LocalDate.of(2026, 10, 7), AttendanceStatus.PRESENT);
-        new JsonPonHubDataStorage(dataPath()).saveData(data.exportState());
+        new JsonPonHubDataStorage(getDataPath()).saveData(data.exportState());
     }
 
     private WindowFixture createWindow() throws Exception {
         AppHarness app = new AppHarness();
-        app.initializePaths(dataPath(), directory.resolve("navigation-preferences.json"));
-        MainWindow window = new MainWindow(new Stage(), app.getLogic(), dataPath());
+        app.initializePaths(getDataPath(), directory.resolve("navigation-preferences.json"));
+        MainWindow window = new MainWindow(new Stage(), app.getLogic(), getDataPath());
         window.fillInnerParts();
-        WindowFixture fixture = new WindowFixture(app, window, dataPath());
+        WindowFixture fixture = new WindowFixture(app, window, getDataPath());
         fixture.layout();
         return fixture;
     }
@@ -891,60 +891,60 @@ public class LessonBoardNavigationTest {
     private record WindowFixture(AppHarness app, MainWindow window, Path dataPath) implements AutoCloseable {
         private static final String DRAFT = "add r/student n/Unfinished";
 
-        private Region root() {
+        private Region getRoot() {
             return (Region) window.getPrimaryStage().getScene().getRoot();
         }
 
         private void layout() {
-            root().applyCss();
-            root().resize(853, 600);
-            root().layout();
-            people().layout();
-            lessons().layout();
-            history().layout();
+            getRoot().applyCss();
+            getRoot().resize(853, 600);
+            getRoot().layout();
+            getPeople().layout();
+            getLessons().layout();
+            getHistory().layout();
         }
 
         private void layoutShownWindow() {
-            root().applyCss();
-            root().requestLayout();
-            root().layout();
-            people().layout();
-            lessons().layout();
-            history().layout();
+            getRoot().applyCss();
+            getRoot().requestLayout();
+            getRoot().layout();
+            getPeople().layout();
+            getLessons().layout();
+            getHistory().layout();
         }
 
         private TextField input() {
-            return (TextField) root().lookup("#commandTextField");
+            return (TextField) getRoot().lookup("#commandTextField");
         }
 
-        private String feedback() {
-            return ((TextArea) root().lookup("#resultDisplay")).getText();
+        private String getFeedback() {
+            return ((TextArea) getRoot().lookup("#resultDisplay")).getText();
         }
 
         private String label(String id) {
-            return ((Label) root().lookup("#" + id)).getText();
+            return ((Label) getRoot().lookup("#" + id)).getText();
         }
 
         @SuppressWarnings("unchecked")
-        private ListView<PersonRecord> people() {
-            return (ListView<PersonRecord>) root().lookup("#personListView");
+        private ListView<PersonRecord> getPeople() {
+            return (ListView<PersonRecord>) getRoot().lookup("#personListView");
         }
 
         @SuppressWarnings("unchecked")
-        private ListView<LessonView> lessons() {
-            return (ListView<LessonView>) root().lookup("#lessonListView");
+        private ListView<LessonView> getLessons() {
+            return (ListView<LessonView>) getRoot().lookup("#lessonListView");
         }
 
         @SuppressWarnings("unchecked")
-        private ListView<AttendanceHistoryEntry> history() {
-            return (ListView<AttendanceHistoryEntry>) root().lookup("#historyListView");
+        private ListView<AttendanceHistoryEntry> getHistory() {
+            return (ListView<AttendanceHistoryEntry>) getRoot().lookup("#historyListView");
         }
 
         private ListView<?> detail() {
-            return (ListView<?>) root().lookup("#lessonDetailList");
+            return (ListView<?>) getRoot().lookup("#lessonDetailList");
         }
 
-        private List<String> detailLabels() {
+        private List<String> getDetailLabels() {
             var labels = new ArrayList<String>();
             for (int row = 0; row < detail().getItems().size(); row++) {
                 detail().scrollTo(row);
@@ -957,16 +957,16 @@ public class LessonBoardNavigationTest {
             return labels;
         }
 
-        private List<String> peopleIds() {
-            return people().getItems().stream().map(PersonRecord::getId).map(Object::toString).toList();
+        private List<String> getPeopleIds() {
+            return getPeople().getItems().stream().map(PersonRecord::getId).map(Object::toString).toList();
         }
 
-        private List<String> lessonIds() {
-            return lessons().getItems().stream().map(LessonView::getLessonId).map(Object::toString).toList();
+        private List<String> getLessonIds() {
+            return getLessons().getItems().stream().map(LessonView::getLessonId).map(Object::toString).toList();
         }
 
-        private List<String> historyKeys() {
-            return history().getItems().stream().map(entry -> entry.getStudentId() + "/" + entry.getLessonId()
+        private List<String> getHistoryKeys() {
+            return getHistory().getItems().stream().map(entry -> entry.getStudentId() + "/" + entry.getLessonId()
                     + "/" + entry.getDate() + "/" + entry.getStatus()).toList();
         }
 
@@ -977,13 +977,13 @@ public class LessonBoardNavigationTest {
         }
 
         private void click(String id) {
-            Button button = (Button) root().lookup("#" + id);
+            Button button = (Button) getRoot().lookup("#" + id);
             button.fire();
             layout();
         }
 
         private void mouseClick(String id) {
-            Button button = (Button) root().lookup("#" + id);
+            Button button = (Button) getRoot().lookup("#" + id);
             sendMouseEvent(button, MouseEvent.MOUSE_PRESSED, 5, 5);
             sendMouseEvent(button, MouseEvent.MOUSE_RELEASED, 5, 5);
             layout();
@@ -1026,20 +1026,20 @@ public class LessonBoardNavigationTest {
         }
 
         private void assertLessonPane(String activeButton) {
-            assertTrue(lessons().getParent().isVisible());
-            assertFalse(history().getParent().isVisible());
+            assertTrue(getLessons().getParent().isVisible());
+            assertFalse(getHistory().getParent().isVisible());
             assertActiveOnly(activeButton);
         }
 
         private void assertHistoryPane() {
-            assertTrue(history().getParent().isVisible());
-            assertFalse(lessons().getParent().isVisible());
+            assertTrue(getHistory().getParent().isVisible());
+            assertFalse(getLessons().getParent().isVisible());
             assertActiveOnly("attendanceButton");
         }
 
         private void assertActiveOnly(String activeButton) {
             for (String id : List.of("lessonsButton", "studentLessonsButton", "attendanceButton")) {
-                assertEquals(id.equals(activeButton), root().lookup("#" + id).getPseudoClassStates()
+                assertEquals(id.equals(activeButton), getRoot().lookup("#" + id).getPseudoClassStates()
                         .contains(PseudoClass.getPseudoClass("active")), id);
             }
         }
