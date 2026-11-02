@@ -45,7 +45,7 @@ public class LessonEditCandidateTest {
     public void prepare_allFieldsSet_preservesPositionIdentityRosterHistoryAndCounters() {
         PonHubData liveData = new PonHubData(createSourceWithHistory());
         PonHubDataState source = liveData.exportState();
-        LessonEditInput input = input(Optional.of(LessonDay.WEDNESDAY), Optional.of(new LessonTime("1100")),
+        LessonEditInput input = createInput(Optional.of(LessonDay.WEDNESDAY), Optional.of(new LessonTime("1100")),
                 Optional.of(new LessonTime("1200")), Optional.of(new Subject("Physics")),
                 Optional.of(new PersonId("T3")), Optional.of(new Room("R4")));
         LessonEditCandidate candidate = LessonEditCandidate.prepare(source, new LessonId("L3"), input);
@@ -68,7 +68,7 @@ public class LessonEditCandidateTest {
     @Test
     public void prepare_nonDayEditWithCurrentAndFormerAttendance_preservesCompleteHistory() {
         PonHubDataState source = createSourceWithHistory();
-        LessonEditInput input = input(Optional.empty(), Optional.of(new LessonTime("1100")),
+        LessonEditInput input = createInput(Optional.empty(), Optional.of(new LessonTime("1100")),
                 Optional.of(new LessonTime("1200")), Optional.of(new Subject("Advanced Math")),
                 Optional.of(new PersonId("T3")), Optional.of(new Room("R4")));
         LessonEditCandidate candidate = LessonEditCandidate.prepare(source, new LessonId("L1"), input);
@@ -88,7 +88,7 @@ public class LessonEditCandidateTest {
     public void prepare_omittedAndNormalizedIdenticalValues_returnsOriginalSnapshotWithoutChange() {
         PonHubDataState source = createSourceWithHistory();
         Lesson original = findLesson(source, "L1");
-        LessonEditInput sameValues = input(Optional.of(LessonDay.MONDAY), Optional.of(new LessonTime("0900")),
+        LessonEditInput sameValues = createInput(Optional.of(LessonDay.MONDAY), Optional.of(new LessonTime("0900")),
                 Optional.of(new LessonTime("1000")), Optional.of(new Subject("  Math  ")),
                 Optional.of(new PersonId("T1")), Optional.of(new Room(" r1 ")));
 
@@ -104,7 +104,7 @@ public class LessonEditCandidateTest {
     @Test
     public void prepare_subjectDisplayCaseChange_isObservableAndExcludesSelfFromConflicts() {
         PonHubDataState source = createSourceWithHistory();
-        LessonEditInput input = input(Optional.empty(), Optional.empty(), Optional.empty(),
+        LessonEditInput input = createInput(Optional.empty(), Optional.empty(), Optional.empty(),
                 Optional.of(new Subject("MATH")), Optional.empty(), Optional.empty());
         LessonEditCandidate candidate = LessonEditCandidate.prepare(source, new LessonId("L1"), input);
 
@@ -118,7 +118,7 @@ public class LessonEditCandidateTest {
     @Test
     public void prepare_adjacentSharedResources_allowsBoundaryWithoutOverlap() {
         PonHubDataState source = createSourceWithHistory();
-        LessonEditInput input = input(Optional.of(LessonDay.MONDAY), Optional.of(new LessonTime("0800")),
+        LessonEditInput input = createInput(Optional.of(LessonDay.MONDAY), Optional.of(new LessonTime("0800")),
                 Optional.of(new LessonTime("0900")), Optional.empty(), Optional.of(new PersonId("T1")),
                 Optional.of(new Room("R1")));
         LessonEditCandidate candidate = LessonEditCandidate.prepare(source, new LessonId("L3"), input);
@@ -137,11 +137,11 @@ public class LessonEditCandidateTest {
         Optional<LessonTime> startTime = Optional.of(new LessonTime("0900"));
         Optional<LessonTime> endTime = Optional.of(new LessonTime("1000"));
         List<LessonEditInput> conflicts = List.of(
-                input(monday, startTime, endTime, Optional.empty(), Optional.of(new PersonId("T1")),
+                createInput(monday, startTime, endTime, Optional.empty(), Optional.of(new PersonId("T1")),
                         Optional.of(new Room("R4"))),
-                input(monday, startTime, endTime, Optional.empty(), Optional.of(new PersonId("T3")),
+                createInput(monday, startTime, endTime, Optional.empty(), Optional.of(new PersonId("T3")),
                         Optional.of(new Room("R1"))),
-                input(monday, startTime, endTime, Optional.empty(), Optional.of(new PersonId("T3")),
+                createInput(monday, startTime, endTime, Optional.empty(), Optional.of(new PersonId("T3")),
                         Optional.of(new Room("R4"))));
 
         for (LessonEditInput input : conflicts) {
@@ -154,7 +154,7 @@ public class LessonEditCandidateTest {
     @Test
     public void prepare_invalidCombinedSlot_rejectsWithoutChangingSource() {
         PonHubDataState source = createSourceWithHistory();
-        LessonEditInput input = input(Optional.empty(), Optional.of(new LessonTime("1000")),
+        LessonEditInput input = createInput(Optional.empty(), Optional.of(new LessonTime("1000")),
                 Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () ->
@@ -166,7 +166,7 @@ public class LessonEditCandidateTest {
     public void prepare_missingAndWrongRoleTutors_rejectsWithoutChangingSource() {
         PonHubDataState source = createSourceWithHistory();
         for (PersonId tutorId : List.of(new PersonId("T99"), new PersonId("S1"))) {
-            LessonEditInput input = input(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
+            LessonEditInput input = createInput(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
                     Optional.of(tutorId), Optional.empty());
 
             assertThrows(IllegalArgumentException.class, () ->
@@ -183,7 +183,7 @@ public class LessonEditCandidateTest {
         assertFalse(original.hasEnrolledStudent(formerMemberAttendance.getStudentId()));
         PonHubDataState source = new PonHubDataState(baseline.people(), baseline.lessons(),
                 List.of(formerMemberAttendance), baseline.lastAllocatedLessonSequence());
-        LessonEditInput input = input(Optional.of(LessonDay.TUESDAY), Optional.empty(), Optional.empty(),
+        LessonEditInput input = createInput(Optional.of(LessonDay.TUESDAY), Optional.empty(), Optional.empty(),
                 Optional.empty(), Optional.empty(), Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () ->
@@ -197,7 +197,7 @@ public class LessonEditCandidateTest {
         PonHubDataState baseline = createSourceWithHistory();
         PonHubDataState source = new PonHubDataState(baseline.people(), baseline.lessons(), baseline.attendance(),
                 Long.MAX_VALUE);
-        LessonEditInput input = input(Optional.empty(), Optional.empty(), Optional.empty(),
+        LessonEditInput input = createInput(Optional.empty(), Optional.empty(), Optional.empty(),
                 Optional.of(new Subject("Further Math")), Optional.empty(), Optional.empty());
         LessonEditCandidate candidate = LessonEditCandidate.prepare(source, new LessonId("L1"), input);
 
@@ -226,11 +226,11 @@ public class LessonEditCandidateTest {
     }
 
     private static LessonEditInput createEmptyInput() {
-        return input(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
+        return createInput(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
                 Optional.empty());
     }
 
-    private static LessonEditInput input(Optional<LessonDay> day, Optional<LessonTime> startTime,
+    private static LessonEditInput createInput(Optional<LessonDay> day, Optional<LessonTime> startTime,
             Optional<LessonTime> endTime, Optional<Subject> subject, Optional<PersonId> tutorId,
             Optional<Room> room) {
         return new LessonEditInput(day, startTime, endTime, subject, tutorId, room);

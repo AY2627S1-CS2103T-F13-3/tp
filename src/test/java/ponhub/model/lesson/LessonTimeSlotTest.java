@@ -23,15 +23,15 @@ public class LessonTimeSlotTest {
 
     @Test
     public void constructor_endNotAfterStart_throwsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> slot(LessonDay.MONDAY, "0900", "0900"));
-        assertThrows(IllegalArgumentException.class, () -> slot(LessonDay.MONDAY, "1000", "0900"));
+        assertThrows(IllegalArgumentException.class, () -> createTimeSlot(LessonDay.MONDAY, "0900", "0900"));
+        assertThrows(IllegalArgumentException.class, () -> createTimeSlot(LessonDay.MONDAY, "1000", "0900"));
     }
 
     @Test
     public void overlaps_sharedTimeOnSameDay_returnsTrue() {
-        LessonTimeSlot first = slot(LessonDay.MONDAY, "0900", "1030");
-        LessonTimeSlot second = slot(LessonDay.MONDAY, "1000", "1100");
-        LessonTimeSlot same = slot(LessonDay.MONDAY, "0900", "1030");
+        LessonTimeSlot first = createTimeSlot(LessonDay.MONDAY, "0900", "1030");
+        LessonTimeSlot second = createTimeSlot(LessonDay.MONDAY, "1000", "1100");
+        LessonTimeSlot same = createTimeSlot(LessonDay.MONDAY, "0900", "1030");
 
         assertTrue(first.overlaps(second));
         assertTrue(second.overlaps(first));
@@ -40,8 +40,8 @@ public class LessonTimeSlotTest {
 
     @Test
     public void overlaps_strictContainment_returnsTrueInBothDirections() {
-        LessonTimeSlot containing = slot(LessonDay.MONDAY, "0900", "1200");
-        LessonTimeSlot contained = slot(LessonDay.MONDAY, "1000", "1100");
+        LessonTimeSlot containing = createTimeSlot(LessonDay.MONDAY, "0900", "1200");
+        LessonTimeSlot contained = createTimeSlot(LessonDay.MONDAY, "1000", "1100");
 
         assertTrue(containing.overlaps(contained));
         assertTrue(contained.overlaps(containing));
@@ -49,8 +49,8 @@ public class LessonTimeSlotTest {
 
     @Test
     public void overlaps_separatedSlots_returnsFalseInBothDirections() {
-        LessonTimeSlot earlier = slot(LessonDay.MONDAY, "0900", "1000");
-        LessonTimeSlot later = slot(LessonDay.MONDAY, "1100", "1200");
+        LessonTimeSlot earlier = createTimeSlot(LessonDay.MONDAY, "0900", "1000");
+        LessonTimeSlot later = createTimeSlot(LessonDay.MONDAY, "1100", "1200");
 
         assertFalse(earlier.overlaps(later));
         assertFalse(later.overlaps(earlier));
@@ -58,9 +58,9 @@ public class LessonTimeSlotTest {
 
     @Test
     public void overlaps_oneMinuteAtMidnight_distinguishesSharedTimeFromAdjacency() {
-        LessonTimeSlot firstMinute = slot(LessonDay.MONDAY, "0000", "0001");
-        LessonTimeSlot nextMinute = slot(LessonDay.MONDAY, "0001", "0002");
-        LessonTimeSlot firstTwoMinutes = slot(LessonDay.MONDAY, "0000", "0002");
+        LessonTimeSlot firstMinute = createTimeSlot(LessonDay.MONDAY, "0000", "0001");
+        LessonTimeSlot nextMinute = createTimeSlot(LessonDay.MONDAY, "0001", "0002");
+        LessonTimeSlot firstTwoMinutes = createTimeSlot(LessonDay.MONDAY, "0000", "0002");
 
         assertFalse(firstMinute.overlaps(nextMinute));
         assertFalse(nextMinute.overlaps(firstMinute));
@@ -70,9 +70,9 @@ public class LessonTimeSlotTest {
 
     @Test
     public void overlaps_oneMinuteAtDayEnd_distinguishesSharedTimeFromAdjacency() {
-        LessonTimeSlot earlierMinute = slot(LessonDay.SUNDAY, "2357", "2358");
-        LessonTimeSlot lastMinute = slot(LessonDay.SUNDAY, "2358", "2359");
-        LessonTimeSlot lastTwoMinutes = slot(LessonDay.SUNDAY, "2357", "2359");
+        LessonTimeSlot earlierMinute = createTimeSlot(LessonDay.SUNDAY, "2357", "2358");
+        LessonTimeSlot lastMinute = createTimeSlot(LessonDay.SUNDAY, "2358", "2359");
+        LessonTimeSlot lastTwoMinutes = createTimeSlot(LessonDay.SUNDAY, "2357", "2359");
 
         assertFalse(earlierMinute.overlaps(lastMinute));
         assertFalse(lastMinute.overlaps(earlierMinute));
@@ -82,7 +82,7 @@ public class LessonTimeSlotTest {
 
     @Test
     public void constructor_dayEndCannotWrapToMidnight_rejectsOvernightSlot() {
-        assertThrows(IllegalArgumentException.class, () -> slot(LessonDay.SUNDAY, "2359", "0000"));
+        assertThrows(IllegalArgumentException.class, () -> createTimeSlot(LessonDay.SUNDAY, "2359", "0000"));
     }
 
     @Test
@@ -116,13 +116,13 @@ public class LessonTimeSlotTest {
         assertEquals(slot, slot);
         assertEquals(slot, new LessonTimeSlot(LessonDay.MONDAY, NINE_AM, TEN_AM));
         assertNotEquals(slot, new LessonTimeSlot(LessonDay.TUESDAY, NINE_AM, TEN_AM));
-        assertNotEquals(slot, slot(LessonDay.MONDAY, "0901", "1000"));
-        assertNotEquals(slot, slot(LessonDay.MONDAY, "0900", "1001"));
+        assertNotEquals(slot, createTimeSlot(LessonDay.MONDAY, "0901", "1000"));
+        assertNotEquals(slot, createTimeSlot(LessonDay.MONDAY, "0900", "1001"));
         assertNotEquals(slot, null);
         assertNotEquals(slot, "Mon 0900-1000");
     }
 
-    private static LessonTimeSlot slot(LessonDay day, String startTime, String endTime) {
+    private static LessonTimeSlot createTimeSlot(LessonDay day, String startTime, String endTime) {
         return new LessonTimeSlot(day, new LessonTime(startTime), new LessonTime(endTime));
     }
 }
