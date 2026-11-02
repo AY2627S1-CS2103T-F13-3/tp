@@ -340,16 +340,15 @@ When PonHub starts, `MainApp.init()` resolves **application home**—the directo
 
 <a id="shared-lesson-target-contract"></a>
 
-PonHub enforces a single set of domain rules across typed commands, JSON loading, and snapshot restoration:
+This section explains what PonHub stores, which values and relationships it accepts, and how changes reach read-only views. Commands, JSON loading and snapshot restoration share the same domain validation.
 
-| Domain concept | Canonical representation |
+| Concept | Stored or derived form |
 | --- | --- |
-| People | Immutable `Student`, `Tutor`, and `Parent` records implementing `PersonRecord` inside `PeopleRegistry`, each identified by a role-checked `PersonId`. |
-| Lesson | A shared weekly teaching slot (`Lesson`) with a `LessonId`, `tutorId` (`PersonId` with `PersonRole.TUTOR`), `LessonDay`, `LessonTimeSlot`, `Subject`, `Room`, and roster (`Set<PersonId>` of `PersonRole.STUDENT` IDs). |
-| Enrolment | Stored solely in `Lesson.enrolledStudentIds` (`Set<PersonId>`). Students do not hold their own copies of lessons. |
-| Attendance | Separate `Attendance` records keyed by `AttendanceKey` (student-role `PersonId`, `LessonId`, `LocalDate`), with status `present` or `absent`. |
-| Parent–student link | Derived dynamically whenever a `Parent`'s own phone exactly equals a `Student`'s `parentPhone` (including leading zeros). |
-| Displayed views | Read-only projections derived from canonical state, never edited directly as separate stores. |
+| People | Student, Tutor and Parent records with stable role-prefixed IDs. |
+| Lessons and enrolment | Shared weekly lessons; each lesson stores its own Student roster. |
+| Attendance | Separate dated records that can outlive current membership. |
+| Parent links | Derived from matching phone values. |
+| Displayed results | Read-only views of the shared records. |
 
 ### 4.1 People, roles, and contact details
 
@@ -359,110 +358,214 @@ PonHub enforces a single set of domain rules across typed commands, JSON loading
 <a id="allocation-and-state-validation"></a>
 <a id="deletion-and-activation-boundaries"></a>
 
-`Student`, `Tutor`, and `Parent` implement [`PersonRecord`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/person/PersonRecord.java) and hold a [`ContactDetails`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/person/ContactDetails.java) value object:
+PonHub stores three immutable person types: `Student`, `Tutor`, and `Parent`. All implement `PersonRecord` and hold a stable `PersonId` and shared `ContactDetails`.
 
-| Role | ID prefix | Required fields | Optional fields |
+<figure class="dg-figure">
+<figcaption>People records and role-specific fields</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="People records and role-specific fields">
+<a href="images/DomainPeopleStructure.png"><img src="images/DomainPeopleStructure.png" alt="Student, Tutor and Parent implement PersonRecord. All expose an ID and contact details; Student also stores an education level and parent phone."></a>
+</div>
+</figure>
+
+#### Required and optional fields
+
+| Role | ID prefix | Required details | Optional details |
 | --- | --- | --- | --- |
-| `Student` | `S` (`S1`, `S2`, …) | `PersonId`, `Name`, `EducationLevel` (`P1`–`P6`, `S1`–`S5`, `JC1`, `JC2`), `parentPhone` | Own `Phone`, `Email`, `Address` |
-| `Tutor` | `T` (`T1`, `T2`, …) | `PersonId`, `Name`, own `Phone` | `Email`, `Address` |
-| `Parent` | `P` (`P1`, `P2`, …) | `PersonId`, `Name`, own `Phone` | `Email`, `Address` |
+| Student | `S` | Name, education level, parent phone | Own phone, email, address |
+| Tutor | `T` | Name, own phone | Email, address |
+| Parent | `P` | Name, own phone | Email, address |
 
-Commands and JSON deserialization construct the exact same value classes so both entry paths enforce identical validation and normalization rules:
+Student education levels are `P1`–`P6`, `S1`–`S5`, `JC1`, or `JC2`; letter case and surrounding spaces are normalised. Other levels are rejected. A record's ID must match its role.
 
-| Value type | Validation and normalization rules |
-| --- | --- |
-| `Name` | 1–100 Unicode code points after boundary trimming, collapsing repeated ASCII spaces, and NFC normalization (rejects inputs over 400 code points pre-NFC to bound work). Allows letters, attached combining marks, ASCII spaces, apostrophes (`'`, `’`), hyphens, periods, and standalone lowercase `s/o` or `d/o` between letter-bearing words; must contain at least one letter. Preserves display capitalization; rejects digits, emoji, other slashes, and control/format characters. |
-| `Phone` | 3–15 ASCII digits stored as a string so leading zeros (such as `00123456`) remain significant. |
-| `Email` | Up to 254 characters validated with a linear scan (constant stack use). Local part allows English letters, digits, and `. _ ' % + -` without leading, trailing, or consecutive dots; domain requires at least two dot-separated labels ending in a 2–63 letter TLD. |
-| `Address` | 1–200 printable ASCII characters after trimming and collapsing repeated ASCII spaces. Slashes are allowed only when immediately surrounded by ASCII digits (such as `#01/02` or `12/34B`). |
+#### Contact rules
 
-**Record equality vs. duplicate identity:**
-* **Record equality:** Two `PersonRecord` objects are equal only if their ID and all stored fields match.
-* **Duplicate identity:** Duplicate detection checks **role + normalized name + identifying phone** (`parentPhone` for Students; own `Phone` for Tutors and Parents). Name comparison lowercases with `Locale.ROOT` and folds final Greek sigma `ς` to `σ` (without stripping accents or expanding `ß`), so `José` and `Jose` remain distinct while canonically equivalent Unicode forms match.
-* **Legacy sigma compatibility:** Existing saved records that differed only by `ς`/`σ` remain loadable using legacy lowercase keys, whereas new additions and identity-changing edits reject sigma collisions.
+Commands and JSON loading use the same value classes. Both paths reject invalid values.
+
+| Value | Accepted input and limits | Rejected input |
+| --- | --- | --- |
+| Name | 1–100 Unicode code points after trimming boundary spaces, collapsing ASCII spaces and NFC normalisation. Letters, attached combining marks, spaces, apostrophes, hyphens and periods are allowed. Standalone lowercase `s/o` and `d/o` are allowed between letter-bearing words. | No letters; digits; emoji; other slashes; control or format characters. More than 400 code points before NFC normalisation is also rejected. |
+| Phone | 3–15 ASCII digits, stored as text. Leading zeros are significant. | Letters, signs, spaces or punctuation. |
+| Email | At most 254 characters. Local part accepts English letters, digits and `. _ ' % + -`. Domain labels use letters, digits and internal hyphens; the final label has 2–63 English letters. | Missing `@`; missing domain dot; empty domain labels; leading, trailing or repeated local-part dots. |
+| Address | 1–200 printable ASCII characters after trimming and collapsing ASCII spaces. A slash must have an ASCII digit immediately on each side, as in `#01/02`. | Empty values, non-ASCII text, controls or other slash placements. |
+
+#### Duplicate people and parent links
+
+Duplicate identity means **role + normalised name + identifying phone**. Students use their parent phone; Tutors and Parents use their own phone. Siblings may share a parent phone when their names differ. Full record equality also compares the ID and all stored fields.
+
+Name matching ignores case and unifies Greek sigma forms. Accents remain significant: `José` and `Jose` are different names. Existing saved sigma variants remain loadable through the legacy compatibility check; new additions and identity-changing edits reject those collisions.
+
+A Parent–Student link is derived from an exact match between the Parent's own phone and the Student's parent phone. Changing either phone can change the link. The Student's parent-phone text is retained even when no matching Parent exists.
 
 ### 4.2 Lessons, tutors, and scheduling
 
 <a id="lesson-scheduling-value-contracts"></a>
 <a id="immutable-shared-lesson-records"></a>
 
-Classes in `ponhub.model.lesson` represent shared recurring weekly classes:
+A `Lesson` is one shared weekly booking with a stable ID, Tutor, time slot, subject and room. Its roster may be empty. Tutor and room reservations still apply before any students enrol.
 
-| Value type | Rule |
-| --- | --- |
-| `LessonId` | `L` followed by a positive `long` sequence (`L1`, `L2`, …) with no leading zeros. |
-| `LessonDay` | Three-letter weekday from `Mon` to `Sun`. |
-| `LessonTime` & `LessonTimeSlot` | Four-digit 24-hour clock times (`0000`–`2359`) with `startTime < endTime`. Time intervals are half-open `[start, end)`, so `1600–1700` and `1700–1800` are adjacent and do not overlap. |
-| `Subject` | 1–50 Unicode letters or digits separated by single spaces or hyphens (such as `A-Math`). |
-| `Room` | 1–10 ASCII letters or digits with optional single internal hyphens, normalized to uppercase (`b-01` becomes `B-01`). |
+<figure class="dg-figure">
+<figcaption>Lesson booking and weekly time slot</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Lesson booking and weekly time slot">
+<a href="images/DomainLessonSchedule.png"><img src="images/DomainLessonSchedule.png" alt="An immutable Lesson references one LessonTimeSlot containing the weekday, start time and end time."></a>
+</div>
+</figure>
 
-**Tutor lookup vs. search:**
-* **Full-name match (`addlesson` / `editlesson`):** `tu/TUTOR_NAME` matches against a tutor's **full normalized name** (case-insensitive, collapsing spaces, unifying `Σ`/`σ`/`ς`).
-* **Phone disambiguation (`tp/`):** If multiple tutors share that full name, `tp/TUTOR_PHONE` is required to disambiguate them. When `tp/` is supplied, it must match the tutor's exact phone even when the name is unique; PonHub never falls back to a name-only match after a phone mismatch.
-* **Search contrast:** `search` accepts a partial name fragment for `tu/`.
+#### Lesson values
 
-**Scheduling clash rules:**
-Two different lessons on the same weekday cannot overlap if they share the same **tutor**, the same **normalized room**, or any **enrolled student**. Tutor and room reservations apply even when a lesson's roster is empty.
+| Value | Accepted input | Rejected input |
+| --- | --- | --- |
+| Lesson ID | `L` followed by a positive `long` sequence, such as `L1`. | Zero, leading zeros, missing prefix or an out-of-range sequence. |
+| Weekday | `Mon` through `Sun`, matched case-insensitively. | Unknown weekday values. |
+| Time slot | Four-digit times from `0000` to `2359`, with the start before the end on the same day. | Invalid clock times, equal endpoints, reversed or overnight slots. |
+| Subject | 1–50 Unicode letters or digits after space normalisation, separated by single spaces or hyphens, such as `A-Math`. | Empty or overlong values, other punctuation, repeated hyphens or mixed separators. |
+| Room | 1–10 ASCII letters or digits with optional single internal hyphens. Surrounding spaces are trimmed and letters stored in uppercase: `b-01` becomes `B-01`. | Empty or overlong values, internal spaces, other punctuation, or leading, trailing or repeated hyphens. |
+
+#### Tutor selection
+
+`addlesson` and `editlesson` match a Tutor's full normalised name. Matching ignores case, collapses spaces and unifies Greek sigma forms. If the name is ambiguous, `tp/` must identify the Tutor by exact phone. A supplied phone must match even when the name is unique. Lesson search instead allows a partial Tutor name.
+
+#### Scheduling rules
+
+Two lessons on the same weekday cannot overlap when they share a Tutor, room or enrolled Student. Slots use `[start, end)`: `1600–1700` and `1700–1800` are allowed; `1600–1700` and `1630–1730` clash when they share one of those resources.
+
+Creation, editing, enrolment and restored snapshots enforce the same scheduling rules.
 
 ### 4.3 Student enrolment and lesson rosters
 
-[![Lessons, tutors and roster membership](images/LessonMembershipClassDiagram.png)](images/LessonMembershipClassDiagram.png)
+Enrolment adds an existing Student to an existing shared `Lesson`. A lesson can have an empty roster. Adding a student keeps the same lesson ID and booking.
 
-[![Lesson identity and values](images/LessonValuesClassDiagram.png)](images/LessonValuesClassDiagram.png)
+#### How enrolment works
 
-A `Lesson` owns an unmodifiable `Set<PersonId>` (`enrolledStudentIds`), copied into a `LinkedHashSet` and exposed through `Collections.unmodifiableSet`. Both `tutorId` and every entry in `enrolledStudentIds` use `PersonId` with explicit role checks (`PersonRole.TUTOR` for `tutorId` and `PersonRole.STUDENT` for roster members; there are no separate `StudentId` or `TutorId` classes). An empty roster is valid so administrators can set up a timetable before enrolling students.
+For `enrol 1 lid/L1`, the command resolves position `1` in the current people list to a Student ID, such as `S7`. The roster stores that stable ID.
 
-* **Shared membership:** Enrolling a second student into `L1` adds their student-role `PersonId` to `L1`'s `enrolledStudentIds` set without creating a duplicate lesson or re-checking `L1`'s own tutor and room against itself.
-* **Student clash protection:** Before adding a student to a lesson, `PonHubData` verifies that the student is not already enrolled in `L1` and is not enrolled in another lesson whose weekday and `[start, end)` time slot overlap `L1`.
-* **Roster ordering:** `LessonQueries` presents a lesson's enrolled students in global people creation order.
+<figure class="dg-figure">
+<figcaption>Enrolling a Student in an existing shared Lesson</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Student enrolment sequence">
+<a href="images/StudentEnrolmentSequenceDiagram.png"><img src="images/StudentEnrolmentSequenceDiagram.png" alt="An enrol command resolves a displayed Student, validates and replaces the candidate lesson, then saves the snapshot. Only after saving succeeds is live data published and read-only roster queries refreshed."></a>
+</div>
+</figure>
+
+The command validates enrolment against isolated candidate data and creates a replacement lesson with the updated roster. Logic saves the complete snapshot before publishing it. `LessonQueries` then refreshes the roster results. A validation or save failure leaves live data and results unchanged.
+
+See [Section 5.4](#54-enrolling-and-unenrolling-students) for the command implementation.
+
+#### Where membership is stored
+
+<figure class="dg-figure">
+<figcaption>Stored enrolment and derived roster views</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Student enrolment class relationships">
+<a href="images/StudentEnrolmentClassDiagram.png"><img src="images/StudentEnrolmentClassDiagram.png" alt="PonHubData exposes its current immutable PonHubDataState, whose ordered lesson catalogue contains Lesson records. Each Lesson stores student PersonIds. LessonQueries observes publications and derives read-only rosters from the shared snapshot."></a>
+</div>
+</figure>
+
+`PonHubDataState` holds the people registry and lesson catalogue. Each `Lesson` stores its roster in an unmodifiable `Set<PersonId>` called `enrolledStudentIds`. It copies incoming IDs into a `LinkedHashSet`. Student records do not store duplicate membership.
+
+Roster IDs must refer to existing Students. The lesson's `tutorId` must refer to an existing Tutor. Both use `PersonId`, checked against `PersonRole.STUDENT` or `PersonRole.TUTOR`.
+
+#### Enrolment rules
+
+| Input or proposed state | Rule |
+| --- | --- |
+| Displayed position | Must identify a Student in the current people list. Invalid positions, Tutors and Parents are rejected. |
+| Lesson ID | Must identify an existing lesson. |
+| Membership | The Student must not already be enrolled in that lesson. |
+| Timetable | The Student's lessons must not overlap on the same weekday. Slots use `[start, end)`, so adjacent lessons are allowed. |
+
+Enrolment replaces the existing lesson rather than adding another booking. Tutor and room checks therefore do not compare the lesson against a duplicate of itself.
+
+#### Roster display and unenrolment
+
+`LessonQueries.getLessonRoster()` lists members in global people creation order, regardless of enrolment order or set insertion order. Filtering the people panel does not change the lesson's membership.
+
+Unenrolment removes current membership but retains dated attendance. See [Section 4.4](#44-dated-attendance-and-retained-history).
 
 ### 4.4 Dated attendance and retained history
 
-[![Attendance is separate from membership](images/AttendanceClassDiagram.png)](images/AttendanceClassDiagram.png)
+Attendance records an outcome for one Student, one lesson and one date. It is stored separately from the lesson's current roster.
 
-[![Attendance key and status](images/AttendanceValuesClassDiagram.png)](images/AttendanceValuesClassDiagram.png)
+<figure class="dg-figure">
+<figcaption>Attendance records and their unique key</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Attendance records and their unique key">
+<a href="images/DomainAttendanceStructure.png"><img src="images/DomainAttendanceStructure.png" alt="PonHubDataState stores Attendance records. Each has a status and an AttendanceKey containing student ID, lesson ID and date."></a>
+</div>
+</figure>
 
-`Attendance` records are stored in `PonHubDataState` separately from lesson rosters. Each record maps an `AttendanceKey` (`studentId` as a `PersonId` with `PersonRole.STUDENT`, `LessonId`, `LocalDate`) to an `AttendanceStatus` (`PRESENT` or `ABSENT`).
+#### Attendance rules
 
-* **Unrecorded vs. recorded:** The model stores at most one entry per `(studentId, lessonId, date)` `AttendanceKey`. If no entry exists for a date, that lesson occurrence is **unrecorded**, not absent.
-* **Enrolment vs. retained history:** Creating a *new* attendance key requires the student to be currently enrolled in that lesson, and the date must be a valid calendar date (`YYYY-MM-DD`, years `0001`–`9999`) falling on the lesson's weekday. Once recorded, the attendance entry persists independently of roster membership:
+| Value or operation | Rule |
+| --- | --- |
+| Key | One record per `(studentId, lessonId, date)`. Both records must exist, and the person must be a Student. |
+| Date | A real `YYYY-MM-DD` date in years `0001`–`9999`, matching the lesson's weekday. Invalid dates and weekday mismatches are rejected. |
+| Status | `present` or `absent`. No record means unrecorded, not absent. |
+| New record | The Student must currently be enrolled in the lesson. |
+| Correction | An existing record may be corrected after unenrolment. Repeating the same status changes nothing. |
+| Removal | `unmark` removes only the selected Student–lesson–date record. Other attendance and current membership remain unchanged. |
 
-[![Changes to a lesson roster and dated attendance](images/LessonAttendanceStateDiagram.png)](images/LessonAttendanceStateDiagram.png)
+#### History after unenrolment
 
-For example, suppose Monday lesson `L1` has Alex (`S1`) and Jamie (`S2`) enrolled:
+<figure class="dg-figure">
+<figcaption>Unenrolment retains dated attendance</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Unenrolment retains dated attendance">
+<a href="images/DomainAttendanceHistory.png"><img src="images/DomainAttendanceHistory.png" alt="For one Student, lesson and date, marking creates attendance, unenrolment retains it, and unmark removes the dated record."></a>
+</div>
+</figure>
 
-1. Marking Alex `present` and Jamie `absent` on `2026-10-05` creates two attendance entries.
-2. Marking Alex `absent` on `2026-10-05` updates only Alex's entry.
-3. Unenrolling Alex from `L1` removes `S1` from `L1`'s current roster, while keeping Alex's `2026-10-05` absence as former-member history.
-4. Running `unmark` for Alex on `2026-10-05` deletes that dated entry while leaving Jamie and `L1` unchanged.
+For example, Alex is enrolled in Monday lesson `L1`. Marking Alex absent on `2026-10-05` creates a dated record. Unenrolling Alex removes current membership but keeps that record for review and correction. Only `unmark` removes the selected attendance entry.
+
+The date and Student/Lesson IDs identify the event. Enrolment order and later people-list filters do not change that identity.
 
 ### 4.5 Displayed positions and stable IDs
 
-[![People positions and stable IDs](images/PeopleSelectionClassDiagram.png)](images/PeopleSelectionClassDiagram.png)
+A displayed position selects a person from the current people list. A stable ID identifies the stored record across filtering, editing and restarts.
 
-PonHub distinguishes between two ways of referring to records:
+<figure class="dg-figure">
+<figcaption>Displayed position becomes a stable identity</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Displayed position becomes a stable identity">
+<a href="images/DomainPersonSelection.png"><img src="images/DomainPersonSelection.png" alt="The command reads the current PeopleView and resolves position 2 from S4 and S9 to the Student whose ID is S9."></a>
+</div>
+</figure>
 
-* **Displayed people position (`INDEX` / `STUDENT_INDEX`):** A 1-based integer position in the **currently displayed people list** (`PeopleView.getPeople()`). Filtering by role (`list r/student`) or running a people `search` changes which person sits at position `1`. For example, if the current list displays `[S4, S9]`, running `edit 2 ...` or `enrol 2 lid/L1` targets `S9`, never `S2`.
-* **Stable ID (`S1`, `T1`, `P1`, `L1`):** A permanent identifier assigned when a record is created. Stable IDs never change across filtering, editing, or application restarts. Existing lessons are always selected by stable ID (`lid/L1`), and all internal references (lesson tutors, rosters, attendance keys, UI selection tracking) store stable IDs.
+| Selector | Meaning | Common mistake |
+| --- | --- | --- |
+| `INDEX` or `STUDENT_INDEX` | A 1-based position in `PeopleView.getPeople()`. | Position `2` does not mean ID `S2` or the second person in the full registry. |
+| `PersonId` | A permanent, role-prefixed ID such as `S9`, `T3` or `P2`. | A number from another panel is not a people position. |
+| `LessonId` | A permanent lesson ID, selected with syntax such as `lid/L1`. | A lesson row number is not a lesson ID. |
 
-Commands that accept a person position resolve it once through `PersonIndexResolver` against the current people view, verify the person's role if required (for example, `enrol`, `mark`, `lessons`, and `history` require a `Student`), and use the resolved `PersonId` for the rest of the transaction. Row numbers in lesson, roster, or attendance-history panels are never used as person command indices.
+Commands resolve the position once through `PersonIndexResolver`. Student-only commands reject a Tutor or Parent at that position. Invalid or out-of-range positions are rejected.
+
+For a displayed list `[S4, S9]`, `enrol 2 lid/L1` targets `S9`. The command uses that Student's ID for the remaining operation. Later filtering can change position `2`, but it does not retarget stored relationships or an already selected Student's lesson/history view.
+
+Stable IDs use positive `long` sequences without leading zeros. Surrounding spaces are trimmed and prefixes stored in uppercase. Their role prefixes must match the record type. Committed IDs are never reused; see [Section 4.7](#47-immutable-records-and-complete-snapshots).
 
 ### 4.6 Validation, references, and deletion rules
 
-Every snapshot enforces referential integrity across all records:
+A complete snapshot must contain every record referenced by a lesson or attendance entry. Invalid links are rejected before the candidate becomes live.
 
-* Every `Lesson.tutorId` (`PersonId` with `PersonRole.TUTOR`) must reference an existing `Tutor` in `PeopleRegistry`.
-* Every `PersonId` in `Lesson.enrolledStudentIds` (`Set<PersonId>` with `PersonRole.STUDENT`) must reference an existing `Student`, with no duplicate IDs in the same roster.
-* Every `AttendanceKey` must reference an existing `Student` (`studentId` `PersonId`) and `Lesson` (`lessonId` `LessonId`), and its `LocalDate` must match the lesson's current `LessonDay`.
-
-To preserve these links, PonHub never cascades deletions automatically. Instead, deletion is blocked whenever another record still depends on the target:
-
-| Target record | When deletion is blocked |
+| Reference | Required target |
 | --- | --- |
-| `Student` | The student is currently enrolled in any lesson roster, or any retained `Attendance` entry still references their `PersonId`. |
-| `Tutor` | Any `Lesson` still references their `PersonId` as `tutorId`, even if that lesson's roster is empty. |
-| `Lesson` | Its `enrolledStudentIds` roster is non-empty, or any retained `Attendance` entry still references its `LessonId`. |
-| `Parent` | Never blocked by lessons or attendance. Deleting a `Parent` leaves students' `parentPhone` strings unchanged (removing only the derived parent link). |
+| `Lesson.tutorId` | An existing Tutor. |
+| `Lesson.enrolledStudentIds` | Existing Students, with no duplicate IDs in one roster. |
+| `AttendanceKey` | An existing Student and lesson, with a date matching the lesson's weekday. Current enrolment is not required for retained history. |
+
+#### Deletion guards
+
+PonHub blocks deletion when stored references still depend on the target. It does not automatically delete related records.
+
+<figure class="dg-figure">
+<figcaption>Deletion checks before changing data</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Deletion checks before changing data">
+<a href="images/DomainDeletionRules.png"><img src="images/DomainDeletionRules.png" alt="Deletion is rejected when a roster, lesson or attendance record still references the target; otherwise staged deletion may proceed."></a>
+</div>
+</figure>
+
+| Target | Deletion is blocked by |
+| --- | --- |
+| Student | Current membership in any lesson, or any retained attendance. |
+| Tutor | Any lesson using that Tutor, including lessons with empty rosters. |
+| Lesson | A non-empty roster, or any retained attendance for that lesson. |
+| Parent | No lesson or attendance dependency. Deletion leaves Student parent-phone values unchanged. |
+
+Remove the blocking relationships explicitly before retrying deletion. Unenrolling a Student alone is insufficient when attendance is retained. A Parent link is derived from phone values, so deleting the Parent removes the link without deleting the Student.
 
 ### 4.7 Immutable records and complete snapshots
 
@@ -470,13 +573,32 @@ To preserve these links, PonHub never cascades deletions automatically. Instead,
 <a id="canonical-data-aggregate-76"></a>
 <a id="capacity-policy"></a>
 
-`PonHubDataState` copies incoming collections defensively and validates the **entire snapshot** on construction. If any ID, role, reference, duplicate key, timetable slot, attendance weekday, or allocation counter is inconsistent, construction fails with an `IllegalArgumentException` and the existing `PonHubData` root remains untouched.
+Domain records are immutable. An edit creates a replacement record; existing snapshots retain their previous values. `PonHubDataState` groups the records and allocation history into one complete operational snapshot.
 
-* **ID counters and non-reuse:** Person IDs use three independent positive `long` sequences (`STUDENT`, `TUTOR`, `PARENT`), and lessons use `lastAllocatedLessonSequence`. Counters record the highest sequence ever committed, including deleted records, so **committed IDs are never reused**. A counter value of `0` means no IDs of that type have been allocated yet; `Long.MAX_VALUE` indicates sequence exhaustion. Discarding an uncommitted staged candidate restores the previous counter.
-* **No artificial record-count caps:** PonHub enforces no fixed class-size limit or total-record cap in the model; physical classroom limits remain an administrative decision.
-* **Validation complexity:**
-  * *People registry:* Uses hash sets over IDs and normalized identity keys, running in `O(P)` expected time and space for `P` people.
-  * *Schedule clashes:* Indexes bookings by weekday and resource (tutor `PersonId`, normalized `Room`, and enrolled student `PersonId`) in start-time order (`TreeMap`), validating `L` lessons and `E` total enrolments in `O((L + E) log L)` time and `O(L + E)` space while reporting the earliest conflicting lesson in creation order.
+<figure class="dg-figure">
+<figcaption>Records and allocation history in one snapshot</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Records and allocation history in one snapshot">
+<a href="images/DomainSnapshotStructure.png"><img src="images/DomainSnapshotStructure.png" alt="PonHubDataState holds lessons, attendance, the lesson allocation counter and a PeopleRegistryState containing ordered people and per-role allocation counters."></a>
+</div>
+</figure>
+
+#### Validation and publication
+
+Snapshot construction copies incoming collections and validates IDs, roles, duplicates, references, schedules, attendance dates and counters. Invalid state is rejected before it replaces live data.
+
+Commands prepare changes in a separate candidate. Changed operational data is saved before publication; a failed validation or save leaves the live snapshot unchanged. Read-only views refresh from the published snapshot rather than maintaining another editable store.
+
+#### Allocation rules
+
+| Rule | Behaviour |
+| --- | --- |
+| Separate sequences | Students, Tutors, Parents and lessons each have their own ID sequence. |
+| Allocation history | Counters retain the highest committed sequence, including deleted records. Committed IDs are never reused. |
+| Bounds | Each person role needs a counter. `0` means none allocated. Counters cannot be negative or lower than a retained ID. `Long.MAX_VALUE` means the sequence is exhausted. |
+| Failed candidate | An uncommitted candidate does not consume IDs in live state. |
+| Record counts | The model sets no fixed class-size or total-record cap. Physical classroom limits remain an administrative decision. |
+
+People validation uses ID and identity-key hash sets: expected `O(P)` time and space for `P` people. Schedule validation indexes bookings by weekday and resource: `O((L + E) log L)` time and `O(L + E)` space for `L` lessons and `E` enrolments. Conflict reporting retains lesson creation order.
 
 ---
 

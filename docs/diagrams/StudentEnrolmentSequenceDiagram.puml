@@ -1,0 +1,36 @@
+@startuml
+' Draft by Vincent Lin with OpenAI Codex assistance.
+' Self-contained source; render with PlantUML 1.2025.3.
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #FFF2F3
+skinparam sequenceParticipantBorderColor #9D0012
+skinparam sequenceLifeLineBorderColor #777777
+skinparam noteBackgroundColor #FFFBE6
+skinparam noteBorderColor #777777
+hide footbox
+
+title Enrolment flow (success)
+participant Logic
+participant "Candidate data" as Candidate
+participant Storage
+participant "Live data" as Live
+participant LessonQueries as Queries
+
+Logic -> Candidate : enrolStudent(S7, L1)
+activate Candidate
+note over Candidate
+  Validate enrolment;
+  replace the lesson roster.
+end note
+Candidate --> Logic : updated candidate
+ deactivate Candidate
+Logic -> Storage : save complete snapshot
+Storage --> Logic : saved
+Logic -> Live : publish snapshot
+activate Live
+Live -> Queries : refresh roster results
+ deactivate Live
+@enduml
