@@ -945,7 +945,7 @@ public class CanonicalMainWindowTest {
                 MenuBar menu = (MenuBar) fixture.root().lookup("#menuBar");
                 menu.getMenus().get(1).getItems().get(0).fire();
                 String guidance = fixture.feedback();
-                assertTrue(fixture.feedback().contains("Operational writes are blocked"));
+                assertTrue(fixture.feedback().contains("Changes cannot be saved in this session"));
                 assertFalse(fixture.feedback().contains("add -"));
                 for (var target : List.of(fixture.input(), fixture.root().lookup("#resultDisplay"))) {
                     Event.fireEvent(target, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F1,
@@ -959,14 +959,14 @@ public class CanonicalMainWindowTest {
                 assertTrue(fixture.feedback().contains("An empty view is not your saved data"));
                 assertTrue(fixture.people().getItems().isEmpty());
                 fixture.enter("add r/student n/Rejected Student l/P1 pp/91234567");
-                assertTrue(fixture.feedback().contains("Operational writes are blocked"));
+                assertTrue(fixture.feedback().contains("Changes cannot be saved in this session"));
                 for (String command : List.of("help EDIT", "help EDITLESSON", "edit invalid", "editlesson invalid")) {
                     fixture.enter(command);
                     assertEquals(command, fixture.input().getText());
                     assertTrue(fixture.input().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
                     assertFalse(fixture.feedback().isBlank());
                     if (!command.startsWith("help")) {
-                        assertTrue(fixture.feedback().contains("Operational writes are blocked"));
+                        assertTrue(fixture.feedback().contains("Changes cannot be saved in this session"));
                     }
                     assertTrue(fixture.people().getItems().isEmpty());
                     assertArrayEquals(original, Files.readAllBytes(dataPath));

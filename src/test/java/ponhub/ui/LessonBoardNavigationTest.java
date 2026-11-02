@@ -652,7 +652,7 @@ public class LessonBoardNavigationTest {
                 fixture.enter("lessons");
                 fixture.assertLessonPane("lessonsButton");
                 String protectedFeedback = fixture.feedback();
-                assertTrue(protectedFeedback.contains("Operational writes are blocked"));
+                assertTrue(protectedFeedback.contains("Changes cannot be saved in this session"));
                 fixture.draft();
                 fixture.mouseClick("lessonsButton");
                 assertEquals(protectedFeedback, fixture.feedback());

@@ -86,8 +86,11 @@ public class ParserUtilTest {
 
     @Test
     public void parseIndex_outOfRangeInput_throwsParseException() {
-        assertThrows(ParseException.class, MESSAGE_INVALID_INDEX, ()
-            -> ParserUtil.parseIndex(Long.toString(Integer.MAX_VALUE + 1)));
+        // The first value above the accepted int boundary and a much larger positive integer need the upper limit.
+        for (String index : List.of(Long.toString(Integer.MAX_VALUE + 1L), "9".repeat(80))) {
+            assertThrows(ParseException.class, "Index must be a positive integer from 1 to 2147483647.", ()
+                    -> ParserUtil.parseIndex(index));
+        }
     }
 
     @Test

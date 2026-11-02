@@ -14,7 +14,9 @@ import ponhub.model.person.PersonRole;
  */
 public final class PeopleListParser {
 
-    public static final String MESSAGE_USAGE = "Use list or list r/student|tutor|parent, with at most one role filter.";
+    public static final String MESSAGE_USAGE = "Usage: list [r/student|tutor|parent]\n"
+            + "Shows all people or one role. Supply at most one lowercase r/ filter; role names ignore case.\n"
+            + "Example: list r/student";
 
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
     private static final Pattern ROLE_FILTER_PATTERN =

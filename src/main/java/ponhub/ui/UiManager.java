@@ -62,7 +62,7 @@ public class UiManager implements Ui {
                         "Your saved data could not be loaded", dataLoadError.get());
             }
         } catch (Throwable e) {
-            showFatalErrorDialogAndShutdown(primaryStage, "Fatal error during initializing", e);
+            showFatalErrorDialogAndShutdown(primaryStage, "Fatal error during initialization", e);
         }
     }
 
