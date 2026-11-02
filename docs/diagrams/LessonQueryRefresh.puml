@@ -1,5 +1,5 @@
 @startuml
-' Renderer: PlantUML 1.2025.3, using committed style.puml unchanged.
+' Renderer: PlantUML 1.2025.4, using committed style.puml unchanged.
 ' Readability layout by Vincent with Codex assistance (#393); existing model/feature credit retained.
 !include style.puml
 skinparam ParticipantFontColor #FFFFFF

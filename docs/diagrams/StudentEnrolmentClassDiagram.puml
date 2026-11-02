@@ -1,6 +1,6 @@
 @startuml
 ' Draft by Vincent Lin with OpenAI Codex assistance.
-' Self-contained source; render with PlantUML 1.2025.3.
+' Self-contained source; render with PlantUML 1.2025.4.
 skinparam defaultFontName Arial
 skinparam defaultFontSize 15
 skinparam shadowing false
