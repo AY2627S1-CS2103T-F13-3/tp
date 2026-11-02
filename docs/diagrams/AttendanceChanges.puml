@@ -1,0 +1,37 @@
+@startuml
+' Yang Shuo with OpenAI Codex assistance. #641; DG 5.7.
+' Trace: CanonicalMarkAttendanceCommand, CanonicalUnmarkAttendanceCommand, PonHubData.
+!include feature-sequence-style.iuml
+participant "executor :\nCanonicalCommandExecutor" as E
+participant "command :\nStagedCommand" as C
+participant "staged :\nPonHubData" as D
+
+E -> C : execute(staged, stagedView)
+C -> C : Resolve current Student once;\nform Student/Lesson/date key
+alt mark
+  C -> D : getAttendance(key);\nmarkAttendance(...)
+  note over D
+    Validate Lesson and weekday.
+    New key requires current enrolment;
+    existing key may belong to a former member.
+  end note
+  alt identical recorded status
+    note over C : Prepare no-change feedback; skip future guard.
+  else new or changed status
+    C -> C : Read today from injected Clock
+    opt future present without ack/future
+      note over C, D
+        Throw before saving.
+        Discard the isolated staged mutation.
+      end note
+    end
+  end
+else unmark
+  C -> D : unmarkAttendance(studentId, id, date)
+  note over D : Remove one key; absent key is a no-op.
+end
+C --> E : feedback or CommandException
+opt staging succeeded
+  ref over E : Persist and publish — Figure 5.2a
+end
+@enduml

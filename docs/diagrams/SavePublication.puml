@@ -1,0 +1,43 @@
+@startuml
+' Yang Shuo with OpenAI Codex assistance. #641; common executor boundary.
+' Trace: CanonicalCommandExecutor.execute; CanonicalTransaction.commit.
+!include feature-sequence-style.iuml
+participant "executor :\nCanonicalCommandExecutor" as E
+participant "transaction :\nCanonicalTransaction" as T
+participant "writer :\nSnapshotWriter" as W
+
+note over E, W
+  Entry: command has prepared a valid isolated candidate
+  and feedback; the live model is unchanged.
+end note
+E -> T : hasOperationalChanges()
+alt no operational changes
+  E -> T : commit()
+  note over T
+    Publish a changed view filter, if any.
+    A true no-op publishes nothing; no disk write.
+  end note
+else changed operational snapshot
+  E -> E : Recheck writable-session guard
+  alt guard rejects
+    note over E : Throw before saving; do not commit.
+  else writable session
+    E -> W : save(candidate snapshot)
+    alt save succeeded
+      W --> E : saved
+      E -> T : commit()
+      note over T
+        Replace live root, then apply staged filter.
+        Synchronous query/UI listeners see saved state.
+      end note
+    else save failed
+      W --> E : IOException
+      note over E, T
+        Throw CommandException; do not commit.
+        Preserve live data, views and ID counters.
+      end note
+    end
+  end
+end
+note over E : Return prepared feedback only after successful commit.
+@enduml

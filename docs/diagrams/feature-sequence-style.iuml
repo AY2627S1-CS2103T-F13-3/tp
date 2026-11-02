@@ -1,0 +1,28 @@
+' Shared presentation for #641. Yang Shuo, with OpenAI Codex assistance.
+' PlantUML 1.2025.4. Course W6.1/W8.3 minimal notation:
+' activation bars and uninformative returns omitted; labels may summarize operations.
+' Instance labels are not underlined. Solid filled calls; dashed returns.
+hide footbox
+skinparam defaultFontName Arial
+skinparam defaultFontSize 16
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 155
+skinparam ParticipantPadding 6
+skinparam BoxPadding 5
+skinparam sequence {
+  ParticipantBackgroundColor #DBEAFE
+  ParticipantBorderColor #64748B
+  ParticipantFontColor #172554
+  ParticipantFontSize 15
+  LifeLineBorderColor #94A3B8
+  GroupBorderColor #64748B
+  GroupBackgroundColor #F8FAFC
+  GroupHeaderFontColor #334155
+  ArrowColor #334155
+  ArrowFontColor #0F172A
+}
+skinparam NoteBackgroundColor #FFFBE6
+skinparam NoteBorderColor #A16207
+skinparam NoteFontColor #422006
+skinparam NoteFontSize 14
