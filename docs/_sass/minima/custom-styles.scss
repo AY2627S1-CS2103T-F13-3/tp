@@ -267,6 +267,20 @@ h2, h3, h4, h5, h6 {
   }
 }
 
+@media print {
+  // Paper cannot scroll, so wrap long code lines instead of clipping them.
+  pre,
+  pre code {
+    overflow: visible;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  code {
+    overflow-wrap: anywhere;
+  }
+}
+
 // Inline command-group references remain normal links when enhancement is unavailable.
 .command-list-trigger {
   color: #b84c00;
