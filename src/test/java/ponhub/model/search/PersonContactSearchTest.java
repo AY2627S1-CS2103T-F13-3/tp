@@ -34,11 +34,11 @@ public class PersonContactSearchTest {
     @BeforeEach
     public void setUp() {
         registry = new PeopleRegistry();
-        tutor = registry.addTutor(contact("Mei Lim", "0012345", "Mei@example.com", "1 Jurong Road"));
-        alex = registry.addStudent(contact("Alex Tan", null, null, null),
+        tutor = registry.addTutor(createContacts("Mei Lim", "0012345", "Mei@example.com", "1 Jurong Road"));
+        alex = registry.addStudent(createContacts("Alex Tan", null, null, null),
                 new EducationLevel("S2"), new Phone("0098765"));
-        parent = registry.addParent(contact("Pat Tan", "0098765", null, "2 Jurong Road"));
-        jamie = registry.addStudent(contact("Jamie Tan", "0001234", "Jamie@example.com", "3 Jurong Road"),
+        parent = registry.addParent(createContacts("Pat Tan", "0098765", null, "2 Jurong Road"));
+        jamie = registry.addStudent(createContacts("Jamie Tan", "0001234", "Jamie@example.com", "3 Jurong Road"),
                 new EducationLevel("S3"), new Phone("0098765"));
     }
 
@@ -98,7 +98,7 @@ public class PersonContactSearchTest {
         List<PersonRecord> result = search(SearchCategory.STUDENT, Map.of());
         assertThrows(UnsupportedOperationException.class, () -> result.remove(0));
         assertEquals(before, registry.getPeople());
-        registry.addStudent(contact("New Student", null, null, null),
+        registry.addStudent(createContacts("New Student", null, null, null),
                 new EducationLevel("P1"), new Phone("1234567"));
         assertEquals(List.of(alex, jamie), result);
         assertEquals(List.of(alex, jamie, registry.getPeople().get(4)),
@@ -125,7 +125,7 @@ public class PersonContactSearchTest {
         return PersonContactSearch.search(registry.getPeople(), new SearchCriteria(category, filters));
     }
 
-    private static ContactDetails contact(String name, String phone, String email, String address) {
+    private static ContactDetails createContacts(String name, String phone, String email, String address) {
         return new ContactDetails(new Name(name), createOptional(phone).map(Phone::new),
                 createOptional(email).map(Email::new), createOptional(address).map(Address::new));
     }

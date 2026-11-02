@@ -104,15 +104,15 @@ public class LessonAllocationBoundaryTest {
     }
 
     private Lesson addLesson(PonHubData data, LessonDay day) {
-        return data.addLesson(tutor.getId(), slot(day), new Subject("Mathematics"), new Room("R1"));
+        return data.addLesson(tutor.getId(), createTimeSlot(day), new Subject("Mathematics"), new Room("R1"));
     }
 
     private Lesson createRetainedLesson() {
-        return new Lesson(new LessonId("L1"), tutor.getId(), slot(LessonDay.MONDAY),
+        return new Lesson(new LessonId("L1"), tutor.getId(), createTimeSlot(LessonDay.MONDAY),
                 new Subject("Mathematics"), new Room("R1"), Set.of());
     }
 
-    private LessonTimeSlot slot(LessonDay day) {
+    private LessonTimeSlot createTimeSlot(LessonDay day) {
         return new LessonTimeSlot(day, new LessonTime("0900"), new LessonTime("1000"));
     }
 }

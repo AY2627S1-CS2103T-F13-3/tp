@@ -88,23 +88,12 @@ public class SearchFieldTest {
 
         assertEquals(EnumSet.allOf(SearchField.class), categories.keySet());
         categories.forEach((field, supported) -> {
-            assertEquals(supported, field.getSupportedCategories(), field.name());
             for (SearchCategory category : SearchCategory.values()) {
                 assertEquals(supported.contains(category), field.isSupportedBy(category),
                         field + " in " + category);
             }
             assertThrows(NullPointerException.class, () -> field.isSupportedBy(null));
         });
-    }
-
-    @Test
-    public void getSupportedCategories_tutorNameRules_cannotBeChangedByCaller() {
-        Set<SearchCategory> categories = SearchField.TUTOR_NAME.getSupportedCategories();
-        assertEquals(Set.of(STUDENT, PARENT, LESSON), categories);
-        assertThrows(UnsupportedOperationException.class, () -> categories.add(TUTOR));
-        assertThrows(UnsupportedOperationException.class, () -> categories.remove(STUDENT));
-        assertFalse(SearchField.TUTOR_NAME.isSupportedBy(TUTOR));
-        assertTrue(SearchField.TUTOR_NAME.isSupportedBy(STUDENT));
     }
 
     @Test

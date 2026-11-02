@@ -165,7 +165,7 @@ public class CanonicalMembershipBoundaryTest {
         fixture.assertSearchStillApplies();
     }
 
-    private static PonHubDataState state(boolean isEnrolled) {
+    private static PonHubDataState createState(boolean isEnrolled) {
         Tutor tutor = new Tutor(TUTOR, createContacts("Mei Lim", "00123456"));
         Student other = createStudent(OTHER_STUDENT, "Alice Student");
         Parent parent = new Parent(new PersonId("P2"), createContacts("Pat Parent", "60000002"));
@@ -204,7 +204,7 @@ public class CanonicalMembershipBoundaryTest {
 
         Fixture(String filename, boolean isEnrolled, boolean shouldFailFirstSave) throws Exception {
             path = directory.resolve(filename);
-            initial = state(isEnrolled);
+            initial = createState(isEnrolled);
             JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
             storage.saveData(initial);
             session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), candidate -> {
@@ -218,9 +218,9 @@ public class CanonicalMembershipBoundaryTest {
             });
             logic = new CanonicalLogicManager(session, new UserPrefs());
             people = logic.getPersonRecords();
-            lessons = logic.getLessonList();
-            roster = logic.getLessonRoster(LESSON);
-            studentLessons = logic.getStudentLessons(SELECTED_STUDENT);
+            lessons = session.getLessonQueries().getLessonList();
+            roster = session.getLessonQueries().getLessonRoster(LESSON);
+            studentLessons = session.getLessonQueries().getStudentLessons(SELECTED_STUDENT);
             people.addListener((ListChangeListener<PersonRecord>) change -> notifications++);
             lessons.addListener((ListChangeListener<LessonView>) change -> notifications++);
             roster.addListener((ListChangeListener<StudentView>) change -> notifications++);
@@ -249,9 +249,9 @@ public class CanonicalMembershipBoundaryTest {
 
         void assertIdentities() {
             assertSame(people, logic.getPersonRecords());
-            assertSame(lessons, logic.getLessonList());
-            assertSame(roster, logic.getLessonRoster(LESSON));
-            assertSame(studentLessons, logic.getStudentLessons(SELECTED_STUDENT));
+            assertSame(lessons, session.getLessonQueries().getLessonList());
+            assertSame(roster, session.getLessonQueries().getLessonRoster(LESSON));
+            assertSame(studentLessons, session.getLessonQueries().getStudentLessons(SELECTED_STUDENT));
         }
 
         void assertUnchanged(PonHubDataState before, byte[] bytes) throws Exception {

@@ -14,7 +14,7 @@ import ponhub.model.person.PersonRole;
  * Immutable attendance projection with membership taken from the current lesson roster.
  */
 public record AttendanceHistoryEntryData(PersonId studentId, LessonId lessonId, LocalDate date,
-        Status status, boolean currentlyEnrolled) implements AttendanceHistoryEntry {
+        AttendanceStatus status, boolean currentlyEnrolled) implements AttendanceHistoryEntry {
 
     /**
      * Validates the immutable public projection fields.
@@ -31,8 +31,7 @@ public record AttendanceHistoryEntryData(PersonId studentId, LessonId lessonId, 
      */
     public AttendanceHistoryEntryData(Attendance attendance, boolean currentlyEnrolled) {
         this(attendance.getStudentId(), attendance.getLessonId(), attendance.getDate(),
-                attendance.getStatus() == AttendanceStatus.PRESENT ? Status.PRESENT : Status.ABSENT,
-                currentlyEnrolled);
+                attendance.getStatus(), currentlyEnrolled);
     }
 
     @Override
@@ -51,7 +50,7 @@ public record AttendanceHistoryEntryData(PersonId studentId, LessonId lessonId, 
     }
 
     @Override
-    public Status getStatus() {
+    public AttendanceStatus getStatus() {
         return status;
     }
 

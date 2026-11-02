@@ -29,7 +29,7 @@ public final class AttendanceRetrieval {
     private final LessonQuerySource queries;
     private final PeopleView peopleView;
     private final ObservableList<AttendanceHistoryEntry> displayedEntries = FXCollections.observableArrayList();
-    private final ObservableList<AttendanceHistoryEntry> readOnlyDisplayed =
+    private final ObservableList<AttendanceHistoryEntry> readOnlyDisplayedEntries =
             FXCollections.unmodifiableObservableList(displayedEntries);
     private final ListChangeListener<AttendanceHistoryEntry> refresh = change -> refreshDisplayed();
     private final ReadOnlyStringWrapper context = new ReadOnlyStringWrapper("Attendance history");
@@ -50,7 +50,7 @@ public final class AttendanceRetrieval {
     }
 
     public ObservableList<AttendanceHistoryEntry> getDisplayedHistory() {
-        return readOnlyDisplayed;
+        return readOnlyDisplayedEntries;
     }
 
     public ReadOnlyStringProperty contextProperty() {
@@ -93,7 +93,7 @@ public final class AttendanceRetrieval {
                 + selectedDate.map(date -> " · " + date).orElse("")
                 + selectedStatus.map(status -> " · " + status).orElse(""));
         active.set(true);
-        return readOnlyDisplayed;
+        return readOnlyDisplayedEntries;
     }
 
     /**
@@ -109,7 +109,7 @@ public final class AttendanceRetrieval {
     private void refreshDisplayed() {
         displayedEntries.setAll(selectedEntries.stream()
                 .filter(entry -> selectedDate.map(date -> date.equals(entry.getDate())).orElse(true))
-                .filter(entry -> selectedStatus.map(status -> status.name().equals(entry.getStatus().name()))
+                .filter(entry -> selectedStatus.map(status -> status == entry.getStatus())
                         .orElse(true))
                 .toList());
     }

@@ -63,8 +63,8 @@ public class JsonAttendanceStorageTest {
         Lesson second = new Lesson(new LessonId("L5"), new PersonId("T2"), new LessonTimeSlot(LessonDay.MONDAY,
                 new LessonTime("1000"), new LessonTime("1100")), new Subject("English"), new Room("R2"), Set.of());
         original = new PonHubDataState(people.exportState(), List.of(first, second), List.of(
-                record("S1", "L2", "2026-10-05"), record("S2", "L2", "2026-10-05"),
-                record("S1", "L2", "2026-10-12"), record("S1", "L5", "2026-10-05")), 9);
+                createAttendance("S1", "L2", "2026-10-05"), createAttendance("S2", "L2", "2026-10-05"),
+                createAttendance("S1", "L2", "2026-10-12"), createAttendance("S1", "L5", "2026-10-05")), 9);
     }
 
     @Test
@@ -151,7 +151,7 @@ public class JsonAttendanceStorageTest {
         }
     }
 
-    private static Attendance record(String student, String lesson, String date) {
+    private static Attendance createAttendance(String student, String lesson, String date) {
         return Attendance.fromStrings(new PersonId(student), new LessonId(lesson), date, "present");
     }
 

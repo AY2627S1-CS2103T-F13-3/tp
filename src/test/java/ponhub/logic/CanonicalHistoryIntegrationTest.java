@@ -22,7 +22,6 @@ import ponhub.model.PonHubData;
 import ponhub.model.PonHubDataState;
 import ponhub.model.attendance.AttendanceStatus;
 import ponhub.model.person.PersonRecord;
-import ponhub.model.query.AttendanceHistoryEntry;
 import ponhub.storage.JsonPonHubDataStorage;
 import ponhub.storage.ProtectedPonHubDataStorage;
 import ponhub.testutil.LessonQueryTestData;
@@ -49,7 +48,7 @@ public class CanonicalHistoryIntegrationTest {
         var history = session.getDisplayedHistory();
         assertTrue(session.historyViewActiveProperty().get());
         assertEquals("Student S2 · attendance history · L10", session.historyResultContextProperty().get());
-        assertEquals(AttendanceHistoryEntry.Status.PRESENT, history.get(0).getStatus());
+        assertEquals(AttendanceStatus.PRESENT, history.get(0).getStatus());
         assertTrue(history.get(0).isCurrentlyEnrolled());
         assertSame(people, session.getPeople());
         assertEquals(ids, people.stream().map(PersonRecord::getId).map(Object::toString).toList());
@@ -60,14 +59,14 @@ public class CanonicalHistoryIntegrationTest {
         assertFalse(history.get(0).isCurrentlyEnrolled());
         assertEquals("Showing 1 attendance record(s).", session.execute("history 1").getFeedbackToUser());
         session.execute("mark 1 lid/L10 d/2026-10-05 s/absent");
-        assertEquals(AttendanceHistoryEntry.Status.ABSENT, history.get(0).getStatus());
+        assertEquals(AttendanceStatus.ABSENT, history.get(0).getStatus());
         assertFalse(history.get(0).isCurrentlyEnrolled());
         assertEquals(ids, people.stream().map(PersonRecord::getId).map(Object::toString).toList());
 
         CanonicalPeopleSession restarted = new CanonicalPeopleSession(path);
         restarted.execute("search c/student n/Jamie");
         restarted.execute("history 1 lid/L10");
-        assertEquals(AttendanceHistoryEntry.Status.ABSENT, restarted.getDisplayedHistory().get(0).getStatus());
+        assertEquals(AttendanceStatus.ABSENT, restarted.getDisplayedHistory().get(0).getStatus());
         assertFalse(restarted.getDisplayedHistory().get(0).isCurrentlyEnrolled());
         assertFalse(restarted.getLessonQueries().getStudentLessons(LessonQueryTestData.STUDENT_TWO).stream()
                 .anyMatch(lesson -> lesson.getLessonId().equals(LessonQueryTestData.SHARED_LESSON)));
@@ -128,10 +127,10 @@ public class CanonicalHistoryIntegrationTest {
         PonHubDataState original = session.getDataSnapshot();
         assertThrows(CommandException.class, () -> session.execute("mark 1 lid/L10 d/2026-10-05 s/absent"));
         assertSame(original, session.getDataSnapshot());
-        assertEquals(AttendanceHistoryEntry.Status.PRESENT, history.get(0).getStatus());
+        assertEquals(AttendanceStatus.PRESENT, history.get(0).getStatus());
         assertArrayEquals(before, Files.readAllBytes(path));
         session.execute("mark 1 lid/L10 d/2026-10-05 s/absent");
-        assertEquals(AttendanceHistoryEntry.Status.ABSENT, history.get(0).getStatus());
+        assertEquals(AttendanceStatus.ABSENT, history.get(0).getStatus());
         assertEquals(2, writes[0]);
     }
 
@@ -172,7 +171,7 @@ public class CanonicalHistoryIntegrationTest {
 
         assertThrows(CommandException.class, () -> session.execute("unmark 1 lid/L10 d/2026-10-05"));
         assertSame(original, session.getDataSnapshot());
-        assertEquals(AttendanceHistoryEntry.Status.PRESENT, history.getFirst().getStatus());
+        assertEquals(AttendanceStatus.PRESENT, history.getFirst().getStatus());
         assertArrayEquals(before, Files.readAllBytes(path));
         session.execute("unmark 1 lid/L10 d/2026-10-05");
         assertTrue(history.isEmpty());

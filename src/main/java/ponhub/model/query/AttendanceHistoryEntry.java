@@ -2,6 +2,7 @@ package ponhub.model.query;
 
 import java.time.LocalDate;
 
+import ponhub.model.attendance.AttendanceStatus;
 import ponhub.model.lesson.LessonId;
 import ponhub.model.person.PersonId;
 
@@ -30,18 +31,10 @@ public interface AttendanceHistoryEntry {
     /**
      * Returns the recorded attendance status.
      */
-    Status getStatus();
+    AttendanceStatus getStatus();
 
     /**
      * Returns whether the student is currently enrolled in this lesson.
      */
     boolean isCurrentlyEnrolled();
-
-    /**
-     * The recorded statuses exposed by the history view.
-     */
-    enum Status {
-        PRESENT,
-        ABSENT
-    }
 }

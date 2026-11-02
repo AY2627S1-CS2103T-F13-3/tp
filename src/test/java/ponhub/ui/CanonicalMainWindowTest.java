@@ -164,7 +164,7 @@ public class CanonicalMainWindowTest {
                 assertEquals("Deleted tutor: Privacy Canary (T1).", fixture.getFeedback());
                 String rejected = "privacy378@example.com a/378 Canary Avenue";
                 fixture.enter(rejected);
-                assertEquals(rejected, fixture.input().getText());
+                assertEquals(rejected, fixture.getInput().getText());
                 assertTrue(fixture.getFeedback().contains("privacy378@example.com"));
                 assertEquals(List.of("Command type=add outcome=success", "Command type=delete outcome=success",
                         "Command type=delete outcome=success",
@@ -230,7 +230,7 @@ public class CanonicalMainWindowTest {
                 Label summary = (Label) fixture.getRoot().lookup("#historySummary");
                 assertEquals("Student S2 · attendance history · L10", context.getText());
                 assertEquals("Showing 1 attendance record(s).", summary.getText());
-                assertEquals(AttendanceHistoryEntry.Status.PRESENT, fixture.getHistory().getItems().get(0).getStatus());
+                assertEquals(AttendanceStatus.PRESENT, fixture.getHistory().getItems().get(0).getStatus());
                 assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertArrayEquals(before, Files.readAllBytes(path));
                 assertTrue(fixture.getRoot().lookupAll(".label").stream().map(Label.class::cast)
@@ -244,13 +244,13 @@ public class CanonicalMainWindowTest {
                 assertEquals("Student S2 · attendance history · L10", context.getText());
                 fixture.enter("search c/tutor s/Math d/Mon");
                 assertTrue(fixture.getHistory().getParent().isVisible());
-                assertEquals(AttendanceHistoryEntry.Status.PRESENT, fixture.getHistory().getItems().get(0).getStatus());
+                assertEquals(AttendanceStatus.PRESENT, fixture.getHistory().getItems().get(0).getStatus());
                 fixture.enter("search c/student n/Jamie");
                 fixture.getPeople().getSelectionModel().select(0);
                 fixture.enter("unenrol 1 lid/L10");
                 assertFalse(fixture.getHistory().getItems().get(0).isCurrentlyEnrolled());
                 fixture.enter("mark 1 lid/L10 d/2026-10-05 s/absent");
-                assertEquals(AttendanceHistoryEntry.Status.ABSENT, fixture.getHistory().getItems().get(0).getStatus());
+                assertEquals(AttendanceStatus.ABSENT, fixture.getHistory().getItems().get(0).getStatus());
                 assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 captureRegion(fixture, "PONHUB_CAPTURE_ATTENDANCE_HISTORY", 1480, 1200, "jpg",
                         (Region) fixture.getHistory().getParent().getParent().getParent(), 230);
@@ -657,8 +657,8 @@ public class CanonicalMainWindowTest {
                 for (String command : List.of("list r/all", "list r/student r/tutor", "delete S3", "edit 2",
                         "find Selected", "clear", "search n/Selected", "lessons sid/S3", "help clear")) {
                     fixture.enter(command);
-                    assertEquals(command, fixture.input().getText());
-                    assertTrue(fixture.input().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
+                    assertEquals(command, fixture.getInput().getText());
+                    assertTrue(fixture.getInput().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
                     assertEquals(new PersonId("S3"), fixture.getPeople().getSelectionModel().getSelectedItem().getId());
                     assertEquals(originalState, fixture.app.snapshot());
                     assertArrayEquals(original, Files.readAllBytes(fixture.dataPath));
@@ -712,7 +712,7 @@ public class CanonicalMainWindowTest {
                 Files.move(fixture.dataPath, backup);
                 Files.createDirectory(fixture.dataPath);
                 fixture.enter("edit 1 n/Corrected Student");
-                assertEquals("edit 1 n/Corrected Student", fixture.input().getText());
+                assertEquals("edit 1 n/Corrected Student", fixture.getInput().getText());
                 assertTrue(fixture.getFeedback().contains("Could not save"));
                 assertEquals(original, fixture.app.snapshot());
                 assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
@@ -755,7 +755,7 @@ public class CanonicalMainWindowTest {
                 assertTrue(fixture.getHistory().getParent().isVisible());
                 assertEquals("Student S9 · attendance history", ((Label) fixture.getRoot()
                         .lookup("#historyContext")).getText());
-                assertTrue(fixture.input().getText().isEmpty());
+                assertTrue(fixture.getInput().getText().isEmpty());
             }
             return null;
         });
@@ -772,7 +772,7 @@ public class CanonicalMainWindowTest {
                 fixture.enter("delete 1");
                 fixture.enter("delete confirm");
                 assertEquals("Deleted student: Older Student (S9).", fixture.getFeedback());
-                assertTrue(fixture.input().getText().isEmpty());
+                assertTrue(fixture.getInput().getText().isEmpty());
                 assertSame(visible, fixture.getPeople().getItems());
                 assertEquals(List.of(new PersonId("S3")),
                         visible.stream().map(PersonRecord::getId).toList());
@@ -811,8 +811,8 @@ public class CanonicalMainWindowTest {
                 Files.createDirectory(fixture.dataPath);
                 fixture.enter("delete 1");
                 fixture.enter("delete confirm");
-                assertEquals("delete confirm", fixture.input().getText());
-                assertTrue(fixture.input().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
+                assertEquals("delete confirm", fixture.getInput().getText());
+                assertTrue(fixture.getInput().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
                 assertEquals(original, fixture.app.snapshot());
                 assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
                 assertSame(displayed, fixture.getLessons().getItems());
@@ -856,7 +856,7 @@ public class CanonicalMainWindowTest {
                 Files.createDirectory(fixture.dataPath);
                 String addition = "add r/student n/New Student l/P1 pp/91234567";
                 fixture.enter(addition);
-                assertEquals(addition, fixture.input().getText());
+                assertEquals(addition, fixture.getInput().getText());
                 assertEquals(original, fixture.app.snapshot());
                 assertEquals(new PersonId("S3"), fixture.getPeople().getSelectionModel().getSelectedItem().getId());
                 assertEquals(1, fixture.getPeople().getSelectionModel().getSelectedIndex());
@@ -900,23 +900,23 @@ public class CanonicalMainWindowTest {
                 var settings = fixture.app.getLogic().getGuiSettings();
                 fixture.getPeople().getSelectionModel().select(1);
                 String draft = "editlesson lid/L1 s/Unfinished";
-                fixture.input().setText(draft);
+                fixture.getInput().setText(draft);
                 MenuBar menu = (MenuBar) fixture.getRoot().lookup("#menuBar");
                 menu.getMenus().get(1).getItems().get(0).fire();
                 String overview = CanonicalCommandCatalog.getOverview(Optional.empty());
                 assertEquals(overview, fixture.getFeedback());
-                for (var target : List.of(fixture.input(), fixture.getRoot().lookup("#resultDisplay"))) {
+                for (var target : List.of(fixture.getInput(), fixture.getRoot().lookup("#resultDisplay"))) {
                     Event.fireEvent(target, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F1,
                             false, false, false, false));
                     assertEquals(overview, fixture.getFeedback());
-                    assertEquals(draft, fixture.input().getText());
+                    assertEquals(draft, fixture.getInput().getText());
                     assertEquals(new PersonId("S3"), fixture.getPeople().getSelectionModel().getSelectedItem().getId());
                 }
                 for (String topic : List.of("edit", "EDIT", "editlesson", "EDITLESSON")) {
                     fixture.enter("help " + topic);
                     assertEquals(CanonicalCommandCatalog.getUsage(topic.toLowerCase(Locale.ROOT), false)
                             .orElseThrow(), fixture.getFeedback());
-                    assertTrue(fixture.input().getText().isEmpty());
+                    assertTrue(fixture.getInput().getText().isEmpty());
                     assertEquals(new PersonId("S3"), fixture.getPeople().getSelectionModel().getSelectedItem().getId());
                 }
                 assertEquals(visible, fixture.getPeople().getItems());
@@ -942,17 +942,17 @@ public class CanonicalMainWindowTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 String draft = "add r/student n/Unfinished";
-                fixture.input().setText(draft);
+                fixture.getInput().setText(draft);
                 MenuBar menu = (MenuBar) fixture.getRoot().lookup("#menuBar");
                 menu.getMenus().get(1).getItems().get(0).fire();
                 String guidance = fixture.getFeedback();
                 assertTrue(fixture.getFeedback().contains("Changes cannot be saved in this session"));
                 assertFalse(fixture.getFeedback().contains("add -"));
-                for (var target : List.of(fixture.input(), fixture.getRoot().lookup("#resultDisplay"))) {
+                for (var target : List.of(fixture.getInput(), fixture.getRoot().lookup("#resultDisplay"))) {
                     Event.fireEvent(target, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F1,
                             false, false, false, false));
                     assertEquals(guidance, fixture.getFeedback());
-                    assertEquals(draft, fixture.input().getText());
+                    assertEquals(draft, fixture.getInput().getText());
                     assertArrayEquals(original, Files.readAllBytes(dataPath));
                 }
                 fixture.enter("list");
@@ -963,8 +963,8 @@ public class CanonicalMainWindowTest {
                 assertTrue(fixture.getFeedback().contains("Changes cannot be saved in this session"));
                 for (String command : List.of("help EDIT", "help EDITLESSON", "edit invalid", "editlesson invalid")) {
                     fixture.enter(command);
-                    assertEquals(command, fixture.input().getText());
-                    assertTrue(fixture.input().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
+                    assertEquals(command, fixture.getInput().getText());
+                    assertTrue(fixture.getInput().getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
                     assertFalse(fixture.getFeedback().isBlank());
                     if (!command.startsWith("help")) {
                         assertTrue(fixture.getFeedback().contains("Changes cannot be saved in this session"));
@@ -990,9 +990,9 @@ public class CanonicalMainWindowTest {
                 try (WindowFixture fixture = createWindow()) {
                     String originalFeedback = fixture.getFeedback();
                     for (String prefix : List.of("h", "li", "e", "sho")) {
-                        fixture.input().setText(prefix);
-                        fixture.input().end();
-                        Event.fireEvent(fixture.input(), new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.TAB,
+                        fixture.getInput().setText(prefix);
+                        fixture.getInput().end();
+                        Event.fireEvent(fixture.getInput(), new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.TAB,
                                 false, false, false, false));
                         String expected = switch (prefix) {
                             case "h" -> isProtected ? "help" : "history";
@@ -1000,16 +1000,16 @@ public class CanonicalMainWindowTest {
                             case "e" -> isProtected ? "exit" : "edit";
                             default -> isProtected ? "sho" : "showlesson";
                         };
-                        assertEquals(expected, fixture.input().getText());
+                        assertEquals(expected, fixture.getInput().getText());
                         assertEquals(originalFeedback, fixture.getFeedback());
                         assertTrue(fixture.getPeople().getItems().isEmpty());
                     }
-                    fixture.input().setText("he");
-                    fixture.input().end();
-                    Event.fireEvent(fixture.input(), new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.TAB,
+                    fixture.getInput().setText("he");
+                    fixture.getInput().end();
+                    Event.fireEvent(fixture.getInput(), new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.TAB,
                             false, false, false, false));
-                    Event.fireEvent(fixture.input(), new ActionEvent());
-                    assertTrue(fixture.input().getText().isEmpty());
+                    Event.fireEvent(fixture.getInput(), new ActionEvent());
+                    assertTrue(fixture.getInput().getText().isEmpty());
                     assertTrue(fixture.getFeedback().contains("PonHub commands"));
                 }
                 return null;
@@ -1084,7 +1084,7 @@ public class CanonicalMainWindowTest {
             }
         }
 
-        private TextField input() {
+        private TextField getInput() {
             return (TextField) getRoot().lookup("#commandTextField");
         }
 
@@ -1108,8 +1108,8 @@ public class CanonicalMainWindowTest {
         }
 
         private void enter(String command) {
-            input().setText(command);
-            Event.fireEvent(input(), new ActionEvent());
+            getInput().setText(command);
+            Event.fireEvent(getInput(), new ActionEvent());
             layout();
         }
 

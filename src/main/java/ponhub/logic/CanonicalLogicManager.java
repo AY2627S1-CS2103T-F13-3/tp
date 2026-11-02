@@ -4,7 +4,6 @@ import static ponhub.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,12 +20,10 @@ import ponhub.logic.commands.CommandResult;
 import ponhub.logic.commands.exceptions.CommandException;
 import ponhub.logic.parser.exceptions.ParseException;
 import ponhub.model.UserPrefs;
-import ponhub.model.lesson.LessonId;
 import ponhub.model.person.PersonId;
 import ponhub.model.person.PersonRecord;
 import ponhub.model.query.AttendanceHistoryEntry;
 import ponhub.model.query.LessonView;
-import ponhub.model.query.StudentView;
 import ponhub.model.search.PersonSearchMatch;
 
 /**
@@ -108,16 +105,6 @@ public final class CanonicalLogicManager implements Logic {
     }
 
     @Override
-    public ObservableList<LessonView> getLessonList() {
-        return session.getLessonQueries().getLessonList();
-    }
-
-    @Override
-    public ObservableList<LessonView> getFilteredLessonList() {
-        return session.getLessonQueries().getFilteredLessonList();
-    }
-
-    @Override
     public ObservableList<LessonView> getDisplayedLessons() {
         return session.getDisplayedLessons();
     }
@@ -130,36 +117,6 @@ public final class CanonicalLogicManager implements Logic {
     @Override
     public ReadOnlyObjectProperty<LessonRetrieval.ResultKind> lessonResultKindProperty() {
         return session.lessonResultKindProperty();
-    }
-
-    @Override
-    public Optional<LessonView> findLessonById(LessonId lessonId) {
-        return session.getLessonQueries().findLessonById(lessonId);
-    }
-
-    @Override
-    public ObservableList<LessonView> getStudentLessons(PersonId studentId) {
-        return session.getLessonQueries().getStudentLessons(studentId);
-    }
-
-    @Override
-    public ObservableList<StudentView> getLessonRoster(LessonId lessonId) {
-        return session.getLessonQueries().getLessonRoster(lessonId);
-    }
-
-    @Override
-    public ObservableList<LessonView> getTutorSchedule(PersonId tutorId) {
-        return session.getLessonQueries().getTutorSchedule(tutorId);
-    }
-
-    @Override
-    public ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId) {
-        return session.getLessonQueries().getAttendanceHistory(studentId);
-    }
-
-    @Override
-    public ObservableList<AttendanceHistoryEntry> getAttendanceHistory(PersonId studentId, LessonId lessonId) {
-        return session.getLessonQueries().getAttendanceHistory(studentId, lessonId);
     }
 
     @Override

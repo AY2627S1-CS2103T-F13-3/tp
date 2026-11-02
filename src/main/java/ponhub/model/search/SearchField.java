@@ -57,13 +57,6 @@ public enum SearchField {
     }
 
     /**
-     * Returns an immutable set of categories accepting this filter.
-     */
-    public Set<SearchCategory> getSupportedCategories() {
-        return supportedCategories;
-    }
-
-    /**
      * Returns whether this filter is supported by the selected result category.
      */
     public boolean isSupportedBy(SearchCategory category) {

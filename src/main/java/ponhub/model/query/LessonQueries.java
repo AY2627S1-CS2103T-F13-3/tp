@@ -40,10 +40,6 @@ import ponhub.model.search.SearchField;
 public final class LessonQueries implements LessonQuerySource {
     private static final List<SearchField> EXACT_FIELDS =
             List.of(SearchField.DAY, SearchField.START_TIME, SearchField.END_TIME);
-    private static final Comparator<LessonView> SCHEDULE_ORDER = Comparator
-            .comparing((LessonView lesson) -> lesson.getTimeSlot().getDay())
-            .thenComparing(lesson -> lesson.getTimeSlot().getStartTime())
-            .thenComparing(LessonView::getLessonId);
     private static final Comparator<AttendanceHistoryEntry> HISTORY_ORDER = Comparator
             .comparing(AttendanceHistoryEntry::getDate).reversed()
             .thenComparing(AttendanceHistoryEntry::getLessonId);
@@ -268,7 +264,7 @@ public final class LessonQueries implements LessonQuerySource {
                             lesson.getEnrolledStudentIds().contains(attendance.getStudentId())));
         }
         histories.values().forEach(history -> history.sort(HISTORY_ORDER));
-        tutorSchedules.values().forEach(schedule -> schedule.sort(SCHEDULE_ORDER));
+        tutorSchedules.replaceAll((tutorId, lessonsForTutor) -> LessonOrder.SCHEDULE.apply(lessonsForTutor));
         studentsByParentPhone.replaceAll((phone, students) -> List.copyOf(students));
         // All derived indexes are complete before any observable list publishes replacement entries.
         reconcileSubscriptions(studentSubscriptions, retiredStudents, peopleById::containsKey);

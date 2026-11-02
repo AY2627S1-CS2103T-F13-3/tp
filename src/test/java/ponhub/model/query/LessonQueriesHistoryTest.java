@@ -37,7 +37,7 @@ public class LessonQueriesHistoryTest {
         assertEquals(List.of(LocalDate.of(2026, 10, 12), LocalDate.of(2026, 10, 12),
                 LocalDate.of(2026, 10, 5)), all.stream().map(AttendanceHistoryEntry::getDate).toList());
         assertEquals(2, oneLesson.size());
-        assertEquals(AttendanceHistoryEntry.Status.PRESENT, oneLesson.get(0).getStatus());
+        assertEquals(AttendanceStatus.PRESENT, oneLesson.get(0).getStatus());
         assertTrue(oneLesson.get(0).isCurrentlyEnrolled());
         assertEquals(student, oneLesson.get(0).getStudentId());
         assertThrows(UnsupportedOperationException.class, all::clear);
@@ -51,7 +51,7 @@ public class LessonQueriesHistoryTest {
                 .map(LessonView::getLessonId).toList());
 
         data.markAttendance(student, shared, LocalDate.of(2026, 10, 12), AttendanceStatus.ABSENT);
-        assertEquals(AttendanceHistoryEntry.Status.ABSENT, oneLesson.get(0).getStatus());
+        assertEquals(AttendanceStatus.ABSENT, oneLesson.get(0).getStatus());
         assertEquals(3, all.size());
         PonHubDataState state = data.exportState();
         data.resetData(new PonHubDataState(state.people(), state.lessons(), state.attendance().stream()
@@ -80,9 +80,9 @@ public class LessonQueriesHistoryTest {
         assertThrows(NullPointerException.class, () -> queries.getAttendanceHistory(student, null));
         assertThrows(IllegalArgumentException.class, () -> new AttendanceHistoryEntryData(
                 new PersonId("T1"), LessonQueryTestData.EMPTY_LESSON, LocalDate.of(2026, 10, 5),
-                AttendanceHistoryEntry.Status.PRESENT, false));
+                AttendanceStatus.PRESENT, false));
         assertThrows(NullPointerException.class, () -> new AttendanceHistoryEntryData(
                 null, LessonQueryTestData.EMPTY_LESSON, LocalDate.of(2026, 10, 5),
-                AttendanceHistoryEntry.Status.PRESENT, false));
+                AttendanceStatus.PRESENT, false));
     }
 }
