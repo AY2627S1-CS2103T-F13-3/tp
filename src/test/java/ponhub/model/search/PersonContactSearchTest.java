@@ -126,11 +126,11 @@ public class PersonContactSearchTest {
     }
 
     private static ContactDetails contact(String name, String phone, String email, String address) {
-        return new ContactDetails(new Name(name), optional(phone).map(Phone::new),
-                optional(email).map(Email::new), optional(address).map(Address::new));
+        return new ContactDetails(new Name(name), createOptional(phone).map(Phone::new),
+                createOptional(email).map(Email::new), createOptional(address).map(Address::new));
     }
 
-    private static Optional<String> optional(String value) {
+    private static Optional<String> createOptional(String value) {
         return Optional.ofNullable(value);
     }
 }
