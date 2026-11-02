@@ -65,7 +65,7 @@ public class CanonicalAttendanceIntegrationTest {
     public void execute_markCreatesCorrectsAndSkipsIdenticalStatus() throws Exception {
         Path path = directory.resolve("canonical.json");
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
-        PonHubDataState before = attendanceState(Set.of(STUDENT_ONE, STUDENT_TWO), List.of());
+        PonHubDataState before = createAttendanceState(Set.of(STUDENT_ONE, STUDENT_TWO), List.of());
         storage.saveData(before);
         int[] writes = {0};
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
@@ -86,7 +86,7 @@ public class CanonicalAttendanceIntegrationTest {
                 session.execute("mark 2 lid/L10 d/2026-10-05 s/present").getFeedbackToUser());
         assertEquals(1, writes[0]);
         assertTrue(lessonEvents[0] > 0);
-        assertEquals(List.of(attendance(STUDENT_TWO, FIRST_MONDAY, AttendanceStatus.PRESENT)),
+        assertEquals(List.of(createAttendance(STUDENT_TWO, FIRST_MONDAY, AttendanceStatus.PRESENT)),
                 session.getDataSnapshot().attendance());
         int eventsAfterCreation = lessonEvents[0];
         PonHubDataState created = session.getDataSnapshot();
@@ -108,16 +108,16 @@ public class CanonicalAttendanceIntegrationTest {
                 session.execute("mark 1 lid/L10 d/2026-10-05 s/absent").getFeedbackToUser());
         assertEquals(4, writes[0]);
         assertEquals(List.of(
-                attendance(STUDENT_TWO, FIRST_MONDAY, AttendanceStatus.ABSENT),
-                attendance(STUDENT_TWO, SECOND_MONDAY, AttendanceStatus.PRESENT),
-                attendance(STUDENT_ONE, FIRST_MONDAY, AttendanceStatus.ABSENT)),
+                createAttendance(STUDENT_TWO, FIRST_MONDAY, AttendanceStatus.ABSENT),
+                createAttendance(STUDENT_TWO, SECOND_MONDAY, AttendanceStatus.PRESENT),
+                createAttendance(STUDENT_ONE, FIRST_MONDAY, AttendanceStatus.ABSENT)),
                 session.getDataSnapshot().attendance());
         assertSame(visiblePeople, session.getPeople());
         assertSame(queries, session.getLessonQueries());
         assertSame(lessonList, queries.getLessonList());
         assertSame(roster, queries.getLessonRoster(LESSON));
         assertSame(studentLessons, queries.getStudentLessons(STUDENT_TWO));
-        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), visibleIds(session));
+        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), getVisibleIds(session));
         assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
         assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
     }
@@ -126,7 +126,7 @@ public class CanonicalAttendanceIntegrationTest {
     public void execute_futurePresentRequiresAcknowledgementButFutureAbsentRemainsAvailable() throws Exception {
         Path path = directory.resolve("future-safeguard.json");
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
-        PonHubDataState before = attendanceState(Set.of(STUDENT_TWO), List.of());
+        PonHubDataState before = createAttendanceState(Set.of(STUDENT_TWO), List.of());
         storage.saveData(before);
         byte[] original = Files.readAllBytes(path);
         int[] writes = {0};
@@ -171,8 +171,8 @@ public class CanonicalAttendanceIntegrationTest {
     @Test
     public void execute_markHistoricalCorrectionAllowedButNewHistoryRequiresMembership() throws Exception {
         Path path = directory.resolve("canonical.json");
-        Attendance historical = attendance(STUDENT_ONE, FIRST_MONDAY, AttendanceStatus.PRESENT);
-        PonHubDataState before = attendanceState(Set.of(), List.of(historical));
+        Attendance historical = createAttendance(STUDENT_ONE, FIRST_MONDAY, AttendanceStatus.PRESENT);
+        PonHubDataState before = createAttendanceState(Set.of(), List.of(historical));
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
         storage.saveData(before);
         int[] writes = {0};
@@ -184,7 +184,7 @@ public class CanonicalAttendanceIntegrationTest {
 
         assertEquals("Attendance for Student S9 in lesson L10 on 2026-10-05 marked absent.",
                 session.execute("mark 1 lid/L10 d/2026-10-05 s/absent").getFeedbackToUser());
-        assertEquals(List.of(attendance(STUDENT_ONE, FIRST_MONDAY, AttendanceStatus.ABSENT)),
+        assertEquals(List.of(createAttendance(STUDENT_ONE, FIRST_MONDAY, AttendanceStatus.ABSENT)),
                 session.getDataSnapshot().attendance());
         PonHubDataState corrected = session.getDataSnapshot();
         byte[] correctedBytes = Files.readAllBytes(path);
@@ -201,7 +201,7 @@ public class CanonicalAttendanceIntegrationTest {
     @Test
     public void execute_markInvalidSelectionLessonOrWeekday_rejectsWithoutSaving() throws Exception {
         Path path = directory.resolve("canonical.json");
-        PonHubDataState before = attendanceState(Set.of(STUDENT_TWO), List.of());
+        PonHubDataState before = createAttendanceState(Set.of(STUDENT_TWO), List.of());
         new JsonPonHubDataStorage(path).saveData(before);
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
             throw new AssertionError("Rejected attendance commands must not save");
@@ -229,7 +229,7 @@ public class CanonicalAttendanceIntegrationTest {
     @Test
     public void execute_markSaveFailureRestoresStateViewsAndRetryCommits() throws Exception {
         Path path = directory.resolve("canonical.json");
-        PonHubDataState before = attendanceState(Set.of(STUDENT_TWO), List.of());
+        PonHubDataState before = createAttendanceState(Set.of(STUDENT_TWO), List.of());
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
         storage.saveData(before);
         byte[] original = Files.readAllBytes(path);
@@ -259,7 +259,7 @@ public class CanonicalAttendanceIntegrationTest {
         assertSame(visiblePeople, session.getPeople());
         assertSame(lessonList, session.getLessonQueries().getLessonList());
         assertSame(roster, session.getLessonQueries().getLessonRoster(LESSON));
-        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), visibleIds(session));
+        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), getVisibleIds(session));
         assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
         assertEquals(0, lessonEvents[0]);
 
@@ -273,10 +273,10 @@ public class CanonicalAttendanceIntegrationTest {
     @Test
     public void execute_unmarkRemovesOnlySelectedKeyAndMissingKeyIsNoOp() throws Exception {
         Path path = directory.resolve("canonical.json");
-        Attendance selected = attendance(STUDENT_TWO, FIRST_MONDAY, AttendanceStatus.PRESENT);
-        Attendance otherDate = attendance(STUDENT_TWO, SECOND_MONDAY, AttendanceStatus.ABSENT);
-        Attendance otherStudent = attendance(STUDENT_ONE, FIRST_MONDAY, AttendanceStatus.ABSENT);
-        PonHubDataState before = attendanceState(Set.of(STUDENT_ONE, STUDENT_TWO),
+        Attendance selected = createAttendance(STUDENT_TWO, FIRST_MONDAY, AttendanceStatus.PRESENT);
+        Attendance otherDate = createAttendance(STUDENT_TWO, SECOND_MONDAY, AttendanceStatus.ABSENT);
+        Attendance otherStudent = createAttendance(STUDENT_ONE, FIRST_MONDAY, AttendanceStatus.ABSENT);
+        PonHubDataState before = createAttendanceState(Set.of(STUDENT_ONE, STUDENT_TWO),
                 List.of(selected, otherDate, otherStudent));
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
         storage.saveData(before);
@@ -306,7 +306,7 @@ public class CanonicalAttendanceIntegrationTest {
         assertSame(lessonList, queries.getLessonList());
         assertSame(roster, queries.getLessonRoster(LESSON));
         assertSame(studentLessons, queries.getStudentLessons(STUDENT_TWO));
-        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), visibleIds(session));
+        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), getVisibleIds(session));
         assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
         assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
 
@@ -321,14 +321,14 @@ public class CanonicalAttendanceIntegrationTest {
         assertSame(removed, session.getDataSnapshot());
         assertArrayEquals(removedBytes, Files.readAllBytes(path));
         assertSame(visiblePeople, session.getPeople());
-        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), visibleIds(session));
+        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), getVisibleIds(session));
     }
 
     @Test
     public void execute_unmarkHistoricalAttendanceAllowedAfterUnenrolment() throws Exception {
         Path path = directory.resolve("canonical.json");
-        Attendance historical = attendance(STUDENT_ONE, FIRST_MONDAY, AttendanceStatus.PRESENT);
-        PonHubDataState before = attendanceState(Set.of(), List.of(historical));
+        Attendance historical = createAttendance(STUDENT_ONE, FIRST_MONDAY, AttendanceStatus.PRESENT);
+        PonHubDataState before = createAttendanceState(Set.of(), List.of(historical));
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
         storage.saveData(before);
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path),
@@ -345,8 +345,8 @@ public class CanonicalAttendanceIntegrationTest {
     @Test
     public void execute_unmarkInvalidSelectionLessonOrWeekday_rejectsWithoutSaving() throws Exception {
         Path path = directory.resolve("canonical.json");
-        Attendance attendance = attendance(STUDENT_TWO, FIRST_MONDAY, AttendanceStatus.PRESENT);
-        PonHubDataState before = attendanceState(Set.of(STUDENT_TWO), List.of(attendance));
+        Attendance attendance = createAttendance(STUDENT_TWO, FIRST_MONDAY, AttendanceStatus.PRESENT);
+        PonHubDataState before = createAttendanceState(Set.of(STUDENT_TWO), List.of(attendance));
         new JsonPonHubDataStorage(path).saveData(before);
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
             throw new AssertionError("Rejected attendance commands must not save");
@@ -374,8 +374,8 @@ public class CanonicalAttendanceIntegrationTest {
     @Test
     public void execute_unmarkSaveFailureRestoresStateViewsAndRetryCommits() throws Exception {
         Path path = directory.resolve("canonical.json");
-        Attendance selected = attendance(STUDENT_TWO, FIRST_MONDAY, AttendanceStatus.PRESENT);
-        PonHubDataState before = attendanceState(Set.of(STUDENT_TWO), List.of(selected));
+        Attendance selected = createAttendance(STUDENT_TWO, FIRST_MONDAY, AttendanceStatus.PRESENT);
+        PonHubDataState before = createAttendanceState(Set.of(STUDENT_TWO), List.of(selected));
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
         storage.saveData(before);
         byte[] original = Files.readAllBytes(path);
@@ -405,7 +405,7 @@ public class CanonicalAttendanceIntegrationTest {
         assertSame(visiblePeople, session.getPeople());
         assertSame(lessonList, session.getLessonQueries().getLessonList());
         assertSame(roster, session.getLessonQueries().getLessonRoster(LESSON));
-        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), visibleIds(session));
+        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), getVisibleIds(session));
         assertEquals(Optional.of(PersonRole.STUDENT), session.getRoleFilter());
         assertEquals(0, lessonEvents[0]);
 
@@ -417,19 +417,19 @@ public class CanonicalAttendanceIntegrationTest {
         assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
     }
 
-    private static List<PersonId> visibleIds(CanonicalPeopleSession session) {
+    private static List<PersonId> getVisibleIds(CanonicalPeopleSession session) {
         return session.getPeople().stream().map(PersonRecord::getId).toList();
     }
 
-    private static Attendance attendance(PersonId studentId, LocalDate date, AttendanceStatus status) {
+    private static Attendance createAttendance(PersonId studentId, LocalDate date, AttendanceStatus status) {
         return new Attendance(studentId, LESSON, date, status);
     }
 
-    private static PonHubDataState attendanceState(Set<PersonId> roster, List<Attendance> attendance) {
-        Tutor tutor = new Tutor(TUTOR, contacts("Tutor Tan", "70000001"));
+    private static PonHubDataState createAttendanceState(Set<PersonId> roster, List<Attendance> attendance) {
+        Tutor tutor = new Tutor(TUTOR, createContacts("Tutor Tan", "70000001"));
         Student firstStudent = new Student(STUDENT_ONE, new ContactDetails(new Name("Alice Student")),
                 new EducationLevel("P1"), new Phone("60000001"));
-        Parent parent = new Parent(new PersonId("P2"), contacts("Parent Tan", "60000002"));
+        Parent parent = new Parent(new PersonId("P2"), createContacts("Parent Tan", "60000002"));
         Student secondStudent = new Student(STUDENT_TWO, new ContactDetails(new Name("Bob Student")),
                 new EducationLevel("P2"), new Phone("60000002"));
         PeopleRegistryState people = new PeopleRegistryState(List.of(tutor, firstStudent, parent, secondStudent),
@@ -440,7 +440,7 @@ public class CanonicalAttendanceIntegrationTest {
         return new PonHubDataState(people, List.of(lesson), attendance, 10);
     }
 
-    private static ContactDetails contacts(String name, String phone) {
+    private static ContactDetails createContacts(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.of(new Phone(phone)), Optional.empty(), Optional.empty());
     }
 }

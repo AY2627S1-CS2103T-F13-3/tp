@@ -41,17 +41,17 @@ public class PonHubDataAttendanceTest {
     @BeforeEach
     public void setUp() {
         people = new PeopleRegistry();
-        tutor = people.addTutor(contacts("Tutor Tan", "70000001"));
+        tutor = people.addTutor(createContacts("Tutor Tan", "70000001"));
         firstStudent = people.addStudent(new ContactDetails(new Name("First Student")),
                 new EducationLevel("P1"), new Phone("60000001"));
         secondStudent = people.addStudent(new ContactDetails(new Name("Second Student")),
                 new EducationLevel("P2"), new Phone("60000002"));
-        lesson = lesson(Set.of(firstStudent.getId(), secondStudent.getId()));
+        lesson = createLesson(Set.of(firstStudent.getId(), secondStudent.getId()));
     }
 
     @Test
     public void markAttendance_newKeys_appendsIndependentStudentsAndDates() {
-        PonHubData data = dataWith(lesson, List.of());
+        PonHubData data = createDataWith(lesson, List.of());
 
         Attendance first = data.markAttendance(firstStudent.getId(), lesson.getId(),
                 LocalDate.of(2026, 10, 5), AttendanceStatus.PRESENT);
@@ -67,10 +67,10 @@ public class PonHubDataAttendanceTest {
 
     @Test
     public void markAttendance_existingHistoryAfterUnenrol_correctsInPlaceAndSameStatusIsNoOp() {
-        Lesson emptyLesson = lesson(Set.of());
+        Lesson emptyLesson = createLesson(Set.of());
         Attendance historical = new Attendance(firstStudent.getId(), emptyLesson.getId(),
                 LocalDate.of(2026, 10, 5), AttendanceStatus.PRESENT);
-        PonHubData data = dataWith(emptyLesson, List.of(historical));
+        PonHubData data = createDataWith(emptyLesson, List.of(historical));
 
         Attendance corrected = data.markAttendance(firstStudent.getId(), emptyLesson.getId(),
                 historical.getDate(), AttendanceStatus.ABSENT);
@@ -89,8 +89,8 @@ public class PonHubDataAttendanceTest {
 
     @Test
     public void markAttendance_invalidReferenceMembershipOrWeekday_rejectsWithoutChange() {
-        Lesson firstStudentOnly = lesson(Set.of(firstStudent.getId()));
-        PonHubData data = dataWith(firstStudentOnly, List.of());
+        Lesson firstStudentOnly = createLesson(Set.of(firstStudent.getId()));
+        PonHubData data = createDataWith(firstStudentOnly, List.of());
         PonHubDataState before = data.exportState();
 
         assertThrows(IllegalArgumentException.class, () -> data.markAttendance(new PersonId("S99"),
@@ -115,7 +115,7 @@ public class PonHubDataAttendanceTest {
                 LocalDate.of(2026, 10, 5), AttendanceStatus.ABSENT);
         Attendance otherDate = new Attendance(firstStudent.getId(), lesson.getId(),
                 LocalDate.of(2026, 10, 12), AttendanceStatus.ABSENT);
-        PonHubData data = dataWith(lesson, List.of(selected, otherStudent, otherDate));
+        PonHubData data = createDataWith(lesson, List.of(selected, otherStudent, otherDate));
 
         assertEquals(Optional.of(selected), data.unmarkAttendance(firstStudent.getId(), lesson.getId(),
                 selected.getDate()));
@@ -127,10 +127,10 @@ public class PonHubDataAttendanceTest {
 
     @Test
     public void unmarkAttendance_historicalOrMissingRecord_removesWithoutMembershipAndSkipsNoOp() {
-        Lesson emptyLesson = lesson(Set.of());
+        Lesson emptyLesson = createLesson(Set.of());
         Attendance historical = new Attendance(firstStudent.getId(), emptyLesson.getId(),
                 LocalDate.of(2026, 10, 5), AttendanceStatus.PRESENT);
-        PonHubData data = dataWith(emptyLesson, List.of(historical));
+        PonHubData data = createDataWith(emptyLesson, List.of(historical));
 
         assertEquals(Optional.of(historical), data.unmarkAttendance(firstStudent.getId(), emptyLesson.getId(),
                 historical.getDate()));
@@ -147,7 +147,7 @@ public class PonHubDataAttendanceTest {
     public void unmarkAttendance_invalidReferenceOrWeekday_rejectsWithoutChange() {
         Attendance attendance = new Attendance(firstStudent.getId(), lesson.getId(),
                 LocalDate.of(2026, 10, 5), AttendanceStatus.PRESENT);
-        PonHubData data = dataWith(lesson, List.of(attendance));
+        PonHubData data = createDataWith(lesson, List.of(attendance));
         PonHubDataState before = data.exportState();
 
         assertThrows(IllegalArgumentException.class, () -> data.unmarkAttendance(new PersonId("S99"),
@@ -162,17 +162,17 @@ public class PonHubDataAttendanceTest {
         assertSame(before, data.exportState());
     }
 
-    private PonHubData dataWith(Lesson initialLesson, List<Attendance> attendance) {
+    private PonHubData createDataWith(Lesson initialLesson, List<Attendance> attendance) {
         return new PonHubData(new PonHubDataState(people.exportState(), List.of(initialLesson), attendance, 1));
     }
 
-    private Lesson lesson(Set<PersonId> roster) {
+    private Lesson createLesson(Set<PersonId> roster) {
         return new Lesson(new LessonId("L1"), tutor.getId(),
                 new LessonTimeSlot(LessonDay.MONDAY, new LessonTime("0900"), new LessonTime("1000")),
                 new Subject("Mathematics"), new Room("R1"), roster);
     }
 
-    private ContactDetails contacts(String name, String phone) {
+    private ContactDetails createContacts(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.of(new Phone(phone)), Optional.empty(), Optional.empty());
     }
 }

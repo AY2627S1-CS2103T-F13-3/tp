@@ -32,7 +32,7 @@ public class PonHubDataLessonEditTest {
 
     @Test
     public void replaceLesson_equalAndChangedValues_publishesOnlyChangedCompleteSnapshot() {
-        PonHubDataState source = sourceWithTwoLessons();
+        PonHubDataState source = createSourceWithTwoLessons();
         PonHubData data = new PonHubData(source);
         AtomicInteger notifications = new AtomicInteger();
         data.stateProperty().addListener((observable, oldState, newState) -> {
@@ -60,39 +60,39 @@ public class PonHubDataLessonEditTest {
 
     @Test
     public void replaceLesson_nullMissingAndConflictingValues_preservesInstalledSnapshot() {
-        PonHubDataState source = sourceWithTwoLessons();
+        PonHubDataState source = createSourceWithTwoLessons();
         PonHubData data = new PonHubData(source);
         AtomicInteger notifications = new AtomicInteger();
         data.stateProperty().addListener((observable, oldState, newState) -> notifications.incrementAndGet());
 
         assertThrows(NullPointerException.class, () -> data.replaceLesson(null));
-        Lesson missing = lesson("L99", "T1", LessonDay.WEDNESDAY, "0900", "1000", "English", "R3");
+        Lesson missing = createLesson("L99", "T1", LessonDay.WEDNESDAY, "0900", "1000", "English", "R3");
         assertThrows(IllegalArgumentException.class, () -> data.replaceLesson(missing));
-        Lesson conflict = lesson("L2", "T1", LessonDay.MONDAY, "0900", "1000", "Science", "R2");
+        Lesson conflict = createLesson("L2", "T1", LessonDay.MONDAY, "0900", "1000", "Science", "R2");
         assertThrows(IllegalArgumentException.class, () -> data.replaceLesson(conflict));
 
         assertSame(source, data.exportState());
         assertEquals(0, notifications.get());
     }
 
-    private static PonHubDataState sourceWithTwoLessons() {
-        List<PersonRecord> people = List.of(tutor("T1", "Tutor One", "00111111"),
-                tutor("T2", "Tutor Two", "00222222"));
+    private static PonHubDataState createSourceWithTwoLessons() {
+        List<PersonRecord> people = List.of(createTutor("T1", "Tutor One", "00111111"),
+                createTutor("T2", "Tutor Two", "00222222"));
         PeopleRegistryState peopleState = new PeopleRegistryState(people,
                 Map.of(PersonRole.STUDENT, 0L, PersonRole.TUTOR, 2L, PersonRole.PARENT, 0L));
-        Lesson first = lesson("L1", "T1", LessonDay.MONDAY, "0900", "1000", "Math", "R1");
-        Lesson second = lesson("L2", "T2", LessonDay.MONDAY, "1000", "1100", "Science", "R2");
+        Lesson first = createLesson("L1", "T1", LessonDay.MONDAY, "0900", "1000", "Math", "R1");
+        Lesson second = createLesson("L2", "T2", LessonDay.MONDAY, "1000", "1100", "Science", "R2");
         return new PonHubDataState(peopleState, List.of(first, second), List.of(), 8);
     }
 
-    private static Lesson lesson(String id, String tutorId, LessonDay day, String startTime, String endTime,
+    private static Lesson createLesson(String id, String tutorId, LessonDay day, String startTime, String endTime,
             String subject, String room) {
         return new Lesson(new LessonId(id), new PersonId(tutorId),
                 new LessonTimeSlot(day, new LessonTime(startTime), new LessonTime(endTime)),
                 new Subject(subject), new Room(room), Set.of());
     }
 
-    private static Tutor tutor(String id, String name, String phone) {
+    private static Tutor createTutor(String id, String name, String phone) {
         return new Tutor(new PersonId(id), new ContactDetails(new Name(name), Optional.of(new Phone(phone)),
                 Optional.empty(), Optional.empty()));
     }

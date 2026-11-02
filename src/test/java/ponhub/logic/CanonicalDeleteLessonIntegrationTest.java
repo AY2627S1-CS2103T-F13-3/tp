@@ -62,7 +62,7 @@ public class CanonicalDeleteLessonIntegrationTest {
 
     @Test
     public void execute_unreferencedLesson_releasesScheduleRefreshesViewsAndNeverReusesId() throws Exception {
-        Path path = savedData(Set.of(), List.of());
+        Path path = createSavedData(Set.of(), List.of());
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("search c/student");
         session.execute("search c/lesson s/Mathematics");
@@ -98,7 +98,7 @@ public class CanonicalDeleteLessonIntegrationTest {
     public void execute_rosterThenRetainedAttendance_blockUntilExplicitlyCleared() throws Exception {
         Attendance attendance = new Attendance(STUDENT_ONE, LESSON, LESSON_DATE, AttendanceStatus.PRESENT);
         Set<PersonId> roster = new LinkedHashSet<>(List.of(STUDENT_ONE, STUDENT_TWO));
-        Path path = savedData(roster, List.of(attendance));
+        Path path = createSavedData(roster, List.of(attendance));
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("list r/student");
         PonHubDataState original = session.getDataSnapshot();
@@ -132,7 +132,7 @@ public class CanonicalDeleteLessonIntegrationTest {
 
     @Test
     public void execute_invalidOrMissingLesson_rejectsWithoutSaving() throws Exception {
-        Path path = savedData(Set.of(), List.of());
+        Path path = createSavedData(Set.of(), List.of());
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
             throw new AssertionError("Rejected lesson deletion must not save");
         });
@@ -157,7 +157,7 @@ public class CanonicalDeleteLessonIntegrationTest {
 
     @Test
     public void execute_failedSavePreservesStateCountersAndViewsBeforeSuccessfulRetry() throws Exception {
-        Path path = savedData(Set.of(), List.of());
+        Path path = createSavedData(Set.of(), List.of());
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
         PonHubDataState before = storage.readData().orElseThrow();
         byte[] original = Files.readAllBytes(path);
@@ -205,10 +205,10 @@ public class CanonicalDeleteLessonIntegrationTest {
         assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
     }
 
-    private Path savedData(Set<PersonId> roster, List<Attendance> attendance) throws IOException {
+    private Path createSavedData(Set<PersonId> roster, List<Attendance> attendance) throws IOException {
         Path path = directory.resolve("canonical-" + roster.size() + "-" + attendance.size() + ".json");
         List<PersonRecord> people = List.of(
-                new Tutor(TUTOR, contacts("Assigned Tutor", "70000001")),
+                new Tutor(TUTOR, createContacts("Assigned Tutor", "70000001")),
                 new Student(STUDENT_ONE, new ContactDetails(new Name("Alice Student")),
                         new EducationLevel("P1"), new Phone("60000001")),
                 new Student(STUDENT_TWO, new ContactDetails(new Name("Bob Student")),
@@ -222,7 +222,7 @@ public class CanonicalDeleteLessonIntegrationTest {
         return path;
     }
 
-    private static ContactDetails contacts(String name, String phone) {
+    private static ContactDetails createContacts(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.of(new Phone(phone)), Optional.empty(), Optional.empty());
     }
 }
