@@ -1,5 +1,6 @@
 @startuml
 ' Yang Shuo with OpenAI Codex assistance. #641; Benjamin's relationship-search feature retained.
+' Review corrections: Vincent Lin with OpenAI Codex assistance, 2026-11-02.
 ' Trace: CanonicalSearchCommand.execute; PeopleView.setSearchCriteria;
 ' PersonRelationshipSearch.search; PersonContactSearch.search;
 ' LessonQueries.searchLessons/getStudentsByParentPhone.
@@ -25,6 +26,7 @@ opt relationship criteria supplied
 end
 R --> V : distinct people in creation order\nand matching relationship contexts
 V -> V : Store criteria; publish people\nand result context
-V --> C : updated count
+C -> V : getPeople().size()
+V --> C : displayed count
 note over C, Q : No operational save; right-pane selection is unchanged.
 @enduml

@@ -1,5 +1,6 @@
 @startuml
 ' Yang Shuo with OpenAI Codex assistance. #641; Benjamin's retrieval/views retained.
+' Review corrections: Vincent Lin with OpenAI Codex assistance, 2026-11-02.
 ' Trace: LessonRetrieval.show/buildDetail; AttendanceRetrieval.show/refreshDisplayed;
 ' MainWindow.fillInnerParts; LessonListPanel; HistoryListPanel.
 !include feature-sequence-style.iuml
@@ -15,15 +16,19 @@ alt showlesson lid/L1 [d/DATE]
   note over L : Missing current-roster status is unrecorded.
   L --> S : detail view; select detail source
   S -> H : hide()
+  H -> H : Set active = false
+  opt history active flag changed
+    H -> W : active-property listener\nand bound pane visibility update
+  end
 else history STUDENT_INDEX [filters]
   S -> H : show(parsed input)
   H -> H : Resolve displayed Student once;\nselect stable-ID query
   H -> H : Rebind listener if needed;\napply date/status filters
   H -> H : Set context and active = true
+  opt history active flag changed
+    H -> W : active-property listener\nand bound pane visibility update
+  end
   H --> S : newest-first recorded history
-end
-opt history active flag changed
-  H -> W : active-property listener\nand bound pane visibility update
 end
 note over L, W
   LessonListPanel or HistoryListPanel renders results.
