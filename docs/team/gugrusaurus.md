@@ -46,16 +46,16 @@ boundary to the active runtime, shared view and people commands. See
 [staged execution](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/170).
 
 I later added a programmer invariant that detects a staged callback changing live records, counters
-or filters before the writer runs. It detects misuse without claiming to undo a faulty callback's
-own changes. See the [live-state invariant](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/409).
+or filters before the writer runs. It reports a violation while leaving the callback's prior live
+mutations in place. See the [live-state invariant](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/409).
 
 ### Safe file replacement and protected startup
 
 I replaced direct JSON writes with a complete temporary sibling file followed by atomic replacement
 where supported. The fallback retains a recovery backup before ordinary replacement and attempts
 restoration after failure. Symbolic links are resolved without replacing the link itself; unsafe
-or inaccessible destinations are rejected. These measures reduce partial-write risk without claiming
-power-loss durability. See [safe JSON replacement](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/111).
+or inaccessible destinations are rejected. These measures reduce partial-write risk; power loss can
+still lose data. See [safe JSON replacement](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/111).
 
 I implemented `ProtectedPonHubDataStorage` so an unreadable, invalid, unsupported or legacy file
 cannot silently become an empty writable store. A rejected session preserves the original and blocks
@@ -108,8 +108,7 @@ unused retired handles can be collected. See
 
 I indexed schedule validation by weekday and resource, avoiding comparisons between unrelated
 bookings while retaining conflict precedence and diagnostics. Independent tests compare results
-against a pairwise oracle over 4,000 seeded catalogues. Performance measurements in the PR are local
-observations, rather than response-time guarantees. See
+against a pairwise oracle over 4,000 seeded catalogues. See
 [schedule indexing](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/589).
 
 ## Testing and verification
@@ -131,8 +130,6 @@ synchronisation, retaining checks against actual result-control feedback. I late
 verification use the triggering candidate's version. See the verifier changes in
 [command logging](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/408) and
 [candidate-version verification](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/539).
-The linked records distinguish automated, hosted and native checks and identify the candidates tested;
-they do not establish acceptance of every later integrated build.
 
 ## Documentation
 

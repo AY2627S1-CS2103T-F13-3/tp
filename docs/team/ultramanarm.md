@@ -101,7 +101,7 @@ I contributed automated tests across model, parser, command, storage and JavaFX 
   checking atomic-save recovery, symbolic-link bounds and literal logging paths.
 * [Hosted Linux JAR verification](https://github.com/AY2627S1-CS2103T-F13-3/tp/pull/254)
   exercising the actual packaged application's command box, persistence and restart under Xvfb,
-  tied to the supplied artifact's SHA-256. This is hosted verification rather than physical-desktop acceptance.
+  tied to the supplied artifact's SHA-256.
 
 ## Documentation
 
