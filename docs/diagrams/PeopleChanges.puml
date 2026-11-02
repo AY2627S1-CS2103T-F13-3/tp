@@ -1,0 +1,43 @@
+@startuml
+' Yang Shuo with OpenAI Codex assistance. #641; original people feature authors retained.
+' Trace: CanonicalAddCommand, CanonicalEditCommand, CanonicalListCommand;
+' PersonAdditionCandidate/PersonEditCandidate and PersonIndexResolver.
+!include feature-sequence-style.iuml
+participant "executor :\nCanonicalCommandExecutor" as E
+participant "command :\nStagedCommand" as C
+participant "stagedView :\nPeopleView" as V
+participant "staged :\nPonHubData" as D
+
+E -> C : execute(staged, stagedView)\n[already parsed input]
+alt add
+  C -> D : exportState()
+  D --> C : current staged snapshot
+  note over C
+    PersonAdditionCandidate prepares isolated
+    allocation and duplicate checks.
+  end note
+  C -> D : resetData(candidate state)
+  C -> V : setRoleFilter(all roles)
+else edit
+  C -> V : getPeople()
+  V --> C : displayed records
+  note over C : Resolve INDEX once via PersonIndexResolver.
+  C -> D : exportState()
+  D --> C : current staged snapshot
+  note over C, D
+    PersonEditCandidate checks role fields and identity.
+    Compare parent/Student links for feedback.
+    Identical stored fields leave data unchanged.
+  end note
+  opt candidate changed
+    C -> D : resetData(candidate state)
+  end
+else list
+  C -> V : setRoleFilter(requested role)
+  note over V : Clear search; preserve global relative order.
+end
+C --> E : prepared feedback\n(or CommandException on rejection)
+opt staging succeeded
+  ref over E : Persist and publish — Figure 5.2a
+end
+@enduml

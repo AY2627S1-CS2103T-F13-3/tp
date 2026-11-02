@@ -1,0 +1,37 @@
+@startuml
+' Yang Shuo with OpenAI Codex assistance. #641; original CommandBox authors retained.
+' Trace: CommandBox TextFormatter, handleRecall, rememberSubmission, handleCommandEntered.
+!include feature-sequence-style.iuml
+participant "field :\nTextField" as F
+participant "box :\nCommandBox" as B
+participant "window :\nMainWindow" as W
+
+== Raw replacement (including paste) ==
+F -> B : TextFormatter change
+alt ISO control or Unicode line/paragraph separator
+  B -> B : Mark inputRejected; show error
+  B --> F : reject entire replacement
+else ordinary edit
+  B --> F : accept change
+  F -> B : text listener clears rejection\nand resets recall/completion
+end
+== Command recall ==
+F -> B : unmodified Up / Down
+B -> B : Save unfinished draft on first Up;\nmove within session history
+B -> F : Restore recalled command or draft\nwith anchor and caret
+== Enter ==
+F -> B : submit
+alt input still rejected
+  B -> B : Repeat error; block execution
+else non-empty accepted text
+  B -> B : Remember non-blank submission\n(maximum 50 entries)
+  B -> W : executeCommand(text)
+  alt command succeeds
+    W --> B : result
+    B -> F : clear text
+  else command rejected
+    W --> B : exception
+    B -> B : Keep text; indicate failure
+  end
+end
+@enduml

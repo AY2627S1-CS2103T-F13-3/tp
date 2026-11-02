@@ -252,7 +252,7 @@ public class SearchFieldTest {
 
     @Test
     public void matchesValue_sigmaVariants_matchAtEveryPositionAcrossTextFields() {
-        for (SearchField field : textFields()) {
+        for (SearchField field : getTextFields()) {
             for (String candidate : List.of("ΝΊΚΟΣ", "Νίκος", "Νίκοσ", "Σίγμα", "αςα", "σσς")) {
                 for (String query : List.of("Σ", "σ", "ς")) {
                     assertTrue(field.matchesValue(field.normalizeValue(query), candidate), field + " " + candidate);
@@ -268,7 +268,7 @@ public class SearchFieldTest {
 
     @Test
     public void matchesValue_otherUnicodeText_preservesExistingComparisonLimits() {
-        for (SearchField field : textFields()) {
+        for (SearchField field : getTextFields()) {
             assertTrue(field.matchesValue(field.normalizeValue("É"), "José"), field.name());
             assertTrue(field.matchesValue(field.normalizeValue("STRAẞE"), "Straße"), field.name());
             assertFalse(field.matchesValue(field.normalizeValue("STRASSE"), "Straße"), field.name());
@@ -280,7 +280,7 @@ public class SearchFieldTest {
         }
     }
 
-    private static List<SearchField> textFields() {
+    private static List<SearchField> getTextFields() {
         return List.of(SearchField.NAME, SearchField.EMAIL, SearchField.ADDRESS, SearchField.STUDENT_NAME,
                 SearchField.SUBJECT, SearchField.TUTOR_NAME, SearchField.ROOM);
     }

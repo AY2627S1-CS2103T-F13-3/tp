@@ -1,0 +1,31 @@
+@startuml
+' Yang Shuo with OpenAI Codex assistance. #641; original completion authors retained.
+' Trace: CommandBox constructor/handleCompletion/resetCompletion; CommandWordCompleter.complete.
+!include feature-sequence-style.iuml
+participant "box :\nCommandBox" as B
+participant "completer :\nCommandWordCompleter" as C
+participant "field :\nTextField" as F
+
+note over B, C
+  The supplied catalogue contains this session's
+  available commands (help/list/exit if protected).
+end note
+F -> B : Tab key event
+alt unmodified Tab, no selection
+  B -> C : complete(draft, caret)
+  alt caret inside word and matching commands
+    C -> C : Find initial matches or\ncycle through held matches
+    C --> B : completed text and caret
+    B -> F : setText(...); positionCaret(...)
+    B -> B : Consume key event
+  else no applicable completion
+    C --> B : empty
+    note over F : Normal JavaFX focus traversal continues.
+  end
+else modified Tab or selected text
+  note over B, F : Do not consume as command completion.
+end
+== Later external text / caret / selection / focus change ==
+F -> B : property listener
+B -> C : reset()
+@enduml

@@ -26,7 +26,7 @@ public class CanonicalUnicodeSearchIntegrationTest {
     public void execute_sigmaSearches_matchOwnAndRelatedNamesWithoutSaving() throws Exception {
         Path path = saveFixture();
         byte[] bytes = Files.readAllBytes(path);
-        CanonicalPeopleSession session = readOnlySession(path);
+        CanonicalPeopleSession session = createReadOnlySession(path);
         var before = session.getDataSnapshot();
         var people = session.getPeople();
         for (String query : List.of("Σ", "σ", "ς")) {
@@ -61,7 +61,7 @@ public class CanonicalUnicodeSearchIntegrationTest {
     public void execute_invalidUnicodeSearches_preserveBothResultScopesAndBytes() throws Exception {
         Path path = saveFixture();
         byte[] bytes = Files.readAllBytes(path);
-        CanonicalPeopleSession session = readOnlySession(path);
+        CanonicalPeopleSession session = createReadOnlySession(path);
         session.execute("search c/student n/Σ l/P1 pp/91234569");
         session.execute("search c/lesson sn/ς tu/Σ");
         var people = List.copyOf(session.getPeople());
@@ -97,7 +97,7 @@ public class CanonicalUnicodeSearchIntegrationTest {
         return path;
     }
 
-    private CanonicalPeopleSession readOnlySession(Path path) {
+    private CanonicalPeopleSession createReadOnlySession(Path path) {
         return new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
             throw new AssertionError("Search must not save");
         });
