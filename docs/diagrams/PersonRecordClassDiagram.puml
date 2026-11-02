@@ -1,5 +1,6 @@
 @startuml
 !include style.puml
+skinparam packageStyle Folder
 !pragma layout smetana
 
 skinparam linetype ortho

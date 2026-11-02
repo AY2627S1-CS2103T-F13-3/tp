@@ -10,17 +10,31 @@ skinparam classBorderColor #9D0012
 skinparam classArrowColor #9D0012
 skinparam noteBackgroundColor #FFFBE6
 skinparam noteBorderColor #777777
-skinparam nodesep 35
-skinparam ranksep 40
+skinparam nodesep 70
+skinparam ranksep 70
 
-title One student, lesson and date
 skinparam stateBackgroundColor #FFF2F3
 skinparam stateBorderColor #9D0012
+hide empty description
 state "Enrolled\nNo attendance record" as A
 state "Enrolled\nAttendance recorded" as B
 state "Unenrolled\nAttendance retained" as C
 state "Unenrolled\nNo attendance record" as D
-A -down-> B : mark
+[*] --> D
+D -up-> A : enrol
+A -down-> D : unenrol
+A --> B : mark
+B --> A : unmark
 B -down-> C : unenrol
-C -down-> D : unmark
+C -up-> B : enrol
+C -left-> D : unmark
+B --> B : mark / correct existing date
+C --> C : mark / correct existing date
+note bottom of D
+  Membership and attendance for one existing Student,
+  Lesson and matching-weekday date, initially unenrolled.
+  Guards such as schedule clashes still apply.
+  New dated records require current enrolment;
+  retained records remain correctable after unenrolment.
+end note
 @enduml

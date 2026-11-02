@@ -1,6 +1,6 @@
 @startuml
 ' Simplified domain draft by Vincent Lin with OpenAI Codex assistance.
-' Self-contained source; renderer: PlantUML 1.2025.4.
+' Self-contained source; renderer: PlantUML 1.2025.3.
 skinparam defaultFontName Arial
 skinparam defaultFontSize 15
 skinparam shadowing false
@@ -15,8 +15,7 @@ skinparam ranksep 40
 hide circle
 hide empty members
 
-title People share one record interface
-interface PersonRecord <<interface>> {
+class PersonRecord <<interface>> {
   + getId() : PersonId
   + getContactDetails() : ContactDetails
 }

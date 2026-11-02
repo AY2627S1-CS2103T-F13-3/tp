@@ -13,7 +13,6 @@ skinparam noteBorderColor #777777
 skinparam nodesep 35
 skinparam ranksep 40
 
-title Deletion checks stored references
 skinparam activityBackgroundColor #FFF2F3
 skinparam activityBorderColor #9D0012
 skinparam activityDiamondBackgroundColor #FFFBE6

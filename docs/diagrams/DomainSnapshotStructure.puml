@@ -15,7 +15,6 @@ skinparam ranksep 40
 hide circle
 hide empty members
 
-title A complete operational snapshot
 class PonHubDataState <<immutable>> {
   lessons : List<Lesson>
   attendance : List<Attendance>

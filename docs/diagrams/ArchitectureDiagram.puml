@@ -12,13 +12,16 @@ component "Storage\nProtected loading and snapshot persistence" as Storage #FFF0
 component "MainApp\nStartup wiring and separate preferences" as Main #EEEEEE
 Main ..> UI : wires
 Main ..> Logic : wires
+Main ..> Model : preferences types
+Main --> Storage : loads / saves preferences
 UI --> Logic : Logic API
+UI --> Model : reads record values
 Logic --> Model : stage / query / publish
 Logic --> Storage : load / save snapshot
-Storage ..> Model : canonical snapshot types
+Storage --> Model : constructs / decodes snapshots
 legend bottom
   Solid arrow: runtime call dependency
-  Dashed arrow: wiring or type dependency
+  Dashed arrow: wiring or record-type dependency
   Shared Commons helpers omitted for clarity.
 endlegend
 @enduml

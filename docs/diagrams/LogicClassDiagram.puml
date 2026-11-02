@@ -7,7 +7,7 @@ skinparam defaultFontName Arial
 skinparam defaultFontSize 14
 skinparam shadowing false
 skinparam classAttributeIconSize 0
-interface Logic <<interface>> #E1F2DC {
+class Logic <<interface>> #E5E5FA {
   execute(commandText)
 }
 class CanonicalLogicManager #E5E5FA
@@ -17,7 +17,7 @@ class CanonicalPeopleSession #E5E5FA {
 class CanonicalCommandExecutor #E5E5FA {
   execute(command)
 }
-interface "CanonicalCommandExecutor.\nStagedCommand" as StagedCommand <<interface>> #E5E5FA {
+class "CanonicalCommandExecutor.\nStagedCommand" as StagedCommand <<interface>> #E5E5FA {
   execute(staged, stagedView)
 }
 class CanonicalTransaction #FBE3E6 {
@@ -26,7 +26,7 @@ class CanonicalTransaction #FBE3E6 {
   hasOperationalChanges()
   commit()
 }
-interface "CanonicalCommandExecutor.\nSnapshotWriter" as Writer <<interface>> #FFF0BD {
+class "CanonicalCommandExecutor.\nSnapshotWriter" as Writer <<interface>> #E5E5FA {
   save(state)
 }
 CanonicalLogicManager ..|> Logic
@@ -36,9 +36,7 @@ CanonicalCommandExecutor ..> StagedCommand : calls on isolated copies
 CanonicalCommandExecutor ..> CanonicalTransaction : obtains via PeopleView
 CanonicalCommandExecutor --> Writer : injected callback
 CanonicalTransaction -[hidden]-> Writer
-legend bottom
-  Solid arrow: retained collaborator
-  Dashed arrow: use; hollow triangle: implements
+note as LogicScope
   Only command-boundary collaborators are shown.
-endlegend
+end note
 @enduml

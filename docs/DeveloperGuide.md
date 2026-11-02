@@ -219,7 +219,7 @@ Parsing errors and domain rule violations stop before step 3. Valid commands tha
 <figure class="dg-figure">
 <figcaption>UI controllers, panels and cards</figcaption>
 <div class="dg-ui-class-scroll" tabindex="0" role="region" aria-label="UI class diagram; scroll horizontally to see all classes">
-<a href="images/UiClassDiagram.png"><img src="images/UiClassDiagram.png" alt="UiManager implements Ui and creates MainWindow. MainWindow connects the UI components through Logic; each list panel creates its cards. The legend summarizes shared UiPart inheritance."></a>
+<a href="images/UiClassDiagram.png"><img src="images/UiClassDiagram.png" alt="UiManager implements Ui and creates MainWindow. MainWindow connects the UI components through Logic; each list panel creates its cards. A note summarizes shared UiPart inheritance."></a>
 </div>
 </figure>
 
@@ -512,9 +512,9 @@ Attendance records an outcome for one Student, one lesson and one date. It is st
 #### History after unenrolment
 
 <figure class="dg-figure">
-<figcaption>Unenrolment retains dated attendance</figcaption>
+<figcaption>Membership and dated attendance transitions</figcaption>
 <div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Unenrolment retains dated attendance">
-<a href="images/DomainAttendanceHistory.png"><img src="images/DomainAttendanceHistory.png" alt="For one Student, lesson and date, marking creates attendance, unenrolment retains it, and unmark removes the dated record."></a>
+<a href="images/DomainAttendanceHistory.png"><img src="images/DomainAttendanceHistory.png" alt="For one existing Student, lesson and date, enrolment and attendance change independently. Unenrolment retains attendance, unmark removes it, and retained dates remain correctable."></a>
 </div>
 </figure>
 

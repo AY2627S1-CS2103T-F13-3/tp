@@ -1,5 +1,5 @@
 @startuml
-' Renderer: PlantUML 1.2025.4, using committed style.puml unchanged.
+' Renderer: PlantUML 1.2025.3, using committed style.puml unchanged.
 ' Readability layout by Vincent with Codex assistance (#393); existing model/feature credit retained.
 !include style.puml
 skinparam ParticipantFontColor #FFFFFF
@@ -42,7 +42,32 @@ alt save fails
 else save succeeds
     writer --> executor : saved
 end
-newpage Successful-save publication and query refresh
+@enduml
+
+@startuml
+' Renderer: PlantUML 1.2025.3, using committed style.puml unchanged.
+' Readability layout by Vincent with Codex assistance (#393); existing model/feature credit retained.
+!include style.puml
+skinparam ParticipantFontColor #FFFFFF
+skinparam sequenceMessageAlign left
+skinparam maxMessageSize 280
+skinparam ParticipantPadding 5
+skinparam ArrowFontSize 14
+skinparam ArrowFontStyle normal
+skinparam defaultFontSize 14
+skinparam ParticipantFontSize 14
+skinparam noteFontSize 14
+participant "executor:\nCanonicalCommandExecutor" as executor LOGIC_COLOR
+participant "transaction:\nCanonicalTransaction" as transaction MODEL_COLOR
+participant "live:\nPonHubData" as live MODEL_COLOR
+participant "queries:\nLessonQueries" as queries MODEL_COLOR
+participant "retrieval:\nLessonRetrieval" as retrieval LOGIC_COLOR
+
+note over executor, retrieval
+  Continuation after the candidate was saved successfully.
+  Active search: Mon, 1600, Math, Mei, R1, sn/a.
+  L1's subject changes from Math to English.
+end note
 opt save succeeded
     executor -> transaction : commit()
     transaction -> live : resetData(candidate)
@@ -56,7 +81,7 @@ opt save succeeded
     note over queries, retrieval
       Same held/displayed list objects.
       Jamie's held list now has English L1.
-      Old search snapshot still has Math L1.
+      The active Math search no longer matches L1.
     end note
     transaction --> executor : committed
 end

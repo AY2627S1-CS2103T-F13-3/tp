@@ -17,7 +17,6 @@ skinparam sequenceParticipantBorderColor #FFFFFF
 skinparam sequenceParticipantFontColor #FFFFFF
 hide footbox
 
-title Lesson retrieval: one UI binding, switchable sources
 
 participant "window:MainWindow" as UI UI_COLOR
 participant "displayed:ObservableList" as Displayed LOGIC_COLOR
@@ -25,7 +24,9 @@ participant "retrieval:LessonRetrieval" as Retrieval LOGIC_COLOR
 participant "previous:ObservableList" as Previous MODEL_COLOR
 participant "selected:ObservableList" as Next MODEL_COLOR
 
-== Bind once at UI setup ==
+note over UI, Next
+  Bind once at UI setup
+end note
 UI -> Retrieval : getDisplayedLessons()\n(via Logic and session)
 Retrieval --> UI : same read-only observable list
 UI -> UI : Bind list and heading once\nvia LessonListPanel
@@ -34,7 +35,9 @@ note over Displayed, Retrieval
   one stable read-only wrapper to the UI.
 end note
 
-== Choose a result source ==
+note over UI, Next
+  Choose a result source
+end note
 UI -> Retrieval : Request lessons, search or lesson details\n(via Logic and commands)
 Retrieval -> Retrieval : Resolve request; set heading context
 note over Retrieval, Next
@@ -52,7 +55,9 @@ end
 Retrieval -> Displayed : Refresh backing contents\nfrom selected source
 Displayed -> UI : Notify registered list-change listener
 
-== Later changes ==
+note over UI, Next
+  Later changes
+end note
 Next -> Retrieval : Selected source changes\n(refresh listener)
 Retrieval -> Displayed : Refresh backing contents
 Displayed -> UI : Notify registered list-change listener
