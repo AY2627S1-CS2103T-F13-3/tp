@@ -7,15 +7,16 @@ title: Screenshot credits
 
 The images illustrate the development interface using fictitious records.
 
-Vincent Lin (`gugrusaurus`) created the original guide media. Zhu Zhi Yu
-(`ultramanarm`) refreshes the overview, navigation and attendance-history images. Both use OpenAI Codex
+Vincent Lin (`gugrusaurus`) created the original guide media and the current overview,
+navigation and attendance-detail images. Zhu Zhi Yu (`ultramanarm`) contributed earlier
+overview/navigation images and the retained attendance-history image. Both used OpenAI Codex
 assistance.
 
 | Image | Illustration |
 | --- | --- |
-| [Overview](Ui.png) | Two Students sharing one Lesson. |
-| [Lesson navigation](LessonBoardNavigation.png) | Student lessons beside an independent people filter. |
-| [Attendance details](AttendanceDetails.jpg) | Alex present and Jamie absent in the current roster. |
+| [Overview](Ui.png) | Alex and Jamie share L1 while the people panel shows Students. |
+| [Lesson navigation](LessonBoardNavigation.png) | Alex's lessons remain selected while the people panel shows Tutors. |
+| [Attendance details](AttendanceDetails.jpg) | Current Lesson information, with Alex present and Jamie absent in the current roster. |
 | [Attendance history](AttendanceHistory.png) | Jamie's retained absence, showing the current enrolment-status wording. |
 
 ## Other project media
