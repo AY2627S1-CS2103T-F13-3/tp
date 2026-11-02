@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import ponhub.logic.parser.PersonEditInput.Field;
 import ponhub.logic.parser.exceptions.ParseException;
+import ponhub.model.lesson.Subject;
 import ponhub.model.person.Address;
 import ponhub.model.person.Name;
 
@@ -77,6 +78,41 @@ public class SlashContactParserTest {
                 new LessonEditParser().parse(edit + " TU/Other")).getMessage());
         assertEquals("Repeated editlesson prefix 'tu/'.", assertThrows(ParseException.class, () ->
                 new LessonEditParser().parse(edit + " tu/Other")).getMessage());
+    }
+
+    @Test
+    public void parse_subjectStartingWithOAfterTutor_readsRequiredSubject() throws Exception {
+        // s/ is required by addlesson, so a lowercase s/o in the tutor value is the subject when no other s/ exists.
+        for (String arguments : List.of("d/Wed st/1100 et/1200 tu/Bob Ong s/o level math rm/R3",
+                "d/Wed st/1100 et/1200 s/o level math tu/Bob Ong rm/R3",
+                "tu/Bob Ong s/o level math d/Wed st/1100 et/1200 rm/R3")) {
+            LessonCreationInput input = new AddLessonParser().parse(arguments);
+            assertEquals(new Name("Bob Ong"), input.tutorName(), arguments);
+            assertEquals(new Subject("o level math"), input.subject(), arguments);
+        }
+        // Boundary: a single-letter subject directly before the next prefix.
+        LessonCreationInput shortSubject = new AddLessonParser().parse("d/Thu st/1100 et/1200 tu/Bob Ong s/o rm/R5");
+        assertEquals(new Name("Bob Ong"), shortSubject.tutorName());
+        assertEquals(new Subject("o"), shortSubject.subject());
+        // The last marker starts the subject, so an earlier one stays in the legal name.
+        LessonCreationInput bothMarkers = new AddLessonParser()
+                .parse("d/Thu st/1100 et/1200 tu/Ravi s/o Kumar s/o level math rm/R5");
+        assertEquals(new Name("Ravi s/o Kumar"), bothMarkers.tutorName());
+        assertEquals(new Subject("o level math"), bothMarkers.subject());
+    }
+
+    @Test
+    public void parse_tutorLegalNameWithSeparateSubject_keepsMarkersInName() throws Exception {
+        for (String arguments : List.of("d/Mon st/0900 et/1000 tu/Ravi s/o Kumar s/Math rm/R1",
+                "d/Mon st/0900 et/1000 s/Math tu/Ravi s/o Kumar rm/R1",
+                "d/Mon st/0900 et/1000 s/o level math tu/Anita d/o Kumar rm/R1")) {
+            LessonCreationInput input = new AddLessonParser().parse(arguments);
+            assertEquals(arguments.contains("Anita") ? new Name("Anita d/o Kumar") : new Name("Ravi s/o Kumar"),
+                    input.tutorName(), arguments);
+        }
+        // editlesson has no required subject, so its tutor value keeps a legal-name marker.
+        assertEquals(Optional.of(new Name("Ravi s/o Kumar")),
+                new LessonEditParser().parse("lid/L1 tu/Ravi s/o Kumar").tutorName());
     }
 
     @Test
