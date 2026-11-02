@@ -73,4 +73,4 @@ We are a team based in the [School of Computing, National University of Singapor
   * Maintain lesson/attendance feature documentation, domain diagrams, non-functional requirements and glossary.
   * Coordinate DevOps and packaged application verification.
 
-These responsibilities follow the [agreed shared-lesson contracts](DeveloperGuide.html#shared-lesson-target-contract). Each feature owner writes their own UG/DG sections, tests and applicable AI/reuse attribution as behavior is delivered; Ernest coordinates shared conventions and consistency.
+These responsibilities follow the [shared-lesson contracts](DeveloperGuide.html#shared-lesson-target-contract). Each feature owner writes their own UG/DG sections, tests and applicable AI/reuse attribution; Ernest coordinates shared conventions and consistency.
