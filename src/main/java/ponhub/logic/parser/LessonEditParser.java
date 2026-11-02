@@ -55,10 +55,14 @@ public final class LessonEditParser {
             throw new ParseException(MESSAGE_TUTOR_PHONE);
         }
         try {
-            return new Input(new LessonId(values.get("lid/")), optional(values, "d/", LessonDay::fromString),
-                    optional(values, "st/", LessonTime::new), optional(values, "et/", LessonTime::new),
-                    optional(values, "s/", Subject::new), optional(values, "tu/", Name::new),
-                    optional(values, "tp/", Phone::new), optional(values, "rm/", Room::new));
+            return new Input(new LessonId(values.get("lid/")),
+                    parseOptionalValue(values, "d/", LessonDay::fromString),
+                    parseOptionalValue(values, "st/", LessonTime::new),
+                    parseOptionalValue(values, "et/", LessonTime::new),
+                    parseOptionalValue(values, "s/", Subject::new),
+                    parseOptionalValue(values, "tu/", Name::new),
+                    parseOptionalValue(values, "tp/", Phone::new),
+                    parseOptionalValue(values, "rm/", Room::new));
         } catch (IllegalArgumentException failure) {
             throw new ParseException(failure.getMessage(), failure);
         }
@@ -92,7 +96,8 @@ public final class LessonEditParser {
         return values;
     }
 
-    private static <T> Optional<T> optional(Map<String, String> values, String prefix, ValueParser<T> parser) {
+    private static <T> Optional<T> parseOptionalValue(Map<String, String> values, String prefix,
+            ValueParser<T> parser) {
         return values.containsKey(prefix) ? Optional.of(parser.parse(values.get(prefix))) : Optional.empty();
     }
 

@@ -42,12 +42,12 @@ public final class AttendanceMarkParser {
         }
 
         AttendanceArguments parsed = AttendanceArguments.extract(arguments, "mark", PREFIXES, MESSAGE_ARGUMENTS);
-        Index studentIndex = ParserUtil.parseIndex(parsed.studentIndex());
+        Index studentIndex = ParserUtil.parseIndex(parsed.getStudentIndex());
         try {
             LessonId lessonId = new LessonId(parsed.requireValue("lid/"));
             LocalDate date = Attendance.parseDate(parsed.requireValue("d/"));
             AttendanceStatus status = AttendanceStatus.parse(parsed.requireValue("s/"));
-            boolean futureAcknowledged = parsed.optionalValue("ack/").map(value -> {
+            boolean futureAcknowledged = parsed.getOptionalValue("ack/").map(value -> {
                 if (!value.equalsIgnoreCase("future")) {
                     throw new IllegalArgumentException(MESSAGE_ACKNOWLEDGEMENT);
                 }

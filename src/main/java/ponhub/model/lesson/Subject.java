@@ -13,6 +13,8 @@ public final class Subject {
             "Subjects should contain 1 to 50 letters or digits, separated by single spaces or hyphens";
     public static final String VALIDATION_REGEX = "[\\p{L}\\p{N}]+(?:[ -][\\p{L}\\p{N}]+)*";
 
+    private static final int MAX_LENGTH = 50;
+
     private final String value;
 
     /**
@@ -38,7 +40,7 @@ public final class Subject {
     }
 
     private static boolean isNormalizedSubjectValid(String subject) {
-        return subject.codePointCount(0, subject.length()) <= 50 && subject.matches(VALIDATION_REGEX);
+        return subject.codePointCount(0, subject.length()) <= MAX_LENGTH && subject.matches(VALIDATION_REGEX);
     }
 
     public String getValue() {

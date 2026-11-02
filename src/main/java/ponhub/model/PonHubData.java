@@ -361,20 +361,6 @@ public final class PonHubData {
     }
 
     /**
-     * Returns all retained attendance records for an existing student in storage order.
-     * The returned list is an immutable snapshot.
-     *
-     * @throws NullPointerException if the student ID is null.
-     * @throws IllegalArgumentException if the student does not exist.
-     */
-    public List<Attendance> getAttendanceForStudent(PersonId studentId) {
-        requirePerson(studentId, PersonRole.STUDENT, MESSAGE_MISSING_STUDENT);
-        return getAttendance().stream()
-                .filter(record -> record.getStudentId().equals(studentId))
-                .toList();
-    }
-
-    /**
      * Returns all retained attendance records for an existing lesson in storage order.
      * The returned list is an immutable snapshot.
      *
@@ -427,17 +413,6 @@ public final class PonHubData {
             }
         }
         return Optional.empty();
-    }
-
-    /**
-     * Returns whether an existing lesson has roster or attendance references that block deletion.
-     *
-     * @throws NullPointerException if the lesson ID is null.
-     * @throws IllegalArgumentException if the lesson does not exist.
-     */
-    public boolean isLessonReferenced(LessonId lessonId) {
-        Lesson lesson = requireLesson(lessonId);
-        return getLessonDeletionBlocker(lesson).isPresent();
     }
 
     /**

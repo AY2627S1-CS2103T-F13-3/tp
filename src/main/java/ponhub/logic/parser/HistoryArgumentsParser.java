@@ -36,11 +36,11 @@ public final class HistoryArgumentsParser {
             return new Input(ParserUtil.parseIndex(stripped), Optional.empty(), Optional.empty(), Optional.empty());
         }
         AttendanceArguments parsed = AttendanceArguments.extract(stripped, "history", PREFIXES, MESSAGE_USAGE);
-        Index studentIndex = ParserUtil.parseIndex(parsed.studentIndex());
+        Index studentIndex = ParserUtil.parseIndex(parsed.getStudentIndex());
         try {
-            return new Input(studentIndex, parsed.optionalValue("lid/").map(LessonId::new),
-                    parsed.optionalValue("d/").map(Attendance::parseDate),
-                    parsed.optionalValue("s/").map(AttendanceStatus::parse));
+            return new Input(studentIndex, parsed.getOptionalValue("lid/").map(LessonId::new),
+                    parsed.getOptionalValue("d/").map(Attendance::parseDate),
+                    parsed.getOptionalValue("s/").map(AttendanceStatus::parse));
         } catch (IllegalArgumentException exception) {
             throw new ParseException(exception.getMessage(), exception);
         }

@@ -39,7 +39,7 @@ public final class AttendanceUnmarkParser {
         }
 
         AttendanceArguments parsed = AttendanceArguments.extract(arguments, "unmark", PREFIXES, MESSAGE_ARGUMENTS);
-        Index studentIndex = ParserUtil.parseIndex(parsed.studentIndex());
+        Index studentIndex = ParserUtil.parseIndex(parsed.getStudentIndex());
         try {
             LessonId lessonId = new LessonId(parsed.requireValue("lid/"));
             LocalDate date = Attendance.parseDate(parsed.requireValue("d/"));

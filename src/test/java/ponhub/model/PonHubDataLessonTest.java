@@ -2,6 +2,7 @@ package ponhub.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -247,18 +248,17 @@ public class PonHubDataLessonTest {
 
         List<Student> roster = data.getLessonRoster(firstLesson.getId());
         List<Lesson> studentLessons = data.getStudentLessons(firstStudent.getId());
-        List<Attendance> studentAttendance = data.getAttendanceForStudent(secondStudent.getId());
+        List<Attendance> retainedAttendance = data.getAttendance();
         List<Attendance> lessonAttendance = data.getAttendanceForLesson(firstLesson.getId());
 
         assertEquals(List.of(secondStudent, firstStudent), roster);
         assertEquals(List.of(firstLesson, secondLesson), studentLessons);
-        assertEquals(List.of(secondAttendance), studentAttendance);
+        assertEquals(List.of(firstAttendance, secondAttendance, historicalAttendance), retainedAttendance);
         assertEquals(List.of(firstAttendance, secondAttendance), lessonAttendance);
         assertTrue(data.getStudentLessons(attendanceOnlyStudent.getId()).isEmpty());
-        assertEquals(List.of(historicalAttendance), data.getAttendanceForStudent(attendanceOnlyStudent.getId()));
         assertThrows(UnsupportedOperationException.class, () -> roster.clear());
         assertThrows(UnsupportedOperationException.class, () -> studentLessons.clear());
-        assertThrows(UnsupportedOperationException.class, () -> studentAttendance.clear());
+        assertThrows(UnsupportedOperationException.class, () -> retainedAttendance.clear());
         assertThrows(UnsupportedOperationException.class, () -> lessonAttendance.clear());
 
         assertTrue(data.isPersonReferenced(firstStudent));
@@ -267,10 +267,12 @@ public class PonHubDataLessonTest {
         assertTrue(data.isPersonReferenced(secondTutorWithSameName));
         assertTrue(data.isPersonReferenced(attendanceOnlyStudent));
         assertFalse(data.isPersonReferenced(parent));
-        assertTrue(data.isLessonReferenced(firstLesson.getId()));
-        assertTrue(data.isLessonReferenced(secondLesson.getId()));
-        assertTrue(data.isLessonReferenced(thirdLesson.getId()));
-        assertFalse(data.isLessonReferenced(fourthLesson.getId()));
+        PonHubDataState retainedState = data.exportState();
+        assertThrows(IllegalArgumentException.class, () -> new PonHubData(data).removeLesson(firstLesson.getId()));
+        assertThrows(IllegalArgumentException.class, () -> new PonHubData(data).removeLesson(secondLesson.getId()));
+        assertThrows(IllegalArgumentException.class, () -> new PonHubData(data).removeLesson(thirdLesson.getId()));
+        assertEquals(fourthLesson, new PonHubData(data).removeLesson(fourthLesson.getId()));
+        assertSame(retainedState, data.exportState());
     }
 
     @Test
@@ -292,9 +294,8 @@ public class PonHubDataLessonTest {
         assertThrows(IllegalArgumentException.class, () -> data.getLessonRoster(new LessonId("L1")));
         assertThrows(IllegalArgumentException.class, () -> data.getStudentLessons(new PersonId("S99")));
         assertThrows(IllegalArgumentException.class, () -> data.getStudentLessons(firstTutor.getId()));
-        assertThrows(IllegalArgumentException.class, () -> data.getAttendanceForStudent(new PersonId("S99")));
         assertThrows(IllegalArgumentException.class, () -> data.getAttendanceForLesson(new LessonId("L1")));
-        assertThrows(IllegalArgumentException.class, () -> data.isLessonReferenced(new LessonId("L1")));
+        assertThrows(IllegalArgumentException.class, () -> data.removeLesson(new LessonId("L1")));
     }
 
     private PonHubData createDataWithAllocationHistory(long lastAllocatedLessonSequence) {

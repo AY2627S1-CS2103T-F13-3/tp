@@ -55,7 +55,7 @@ final class AttendanceArguments {
             }
             String value = ParserUtil.stripUnicodeBoundaryWhitespace(arguments.substring(valueStart, valueEnd));
             if (value.isEmpty()) {
-                throw new ParseException(commandNameCapitalized(commandName) + " prefix '" + prefix
+                throw new ParseException(capitalizeCommandName(commandName) + " prefix '" + prefix
                         + "' requires a non-blank value.");
             }
             values.put(prefix, value);
@@ -63,7 +63,7 @@ final class AttendanceArguments {
         return new AttendanceArguments(commandName, studentIndex, values);
     }
 
-    String studentIndex() {
+    String getStudentIndex() {
         return studentIndex;
     }
 
@@ -81,11 +81,11 @@ final class AttendanceArguments {
     /**
      * Returns an optional supported prefix value.
      */
-    Optional<String> optionalValue(String prefix) {
+    Optional<String> getOptionalValue(String prefix) {
         return Optional.ofNullable(values.get(prefix));
     }
 
-    private static String commandNameCapitalized(String commandName) {
+    private static String capitalizeCommandName(String commandName) {
         return Character.toUpperCase(commandName.charAt(0)) + commandName.substring(1);
     }
 }

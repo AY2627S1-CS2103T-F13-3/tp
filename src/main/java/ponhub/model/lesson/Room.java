@@ -16,6 +16,8 @@ public final class Room {
                     + "using letters or digits optionally separated by single hyphens";
     public static final String VALIDATION_REGEX = "[A-Z0-9]+(?:-[A-Z0-9]+)*";
 
+    private static final int MAX_LENGTH = 10;
+
     private final String value;
 
     /**
@@ -41,7 +43,7 @@ public final class Room {
     }
 
     private static boolean isNormalizedRoomValid(String room) {
-        return room.length() <= 10 && room.matches(VALIDATION_REGEX);
+        return room.length() <= MAX_LENGTH && room.matches(VALIDATION_REGEX);
     }
 
     public String getValue() {
