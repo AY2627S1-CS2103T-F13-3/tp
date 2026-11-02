@@ -20,11 +20,14 @@ public class SearchCriteriaParser {
     private static final Pattern PREFIX_PATTERN = Pattern.compile("(?<!\\S)([^\\s/]+/)",
             Pattern.UNICODE_CHARACTER_CLASS);
 
+    private static final Pattern AMBIGUOUS_SUBJECT_PATTERN = Pattern.compile("(?<!\\S)s/o(?=\\s|$)",
+            Pattern.UNICODE_CHARACTER_CLASS);
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
 
     /**
      * Parses arguments of the form {@code c/CATEGORY [PREFIX/VALUE]...}, excluding the command word.
-     * Prefixes are lowercase and may occur in any order. Category-only searches are valid.
+     * Prefixes are lowercase. Separate an ambiguous s/o subject from a preceding name with the category prefix,
+     * or put the subject first. Other prefixes may occur in any order. Category-only searches are valid.
      *
      * @throws ParseException If the input contains missing, blank, repeated, unsupported or invalid fields.
      */
@@ -51,6 +54,12 @@ public class SearchCriteriaParser {
             hasNext = FieldValueTokenizer.findNextPrefix(matcher, args, prefix);
             int valueEnd = hasNext ? matcher.start() : args.length();
             String value = ParserUtil.stripUnicodeBoundaryWhitespace(args.substring(valueStart, valueEnd));
+            if ((prefix.equals("n/") || prefix.equals("sn/") || prefix.equals("tu/"))
+                    && AMBIGUOUS_SUBJECT_PATTERN.matcher(value).find()) {
+                throw new ParseException("Ambiguous 's/o' after search name prefix '" + prefix + "'. "
+                        + "Search by a slash-free name fragment. If you meant an s/ subject beginning with 'o', "
+                        + "put it before name filters or immediately after c/CATEGORY.");
+            }
             if (prefix.equals("c/")) {
                 if (category != null) {
                     throw new ParseException("Repeated search prefix 'c/'.");

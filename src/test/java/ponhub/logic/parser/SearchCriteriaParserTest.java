@@ -183,8 +183,13 @@ public class SearchCriteriaParserTest {
             for (String prefix : new String[]{"n/", "sn/", "tu/"}) {
                 String category = prefix.equals("n/") ? "student" : "lesson";
                 String name = prefix + "Ravi " + marker + " Kumar";
-                String error = "Search filter '" + prefix
-                        + "' requires a non-blank value without slashes or line breaks.";
+                String error = marker.equals("s/o")
+                        ? "Ambiguous 's/o' after search name prefix '" + prefix + "'. "
+                                + "Search by a slash-free name fragment. "
+                                + "If you meant an s/ subject beginning with 'o', "
+                                + "put it before name filters or immediately after c/CATEGORY."
+                        : "Search filter '" + prefix
+                                + "' requires a non-blank value without slashes or line breaks.";
                 for (String arguments : new String[]{"c/" + category + " " + name,
                     name + " c/" + category, "c/" + category + " " + name + " s/Math d/Mon",
                     "d/Mon s/Math " + name + " c/" + category}) {
