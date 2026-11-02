@@ -17,8 +17,8 @@ title Resolve a displayed position once
 skinparam sequenceParticipantBackgroundColor #FFF2F3
 skinparam sequenceParticipantBorderColor #9D0012
 hide footbox
-participant Command
-participant PeopleView as View
+participant "enrol:CanonicalEnrolCommand" as Command
+participant "view:PeopleView" as View
 participant PersonIndexResolver as Resolver <<class>>
 Command -> View : getPeople()
 View --> Command : [S4, S9]

@@ -12,14 +12,14 @@ skinparam noteBackgroundColor #FFFBE6
 skinparam noteBorderColor #777777
 hide footbox
 
-title Enrolment flow (success)
-participant Logic
-participant "Candidate data" as Candidate
-participant Storage
-participant "Live data" as Live
-participant LessonQueries as Queries
+title Enrolment flow (helper calls grouped)
+participant "executor:CanonicalCommandExecutor" as Logic
+participant "candidate:PonHubData" as Candidate
+participant "writer:SnapshotWriter" as Storage
+participant "live:PonHubData" as Live
+participant "queries:LessonQueries" as Queries
 
-Logic -> Candidate : enrolStudent(S7, L1)
+Logic -> Candidate : Stage enrolment for S7 in L1
 activate Candidate
 note over Candidate
   Validate enrolment;
