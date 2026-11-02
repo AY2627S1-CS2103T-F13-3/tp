@@ -223,20 +223,6 @@ public class CanonicalLogicManagerTest {
         assertSame(session.lessonResultKindProperty(), logic.lessonResultKindProperty());
         assertEquals(LessonRetrieval.ResultKind.ALL_LESSONS, logic.lessonResultKindProperty().get());
         assertEquals(queries.getLessonList(), logic.getDisplayedLessons());
-        assertSame(queries.getLessonList(), logic.getLessonList());
-        assertSame(queries.getFilteredLessonList(), logic.getFilteredLessonList());
-        assertSame(queries.findLessonById(LessonQueryTestData.SHARED_LESSON).orElseThrow(),
-                logic.findLessonById(LessonQueryTestData.SHARED_LESSON).orElseThrow());
-        assertSame(queries.getStudentLessons(LessonQueryTestData.STUDENT_ONE),
-                logic.getStudentLessons(LessonQueryTestData.STUDENT_ONE));
-        assertSame(queries.getLessonRoster(LessonQueryTestData.SHARED_LESSON),
-                logic.getLessonRoster(LessonQueryTestData.SHARED_LESSON));
-        assertSame(queries.getTutorSchedule(LessonQueryTestData.TUTOR_ONE),
-                logic.getTutorSchedule(LessonQueryTestData.TUTOR_ONE));
-        assertSame(queries.getAttendanceHistory(LessonQueryTestData.STUDENT_ONE),
-                logic.getAttendanceHistory(LessonQueryTestData.STUDENT_ONE));
-        assertSame(queries.getAttendanceHistory(LessonQueryTestData.STUDENT_ONE, LessonQueryTestData.SHARED_LESSON),
-                logic.getAttendanceHistory(LessonQueryTestData.STUDENT_ONE, LessonQueryTestData.SHARED_LESSON));
         assertSame(session.getDisplayedHistory(), logic.getDisplayedHistory());
         assertSame(session.historyResultContextProperty(), logic.historyResultContextProperty());
         assertSame(session.historyViewActiveProperty(), logic.historyViewActiveProperty());

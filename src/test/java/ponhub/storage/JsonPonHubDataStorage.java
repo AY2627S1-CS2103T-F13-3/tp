@@ -14,12 +14,15 @@ import ponhub.commons.util.FileUtil;
 import ponhub.model.PonHubDataState;
 
 /**
- * Standalone canonical codec/file access. Runtime callers use {@link ProtectedPonHubDataStorage}
+ * Test-fixture canonical codec/file access. Runtime callers use {@link ProtectedPonHubDataStorage}
  * for startup validation and session write protection.
  */
 public final class JsonPonHubDataStorage {
     private final Path filePath;
 
+    /**
+     * Creates a standalone fixture reader and writer for the supplied test data path.
+     */
     public JsonPonHubDataStorage(Path filePath) {
         this.filePath = requireNonNull(filePath);
     }

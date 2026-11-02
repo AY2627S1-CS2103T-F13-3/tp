@@ -69,8 +69,8 @@ public class MainWindowResultResizeTest {
                 assertTrue(fixture.getRecordsPane().getHeight() >= 100);
                 fixture.enter("list");
                 assertEquals(height, fixture.getResultPane().getHeight(), 1);
-                ScrollPane scroll = (ScrollPane) fixture.result().lookup(".scroll-pane");
-                assertTrue(scroll.getViewportBounds().getHeight() >= fixture.result().getFont().getSize() + 2,
+                ScrollPane scroll = (ScrollPane) fixture.getResult().lookup(".scroll-pane");
+                assertTrue(scroll.getViewportBounds().getHeight() >= fixture.getResult().getFont().getSize() + 2,
                         "Short feedback must have room for a complete line.");
                 for (String selector : List.of("#viewNavigation", "#commandTextField", "#resultDisplay",
                         "#personListView", "#lessonListView", "#statusbarPlaceholder")) {
@@ -113,18 +113,18 @@ public class MainWindowResultResizeTest {
         runOnFxThread(fixture::layout);
         runOnFxThread(() -> {
             assertEquals(height, fixture.getResultPane().getHeight(), 1);
-            ScrollBar vertical = fixture.result().lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
+            ScrollBar vertical = fixture.getResult().lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
                     .filter(bar -> bar.getOrientation() == Orientation.VERTICAL).findFirst().orElseThrow();
             assertTrue(vertical.isVisible());
             vertical.setValue(vertical.getMax());
         });
         runOnFxThread(() -> {
             fixture.layout();
-            ScrollPane scroll = (ScrollPane) fixture.result().lookup(".scroll-pane");
+            ScrollPane scroll = (ScrollPane) fixture.getResult().lookup(".scroll-pane");
             Bounds viewport = scroll.lookup(".viewport").localToScene(
                     scroll.lookup(".viewport").getBoundsInLocal());
             Bounds content = scroll.getContent().localToScene(scroll.getContent().getBoundsInLocal());
-            assertTrue(fixture.result().getScrollTop() > 0);
+            assertTrue(fixture.getResult().getScrollTop() > 0);
             assertTrue(content.getMaxY() >= viewport.getMinY() && content.getMaxY() <= viewport.getMaxY() + 2,
                     "The complete search help must remain reachable from the compact startup height.");
             assertEquals(height, fixture.getResultPane().getHeight(), 1);
@@ -144,7 +144,7 @@ public class MainWindowResultResizeTest {
                 double resultHeight = fixture.getResultPane().getHeight();
                 Region footer = (Region) fixture.root().lookup("#statusbarPlaceholder");
                 double footerHeight = footer.getHeight();
-                double inputY = fixture.input().localToScene(0, 0).getY();
+                double inputY = fixture.getInput().localToScene(0, 0).getY();
                 double position = fixture.split().getDividerPositions()[0];
                 for (int cycle = 0; cycle < 3; cycle++) {
                     for (String command : List.of("help", "showlesson lid/L1 d/2026-10-19", "history 1", "help")) {
@@ -162,7 +162,7 @@ public class MainWindowResultResizeTest {
                         assertEquals(splitHeight, fixture.split().getHeight(), 0.01, context);
                         assertEquals(resultHeight, fixture.getResultPane().getHeight(), 0.01, context);
                         assertEquals(footerHeight, footer.getHeight(), 0.01, context);
-                        assertEquals(inputY, fixture.input().localToScene(0, 0).getY(), 0.01, context);
+                        assertEquals(inputY, fixture.getInput().localToScene(0, 0).getY(), 0.01, context);
                         assertEquals(position, fixture.split().getDividerPositions()[0], 0.000001, context);
                     }
                 }
@@ -238,7 +238,7 @@ public class MainWindowResultResizeTest {
             runOnFxThread(() -> {
                 fixture.resize(size[0], size[1]);
                 for (String feedback : List.of("", "Showing 2 students.", "Long feedback. ".repeat(100))) {
-                    fixture.result().setText(feedback);
+                    fixture.getResult().setText(feedback);
                     for (double position : new double[] {0, 0.13, 0.35, 0.65, 1, 0}) {
                         fixture.split().setDividerPositions(position);
                         fixture.layout();
@@ -282,23 +282,23 @@ public class MainWindowResultResizeTest {
             }
             // Select after the explicit list command; help must preserve this exact selection and draft.
             people.getSelectionModel().select(people.getItems().indexOf(selected));
-            fixture.input().setText("add r/student n/Unfinished");
-            Event.fireEvent(fixture.input(), new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F1,
+            fixture.getInput().setText("add r/student n/Unfinished");
+            Event.fireEvent(fixture.getInput(), new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F1,
                     false, false, false, false));
             fixture.layout();
-            assertEquals("add r/student n/Unfinished", fixture.input().getText());
+            assertEquals("add r/student n/Unfinished", fixture.getInput().getText());
             assertSame(selected, people.getSelectionModel().getSelectedItem());
             assertEquals(height, fixture.getResultPane().getHeight(), 1);
             MenuBar menu = (MenuBar) fixture.root().lookup("#menuBar");
             menu.getMenus().get(1).getItems().getFirst().fire();
             fixture.layout();
-            assertEquals("add r/student n/Unfinished", fixture.input().getText());
+            assertEquals("add r/student n/Unfinished", fixture.getInput().getText());
             assertSame(selected, people.getSelectionModel().getSelectedItem());
             assertEquals(height, fixture.getResultPane().getHeight(), 1);
-            assertFalse(fixture.result().isEditable());
-            assertTrue(fixture.result().isWrapText());
-            fixture.result().selectRange(0, 4);
-            assertEquals(fixture.result().getText().substring(0, 4), fixture.result().getSelectedText());
+            assertFalse(fixture.getResult().isEditable());
+            assertTrue(fixture.getResult().isWrapText());
+            fixture.getResult().selectRange(0, 4);
+            assertEquals(fixture.getResult().getText().substring(0, 4), fixture.getResult().getSelectedText());
         });
         assertEquals(fixture.originalData(), Files.readString(fixture.dataPath()));
     }
@@ -310,23 +310,23 @@ public class MainWindowResultResizeTest {
         runOnFxThread(() -> {
             fixture.resize(450, 330);
             fixture.split().setDividerPositions(0.7);
-            fixture.result().setText(feedback);
+            fixture.getResult().setText(feedback);
             fixture.layout();
         });
         runOnFxThread(fixture::layout);
         runOnFxThread(() -> {
-            ScrollBar vertical = fixture.result().lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
+            ScrollBar vertical = fixture.getResult().lookupAll(".scroll-bar").stream().map(ScrollBar.class::cast)
                     .filter(bar -> bar.getOrientation() == Orientation.VERTICAL).findFirst().orElseThrow();
             assertTrue(vertical.isVisible());
             vertical.setValue(vertical.getMax());
         });
         runOnFxThread(() -> {
             fixture.layout();
-            ScrollPane scroll = (ScrollPane) fixture.result().lookup(".scroll-pane");
+            ScrollPane scroll = (ScrollPane) fixture.getResult().lookup(".scroll-pane");
             Bounds viewport = scroll.lookup(".viewport").localToScene(
                     scroll.lookup(".viewport").getBoundsInLocal());
             Bounds content = scroll.getContent().localToScene(scroll.getContent().getBoundsInLocal());
-            assertTrue(fixture.result().getScrollTop() > 0);
+            assertTrue(fixture.getResult().getScrollTop() > 0);
             assertTrue(content.getMaxY() <= viewport.getMaxY() + 2,
                     "The end of the complete message must be reachable.");
             fixture.resize(853, 600);
@@ -399,11 +399,11 @@ public class MainWindowResultResizeTest {
             return (Region) root.lookup("#feedbackSection");
         }
 
-        private TextArea result() {
+        private TextArea getResult() {
             return (TextArea) root.lookup("#resultDisplay");
         }
 
-        private TextField input() {
+        private TextField getInput() {
             return (TextField) root.lookup("#commandTextField");
         }
 
@@ -420,8 +420,8 @@ public class MainWindowResultResizeTest {
         }
 
         private void enter(String command) {
-            input().setText(command);
-            Event.fireEvent(input(), new ActionEvent());
+            getInput().setText(command);
+            Event.fireEvent(getInput(), new ActionEvent());
             layout();
         }
     }

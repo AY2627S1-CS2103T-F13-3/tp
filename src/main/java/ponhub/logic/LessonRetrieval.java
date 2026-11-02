@@ -51,9 +51,9 @@ public final class LessonRetrieval {
     private final PeopleView peopleView;
     private final PonHubData data;
     private final ObservableList<LessonView> displayedLessons = FXCollections.observableArrayList();
-    private final ObservableList<LessonView> readOnlyDisplayed =
+    private final ObservableList<LessonView> readOnlyDisplayedLessons =
             FXCollections.unmodifiableObservableList(displayedLessons);
-    private final ObservableList<LessonView> detail = FXCollections.observableArrayList();
+    private final ObservableList<LessonView> lessonDetails = FXCollections.observableArrayList();
     private final ListChangeListener<LessonView> refresh = change -> refreshDisplayed();
     private LessonOrder order = LessonOrder.CREATION;
     private ObservableList<LessonView> selectedLessons;
@@ -80,7 +80,7 @@ public final class LessonRetrieval {
      * Returns the same read-only UI list across commands, committed changes and rollback.
      */
     public ObservableList<LessonView> getDisplayedLessons() {
-        return readOnlyDisplayed;
+        return readOnlyDisplayedLessons;
     }
 
     /**
@@ -109,12 +109,12 @@ public final class LessonRetrieval {
         if (studentIndex.isEmpty()) {
             context.set("All lessons" + suffix);
             select(queries.getLessonList(), ResultKind.ALL_LESSONS, input.order());
-            return readOnlyDisplayed;
+            return readOnlyDisplayedLessons;
         }
         var student = PersonIndexResolver.resolveStudent(studentIndex.get(), peopleView.getPeople());
         context.set("Student " + student.getId() + " · current lessons" + suffix);
         select(queries.getStudentLessons(student.getId()), ResultKind.STUDENT_LESSONS, input.order());
-        return readOnlyDisplayed;
+        return readOnlyDisplayedLessons;
     }
 
     /**
@@ -146,10 +146,10 @@ public final class LessonRetrieval {
         LessonDetailView snapshot = buildDetail(lesson, input.date());
         selectedDetailId = lesson.getId();
         selectedDate = input.date();
-        detail.setAll(snapshot);
+        lessonDetails.setAll(snapshot);
         context.set("Lesson " + lesson.getId() + input.date().map(date -> " · " + date).orElse("")
                 + " · current roster and retained attendance");
-        select(detail, ResultKind.DETAIL);
+        select(lessonDetails, ResultKind.DETAIL);
         return snapshot;
     }
 
@@ -157,12 +157,12 @@ public final class LessonRetrieval {
      * Refreshes only the selected detail after committed replacement; a failed save publishes nothing.
      */
     private void refreshDetail() {
-        if (selectedLessons != detail) {
+        if (selectedLessons != lessonDetails) {
             return;
         }
         Optional<Lesson> lesson = data.getLesson(selectedDetailId);
         if (lesson.isEmpty()) {
-            detail.clear();
+            lessonDetails.clear();
             context.set("Lesson " + selectedDetailId + " is no longer available");
             return;
         }
@@ -172,7 +172,7 @@ public final class LessonRetrieval {
             selectedDate = Optional.empty();
             context.set("Lesson " + selectedDetailId + " · current roster and retained attendance");
         }
-        detail.setAll(buildDetail(selectedLesson, selectedDate));
+        lessonDetails.setAll(buildDetail(selectedLesson, selectedDate));
     }
 
     private LessonDetailView buildDetail(Lesson lesson, Optional<LocalDate> date) {

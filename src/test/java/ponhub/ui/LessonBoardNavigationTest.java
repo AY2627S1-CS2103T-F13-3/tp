@@ -161,11 +161,11 @@ public class LessonBoardNavigationTest {
                 fixture.enter("history 4");
                 fixture.enter("showlesson lid/L10 d/2026-10-12");
                 fixture.assertLessonPane("");
-                assertTrue(fixture.detail().isVisible());
+                assertTrue(fixture.getDetailList().isVisible());
                 assertEquals(List.of("L10"), fixture.getLessonIds());
-                assertEquals("Math", ((Label) fixture.detail().lookup("#lessonHeading")).getText());
-                assertEquals("Lesson L10", ((Label) fixture.detail().lookup("#lessonIdentity")).getText());
-                Label schedule = (Label) fixture.detail().lookup("#lessonSchedule");
+                assertEquals("Math", ((Label) fixture.getDetailList().lookup("#lessonHeading")).getText());
+                assertEquals("Lesson L10", ((Label) fixture.getDetailList().lookup("#lessonIdentity")).getText());
+                Label schedule = (Label) fixture.getDetailList().lookup("#lessonSchedule");
                 assertEquals("Mon 0900-1000", schedule.getText());
                 assertEquals(people, fixture.getPeople().getItems());
                 assertSame(selected, fixture.getPeople().getSelectionModel().getSelectedItem());
@@ -341,17 +341,17 @@ public class LessonBoardNavigationTest {
             for (String id : List.of("lessonsButton", "studentLessonsButton", "attendanceButton")) {
                 for (int[] range : new int[][] {{3, 5}, {5, 3}, {4, 4}}) {
                     callOnFxThread(() -> {
-                        fixture.input().requestFocus();
-                        fixture.input().setText(WindowFixture.DRAFT);
-                        fixture.input().selectRange(range[0], range[1]);
+                        fixture.getInput().requestFocus();
+                        fixture.getInput().setText(WindowFixture.DRAFT);
+                        fixture.getInput().selectRange(range[0], range[1]);
                         fixture.mouseClick(id);
                         return null;
                     });
                     callOnFxThread(() -> {
-                        assertEquals(WindowFixture.DRAFT, fixture.input().getText());
-                        assertEquals(range[0], fixture.input().getAnchor(), id);
-                        assertEquals(range[1], fixture.input().getCaretPosition(), id);
-                        assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
+                        assertEquals(WindowFixture.DRAFT, fixture.getInput().getText());
+                        assertEquals(range[0], fixture.getInput().getAnchor(), id);
+                        assertEquals(range[1], fixture.getInput().getCaretPosition(), id);
+                        assertSame(fixture.getInput(), fixture.getRoot().getScene().getFocusOwner());
                         fixture.assertActiveOnly(id);
                         return null;
                     });
@@ -380,9 +380,9 @@ public class LessonBoardNavigationTest {
             for (String id : List.of("lessonsButton", "studentLessonsButton", "attendanceButton")) {
                 for (int[] range : new int[][] {{3, 5}, {5, 3}, {4, 4}}) {
                     callOnFxThread(() -> {
-                        fixture.input().requestFocus();
-                        fixture.input().setText(WindowFixture.DRAFT);
-                        fixture.input().selectRange(range[0], range[1]);
+                        fixture.getInput().requestFocus();
+                        fixture.getInput().setText(WindowFixture.DRAFT);
+                        fixture.getInput().selectRange(range[0], range[1]);
                         Button button = (Button) fixture.getRoot().lookup("#" + id);
                         var actions = new ArrayList<ActionEvent>();
                         EventHandler<ActionEvent> actionCounter = actions::add;
@@ -404,10 +404,10 @@ public class LessonBoardNavigationTest {
                         assertTrue(button.isFocusTraversable(), id);
                         button.removeEventHandler(ActionEvent.ACTION, actionCounter);
                         fixture.assertActiveOnly(id);
-                        assertEquals(WindowFixture.DRAFT, fixture.input().getText());
-                        assertEquals(range[0], fixture.input().getAnchor(), id);
-                        assertEquals(range[1], fixture.input().getCaretPosition(), id);
-                        assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
+                        assertEquals(WindowFixture.DRAFT, fixture.getInput().getText());
+                        assertEquals(range[0], fixture.getInput().getAnchor(), id);
+                        assertEquals(range[1], fixture.getInput().getCaretPosition(), id);
+                        assertSame(fixture.getInput(), fixture.getRoot().getScene().getFocusOwner());
                         return null;
                     });
                 }
@@ -439,14 +439,14 @@ public class LessonBoardNavigationTest {
                         if (index >= 0) {
                             fixture.getPeople().getSelectionModel().select(index);
                         }
-                        fixture.input().requestFocus();
+                        fixture.getInput().requestFocus();
                         fixture.draft();
                         fixture.mouseClick(id);
                         return null;
                     });
                     callOnFxThread(() -> {
                         fixture.assertDraft();
-                        assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
+                        assertSame(fixture.getInput(), fixture.getRoot().getScene().getFocusOwner());
                         fixture.assertHistoryPane();
                         assertEquals("Student S2 · attendance history · L10", fixture.label("historyContext"));
                         assertTrue(fixture.getFeedback().toLowerCase(Locale.ROOT).contains("student"));
@@ -471,7 +471,7 @@ public class LessonBoardNavigationTest {
                 fixture.window().show();
                 fixture.getPeople().getSelectionModel().select(3);
                 fixture.enter("history 4");
-                fixture.input().requestFocus();
+                fixture.getInput().requestFocus();
                 fixture.draft();
                 Button all = (Button) fixture.getRoot().lookup("#lessonsButton");
                 fixture.sendMouseEvent(all, MouseEvent.MOUSE_PRESSED, 5, 5);
@@ -479,7 +479,7 @@ public class LessonBoardNavigationTest {
                 fixture.sendMouseEvent(all, MouseEvent.MOUSE_RELEASED, -5, -5);
                 fixture.assertHistoryPane();
                 fixture.assertDraft();
-                assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
+                assertSame(fixture.getInput(), fixture.getRoot().getScene().getFocusOwner());
                 assertFalse(all.isArmed());
 
                 // A release without a fresh press must not reactivate the cancelled shortcut.
@@ -489,13 +489,13 @@ public class LessonBoardNavigationTest {
                 fixture.sendMouseEvent(all, MouseEvent.MOUSE_RELEASED, 5, 5);
                 fixture.assertHistoryPane();
                 fixture.assertDraft();
-                assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
+                assertSame(fixture.getInput(), fixture.getRoot().getScene().getFocusOwner());
                 for (MouseButton mouseButton : List.of(MouseButton.SECONDARY, MouseButton.MIDDLE)) {
                     fixture.sendMouseEvent(all, MouseEvent.MOUSE_PRESSED, 5, 5, mouseButton);
                     fixture.sendMouseEvent(all, MouseEvent.MOUSE_RELEASED, 5, 5, mouseButton);
                     fixture.assertHistoryPane();
                     fixture.assertDraft();
-                    assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
+                    assertSame(fixture.getInput(), fixture.getRoot().getScene().getFocusOwner());
                     assertFalse(all.isArmed());
 
                     // A second button's press/release must not fire or cancel a held primary gesture.
@@ -508,14 +508,14 @@ public class LessonBoardNavigationTest {
                     fixture.assertDraft();
                     assertTrue(all.isArmed());
                     assertTrue(all.isPressed());
-                    assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
+                    assertSame(fixture.getInput(), fixture.getRoot().getScene().getFocusOwner());
                     fixture.sendMouseEvent(all, MouseEvent.MOUSE_RELEASED, 5, 5);
                     fixture.assertLessonPane("lessonsButton");
                     assertFalse(all.isArmed());
                     assertFalse(all.isPressed());
                     fixture.assertDraft();
                     fixture.enter("history 4");
-                    fixture.input().requestFocus();
+                    fixture.getInput().requestFocus();
                     fixture.draft();
                 }
 
@@ -529,7 +529,7 @@ public class LessonBoardNavigationTest {
                             false, false, false, false));
                     fixture.assertActiveOnly(id);
                     assertSame(button, fixture.getRoot().getScene().getFocusOwner());
-                    assertEquals(WindowFixture.DRAFT, fixture.input().getText());
+                    assertEquals(WindowFixture.DRAFT, fixture.getInput().getText());
                 }
             }
             return null;
@@ -647,7 +647,7 @@ public class LessonBoardNavigationTest {
         callOnFxThread(() -> {
             try (WindowFixture fixture = createWindow()) {
                 fixture.window().show();
-                fixture.input().requestFocus();
+                fixture.getInput().requestFocus();
                 fixture.assertLessonPane("lessonsButton");
                 fixture.enter("lessons");
                 fixture.assertLessonPane("lessonsButton");
@@ -663,7 +663,7 @@ public class LessonBoardNavigationTest {
                     assertFalse(fixture.getFeedback().isBlank());
                     fixture.assertLessonPane("lessonsButton");
                     fixture.assertDraft();
-                    assertSame(fixture.input(), fixture.getRoot().getScene().getFocusOwner());
+                    assertSame(fixture.getInput(), fixture.getRoot().getScene().getFocusOwner());
                 }
                 assertTrue(fixture.getPeople().getItems().isEmpty());
                 assertTrue(fixture.getLessons().getItems().isEmpty());
@@ -839,12 +839,12 @@ public class LessonBoardNavigationTest {
                 assertEquals("Help is temporarily unavailable", fixture.getFeedback());
                 fixture.assertLessonPane("studentLessonsButton");
                 fixture.assertDraft();
-                fixture.input().setText("Unrelated key draft");
-                for (Node target : List.of(fixture.input(), fixture.getRoot())) {
+                fixture.getInput().setText("Unrelated key draft");
+                for (Node target : List.of(fixture.getInput(), fixture.getRoot())) {
                     Event.fireEvent(target, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.F2,
                             false, false, false, false));
                 }
-                assertEquals("Unrelated key draft", fixture.input().getText());
+                assertEquals("Unrelated key draft", fixture.getInput().getText());
                 assertEquals("Help is temporarily unavailable", fixture.getFeedback());
                 fixture.assertLessonPane("studentLessonsButton");
                 assertEquals(lessons, fixture.getLessonIds());
@@ -913,7 +913,7 @@ public class LessonBoardNavigationTest {
             getHistory().layout();
         }
 
-        private TextField input() {
+        private TextField getInput() {
             return (TextField) getRoot().lookup("#commandTextField");
         }
 
@@ -940,20 +940,20 @@ public class LessonBoardNavigationTest {
             return (ListView<AttendanceHistoryEntry>) getRoot().lookup("#historyListView");
         }
 
-        private ListView<?> detail() {
+        private ListView<?> getDetailList() {
             return (ListView<?>) getRoot().lookup("#lessonDetailList");
         }
 
         private List<String> getDetailLabels() {
             var labels = new ArrayList<String>();
-            for (int row = 0; row < detail().getItems().size(); row++) {
-                detail().scrollTo(row);
-                detail().layout();
-                labels.addAll(detail().lookupAll(".label").stream().map(Label.class::cast)
+            for (int row = 0; row < getDetailList().getItems().size(); row++) {
+                getDetailList().scrollTo(row);
+                getDetailList().layout();
+                labels.addAll(getDetailList().lookupAll(".label").stream().map(Label.class::cast)
                         .map(Label::getText).toList());
             }
-            detail().scrollTo(0);
-            detail().layout();
+            getDetailList().scrollTo(0);
+            getDetailList().layout();
             return labels;
         }
 
@@ -971,8 +971,8 @@ public class LessonBoardNavigationTest {
         }
 
         private void enter(String command) {
-            input().setText(command);
-            Event.fireEvent(input(), new ActionEvent());
+            getInput().setText(command);
+            Event.fireEvent(getInput(), new ActionEvent());
             layout();
         }
 
@@ -1015,14 +1015,14 @@ public class LessonBoardNavigationTest {
         }
 
         private void draft() {
-            input().setText(DRAFT);
-            input().selectRange(3, 8);
+            getInput().setText(DRAFT);
+            getInput().selectRange(3, 8);
         }
 
         private void assertDraft() {
-            assertEquals(DRAFT, input().getText());
-            assertEquals(3, input().getAnchor());
-            assertEquals(8, input().getCaretPosition());
+            assertEquals(DRAFT, getInput().getText());
+            assertEquals(3, getInput().getAnchor());
+            assertEquals(8, getInput().getCaretPosition());
         }
 
         private void assertLessonPane(String activeButton) {

@@ -8,13 +8,13 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import ponhub.model.query.AttendanceHistoryEntry.Status;
+import ponhub.model.attendance.AttendanceStatus;
 
 public class AttendanceHistoryEntryTest {
     @Test
     public void recordedStatuses_excludeUnrecordedOccurrences() {
         // The guides require missing attendance to remain an absent entry, never a third recorded status.
-        assertEquals(Set.of(Status.PRESENT, Status.ABSENT), EnumSet.allOf(Status.class));
-        assertThrows(IllegalArgumentException.class, () -> Status.valueOf("UNRECORDED"));
+        assertEquals(Set.of(AttendanceStatus.PRESENT, AttendanceStatus.ABSENT), EnumSet.allOf(AttendanceStatus.class));
+        assertThrows(IllegalArgumentException.class, () -> AttendanceStatus.valueOf("UNRECORDED"));
     }
 }

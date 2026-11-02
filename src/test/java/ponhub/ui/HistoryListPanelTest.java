@@ -26,6 +26,7 @@ import javafx.scene.control.ScrollBar;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import ponhub.MainApp;
+import ponhub.model.attendance.AttendanceStatus;
 import ponhub.model.lesson.LessonId;
 import ponhub.model.query.AttendanceHistoryEntry;
 import ponhub.model.query.AttendanceHistoryEntryData;
@@ -39,7 +40,7 @@ public class HistoryListPanelTest {
             IntStream.range(0, 60).forEach(index -> history.add(new AttendanceHistoryEntryData(
                     LessonQueryTestData.STUDENT_ONE, LessonId.fromSequenceNumber(Long.MAX_VALUE),
                     LocalDate.of(2026, 10, 5).minusDays(index),
-                    index % 2 == 0 ? AttendanceHistoryEntry.Status.PRESENT : AttendanceHistoryEntry.Status.ABSENT,
+                    index % 2 == 0 ? AttendanceStatus.PRESENT : AttendanceStatus.ABSENT,
                     index % 2 == 0)));
             Region panel = new HistoryListPanel(history, new SimpleStringProperty("Attendance history")).getRoot();
             Scene scene = new Scene(panel, 198, 220);
@@ -76,7 +77,7 @@ public class HistoryListPanelTest {
             // Refresh and clear the same live list after VirtualFlow has reused its cells.
             history.setAll(new AttendanceHistoryEntryData(LessonQueryTestData.STUDENT_ONE,
                     LessonQueryTestData.SHARED_LESSON, LocalDate.of(2026, 10, 5),
-                    AttendanceHistoryEntry.Status.ABSENT, false));
+                    AttendanceStatus.ABSENT, false));
             list.scrollTo(0);
             layout(panel);
             assertWrappedCard(list, history.getFirst());
@@ -137,7 +138,7 @@ public class HistoryListPanelTest {
             assertEquals("No recorded attendance. Missing dates are unrecorded.", placeholder.getText());
             var entry = new AttendanceHistoryEntryData(LessonQueryTestData.STUDENT_ONE,
                     LessonQueryTestData.SHARED_LESSON, LocalDate.of(2026, 10, 5),
-                    AttendanceHistoryEntry.Status.PRESENT, true);
+                    AttendanceStatus.PRESENT, true);
             history.add(entry);
             context.set("Student S1 · attendance history · L10");
             assertEquals("Showing 1 attendance record(s).", ((Label) panel.lookup("#historySummary")).getText());
@@ -152,7 +153,7 @@ public class HistoryListPanelTest {
             assertEquals("currently enrolled", label(previous, "attendanceMembership").getText());
             var former = new AttendanceHistoryEntryData(LessonQueryTestData.STUDENT_ONE,
                     LessonQueryTestData.SHARED_LESSON, LocalDate.of(2026, 10, 5),
-                    AttendanceHistoryEntry.Status.ABSENT, false);
+                    AttendanceStatus.ABSENT, false);
             cell.updateItem(former, false);
             assertFalse(previous.prefWidthProperty().isBound());
             Region replacement = (Region) cell.getGraphic();

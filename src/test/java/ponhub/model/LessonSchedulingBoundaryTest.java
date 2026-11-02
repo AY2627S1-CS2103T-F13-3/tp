@@ -51,9 +51,9 @@ public class LessonSchedulingBoundaryTest {
     @Test
     public void enrolStudent_containedLessonsWithDisjointNonEmptyRosters_succeedsAndRestores() {
         PonHubData data = new PonHubData(new PonHubDataState(registry.exportState(), List.of(), List.of(), 0));
-        Lesson outer = data.addLesson(firstTutor.getId(), slot("0900", "1200"),
+        Lesson outer = data.addLesson(firstTutor.getId(), createTimeSlot("0900", "1200"),
                 new Subject("Mathematics"), new Room("R1"));
-        Lesson inner = data.addLesson(secondTutor.getId(), slot("1000", "1100"),
+        Lesson inner = data.addLesson(secondTutor.getId(), createTimeSlot("1000", "1100"),
                 new Subject("Science"), new Room("R2"));
 
         Lesson enrolledOuter = data.enrolStudent(firstStudent.getId(), outer.getId());
@@ -73,19 +73,19 @@ public class LessonSchedulingBoundaryTest {
 
     @Test
     public void enrolStudent_containedTargetWithSharedStudent_rejectsAtomically() {
-        assertSharedStudentRejected(slot("0900", "1200"), slot("1000", "1100"));
+        assertSharedStudentRejected(createTimeSlot("0900", "1200"), createTimeSlot("1000", "1100"));
     }
 
     @Test
     public void enrolStudent_containingTargetWithSharedStudent_rejectsAtomically() {
-        assertSharedStudentRejected(slot("1000", "1100"), slot("0900", "1200"));
+        assertSharedStudentRejected(createTimeSlot("1000", "1100"), createTimeSlot("0900", "1200"));
     }
 
     @Test
     public void restore_sharedStudentContainmentInEitherCatalogueOrder_rejectsAtomically() {
-        Lesson outer = createLesson("L1", firstTutor, slot("0900", "1200"), "R1")
+        Lesson outer = createLesson("L1", firstTutor, createTimeSlot("0900", "1200"), "R1")
                 .withEnrolledStudent(firstStudent.getId());
-        Lesson inner = createLesson("L2", secondTutor, slot("1000", "1100"), "R2")
+        Lesson inner = createLesson("L2", secondTutor, createTimeSlot("1000", "1100"), "R2")
                 .withEnrolledStudent(firstStudent.getId());
         PonHubData data = new PonHubData(new PonHubDataState(registry.exportState(),
                 List.of(outer), List.of(), 1));
@@ -104,8 +104,9 @@ public class LessonSchedulingBoundaryTest {
 
     @Test
     public void addLesson_containmentWithSameTutorOrNormalizedRoom_rejectsAtomically() {
-        for (List<LessonTimeSlot> slots : List.of(List.of(slot("0900", "1200"), slot("1000", "1100")),
-                List.of(slot("1000", "1100"), slot("0900", "1200")))) {
+        for (List<LessonTimeSlot> slots : List.of(
+                List.of(createTimeSlot("0900", "1200"), createTimeSlot("1000", "1100")),
+                List.of(createTimeSlot("1000", "1100"), createTimeSlot("0900", "1200")))) {
             Lesson existing = createLesson("L1", firstTutor, slots.get(0), "R1")
                     .withEnrolledStudent(firstStudent.getId());
             PonHubData data = new PonHubData(new PonHubDataState(registry.exportState(),
@@ -118,7 +119,7 @@ public class LessonSchedulingBoundaryTest {
             assertThrows(IllegalArgumentException.class, () -> data.addLesson(secondTutor.getId(), slots.get(1),
                     new Subject("Science"), new Room(" r1 ")));
             assertSame(before, data.exportState());
-            Lesson next = data.addLesson(firstTutor.getId(), slot("1200", "1300"),
+            Lesson next = data.addLesson(firstTutor.getId(), createTimeSlot("1200", "1300"),
                     new Subject("Science"), new Room("R1"));
             assertEquals(new LessonId("L2"), next.getId());
         }
@@ -143,7 +144,7 @@ public class LessonSchedulingBoundaryTest {
                 .getEnrolledStudentIds());
         assertEquals(List.of(retained), data.getAttendance());
         assertEquals(2, data.exportState().lastAllocatedLessonSequence());
-        Lesson next = data.addLesson(firstTutor.getId(), slot("1200", "1300"),
+        Lesson next = data.addLesson(firstTutor.getId(), createTimeSlot("1200", "1300"),
                 new Subject("Science"), new Room("R1"));
         assertEquals(new LessonId("L3"), next.getId());
     }
@@ -153,7 +154,7 @@ public class LessonSchedulingBoundaryTest {
                 new Room(room), Set.of());
     }
 
-    private LessonTimeSlot slot(String start, String end) {
+    private LessonTimeSlot createTimeSlot(String start, String end) {
         return new LessonTimeSlot(LessonDay.MONDAY, new LessonTime(start), new LessonTime(end));
     }
 

@@ -67,10 +67,11 @@ public class CanonicalLessonCreationBoundaryTest {
         assertEquals(new PonHubDataState(fixture.initial.people(), List.of(expected), List.of(), 13),
                 fixture.session.getDataSnapshot());
         assertEquals(fixture.session.getDataSnapshot(), new CanonicalPeopleSession(fixture.path).getDataSnapshot());
-        assertEquals(SECOND_TUTOR, fixture.logic.findLessonById(expected.getId()).orElseThrow().getTutorId());
-        assertTrue(fixture.logic.getTutorSchedule(FIRST_TUTOR).isEmpty());
-        assertEquals(List.of(expected.getId()), fixture.logic.getTutorSchedule(SECOND_TUTOR).stream()
-                .map(LessonView::getLessonId).toList());
+        assertEquals(SECOND_TUTOR, fixture.session.getLessonQueries().findLessonById(expected.getId())
+                .orElseThrow().getTutorId());
+        assertTrue(fixture.session.getLessonQueries().getTutorSchedule(FIRST_TUTOR).isEmpty());
+        assertEquals(List.of(expected.getId()), fixture.session.getLessonQueries().getTutorSchedule(SECOND_TUTOR)
+                .stream().map(LessonView::getLessonId).toList());
         assertEquals(1, fixture.writes);
         fixture.assertViewRetained();
     }
@@ -150,7 +151,7 @@ public class CanonicalLessonCreationBoundaryTest {
                 candidate -> writes[0]++);
         Logic logic = new CanonicalLogicManager(session, new UserPrefs());
         var people = logic.getPersonRecords();
-        var lessons = logic.getLessonList();
+        var lessons = session.getLessonQueries().getLessonList();
         PonHubDataState before = session.getDataSnapshot();
 
         for (String command : new String[]{SECOND_TUTOR_COMMAND, "addlesson", "enrol 1 lid/L10",
@@ -160,14 +161,14 @@ public class CanonicalLessonCreationBoundaryTest {
             assertEquals(before, session.getDataSnapshot());
             assertArrayEquals(bytes, Files.readAllBytes(path));
             assertSame(people, logic.getPersonRecords());
-            assertSame(lessons, logic.getLessonList());
+            assertSame(lessons, session.getLessonQueries().getLessonList());
             assertTrue(people.isEmpty());
             assertTrue(lessons.isEmpty());
             assertEquals(0, writes[0]);
         }
     }
 
-    private static PonHubDataState state(long counter) {
+    private static PonHubDataState createState(long counter) {
         Tutor first = new Tutor(FIRST_TUTOR, createContacts("Mei Lim", "00123456"));
         Tutor second = new Tutor(SECOND_TUTOR, createContacts("MEI LIM", "00987654"));
         Tutor other = new Tutor(new PersonId("T9"), createContacts("Another Tutor", "00011122"));
@@ -196,7 +197,7 @@ public class CanonicalLessonCreationBoundaryTest {
 
         Fixture(String filename, long counter, boolean shouldFailFirstSave) throws Exception {
             path = directory.resolve(filename);
-            initial = state(counter);
+            initial = createState(counter);
             JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
             storage.saveData(initial);
             session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), candidate -> {
@@ -209,7 +210,7 @@ public class CanonicalLessonCreationBoundaryTest {
             logic = new CanonicalLogicManager(session, new UserPrefs());
             logic.execute("search c/tutor n/Mei");
             people = logic.getPersonRecords();
-            lessons = logic.getLessonList();
+            lessons = session.getLessonQueries().getLessonList();
             people.addListener((ListChangeListener<PersonRecord>) change -> notifications++);
             lessons.addListener((ListChangeListener<LessonView>) change -> notifications++);
         }
@@ -220,7 +221,7 @@ public class CanonicalLessonCreationBoundaryTest {
 
         void assertViewRetained() {
             assertSame(people, logic.getPersonRecords());
-            assertSame(lessons, logic.getLessonList());
+            assertSame(lessons, session.getLessonQueries().getLessonList());
             assertEquals(List.of(FIRST_TUTOR, SECOND_TUTOR), people.stream().map(PersonRecord::getId).toList());
             assertEquals(Optional.of(PersonRole.TUTOR), session.getRoleFilter());
         }

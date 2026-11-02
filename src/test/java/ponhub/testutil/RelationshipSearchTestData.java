@@ -22,14 +22,14 @@ public final class RelationshipSearchTestData {
     public static PonHubData createData() {
         var base = LessonQueryTestData.createData().exportState();
         PeopleRegistry people = new PeopleRegistry(base.people());
-        people.addParent(contact("Pat Tan", "0987654")); // Same name, different exact number, unlinked.
-        people.addParent(contact("Unassigned Parent", "00888888")); // S3 has no lessons.
-        people.addParent(contact("Other Parent", "00987654")); // Same number as P1, distinct identity.
+        people.addParent(createContacts("Pat Tan", "0987654")); // Same name, different exact number, unlinked.
+        people.addParent(createContacts("Unassigned Parent", "00888888")); // S3 has no lessons.
+        people.addParent(createContacts("Other Parent", "00987654")); // Same number as P1, distinct identity.
         return new PonHubData(new PonHubDataState(people.exportState(), base.lessons(), base.attendance(),
                 base.lastAllocatedLessonSequence()));
     }
 
-    private static ContactDetails contact(String name, String phone) {
+    private static ContactDetails createContacts(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.of(new Phone(phone)), Optional.empty(), Optional.empty());
     }
 }

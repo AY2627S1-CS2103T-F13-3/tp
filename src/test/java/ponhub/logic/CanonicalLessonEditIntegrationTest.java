@@ -146,14 +146,14 @@ public class CanonicalLessonEditIntegrationTest {
         assertEquals(new PersonId("S1"), currentHistory.getStudentId());
         assertEquals(new LessonId("L1"), currentHistory.getLessonId());
         assertTrue(currentHistory.isCurrentlyEnrolled());
-        assertEquals(AttendanceHistoryEntry.Status.PRESENT, currentHistory.getStatus());
+        assertEquals(AttendanceStatus.PRESENT, currentHistory.getStatus());
         assertEquals("Showing 1 attendance record(s).",
                 session.execute("history 2 lid/L1").getFeedbackToUser());
         AttendanceHistoryEntry formerHistory = session.getDisplayedHistory().getFirst();
         assertEquals(new PersonId("S2"), formerHistory.getStudentId());
         assertEquals(new LessonId("L1"), formerHistory.getLessonId());
         assertFalse(formerHistory.isCurrentlyEnrolled());
-        assertEquals(AttendanceHistoryEntry.Status.ABSENT, formerHistory.getStatus());
+        assertEquals(AttendanceStatus.ABSENT, formerHistory.getStatus());
 
         PonHubDataState afterEdit = session.getDataSnapshot();
         assertEquals(lessonIds, afterEdit.lessons().stream().map(Lesson::getId).toList());

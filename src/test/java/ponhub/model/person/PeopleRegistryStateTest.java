@@ -68,8 +68,8 @@ public class PeopleRegistryStateTest {
                 List.of(first, sameIdDifferentContact), createCounters(1, 0, 0)));
 
         for (PersonRole role : PersonRole.values()) {
-            PersonRecord original = record(role, 1, "Alex Tan");
-            PersonRecord duplicate = record(role, 2, "Alex  TAN ");
+            PersonRecord original = createPerson(role, 1, "Alex Tan");
+            PersonRecord duplicate = createPerson(role, 2, "Alex  TAN ");
             assertThrows(DuplicatePersonException.class, () -> new PeopleRegistryState(
                     List.of(original, duplicate), createCounters(2, 2, 2)));
         }
@@ -77,8 +77,8 @@ public class PeopleRegistryStateTest {
 
     @Test
     public void constructor_sameContactAcrossRoles_preservesDistinctRecords() {
-        List<PersonRecord> records = List.of(record(PersonRole.PARENT, 1, "Alex Tan"),
-                record(PersonRole.STUDENT, 1, "Alex Tan"), record(PersonRole.TUTOR, 1, "Alex Tan"));
+        List<PersonRecord> records = List.of(createPerson(PersonRole.PARENT, 1, "Alex Tan"),
+                createPerson(PersonRole.STUDENT, 1, "Alex Tan"), createPerson(PersonRole.TUTOR, 1, "Alex Tan"));
 
         assertEquals(records, new PeopleRegistryState(records, createCounters(1, 1, 1)).getPeople());
     }
@@ -86,7 +86,7 @@ public class PeopleRegistryStateTest {
     @Test
     public void constructor_unicodeNamesAndOptionalContacts_preservesDuplicateRulesForEveryRole() {
         for (PersonRole role : PersonRole.values()) {
-            PersonRecord original = record(role, 1, "José Santos");
+            PersonRecord original = createPerson(role, 1, "José Santos");
             ContactDetails changedContacts = new ContactDetails(new Name("\u00a0JOSE\u0301   SANTOS\u2003"),
                     Optional.of(new Phone("00012345")), Optional.of(new Email("changed@example.com")),
                     Optional.of(new Address("Changed address")));
@@ -99,7 +99,7 @@ public class PeopleRegistryStateTest {
 
             assertThrows(DuplicatePersonException.class, () -> new PeopleRegistryState(
                     List.of(original, duplicate), createCounters(2, 2, 2)), role.toString());
-            PersonRecord unaccented = record(role, 2, "Jose Santos");
+            PersonRecord unaccented = createPerson(role, 2, "Jose Santos");
             List<PersonRecord> distinctNames = List.of(original, unaccented);
             assertEquals(distinctNames, new PeopleRegistryState(distinctNames, createCounters(2, 2, 2)).getPeople());
         }
@@ -120,7 +120,7 @@ public class PeopleRegistryStateTest {
     @Test
     public void constructor_differentRelevantPhones_preservesLeadingZerosForEveryRole() {
         for (PersonRole role : PersonRole.values()) {
-            PersonRecord original = record(role, 1, "Alex Tan");
+            PersonRecord original = createPerson(role, 1, "Alex Tan");
             ContactDetails changedContacts = new ContactDetails(new Name("Alex Tan"),
                     Optional.of(new Phone("12345")), Optional.empty(), Optional.empty());
             PersonRecord differentPhone = switch (role) {
@@ -142,7 +142,7 @@ public class PeopleRegistryStateTest {
             String suffix = "" + (char) ('A' + sequence / (26 * 26))
                     + (char) ('A' + sequence / 26 % 26) + (char) ('A' + sequence % 26);
             for (PersonRole role : PersonRole.values()) {
-                rows.add(record(role, sequence, "Load Test " + suffix));
+                rows.add(createPerson(role, sequence, "Load Test " + suffix));
             }
         }
         Map<PersonRole, Long> allocationHistory = createCounters(2000, 3000, 4000);
@@ -150,7 +150,7 @@ public class PeopleRegistryStateTest {
         assertEquals(rows, state.getPeople());
         assertEquals(allocationHistory, state.getLastAllocatedSequences());
 
-        rows.add(record(PersonRole.STUDENT, 2000, "LOAD TEST AAB"));
+        rows.add(createPerson(PersonRole.STUDENT, 2000, "LOAD TEST AAB"));
         assertThrows(DuplicatePersonException.class, () -> new PeopleRegistryState(rows, allocationHistory));
         assertEquals(3000, state.getPeople().size());
         assertEquals(allocationHistory, state.getLastAllocatedSequences());
@@ -191,7 +191,7 @@ public class PeopleRegistryStateTest {
                 new Phone("00012345"));
     }
 
-    private static PersonRecord record(PersonRole role, long sequence, String name) {
+    private static PersonRecord createPerson(PersonRole role, long sequence, String name) {
         PersonId id = PersonId.of(role, sequence);
         return switch (role) {
             case STUDENT -> createStudent(id.toString(), name);

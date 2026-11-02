@@ -304,7 +304,7 @@ with a `SnapshotWriter` callback bound to `ProtectedPonHubDataStorage.saveData`.
 failing writer to verify that a save error prevents proposed changes from reaching live records,
 allocation counters and views.
 
-`JsonPonHubDataStorage` provides a standalone file wrapper for tests and utilities, whereas the running application always uses `ProtectedPonHubDataStorage` so that rejected startup files can never be overwritten.
+`JsonPonHubDataStorage` is a test-source fixture wrapper for standalone JSON file access. The running application uses `ProtectedPonHubDataStorage` so that rejected startup files can never be overwritten.
 
 ### 3.6 Common utilities
 
