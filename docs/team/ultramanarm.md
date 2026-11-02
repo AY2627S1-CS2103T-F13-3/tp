@@ -12,7 +12,7 @@ into one application, reducing the need to maintain separate contact lists and s
 My main responsibilities were people-record management, testing and representative sample data,
 and the Developer Guide's target user profile, value proposition and prioritised user stories.
 I also contributed runtime integration, usability improvements, retrieval extensions and peer review.
-The examples below describe merged contributions as of **1 November 2026**.
+The examples below describe merged contributions.
 
 **Contribution links:** [Code on RepoSense](https://NUS-CS2103-AY2627-S1.github.io/tp-dashboard/?search=ultramanarm&breakdown=true)
 | [My pull requests](https://github.com/AY2627S1-CS2103T-F13-3/tp/pulls?q=is%3Apr+author%3Aultramanarm)
@@ -134,7 +134,9 @@ I also coordinated release-readiness work, dependencies and verification evidenc
 PonHub builds on AddressBook-Level3 and the libraries credited in the
 [Developer Guide acknowledgements](../DeveloperGuide.html#acknowledgements).
 I used OpenAI Codex across implementation, tests, documentation, review and verification support,
-including preparation of this portfolio. I remain responsible for my contributions.
+including preparation of this portfolio. I also used Claude (Anthropic) for the stored-subject
+compatibility fix, UML diagram corrections, manual-check tool cleanup, AboutUs portrait and wording
+updates, and review support. I remain responsible for my contributions.
 Vincent's underlying persistence work, Benjamin's core retrieval and view features, Yang Shuo's lesson
 and attendance features, and Ernest's help and person-edit command work retain their authorship;
 my integration and extensions above build on those contributions.

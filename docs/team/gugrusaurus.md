@@ -11,8 +11,7 @@ reducing the need to maintain separate contact lists and spreadsheets.
 
 My main responsibilities were saving and validated loading, complete data snapshots, transaction
 coordination and recovery guidance. I also contributed UI improvements, testing, documentation,
-release materials and deliverable coordination. The examples below describe merged contributions
-as of **2 November 2026**.
+release materials and deliverable coordination. The examples below describe merged contributions.
 
 **Contribution links:** [Code on RepoSense](https://NUS-CS2103-AY2627-S1.github.io/tp-dashboard/?search=gugrusaurus&breakdown=true)
 | [My pull requests](https://github.com/AY2627S1-CS2103T-F13-3/tp/pulls?q=is%3Apr+author%3Agugrusaurus)
