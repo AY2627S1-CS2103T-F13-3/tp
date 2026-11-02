@@ -1,5 +1,15 @@
 // Placeholder to allow overriding predefined variables smoothly.
 
+// Bright orange is reserved for the black masthead. Dark orange keeps text
+// and interactive states readable on the light guide pages.
+$ponhub-black: #101010;
+$ponhub-orange: #ff9900;
+$ponhub-link: #a34800;
+$link-base-color: $ponhub-link;
+$link-visited-color: #713600;
+$code-background-color: #fff3e6;
+$on-medium: 800px;
+
 //Bootstrap's default
 $white:    #fff !default;
 $gray-100: #f8f9fa !default;
@@ -23,7 +33,7 @@ $green:   #28a745 !default;
 $teal:    #20c997 !default;
 $cyan:    #17a2b8 !default;
 
-$primary:       $blue !default;
+$primary:       $ponhub-link !default;
 $secondary:     $gray-600 !default;
 $success:       $green !default;
 $info:          $cyan !default;

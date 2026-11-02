@@ -108,9 +108,9 @@ public class ParentStudentEditWarningTest {
     public void edit_failedSaveAndValidation_doNotReturnWarningOrPublishUntilSuccessfulRetry() throws Exception {
         CanonicalPeopleSession setup = fixture();
         Path path = setup.getDataFilePath();
-        AtomicBoolean failSave = new AtomicBoolean(true);
+        AtomicBoolean shouldFailSave = new AtomicBoolean(true);
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
-            if (failSave.get()) {
+            if (shouldFailSave.get()) {
                 throw new IOException("Injected relationship edit save failure");
             }
             new JsonPonHubDataStorage(path).saveData(state);
@@ -127,7 +127,7 @@ public class ParentStudentEditWarningTest {
         assertArrayEquals(bytes, Files.readAllBytes(path));
         assertThrows(CommandException.class, () -> session.execute("edit 1 p/"));
         assertSame(before, session.getDataSnapshot());
-        failSave.set(false);
+        shouldFailSave.set(false);
         assertTrue(session.execute("edit 1 p/90000000").getFeedbackToUser().contains("P1 / S1, P1 / S2"));
         assertTrue(session.getPeople().isEmpty());
     }

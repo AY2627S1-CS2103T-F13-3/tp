@@ -1,0 +1,21 @@
+<section class="command-list-reference" aria-labelledby="command-list-reference-heading">
+  <h2 id="command-list-reference-heading" class="command-list-reference-heading">Command group reference</h2>
+  {% for key in page.command_lists %}
+  {% assign command_group = site.data.command_lists[key] %}
+  <section id="command-list-{{ key | escape }}" class="command-list-panel" aria-labelledby="command-list-title-{{ key | escape }}" aria-describedby="command-list-description-{{ key | escape }}">
+    <div class="command-list-panel-header">
+      <h3 id="command-list-title-{{ key | escape }}">{{ command_group.title | escape }}</h3>
+      <button type="button" class="command-list-close" popovertarget="command-list-{{ key | escape }}" popovertargetaction="hide" aria-label="Close {{ command_group.title | escape }}" hidden>Close</button>
+    </div>
+    <p id="command-list-description-{{ key | escape }}" class="command-list-description">{{ command_group.description | escape }}</p>
+    <dl class="command-list-groups">
+      {% for group in command_group.groups %}
+      <div>
+        <dt>{{ group.title | escape }}</dt>
+        <dd>{% for command in group.commands %}<code>{{ command | escape }}</code>{% unless forloop.last %} {% endunless %}{% endfor %}</dd>
+      </div>
+      {% endfor %}
+    </dl>
+  </section>
+  {% endfor %}
+</section>

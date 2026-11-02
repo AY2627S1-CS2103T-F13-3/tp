@@ -199,8 +199,13 @@ public final class PonHubData {
         List<Lesson> lessons = new ArrayList<>(getLessons());
         lessons.add(lesson);
 
-        PonHubDataState replacement = new PonHubDataState(state.get().people(), lessons, state.get().attendance(),
-                lessonId.getSequenceNumber());
+        PonHubDataState replacement;
+        try {
+            replacement = new PonHubDataState(state.get().people(), lessons, state.get().attendance(),
+                    lessonId.getSequenceNumber());
+        } catch (PonHubDataState.ScheduleClashException failure) {
+            throw new IllegalArgumentException(failure.getCreationMessage(), failure);
+        }
         state.set(replacement);
         return lesson;
     }

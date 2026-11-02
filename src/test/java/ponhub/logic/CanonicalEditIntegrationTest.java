@@ -184,11 +184,11 @@ public class CanonicalEditIntegrationTest {
         Path path = fixture();
         for (IOException failure : List.of(new IOException("disk failure"),
                 new AccessDeniedException(path.toString()))) {
-            AtomicBoolean failSave = new AtomicBoolean(true);
+            AtomicBoolean shouldFailSave = new AtomicBoolean(true);
             AtomicInteger saves = new AtomicInteger();
             CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
                 saves.incrementAndGet();
-                if (failSave.get()) {
+                if (shouldFailSave.get()) {
                     throw failure;
                 }
                 new JsonPonHubDataStorage(path).saveData(state);
@@ -207,7 +207,7 @@ public class CanonicalEditIntegrationTest {
             assertSame(person, session.getPeople().getFirst());
             assertSame(contexts, session.personSearchContextProperty().get());
             assertArrayEquals(bytes, Files.readAllBytes(path));
-            failSave.set(false);
+            shouldFailSave.set(false);
             session.execute("edit 1 n/Changed Student");
             assertTrue(session.getPeople().isEmpty());
             assertEquals(2, saves.get());

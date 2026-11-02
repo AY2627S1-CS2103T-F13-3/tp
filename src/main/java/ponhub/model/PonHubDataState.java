@@ -127,18 +127,35 @@ public record PonHubDataState(PeopleRegistryState people, List<Lesson> lessons, 
      */
     private static void rejectOverlap(Lesson earlier, Lesson lesson) {
         if (lesson.getTutorId().equals(earlier.getTutorId())) {
-            throw new IllegalArgumentException("Tutor schedule overlap between " + earlier.getId()
-                    + " and " + lesson.getId() + ".");
+            throw new ScheduleClashException("Tutor", earlier.getId(), lesson.getId());
         }
         if (lesson.getRoom().equals(earlier.getRoom())) {
-            throw new IllegalArgumentException("Room schedule overlap between " + earlier.getId()
-                    + " and " + lesson.getId() + ".");
+            throw new ScheduleClashException("Room", earlier.getId(), lesson.getId());
         }
         for (PersonId student : lesson.getEnrolledStudentIds()) {
             if (earlier.hasEnrolledStudent(student)) {
-                throw new IllegalArgumentException("Student " + student + " schedule overlap between "
-                        + earlier.getId() + " and " + lesson.getId() + ".");
+                throw new ScheduleClashException("Student " + student, earlier.getId(), lesson.getId());
             }
+        }
+    }
+
+    /**
+     * Retains the conflicting resource and existing lesson for creation-specific feedback.
+     * Other validation paths keep the normal diagnostic naming both lessons.
+     */
+    static final class ScheduleClashException extends IllegalArgumentException {
+        private final String creationMessage;
+
+        private ScheduleClashException(String resource, LessonId earlierId, LessonId laterId) {
+            super(resource + " schedule overlap between " + earlierId + " and " + laterId + ".");
+            creationMessage = resource + " schedule overlap with " + earlierId + ".";
+        }
+
+        /**
+         * Returns feedback for a new lesson, excluding its uncommitted candidate ID.
+         */
+        String getCreationMessage() {
+            return creationMessage;
         }
     }
 

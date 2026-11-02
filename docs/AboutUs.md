@@ -25,7 +25,7 @@ We are a team based in the [School of Computing, National University of Singapor
 
 <img src="images/gugrusaurus.png" width="200px" alt="Vincent Lin">
 
-[[github](https://github.com/gugrusaurus)]
+[[github](https://github.com/gugrusaurus)] [[PPP](team/gugrusaurus.html)]
 
 * Role: Developer, Deliverables and Deadlines, Documentation
 * Responsibilities:

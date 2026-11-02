@@ -43,10 +43,9 @@ checks. Run it from the repository root in a POSIX shell with Git that supports 
 .github/run-checks.sh
 ```
 
-If Git reports that Perl-compatible regular expressions are unavailable, those checks have not succeeded;
-use a Git build with that support or inspect the Linux CI result.
-The workflows in `.github/workflows/` define the actual platform checks. A local Mac pass does not establish
-a Windows/Linux pass, and CI build/test success does not establish packaged GUI acceptance.
+If Git reports that Perl-compatible regular expressions are unavailable, use a Git build with that
+support or inspect the Linux CI result. Use `.github/workflows/` to identify each platform's checks
+and the DG's manual-testing instructions for packaged GUI checks.
 
 ### Selecting tests during development
 
@@ -92,7 +91,7 @@ After a Gradle run, open the local reports:
 | Coverage XML from `coverage` | `build/reports/jacoco/coverage/coverage.xml` |
 
 `test` also finalizes with `jacocoTestReport`, whose HTML is at
-`build/reports/jacoco/test/html/index.html`. Coverage describes executed code, not correctness or a required percentage.
+`build/reports/jacoco/test/html/index.html`. Coverage reports show executed lines and branches.
 After a filtered run, reports cover that selection; rerun `check coverage` to obtain the full suite's result.
 
 When a check fails, record the source commit, command, OS/JDK, failing test or task and report details
@@ -102,6 +101,5 @@ checks after resolving the cause. Summarize actual failures and skips in the PR.
 reuse the [DG procedure](DeveloperGuide.html#appendix-instructions-for-manual-testing) and record the exact artifact
 and environment tested rather than copying the procedure or repeating another owner's acceptance campaign.
 
-Optional [packaged UI diagnostic agents](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/tools/manual-checks/README.md)
-can supplement these checks using a supplied JAR and disposable fictitious data. They do not replace
-the DG procedures or establish acceptance of an untested platform/display configuration.
+Use the optional [packaged UI diagnostic agents](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/tools/manual-checks/README.md)
+with a supplied JAR and disposable fictitious data for focused command, keyboard and layout checks.

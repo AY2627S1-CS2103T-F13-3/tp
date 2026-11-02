@@ -59,8 +59,8 @@ The packaged user launch does not require `-ea`.
    while editing; `./gradlew check coverage` remains the repository validation path.
 3. **Run focused checks, then repository checks.** Use the [Testing guide](Testing.html) for selection and reports,
    [Logging](Logging.html) for startup diagnosis, and [Documentation](Documentation.html#build-and-preview-locally)
-   when changing the website. GitHub Actions runs the configured checks on pushes and pull requests;
-   inspect the actual run, including any fork Actions settings, before reporting CI as passed.
+   when changing the website. Inspect GitHub Actions results for pushes and pull requests, including
+   any fork Actions settings needed to run the configured checks.
 
 PonHub evolved from AddressBook-Level3. Its upstream [tracing](https://se-education.org/guides/tutorials/ab3TracingCode.html),
 [adding a command](https://se-education.org/guides/tutorials/ab3AddRemark.html) and

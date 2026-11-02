@@ -1,0 +1,45 @@
+operational-mutations:
+  title: Operational mutations
+  description: Commands that change stored tuition records. View-only list is separate.
+  groups:
+    - title: People
+      commands: [add, edit, delete confirm]
+    - title: Lessons
+      commands: [addlesson, editlesson, deletelesson]
+    - title: Membership
+      commands: [enrol, unenrol]
+    - title: Attendance
+      commands: [mark, unmark]
+
+student-position-examples:
+  title: Student-only command examples
+  description: Examples from the selector rule; this is not an exhaustive command catalogue.
+  groups:
+    - title: Membership
+      commands: [enrol]
+    - title: Attendance
+      commands: [mark]
+    - title: Read-only retrieval
+      commands: [lessons, history]
+
+lesson-retrieval:
+  title: Lesson and attendance retrieval commands
+  description: These read-only requests preserve the current people list and its positions.
+  groups:
+    - title: Catalogue and search
+      commands: [lessons, search c/lesson]
+    - title: Student views
+      commands: [lessons STUDENT_INDEX, history STUDENT_INDEX]
+    - title: Lesson details
+      commands: [showlesson]
+
+record-validation:
+  title: Commands that create or edit records
+  description: Commands listed in the field-reference introduction; supplied values use the shared validation rules.
+  groups:
+    - title: People
+      commands: [add, edit]
+    - title: Lessons
+      commands: [addlesson, editlesson]
+    - title: Attendance
+      commands: [mark, unmark]
