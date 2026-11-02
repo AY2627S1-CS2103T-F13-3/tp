@@ -22,10 +22,8 @@ Download **`ponhub.jar`** from the latest published release,
 [v1.6](https://github.com/AY2627S1-CS2103T-F13-3/tp/releases/tag/v1.6), and follow its
 [v1.6 User Guide](UserGuide.html#quick-start).
 Use Java 25 and launch it with `java -jar ponhub.jar` in a writable application folder.
-Contributors can [build the current source](DevOps.html#build-automation) to try later development changes.
-Use the v1.6 guide above when running the released JAR.
 
-* [Current source User Guide and command summary](UserGuide.html#current-command-summary) — commands and examples;
+* [Command summary](UserGuide.html#current-command-summary) — commands and examples;
   use `help` or `help COMMAND` in the app for inline guidance.
 * [Developer Guide](DeveloperGuide.html)
 * [About Us](AboutUs.html)
