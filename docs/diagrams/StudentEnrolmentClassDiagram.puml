@@ -1,6 +1,6 @@
 @startuml
 ' Draft by Vincent Lin with OpenAI Codex assistance.
-' Self-contained source; render with PlantUML 1.2025.3.
+' Self-contained source; render with PlantUML 1.2025.4.
 skinparam defaultFontName Arial
 skinparam defaultFontSize 15
 skinparam shadowing false
@@ -16,9 +16,10 @@ skinparam ranksep 45
 hide circle
 hide empty members
 
-title Stored membership and roster queries
+title Stored membership and displayed rosters
 class PonHubData {
   + enrolStudent(studentId, lessonId)
+  + getLessonRoster(lessonId)
 }
 class PonHubDataState <<immutable snapshot>> {
   people : PeopleRegistryState
@@ -27,13 +28,13 @@ class Lesson <<immutable>> {
   id : LessonId
   enrolledStudentIds : Set<PersonId>
 }
-class LessonQueries {
-  + getLessonRoster(lessonId)
+class LessonRetrieval {
+  - buildDetail(lesson, date)
 }
 
 PonHubData "0..*" -down-> "1" PonHubDataState : current state
 PonHubDataState "0..*" -down-> "0..*" Lesson : lessons
-LessonQueries .left.> PonHubData : observes changes
+LessonRetrieval -left-> "1" PonHubData : reads roster,\nobserves changes
 
 note as RosterRule
   Zero or more unique Student IDs.
