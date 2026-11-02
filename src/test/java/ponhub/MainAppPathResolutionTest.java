@@ -25,6 +25,27 @@ public class MainAppPathResolutionTest {
     Path directory;
 
     @Test
+    public void validateStartupPaths_lockSymbolicAlias_rejectsWithoutChangingTarget() throws IOException {
+        Path target = directory.resolve("data.ponhub-lock");
+        Path alias = directory.resolve("data.json");
+        createLink(alias, target.getFileName());
+        for (boolean exists : List.of(false, true)) {
+            if (exists) {
+                Files.writeString(target, "preserve lock");
+            }
+            IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () ->
+                    MainApp.validateStartupPaths(Map.of("data", "data.json"), directory));
+            assertTrue(error.getMessage().contains("reserved"));
+            assertEquals(target.getFileName(), Files.readSymbolicLink(alias));
+            if (exists) {
+                assertEquals("preserve lock", Files.readString(target));
+            } else {
+                assertTrue(Files.notExists(target, LinkOption.NOFOLLOW_LINKS));
+            }
+        }
+    }
+
+    @Test
     public void selectDataPath_cyclicLinks_rejectsDirectAndMissingDescendantPaths() throws IOException {
         Path first = directory.resolve("first");
         Path second = directory.resolve("second");
