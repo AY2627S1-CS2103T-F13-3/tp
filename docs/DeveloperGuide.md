@@ -800,9 +800,19 @@ Student and Tutor relationship searches run in `O(P + B + R_B + K)` time, where 
 
 #### Refreshing subscribed views only after commit
 
-[![Lesson query refresh: prepare and save](images/LessonQueryRefresh.png)](images/LessonQueryRefresh.png)
+<figure class="dg-figure">
+<figcaption>Lesson query refresh: prepare and save</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Lesson query refresh: prepare and save">
+<a href="images/LessonQueryRefresh.png"><img src="images/LessonQueryRefresh.png" alt="The executor prepares an isolated edit and saves the candidate. Save failure leaves the live lesson and query results unchanged. Jamie is the matching Student in the worked example."></a>
+</div>
+</figure>
 
-[![Lesson query refresh: update the live results](images/LessonQueryRefresh_001.png)](images/LessonQueryRefresh_001.png)
+<figure class="dg-figure">
+<figcaption>Lesson query refresh: publish and update results</figcaption>
+<div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Lesson query refresh: publish and update results">
+<a href="images/LessonQueryRefresh_001.png"><img src="images/LessonQueryRefresh_001.png" alt="After saving succeeds, commit publishes the snapshot. Queries refresh their indexes and held results, then retrieval refreshes the same displayed list."></a>
+</div>
+</figure>
 
 Suppose the right panel is displaying a `Math` lesson search containing `L1`, and the user runs `editlesson lid/L1 s/English`:
 

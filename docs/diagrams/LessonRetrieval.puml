@@ -1,4 +1,5 @@
 @startuml
+' UI operation descriptions group MainWindow's owned panel and ListView helpers.
 ' Renderer: PlantUML 1.2025.3, using the committed style.puml unchanged.
 ' From the repository root:
 ' java -jar plantuml-1.2025.3.jar -charset UTF-8 -tpng -o ../images docs/diagrams/LessonRetrieval.puml
@@ -18,16 +19,16 @@ hide footbox
 
 title Lesson retrieval: one UI binding, switchable sources
 
-participant "UI\n(MainWindow / LessonListPanel)" as UI UI_COLOR
-participant "Displayed lessons" as Displayed LOGIC_COLOR
-participant LessonRetrieval as Retrieval LOGIC_COLOR
-participant "Previous source" as Previous MODEL_COLOR
-participant "New source" as Next MODEL_COLOR
+participant "window:MainWindow" as UI UI_COLOR
+participant "displayed:ObservableList" as Displayed LOGIC_COLOR
+participant "retrieval:LessonRetrieval" as Retrieval LOGIC_COLOR
+participant "previous:ObservableList" as Previous MODEL_COLOR
+participant "selected:ObservableList" as Next MODEL_COLOR
 
 == Bind once at UI setup ==
 UI -> Retrieval : getDisplayedLessons()\n(via Logic and session)
 Retrieval --> UI : same read-only observable list
-UI -> UI : Set list items once\nand bind heading
+UI -> UI : Bind list and heading once\nvia LessonListPanel
 note over Displayed, Retrieval
   LessonRetrieval owns the backing list and exposes
   one stable read-only wrapper to the UI.
