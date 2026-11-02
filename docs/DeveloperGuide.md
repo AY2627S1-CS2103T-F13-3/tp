@@ -905,7 +905,7 @@ live view, without an operational write or a change to the selected right-pane q
 </div>
 </figure>
 
-`LessonRetrieval` owns a single observable `displayedLessons` list that the UI binds to once. Switching between `lessons`, `lessons INDEX`, `search c/lesson`, and `showlesson` rebinds `LessonRetrieval` to the chosen query projection without modifying the left-hand `PeopleView`. Conversely, running `list` or `search c/student` updates the people panel without retargeting the right-hand lesson or history panel (which retains the resolved stable student `PersonId` or `LessonId`).
+`LessonRetrieval` owns a single observable `displayedLessons` list that the UI binds to once. Switching between `lessons`, `lessons INDEX`, `search c/lesson`, and `showlesson` rebinds `LessonRetrieval` to the chosen query projection or lesson-detail list without modifying the left-hand `PeopleView`. Conversely, running `list` or `search c/student` updates the people panel without retargeting the right-hand lesson or history panel (which retains the resolved stable student `PersonId` or `LessonId`).
 
 #### Refreshing subscribed views only after commit
 
@@ -2062,10 +2062,10 @@ Run the following window and layout checks on these physical display configurati
 | macOS | Same display | **Default** |
 | macOS | Same display | **More Space** |
 
+<!-- @@author -->
+
 macOS offers scaled resolution options instead of percentage scaling. In **System Settings → Displays**, select
 each option in turn and record the display's physical resolution and the resolution macOS reports for the option.
-
-<!-- @@author -->
 
 1. **Resizing and long text wrapping:** Resize the window down to its minimum dimensions (`450 × 360` logical pixels), adjust both split-pane dividers, and add a tutor with long fields:
 
