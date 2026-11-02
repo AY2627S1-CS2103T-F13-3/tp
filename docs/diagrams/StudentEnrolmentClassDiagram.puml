@@ -19,7 +19,7 @@ hide empty members
 title Stored membership and displayed rosters
 class PonHubData {
   + enrolStudent(studentId, lessonId)
-  + getLessonRoster(lessonId) : List<Student>
+  + getLessonRoster(lessonId)
 }
 class PonHubDataState <<immutable snapshot>> {
   people : PeopleRegistryState
@@ -29,7 +29,7 @@ class Lesson <<immutable>> {
   enrolledStudentIds : Set<PersonId>
 }
 class LessonRetrieval {
-  - buildDetail(lesson, date) : LessonDetailView
+  - buildDetail(lesson, date)
 }
 
 PonHubData "0..*" -down-> "1" PonHubDataState : current state
