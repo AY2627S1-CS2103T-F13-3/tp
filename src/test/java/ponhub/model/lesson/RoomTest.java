@@ -33,6 +33,17 @@ public class RoomTest {
     }
 
     @Test
+    public void constructor_nonAsciiInput_rejectsBeforeCaseMapping() {
+        for (String room : new String[] {"ß", "a-ß", "ı", "ſ", "ﬀ", "é1", "Ａ1", "R١"}) {
+            assertFalse(Room.isValidRoom(room));
+            IllegalArgumentException failure = assertThrows(IllegalArgumentException.class, () -> new Room(room));
+            assertEquals(Room.MESSAGE_CONSTRAINTS, failure.getMessage());
+        }
+        assertTrue(Room.isValidRoom("ss"));
+        assertEquals("SS", new Room("ss").getValue());
+    }
+
+    @Test
     public void isValidRoom() {
         assertThrows(NullPointerException.class, () -> Room.isValidRoom(null));
 

@@ -31,6 +31,51 @@ public class SubjectTest {
     }
 
     @Test
+    public void constructor_unicodeLettersAndAttachedMarks_normalizesToNfc() {
+        for (String subject : new String[] {"தமிழ்", "हिंदी", "q\u0301", "\uD840\uDC00\u0301"}) {
+            assertTrue(Subject.isValidSubject(subject));
+            assertEquals(subject, new Subject(subject).getValue());
+        }
+        Subject composed = new Subject("Français");
+        Subject decomposed = new Subject("  Franc\u0327ais  ");
+        assertTrue(Subject.isValidSubject("Franc\u0327ais"));
+        assertEquals("Français", decomposed.getValue());
+        assertEquals(composed, decomposed);
+        assertEquals(composed.hashCode(), decomposed.hashCode());
+    }
+
+    @Test
+    public void constructor_normalizedLength_countsSeparatorsAndCombiningMarks() {
+        for (String subject : new String[] {"A ".repeat(24) + "AB", "A-".repeat(24) + "AB",
+            "q\u0301".repeat(25), "\uD840\uDC00".repeat(50), "e\u0301".repeat(50),
+            "\u03b1\u0313\u0342\u0345".repeat(50)}) {
+            assertTrue(Subject.isValidSubject(subject));
+            String value = new Subject(subject).getValue();
+            assertEquals(50, value.codePointCount(0, value.length()));
+            assertFalse(Subject.isValidSubject(subject + "B"));
+            assertThrows(IllegalArgumentException.class, () -> new Subject(subject + "B"));
+        }
+        assertFalse(Subject.isValidSubject("A ".repeat(25) + "A"));
+    }
+
+    @Test
+    public void constructor_excessiveDecomposedInput_rejectsBeforeCanonicalReordering() {
+        String subject = "a" + "\u0315".repeat(20_000) + "\u0300".repeat(20_000);
+        assertFalse(Subject.isValidSubject(subject));
+        assertThrows(IllegalArgumentException.class, () -> new Subject(subject));
+    }
+
+    @Test
+    public void constructor_unattachedMarksAndUnsupportedCharacters_rejects() {
+        for (String subject : new String[] {"\u0301", "\u0301Math", "Math \u0301", "Math-\u0301",
+            "1\u0301", "A1\u0301", "Math\u00a0Science", "Math\u200dScience", "Math\u202eScience",
+            "Math\u0000Science", "Math\uD800", "Math\uDC00"}) {
+            assertFalse(Subject.isValidSubject(subject));
+            assertThrows(IllegalArgumentException.class, () -> new Subject(subject));
+        }
+    }
+
+    @Test
     public void isValidSubject() {
         String supplementaryLetter = new String(Character.toChars(0x20000));
 

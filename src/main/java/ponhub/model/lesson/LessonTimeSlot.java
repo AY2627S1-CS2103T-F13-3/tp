@@ -12,7 +12,7 @@ import java.util.Objects;
 public final class LessonTimeSlot {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "A lesson end time should be later than its start time on the same day";
+            "A lesson end time should be later than its start time on the same day.";
 
     private final LessonDay day;
     private final LessonTime startTime;

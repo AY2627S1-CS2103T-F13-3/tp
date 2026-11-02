@@ -20,6 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 import javafx.collections.ObservableList;
 import ponhub.logic.commands.CommandResult;
 import ponhub.logic.commands.exceptions.CommandException;
+import ponhub.logic.parser.exceptions.ParseException;
 import ponhub.model.PonHubDataState;
 import ponhub.model.lesson.Lesson;
 import ponhub.model.lesson.LessonDay;
@@ -120,6 +121,53 @@ public class CanonicalAddLessonIntegrationTest {
         CanonicalPeopleSession reloaded = new CanonicalPeopleSession(path);
         assertEquals("Found 1 lesson(s).", reloaded.execute("search c/lesson s/h2-math").getFeedbackToUser());
         assertEquals(new Subject("H2-Math"), reloaded.getDisplayedLessons().getFirst().getSubject());
+    }
+
+    @Test
+    public void execute_unicodeSubject_createEditAndReloadPreserveNormalizedLabel() throws Exception {
+        Path path = directory.resolve("unicode-subject.json");
+        new JsonPonHubDataStorage(path).saveData(createState(List.of(), 12));
+        CanonicalPeopleSession session = new CanonicalPeopleSession(path);
+
+        session.execute("addlesson d/Mon st/1600 et/1730 s/தமிழ் tu/Unique Tutor rm/r1");
+        assertEquals("தமிழ்", new CanonicalPeopleSession(path).getDataSnapshot()
+                .lessons().getFirst().getSubject().getValue());
+        session.execute("editlesson lid/L13 s/हिंदी");
+        assertEquals("हिंदी", new CanonicalPeopleSession(path).getDataSnapshot()
+                .lessons().getFirst().getSubject().getValue());
+        session.execute("editlesson lid/L13 s/Franc\u0327ais");
+        assertEquals("Français", new CanonicalPeopleSession(path).getDataSnapshot()
+                .lessons().getFirst().getSubject().getValue());
+        byte[] savedBytes = Files.readAllBytes(path);
+        assertEquals("No changes to lesson: L13.",
+                session.execute("editlesson lid/L13 s/Français").getFeedbackToUser());
+        assertArrayEquals(savedBytes, Files.readAllBytes(path));
+    }
+
+    @Test
+    public void execute_nonAsciiRoom_createAndEditRejectWithoutChangingFileOrState() throws Exception {
+        Path path = directory.resolve("invalid-room.json");
+        new JsonPonHubDataStorage(path).saveData(createState(List.of(), 12));
+        CanonicalPeopleSession session = new CanonicalPeopleSession(path);
+        PonHubDataState before = session.getDataSnapshot();
+        byte[] savedBytes = Files.readAllBytes(path);
+
+        ParseException createFailure = assertThrows(ParseException.class, () -> session.execute(
+                "addlesson d/Mon st/1600 et/1730 s/Math tu/Unique Tutor rm/ß"));
+        assertEquals(Room.MESSAGE_CONSTRAINTS, createFailure.getMessage());
+        assertSame(before, session.getDataSnapshot());
+        assertArrayEquals(savedBytes, Files.readAllBytes(path));
+        assertEquals("New lesson added: L13.", session.execute(
+                "addlesson d/Mon st/1600 et/1730 s/Math tu/Unique Tutor rm/ss").getFeedbackToUser());
+
+        PonHubDataState afterCreate = session.getDataSnapshot();
+        byte[] createdBytes = Files.readAllBytes(path);
+        ParseException editFailure = assertThrows(ParseException.class, () ->
+                session.execute("editlesson lid/L13 rm/ı"));
+        assertEquals(Room.MESSAGE_CONSTRAINTS, editFailure.getMessage());
+        assertSame(afterCreate, session.getDataSnapshot());
+        assertArrayEquals(createdBytes, Files.readAllBytes(path));
+        assertEquals(afterCreate, new CanonicalPeopleSession(path).getDataSnapshot());
     }
 
     @Test

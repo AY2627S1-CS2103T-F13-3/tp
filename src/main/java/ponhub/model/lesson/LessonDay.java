@@ -18,7 +18,7 @@ public enum LessonDay {
     SUNDAY("Sun", DayOfWeek.SUNDAY);
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Lesson days should be one of Mon, Tue, Wed, Thu, Fri, Sat or Sun";
+            "Lesson days should be one of Mon, Tue, Wed, Thu, Fri, Sat or Sun.";
 
     private final String displayValue;
     private final DayOfWeek dayOfWeek;

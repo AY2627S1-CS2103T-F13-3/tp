@@ -12,10 +12,11 @@ import java.util.Locale;
 public final class LessonTime implements Comparable<LessonTime> {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Lesson times should use four-digit 24-hour HHMM format from 0000 to 2359";
+            "Lesson times should use four-digit 24-hour HHMM format from 0000 to 2359.";
     public static final String VALIDATION_REGEX = "\\d{4}";
 
     private static final int MINUTES_PER_HOUR = 60;
+    private static final int HOURS_PER_DAY = 24;
 
     private final int minutesFromMidnight;
 
@@ -42,7 +43,7 @@ public final class LessonTime implements Comparable<LessonTime> {
         }
         int hour = Integer.parseInt(test.substring(0, 2));
         int minute = Integer.parseInt(test.substring(2));
-        return hour < 24 && minute < MINUTES_PER_HOUR;
+        return hour < HOURS_PER_DAY && minute < MINUTES_PER_HOUR;
     }
 
     @Override

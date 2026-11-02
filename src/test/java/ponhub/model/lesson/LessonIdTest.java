@@ -21,7 +21,10 @@ public class LessonIdTest {
             "L9223372036854775808"};
 
         for (String invalidId : invalidIds) {
-            assertThrows(IllegalArgumentException.class, () -> new LessonId(invalidId));
+            IllegalArgumentException failure = assertThrows(IllegalArgumentException.class, () ->
+                    new LessonId(invalidId));
+            assertEquals("Lesson IDs should start with L followed by a positive number without leading zeros.",
+                    failure.getMessage());
         }
     }
 
@@ -57,7 +60,8 @@ public class LessonIdTest {
     @Test
     public void next_maximumSequence_throwsIllegalStateException() {
         LessonId maximumId = LessonId.fromSequenceNumber(Long.MAX_VALUE);
-        assertThrows(IllegalStateException.class, maximumId::next);
+        IllegalStateException failure = assertThrows(IllegalStateException.class, maximumId::next);
+        assertEquals("No further Lesson ID can be allocated.", failure.getMessage());
     }
 
     @Test

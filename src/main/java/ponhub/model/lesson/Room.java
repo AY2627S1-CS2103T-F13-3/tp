@@ -13,8 +13,8 @@ public final class Room {
 
     public static final String MESSAGE_CONSTRAINTS =
             "Rooms should contain 1 to 10 characters in total, including any hyphens, "
-                    + "using letters or digits optionally separated by single hyphens";
-    public static final String VALIDATION_REGEX = "[A-Z0-9]+(?:-[A-Z0-9]+)*";
+                    + "using English letters (A-Z, a-z) or digits (0-9) optionally separated by single hyphens.";
+    public static final String VALIDATION_REGEX = "[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*";
 
     private static final int MAX_LENGTH = 10;
 
@@ -27,7 +27,7 @@ public final class Room {
         requireNonNull(room);
         String normalizedRoom = normalize(room);
         checkArgument(isNormalizedRoomValid(normalizedRoom), MESSAGE_CONSTRAINTS);
-        value = normalizedRoom;
+        value = normalizedRoom.toUpperCase(Locale.ROOT);
     }
 
     /**
@@ -39,7 +39,7 @@ public final class Room {
     }
 
     private static String normalize(String room) {
-        return room.strip().toUpperCase(Locale.ROOT);
+        return room.strip();
     }
 
     private static boolean isNormalizedRoomValid(String room) {

@@ -10,8 +10,8 @@ import static ponhub.commons.util.AppUtil.checkArgument;
 public final class LessonId implements Comparable<LessonId> {
 
     public static final String MESSAGE_CONSTRAINTS =
-            "Lesson IDs should start with L followed by a positive number without leading zeros";
-    public static final String MESSAGE_SEQUENCE_EXHAUSTED = "No further Lesson ID can be allocated";
+            "Lesson IDs should start with L followed by a positive number without leading zeros.";
+    public static final String MESSAGE_SEQUENCE_EXHAUSTED = "No further Lesson ID can be allocated.";
     public static final String VALIDATION_REGEX = "[Ll][1-9]\\d*";
 
     private final long sequenceNumber;
