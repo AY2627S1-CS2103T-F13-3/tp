@@ -3,7 +3,7 @@
 Build the site with the frozen `docs/Gemfile.lock` workflow, then serve the generated directory. Run this
 browser check against its actual base URL. It verifies command contents, all five trigger locations,
 keyboard/touch activation, dismissal/focus, viewport bounds, print CSS/events, and both no-JavaScript and
-simulated unsupported-API fallbacks. It does not claim acceptance in other browser engines.
+simulated unsupported-API fallbacks in Chromium.
 
 The application does not acquire a JavaScript dependency. For an isolated POSIX test installation:
 

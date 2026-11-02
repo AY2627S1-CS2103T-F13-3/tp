@@ -48,9 +48,8 @@ See [Making a release](#making-a-release) for candidate, package and publication
 This project uses GitHub Actions for CI. The
 [Java workflow](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/.github/workflows/gradle.yml)
 runs `check coverage` on Windows, Linux and macOS with Java 25, using a virtual display on Linux.
-Verify the checks on the PR's current head; results from an earlier commit are historical evidence.
-Unit/integration CI, a packaged launch, and a rendered website check establish different things;
-record their outcomes separately. Website preview instructions are in the [Documentation guide](Documentation.html#build-and-preview-locally).
+Verify the checks on the PR's current head, then complete the packaged-application checks below.
+Preview website changes using the [Documentation guide](Documentation.html#build-and-preview-locally).
 
 ### Code coverage
 
@@ -110,17 +109,16 @@ Copy the candidate JAR into a fresh disposable folder, confirm Java 25 in the la
 `java -jar ponhub.jar`. Follow the [runtime prerequisites](SettingUp.html#setting-up-the-project-on-your-computer).
 On macOS use the course-prescribed Azul JDK 25 with JavaFX (`25.0.3.fx-zulu`) for the Mac's architecture.
 Record the OS, architecture, JDK distribution/version, source SHA, JAR hash and actual launch result.
-Other runtime trials are optional portability evidence, not substitutes for the prescribed Mac check.
+Use other runtime trials for optional portability checks.
 Compatibility with Windows, Linux and macOS remains required; use the existing JAR distribution.
 
 Use the [User Guide](UserGuide.html) and [developer manual checks](DeveloperGuide.html#appendix-instructions-for-manual-testing)
 for the candidate's supported commands and acceptance cases. Verify Help/menu/F1, the shared-lesson workflow,
-retained attendance/history, and save/restart persistence. Include newly delivered mutations and their
-failure cases without claiming proposed features work. In a fresh folder, missing operational data should
+retained attendance/history, and save/restart persistence. Include each delivered mutation and its
+failure cases. In a fresh folder, missing operational data should
 remain unwritten until the first successful mutation; preferences and logs are separate. Exercise rejected
 data and recovery on disposable copies, preserving original bytes. Also launch from another working
 directory and confirm packaged files remain anchored to the JAR folder. Record limitations and failures.
-Building a JAR or passing Java CI alone does not establish these packaged outcomes.
 
 For hosted Linux verification, manually dispatch **Verify Linux release package** in GitHub Actions using
 the [workflow](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/.github/workflows/linux-package.yml).
@@ -129,8 +127,8 @@ Set `candidate_ref` to the reviewed **team source SHA**, `expected_sha256` to th
 (for example, `1.5`, without the startup log's `v` prefix). Manual dispatch deliberately has no remembered
 candidate defaults. The expected version must match the candidate source's `build.gradle` declaration;
 it is then checked against the JAR manifest and runtime startup version. Push and pull-request runs use
-the event SHA, its source-declared product version and freshly calculated checksum, so they check the
-verification tooling but do not establish the independently identified release handoff. Track final candidate
+the event SHA, its source-declared product version and freshly calculated checksum to check the
+verification tooling. Use manual dispatch for the final candidate and track its
 verification in the [delivery tracker](https://github.com/AY2627S1-CS2103T-F13-3/tp/issues/328).
 
 The hosted Ubuntu job rebuilds that source, rejects a different checksum and drives the real JAR's command
@@ -140,19 +138,19 @@ and confirms that the runtime startup version matches. Check the
 [verification script](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/.github/scripts/verify_linux_package.py)
 for its actual coverage; arrange additional checks for new features it does not exercise. Download
 `linux-package-evidence` promptly (the workflow retains it for 30 days): it contains the exact JAR, runtime,
-logs, disposable data and screenshots. Record the run URL and result. Automated X11 results do not establish
-manual physical-display acceptance; a failed or unavailable check remains unverified.
+logs, disposable data and screenshots. Record the run URL and result in the delivery tracker.
+Use the DG's display checks to verify physical display configurations.
 
 ### Publish and verify the release
 
 1. Reconcile release notes, guide examples and media against the accepted candidate. Describe changes since
    the previous release and retain known limitations and author/AI/reuse credits. Capture fictitious data;
-   reuse existing media only when it still matches and its provenance is retained.
+   reuse existing media only when it still matches and its creator/AI/reuse credits are retained.
 2. Verify that the intended version tag points to the accepted source commit. Have the designated release
    owner [create the GitHub release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)
    with the accepted notes, exact verified JAR and working media links.
 3. Download the public JAR and compare its SHA-256 with the accepted hash. Check the public tag/source,
    release copy and media, and verify the deployed guides via the
    [website checks](Documentation.html#maintain-and-publish-the-website). Record the release URL and outcomes.
-4. Reconcile issue acceptance and the iteration's release records before milestone closure. An uploaded
-   asset or closed issue alone does not prove a working release; retain explicit unresolved limitations.
+4. Reconcile issue acceptance and the iteration's release records before milestone closure.
+   Retain explicit unresolved limitations.
