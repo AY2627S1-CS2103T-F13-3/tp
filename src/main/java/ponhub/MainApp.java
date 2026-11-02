@@ -61,13 +61,7 @@ public class MainApp extends Application {
      * @throws IllegalArgumentException if both paths identify the same file.
      */
     protected void initialize(Path dataPath, Path prefsPath) throws IOException {
-        if (resolveStoragePath(dataPath.toAbsolutePath(), 0).equals(resolveStoragePath(prefsPath.toAbsolutePath(), 0))
-                || (Files.exists(dataPath) && Files.exists(prefsPath) && Files.isSameFile(dataPath, prefsPath))) {
-            throw new IllegalArgumentException("Canonical data and preferences must use separate files.");
-        }
-        Path applicationDirectory = resolveStoragePath(prefsPath.toAbsolutePath().getParent(), 0);
-        rejectLogAlias(dataPath.toAbsolutePath(), applicationDirectory);
-        rejectLogAlias(prefsPath.toAbsolutePath(), applicationDirectory);
+        validateStoragePaths(dataPath, prefsPath);
 
         logger.info("Using canonical data file : " + dataPath);
         canonicalSession = new CanonicalPeopleSession(dataPath);
@@ -75,6 +69,29 @@ public class MainApp extends Application {
         userPrefsStorage = new JsonUserPrefsStorage(prefsPath);
         userPrefs = initPrefs(userPrefsStorage);
         logic = new CanonicalLogicManager(canonicalSession, userPrefs);
+    }
+
+    /**
+     * Checks startup paths before launching JavaFX, without loading or writing any application files.
+     * Initialization repeats these checks to retain its storage safeguards.
+     */
+    static void validateStartupPaths(Map<String, String> namedParameters, Path applicationDirectory)
+            throws IOException {
+        validateStoragePaths(selectDataPath(namedParameters, applicationDirectory),
+                requireWithinApplicationDirectory(USER_PREFS_FILE_PATH, applicationDirectory));
+    }
+
+    /**
+     * Rejects data, preferences and log aliases before any application file can be changed.
+     */
+    private static void validateStoragePaths(Path dataPath, Path prefsPath) throws IOException {
+        if (resolveStoragePath(dataPath.toAbsolutePath(), 0).equals(resolveStoragePath(prefsPath.toAbsolutePath(), 0))
+                || (Files.exists(dataPath) && Files.exists(prefsPath) && Files.isSameFile(dataPath, prefsPath))) {
+            throw new IllegalArgumentException("Canonical data and preferences must use separate files.");
+        }
+        Path applicationDirectory = resolveStoragePath(prefsPath.toAbsolutePath().getParent(), 0);
+        rejectLogAlias(dataPath.toAbsolutePath(), applicationDirectory);
+        rejectLogAlias(prefsPath.toAbsolutePath(), applicationDirectory);
     }
 
     /**
