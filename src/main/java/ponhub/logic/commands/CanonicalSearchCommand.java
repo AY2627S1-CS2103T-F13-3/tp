@@ -17,7 +17,7 @@ import ponhub.model.search.SearchCriteria;
  */
 public final class CanonicalSearchCommand implements CanonicalCommandExecutor.StagedCommand {
     public static final String MESSAGE_SUCCESS = "Found %d %s(s).";
-    public static final String MESSAGE_LESSONS_UNAVAILABLE = "Lesson search is not available yet.";
+    public static final String MESSAGE_INVALID_CATEGORY = "People search requires c/student, c/parent, or c/tutor.";
 
     private final SearchCriteria criteria;
 
@@ -29,7 +29,7 @@ public final class CanonicalSearchCommand implements CanonicalCommandExecutor.St
     public CommandResult execute(PonHubData staged, PeopleView stagedView) throws CommandException {
         requireAllNonNull(staged, stagedView);
         if (criteria.getCategory() == SearchCategory.LESSON) {
-            throw new CommandException(MESSAGE_LESSONS_UNAVAILABLE);
+            throw new CommandException(MESSAGE_INVALID_CATEGORY);
         }
         try {
             stagedView.setSearchCriteria(criteria);

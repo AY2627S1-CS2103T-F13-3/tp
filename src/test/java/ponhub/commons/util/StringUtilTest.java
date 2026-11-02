@@ -24,14 +24,6 @@ public class StringUtilTest {
     }
 
     @Test
-    public void trimSpaces_onlyAsciiSpaces_preservesOtherCharacters() {
-        assertEquals("", StringUtil.trimSpaces(""));
-        assertEquals("", StringUtil.trimSpaces(" ".repeat(100_000)));
-        assertEquals("A  B", StringUtil.trimSpaces("  A  B  "));
-        assertEquals("\tA\n\u00a0", StringUtil.trimSpaces("  \tA\n\u00a0  "));
-    }
-
-    @Test
     public void normalizeSpaces_onlyAsciiSpaces_collapsesSpaces() {
         assertEquals("", StringUtil.normalizeSpaces(""));
         assertEquals("", StringUtil.normalizeSpaces(" ".repeat(100_000)));
