@@ -1,6 +1,6 @@
 @startuml
 ' Draft by Vincent Lin with OpenAI Codex assistance.
-' Self-contained source; render with PlantUML 1.2025.3.
+' Self-contained source; render with PlantUML 1.2025.4.
 ' Command and transaction helper calls are grouped as operation descriptions.
 skinparam defaultFontName Arial
 skinparam defaultFontSize 14
@@ -18,7 +18,7 @@ participant "executor:\nCanonicalCommandExecutor" as Logic
 participant "candidate:\nPonHubData" as Candidate
 participant "writer:\nSnapshotWriter" as Storage
 participant "live:\nPonHubData" as Live
-participant "queries:\nLessonQueries" as Queries
+participant "retrieval:\nLessonRetrieval" as Retrieval
 
 Logic -> Candidate : Stage enrolment for S7 in L1
 note over Candidate
@@ -28,5 +28,9 @@ end note
 Logic -> Storage : save complete snapshot
 Storage --> Logic : saved
 Logic -> Live : publish snapshot
-Live -> Queries : refresh roster results
+Live -> Retrieval : state changed
+opt lesson details displayed
+  Retrieval -> Live : getLessonRoster(L1)
+  Live --> Retrieval : current roster
+end
 @enduml

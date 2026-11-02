@@ -73,7 +73,7 @@ merge, then check the deployment result and the affected [public pages](https://
 See the [SE-EDU Jekyll guide](https://se-education.org/guides/tutorials/jekyll.html) for Pages settings.
 
 Site-wide changes belong in `docs/_config.yml`, `docs/_includes/`, `docs/_layouts/` or `docs/_sass/`, as appropriate.
-The print stylesheet `docs/_sass/minima/_base.scss` already labels the product **PonHub**. Preserve correct
+The print stylesheet `docs/_sass/minima/_base.scss` labels the product **PonHub**. Preserve correct
 branding and upstream credits; inspect print preview if styling changes. To export a guide, follow the
 [web-document PDF guide](https://se-education.org/guides/tutorials/savingPdf.html) and check page breaks,
 tables, links and diagram legibility in the resulting PDF.

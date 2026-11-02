@@ -53,7 +53,8 @@ The packaged user launch does not require `-ea`.
 1. **Follow the current design.** Read [PonHub's architecture](DeveloperGuide.html#architecture), then trace
    [canonical people commands](DeveloperGuide.html#canonical-people-commands) through routing, staged changes,
    persistence and view publication. The DG's [maintainer reading path](DeveloperGuide.html#maintainer-reading-path)
-   links the source and representative tests.
+   outlines its sections; its [architecture](DeveloperGuide.html#architecture) and
+   [test](DeveloperGuide.html#72-unit-integration-and-ui-tests) sections link the main source classes and representative tests.
 2. **Configure code style.** Follow the [IDEA code-style guide](https://se-education.org/guides/tutorials/intellijCodeStyle.html).
    The optional [Checkstyle integration](https://se-education.org/guides/tutorials/checkstyle.html) gives feedback
    while editing; `./gradlew check coverage` remains the repository validation path.

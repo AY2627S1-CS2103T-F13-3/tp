@@ -46,6 +46,7 @@ This guide progresses from high-level setup and architecture to domain rules, fe
   * **[Appendix A: Requirements](#appendix-requirements):** Review the requirements.
   * **[Appendix B: Instructions for Manual Testing](#appendix-instructions-for-manual-testing):** Run the manual testing workflows.
   * **[Appendix C: Glossary](#terms-used-in-this-guide):** Look up terms used in this guide.
+  * **[Appendix D: Acknowledgements](#appendix-acknowledgements):** See reused work, libraries and AI-assistance credits.
 
 Before diving into the code, note these core software terms used throughout PonHub's class names and documentation (full definitions appear in the [Glossary](#terms-used-in-this-guide)):
 
@@ -126,7 +127,7 @@ Run the automated test suite and style checks from the repository root:
   ```
 
 **Enabling development assertions:**
-Both `./gradlew run` and `./gradlew test` enable Java assertions (`-ea`) automatically. If you launch `ponhub.Main` directly through an IntelliJ **Application** or **JUnit** run configuration instead of delegating to Gradle, add `-ea` to **VM options**.
+Both `./gradlew run` and `./gradlew test` enable Java assertions (`-ea`) automatically. If you launch `ponhub.Main` through an IntelliJ **Application** run configuration, or run tests with IntelliJ's own JUnit runner, instead of delegating to Gradle, add `-ea` to **VM options**.
 
 Use `assert` statements to catch internal programming bugs (such as an unexpected null reference or a mutated live state during a staged transaction). Always use normal runtime checks and exceptions to validate user input and external files, because end users run `java -jar ponhub.jar` with assertions disabled. See the [Testing guide](Testing.html#running-tests) for report locations.
 
@@ -177,7 +178,7 @@ PonHub follows a layered architecture inspired by Model-View-Controller (MVC), a
 | [**UI**](#ui-component) | Renders people, lessons, rosters, and attendance history; captures keyboard commands and button actions; displays feedback. | **Observer** (binds to read-only JavaFX `ObservableList` and property views exposed by `Logic`). |
 | [**Logic**](#logic-component) | Parses commands, coordinates staged execution, triggers snapshot persistence, and manages read-only query projections. | **Command** (`CanonicalCommandExecutor` and staged commands) and **Facade** (`Logic` / `CanonicalPeopleSession`). |
 | [**Model**](#model-component) | Holds the canonical in-memory records (`PonHubData`), enforces domain and scheduling invariants, and provides filtered views. | **Immutable Value Object** and **Aggregate Root** (`PonHubData` wrapping `PonHubDataState`). |
-| [**Storage**](#storage-component) | Reads and writes operational records (`data/ponhub.json`) and user preferences (`preferences.json`) safely on disk. | **Adapter / Codec** (`JsonPonHubDataCodec` and `ProtectedPonHubDataStorage` implementing storage interfaces). |
+| [**Storage**](#storage-component) | Reads and writes operational records (`data/ponhub.json`) and user preferences (`preferences.json`) safely on disk. | **Codec** (`JsonPonHubDataCodec` converts between JSON and validated snapshots) and a protective wrapper (`ProtectedPonHubDataStorage` combines loading, the file guard and atomic saves). Logic depends on a `SnapshotWriter` callback rather than a storage interface. |
 | [**Commons**](#common-classes) | Supplies cross-cutting utilities for logging (`LogsCenter`), atomic file writes, path validation, settings, and exceptions. | Shared utility classes. |
 
 [`Main`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/Main.java) starts JavaFX.
@@ -207,7 +208,7 @@ The command executes as follows:
 4. **Publish on success:** Once the file is safely written, `CanonicalTransaction.commit()` updates the live model and people filter, refreshing subscribed UI views, and the executor returns the success `CommandResult`.
 5. **Preserve state on failure:** If saving throws an exception, the executor catches it and throws a `CommandException` without committing. The live records, ID counters, and UI views remain untouched. (Disk-level recovery follows the [safe file replacement rules](#safe-json-saves).)
 
-Parsing errors and domain rule violations stop before step 3. Valid commands that make no operational change (no-ops) skip the disk write, and view-only commands (such as `list`) update the view filter without writing operational data.
+Parsing errors and domain rule violations stop before step 3. Valid commands that make no operational change (no-ops) skip the data-file write, and view-only commands (such as `list`) update the view filter without writing operational data.
 
 ### 3.2 UI component
 
@@ -260,11 +261,11 @@ The session owns the canonical model and query helpers, checks command availabil
 startup, and routes commands to their handlers. Its execution paths are:
 
 * **Catalogue and routing:** [`CanonicalCommandDefinition`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandDefinition.java) and [`CanonicalCommandCatalog`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandCatalog.java) declare every supported command word, its inline help text, and whether it is allowed during protected startup.
-* **Parsers:** Feature-specific parsers (`RoleAwareAddParser`, `PersonEditParser`, `AddLessonParser`, `LessonEditParser`, `SearchCriteriaParser`, etc.) validate raw command arguments and build typed input records without mutating state or using the retired AB3 parser hierarchy.
+* **Parsers:** Feature-specific parsers (`RoleAwareAddParser`, `PersonEditParser`, `AddLessonParser`, `LessonEditParser`, `SearchCriteriaParser`, etc.) validate raw command arguments and build typed input records without mutating state.
 * **Transactional execution vs. direct people search:**
   * {% include command-list.html key="operational-mutations" label="Operational mutations" %} and `list` run through `CanonicalCommandExecutor`. It starts a `CanonicalTransaction` via `PeopleView.beginTransaction()`, runs a `StagedCommand` on the isolated candidate model, saves the snapshot if operational data changed, and calls `commit()`.
   * People-category `search` (`c/student|parent|tutor`) runs `new CanonicalSearchCommand(criteria).execute(data, view)` directly in `CanonicalPeopleSession.execute()`, updating the live `PeopleView` search criteria without `CanonicalCommandExecutor`, `beginTransaction()`, or `commit()`.
-* **Read-only retrieval:** [`LessonRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/LessonRetrieval.java) and [`AttendanceRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/AttendanceRetrieval.java) coordinate right-pane queries over [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQueries.java) without staging a model copy or touching disk.
+* **Read-only retrieval:** [`LessonRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/LessonRetrieval.java) and [`AttendanceRetrieval`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/AttendanceRetrieval.java) coordinate right-pane queries over [`LessonQueries`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/model/query/LessonQueries.java) (and, for `showlesson` details, `PonHubData`) without staging a model copy or saving operational data. Like every command, they still record their outcome in the application log.
 
 ### 3.4 Model component
 
@@ -424,7 +425,7 @@ A `Lesson` is one shared weekly booking with a stable ID, Tutor, time slot, subj
 | Lesson ID | `L` followed by a positive `long` sequence, such as `L1`. | Zero, leading zeros, missing prefix or an out-of-range sequence. |
 | Weekday | `Mon` through `Sun`, matched case-insensitively. | Unknown weekday values. |
 | Time slot | Four-digit times from `0000` to `2359`, with the start before the end on the same day. | Invalid clock times, equal endpoints, reversed or overnight slots. |
-| Subject | 1–50 Unicode letters or digits after space normalisation, separated by single spaces or hyphens, such as `A-Math`. | Empty or overlong values, other punctuation, repeated hyphens or mixed separators. |
+| Subject | 1–50 characters after space normalisation, counting separators: Unicode letters or digits separated by single spaces or hyphens, such as `A-Math`. | Empty or overlong values, other punctuation, repeated hyphens or mixed separators. |
 | Room | 1–10 ASCII letters or digits with optional single internal hyphens. Surrounding spaces are trimmed and letters stored in uppercase: `b-01` becomes `B-01`. | Empty or overlong values, internal spaces, other punctuation, or leading, trailing or repeated hyphens. |
 
 #### Tutor selection
@@ -448,11 +449,11 @@ For `enrol 1 lid/L1`, the command resolves position `1` in the current people li
 <figure class="dg-figure">
 <figcaption>Enrolling a Student in an existing shared Lesson</figcaption>
 <div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Student enrolment sequence">
-<a href="images/StudentEnrolmentSequenceDiagram.png"><img src="images/StudentEnrolmentSequenceDiagram.png" alt="An enrol command resolves a displayed Student, validates and replaces the candidate lesson, then saves the snapshot. Only after saving succeeds is live data published and read-only roster queries refreshed."></a>
+<a href="images/StudentEnrolmentSequenceDiagram.png"><img src="images/StudentEnrolmentSequenceDiagram.png" alt="An enrol command validates and replaces the candidate lesson, then saves the snapshot. Only after saving succeeds is live data published; LessonRetrieval then rebuilds any displayed lesson details from the published roster."></a>
 </div>
 </figure>
 
-The command validates enrolment against isolated candidate data and creates a replacement lesson with the updated roster. Logic saves the complete snapshot before publishing it. `LessonQueries` then refreshes the roster results. A validation or save failure leaves live data and results unchanged.
+The command validates enrolment against isolated candidate data and creates a replacement lesson with the updated roster. Logic saves the complete snapshot before publishing it. If `showlesson` is displaying that lesson, `LessonRetrieval` observes the published state and rebuilds the details from `PonHubData.getLessonRoster()`. A validation or save failure leaves live data and results unchanged.
 
 See [Section 5.4](#54-enrolling-and-unenrolling-students) for the command implementation.
 
@@ -461,7 +462,7 @@ See [Section 5.4](#54-enrolling-and-unenrolling-students) for the command implem
 <figure class="dg-figure">
 <figcaption>Stored enrolment and derived roster views</figcaption>
 <div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Student enrolment class relationships">
-<a href="images/StudentEnrolmentClassDiagram.png"><img src="images/StudentEnrolmentClassDiagram.png" alt="PonHubData exposes its current immutable PonHubDataState, whose ordered lesson catalogue contains Lesson records. Each Lesson stores student PersonIds. LessonQueries observes publications and derives read-only rosters from the shared snapshot."></a>
+<a href="images/StudentEnrolmentClassDiagram.png"><img src="images/StudentEnrolmentClassDiagram.png" alt="PonHubData exposes its current immutable PonHubDataState, whose ordered lesson catalogue contains Lesson records. Each Lesson stores student PersonIds. LessonRetrieval reads the roster from PonHubData for displayed lesson details and observes publications."></a>
 </div>
 </figure>
 
@@ -482,7 +483,7 @@ Enrolment replaces the existing lesson rather than adding another booking. Tutor
 
 #### Roster display and unenrolment
 
-`LessonQueries.getLessonRoster()` lists members in global people creation order, regardless of enrolment order or set insertion order. Filtering the people panel does not change the lesson's membership.
+`PonHubData.getLessonRoster()`, which `showlesson` uses, lists members in global people creation order, regardless of enrolment order or set insertion order. Filtering the people panel does not change the lesson's membership.
 
 Unenrolment removes current membership but retains dated attendance. See [Section 4.4](#44-dated-attendance-and-retained-history).
 
@@ -629,10 +630,10 @@ scroll horizontally to retain its label size, or open its linked full-size image
 
 <a id="current-increment-and-command-integration"></a>
 
-All user commands enter through `CanonicalPeopleSession.execute(String)`. The inherited AddressBook-Level3 command classes and parser hierarchy are not used in the active application (`clear` and `find` are retired).
+All user commands enter through `CanonicalPeopleSession.execute(String)`, which processes them in this order:
 
-1. **Catalogue lookup and startup guard:** `CanonicalPeopleSession` extracts the first whitespace-delimited command word (supporting Unicode horizontal spaces via `UNICODE_CHARACTER_CLASS`) and looks up its [`CanonicalCommandDefinition`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandDefinition.java). If the session is in protected startup mode and the command is not marked available (`help`, `list`, `exit`), execution stops immediately before parsing arguments.
-2. **Pending deletion cleanup:** Any new command submission consumes and clears any pending `delete` confirmation target before parsing begins.
+1. **Pending deletion cleanup:** Any new command submission first consumes and clears any pending `delete` confirmation target, even if the input is later rejected.
+2. **Catalogue lookup and startup guard:** `CanonicalPeopleSession` extracts the first whitespace-delimited command word (supporting Unicode horizontal spaces via `UNICODE_CHARACTER_CLASS`) and looks up its [`CanonicalCommandDefinition`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandDefinition.java). If the session is in protected startup mode and the command is not marked available (`help`, `list`, `exit`), execution stops immediately before parsing arguments.
 3. **Exhaustive routing:** The session dispatches the command word through an exhaustive `switch` over `CanonicalCommandDefinition` (with no `default` branch, so adding a new enum constant requires wiring its handler at compile time).
 4. **Shared tokenization:** Add and edit parsers use [`FieldValueTokenizer`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/parser/FieldValueTokenizer.java) to scan lowercase `prefix/` markers while allowing standalone `s/o` and `d/o` inside `n/` and `tu/` values and digit-surrounded slashes (such as `#01/02`) inside `a/` values. Unknown or repeated prefixes, unexpected preambles, and control characters are rejected with usage guidance.
 
@@ -647,8 +648,7 @@ When adding a new command, register it in `CanonicalCommandDefinition`, implemen
 </div>
 </figure>
 
-This follows steps 1–4 above, with pending deletion consumed first as implemented by
-`CanonicalPeopleSession.execute`. The add route illustrates the tokenizer boundary; other catalogue
+This follows steps 1–4 above. The add route illustrates the tokenizer boundary; other catalogue
 routes choose their own typed parser. [Editable source](diagrams/FeatureDispatch.puml).
 
 <!-- @@author -->
@@ -722,7 +722,7 @@ feedback before returning to the executor. [Editable source](diagrams/PeopleChan
 #### Creating a lesson (`addlesson`)
 
 ```text
-addlesson d/DAY st/START_TIME et/END_TIME s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM
+addlesson d/DAY st/HHMM et/HHMM s/SUBJECT tu/TUTOR_NAME [tp/TUTOR_PHONE] rm/ROOM
 ```
 
 1. **Parse:** `AddLessonParser` validates the weekday, time slot, subject, tutor name/phone, and room into a `LessonCreationInput` without reading model state or allocating a `LessonId`.
@@ -890,9 +890,11 @@ live view, without an operational write or a change to the selected right-pane q
 | Full lesson catalogue (`lessons`) | All lessons in creation order, including empty rosters. |
 | Student lessons (`lessons INDEX`) | Lessons whose current roster contains the resolved student's `PersonId`. |
 | Lesson search (`search c/lesson ...`) | Matching lessons in creation order (or `Mon`–`Sun`, start time, numeric `LessonId` when `sort/schedule` is used). |
-| Lesson roster (`showlesson`) | Currently enrolled students in people creation order, followed by former members' attendance newest-first. |
+| Lesson roster | Currently enrolled students in people creation order. Student searches with lesson filters and Tutor searches with `sn/` read it. |
 | Tutor schedule | Assigned lessons ordered by weekday, start time, and numeric `LessonId`. |
 | Attendance history (`history`) | Recorded entries for a student (and optional lesson/date/status) ordered newest date first, then numeric `LessonId`. |
+
+`showlesson` does not use these projections. `LessonRetrieval.buildDetail` reads `PonHubData.getLessonRoster()` and `PonHubData.getAttendanceForLesson()` to list current members in people creation order, followed by former members' attendance newest-first. Its own `PonHubData.stateProperty()` listener rebuilds the displayed details after each commit.
 
 #### Keeping the left and right panels independent
 
@@ -903,14 +905,14 @@ live view, without an operational write or a change to the selected right-pane q
 </div>
 </figure>
 
-`LessonRetrieval` owns a single observable `displayedLessons` list that the UI binds to once. Switching between `lessons`, `lessons INDEX`, `search c/lesson`, and `showlesson` rebinds `LessonRetrieval` to the chosen query projection without modifying the left-hand `PeopleView`. Conversely, running `list` or `search c/student` updates the people panel without retargeting the right-hand lesson or history panel (which retains the resolved stable student `PersonId` or `LessonId`).
+`LessonRetrieval` owns a single observable `displayedLessons` list that the UI binds to once. Switching between `lessons`, `lessons INDEX`, `search c/lesson`, and `showlesson` rebinds `LessonRetrieval` to the chosen query projection or lesson-detail list without modifying the left-hand `PeopleView`. Conversely, running `list` or `search c/student` updates the people panel without retargeting the right-hand lesson or history panel (which retains the resolved stable student `PersonId` or `LessonId`).
 
 #### Refreshing subscribed views only after commit
 
 <figure class="dg-figure">
 <figcaption>Lesson query refresh: prepare and save</figcaption>
 <div class="dg-edit-flow-scroll" tabindex="0" role="region" aria-label="Lesson query refresh: prepare and save">
-<a href="images/LessonQueryRefresh.png"><img src="images/LessonQueryRefresh.png" alt="The executor prepares an isolated edit and saves the candidate. Save failure leaves the live lesson and query results unchanged. Jamie is the matching Student in the worked example."></a>
+<a href="images/LessonQueryRefresh.png"><img src="images/LessonQueryRefresh.png" alt="The staged edit command prepares English L1 on the transaction's isolated root, then the executor saves the candidate. Save failure leaves the live lesson and query results unchanged. Jamie is the matching Student in the worked example."></a>
 </div>
 </figure>
 
@@ -1198,8 +1200,8 @@ Key schema rules enforced by `JsonPonHubDataCodec`:
 
 1. **Begin transaction:** `PeopleView.beginTransaction()` creates a `CanonicalTransaction` holding an isolated copy of `PonHubData` and `PeopleView` initialised with the current snapshot, role filter, and search criteria.
 2. **Stage changes:** The command resolves any displayed people indices against the staged view and mutates only the staged `PonHubData` and staged `PeopleView`. Before saving, a development assertion verifies that the live `PonHubDataState` and live filter have not been mutated during staging.
-3. **Conditional persistence:** If the staged `PonHubDataState` differs from the starting snapshot, the executor passes the complete candidate snapshot to `SnapshotWriter` (`ProtectedPonHubDataStorage.saveData`). Read-only commands, filter-only commands (`list`), and operational no-ops (such as an `edit` or `mark` that leaves state unchanged) skip disk I/O.
-4. **Commit:** Only after `saveData` returns without error does `CanonicalTransaction.commit()` replace the live `PonHubData` root and apply the staged people filter, triggering `LessonQueries` and UI panel listeners.
+3. **Conditional persistence:** If the staged `PonHubDataState` differs from the starting snapshot, the executor passes the complete candidate snapshot to `SnapshotWriter` (`ProtectedPonHubDataStorage.saveData`). Read-only commands, filter-only commands (`list`), and operational no-ops (such as an `edit` or `mark` that leaves state unchanged) skip this save. `CanonicalLogicManager` still logs each command's outcome.
+4. **Commit:** Only after `saveData` returns without error does `CanonicalTransaction.commit()` replace the live `PonHubData` root and apply the staged people filter, triggering `LessonQueries`, `LessonRetrieval` and UI panel listeners.
 
 #### Example: adding a parent record
 
@@ -1311,11 +1313,11 @@ Representative test classes across the codebase include:
 
 | Layer | Representative test classes | What they verify |
 | --- | --- | --- |
-| **Model & value objects** | `NameTest`, `PonHubDataTest`, `LessonQueriesTest` | Unicode NFC and `s/o` name validation, `O((L + E) log L)` schedule clash detection, and equivalence between indexed queries and raw-record scans across 1,000 seeded queries. |
+| **Model & value objects** | `NameTest`, `PonHubDataTest`, `PonHubDataLessonTest`, `LessonScheduleIndexTest`, `LessonQueriesTest` | Unicode NFC and `s/o` name validation, tutor/room/student schedule clashes and conflict reporting (including seeded catalogues checked against a pairwise oracle), and equivalence between indexed lesson searches and raw-record scans across 2,500 seeded searches, repeated after a roster change and a restore. |
 | **Parsers & resolvers** | [`PersonIndexResolverTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/PersonIndexResolverTest.java), `PersonEditParserTest`, `LessonEditParserTest`, `SearchCriteriaParserTest` | 1-based people index resolution, role guards, slash tokenization, and search prefix compatibility. |
 | **Command & session integration** | [`CanonicalPeopleCommandIntegrationTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/commands/CanonicalPeopleCommandIntegrationTest.java), `CanonicalEditIntegrationTest`, `CanonicalLessonEditIntegrationTest`, `CanonicalAttendanceIntegrationTest`, `CanonicalDeleteIntegrationTest`, [`CanonicalLogicManagerTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/CanonicalLogicManagerTest.java) | End-to-end command execution, view refreshes, no-op handling, parent–student link warnings, and protected startup blocking. |
 | **Storage & file safety** | [`JsonPonHubDataStorageTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/storage/JsonPonHubDataStorageTest.java), [`ProtectedStartupTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/ProtectedStartupTest.java) | Version detection, JSON round trips, numeric resource limits, sidecar lock guards, and path confinement. |
-| **UI & keyboard controls** | `CanonicalMainWindowTest`, `CommandBoxTest`, `ResultHeadingTooltipTest`, `LogoSoundPlayerTest` | View-mode button indicators, Tab completion cycles, 50-entry command recall, control-character paste rejection, and card contact copying. |
+| **UI & keyboard controls** | `CanonicalMainWindowTest`, `CommandBoxTest`, `PersonContactCopyTest`, `ResultHeadingTooltipTest`, `LogoSoundPlayerTest` | View-mode button indicators, Tab completion cycles, 50-entry command recall, control-character paste rejection, and card contact copying. |
 
 ### 7.3 Fixtures and sample data
 
@@ -1399,7 +1401,7 @@ PonHub links people, shared recurring lessons, rosters, and dated attendance in 
 
 ### User stories
 
-Priorities: **High** (core operational workflows delivered in current releases), **Medium** (useful workflow extensions), and **Low** (longer-term enhancements). Note that US-33 is partially delivered (Tab completes command words; argument completion and spelling suggestions remain future work) and US-22 is partially delivered (level filtering via `search` is supported; name sorting/grouping remains future work).
+Priorities: **High** (core operational workflows the product must support), **Medium** (useful workflow extensions), and **Low** (longer-term enhancements). All High-priority stories are delivered in the current release. Some Medium-priority stories are partially delivered: US-22 (level filtering via `search` is supported; name sorting/grouping remains future work), US-33 (Tab completes command words; argument completion and spelling suggestions remain future work), and US-35 (`delete` shows the person before `delete confirm`; `deletelesson` has no preview).
 
 | ID | Priority | As a … | I want to … | So that I can … |
 | --- | --- | --- | --- | --- |
@@ -1623,10 +1625,12 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
    Use case ends.
 
 **Extensions:**
-* 1a. No entry exists for that student, lesson and date and the student is no longer enrolled, or the date does not match the lesson's weekday:
+* 1a. No entry exists for that student, lesson and date and the student is not currently enrolled, or the date does not match the lesson's weekday:
   * 1a1. PonHub reports the error and leaves attendance unchanged. Use case ends.
 * 1b. A new or changed `present` status is requested for a future date without acknowledgement:
   * 1b1. PonHub warns that the date is in the future and asks for acknowledgement before recording it. Use case ends.
+* 1c. The requested status is already recorded for that student, lesson and date:
+  * 1c1. PonHub reports that no changes were made and leaves the records and stored file unchanged. Use case ends.
 
 #### UC-12: Remove a dated attendance entry
 
@@ -1670,8 +1674,8 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
 **Extensions:**
 * 1a. The person is still referenced by a lesson as tutor or enrolled student, or by retained attendance:
   * 1a1. PonHub rejects the deletion and identifies the blocking lesson. Use case ends.
-* 2a. The administrator cancels or makes any other request before confirming:
-  * 2a1. PonHub cancels the pending deletion without removing the person. Use case ends.
+* 3a. The administrator cancels or makes any other request instead of confirming:
+  * 3a1. PonHub cancels the pending deletion without removing the person. Use case ends.
 
 #### UC-15: View command help and recover from input errors
 
@@ -1877,9 +1881,29 @@ Using the [shared baseline fixture](#active-shared-lesson-and-attendance-workflo
    * Verify that unpaired `from/`, reversed windows (`from/1800 to/1700`), time windows on people categories (`search c/student from/1600 to/1700`), and unknown sort modes are rejected without changing the displayed view.
 
 2. **Conjunctive people relationship searches:**
-   * Enrol a student in Tuesday Math and Monday Science (with no Monday Math lesson). Confirm that `search c/student d/Mon s/Math` does **not** match that student.
-   * Link a Parent (`p/91234567`) to two children (`Alex Tan` and `Jamie Tan`) where only Jamie takes Math. Confirm that `search c/parent sn/Alex s/Math` does **not** match the parent (one single child must satisfy both `sn/` and the lesson filters).
-   * Confirm that `list` or `list r/student` clears the active people search heading and context.
+   Start with a separate, previously unused data file (for example, `--data="manual/relationship-search.json"`) and replay the [shared baseline fixture setup](#active-shared-lesson-and-attendance-workflow) through **Step 4**. Then add a Student who takes Tuesday Math and Monday Science, and a Parent linked to Alex and Jamie:
+
+   ```text
+   add r/student n/Casey Lim l/P3 pp/94567890
+   addlesson d/Tue st/1600 et/1730 s/Math tu/Mei Lim tp/92345678 rm/R1
+   list r/student
+   enrol 3 lid/L4
+   enrol 3 lid/L2
+   search c/student d/Mon s/Math
+   search c/student d/Tue s/Math
+   add r/parent n/Pat Tan p/91234567
+   list r/student
+   unenrol 1 lid/L1
+   search c/parent sn/Alex s/Math
+   search c/parent sn/Jamie s/Math
+   list
+   ```
+
+   *Expected:*
+   * The new lesson is `L4`, and Casey (`S3`, position `3` of `list r/student`) is enrolled in Tuesday Math `L4` and Monday Science `L2`.
+   * `search c/student d/Mon s/Math` finds Alex and Jamie (both in Monday Math `L1`) but **not** Casey, whose Monday lesson and Math lesson are different lessons. `search c/student d/Tue s/Math` finds only Casey.
+   * Pat Tan (`P1`) is linked to Alex and Jamie through phone `91234567`. After Alex leaves `L1`, only Jamie takes Math, so `search c/parent sn/Alex s/Math` finds `0` parents (one single child must satisfy both `sn/` and the lesson filters), while `search c/parent sn/Jamie s/Math` finds Pat Tan.
+   * `list` clears the active people search heading and context.
 
 ### B.5 Attendance and history workflows
 
@@ -1946,12 +1970,13 @@ Using the baseline fixture with a Parent added (`add r/parent n/Pat Tan p/912345
 
    ```text
    list r/student
+   edit 1 p/81234567 e/alex@example.com a/Blk 10, #01-02
    edit 1 l/P2 p/ e/ a/
    edit 1 n/Alex  Tan
    edit 1 n/ALEX TAN
    ```
 
-   *Expected:* The first edit updates Alex (`S1`) to level `P2` and clears optional own phone, email, and address while preserving `S1` and the Student filter. The edit with two spaces between `Alex` and `Tan` normalizes to `Alex Tan` and reports no change (no operational save). `edit 1 n/ALEX TAN` updates the displayed uppercase spelling and saves.
+   *Expected:* The first edit gives Alex (`S1`) an own phone, email, and address. The second updates Alex to level `P2` and clears those optional fields while preserving `S1` and the Student filter. The edit with two spaces between `Alex` and `Tan` normalizes to `Alex Tan` and reports no change (no operational save). `edit 1 n/ALEX TAN` updates the displayed uppercase spelling and saves.
 
 2. **Parent–student phone link warnings and tutor rename propagation:**
    * Run `search c/parent sn/ALEX`, then edit Pat Tan's phone (`list r/parent` → `edit 1 p/99998888`). Confirm the success message lists the disconnected `(P1, S1)` and `(P1, S2)` links while leaving the students' `parentPhone` values (`91234567`) untouched.
@@ -2033,11 +2058,14 @@ Run the following window and layout checks on these physical display configurati
 | Linux | 1280×720 | 150% |
 | Linux | 1920×1080 | 100% |
 | Linux | 1920×1080 | 125% |
-| macOS | 1280×720 | 150% |
-| macOS | 1920×1080 | 100% |
-| macOS | 1920×1080 | 125% |
+| macOS | Built-in or external display | **Larger Text** |
+| macOS | Same display | **Default** |
+| macOS | Same display | **More Space** |
 
 <!-- @@author -->
+
+macOS offers scaled resolution options instead of percentage scaling. In **System Settings → Displays**, select
+each option in turn and record the display's physical resolution and the resolution macOS reports for the option.
 
 1. **Resizing and long text wrapping:** Resize the window down to its minimum dimensions (`450 × 360` logical pixels), adjust both split-pane dividers, and add a tutor with long fields:
 
@@ -2147,7 +2175,7 @@ Terms are listed in alphabetical order:
 | **Snapshot** | `PonHubDataState`, a complete, self-contained, immutable copy of all operational records and counters at one point in time. |
 | **Stable ID** | A permanent identifier (`S1`, `T1`, `P1`, `L1`) assigned at creation; never changes across filtering, editing, or restarts, and is never reused after deletion. |
 | **Staged change / candidate** | A proposed snapshot prepared inside an isolated transaction before saving to disk. |
-| **Transaction** | The execution unit (`CanonicalTransaction`) that prepares a candidate change, saves it to disk, and commits it to the live model together. |
+| **Transaction** | The prepare-save-publish sequence run by `CanonicalCommandExecutor`: a staged command prepares a candidate in an isolated `CanonicalTransaction`, the executor saves it, and `CanonicalTransaction.commit()` publishes it to the live model. |
 | **Tutor lookup** | Matching a tutor by full normalized name (plus optional exact phone `tp/`) during `addlesson` and `editlesson`. |
 | **Tutor / room / student clash** | Two lessons on the same weekday whose `[start, end)` time intervals overlap while sharing a tutor, room, or enrolled student. |
 | **Unrecorded** | A lesson occurrence for which no `AttendanceKey` exists yet (distinct from a recorded `absent` entry). |
@@ -2167,4 +2195,4 @@ Terms are listed in alphabetical order:
 * **Architecture command-flow diagram:** Original command flow by Ernest Chua; sequence layout and overview by Vincent Lin, with OpenAI Codex assistance.
 * **AI assistance:** OpenAI Codex was used by Ernest Chua (`ErnestChuaa`), Benjamin Ng (`ben58882`), Yang Shuo (`ys000009`), Vincent Lin (`gugrusaurus`), and Zhu Zhi Yu (`ultramanarm`) across implementation, refactoring, test development, documentation, code review support, integration/conflict resolution, and verification support. Each team member remains responsible for their submitted work and feature ownership.
 
-<!-- DG skeleton structure prepared by Vincent Lin (gugrusaurus, #620); reordered and rewritten by Ernest Chua (ErnestChuaa, #622) with AI assistance. -->
+<!-- DG skeleton structure prepared by Vincent Lin (gugrusaurus); reordered and rewritten by Ernest Chua (ErnestChuaa) with AI assistance. -->

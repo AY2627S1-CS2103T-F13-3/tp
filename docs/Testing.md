@@ -4,7 +4,7 @@ title: Testing guide
 ---
 
 Use this guide to select automated checks for a PonHub change and find their results.
-Complete [setup](SettingUp.html) first. Automated tests check the contracts covered by their assertions;
+Complete [setup](SettingUp.html) first. Automated tests cover the model, parsers, commands, storage and UI controllers;
 the DG's [manual-testing instructions](DeveloperGuide.html#appendix-instructions-for-manual-testing)
 cover visible workflows, packaged launch and persistence checks that need a running application.
 
@@ -66,8 +66,7 @@ before requesting review, even when the IDE's selected tests pass.
 
 ## Representative tests and results
 
-Start with tests near the changed behavior. These examples exercise the current canonical model/session
-instead of the inherited AddressBook command path:
+Start with tests near the changed behavior. These examples exercise the canonical model and session:
 
 | Test | What it checks |
 | --- | --- |
@@ -98,8 +97,8 @@ When a check fails, record the source commit, command, OS/JDK, failing test or t
 in the corresponding issue description/comments. Keep generated results outside tracked repository files.
 Distinguish a product failure from a missing display/tool or unsupported local runtime, then rerun the relevant
 checks after resolving the cause. Summarize actual failures and skips in the PR. For manual checks,
-reuse the [DG procedure](DeveloperGuide.html#appendix-instructions-for-manual-testing) and record the exact artifact
-and environment tested rather than copying the procedure or repeating another owner's acceptance campaign.
+follow the [DG procedure](DeveloperGuide.html#appendix-instructions-for-manual-testing) rather than copying it,
+and record the exact artifact (such as the JAR checksum) and environment tested.
 
 Use the optional [packaged UI diagnostic agents](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/tools/manual-checks/README.md)
 with a supplied JAR and disposable fictitious data for focused command, keyboard and layout checks.
