@@ -1,5 +1,6 @@
 @startuml
 ' Yang Shuo with OpenAI Codex assistance. #641; original UI authors retained.
+' Review corrections: Vincent Lin with OpenAI Codex assistance, 2026-11-02.
 ' Trace: MainWindow.setWindowDefaultSize/fillInnerParts/executeStudentViewingCommand;
 ' WindowPlacement.fit; PersonRecordCard copy handling.
 !include feature-sequence-style.iuml
@@ -22,9 +23,12 @@ W -> L : getPersonRecords()
 L --> W : current displayed people
 alt selected record is a current Student
   W -> L : execute(lessons INDEX\nor history INDEX)
+  opt history active or lesson result kind changed
+    L -> W : Registered property listener\nupdates active navigation indicators
+  end
   L --> W : result
   W -> V : restoreSelection(stable ID)
-  W -> W : Show feedback and update\nactive navigation indicators
+  W -> W : Show feedback
 else absent or wrong-role selection
   W -> W : Show selection guidance
 end
