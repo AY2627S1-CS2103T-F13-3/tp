@@ -1400,7 +1400,7 @@ PonHub links people, shared recurring lessons, rosters, and dated attendance in 
 
 ### User stories
 
-Priorities: **High** (core operational workflows delivered in current releases), **Medium** (useful workflow extensions), and **Low** (longer-term enhancements). Note that US-33 is partially delivered (Tab completes command words; argument completion and spelling suggestions remain future work) and US-22 is partially delivered (level filtering via `search` is supported; name sorting/grouping remains future work).
+Priorities: **High** (core operational workflows the product must support), **Medium** (useful workflow extensions), and **Low** (longer-term enhancements). All High-priority stories are delivered in the current release. Some Medium-priority stories are partially delivered: US-22 (level filtering via `search` is supported; name sorting/grouping remains future work), US-33 (Tab completes command words; argument completion and spelling suggestions remain future work), and US-35 (`delete` shows the person before `delete confirm`; `deletelesson` has no preview).
 
 | ID | Priority | As a … | I want to … | So that I can … |
 | --- | --- | --- | --- | --- |
@@ -1624,10 +1624,12 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
    Use case ends.
 
 **Extensions:**
-* 1a. No entry exists for that student, lesson and date and the student is no longer enrolled, or the date does not match the lesson's weekday:
+* 1a. No entry exists for that student, lesson and date and the student is not currently enrolled, or the date does not match the lesson's weekday:
   * 1a1. PonHub reports the error and leaves attendance unchanged. Use case ends.
 * 1b. A new or changed `present` status is requested for a future date without acknowledgement:
   * 1b1. PonHub warns that the date is in the future and asks for acknowledgement before recording it. Use case ends.
+* 1c. The requested status is already recorded for that student, lesson and date:
+  * 1c1. PonHub reports that no changes were made and leaves the records and stored file unchanged. Use case ends.
 
 #### UC-12: Remove a dated attendance entry
 
@@ -1671,8 +1673,8 @@ For all use cases below, the **Actor** is the **Tuition Centre Administrator** a
 **Extensions:**
 * 1a. The person is still referenced by a lesson as tutor or enrolled student, or by retained attendance:
   * 1a1. PonHub rejects the deletion and identifies the blocking lesson. Use case ends.
-* 2a. The administrator cancels or makes any other request before confirming:
-  * 2a1. PonHub cancels the pending deletion without removing the person. Use case ends.
+* 3a. The administrator cancels or makes any other request instead of confirming:
+  * 3a1. PonHub cancels the pending deletion without removing the person. Use case ends.
 
 #### UC-15: View command help and recover from input errors
 
