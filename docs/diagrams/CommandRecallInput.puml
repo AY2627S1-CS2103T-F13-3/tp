@@ -6,7 +6,9 @@ participant "field :\nTextField" as F
 participant "box :\nCommandBox" as B
 participant "window :\nMainWindow" as W
 
-== Raw replacement (including paste) ==
+note over F, W
+  Raw replacement (including paste)
+end note
 F -> B : TextFormatter change
 alt ISO control or Unicode line/paragraph separator
   B -> B : Mark inputRejected; show error
@@ -15,11 +17,15 @@ else ordinary edit
   B --> F : accept change
   F -> B : text listener clears rejection\nand resets recall/completion
 end
-== Command recall ==
+note over F, W
+  Command recall
+end note
 F -> B : unmodified Up / Down
 B -> B : Save unfinished draft on first Up;\nmove within session history
 B -> F : Restore recalled command or draft\nwith anchor and caret
-== Enter ==
+note over F, W
+  Submit with Enter
+end note
 F -> B : submit
 alt input still rejected
   B -> B : Repeat error; block execution

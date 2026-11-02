@@ -16,7 +16,9 @@ note over W
   Command entry stays below both columns.
   Bind result lists once; headings/feedback can scroll.
 end note
-== Student viewing shortcut ==
+note over W, L
+  Student viewing shortcut
+end note
 W -> V : getSelectedPersonId()
 V --> W : stable selected ID, if any
 W -> L : getPersonRecords()
