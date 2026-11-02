@@ -203,16 +203,19 @@ public class CanonicalLessonEditIntegrationTest {
         assertEquals(0, notifications.get());
 
         String[][] conflicts = {
-            {"tutor.json", "editlesson lid/L2 st/0930 et/1030 tu/Tutor One", "Tutor schedule overlap"},
-            {"room.json", "editlesson lid/L2 st/0930 et/1030 rm/R1", "Room schedule overlap"},
-            {"student.json", "editlesson lid/L2 st/0930 et/1030", "Student S1 schedule overlap"}
+            {"tutor.json", "editlesson lid/L2 st/0930 et/1030 tu/Tutor One",
+                "Tutor schedule overlap between L1 and L2."},
+            {"room.json", "editlesson lid/L2 st/0930 et/1030 rm/R1",
+                "Room schedule overlap between L1 and L2."},
+            {"student.json", "editlesson lid/L2 st/0930 et/1030",
+                "Student S1 schedule overlap between L1 and L2."}
         };
         for (String[] testCase : conflicts) {
             CanonicalPeopleSession session = baseline(testCase[0]);
             PonHubDataState unchanged = session.getDataSnapshot();
             byte[] unchangedBytes = Files.readAllBytes(session.getDataFilePath());
             CommandException failure = assertThrows(CommandException.class, () -> session.execute(testCase[1]));
-            assertTrue(failure.getMessage().contains(testCase[2]));
+            assertEquals(testCase[2], failure.getMessage());
             assertSame(unchanged, session.getDataSnapshot());
             assertArrayEquals(unchangedBytes, Files.readAllBytes(session.getDataFilePath()));
         }

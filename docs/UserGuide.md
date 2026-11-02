@@ -438,6 +438,7 @@ See [Field reference](#field-reference) for the exact format of `d/`, `st/`, `et
   * Whenever `tp/` is supplied, it must match the named tutor's phone number even if the tutor's name is unique.
   * If an older data file contains two tutors with both the same normalized name and the same phone number, use `list r/tutor` and [`edit`](#editing-a-person-edit) to give one a distinct name or phone first.
 * **Schedule rules and clashes:** Start time (`st/`) must be earlier than end time (`et/`) on the same day. Neither the tutor nor the room may overlap another lesson on the same weekday (rooms are stored in uppercase, so `b-01` and `B-01` are the same room). Back-to-back lessons (such as `1600`–`1730` and `1730`–`1900`) are allowed, and enrolling students later never books the tutor or room a second time.
+* **Clash feedback:** A rejected creation names the existing conflicting lesson, such as `Tutor schedule overlap with L1.` or `Room schedule overlap with L1.` It does not create a lesson or consume the next lesson ID.
 
 <a id="editing-a-shared-lesson-editlesson"></a>
 

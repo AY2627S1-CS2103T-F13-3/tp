@@ -94,7 +94,7 @@ public class CanonicalAddLessonIntegrationTest {
         assertEquals(new Room("B-01"), session.getDataSnapshot().lessons().getFirst().getRoom());
         assertCommandFailure(session,
                 "addlesson d/Mon st/1600 et/1730 s/Science tu/Mei Lim tp/00123456 rm/B-01",
-                "Room schedule overlap between L13 and L14.");
+                "Room schedule overlap with L13.");
 
         session.execute("editlesson lid/L13 rm/b-02");
         assertEquals("Found 1 lesson(s).", session.execute("search c/lesson rm/b-02").getFeedbackToUser());
@@ -144,26 +144,66 @@ public class CanonicalAddLessonIntegrationTest {
         PonHubDataState before = createState(List.of(existing), 12);
         JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
         storage.saveData(before);
+        byte[] originalBytes = Files.readAllBytes(path);
         int[] writes = {0};
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
             writes[0]++;
             storage.saveData(state);
         });
 
+        session.execute("lessons");
+        ObservableList<LessonView> displayed = session.getDisplayedLessons();
+        List<LessonView> originalResults = List.copyOf(displayed);
+
         assertCommandFailure(session,
                 "addlesson d/Mon st/0930 et/1030 s/Math tu/Mei Lim tp/00123456 rm/R2",
-                "Tutor schedule overlap between L12 and L13.");
+                "Tutor schedule overlap with L12.");
         assertCommandFailure(session,
                 "addlesson d/Mon st/0930 et/1030 s/Math tu/Unique Tutor rm/r1",
-                "Room schedule overlap between L12 and L13.");
+                "Room schedule overlap with L12.");
         assertEquals(before, session.getDataSnapshot());
         assertEquals(0, writes[0]);
+        assertArrayEquals(originalBytes, Files.readAllBytes(path));
+        assertSame(displayed, session.getDisplayedLessons());
+        assertEquals(originalResults, displayed);
 
         assertEquals("New lesson added: L13.", session.execute(
                 "addlesson d/Mon st/1000 et/1100 s/Math tu/Mei Lim tp/00123456 rm/R2")
                 .getFeedbackToUser());
         assertEquals(NEXT_LESSON_ID, session.getDataSnapshot().lessons().getLast().getId());
         assertEquals(1, writes[0]);
+    }
+
+    @Test
+    public void execute_emptyRosterCreationThenStudentClash_namesOnlyExistingLessons() throws Exception {
+        PersonId studentId = new PersonId("S4");
+        Lesson existing = createLesson(new LessonId("L12"), FIRST_TUTOR_ID, LessonDay.MONDAY,
+                "0900", "1000", "R1").withEnrolledStudentIds(Set.of(studentId));
+        Path path = directory.resolve("student-clash.json");
+        JsonPonHubDataStorage storage = new JsonPonHubDataStorage(path);
+        storage.saveData(createState(List.of(existing), 12));
+        int[] writes = {0};
+        CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+            writes[0]++;
+            storage.saveData(state);
+        });
+
+        assertEquals("New lesson added: L13.", session.execute(
+                "addlesson d/Mon st/0930 et/1030 s/Science tu/Unique Tutor rm/R2").getFeedbackToUser());
+        assertTrue(session.getDataSnapshot().lessons().getLast().getEnrolledStudentIds().isEmpty());
+        session.execute("list r/student");
+        session.execute("lessons");
+        PonHubDataState beforeEnrolment = session.getDataSnapshot();
+        byte[] savedBytes = Files.readAllBytes(path);
+        List<LessonView> originalResults = List.copyOf(session.getDisplayedLessons());
+
+        assertCommandFailure(session, "enrol 1 lid/L13",
+                "Student S4 schedule overlap between L12 and L13.");
+        assertSame(beforeEnrolment, session.getDataSnapshot());
+        assertArrayEquals(savedBytes, Files.readAllBytes(path));
+        assertEquals(originalResults, session.getDisplayedLessons());
+        assertEquals(1, writes[0]);
+        assertEquals(beforeEnrolment, new CanonicalPeopleSession(path).getDataSnapshot());
     }
 
     @Test
