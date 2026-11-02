@@ -967,7 +967,7 @@ public class LessonBoardNavigationTest {
 
         private List<String> getHistoryKeys() {
             return getHistory().getItems().stream().map(entry -> entry.getStudentId() + "/" + entry.getLessonId()
-                    + "/" + entry.getDate() + "/" + entry.getStatus()).toList();
+                    + "/" + entry.getDate() + "/" + entry.getStatus().name()).toList();
         }
 
         private void enter(String command) {
