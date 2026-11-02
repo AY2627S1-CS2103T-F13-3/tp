@@ -99,6 +99,9 @@ public class SlashContactParserTest {
                 .parse("d/Thu st/1100 et/1200 tu/Ravi s/o Kumar s/o level math rm/R5");
         assertEquals(new Name("Ravi s/o Kumar"), bothMarkers.tutorName());
         assertEquals(new Subject("o level math"), bothMarkers.subject());
+        // Without s/ or tu/, the missing subject is still reported.
+        assertEquals("Missing required addlesson prefix 's/'.", assertThrows(ParseException.class, () ->
+                new AddLessonParser().parse("d/Thu st/1100 et/1200 rm/R5")).getMessage());
     }
 
     @Test
