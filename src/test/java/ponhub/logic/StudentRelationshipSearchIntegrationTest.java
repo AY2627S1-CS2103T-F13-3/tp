@@ -66,9 +66,9 @@ public class StudentRelationshipSearchIntegrationTest {
     @Test
     public void membership_refreshesResultsAndContextWithFailedSaveRetryAndReload() throws Exception {
         Path path = saveFixture();
-        AtomicBoolean fail = new AtomicBoolean(true);
+        AtomicBoolean shouldFailSave = new AtomicBoolean(true);
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
-            if (fail.get()) {
+            if (shouldFailSave.get()) {
                 throw new IOException("Injected enrolment write failure");
             }
             new JsonPonHubDataStorage(path).saveData(state);
@@ -82,7 +82,7 @@ public class StudentRelationshipSearchIntegrationTest {
         assertIds(session, "S1", "S2");
         assertSame(before, contexts.get());
         assertArrayEquals(bytes, Files.readAllBytes(path));
-        fail.set(false);
+        shouldFailSave.set(false);
         session.execute("unenrol 1 lid/L10");
         assertIds(session, "S2");
         assertEquals(List.of(new PersonId("S2")), contexts.get().keySet().stream().toList());

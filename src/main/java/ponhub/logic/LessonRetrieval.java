@@ -50,12 +50,13 @@ public final class LessonRetrieval {
     private final LessonQueries queries;
     private final PeopleView peopleView;
     private final PonHubData data;
-    private final ObservableList<LessonView> displayed = FXCollections.observableArrayList();
-    private final ObservableList<LessonView> readOnlyDisplayed = FXCollections.unmodifiableObservableList(displayed);
+    private final ObservableList<LessonView> displayedLessons = FXCollections.observableArrayList();
+    private final ObservableList<LessonView> readOnlyDisplayed =
+            FXCollections.unmodifiableObservableList(displayedLessons);
     private final ObservableList<LessonView> detail = FXCollections.observableArrayList();
     private final ListChangeListener<LessonView> refresh = change -> refreshDisplayed();
     private LessonOrder order = LessonOrder.CREATION;
-    private ObservableList<LessonView> selected;
+    private ObservableList<LessonView> selectedLessons;
     private LessonId selectedDetailId;
     private Optional<LocalDate> selectedDate = Optional.empty();
     private final ReadOnlyStringWrapper context = new ReadOnlyStringWrapper("All lessons");
@@ -69,9 +70,9 @@ public final class LessonRetrieval {
         this.queries = requireNonNull(queries);
         this.peopleView = requireNonNull(peopleView);
         this.data = requireNonNull(data);
-        selected = queries.getLessonList();
-        selected.addListener(refresh);
-        displayed.setAll(selected);
+        selectedLessons = queries.getLessonList();
+        selectedLessons.addListener(refresh);
+        displayedLessons.setAll(selectedLessons);
         data.stateProperty().addListener((observable, previous, current) -> refreshDetail());
     }
 
@@ -96,16 +97,6 @@ public final class LessonRetrieval {
      */
     public ReadOnlyObjectProperty<ResultKind> resultKindProperty() {
         return resultKind.getReadOnlyProperty();
-    }
-
-    /**
-     * Returns the full catalogue or one current-view student's lessons.
-     * A supplied index is resolved once against the current people list, then converted to a stable ID.
-     * The returned observable result is read-only and remains current after canonical publication.
-     */
-    public ObservableList<LessonView> list(Optional<Index> studentIndex) throws CommandException {
-        listInput(new LessonsInput(studentIndex, LessonOrder.CREATION));
-        return selected;
     }
 
     /**
@@ -166,7 +157,7 @@ public final class LessonRetrieval {
      * Refreshes only the selected detail after committed replacement; a failed save publishes nothing.
      */
     private void refreshDetail() {
-        if (selected != detail) {
+        if (selectedLessons != detail) {
             return;
         }
         Optional<Lesson> lesson = data.getLesson(selectedDetailId);
@@ -191,10 +182,10 @@ public final class LessonRetrieval {
                 .filter(record -> date.isEmpty() || date.orElseThrow().equals(record.getDate())).toList();
         Map<PersonId, AttendanceStatus> statuses = date.isEmpty() ? Map.of() : records.stream()
                 .collect(Collectors.toMap(Attendance::getStudentId, Attendance::getStatus));
-        List<LessonDetailView.RosterStatus> current = roster.stream()
+        List<LessonDetailView.RosterStatus> currentRosterEntries = roster.stream()
                 .map(student -> new LessonDetailView.RosterStatus(student,
                         Optional.ofNullable(statuses.get(student.getId())))).toList();
-        List<LessonDetailView.FormerAttendance> former = records.stream()
+        List<LessonDetailView.FormerAttendance> formerAttendanceRecords = records.stream()
                 .filter(record -> !currentIds.contains(record.getStudentId()))
                 .sorted(Comparator.comparing(Attendance::getDate).reversed()
                         .thenComparingLong(record -> record.getStudentId().getSequence()))
@@ -202,7 +193,7 @@ public final class LessonRetrieval {
                         (Student) data.getPerson(record.getStudentId()).orElseThrow(),
                         record.getDate(), record.getStatus())).toList();
         String tutorName = data.getPerson(lesson.getTutorId()).orElseThrow().getName().fullName;
-        return new LessonDetailView(lesson, tutorName, date, current, former);
+        return new LessonDetailView(lesson, tutorName, date, currentRosterEntries, formerAttendanceRecords);
     }
 
     /**
@@ -215,10 +206,10 @@ public final class LessonRetrieval {
     private ObservableList<LessonView> select(ObservableList<LessonView> source, ResultKind kind,
             LessonOrder requestedOrder) {
         order = requestedOrder;
-        if (selected != source) {
-            selected.removeListener(refresh);
-            selected = source;
-            selected.addListener(refresh);
+        if (selectedLessons != source) {
+            selectedLessons.removeListener(refresh);
+            selectedLessons = source;
+            selectedLessons.addListener(refresh);
         }
         refreshDisplayed();
         resultKind.set(kind);
@@ -226,6 +217,6 @@ public final class LessonRetrieval {
     }
 
     private void refreshDisplayed() {
-        displayed.setAll(order.apply(selected));
+        displayedLessons.setAll(order.apply(selectedLessons));
     }
 }

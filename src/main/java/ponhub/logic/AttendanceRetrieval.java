@@ -28,13 +28,13 @@ import ponhub.model.query.LessonQuerySource;
 public final class AttendanceRetrieval {
     private final LessonQuerySource queries;
     private final PeopleView peopleView;
-    private final ObservableList<AttendanceHistoryEntry> displayed = FXCollections.observableArrayList();
+    private final ObservableList<AttendanceHistoryEntry> displayedEntries = FXCollections.observableArrayList();
     private final ObservableList<AttendanceHistoryEntry> readOnlyDisplayed =
-            FXCollections.unmodifiableObservableList(displayed);
+            FXCollections.unmodifiableObservableList(displayedEntries);
     private final ListChangeListener<AttendanceHistoryEntry> refresh = change -> refreshDisplayed();
     private final ReadOnlyStringWrapper context = new ReadOnlyStringWrapper("Attendance history");
     private final ReadOnlyBooleanWrapper active = new ReadOnlyBooleanWrapper(false);
-    private ObservableList<AttendanceHistoryEntry> selected;
+    private ObservableList<AttendanceHistoryEntry> selectedEntries;
     private PersonId selectedStudentId;
     private Optional<LessonId> selectedLessonId = Optional.empty();
     private Optional<LocalDate> selectedDate = Optional.empty();
@@ -76,12 +76,12 @@ public final class AttendanceRetrieval {
         } catch (IllegalArgumentException exception) {
             throw new CommandException(exception.getMessage());
         }
-        if (selected != source) {
-            if (selected != null) {
-                selected.removeListener(refresh);
+        if (selectedEntries != source) {
+            if (selectedEntries != null) {
+                selectedEntries.removeListener(refresh);
             }
-            selected = source;
-            selected.addListener(refresh);
+            selectedEntries = source;
+            selectedEntries.addListener(refresh);
         }
         selectedStudentId = student.getId();
         selectedLessonId = lessonId;
@@ -107,7 +107,7 @@ public final class AttendanceRetrieval {
      * Applies the held filters to committed records without changing their query order or membership context.
      */
     private void refreshDisplayed() {
-        displayed.setAll(selected.stream()
+        displayedEntries.setAll(selectedEntries.stream()
                 .filter(entry -> selectedDate.map(date -> date.equals(entry.getDate())).orElse(true))
                 .filter(entry -> selectedStatus.map(status -> status.name().equals(entry.getStatus().name()))
                         .orElse(true))
@@ -122,13 +122,13 @@ public final class AttendanceRetrieval {
                 && selectedLessonId.map(id -> data.getLesson(id).isPresent()).orElse(true))) {
             return;
         }
-        selected.removeListener(refresh);
-        selected = null;
+        selectedEntries.removeListener(refresh);
+        selectedEntries = null;
         selectedStudentId = null;
         selectedLessonId = Optional.empty();
         selectedDate = Optional.empty();
         selectedStatus = Optional.empty();
-        displayed.clear();
+        displayedEntries.clear();
         context.set("Attendance history");
         hide();
     }

@@ -20,7 +20,7 @@ public class PersonIndexParserBoundaryTest {
                         new LessonMembershipParser().parse(index + " lid/L10"));
                 for (String selector : List.of(index, "si/" + index)) {
                     assertThrows(ParseException.class, LessonsArgumentsParser.MESSAGE_USAGE, () ->
-                            new LessonsArgumentsParser().parse(selector));
+                            new LessonsArgumentsParser().parseInput(selector));
                 }
                 assertThrows(ParseException.class, HistoryArgumentsParser.MESSAGE_USAGE, () ->
                         new HistoryArgumentsParser().parse(index + " lid/L10"));
@@ -39,7 +39,7 @@ public class PersonIndexParserBoundaryTest {
                     new LessonMembershipParser().parse(index + " lid/L0"));
             for (String selector : List.of(index, "si/" + index)) {
                 assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_INDEX, () ->
-                        new LessonsArgumentsParser().parse(selector));
+                        new LessonsArgumentsParser().parseInput(selector));
             }
             assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_INDEX, () ->
                     new HistoryArgumentsParser().parse(index + " lid/L0"));

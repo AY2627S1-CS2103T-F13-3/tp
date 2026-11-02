@@ -11,8 +11,6 @@ import ponhub.model.person.PersonId;
  * Lists retain their identity across committed source changes and cannot be modified by callers.
  */
 public interface LessonQuerySource {
-    String MESSAGE_UNAVAILABLE = "Shared-lesson retrieval is not implemented yet";
-
     /**
      * Returns every shared lesson once in creation order, including empty rosters.
      */

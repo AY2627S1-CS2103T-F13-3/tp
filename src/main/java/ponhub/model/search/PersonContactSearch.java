@@ -35,7 +35,7 @@ public final class PersonContactSearch {
                 "Person contact search requires c/student, c/parent, or c/tutor.");
         for (SearchField field : criteria.getFilters().keySet()) {
             checkArgument(OWN_FIELDS.contains(field),
-                    "Search prefix '" + field.getPrefix() + "' is not available for person contact search yet.");
+                    "Search prefix '" + field.getPrefix() + "' is not supported by person contact search.");
         }
 
         PersonRole role = criteria.getCategory().getPersonRole().orElseThrow();

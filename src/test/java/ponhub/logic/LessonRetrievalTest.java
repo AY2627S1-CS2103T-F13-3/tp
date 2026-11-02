@@ -18,6 +18,7 @@ import javafx.collections.ObservableList;
 import ponhub.commons.core.index.Index;
 import ponhub.logic.LessonRetrieval.ResultKind;
 import ponhub.logic.commands.exceptions.CommandException;
+import ponhub.logic.parser.LessonsInput;
 import ponhub.logic.parser.SearchCriteriaParser;
 import ponhub.logic.parser.ShowLessonInput;
 import ponhub.model.PeopleView;
@@ -29,6 +30,7 @@ import ponhub.model.lesson.LessonId;
 import ponhub.model.person.PersonId;
 import ponhub.model.person.PersonRole;
 import ponhub.model.query.LessonDetailView;
+import ponhub.model.query.LessonOrder;
 import ponhub.model.query.LessonQueries;
 import ponhub.model.query.LessonView;
 import ponhub.model.search.SearchCategory;
@@ -50,28 +52,38 @@ public class LessonRetrievalTest {
     }
 
     @Test
-    public void list_fullAndCurrentViewStudentResultsUseStableIdentity() throws CommandException {
+    public void listInput_fullAndCurrentViewStudentResultsUseStableIdentity() throws CommandException {
         PonHubDataState before = data.exportState();
-        assertIds(retrieval.list(Optional.empty()), "L2", "L10", "L3", "L4", "L11");
-        assertIds(retrieval.list(Optional.of(Index.fromOneBased(2))), "L2", "L10");
-        assertIds(retrieval.list(Optional.of(Index.fromOneBased(4))), "L10", "L11");
-        assertTrue(retrieval.list(Optional.of(Index.fromOneBased(6))).isEmpty());
+        assertIds(retrieval.listInput(
+                new LessonsInput(Optional.empty(), LessonOrder.CREATION)), "L2", "L10", "L3", "L4", "L11");
+        assertIds(retrieval.listInput(
+                new LessonsInput(Optional.of(Index.fromOneBased(2)), LessonOrder.CREATION)), "L2", "L10");
+        assertIds(retrieval.listInput(
+                new LessonsInput(Optional.of(Index.fromOneBased(4)), LessonOrder.CREATION)), "L10", "L11");
+        assertTrue(retrieval.listInput(
+                new LessonsInput(Optional.of(Index.fromOneBased(6)), LessonOrder.CREATION)).isEmpty());
         peopleView.setRoleFilter(Optional.of(PersonRole.STUDENT));
-        assertIds(retrieval.list(Optional.of(Index.fromOneBased(1))), "L2", "L10");
-        assertIds(retrieval.list(Optional.of(Index.fromOneBased(2))), "L10", "L11");
+        assertIds(retrieval.listInput(
+                new LessonsInput(Optional.of(Index.fromOneBased(1)), LessonOrder.CREATION)), "L2", "L10");
+        assertIds(retrieval.listInput(
+                new LessonsInput(Optional.of(Index.fromOneBased(2)), LessonOrder.CREATION)), "L10", "L11");
         assertEquals(Optional.of(PersonRole.STUDENT), peopleView.getRoleFilter());
         assertSame(before, data.exportState());
     }
 
     @Test
-    public void list_rejectsWrongRoleAndOutOfRangeWithoutChangingViews() throws CommandException {
-        ObservableList<LessonView> catalogue = retrieval.list(Optional.empty());
+    public void listInput_rejectsWrongRoleAndOutOfRangeWithoutChangingViews() throws CommandException {
+        ObservableList<LessonView> catalogue = retrieval.listInput(
+                new LessonsInput(Optional.empty(), LessonOrder.CREATION));
         var people = peopleView.getPeople();
-        assertThrows(CommandException.class, () -> retrieval.list(Optional.of(Index.fromOneBased(1))));
-        assertThrows(CommandException.class, () -> retrieval.list(Optional.of(Index.fromOneBased(3))));
-        assertThrows(CommandException.class, () -> retrieval.list(Optional.of(Index.fromOneBased(8))));
+        assertThrows(CommandException.class, () -> retrieval.listInput(
+                new LessonsInput(Optional.of(Index.fromOneBased(1)), LessonOrder.CREATION)));
+        assertThrows(CommandException.class, () -> retrieval.listInput(
+                new LessonsInput(Optional.of(Index.fromOneBased(3)), LessonOrder.CREATION)));
+        assertThrows(CommandException.class, () -> retrieval.listInput(
+                new LessonsInput(Optional.of(Index.fromOneBased(8)), LessonOrder.CREATION)));
         assertSame(people, peopleView.getPeople());
-        assertSame(catalogue, retrieval.list(Optional.empty()));
+        assertSame(catalogue, retrieval.listInput(new LessonsInput(Optional.empty(), LessonOrder.CREATION)));
         assertIds(catalogue, "L2", "L10", "L3", "L4", "L11");
     }
 
@@ -87,7 +99,8 @@ public class LessonRetrievalTest {
         assertIds(filtered, "L10");
         assertEquals(before, people);
         assertSame(people, peopleView.getPeople());
-        assertIds(retrieval.list(Optional.of(Index.fromOneBased(2))), "L10", "L11");
+        assertIds(retrieval.listInput(
+                new LessonsInput(Optional.of(Index.fromOneBased(2)), LessonOrder.CREATION)), "L10", "L11");
         assertSame(state, data.exportState());
         assertThrows(UnsupportedOperationException.class, () -> filtered.remove(0));
 
@@ -101,8 +114,13 @@ public class LessonRetrievalTest {
     @Test
     public void heldResults_refreshAfterPublicationAndRollback() throws CommandException {
         PonHubDataState before = data.exportState();
-        var catalogue = retrieval.list(Optional.empty());
-        var student = retrieval.list(Optional.of(Index.fromOneBased(2)));
+        var catalogue = queries.getLessonList();
+        var student = queries.getStudentLessons(new PersonId("S1"));
+        var displayed = retrieval.getDisplayedLessons();
+        assertSame(displayed, retrieval.listInput(
+                new LessonsInput(Optional.empty(), LessonOrder.CREATION)));
+        assertSame(displayed, retrieval.listInput(
+                new LessonsInput(Optional.of(Index.fromOneBased(2)), LessonOrder.CREATION)));
         var filtered = retrieval.search(new SearchCriteria(SearchCategory.LESSON,
                 Map.of(SearchField.SUBJECT, "Math")));
         var people = peopleView.getPeople();
@@ -115,6 +133,7 @@ public class LessonRetrievalTest {
         assertIds(catalogue, "L2", "L10", "L3", "L4", "L11");
         assertIds(student, "L2", "L10");
         assertIds(filtered, "L10", "L4");
+        assertIds(displayed, "L10", "L4");
         assertSame(people, peopleView.getPeople());
     }
 
@@ -123,7 +142,7 @@ public class LessonRetrievalTest {
         assertThrows(NullPointerException.class, () -> new LessonRetrieval(null, peopleView, data));
         assertThrows(NullPointerException.class, () -> new LessonRetrieval(queries, null, data));
         assertThrows(NullPointerException.class, () -> new LessonRetrieval(queries, peopleView, null));
-        assertThrows(NullPointerException.class, () -> retrieval.list(null));
+        assertThrows(NullPointerException.class, () -> retrieval.listInput(null));
         assertThrows(NullPointerException.class, () -> retrieval.search(null));
         SearchCriteria valid = new SearchCriteria(SearchCategory.LESSON, Map.of(SearchField.DAY, "Mon"));
         var filtered = retrieval.search(valid);
@@ -142,15 +161,15 @@ public class LessonRetrievalTest {
         var kind = retrieval.resultKindProperty();
         assertSame(kind, retrieval.resultKindProperty());
         assertEquals(ResultKind.ALL_LESSONS, kind.get());
-        retrieval.list(Optional.empty());
-        retrieval.list(Optional.empty());
+        retrieval.listInput(new LessonsInput(Optional.empty(), LessonOrder.CREATION));
+        retrieval.listInput(new LessonsInput(Optional.empty(), LessonOrder.CREATION));
         assertEquals(ResultKind.ALL_LESSONS, kind.get());
 
-        retrieval.list(Optional.of(Index.fromOneBased(6)));
+        retrieval.listInput(new LessonsInput(Optional.of(Index.fromOneBased(6)), LessonOrder.CREATION));
         assertTrue(retrieval.getDisplayedLessons().isEmpty());
         assertEquals(ResultKind.STUDENT_LESSONS, kind.get());
-        retrieval.list(Optional.of(Index.fromOneBased(2)));
-        retrieval.list(Optional.of(Index.fromOneBased(2)));
+        retrieval.listInput(new LessonsInput(Optional.of(Index.fromOneBased(2)), LessonOrder.CREATION));
+        retrieval.listInput(new LessonsInput(Optional.of(Index.fromOneBased(2)), LessonOrder.CREATION));
         assertEquals(ResultKind.STUDENT_LESSONS, kind.get());
 
         SearchCriteria emptySearch = new SearchCriteriaParser().parse("c/lesson s/Missing");
@@ -167,20 +186,21 @@ public class LessonRetrievalTest {
         assertEquals(ResultKind.DETAIL, kind.get());
         retrieval.show(new ShowLessonInput(new LessonId("L10"), Optional.of(LocalDate.of(2026, 10, 5))));
         assertEquals(ResultKind.DETAIL, kind.get());
-        retrieval.list(Optional.empty());
+        retrieval.listInput(new LessonsInput(Optional.empty(), LessonOrder.CREATION));
         assertEquals(ResultKind.ALL_LESSONS, kind.get());
     }
 
     @Test
     public void resultKind_invalidSelectorsFiltersAndDatesPreservePreviousSource() throws Exception {
-        retrieval.list(Optional.of(Index.fromOneBased(4)));
+        retrieval.listInput(new LessonsInput(Optional.of(Index.fromOneBased(4)), LessonOrder.CREATION));
         var displayed = List.copyOf(retrieval.getDisplayedLessons());
         String context = retrieval.contextProperty().get();
         for (int index : List.of(1, 3, 8)) {
-            assertThrows(CommandException.class, () -> retrieval.list(Optional.of(Index.fromOneBased(index))));
+            assertThrows(CommandException.class, () -> retrieval.listInput(
+                    new LessonsInput(Optional.of(Index.fromOneBased(index)), LessonOrder.CREATION)));
             assertEquals(ResultKind.STUDENT_LESSONS, retrieval.resultKindProperty().get());
         }
-        assertThrows(NullPointerException.class, () -> retrieval.list(null));
+        assertThrows(NullPointerException.class, () -> retrieval.listInput(null));
         assertThrows(NullPointerException.class, () -> retrieval.search(null));
         assertThrows(IllegalArgumentException.class, () -> retrieval.search(
                 new SearchCriteria(SearchCategory.STUDENT, Map.of())));
@@ -199,10 +219,11 @@ public class LessonRetrievalTest {
     public void context_identifiesSelectedStudentOrFiltersAndInvalidRequestsPreserveIt() throws Exception {
         var context = retrieval.contextProperty();
         assertEquals("All lessons", context.get());
-        retrieval.list(Optional.of(Index.fromOneBased(4)));
+        retrieval.listInput(new LessonsInput(Optional.of(Index.fromOneBased(4)), LessonOrder.CREATION));
         assertEquals("Student S2 · current lessons", context.get());
         peopleView.setRoleFilter(Optional.of(PersonRole.TUTOR));
-        assertThrows(CommandException.class, () -> retrieval.list(Optional.of(Index.fromOneBased(1))));
+        assertThrows(CommandException.class, () -> retrieval.listInput(
+                new LessonsInput(Optional.of(Index.fromOneBased(1)), LessonOrder.CREATION)));
         assertEquals("Student S2 · current lessons", context.get());
         retrieval.search(new SearchCriteriaParser().parse("c/lesson tu/MEI d/mon s/Math"));
         assertEquals("Lesson search: d/mon, s/math, tu/mei", context.get());
@@ -211,7 +232,7 @@ public class LessonRetrievalTest {
         assertEquals("Lesson search: d/mon, s/math, tu/mei", context.get());
         retrieval.search(new SearchCriteriaParser().parse("c/lesson"));
         assertEquals("Lesson search: all lessons", context.get());
-        retrieval.list(Optional.empty());
+        retrieval.listInput(new LessonsInput(Optional.empty(), LessonOrder.CREATION));
         assertEquals("All lessons", context.get());
         assertSame(context, retrieval.contextProperty());
     }
@@ -225,10 +246,10 @@ public class LessonRetrievalTest {
         retrieval.search(math);
         assertIds(displayed, "L10", "L4");
         retrieval.search(math); // Reusing the source must not duplicate its subscription.
-        retrieval.list(Optional.of(Index.fromOneBased(4)));
+        retrieval.listInput(new LessonsInput(Optional.of(Index.fromOneBased(4)), LessonOrder.CREATION));
         queries.setLessonFilter(new SearchCriteriaParser().parse("c/lesson s/Science"));
         assertIds(displayed, "L10", "L11"); // The old search source is detached.
-        retrieval.list(Optional.empty());
+        retrieval.listInput(new LessonsInput(Optional.empty(), LessonOrder.CREATION));
         queries.setLessonFilter(math);
         assertIds(displayed, "L2", "L10", "L3", "L4", "L11");
         assertEquals(ResultKind.ALL_LESSONS, retrieval.resultKindProperty().get());
@@ -239,7 +260,7 @@ public class LessonRetrievalTest {
     public void selectedStudentAndSearch_refreshMembershipAttendanceDeletionAndRestore() throws Exception {
         PonHubDataState original = data.exportState();
         var displayed = retrieval.getDisplayedLessons();
-        retrieval.list(Optional.of(Index.fromOneBased(2)));
+        retrieval.listInput(new LessonsInput(Optional.of(Index.fromOneBased(2)), LessonOrder.CREATION));
         peopleView.setRoleFilter(Optional.of(PersonRole.TUTOR));
         PersonId student = new PersonId("S1");
         var withoutStudent = original.lessons().stream().map(lesson -> lesson.withoutEnrolledStudent(student)).toList();
@@ -257,7 +278,7 @@ public class LessonRetrievalTest {
         assertEquals(1, displayed.getFirst().getRosterSize());
         data.resetData(new PonHubDataState(original.people(), enrolled, List.of(), 11)); // Unmark.
         assertIds(displayed, "L3");
-        retrieval.list(Optional.empty());
+        retrieval.listInput(new LessonsInput(Optional.empty(), LessonOrder.CREATION));
         data.resetData(new PonHubDataState(original.people(), List.of(), List.of(), 11)); // Catalogue removal.
         assertTrue(displayed.isEmpty());
         data.resetData(original); // Restore the complete prior state.
@@ -348,7 +369,7 @@ public class LessonRetrievalTest {
         assertTrue(displayed.isEmpty());
         assertEquals(ResultKind.DETAIL, retrieval.resultKindProperty().get());
         assertTrue(retrieval.contextProperty().get().contains("no longer available"));
-        retrieval.list(Optional.empty());
+        retrieval.listInput(new LessonsInput(Optional.empty(), LessonOrder.CREATION));
         assertIds(displayed, "L2", "L10", "L4", "L11");
     }
 }
