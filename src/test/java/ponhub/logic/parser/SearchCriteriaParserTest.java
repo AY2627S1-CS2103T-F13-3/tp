@@ -11,6 +11,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import ponhub.logic.parser.exceptions.ParseException;
+import ponhub.model.person.EducationLevel;
 import ponhub.model.search.SearchCategory;
 import ponhub.model.search.SearchCriteria;
 import ponhub.model.search.SearchField;
@@ -248,7 +249,7 @@ public class SearchCriteriaParserTest {
     public void parse_invalidLevel_throwsParseException() {
         for (String level : new String[]{"P0", "P7", "S0", "S6", "JC0", "JC3", "P01", "JC01", "Primary 1",
             "\u0000s2\u0000", "\u001bp1", "jc2\b"}) {
-            assertThrows(ParseException.class, "Search filter 'l/' requires P1-P6, S1-S5, JC1 or JC2.", () ->
+            assertThrows(ParseException.class, "Search filter 'l/': " + EducationLevel.MESSAGE_CONSTRAINTS, () ->
                     parser.parse("c/student l/" + level));
         }
     }

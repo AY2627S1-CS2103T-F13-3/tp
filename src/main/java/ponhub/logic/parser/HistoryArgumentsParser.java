@@ -32,7 +32,7 @@ public final class HistoryArgumentsParser {
             throw new ParseException(MESSAGE_USAGE);
         }
         String stripped = ParserUtil.stripUnicodeBoundaryWhitespace(arguments);
-        if (stripped.matches("[0-9]+")) {
+        if (stripped.matches("\\p{javaDigit}+")) {
             return new Input(ParserUtil.parseIndex(stripped), Optional.empty(), Optional.empty(), Optional.empty());
         }
         AttendanceArguments parsed = AttendanceArguments.extract(stripped, "history", PREFIXES, MESSAGE_USAGE);

@@ -101,7 +101,7 @@ public enum SearchField {
                 try {
                     yield new Phone(trimmed).value;
                 } catch (IllegalArgumentException e) {
-                    throw new IllegalArgumentException("Search filter '" + prefix + "' requires 3-15 digits.");
+                    throw new IllegalArgumentException("Search filter '" + prefix + "': " + Phone.MESSAGE_CONSTRAINTS);
                 }
             }
             case LEVEL -> {
@@ -111,7 +111,7 @@ public enum SearchField {
                     checkArgument(level.equals(trimmed.toUpperCase(Locale.ROOT)), EducationLevel.MESSAGE_CONSTRAINTS);
                     yield level;
                 } catch (IllegalArgumentException e) {
-                    throw new IllegalArgumentException("Search filter 'l/' requires P1-P6, S1-S5, JC1 or JC2.");
+                    throw new IllegalArgumentException("Search filter 'l/': " + EducationLevel.MESSAGE_CONSTRAINTS);
                 }
             }
             case DAY -> {
@@ -121,8 +121,7 @@ public enum SearchField {
                     checkArgument(day.equals(trimmed.toLowerCase(Locale.ROOT)), LessonDay.MESSAGE_CONSTRAINTS);
                     yield day;
                 } catch (IllegalArgumentException e) {
-                    throw new IllegalArgumentException("Search filter 'd/' requires "
-                            + "Mon, Tue, Wed, Thu, Fri, Sat or Sun.");
+                    throw new IllegalArgumentException("Search filter 'd/': " + LessonDay.MESSAGE_CONSTRAINTS);
                 }
             }
             case START_TIME, END_TIME, FROM_TIME, TO_TIME -> {

@@ -128,6 +128,42 @@ public class CanonicalHistoryFilterTest {
         assertEquals(2, writes[0]);
     }
 
+    @Test
+    public void retrieval_unicodeIndices_preserveCurrentSelectionAndReadOnlyState() throws Exception {
+        Path path = createFixture();
+        CanonicalPeopleSession session = createStudentSession(path);
+        var before = session.getDataSnapshot();
+        byte[] bytes = Files.readAllBytes(path);
+        var people = List.copyOf(session.getPeople());
+        for (String digits : List.of("１", "١", "०१", "0１")) {
+            session.execute("lessons 1 sort/schedule");
+            var lessons = List.copyOf(session.getDisplayedLessons());
+            session.execute("lessons " + digits + " sort/schedule");
+            assertEquals(lessons, session.getDisplayedLessons());
+            session.execute("lessons si/" + digits + " sort/schedule");
+            assertEquals(lessons, session.getDisplayedLessons());
+            for (String filters : List.of("", " lid/L10", " s/absent d/2026-10-12")) {
+                session.execute("history 1" + filters);
+                var history = List.copyOf(session.getDisplayedHistory());
+                String context = session.historyResultContextProperty().get();
+                session.execute("history " + digits + filters);
+                assertEquals(history, session.getDisplayedHistory());
+                assertEquals(context, session.historyResultContextProperty().get());
+            }
+        }
+        var history = List.copyOf(session.getDisplayedHistory());
+        String context = session.historyResultContextProperty().get();
+        for (String command : List.of("lessons ０", "lessons si/２１４７４８３６４８", "history ٠",
+                "history ２１４７４８３６４８ lid/L10")) {
+            assertThrows(ParseException.class, () -> session.execute(command));
+            assertEquals(history, session.getDisplayedHistory());
+            assertEquals(context, session.historyResultContextProperty().get());
+        }
+        assertSame(before, session.getDataSnapshot());
+        assertEquals(people, session.getPeople());
+        assertArrayEquals(bytes, Files.readAllBytes(path));
+    }
+
     private Path createFixture() throws Exception {
         var data = LessonQueryTestData.createData();
         data.markAttendance(LessonQueryTestData.STUDENT_ONE, LessonQueryTestData.SHARED_LESSON,

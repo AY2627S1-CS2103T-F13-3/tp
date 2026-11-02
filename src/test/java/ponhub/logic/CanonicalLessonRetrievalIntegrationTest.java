@@ -200,7 +200,7 @@ public class CanonicalLessonRetrievalIntegrationTest {
         session.execute("search c/lesson s/Math");
         var people = List.copyOf(session.getPeople());
         for (String arguments : List.of("si/", "si/0", "si/-1", "si/+1", "si/1.0", "si/2147483648",
-                "si/999999999999999999999999999999", "si/S1", "si/１", "sid/S1", "si/2 si/4",
+                "si/999999999999999999999999999999", "si/S1", "sid/S1", "si/2 si/4",
                 "si/2 x/no", "si/2\n", "si/2\u2028", "si/2\r", "si/2\u0000")) {
             assertThrows(ParseException.class, () -> session.execute("lessons " + arguments), arguments);
             assertIds(session, "L10", "L4");
@@ -214,7 +214,7 @@ public class CanonicalLessonRetrievalIntegrationTest {
             assertIds(session, "L10", "L4");
             assertEquals(ResultKind.SEARCH, session.lessonResultKindProperty().get());
         }
-        for (String arguments : List.of("1", "si/1", "3", "si/3", "8", "si/8")) {
+        for (String arguments : List.of("1", "si/1", "si/１", "3", "si/3", "8", "si/8")) {
             assertThrows(CommandException.class, () -> session.execute("lessons " + arguments), arguments);
             assertIds(session, "L10", "L4");
             assertEquals(ResultKind.SEARCH, session.lessonResultKindProperty().get());

@@ -120,7 +120,7 @@ public class SearchFieldTest {
     @Test
     public void normalizeValue_invalidPhones_preserveBothPrefixErrors() {
         for (SearchField field : List.of(SearchField.PHONE, SearchField.PARENT_PHONE, SearchField.TUTOR_PHONE)) {
-            String error = "Search filter '" + field.getPrefix() + "' requires 3-15 digits.";
+            String error = "Search filter '" + field.getPrefix() + "': " + Phone.MESSAGE_CONSTRAINTS;
             for (String phone : List.of("12", "1234567890123456", "+123", "12 3", "123-4", "12a", "１２３")) {
                 assertFalse(Phone.isValidPhone(phone), phone);
                 assertThrows(IllegalArgumentException.class, error, () -> field.normalizeValue(phone));
@@ -143,7 +143,7 @@ public class SearchFieldTest {
 
     @Test
     public void normalizeValue_invalidEducationLevels_preservesError() {
-        String error = "Search filter 'l/' requires P1-P6, S1-S5, JC1 or JC2.";
+        String error = "Search filter 'l/': " + EducationLevel.MESSAGE_CONSTRAINTS;
         for (String level : List.of("P0", "P7", "S0", "S6", "JC0", "JC3", "P01", "P", "Primary 1")) {
             assertFalse(EducationLevel.isValid(level), level);
             assertThrows(IllegalArgumentException.class, error, () -> SearchField.LEVEL.normalizeValue(level));
@@ -152,7 +152,7 @@ public class SearchFieldTest {
 
     @Test
     public void normalizeValue_levelWithBoundaryControls_preservesSearchRejectionDespiteDomainTrimming() {
-        String error = "Search filter 'l/' requires P1-P6, S1-S5, JC1 or JC2.";
+        String error = "Search filter 'l/': " + EducationLevel.MESSAGE_CONSTRAINTS;
         for (String level : List.of("\u0000s2\u0000", "\u001bp1", "jc2\b")) {
             assertTrue(EducationLevel.isValid(level));
             assertThrows(IllegalArgumentException.class, error, () -> SearchField.LEVEL.normalizeValue(level));
@@ -162,11 +162,11 @@ public class SearchFieldTest {
     @Test
     public void normalizeValue_exactFieldBoundaries_preservesWhitespaceAndControlRules() {
         Map<SearchField, String[]> cases = Map.of(
-                SearchField.PHONE, new String[]{"00123", "Search filter 'p/' requires 3-15 digits."},
-                SearchField.PARENT_PHONE, new String[]{"00123", "Search filter 'pp/' requires 3-15 digits."},
-                SearchField.LEVEL, new String[]{"S2", "Search filter 'l/' requires P1-P6, S1-S5, JC1 or JC2."},
+                SearchField.PHONE, new String[]{"00123", "Search filter 'p/': " + Phone.MESSAGE_CONSTRAINTS},
+                SearchField.PARENT_PHONE, new String[]{"00123", "Search filter 'pp/': " + Phone.MESSAGE_CONSTRAINTS},
+                SearchField.LEVEL, new String[]{"S2", "Search filter 'l/': " + EducationLevel.MESSAGE_CONSTRAINTS},
                 SearchField.DAY, new String[]{"mon",
-                    "Search filter 'd/' requires Mon, Tue, Wed, Thu, Fri, Sat or Sun."},
+                    "Search filter 'd/': " + LessonDay.MESSAGE_CONSTRAINTS},
                 SearchField.START_TIME, new String[]{"0000", "Search filter 'st/' requires a valid four-digit HHMM."},
                 SearchField.END_TIME, new String[]{"2359", "Search filter 'et/' requires a valid four-digit HHMM."});
         cases.forEach((field, values) -> {
@@ -198,7 +198,7 @@ public class SearchFieldTest {
 
     @Test
     public void normalizeValue_invalidWeekdays_preservesAcceptedSpellingsAndError() {
-        String error = "Search filter 'd/' requires Mon, Tue, Wed, Thu, Fri, Sat or Sun.";
+        String error = "Search filter 'd/': " + LessonDay.MESSAGE_CONSTRAINTS;
         for (String day : List.of("M", "Monday", "Tues", "Thur", "Funday", "ſun", "frı", "frİ")) {
             assertThrows(IllegalArgumentException.class, error, () -> SearchField.DAY.normalizeValue(day));
         }
