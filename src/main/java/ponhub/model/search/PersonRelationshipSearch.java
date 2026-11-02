@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static ponhub.commons.util.AppUtil.checkArgument;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -41,21 +42,21 @@ public final class PersonRelationshipSearch {
         }
         checkArgument(criteria.getCategory() != SearchCategory.LESSON,
                 "Relationship search is not available for " + criteria.getCategory().name().toLowerCase(Locale.ROOT)
-                        + " yet.");
+                        + ".");
         List<PersonRecord> ownMatches = PersonContactSearch.search(people, new SearchCriteria(criteria.getCategory(),
-                fields(criteria, true)));
+                selectFields(criteria, true)));
         if (criteria.getCategory() == SearchCategory.PARENT) {
             return searchParents(ownMatches, queries, criteria);
         }
         if (criteria.getCategory() == SearchCategory.TUTOR) {
             return searchTutors(ownMatches, queries, criteria);
         }
-        Set<PersonId> eligible = ownMatches.stream().map(PersonRecord::getId).collect(Collectors.toSet());
+        Set<PersonId> eligibleIds = ownMatches.stream().map(PersonRecord::getId).collect(Collectors.toSet());
         Map<PersonId, List<PersonSearchMatch>> contexts = new LinkedHashMap<>();
-        var lessonCriteria = new SearchCriteria(SearchCategory.LESSON, fields(criteria, false));
+        var lessonCriteria = new SearchCriteria(SearchCategory.LESSON, selectFields(criteria, false));
         for (var lesson : queries.searchLessons(lessonCriteria)) {
             for (var student : queries.getLessonRoster(lesson.getLessonId())) {
-                if (eligible.contains(student.getStudentId())) {
+                if (eligibleIds.contains(student.getStudentId())) {
                     contexts.computeIfAbsent(student.getStudentId(), id -> new ArrayList<>())
                             .add(new PersonSearchMatch(Optional.empty(), Optional.of(lesson)));
                 }
@@ -66,19 +67,24 @@ public final class PersonRelationshipSearch {
                 contexts);
     }
 
-    private static Map<SearchField, String> fields(SearchCriteria criteria, boolean own) {
-        return criteria.getFilters().entrySet().stream()
-                .filter(entry -> PersonContactSearch.OWN_FIELDS.contains(entry.getKey()) == own)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    private static Map<SearchField, String> selectFields(SearchCriteria criteria, boolean isOwnField) {
+        Map<SearchField, String> selectedFields = new EnumMap<>(SearchField.class);
+        criteria.getFilters().forEach((field, value) -> {
+            if (PersonContactSearch.OWN_FIELDS.contains(field) == isOwnField) {
+                selectedFields.put(field, value);
+            }
+        });
+        return selectedFields;
     }
 
     private static PersonSearchResult searchTutors(List<PersonRecord> tutors, LessonQueries queries,
             SearchCriteria criteria) {
-        Set<PersonId> eligible = tutors.stream().map(PersonRecord::getId).collect(Collectors.toSet());
+        Set<PersonId> eligibleIds = tutors.stream().map(PersonRecord::getId).collect(Collectors.toSet());
         Map<PersonId, List<PersonSearchMatch>> contexts = new LinkedHashMap<>();
         boolean hasStudentFilter = criteria.getValue(SearchField.STUDENT_NAME).isPresent();
-        for (var lesson : queries.searchLessons(new SearchCriteria(SearchCategory.LESSON, fields(criteria, false)))) {
-            if (!eligible.contains(lesson.getTutorId())) {
+        var lessonCriteria = new SearchCriteria(SearchCategory.LESSON, selectFields(criteria, false));
+        for (var lesson : queries.searchLessons(lessonCriteria)) {
+            if (!eligibleIds.contains(lesson.getTutorId())) {
                 continue;
             }
             var matches = contexts.computeIfAbsent(lesson.getTutorId(), unused -> new ArrayList<>());
@@ -102,7 +108,7 @@ public final class PersonRelationshipSearch {
      */
     private static PersonSearchResult searchParents(List<PersonRecord> parents, LessonQueries queries,
             SearchCriteria criteria) {
-        Map<SearchField, String> lessonFields = fields(criteria, false);
+        Map<SearchField, String> lessonFields = selectFields(criteria, false);
         lessonFields.remove(SearchField.STUDENT_NAME);
         boolean hasLessonFilters = !lessonFields.isEmpty();
         Map<LessonId, LessonView> lessons = hasLessonFilters
@@ -114,22 +120,22 @@ public final class PersonRelationshipSearch {
             Parent parent = (Parent) record;
             Phone phone = parent.getContactDetails().getPhone().orElseThrow();
             List<PersonSearchMatch> matches = phoneMatches.computeIfAbsent(phone.value, unused -> {
-                List<PersonSearchMatch> linked = new ArrayList<>();
+                List<PersonSearchMatch> linkedMatches = new ArrayList<>();
                 for (var student : queries.getStudentsByParentPhone(phone)) {
                     if (!criteria.matches(SearchField.STUDENT_NAME, student.getName().fullName)) {
                         continue;
                     }
                     if (!hasLessonFilters) {
-                        linked.add(new PersonSearchMatch(Optional.of(student), Optional.empty()));
+                        linkedMatches.add(new PersonSearchMatch(Optional.of(student), Optional.empty()));
                         continue;
                     }
                     for (var lesson : queries.getStudentLessons(student.getId())) {
                         if (lessons.containsKey(lesson.getLessonId())) {
-                            linked.add(new PersonSearchMatch(Optional.of(student), Optional.of(lesson)));
+                            linkedMatches.add(new PersonSearchMatch(Optional.of(student), Optional.of(lesson)));
                         }
                     }
                 }
-                return List.copyOf(linked);
+                return List.copyOf(linkedMatches);
             });
             if (!matches.isEmpty()) {
                 contexts.put(parent.getId(), matches);

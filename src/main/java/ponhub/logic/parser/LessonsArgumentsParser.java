@@ -6,7 +6,6 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ponhub.commons.core.index.Index;
 import ponhub.logic.parser.exceptions.ParseException;
 import ponhub.model.query.LessonOrder;
 
@@ -19,14 +18,6 @@ public final class LessonsArgumentsParser {
 
     private static final Pattern STUDENT_INDEX_FORMAT = Pattern.compile("(?:si/)?([0-9]+)");
     private static final Pattern LINE_BREAK = Pattern.compile("\\R");
-
-    /**
-     * Returns an absent selector for the full catalogue, or a positive current people-list index.
-     * Role and range are checked by the retrieval boundary at execution time.
-     */
-    public Optional<Index> parse(String arguments) throws ParseException {
-        return parseInput(arguments).studentIndex();
-    }
 
     /**
      * Parses the optional selector and trailing sort prefix, retaining creation order by default.

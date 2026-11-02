@@ -76,9 +76,9 @@ public class CanonicalLessonRetrievalIntegrationTest {
     public void realMembership_failedEnrolAndUnenrolPreserveBothResultModesThenRetryAndReload() throws Exception {
         for (String route : List.of("lessons si/1", "search c/lesson sn/Jamie s/Math")) {
             Path path = saveFixture();
-            AtomicBoolean rejectWrites = new AtomicBoolean(true);
+            AtomicBoolean shouldRejectWrites = new AtomicBoolean(true);
             CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
-                if (rejectWrites.get()) {
+                if (shouldRejectWrites.get()) {
                     throw new IOException("Injected membership save failure");
                 }
                 new JsonPonHubDataStorage(path).saveData(state);
@@ -99,7 +99,7 @@ public class CanonicalLessonRetrievalIntegrationTest {
             assertEquals(kind, session.lessonResultKindProperty().get());
             assertEquals(beforePeople, session.getPeople());
             assertArrayEquals(bytes, Files.readAllBytes(path));
-            rejectWrites.set(false);
+            shouldRejectWrites.set(false);
             session.execute("enrol 1 lid/L4");
             assertTrue(displayed.stream().anyMatch(lesson -> lesson.getLessonId().toString().equals("L4")));
             var enrolledResults = List.copyOf(displayed);
@@ -110,14 +110,14 @@ public class CanonicalLessonRetrievalIntegrationTest {
             reloaded.execute(route);
             assertEquals(displayed.stream().map(LessonView::getLessonId).toList(),
                     reloaded.getDisplayedLessons().stream().map(LessonView::getLessonId).toList());
-            rejectWrites.set(true);
+            shouldRejectWrites.set(true);
             assertThrows(CommandException.class, () -> session.execute("unenrol 1 lid/L4"));
             assertEquals(enrolled, session.getDataSnapshot());
             assertEquals(enrolledResults, displayed);
             assertEquals(kind, session.lessonResultKindProperty().get());
             assertEquals(beforePeople, session.getPeople());
             assertArrayEquals(bytes, Files.readAllBytes(path));
-            rejectWrites.set(false);
+            shouldRejectWrites.set(false);
             session.execute("unenrol 1 lid/L4");
             assertFalse(displayed.stream().anyMatch(lesson -> lesson.getLessonId().toString().equals("L4")));
             assertSame(displayed, session.getDisplayedLessons());
@@ -370,9 +370,9 @@ public class CanonicalLessonRetrievalIntegrationTest {
     public void failedSaveAndCommittedRefresh_preserveEveryResultKindAndHistoryContext() throws Exception {
         for (var route : resultRoutes().entrySet()) {
             Path path = saveFixture();
-            AtomicBoolean rejectWrites = new AtomicBoolean(true);
+            AtomicBoolean shouldRejectWrites = new AtomicBoolean(true);
             CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
-                if (rejectWrites.get()) {
+                if (shouldRejectWrites.get()) {
                     throw new IOException("Injected result-state save failure");
                 }
                 new JsonPonHubDataStorage(path).saveData(state);
@@ -393,7 +393,7 @@ public class CanonicalLessonRetrievalIntegrationTest {
             assertTrue(session.historyViewActiveProperty().get());
             assertEquals(historyContext, session.historyResultContextProperty().get());
             assertArrayEquals(bytes, Files.readAllBytes(path));
-            rejectWrites.set(false);
+            shouldRejectWrites.set(false);
             session.execute(edit);
             assertEquals(route.getValue(), session.lessonResultKindProperty().get());
             assertTrue(session.historyViewActiveProperty().get());

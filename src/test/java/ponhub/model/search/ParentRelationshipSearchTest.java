@@ -113,7 +113,7 @@ public class ParentRelationshipSearchTest {
             SearchCriteria criteria = new SearchCriteria(SearchCategory.PARENT, fields);
             boolean related = fields.keySet().stream()
                     .anyMatch(field -> !PersonContactSearch.OWN_FIELDS.contains(field));
-            boolean lessonFields = fields.keySet().stream()
+            boolean hasLessonFields = fields.keySet().stream()
                     .anyMatch(field -> !PersonContactSearch.OWN_FIELDS.contains(field)
                     && field != SearchField.STUDENT_NAME);
             var expected = data.getPeople().stream().filter(Parent.class::isInstance).map(Parent.class::cast)
@@ -124,7 +124,7 @@ public class ParentRelationshipSearchTest {
                             .map(Student.class::cast).anyMatch(student -> student.getParentPhone().value
                             .equals(parent.getContactDetails().getPhone().orElseThrow().value)
                             && criteria.matches(SearchField.STUDENT_NAME, student.getName().fullName)
-                            && (!lessonFields || data.getLessons().stream().anyMatch(lesson ->
+                            && (!hasLessonFields || data.getLessons().stream().anyMatch(lesson ->
                             lesson.hasEnrolledStudent(student.getId())
                             && criteria.matches(SearchField.DAY, lesson.getTimeSlot().getDay().toString())
                             && criteria.matches(SearchField.SUBJECT, lesson.getSubject().toString())
