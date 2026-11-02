@@ -55,7 +55,7 @@ final class CanonicalDataFileGuard {
         boolean hasSaved = false;
         try (Closeable lock = lockFactory.open(target)) {
             if (lock == null) {
-                throw busy(target);
+                throw createBusyException(target);
             }
             if (!target.equals(resolveTarget(path.toAbsolutePath().normalize()))
                     || !Objects.equals(expectedJson, readCurrentJson())) {
@@ -83,7 +83,7 @@ final class CanonicalDataFileGuard {
         }
     }
 
-    private static IOException busy(Path path) {
+    private static IOException createBusyException(Path path) {
         return new IOException("Another PonHub window is saving " + path
                 + ". This command was not saved or applied. Wait for it to finish and retry;"
                 + " if the file changed, restart this window before re-entering the command.");
@@ -120,7 +120,7 @@ final class CanonicalDataFileGuard {
                 }
             };
         } catch (OverlappingFileLockException failure) {
-            throw busy(target);
+            throw createBusyException(target);
         } finally {
             if (!isAcquired) {
                 channel.close();

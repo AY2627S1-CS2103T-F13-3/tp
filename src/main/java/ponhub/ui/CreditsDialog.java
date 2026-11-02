@@ -71,12 +71,14 @@ final class CreditsDialog extends Dialog<Void> {
         subtitle.setWrapText(true);
         subtitle.getStyleClass().add("credits-subtitle");
         VBox team = new VBox(10,
-                member("Zhu Zhi Yu", "People & testing", "Finds bugs before they find you.", "ultramanarm"),
-                member("Vincent Lin", "Storage & delivery", "Looking for a committed relationship. With Git.",
+                createMemberCard("Zhu Zhi Yu", "People & testing", "Finds bugs before they find you.", "ultramanarm"),
+                createMemberCard("Vincent Lin", "Storage & delivery", "Looking for a committed relationship. With Git.",
                         "gugrusaurus"),
-                member("Benjamin Ng", "Retrieval & views", "Your perfect match, now indexed.", "ben58882"),
-                member("Ernest Chua", "Help & code quality", "Type help. He is already on it.", "ErnestChuaa"),
-                member("Yang Shuo", "Lessons & attendance", "Always present. Occasionally compiling.", "ys000009"));
+                createMemberCard("Benjamin Ng", "Retrieval & views", "Your perfect match, now indexed.", "ben58882"),
+                createMemberCard("Ernest Chua", "Help & code quality", "Type help. He is already on it.",
+                        "ErnestChuaa"),
+                createMemberCard("Yang Shuo", "Lessons & attendance", "Always present. Occasionally compiling.",
+                        "ys000009"));
         ScrollPane roster = new ScrollPane(team);
         roster.setFitToWidth(true);
         roster.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -131,7 +133,7 @@ final class CreditsDialog extends Dialog<Void> {
         burst.playFromStart();
     }
 
-    private HBox member(String name, String role, String joke, String github) {
+    private HBox createMemberCard(String name, String role, String joke, String github) {
         ImageView photo = new ImageView(new Image(CreditsDialog.class.getResource(
                 "/images/team/" + github.toLowerCase(java.util.Locale.ROOT) + ".png").toExternalForm(),
                 84, 84, true, true));
