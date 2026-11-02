@@ -103,6 +103,30 @@ public class CanonicalDeleteIntegrationTest {
     }
 
     @Test
+    public void execute_malformedConfirmation_explainsKeywordCaseOrUsageAndCancels() throws Exception {
+        Path path = saveFixtureData(Set.of());
+        CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {
+            throw new AssertionError("A malformed confirmation must not save");
+        });
+        byte[] bytes = Files.readAllBytes(path);
+        session.execute("list r/parent");
+        // Keywords stay lowercase-only, but a wrong-case keyword is explained rather than reported as an index.
+        for (String command : List.of("delete CONFIRM", "delete Cancel")) {
+            session.execute("delete 1");
+            ParseException failure = assertThrows(ParseException.class, () -> session.execute(command));
+            assertEquals(CanonicalPeopleSession.MESSAGE_DELETE_KEYWORD_CASE, failure.getMessage(), command);
+            assertThrows(CommandException.class, () -> session.execute("delete confirm"), command);
+        }
+        // Missing arguments and extra words get the command usage.
+        for (String command : List.of("delete", "delete  ", "delete confirm now", "delete 1 2")) {
+            ParseException failure = assertThrows(ParseException.class, () -> session.execute(command));
+            assertEquals(String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT,
+                    CanonicalPeopleSession.MESSAGE_DELETE_USAGE), failure.getMessage(), command);
+        }
+        assertArrayEquals(bytes, Files.readAllBytes(path));
+    }
+
+    @Test
     public void execute_interveningCommandsIncludingRejectedInput_cancelThePendingTarget() throws Exception {
         Path path = saveFixtureData(Set.of());
         CanonicalPeopleSession session = new CanonicalPeopleSession(new ProtectedPonHubDataStorage(path), state -> {

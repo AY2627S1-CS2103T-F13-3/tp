@@ -193,7 +193,7 @@ public class ParserUtilTest {
 
     @Test
     public void parseContactPhone_invalidValue_preservesErrorTextAndLengthPrecedence() {
-        String lengthMessage = "Contact phone numbers must contain between 3 and 15 digits.";
+        String lengthMessage = "Phone numbers must contain 3 to 15 digits, without spaces or punctuation.";
         for (String phone : List.of("1234567890123456", "123456789012345x", " 123456789012345 ")) {
             assertThrows(ParseException.class, lengthMessage, () -> ParserUtil.parseContactPhone(phone));
         }

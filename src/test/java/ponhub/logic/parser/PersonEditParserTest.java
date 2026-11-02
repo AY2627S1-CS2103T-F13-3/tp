@@ -81,7 +81,7 @@ public class PersonEditParserTest {
 
     @Test
     public void parse_invalidPhoneValues_preservesOwnAndParentErrorText() {
-        String lengthMessage = "Contact phone numbers must contain between 3 and 15 digits.";
+        String lengthMessage = "Phone numbers must contain 3 to 15 digits, without spaces or punctuation.";
         String phoneMessage = "Phone numbers must contain 3 to 15 digits, without spaces or punctuation.";
         String[][] cases = {
             {"1234567890123456", lengthMessage}, {"123456789012345x", lengthMessage},
@@ -100,7 +100,7 @@ public class PersonEditParserTest {
         String longPhone = "1234567890123456";
         assertEquals(Name.MESSAGE_CONSTRAINTS, assertThrows(ParseException.class, () ->
                 parser.parse("1 pp/" + longPhone + " p/" + longPhone + " n/@Alex")).getMessage());
-        assertEquals("Contact phone numbers must contain between 3 and 15 digits.",
+        assertEquals("Phone numbers must contain 3 to 15 digits, without spaces or punctuation.",
                 assertThrows(ParseException.class, () ->
                         parser.parse("1 pp/12 e/invalid p/" + longPhone)).getMessage());
         assertEquals(Email.MESSAGE_CONSTRAINTS, assertThrows(ParseException.class, () ->
