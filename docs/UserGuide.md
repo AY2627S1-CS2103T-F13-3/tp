@@ -153,7 +153,7 @@ Above the lists sit three shortcut buttons (**All lessons**, **Student lessons**
 Throughout this guide, command formats use these conventions:
 * **`UPPERCASE` words** are placeholders you replace with your own values (for example, `NAME` or `LESSON_ID`). **Lowercase words** such as `r/student` are typed exactly as shown.
 * **Square brackets `[ ]`** mark optional fields. **Vertical bars `|`** separate choices (for example, `s/present|absent` means type `s/present` or `s/absent`). **Three dots `...`** mean you can supply several filters. Never type `[ ]`, `|`, or `...` in your command.
-* **Prefixes** label each field, such as `n/Alex Tan` for a name. Always type command words and prefixes in lowercase. Prefixed fields can appear in any order, at most once per command. Unknown or repeated prefixes are rejected, and there is no quoting or escaping syntax.
+* **Prefixes** label each field, such as `n/Alex Tan` for a name. Always type command words and prefixes in lowercase. Prefixed fields can appear in any order, at most once per command (except in [`lessons`](#listing-lessons-lessons), where the optional student selector—including its legacy `si/STUDENT_INDEX` form—must come before `sort/creation|schedule`). Unknown or repeated prefixes are rejected, and there is no quoting or escaping syntax.
 * **Blank values:** If you do not have an optional value when adding a record, leave its prefix out altogether. Only `edit` accepts an empty prefix (such as `e/` or `a/`) to clear an existing optional field.
 * **Prefixes whose meaning depends on the command:**
   * `d/` takes a weekday (`Mon`–`Sun`) when creating, editing, or searching lessons, but takes a real `YYYY-MM-DD` calendar date in `mark`, `unmark`, `showlesson`, and `history`.
@@ -507,7 +507,7 @@ Displays either the complete lesson catalogue or the lessons a single student is
 **Examples:**
 * `lessons` — shows all shared lessons in creation order, including lessons with empty rosters.
 * `lessons sort/schedule` — shows all lessons ordered from Monday to Sunday, then by start time, then by numeric lesson ID.
-* `lessons 1` — shows only the lessons currently enrolled by the student at position `1` in the people list (the older `lessons si/1` syntax also works).
+* `lessons 1` — shows only the lessons currently enrolled by the student at position `1` in the people list (the older `lessons si/1` syntax also works; when combined with `sort/`, the student selector must come before `sort/creation|schedule`, as in `lessons si/1 sort/schedule`).
 * `lessons 1 sort/schedule` — shows that student's current timetable in weekly schedule order.
 
 **What you will see:**
