@@ -47,7 +47,8 @@ See [Making a release](#making-a-release) for candidate, package and publication
 
 This project uses GitHub Actions for CI. The
 [Java workflow](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/.github/workflows/gradle.yml)
-runs `check coverage` on Windows, Linux and macOS with Java 25, using a virtual display on Linux.
+runs `check coverage` on Windows and Linux with Java 25, using a virtual display on Linux. Check macOS locally
+with the prescribed Azul JDK 25 with JavaFX before merging changes that could affect it.
 Verify the checks on the PR's current head, then complete the packaged-application checks below.
 Preview website changes using the [Documentation guide](Documentation.html#build-and-preview-locally).
 

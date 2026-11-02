@@ -1365,7 +1365,7 @@ PonHub's documentation site is built with Jekyll from `docs/`. See the [Document
 
 GitHub Actions runs automated checks on every push and pull request (see the [DevOps guide](DevOps.html)):
 
-* **Java CI (`.github/workflows/gradle.yml`):** Runs `./gradlew check coverage` across Windows, Linux (with `xvfb-run`), and macOS on JDK 25, and uploads coverage reports to Codecov.
+* **Java CI (`.github/workflows/gradle.yml`):** Runs `./gradlew check coverage` on Windows and Linux (with `xvfb-run`) on JDK 25, and uploads coverage reports to Codecov. macOS is checked locally with the prescribed Azul JDK 25 with JavaFX (see [Running tests](Testing.html#running-tests)).
 * **Repository-wide file checks (`.github/run-checks.sh`):** Checks tracked files for trailing whitespace, DOS line endings, and missing final newlines.
 * **Linux package verification (`.github/workflows/linux-package.yml`):** Rebuilds `build/libs/ponhub.jar`, verifies its SHA-256 checksum and manifest version, and drives the packaged JAR on a virtual X11 display through core workflows and restart persistence.
 * **Versioning:** When preparing a release, update both `version` in [`build.gradle`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/build.gradle) and `MainApp.VERSION` in [`MainApp.java`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/MainApp.java).
