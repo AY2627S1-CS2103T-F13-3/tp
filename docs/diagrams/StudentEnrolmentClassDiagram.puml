@@ -1,0 +1,41 @@
+@startuml
+' Draft by Vincent Lin with OpenAI Codex assistance.
+' Self-contained source; render with PlantUML 1.2025.3.
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #FFF2F3
+skinparam classBorderColor #9D0012
+skinparam classArrowColor #9D0012
+skinparam noteBackgroundColor #FFFBE6
+skinparam noteBorderColor #777777
+skinparam nodesep 45
+skinparam ranksep 45
+hide circle
+hide empty members
+
+title Stored membership and roster queries
+class PonHubData {
+  + enrolStudent(studentId, lessonId)
+}
+class PonHubDataState <<immutable snapshot>> {
+  people : PeopleRegistryState
+}
+class Lesson <<immutable>> {
+  id : LessonId
+  enrolledStudentIds : Set<PersonId>
+}
+class LessonQueries {
+  + getLessonRoster(lessonId)
+}
+
+PonHubData "0..*" -down-> "1" PonHubDataState : current state
+PonHubDataState "0..*" -down-> "0..*" Lesson : lessons
+LessonQueries .left.> PonHubData : observes changes
+
+note right of Lesson
+  Zero or more unique Student IDs.
+  The set is unmodifiable.
+end note
+@enduml

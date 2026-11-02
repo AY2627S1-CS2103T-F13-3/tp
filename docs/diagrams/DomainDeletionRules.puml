@@ -1,0 +1,28 @@
+@startuml
+' Simplified domain draft by Vincent Lin with OpenAI Codex assistance.
+' Self-contained source; renderer: PlantUML 1.2025.3.
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #FFF2F3
+skinparam classBorderColor #9D0012
+skinparam classArrowColor #9D0012
+skinparam noteBackgroundColor #FFFBE6
+skinparam noteBorderColor #777777
+skinparam nodesep 35
+skinparam ranksep 40
+
+title Deletion checks stored references
+skinparam activityBackgroundColor #FFF2F3
+skinparam activityBorderColor #9D0012
+skinparam activityDiamondBackgroundColor #FFFBE6
+start
+:Find target record;
+if (Referenced by a roster,\nlesson or attendance?) then (yes)
+  :Reject deletion;
+else (no)
+  :Allow staged deletion;
+endif
+stop
+@enduml
