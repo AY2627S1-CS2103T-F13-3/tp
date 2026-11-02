@@ -14,17 +14,20 @@ import ponhub.model.search.SearchField;
 
 /**
  * Parses search arguments into validated criteria independently of commands and the model runtime.
- * All prefix-shaped tokens are recognized so unknown prefixes cannot silently become part of another filter's text.
+ * Unknown prefixes remain visible; legal-name markers stay in their values for slash validation.
  */
 public class SearchCriteriaParser {
     private static final Pattern PREFIX_PATTERN = Pattern.compile("(?<!\\S)([^\\s/]+/)",
             Pattern.UNICODE_CHARACTER_CLASS);
 
+    private static final Pattern AMBIGUOUS_SUBJECT_PATTERN = Pattern.compile("(?<!\\S)s/o(?=\\s|$)",
+            Pattern.UNICODE_CHARACTER_CLASS);
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
 
     /**
      * Parses arguments of the form {@code c/CATEGORY [PREFIX/VALUE]...}, excluding the command word.
-     * Prefixes are lowercase and may occur in any order. Category-only searches are valid.
+     * Prefixes are lowercase. Separate an ambiguous s/o subject from a preceding name with the category prefix,
+     * or put the subject first. Other prefixes may occur in any order. Category-only searches are valid.
      *
      * @throws ParseException If the input contains missing, blank, repeated, unsupported or invalid fields.
      */
@@ -48,11 +51,14 @@ public class SearchCriteriaParser {
         do {
             String prefix = matcher.group(1);
             int valueStart = matcher.end();
-            hasNext = matcher.find();
+            hasNext = FieldValueTokenizer.findNextPrefix(matcher, args, prefix);
             int valueEnd = hasNext ? matcher.start() : args.length();
             String value = ParserUtil.stripUnicodeBoundaryWhitespace(args.substring(valueStart, valueEnd));
-            if (value.isEmpty()) {
-                throw new ParseException("Search prefix '" + prefix + "' requires a non-blank value.");
+            if ((prefix.equals("n/") || prefix.equals("sn/") || prefix.equals("tu/"))
+                    && AMBIGUOUS_SUBJECT_PATTERN.matcher(value).find()) {
+                throw new ParseException("Ambiguous 's/o' after search name prefix '" + prefix + "'. "
+                        + "Search by a slash-free name fragment. If you meant an s/ subject beginning with 'o', "
+                        + "put it before name filters or immediately after c/CATEGORY.");
             }
             if (prefix.equals("c/")) {
                 if (category != null) {
@@ -69,6 +75,9 @@ public class SearchCriteriaParser {
                 if (filters.putIfAbsent(field, value) != null) {
                     throw new ParseException("Repeated search prefix '" + prefix + "'.");
                 }
+            }
+            if (value.isEmpty()) {
+                throw new ParseException("Search prefix '" + prefix + "' requires a non-blank value.");
             }
         } while (hasNext);
 

@@ -21,6 +21,25 @@ public class LessonMembershipParserTest {
     }
 
     @Test
+    public void parse_unicodeDecimalIndices_matchesTheSharedIndexParser() throws Exception {
+        for (String index : new String[]{"２", "٢", "०२", "0２", "２١４٧４８３٦４٧"}) {
+            assertEquals(new LessonMembershipInput(ParserUtil.parseIndex(index), new LessonId("L12")),
+                    parser.parse(index + " lid/L12"));
+        }
+    }
+
+    @Test
+    public void parse_unicodeIndexOutsideRange_rejectsWithoutChangingLessonIdRules() {
+        for (String index : new String[]{"０", "٠٠", "２１４７４８３６４８"}) {
+            assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_INDEX, () ->
+                    parser.parse(index + " lid/L1"));
+        }
+        for (String arguments : new String[]{"² lid/L1", "-２ lid/L1", "+２ lid/L1", "２ lid/L１"}) {
+            assertThrows(ParseException.class, () -> parser.parse(arguments));
+        }
+    }
+
+    @Test
     public void parse_missingRepeatedUnknownOrMisorderedArguments_throwsUsage() {
         for (String arguments : new String[]{"", "1", "lid/L1", "lid/L1 1", "S1 lid/L1",
             "si/1 lid/L1", "1 LID/L1", "1 lesson/L1", "1 lid/L1 lid/L2", "1 lid/L1 extra"}) {

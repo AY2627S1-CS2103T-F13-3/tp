@@ -794,7 +794,7 @@ An invalid position, non-Student, or model rejection stops staging. Successful r
 <a id="tutor-relationship-search"></a>
 <a id="tutor-relationship-search-96"></a>
 
-`SearchCriteriaParser` parses `search c/CATEGORY ...` into an immutable `SearchCriteria` object. Every search requires `c/student`, `c/parent`, `c/tutor`, or `c/lesson` (case-insensitive); supplying only `c/CATEGORY` matches all records in that category.
+`SearchCriteriaParser` parses `search c/CATEGORY ...` into an immutable `SearchCriteria` object. It retains `s/o` and `d/o` inside name values so they cannot silently become subject/day filters. An adjacent `s/o` subject after a name is ambiguous and rejected with guidance to put the subject first or separate it with `c/CATEGORY`; ordinary subject filters remain order-independent. Every search requires `c/student`, `c/parent`, `c/tutor`, or `c/lesson` (case-insensitive); supplying only `c/CATEGORY` matches all records in that category.
 
 #### Supported search prefixes by category
 

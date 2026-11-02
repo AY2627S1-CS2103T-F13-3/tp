@@ -57,7 +57,7 @@ public class SearchFieldTest {
     @Test
     public void fromPrefix_unsupportedPrefix_preservesError() {
         for (String prefix : List.of("", "n", "N/", " n/", "x/")) {
-            String error = "Unsupported search prefix '" + prefix + "'.";
+            String error = "Unknown search prefix '" + prefix + "'.";
             assertThrows(IllegalArgumentException.class, error, () -> SearchField.fromPrefix(prefix));
         }
         assertThrows(NullPointerException.class, () -> SearchField.fromPrefix(null));
@@ -248,6 +248,23 @@ public class SearchFieldTest {
             assertEquals("@", field.normalizeValue("@"), field.name());
             assertEquals("中", field.normalizeValue("中"), field.name());
         });
+    }
+
+    @Test
+    public void matchesValue_horizontalUnicodeSpaces_normalizesQueriesAndCandidates() {
+        for (SearchField field : getTextFields()) {
+            for (String space : List.of(" ", "\u00a0", "\u1680", "\u2000", "\u2001", "\u2002", "\u2003",
+                    "\u2004", "\u2005", "\u2006", "\u2007", "\u2008", "\u2009", "\u200a", "\u202f",
+                    "\u205f", "\u3000")) {
+                String query = field.normalizeValue("Alex" + space + space + "Tan");
+                assertEquals("alex tan", query, field + " " + space.codePointAt(0));
+                assertTrue(field.matchesValue(query, "Alex Tan"), field.name());
+                assertTrue(field.matchesValue("alex tan", "Alex" + space + "  " + space + "Tan"), field.name());
+            }
+            for (String control : List.of("\t", "\n", "\r", "\u0085", "\u2028", "\u2029")) {
+                assertFalse(field.matchesValue("alex tan", "Alex" + control + "Tan"), field.name());
+            }
+        }
     }
 
     @Test

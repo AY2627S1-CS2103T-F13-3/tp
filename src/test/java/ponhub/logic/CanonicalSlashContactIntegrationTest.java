@@ -120,17 +120,17 @@ public class CanonicalSlashContactIntegrationTest {
     }
 
     @Test
-    public void execute_fragmentSearch_retainsExistingSlashQueryLimit() throws Exception {
+    public void execute_fragmentSearch_rejectsSlashValuesWithoutChangingResults() throws Exception {
         Path path = directory.resolve("search.json");
         CanonicalPeopleSession session = new CanonicalPeopleSession(path);
         session.execute("add r/student n/Ravi s/o Kumar l/P1 pp/91234567 a/Blk 10, #01/02");
         session.execute("search c/student n/Ravi a/#01");
         assertEquals(List.of(new PersonId("S1")), session.getPeople().stream().map(person -> person.getId()).toList());
+        var matchingPeople = List.copyOf(session.getPeople());
         var before = session.getDataSnapshot();
         byte[] bytes = Files.readAllBytes(path);
-        // Search still treats s/ as its subject filter, rather than as a name literal.
-        session.execute("search c/student n/Ravi s/o Kumar");
-        assertTrue(session.getPeople().isEmpty());
+        assertThrows(ParseException.class, () -> session.execute("search c/student n/Ravi s/o Kumar"));
+        assertEquals(matchingPeople, session.getPeople());
         assertThrows(ParseException.class, () -> session.execute("search c/student a/#01/02"));
         assertSame(before, session.getDataSnapshot());
         assertArrayEquals(bytes, Files.readAllBytes(path));

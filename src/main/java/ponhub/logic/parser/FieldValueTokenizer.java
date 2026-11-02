@@ -16,7 +16,8 @@ final class FieldValueTokenizer {
      */
     static boolean findNextPrefix(Matcher matcher, String arguments, String fieldPrefix) {
         while (matcher.find()) {
-            if ((fieldPrefix.equals("n/") || fieldPrefix.equals("tu/")) && isNameMarker(matcher, arguments)) {
+            if ((fieldPrefix.equals("n/") || fieldPrefix.equals("sn/") || fieldPrefix.equals("tu/"))
+                    && isNameMarker(matcher, arguments)) {
                 continue;
             }
             int slash = matcher.end() - 1;

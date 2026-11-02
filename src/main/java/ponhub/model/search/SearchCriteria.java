@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -30,7 +31,7 @@ public final class SearchCriteria {
             requireNonNull(field);
             if (!field.isSupportedBy(category)) {
                 throw new IllegalArgumentException("Search prefix '" + field.getPrefix()
-                        + "' is not supported for " + category + ".");
+                        + "' is not supported for " + category.name().toLowerCase(Locale.ROOT) + ".");
             }
             normalizedFilters.put(field, field.normalizeValue(value));
         });
