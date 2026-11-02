@@ -396,7 +396,7 @@ Any other command cancels this request.
 After `delete confirm`, PonHub saves the change, reports `Deleted parent: Pat Tan (P1).`, keeps the current filter, and renumbers the remaining people. After `delete cancel`, PonHub reports `Person deletion cancelled. No records were changed.`
 
 **Notes:**
-* **How the preview resets:** Entering any other command, running another `delete INDEX`, or closing PonHub cancels the pending preview. `delete confirm` and `delete cancel` take no extra arguments. If a save fails during confirmation, run `delete INDEX` again before confirming.
+* **How the preview resets:** Entering any other command, running another `delete INDEX`, or closing PonHub cancels the pending preview. Pressing **F1**, choosing **Help > Help**, or using a result shortcut button (**All lessons**, **Student lessons**, **Attendance history**) runs a command too, so it also cancels the preview. `delete confirm` and `delete cancel` take no extra arguments. If a save fails during confirmation, run `delete INDEX` again before confirming.
 * **Deletion guards:**
   * A **student** cannot be deleted while enrolled in any lesson or while any attendance record (including retained history after unenrolment) refers to them. The error message names the blocking lesson ID and attendance date (for example, `Student S1 cannot be deleted while retained attendance exists for lesson L1 on 2026-10-05.`). Use [`unenrol`](#unenrolling-a-student-unenrol) and [`unmark`](#removing-an-attendance-record-unmark) first.
   * A **tutor** cannot be deleted while assigned to any lesson, even one with an empty roster. Reassign the lesson with [`editlesson`](#editing-a-lesson-editlesson) or delete it with [`deletelesson`](#deleting-a-lesson-deletelesson) first.
@@ -879,7 +879,7 @@ Displays built-in command summaries and detailed command usage right in the feed
 
 **Notes:**
 * **Topic rules:** Command topics ignore case, and you can supply at most one topic at a time (`help add delete` is rejected as an invalid format). Asking for an unknown command such as `help remove` reports `Unknown command: 'remove'. Type 'help' to see available commands.`
-* **Menu and F1 shortcut:** Pressing **F1** or choosing **Help > Help** opens the same command summary without clearing any unfinished command you were typing in the command box.
+* **Menu and F1 shortcut:** Pressing **F1** or choosing **Help > Help** opens the same command summary without clearing any unfinished command you were typing in the command box. Because it runs `help`, it cancels a pending [`delete` preview](#deleting-a-person-delete).
 * Works completely offline and never modifies or saves data.
 * In a [protected session](#if-ponhub-shows-data-file-protected), only `help`, `list`, and `exit` are available and listed.
 
