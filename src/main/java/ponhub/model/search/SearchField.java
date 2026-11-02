@@ -10,6 +10,7 @@ import static ponhub.model.search.SearchCategory.TUTOR;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import ponhub.commons.util.StringUtil;
 import ponhub.model.lesson.LessonDay;
@@ -40,6 +41,8 @@ public enum SearchField {
     TUTOR_PHONE("tp/", LESSON),
     ROOM("rm/", STUDENT, PARENT, TUTOR, LESSON),
     LESSON_ORDER("sort/", LESSON);
+
+    private static final Pattern HORIZONTAL_SPACES_PATTERN = Pattern.compile("\\p{Zs}+");
 
     private final String prefix;
     private final Set<SearchCategory> supportedCategories;
@@ -77,7 +80,7 @@ public enum SearchField {
         return Arrays.stream(values())
                 .filter(field -> field.prefix.equals(prefix))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Unsupported search prefix '" + prefix + "'."));
+                .orElseThrow(() -> new IllegalArgumentException("Unknown search prefix '" + prefix + "'."));
     }
 
     /**
@@ -130,7 +133,7 @@ public enum SearchField {
                             + "' requires a valid four-digit HHMM.");
                 }
             }
-            default -> normalizeTextCase(StringUtil.normalizeSpaces(trimmed));
+            default -> normalizeTextCase(trimmed);
         };
     }
 
@@ -154,10 +157,11 @@ public enum SearchField {
     }
 
     /**
-     * Retains locale-independent lowercase comparison while treating both lowercase sigma forms alike.
+     * Normalizes horizontal Unicode spaces and letter case, treating both lowercase sigma forms alike.
      * This search-only policy does not expand sharp S, strip accents or normalize canonical spelling.
      */
     private static String normalizeTextCase(String value) {
-        return value.toLowerCase(Locale.ROOT).replace('ς', 'σ');
+        String normalizedSpaces = HORIZONTAL_SPACES_PATTERN.matcher(value).replaceAll(" ");
+        return StringUtil.normalizeSpaces(normalizedSpaces).toLowerCase(Locale.ROOT).replace('ς', 'σ');
     }
 }

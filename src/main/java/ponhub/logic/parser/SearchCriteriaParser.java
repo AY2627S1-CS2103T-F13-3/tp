@@ -14,7 +14,7 @@ import ponhub.model.search.SearchField;
 
 /**
  * Parses search arguments into validated criteria independently of commands and the model runtime.
- * All prefix-shaped tokens are recognized so unknown prefixes cannot silently become part of another filter's text.
+ * Unknown prefixes remain visible; legal-name markers stay in their values for slash validation.
  */
 public class SearchCriteriaParser {
     private static final Pattern PREFIX_PATTERN = Pattern.compile("(?<!\\S)([^\\s/]+/)",
@@ -48,12 +48,9 @@ public class SearchCriteriaParser {
         do {
             String prefix = matcher.group(1);
             int valueStart = matcher.end();
-            hasNext = matcher.find();
+            hasNext = FieldValueTokenizer.findNextPrefix(matcher, args, prefix);
             int valueEnd = hasNext ? matcher.start() : args.length();
             String value = ParserUtil.stripUnicodeBoundaryWhitespace(args.substring(valueStart, valueEnd));
-            if (value.isEmpty()) {
-                throw new ParseException("Search prefix '" + prefix + "' requires a non-blank value.");
-            }
             if (prefix.equals("c/")) {
                 if (category != null) {
                     throw new ParseException("Repeated search prefix 'c/'.");
@@ -69,6 +66,9 @@ public class SearchCriteriaParser {
                 if (filters.putIfAbsent(field, value) != null) {
                     throw new ParseException("Repeated search prefix '" + prefix + "'.");
                 }
+            }
+            if (value.isEmpty()) {
+                throw new ParseException("Search prefix '" + prefix + "' requires a non-blank value.");
             }
         } while (hasNext);
 

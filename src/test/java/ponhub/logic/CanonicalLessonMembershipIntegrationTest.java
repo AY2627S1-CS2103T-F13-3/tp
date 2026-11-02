@@ -62,6 +62,23 @@ public class CanonicalLessonMembershipIntegrationTest {
     Path directory;
 
     @Test
+    public void execute_unicodeIndices_resolveTheCurrentStudentForEnrolAndUnenrol() throws Exception {
+        Path path = directory.resolve("unicode-indices.json");
+        new JsonPonHubDataStorage(path).saveData(createMembershipState(Set.of(), List.of()));
+        CanonicalPeopleSession session = new CanonicalPeopleSession(path);
+        session.execute("list r/student");
+
+        assertEquals("Student S3 enrolled in lesson L10.",
+                session.execute("enrol ２ lid/L10").getFeedbackToUser());
+        assertEquals(Set.of(STUDENT_TWO), session.getDataSnapshot().lessons().getFirst().getEnrolledStudentIds());
+        assertEquals("Student S3 unenrolled from lesson L10.",
+                session.execute("unenrol ٢ lid/L10").getFeedbackToUser());
+        assertTrue(session.getDataSnapshot().lessons().getFirst().getEnrolledStudentIds().isEmpty());
+        assertEquals(List.of(STUDENT_ONE, STUDENT_TWO), getVisibleIds(session));
+        assertEquals(session.getDataSnapshot(), new CanonicalPeopleSession(path).getDataSnapshot());
+    }
+
+    @Test
     public void execute_enrolUsesCurrentIndexAndRefreshesCanonicalQueries() throws Exception {
         Path path = directory.resolve("canonical.json");
         PonHubDataState before = createMembershipState(Set.of(), List.of());
