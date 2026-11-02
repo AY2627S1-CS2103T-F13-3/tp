@@ -44,19 +44,19 @@ public final class LessonQueryTestData {
         people.addTutor(new ContactDetails(new Name("Unassigned Tutor"), Optional.of(new Phone("12345678")),
                 Optional.empty(), Optional.empty()));
         List<Lesson> lessons = List.of(
-                lesson("L2", TUTOR_ONE, "Tue", "0900", "1000", "Science", "R1", Set.of(STUDENT_ONE)),
-                lesson("L10", TUTOR_ONE, "Mon", "0900", "1000", "Math", "R1",
+                createLesson("L2", TUTOR_ONE, "Tue", "0900", "1000", "Science", "R1", Set.of(STUDENT_ONE)),
+                createLesson("L10", TUTOR_ONE, "Mon", "0900", "1000", "Math", "R1",
                         Set.of(STUDENT_TWO, STUDENT_ONE)),
-                lesson("L3", TUTOR_TWO, "Mon", "0900", "1000", "Science", "R2", Set.of()),
-                lesson("L4", TUTOR_ONE, "Mon", "1000", "1100", "Math", "R1", Set.of()),
-                lesson("L11", TUTOR_TWO, "Wed", "0000", "2359", "中文", "R10", Set.of(STUDENT_TWO)));
+                createLesson("L3", TUTOR_TWO, "Mon", "0900", "1000", "Science", "R2", Set.of()),
+                createLesson("L4", TUTOR_ONE, "Mon", "1000", "1100", "Math", "R1", Set.of()),
+                createLesson("L11", TUTOR_TWO, "Wed", "0000", "2359", "中文", "R10", Set.of(STUDENT_TWO)));
         return new PonHubData(new PonHubDataState(people.exportState(), lessons, List.of(), 11));
     }
 
     /**
      * Builds a validated immutable lesson.
      */
-    public static Lesson lesson(String id, PersonId tutor, String day, String start, String end,
+    public static Lesson createLesson(String id, PersonId tutor, String day, String start, String end,
             String subject, String room, Set<PersonId> students) {
         return new Lesson(new LessonId(id), tutor, new LessonTimeSlot(LessonDay.fromString(day),
                 new LessonTime(start), new LessonTime(end)), new Subject(subject), new Room(room), students);

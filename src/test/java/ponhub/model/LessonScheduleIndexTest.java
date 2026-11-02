@@ -3,7 +3,7 @@ package ponhub.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static ponhub.testutil.LessonQueryTestData.lesson;
+import static ponhub.testutil.LessonQueryTestData.createLesson;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,29 +28,29 @@ public class LessonScheduleIndexTest {
     @Test
     public void restore_spanningSlot_reportsFirstCreatedConflictRatherThanFirstChronological() {
         List<Lesson> lessons = List.of(
-                lesson("L1", FIRST_TUTOR, "Mon", "1100", "1200", "Math", "R1", Set.of()),
-                lesson("L2", FIRST_TUTOR, "Mon", "0900", "1000", "Math", "R1", Set.of()),
-                lesson("L3", FIRST_TUTOR, "Mon", "1000", "1100", "Math", "R1", Set.of()),
-                lesson("L4", FIRST_TUTOR, "Mon", "0830", "1230", "Math", "R2", Set.of()));
+                createLesson("L1", FIRST_TUTOR, "Mon", "1100", "1200", "Math", "R1", Set.of()),
+                createLesson("L2", FIRST_TUTOR, "Mon", "0900", "1000", "Math", "R1", Set.of()),
+                createLesson("L3", FIRST_TUTOR, "Mon", "1000", "1100", "Math", "R1", Set.of()),
+                createLesson("L4", FIRST_TUTOR, "Mon", "0830", "1230", "Math", "R2", Set.of()));
         assertEquals("Tutor schedule overlap between L1 and L4.", getRejection(lessons));
     }
 
     @Test
     public void restore_multipleResourceConflicts_preservesPairBeforeTypePrecedence() {
         List<Lesson> lessons = List.of(
-                lesson("L1", FIRST_TUTOR, "Mon", "0900", "1000", "Math", "R1", Set.of()),
-                lesson("L2", SECOND_TUTOR, "Mon", "0900", "1000", "Math", "R2", Set.of()),
-                lesson("L3", SECOND_TUTOR, "Mon", "0900", "1000", "Math", "r1", Set.of()));
+                createLesson("L1", FIRST_TUTOR, "Mon", "0900", "1000", "Math", "R1", Set.of()),
+                createLesson("L2", SECOND_TUTOR, "Mon", "0900", "1000", "Math", "R2", Set.of()),
+                createLesson("L3", SECOND_TUTOR, "Mon", "0900", "1000", "Math", "r1", Set.of()));
         assertEquals("Room schedule overlap between L1 and L3.", getRejection(lessons));
     }
 
     @Test
     public void restore_disjointResourcesAdjacentSlotsAndWeekdays_preservesCatalogueOrder() {
         List<Lesson> lessons = List.of(
-                lesson("L4", FIRST_TUTOR, "Tue", "0900", "1000", "Math", "R1", Set.of(new PersonId("S1"))),
-                lesson("L2", FIRST_TUTOR, "Mon", "1000", "1100", "Math", "R1", Set.of(new PersonId("S1"))),
-                lesson("L1", FIRST_TUTOR, "Mon", "0900", "1000", "Math", "R1", Set.of(new PersonId("S1"))),
-                lesson("L3", SECOND_TUTOR, "Mon", "0900", "1100", "Math", "R2", Set.of(new PersonId("S2"))));
+                createLesson("L4", FIRST_TUTOR, "Tue", "0900", "1000", "Math", "R1", Set.of(new PersonId("S1"))),
+                createLesson("L2", FIRST_TUTOR, "Mon", "1000", "1100", "Math", "R1", Set.of(new PersonId("S1"))),
+                createLesson("L1", FIRST_TUTOR, "Mon", "0900", "1000", "Math", "R1", Set.of(new PersonId("S1"))),
+                createLesson("L3", SECOND_TUTOR, "Mon", "0900", "1100", "Math", "R2", Set.of(new PersonId("S2"))));
         assertEquals(lessons, new PonHubDataState(people, lessons, List.of(), 4).lessons());
     }
 
@@ -72,7 +72,7 @@ public class LessonScheduleIndexTest {
                 PersonId tutor = random.nextBoolean() ? FIRST_TUTOR : SECOND_TUTOR;
                 String day = random.nextBoolean() ? "Mon" : "Tue";
                 String room = (random.nextBoolean() ? "R" : "r") + random.nextInt(4);
-                lessons.add(lesson("L" + (i + 1), tutor, day, formatTime(start), formatTime(end),
+                lessons.add(createLesson("L" + (i + 1), tutor, day, formatTime(start), formatTime(end),
                         "Math", room, roster));
             }
             Collections.shuffle(lessons, random);

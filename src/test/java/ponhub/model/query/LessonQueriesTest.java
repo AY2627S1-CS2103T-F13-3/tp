@@ -15,7 +15,7 @@ import static ponhub.testutil.LessonQueryTestData.TUTOR_ONE;
 import static ponhub.testutil.LessonQueryTestData.TUTOR_TWO;
 import static ponhub.testutil.LessonQueryTestData.TUTOR_WITHOUT_LESSONS;
 import static ponhub.testutil.LessonQueryTestData.createData;
-import static ponhub.testutil.LessonQueryTestData.lesson;
+import static ponhub.testutil.LessonQueryTestData.createLesson;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -342,7 +342,7 @@ public class LessonQueriesTest {
         AtomicInteger notifications = new AtomicInteger();
         filtered.addListener((ListChangeListener<LessonView>) change -> notifications.incrementAndGet());
         Lesson added = data.addLesson(TUTOR_WITHOUT_LESSONS,
-                lesson("L12", TUTOR_WITHOUT_LESSONS, "Fri", "1200", "1300", "New", "R3", Set.of()).getTimeSlot(),
+                createLesson("L12", TUTOR_WITHOUT_LESSONS, "Fri", "1200", "1300", "New", "R3", Set.of()).getTimeSlot(),
                 new ponhub.model.lesson.Subject("New"), new ponhub.model.lesson.Room("R3"));
         var roster = queries.getLessonRoster(added.getId());
         assertIds(filtered, "L12");
@@ -407,8 +407,8 @@ public class LessonQueriesTest {
         List<PersonRecord> people = new ArrayList<>(before.people().getPeople());
         Tutor tutor = (Tutor) data.getPerson(TUTOR_ONE).orElseThrow();
         Student student = (Student) data.getPerson(STUDENT_ONE).orElseThrow();
-        people.set(people.indexOf(tutor), new Tutor(tutor.getId(), renamed(tutor, "Updated Tutor")));
-        people.set(people.indexOf(student), new Student(student.getId(), renamed(student, "Sally Tan"),
+        people.set(people.indexOf(tutor), new Tutor(tutor.getId(), createRenamedContacts(tutor, "Updated Tutor")));
+        people.set(people.indexOf(student), new Student(student.getId(), createRenamedContacts(student, "Sally Tan"),
                 student.getLevel(), student.getParentPhone()));
         data.resetData(new PonHubDataState(new PeopleRegistryState(people,
                 before.people().getLastAllocatedSequences()), before.lessons(), before.attendance(), 11));
@@ -516,7 +516,7 @@ public class LessonQueriesTest {
             SearchCriteria criteria = new SearchCriteria(SearchCategory.LESSON, values);
             List<LessonId> expected = data.getLessons().stream().filter(lesson -> scanMatches(criteria, lesson))
                     .map(Lesson::getId).toList();
-            assertEquals(expected, ids(queries.searchLessons(criteria)), criteria.toString());
+            assertEquals(expected, getLessonIds(queries.searchLessons(criteria)), criteria.toString());
         }
     }
 
@@ -551,7 +551,7 @@ public class LessonQueriesTest {
         return true;
     }
 
-    private static ContactDetails renamed(PersonRecord person, String name) {
+    private static ContactDetails createRenamedContacts(PersonRecord person, String name) {
         ContactDetails details = person.getContactDetails();
         return new ContactDetails(new Name(name), details.getPhone(), details.getEmail(), details.getAddress());
     }
@@ -571,11 +571,11 @@ public class LessonQueriesTest {
         assertIds(queries.searchLessons(parser.parse(arguments)), expectedIds);
     }
 
-    private static List<LessonId> ids(List<LessonView> lessons) {
+    private static List<LessonId> getLessonIds(List<LessonView> lessons) {
         return lessons.stream().map(LessonView::getLessonId).toList();
     }
 
     private static void assertIds(List<LessonView> lessons, String... expectedIds) {
-        assertEquals(List.of(expectedIds).stream().map(LessonId::new).toList(), ids(lessons));
+        assertEquals(List.of(expectedIds).stream().map(LessonId::new).toList(), getLessonIds(lessons));
     }
 }

@@ -63,9 +63,9 @@ public class LessonQueriesListenerTest {
         publishWithoutListenerErrors(withRoster(original, SHARED_LESSON, Set.of(STUDENT_TWO)));
 
         assertUnenrolledResults();
-        assertEquals(List.of(new LessonId("L2")), lessonIds(heldStudent));
+        assertEquals(List.of(new LessonId("L2")), getLessonIds(heldStudent));
         var subscribedStudent = newStudent.get();
-        assertEquals(List.of(SHARED_LESSON, new LessonId("L11")), lessonIds(subscribedStudent));
+        assertEquals(List.of(SHARED_LESSON, new LessonId("L11")), getLessonIds(subscribedStudent));
         assertEquals(1, subscribedStudent.get(0).getRosterSize());
         assertSame(subscribedStudent, queries.getStudentLessons(STUDENT_TWO));
         assertTrue(unassigned.get().isEmpty());
@@ -75,9 +75,9 @@ public class LessonQueriesListenerTest {
         assertSame(subscribedStudent, newStudent.get());
         assertEquals(2, subscribedStudent.get(0).getRosterSize());
         assertSame(heldStudent, queries.getStudentLessons(STUDENT_ONE));
-        assertEquals(List.of(new LessonId("L2"), SHARED_LESSON), lessonIds(heldStudent));
+        assertEquals(List.of(new LessonId("L2"), SHARED_LESSON), getLessonIds(heldStudent));
         assertEquals(2, heldRoster.size());
-        assertEquals(List.of(new LessonId("L2"), SHARED_LESSON), lessonIds(heldFiltered));
+        assertEquals(List.of(new LessonId("L2"), SHARED_LESSON), getLessonIds(heldFiltered));
     }
 
     @Test
@@ -95,7 +95,7 @@ public class LessonQueriesListenerTest {
         assertUnenrolledResults();
         assertEquals(1, heldTutor.get(0).getRosterSize());
         var subscribedTutor = newTutor.get();
-        assertEquals(List.of(EMPTY_LESSON, new LessonId("L11")), lessonIds(subscribedTutor));
+        assertEquals(List.of(EMPTY_LESSON, new LessonId("L11")), getLessonIds(subscribedTutor));
         assertSame(subscribedTutor, queries.getTutorSchedule(TUTOR_TWO));
         assertTrue(unassigned.get().isEmpty());
 
@@ -105,7 +105,7 @@ public class LessonQueriesListenerTest {
         assertEquals(0, subscribedTutor.get(1).getRosterSize());
         assertSame(heldTutor, queries.getTutorSchedule(TUTOR_ONE));
         assertEquals(2, heldRoster.size());
-        assertEquals(List.of(new LessonId("L2"), SHARED_LESSON), lessonIds(heldFiltered));
+        assertEquals(List.of(new LessonId("L2"), SHARED_LESSON), getLessonIds(heldFiltered));
     }
 
     @Test
@@ -131,7 +131,7 @@ public class LessonQueriesListenerTest {
         assertTrue(subscribedRoster.isEmpty());
         assertSame(heldRoster, queries.getLessonRoster(SHARED_LESSON));
         assertEquals(2, heldRoster.size());
-        assertEquals(List.of(SHARED_LESSON), lessonIds(heldFiltered));
+        assertEquals(List.of(SHARED_LESSON), getLessonIds(heldFiltered));
     }
 
     private void assertUnenrolledResults() {
@@ -140,7 +140,7 @@ public class LessonQueriesListenerTest {
         assertEquals(List.of(STUDENT_TWO), heldRoster.stream().map(StudentView::getStudentId).toList());
         assertSame(heldRoster, queries.getLessonRoster(SHARED_LESSON));
         assertSame(heldFiltered, queries.getFilteredLessonList());
-        assertEquals(List.of(new LessonId("L2")), lessonIds(heldFiltered));
+        assertEquals(List.of(new LessonId("L2")), getLessonIds(heldFiltered));
     }
 
     /**
@@ -166,7 +166,7 @@ public class LessonQueriesListenerTest {
         return new PonHubDataState(state.people(), lessons, state.attendance(), state.lastAllocatedLessonSequence());
     }
 
-    private static List<LessonId> lessonIds(List<LessonView> lessons) {
+    private static List<LessonId> getLessonIds(List<LessonView> lessons) {
         return lessons.stream().map(LessonView::getLessonId).toList();
     }
 }

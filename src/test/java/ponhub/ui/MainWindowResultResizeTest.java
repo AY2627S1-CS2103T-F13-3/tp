@@ -182,7 +182,7 @@ public class MainWindowResultResizeTest {
         }
         PersonId tutor = people.addTutor(new ContactDetails(new Name("Roster Tutor"),
                 Optional.of(new Phone("12345678")), Optional.empty(), Optional.empty())).getId();
-        return new PonHubDataState(people.exportState(), List.of(LessonQueryTestData.lesson(
+        return new PonHubDataState(people.exportState(), List.of(LessonQueryTestData.createLesson(
                 "L1", tutor, "Mon", "0800", "0900", "Math", "R1", students)), List.of(), 1);
     }
 

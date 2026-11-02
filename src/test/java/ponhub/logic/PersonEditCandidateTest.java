@@ -51,7 +51,7 @@ public class PersonEditCandidateTest {
 
     @Test
     public void prepare_studentSetAndClear_preservesPositionIdentityAndCompleteRelationships() {
-        PonHubData liveData = new PonHubData(sourceWithHistory());
+        PonHubData liveData = new PonHubData(createSourceWithHistory());
         PonHubDataState source = liveData.exportState();
         PersonEditInput input = new PersonEditInput(Field.keep(), Field.clear(), Field.clear(), Field.clear(),
                 Field.set(new EducationLevel("p2")), Field.keep());
@@ -69,14 +69,14 @@ public class PersonEditCandidateTest {
         assertRetainedRelationships(source, candidate.getCandidateState());
         assertSame(source, liveData.exportState());
         assertEquals(Optional.of(new Phone("00345678")),
-                person(source, "S7").getContactDetails().getPhone());
+                getPerson(source, "S7").getContactDetails().getPhone());
     }
 
     @Test
     public void prepare_allRolesSetContacts_buildsCanonicalRecordWithSameIdAndRole() {
-        PonHubDataState source = sourceWithHistory();
+        PonHubDataState source = createSourceWithHistory();
         for (String id : new String[]{"S7", "T4", "P2"}) {
-            PersonRecord original = person(source, id);
+            PersonRecord original = getPerson(source, id);
             ContactDetails expectedContacts = new ContactDetails(new Name("Corrected Person"),
                     Optional.of(new Phone("00011122")), Optional.of(new Email("new@example.com")),
                     Optional.of(new Address("New Road")));
@@ -105,11 +105,11 @@ public class PersonEditCandidateTest {
 
     @Test
     public void prepare_tutorAndParentOptionalClears_keepsRequiredOwnPhone() {
-        PonHubDataState source = sourceWithHistory();
+        PonHubDataState source = createSourceWithHistory();
         PersonEditInput input = new PersonEditInput(Field.keep(), Field.keep(), Field.clear(), Field.clear(),
                 Field.keep(), Field.keep());
         for (String id : new String[]{"T4", "P2"}) {
-            PersonRecord original = person(source, id);
+            PersonRecord original = getPerson(source, id);
             PersonEditCandidate candidate = PersonEditCandidate.prepare(source, original.getId(), input);
 
             assertTrue(candidate.isChanged());
@@ -122,7 +122,7 @@ public class PersonEditCandidateTest {
 
     @Test
     public void prepare_individualContactChanges_preservesEveryOmittedFieldAndDisplayEmailCase() {
-        PonHubDataState source = sourceWithHistory();
+        PonHubDataState source = createSourceWithHistory();
         Phone changedPhone = new Phone("00011122");
         Email changedEmail = new Email("EXISTING@example.com");
         Address changedAddress = new Address("  New   Road  ");
@@ -134,7 +134,7 @@ public class PersonEditCandidateTest {
                 new PersonEditInput(Field.keep(), Field.keep(), Field.keep(), Field.set(changedAddress),
                         Field.keep(), Field.keep()));
         for (String id : new String[]{"S7", "T4", "P2"}) {
-            PersonRecord original = person(source, id);
+            PersonRecord original = getPerson(source, id);
             ContactDetails contacts = original.getContactDetails();
             List<ContactDetails> expectedContacts = List.of(
                     new ContactDetails(original.getName(), Optional.of(changedPhone), contacts.getEmail(),
@@ -160,12 +160,12 @@ public class PersonEditCandidateTest {
 
     @Test
     public void prepare_omittedIdenticalAndNormalizedValues_returnsOriginalSnapshotWithoutChange() {
-        PonHubDataState source = sourceWithHistory();
+        PonHubDataState source = createSourceWithHistory();
         for (PersonRecord original : source.people().getPeople()) {
             Name spacedName = new Name("  " + original.getName().fullName.replace(" ", "   ") + "  ");
             PersonEditInput nameOnly = new PersonEditInput(Field.set(spacedName), Field.keep(), Field.keep(),
                     Field.keep(), Field.keep(), Field.keep());
-            for (PersonEditInput input : List.of(keepAll(), nameOnly, sameValues(original))) {
+            for (PersonEditInput input : List.of(keepAll(), nameOnly, createSameValueInput(original))) {
                 PersonEditCandidate candidate = PersonEditCandidate.prepare(source, original.getId(), input);
 
                 assertFalse(candidate.isChanged());
@@ -177,7 +177,7 @@ public class PersonEditCandidateTest {
 
     @Test
     public void prepare_displayCaseChange_isChangeAndNeverDuplicatesSelf() {
-        PonHubDataState source = sourceWithHistory();
+        PonHubDataState source = createSourceWithHistory();
         for (PersonRecord original : source.people().getPeople()) {
             Name changedName = new Name(original.getName().fullName.toUpperCase(Locale.ROOT));
             PersonEditInput input = new PersonEditInput(Field.set(changedName), Field.keep(), Field.keep(),
@@ -195,7 +195,7 @@ public class PersonEditCandidateTest {
 
     @Test
     public void prepare_requiredFieldClears_rejectsWithoutChangingSource() {
-        PonHubData liveData = new PonHubData(sourceWithHistory());
+        PonHubData liveData = new PonHubData(createSourceWithHistory());
         PonHubDataState source = liveData.exportState();
         PersonEditInput clearName = new PersonEditInput(Field.clear(), Field.keep(), Field.keep(),
                 Field.keep(), Field.keep(), Field.keep());
@@ -218,12 +218,12 @@ public class PersonEditCandidateTest {
                     PersonEditCandidate.prepare(source, new PersonId(id), clearPhone));
         }
         assertSame(source, liveData.exportState());
-        assertEquals(sourceWithHistory(), source);
+        assertEquals(createSourceWithHistory(), source);
     }
 
     @Test
     public void prepare_studentFieldsForOtherRoles_rejectsSetAndClearWithoutChangingSource() {
-        PonHubDataState source = sourceWithHistory();
+        PonHubDataState source = createSourceWithHistory();
         for (String id : new String[]{"T4", "P2"}) {
             for (PersonEditInput input : List.of(
                     new PersonEditInput(Field.keep(), Field.keep(), Field.keep(), Field.keep(),
@@ -236,14 +236,14 @@ public class PersonEditCandidateTest {
                             Field.keep(), Field.clear()))) {
                 assertThrows(IllegalArgumentException.class, () ->
                         PersonEditCandidate.prepare(source, new PersonId(id), input));
-                assertEquals(sourceWithHistory(), source);
+                assertEquals(createSourceWithHistory(), source);
             }
         }
     }
 
     @Test
     public void prepare_namePhoneAndCombinedDuplicates_rejectsAcrossAllRolesAndPreservesSource() {
-        PonHubDataState source = sourceWithHistory();
+        PonHubDataState source = createSourceWithHistory();
         for (PersonRole role : PersonRole.values()) {
             List<PersonRecord> sameRole = source.people().getPeople().stream()
                     .filter(person -> person.getRole() == role).toList();
@@ -252,19 +252,19 @@ public class PersonEditCandidateTest {
             Name duplicateName = new Name(other.getName().fullName.toUpperCase(Locale.ROOT).replace(" ", "  "));
 
             PonHubDataState sharedPhone = replaceFixturePerson(source,
-                    withIdentity(other, other.getName(), identifyingPhone(target)));
-            PersonEditInput nameOnly = identityEdit(role, Field.set(duplicateName), Field.keep());
+                    withIdentity(other, other.getName(), getIdentifyingPhone(target)));
+            PersonEditInput nameOnly = createIdentityEdit(role, Field.set(duplicateName), Field.keep());
             assertThrows(DuplicatePersonException.class, () ->
                     PersonEditCandidate.prepare(sharedPhone, target.getId(), nameOnly));
 
             PonHubDataState sharedName = replaceFixturePerson(source,
-                    withIdentity(other, target.getName(), identifyingPhone(other)));
-            PersonEditInput phoneOnly = identityEdit(role, Field.keep(), Field.set(identifyingPhone(other)));
+                    withIdentity(other, target.getName(), getIdentifyingPhone(other)));
+            PersonEditInput phoneOnly = createIdentityEdit(role, Field.keep(), Field.set(getIdentifyingPhone(other)));
             assertThrows(DuplicatePersonException.class, () ->
                     PersonEditCandidate.prepare(sharedName, target.getId(), phoneOnly));
 
-            PersonEditInput identity = identityEdit(role, Field.set(duplicateName),
-                    Field.set(identifyingPhone(other)));
+            PersonEditInput identity = createIdentityEdit(role, Field.set(duplicateName),
+                    Field.set(getIdentifyingPhone(other)));
             PersonEditInput bothWithOptionalChanges = new PersonEditInput(identity.name(),
                     role == PersonRole.STUDENT ? Field.set(new Phone("00077788")) : identity.phone(),
                     Field.set(new Email("different@example.com")), Field.set(new Address("Different Road")),
@@ -276,23 +276,24 @@ public class PersonEditCandidateTest {
             assertSame(source, liveData.exportState());
             assertRetainedRelationships(source, sharedPhone);
             assertRetainedRelationships(source, sharedName);
-            assertEquals(sourceWithHistory(), source);
+            assertEquals(createSourceWithHistory(), source);
         }
     }
 
     @Test
     public void prepare_differentNamePhoneOrRole_allowsDistinctBusinessIdentities() {
-        PonHubDataState source = sourceWithHistory();
+        PonHubDataState source = createSourceWithHistory();
         for (PersonRole role : PersonRole.values()) {
             List<PersonRecord> sameRole = source.people().getPeople().stream()
                     .filter(person -> person.getRole() == role).toList();
             PersonRecord target = sameRole.getFirst();
             PersonRecord other = sameRole.getLast();
-            PersonRecord otherRole = person(source, role == PersonRole.TUTOR ? "P2" : "T4");
+            PersonRecord otherRole = getPerson(source, role == PersonRole.TUTOR ? "P2" : "T4");
             for (PersonEditInput input : List.of(
-                    identityEdit(role, Field.set(other.getName()), Field.keep()),
-                    identityEdit(role, Field.keep(), Field.set(identifyingPhone(other))),
-                    identityEdit(role, Field.set(otherRole.getName()), Field.set(identifyingPhone(otherRole))))) {
+                    createIdentityEdit(role, Field.set(other.getName()), Field.keep()),
+                    createIdentityEdit(role, Field.keep(), Field.set(getIdentifyingPhone(other))),
+                    createIdentityEdit(role, Field.set(otherRole.getName()),
+                            Field.set(getIdentifyingPhone(otherRole))))) {
                 PersonEditCandidate candidate = PersonEditCandidate.prepare(source, target.getId(), input);
 
                 assertTrue(candidate.isChanged());
@@ -306,8 +307,8 @@ public class PersonEditCandidateTest {
 
     @Test
     public void prepare_parentPhoneChanges_recomputesExactLinksWithoutCascadingOrCreatingPeople() {
-        PonHubDataState source = sourceWithHistory();
-        PersonEditInput studentInput = identityEdit(PersonRole.STUDENT, Field.keep(),
+        PonHubDataState source = createSourceWithHistory();
+        PersonEditInput studentInput = createIdentityEdit(PersonRole.STUDENT, Field.keep(),
                 Field.set(new Phone("00765432")));
         PersonEditCandidate studentEdit = PersonEditCandidate.prepare(source, new PersonId("S7"), studentInput);
         PonHubDataState studentState = studentEdit.getCandidateState();
@@ -316,32 +317,32 @@ public class PersonEditCandidateTest {
         assertEquals(List.of("S7", "S9"), studentQueries.getStudentsByParentPhone(new Phone("00765432"))
                 .stream().map(student -> student.getId().toString()).toList());
         assertTrue(studentQueries.getStudentsByParentPhone(new Phone("00123456")).isEmpty());
-        assertEquals(person(source, "P2"), person(studentState, "P2"));
-        assertEquals(person(source, "P5"), person(studentState, "P5"));
+        assertEquals(getPerson(source, "P2"), getPerson(studentState, "P2"));
+        assertEquals(getPerson(source, "P5"), getPerson(studentState, "P5"));
         assertEquals(6, studentState.people().getPeople().size());
 
         for (String unmatchedPhone : new String[]{"0123456", "00888888"}) {
             PersonEditCandidate unmatched = PersonEditCandidate.prepare(source, new PersonId("S7"),
-                    identityEdit(PersonRole.STUDENT, Field.keep(), Field.set(new Phone(unmatchedPhone))));
+                    createIdentityEdit(PersonRole.STUDENT, Field.keep(), Field.set(new Phone(unmatchedPhone))));
             assertEquals(6, unmatched.getCandidateState().people().getPeople().size());
-            assertEquals(person(source, "P2"), person(unmatched.getCandidateState(), "P2"));
+            assertEquals(getPerson(source, "P2"), getPerson(unmatched.getCandidateState(), "P2"));
             assertEquals(new Phone(unmatchedPhone), ((Student) unmatched.getEditedPerson()).getParentPhone());
         }
 
         PersonEditCandidate parentEdit = PersonEditCandidate.prepare(source, new PersonId("P2"),
-                identityEdit(PersonRole.PARENT, Field.keep(), Field.set(new Phone("00765432"))));
-        assertEquals(person(source, "S7"), person(parentEdit.getCandidateState(), "S7"));
-        assertEquals(person(source, "S9"), person(parentEdit.getCandidateState(), "S9"));
+                createIdentityEdit(PersonRole.PARENT, Field.keep(), Field.set(new Phone("00765432"))));
+        assertEquals(getPerson(source, "S7"), getPerson(parentEdit.getCandidateState(), "S7"));
+        assertEquals(getPerson(source, "S9"), getPerson(parentEdit.getCandidateState(), "S9"));
         LessonQueries parentQueries = new LessonQueries(new PonHubData(parentEdit.getCandidateState()));
         Parent editedParent = (Parent) parentEdit.getEditedPerson();
-        assertEquals(List.of(person(source, "S9")), parentQueries.getStudentsByParentPhone(editedParent.getPhone()));
+        assertEquals(List.of(getPerson(source, "S9")), parentQueries.getStudentsByParentPhone(editedParent.getPhone()));
         assertRetainedRelationships(source, studentState);
         assertRetainedRelationships(source, parentEdit.getCandidateState());
     }
 
     @Test
     public void prepare_candidateSnapshots_remainImmutableAndIndependentOfLaterLiveEdits() {
-        PonHubData liveData = new PonHubData(sourceWithHistory());
+        PonHubData liveData = new PonHubData(createSourceWithHistory());
         PonHubDataState source = liveData.exportState();
         PersonEditInput input = new PersonEditInput(Field.set(new Name("Jamie Lim")), Field.keep(), Field.keep(),
                 Field.keep(), Field.keep(), Field.keep());
@@ -362,18 +363,18 @@ public class PersonEditCandidateTest {
         assertEquals(new PersonId("S7"), state.attendance().get(1).getStudentId());
         assertEquals(state.lessons().get(1).getId(), state.attendance().get(1).getLessonId());
 
-        liveData.replacePerson(withIdentity(person(source, "P2"), new Name("Later Parent"), new Phone("00066677")));
+        liveData.replacePerson(withIdentity(getPerson(source, "P2"), new Name("Later Parent"), new Phone("00066677")));
         liveData.resetData(new PonHubData());
         assertEquals(6, state.people().getPeople().size());
-        assertEquals(new Name("Jamie Lim"), person(state, "T4").getName());
-        assertEquals(person(source, "P2"), person(state, "P2"));
+        assertEquals(new Name("Jamie Lim"), getPerson(state, "T4").getName());
+        assertEquals(getPerson(source, "P2"), getPerson(state, "P2"));
         assertRetainedRelationships(source, state);
-        assertEquals(sourceWithHistory(), source);
+        assertEquals(createSourceWithHistory(), source);
     }
 
     @Test
     public void prepare_exhaustedAllocationHistories_editsEveryRoleWithoutAllocating() {
-        PonHubDataState baseline = sourceWithHistory();
+        PonHubDataState baseline = createSourceWithHistory();
         PonHubDataState source = new PonHubDataState(new PeopleRegistryState(baseline.people().getPeople(),
                 Map.of(PersonRole.STUDENT, Long.MAX_VALUE, PersonRole.TUTOR, Long.MAX_VALUE,
                         PersonRole.PARENT, Long.MAX_VALUE)), baseline.lessons(), baseline.attendance(), Long.MAX_VALUE);
@@ -393,7 +394,7 @@ public class PersonEditCandidateTest {
 
     @Test
     public void prepare_nullArgumentsAndMissingTargets_rejectsWithoutChangingLiveState() {
-        PonHubData liveData = new PonHubData(sourceWithHistory());
+        PonHubData liveData = new PonHubData(createSourceWithHistory());
         PonHubDataState source = liveData.exportState();
         PersonEditInput input = keepAll();
 
@@ -413,24 +414,24 @@ public class PersonEditCandidateTest {
         return new PersonEditInput(Field.keep(), Field.keep(), Field.keep(), Field.keep(), Field.keep(), Field.keep());
     }
 
-    private static PersonEditInput sameValues(PersonRecord original) {
+    private static PersonEditInput createSameValueInput(PersonRecord original) {
         ContactDetails contacts = original.getContactDetails();
-        return new PersonEditInput(Field.set(contacts.getName()), suppliedOptional(contacts.getPhone()),
-                suppliedOptional(contacts.getEmail()), suppliedOptional(contacts.getAddress()),
+        return new PersonEditInput(Field.set(contacts.getName()), createOptionalField(contacts.getPhone()),
+                createOptionalField(contacts.getEmail()), createOptionalField(contacts.getAddress()),
                 original instanceof Student student ? Field.set(student.getLevel()) : Field.keep(),
                 original instanceof Student student ? Field.set(student.getParentPhone()) : Field.keep());
     }
 
-    private static <T> Field<T> suppliedOptional(Optional<T> value) {
+    private static <T> Field<T> createOptionalField(Optional<T> value) {
         return value.map(Field::set).orElseGet(Field::clear);
     }
 
-    private static PersonEditInput identityEdit(PersonRole role, Field<Name> name, Field<Phone> phone) {
+    private static PersonEditInput createIdentityEdit(PersonRole role, Field<Name> name, Field<Phone> phone) {
         return new PersonEditInput(name, role == PersonRole.STUDENT ? Field.keep() : phone,
                 Field.keep(), Field.keep(), Field.keep(), role == PersonRole.STUDENT ? phone : Field.keep());
     }
 
-    private static Phone identifyingPhone(PersonRecord person) {
+    private static Phone getIdentifyingPhone(PersonRecord person) {
         return person instanceof Student student ? student.getParentPhone()
                 : person.getContactDetails().getPhone().orElseThrow();
     }
@@ -447,14 +448,14 @@ public class PersonEditCandidateTest {
         };
     }
 
-    private static PersonRecord person(PonHubDataState source, String id) {
+    private static PersonRecord getPerson(PonHubDataState source, String id) {
         return source.people().getPeople().stream().filter(person -> person.getId().equals(new PersonId(id)))
                 .findFirst().orElseThrow();
     }
 
     private static PonHubDataState replaceFixturePerson(PonHubDataState source, PersonRecord replacement) {
         List<PersonRecord> people = new ArrayList<>(source.people().getPeople());
-        people.set(people.indexOf(person(source, replacement.getId().toString())), replacement);
+        people.set(people.indexOf(getPerson(source, replacement.getId().toString())), replacement);
         return new PonHubDataState(new PeopleRegistryState(people, source.people().getLastAllocatedSequences()),
                 source.lessons(), source.attendance(), source.lastAllocatedLessonSequence());
     }
@@ -466,12 +467,12 @@ public class PersonEditCandidateTest {
         assertEquals(source.lastAllocatedLessonSequence(), candidate.lastAllocatedLessonSequence());
     }
 
-    private static PonHubDataState sourceWithHistory() {
+    private static PonHubDataState createSourceWithHistory() {
         List<PersonRecord> people = List.of(
-                new Tutor(new PersonId("T4"), contacts("Mei Lim", "00987654")),
-                new Student(new PersonId("S7"), contacts("Alex Tan", "00345678"),
+                new Tutor(new PersonId("T4"), createContacts("Mei Lim", "00987654")),
+                new Student(new PersonId("S7"), createContacts("Alex Tan", "00345678"),
                         new EducationLevel("P1"), new Phone("00123456")),
-                new Parent(new PersonId("P2"), contacts("Pat Tan", "00123456")),
+                new Parent(new PersonId("P2"), createContacts("Pat Tan", "00123456")),
                 new Student(new PersonId("S9"), new ContactDetails(new Name("Jamie Tan")),
                         new EducationLevel("S1"), new Phone("00765432")),
                 new Tutor(new PersonId("T6"), new ContactDetails(new Name("Arun Das"),
@@ -493,7 +494,7 @@ public class PersonEditCandidateTest {
                 List.of(current, former), List.of(currentAttendance, formerAttendance), 30);
     }
 
-    private static ContactDetails contacts(String name, String phone) {
+    private static ContactDetails createContacts(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.of(new Phone(phone)),
                 Optional.of(new Email("existing@example.com")), Optional.of(new Address("Existing Road")));
     }

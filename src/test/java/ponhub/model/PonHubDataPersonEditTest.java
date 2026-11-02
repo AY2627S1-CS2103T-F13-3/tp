@@ -42,10 +42,10 @@ public class PonHubDataPersonEditTest {
 
     @Test
     public void replacePerson_eachRole_retainsPositionRelationshipsAndCounters() {
-        PonHubDataState source = sourceWithHistory();
+        PonHubDataState source = createSourceWithHistory();
         for (PersonRecord original : source.people().getPeople()) {
             PonHubData data = new PonHubData(source);
-            PersonRecord replacement = renamed(original, "Changed Name");
+            PersonRecord replacement = createRenamedPerson(original, "Changed Name");
             List<PersonRecord> expectedPeople = new ArrayList<>(source.people().getPeople());
             expectedPeople.set(expectedPeople.indexOf(original), replacement);
             assertSame(replacement, data.replacePerson(replacement));
@@ -62,7 +62,7 @@ public class PonHubDataPersonEditTest {
 
     @Test
     public void replacePerson_equalAndChangedRecords_publishesOnlyOneCompleteChangedSnapshot() {
-        PonHubDataState source = sourceWithHistory();
+        PonHubDataState source = createSourceWithHistory();
         PonHubData data = new PonHubData(source);
         AtomicInteger notifications = new AtomicInteger();
         data.stateProperty().addListener((observable, oldState, newState) -> {
@@ -73,10 +73,10 @@ public class PonHubDataPersonEditTest {
             assertEquals(source.attendance(), newState.attendance());
         });
         PersonRecord original = source.people().getPeople().getFirst();
-        assertSame(original, data.replacePerson(renamed(original, original.getName().fullName)));
+        assertSame(original, data.replacePerson(createRenamedPerson(original, original.getName().fullName)));
         assertSame(source, data.exportState());
         assertEquals(0, notifications.get());
-        PersonRecord replacement = renamed(original, "TUTOR");
+        PersonRecord replacement = createRenamedPerson(original, "TUTOR");
         assertSame(replacement, data.replacePerson(replacement));
         assertEquals(1, notifications.get());
         assertSame(replacement, data.getPeople().getFirst());
@@ -84,14 +84,14 @@ public class PonHubDataPersonEditTest {
 
     @Test
     public void replacePerson_nullMissingDuplicateAndUnsupported_preservesInstalledSnapshot() {
-        PonHubDataState source = sourceWithHistory();
+        PonHubDataState source = createSourceWithHistory();
         PonHubData data = new PonHubData(source);
         AtomicInteger notifications = new AtomicInteger();
         data.stateProperty().addListener((observable, oldState, newState) -> notifications.incrementAndGet());
         assertThrows(NullPointerException.class, () -> data.replacePerson(null));
         assertThrows(IllegalArgumentException.class, () -> data.replacePerson(
-                new Tutor(new PersonId("T99"), contacts("Missing", "00123456"))));
-        Tutor duplicate = new Tutor(new PersonId("T1"), contacts("Other Tutor", "00987654"));
+                new Tutor(new PersonId("T99"), createContacts("Missing", "00123456"))));
+        Tutor duplicate = new Tutor(new PersonId("T1"), createContacts("Other Tutor", "00987654"));
         assertThrows(DuplicatePersonException.class, () -> data.replacePerson(duplicate));
         PersonRecord unsupported = new PersonRecord() {
             @Override
@@ -114,7 +114,7 @@ public class PonHubDataPersonEditTest {
         assertEquals(0, notifications.get());
     }
 
-    private static PersonRecord renamed(PersonRecord original, String name) {
+    private static PersonRecord createRenamedPerson(PersonRecord original, String name) {
         ContactDetails oldContacts = original.getContactDetails();
         ContactDetails contacts = new ContactDetails(new Name(name), oldContacts.getPhone(),
                 oldContacts.getEmail(), oldContacts.getAddress());
@@ -127,13 +127,13 @@ public class PonHubDataPersonEditTest {
         };
     }
 
-    private static PonHubDataState sourceWithHistory() {
+    private static PonHubDataState createSourceWithHistory() {
         PeopleRegistry people = new PeopleRegistry();
-        Tutor tutor = people.addTutor(contacts("Tutor", "00123456"));
+        Tutor tutor = people.addTutor(createContacts("Tutor", "00123456"));
         Student student = people.addStudent(new ContactDetails(new Name("Student")),
                 new EducationLevel("P1"), new Phone("00012345"));
-        people.addParent(contacts("Parent", "00012345"));
-        people.addTutor(contacts("Other Tutor", "00987654"));
+        people.addParent(createContacts("Parent", "00012345"));
+        people.addTutor(createContacts("Other Tutor", "00987654"));
         Lesson lesson = new Lesson(new LessonId("L1"), tutor.getId(), new LessonTimeSlot(LessonDay.MONDAY,
                 new LessonTime("0900"), new LessonTime("1000")), new Subject("Math"), new Room("R1"),
                 Set.of(student.getId()));
@@ -144,7 +144,7 @@ public class PonHubDataPersonEditTest {
         return new PonHubDataState(peopleState, List.of(lesson), List.of(attendance), 30);
     }
 
-    private static ContactDetails contacts(String name, String phone) {
+    private static ContactDetails createContacts(String name, String phone) {
         return new ContactDetails(new Name(name), Optional.of(new Phone(phone)), Optional.empty(), Optional.empty());
     }
 }
