@@ -177,7 +177,7 @@ PonHub follows a layered architecture inspired by Model-View-Controller (MVC), a
 | [**UI**](#ui-component) | Renders people, lessons, rosters, and attendance history; captures keyboard commands and button actions; displays feedback. | **Observer** (binds to read-only JavaFX `ObservableList` and property views exposed by `Logic`). |
 | [**Logic**](#logic-component) | Parses commands, coordinates staged execution, triggers snapshot persistence, and manages read-only query projections. | **Command** (`CanonicalCommandExecutor` and staged commands) and **Facade** (`Logic` / `CanonicalPeopleSession`). |
 | [**Model**](#model-component) | Holds the canonical in-memory records (`PonHubData`), enforces domain and scheduling invariants, and provides filtered views. | **Immutable Value Object** and **Aggregate Root** (`PonHubData` wrapping `PonHubDataState`). |
-| [**Storage**](#storage-component) | Reads and writes operational records (`data/ponhub.json`) and user preferences (`preferences.json`) safely on disk. | **Adapter / Codec** (`JsonPonHubDataCodec` and `ProtectedPonHubDataStorage` implementing storage interfaces). |
+| [**Storage**](#storage-component) | Reads and writes operational records (`data/ponhub.json`) and user preferences (`preferences.json`) safely on disk. | **Codec** (`JsonPonHubDataCodec` converts between JSON and validated snapshots) and a protective wrapper (`ProtectedPonHubDataStorage` combines loading, the file guard and atomic saves). Logic depends on a `SnapshotWriter` callback rather than a storage interface. |
 | [**Commons**](#common-classes) | Supplies cross-cutting utilities for logging (`LogsCenter`), atomic file writes, path validation, settings, and exceptions. | Shared utility classes. |
 
 [`Main`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/Main.java) starts JavaFX.
@@ -207,7 +207,7 @@ The command executes as follows:
 4. **Publish on success:** Once the file is safely written, `CanonicalTransaction.commit()` updates the live model and people filter, refreshing subscribed UI views, and the executor returns the success `CommandResult`.
 5. **Preserve state on failure:** If saving throws an exception, the executor catches it and throws a `CommandException` without committing. The live records, ID counters, and UI views remain untouched. (Disk-level recovery follows the [safe file replacement rules](#safe-json-saves).)
 
-Parsing errors and domain rule violations stop before step 3. Valid commands that make no operational change (no-ops) skip the disk write, and view-only commands (such as `list`) update the view filter without writing operational data.
+Parsing errors and domain rule violations stop before step 3. Valid commands that make no operational change (no-ops) skip the data-file write, and view-only commands (such as `list`) update the view filter without writing operational data.
 
 ### 3.2 UI component
 
@@ -260,7 +260,7 @@ The session owns the canonical model and query helpers, checks command availabil
 startup, and routes commands to their handlers. Its execution paths are:
 
 * **Catalogue and routing:** [`CanonicalCommandDefinition`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandDefinition.java) and [`CanonicalCommandCatalog`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandCatalog.java) declare every supported command word, its inline help text, and whether it is allowed during protected startup.
-* **Parsers:** Feature-specific parsers (`RoleAwareAddParser`, `PersonEditParser`, `AddLessonParser`, `LessonEditParser`, `SearchCriteriaParser`, etc.) validate raw command arguments and build typed input records without mutating state or using the retired AB3 parser hierarchy.
+* **Parsers:** Feature-specific parsers (`RoleAwareAddParser`, `PersonEditParser`, `AddLessonParser`, `LessonEditParser`, `SearchCriteriaParser`, etc.) validate raw command arguments and build typed input records without mutating state.
 * **Transactional execution vs. direct people search:**
   * {% include command-list.html key="operational-mutations" label="Operational mutations" %} and `list` run through `CanonicalCommandExecutor`. It starts a `CanonicalTransaction` via `PeopleView.beginTransaction()`, runs a `StagedCommand` on the isolated candidate model, saves the snapshot if operational data changed, and calls `commit()`.
   * People-category `search` (`c/student|parent|tutor`) runs `new CanonicalSearchCommand(criteria).execute(data, view)` directly in `CanonicalPeopleSession.execute()`, updating the live `PeopleView` search criteria without `CanonicalCommandExecutor`, `beginTransaction()`, or `commit()`.
@@ -629,10 +629,10 @@ scroll horizontally to retain its label size, or open its linked full-size image
 
 <a id="current-increment-and-command-integration"></a>
 
-All user commands enter through `CanonicalPeopleSession.execute(String)`. The inherited AddressBook-Level3 command classes and parser hierarchy are not used in the active application (`clear` and `find` are retired).
+All user commands enter through `CanonicalPeopleSession.execute(String)`, which processes them in this order:
 
-1. **Catalogue lookup and startup guard:** `CanonicalPeopleSession` extracts the first whitespace-delimited command word (supporting Unicode horizontal spaces via `UNICODE_CHARACTER_CLASS`) and looks up its [`CanonicalCommandDefinition`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandDefinition.java). If the session is in protected startup mode and the command is not marked available (`help`, `list`, `exit`), execution stops immediately before parsing arguments.
-2. **Pending deletion cleanup:** Any new command submission consumes and clears any pending `delete` confirmation target before parsing begins.
+1. **Pending deletion cleanup:** Any new command submission first consumes and clears any pending `delete` confirmation target, even if the input is later rejected.
+2. **Catalogue lookup and startup guard:** `CanonicalPeopleSession` extracts the first whitespace-delimited command word (supporting Unicode horizontal spaces via `UNICODE_CHARACTER_CLASS`) and looks up its [`CanonicalCommandDefinition`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/CanonicalCommandDefinition.java). If the session is in protected startup mode and the command is not marked available (`help`, `list`, `exit`), execution stops immediately before parsing arguments.
 3. **Exhaustive routing:** The session dispatches the command word through an exhaustive `switch` over `CanonicalCommandDefinition` (with no `default` branch, so adding a new enum constant requires wiring its handler at compile time).
 4. **Shared tokenization:** Add and edit parsers use [`FieldValueTokenizer`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/java/ponhub/logic/parser/FieldValueTokenizer.java) to scan lowercase `prefix/` markers while allowing standalone `s/o` and `d/o` inside `n/` and `tu/` values and digit-surrounded slashes (such as `#01/02`) inside `a/` values. Unknown or repeated prefixes, unexpected preambles, and control characters are rejected with usage guidance.
 
@@ -647,8 +647,7 @@ When adding a new command, register it in `CanonicalCommandDefinition`, implemen
 </div>
 </figure>
 
-This follows steps 1–4 above, with pending deletion consumed first as implemented by
-`CanonicalPeopleSession.execute`. The add route illustrates the tokenizer boundary; other catalogue
+This follows steps 1–4 above. The add route illustrates the tokenizer boundary; other catalogue
 routes choose their own typed parser. [Editable source](diagrams/FeatureDispatch.puml).
 
 <!-- @@author -->
@@ -1200,7 +1199,7 @@ Key schema rules enforced by `JsonPonHubDataCodec`:
 
 1. **Begin transaction:** `PeopleView.beginTransaction()` creates a `CanonicalTransaction` holding an isolated copy of `PonHubData` and `PeopleView` initialised with the current snapshot, role filter, and search criteria.
 2. **Stage changes:** The command resolves any displayed people indices against the staged view and mutates only the staged `PonHubData` and staged `PeopleView`. Before saving, a development assertion verifies that the live `PonHubDataState` and live filter have not been mutated during staging.
-3. **Conditional persistence:** If the staged `PonHubDataState` differs from the starting snapshot, the executor passes the complete candidate snapshot to `SnapshotWriter` (`ProtectedPonHubDataStorage.saveData`). Read-only commands, filter-only commands (`list`), and operational no-ops (such as an `edit` or `mark` that leaves state unchanged) skip disk I/O.
+3. **Conditional persistence:** If the staged `PonHubDataState` differs from the starting snapshot, the executor passes the complete candidate snapshot to `SnapshotWriter` (`ProtectedPonHubDataStorage.saveData`). Read-only commands, filter-only commands (`list`), and operational no-ops (such as an `edit` or `mark` that leaves state unchanged) skip this save. `CanonicalLogicManager` still logs each command's outcome.
 4. **Commit:** Only after `saveData` returns without error does `CanonicalTransaction.commit()` replace the live `PonHubData` root and apply the staged people filter, triggering `LessonQueries`, `LessonRetrieval` and UI panel listeners.
 
 #### Example: adding a parent record
@@ -1313,11 +1312,11 @@ Representative test classes across the codebase include:
 
 | Layer | Representative test classes | What they verify |
 | --- | --- | --- |
-| **Model & value objects** | `NameTest`, `PonHubDataTest`, `LessonQueriesTest` | Unicode NFC and `s/o` name validation, `O((L + E) log L)` schedule clash detection, and equivalence between indexed queries and raw-record scans across 1,000 seeded queries. |
+| **Model & value objects** | `NameTest`, `PonHubDataTest`, `PonHubDataLessonTest`, `LessonScheduleIndexTest`, `LessonQueriesTest` | Unicode NFC and `s/o` name validation, tutor/room/student schedule clashes and conflict reporting (including seeded catalogues checked against a pairwise oracle), and equivalence between indexed lesson searches and raw-record scans across 2,500 seeded searches, repeated after a roster change and a restore. |
 | **Parsers & resolvers** | [`PersonIndexResolverTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/PersonIndexResolverTest.java), `PersonEditParserTest`, `LessonEditParserTest`, `SearchCriteriaParserTest` | 1-based people index resolution, role guards, slash tokenization, and search prefix compatibility. |
 | **Command & session integration** | [`CanonicalPeopleCommandIntegrationTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/commands/CanonicalPeopleCommandIntegrationTest.java), `CanonicalEditIntegrationTest`, `CanonicalLessonEditIntegrationTest`, `CanonicalAttendanceIntegrationTest`, `CanonicalDeleteIntegrationTest`, [`CanonicalLogicManagerTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/logic/CanonicalLogicManagerTest.java) | End-to-end command execution, view refreshes, no-op handling, parent–student link warnings, and protected startup blocking. |
 | **Storage & file safety** | [`JsonPonHubDataStorageTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/storage/JsonPonHubDataStorageTest.java), [`ProtectedStartupTest`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/test/java/ponhub/ProtectedStartupTest.java) | Version detection, JSON round trips, numeric resource limits, sidecar lock guards, and path confinement. |
-| **UI & keyboard controls** | `CanonicalMainWindowTest`, `CommandBoxTest`, `ResultHeadingTooltipTest`, `LogoSoundPlayerTest` | View-mode button indicators, Tab completion cycles, 50-entry command recall, control-character paste rejection, and card contact copying. |
+| **UI & keyboard controls** | `CanonicalMainWindowTest`, `CommandBoxTest`, `PersonContactCopyTest`, `ResultHeadingTooltipTest`, `LogoSoundPlayerTest` | View-mode button indicators, Tab completion cycles, 50-entry command recall, control-character paste rejection, and card contact copying. |
 
 ### 7.3 Fixtures and sample data
 
