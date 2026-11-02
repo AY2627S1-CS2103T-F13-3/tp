@@ -1,6 +1,7 @@
 @startuml
 ' Draft by Vincent Lin with OpenAI Codex assistance.
 ' Self-contained source; render with PlantUML 1.2025.3.
+' Command and transaction helper calls are grouped as operation descriptions.
 skinparam defaultFontName Arial
 skinparam defaultFontSize 14
 skinparam shadowing false
@@ -13,24 +14,19 @@ skinparam noteBorderColor #777777
 hide footbox
 
 title Enrolment flow (helper calls grouped)
-participant "executor:CanonicalCommandExecutor" as Logic
-participant "candidate:PonHubData" as Candidate
-participant "writer:SnapshotWriter" as Storage
-participant "live:PonHubData" as Live
-participant "queries:LessonQueries" as Queries
+participant "executor:\nCanonicalCommandExecutor" as Logic
+participant "candidate:\nPonHubData" as Candidate
+participant "writer:\nSnapshotWriter" as Storage
+participant "live:\nPonHubData" as Live
+participant "queries:\nLessonQueries" as Queries
 
 Logic -> Candidate : Stage enrolment for S7 in L1
-activate Candidate
 note over Candidate
   Validate enrolment;
   replace the lesson roster.
 end note
-Candidate --> Logic : updated candidate
- deactivate Candidate
 Logic -> Storage : save complete snapshot
 Storage --> Logic : saved
 Logic -> Live : publish snapshot
-activate Live
 Live -> Queries : refresh roster results
- deactivate Live
 @enduml
