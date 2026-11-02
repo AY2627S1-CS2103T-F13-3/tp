@@ -348,7 +348,7 @@ When PonHub starts, `MainApp.init()` resolves **application home**—the directo
 
 <a id="shared-lesson-target-contract"></a>
 
-This section explains what PonHub stores, which values and relationships it accepts, and how changes reach read-only views. Commands, JSON loading and snapshot restoration share the same domain validation.
+This section explains what PonHub stores, which values and relationships it accepts, and how changes reach read-only views. Commands, JSON loading and snapshot restoration share the same domain validation, except for the wider stored-subject limit in [Lesson values](#lesson-values) that keeps older data files loadable.
 
 | Concept | Stored or derived form |
 | --- | --- |
@@ -425,7 +425,7 @@ A `Lesson` is one shared weekly booking with a stable ID, Tutor, time slot, subj
 | Lesson ID | `L` followed by a positive `long` sequence, such as `L1`. | Zero, leading zeros, missing prefix or an out-of-range sequence. |
 | Weekday | `Mon` through `Sun`, matched case-insensitively. | Unknown weekday values. |
 | Time slot | Four-digit times from `0000` to `2359`, with the start before the end on the same day. | Invalid clock times, equal endpoints, reversed or overnight slots. |
-| Subject | 1–50 characters after space normalisation, counting separators: Unicode letters or digits separated by single spaces or hyphens, such as `A-Math`. | Empty or overlong values, other punctuation, repeated hyphens or mixed separators. |
+| Subject | Command input: 1–50 Unicode code points after space and NFC normalisation, counting separators and attached combining marks. Parts are letters (each optionally followed by combining marks) or digits, separated by single spaces or hyphens, such as `A-Math` or `தமிழ்`. Subjects read from a data file (`Subject.fromStoredValue`) may instead hold up to 50 letters-with-marks, digits, spaces or hyphens within 200 code points after NFC, so subjects saved by earlier versions still load and re-save. | Empty or overlong values, unattached combining marks, other punctuation, repeated hyphens or mixed separators. |
 | Room | 1–10 ASCII letters or digits with optional single internal hyphens. Surrounding spaces are trimmed and letters stored in uppercase: `b-01` becomes `B-01`. | Empty or overlong values, internal spaces, other punctuation, or leading, trailing or repeated hyphens. |
 
 #### Tutor selection
@@ -2193,6 +2193,6 @@ Terms are listed in alphabetical order:
 * **Third-party libraries:** PonHub uses [JavaFX](https://openjfx.io/) for the graphical interface, [Jackson](https://github.com/FasterXML/jackson) for JSON processing, and [JUnit 5](https://junit.org/junit5/) for automated testing.
 * **Synthesised audio resource:** The optional header wordmark percussion cue was synthesised for PonHub at Vincent Lin's direction with OpenAI Codex assistance, using oscillators and seeded noise without third-party audio samples. The generator script, synthesis details, and MIT reuse notice are documented in [`src/main/resources/audio/README.md`](https://github.com/AY2627S1-CS2103T-F13-3/tp/blob/master/src/main/resources/audio/README.md).
 * **Architecture command-flow diagram:** Original command flow by Ernest Chua; sequence layout and overview by Vincent Lin, with OpenAI Codex assistance.
-* **AI assistance:** OpenAI Codex was used by Ernest Chua (`ErnestChuaa`), Benjamin Ng (`ben58882`), Yang Shuo (`ys000009`), Vincent Lin (`gugrusaurus`), and Zhu Zhi Yu (`ultramanarm`) across implementation, refactoring, test development, documentation, code review support, integration/conflict resolution, and verification support. Each team member remains responsible for their submitted work and feature ownership.
+* **AI assistance:** OpenAI Codex was used by Ernest Chua (`ErnestChuaa`), Benjamin Ng (`ben58882`), Yang Shuo (`ys000009`), Vincent Lin (`gugrusaurus`), and Zhu Zhi Yu (`ultramanarm`) across implementation, refactoring, test development, documentation, code review support, integration/conflict resolution, and verification support. Zhu Zhi Yu (`ultramanarm`) also used Claude (Anthropic) for the stored-subject compatibility fix, UML diagram corrections, manual-check tool cleanup, AboutUs portrait and wording updates, and review support. Each team member remains responsible for their submitted work and feature ownership.
 
 <!-- DG skeleton structure prepared by Vincent Lin (gugrusaurus); reordered and rewritten by Ernest Chua (ErnestChuaa) with AI assistance. -->
