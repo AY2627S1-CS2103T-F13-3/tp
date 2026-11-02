@@ -124,20 +124,20 @@ public class ThemeMenuContrastTest {
 
     private static void assertReadable(Node item) {
         Label label = (Label) item.lookup(".label");
-        Color background = backgroundBehind(label);
+        Color background = findBackgroundBehind(label);
         double opacity = 1;
         for (Node node = label; node != null; node = node.getParent()) {
             opacity *= node.getOpacity();
         }
         Color text = background.interpolate((Color) label.getTextFill(), opacity);
-        double light = Math.max(luminance(text), luminance(background));
-        double dark = Math.min(luminance(text), luminance(background));
+        double light = Math.max(calculateLuminance(text), calculateLuminance(background));
+        double dark = Math.min(calculateLuminance(text), calculateLuminance(background));
         double ratio = (light + 0.05) / (dark + 0.05);
         assertTrue(ratio >= 4.5, () -> label.getText() + " has contrast " + ratio
                 + " after inherited opacity; expected at least 4.5:1");
     }
 
-    private static Color backgroundBehind(Node start) {
+    private static Color findBackgroundBehind(Node start) {
         for (Node node = start; node != null; node = node.getParent()) {
             if (node instanceof Region && ((Region) node).getBackground() != null) {
                 var fills = ((Region) node).getBackground().getFills();
@@ -154,12 +154,12 @@ public class ThemeMenuContrastTest {
         throw new AssertionError("Popup has no opaque background");
     }
 
-    private static double luminance(Color color) {
-        return 0.2126 * linear(color.getRed()) + 0.7152 * linear(color.getGreen())
-                + 0.0722 * linear(color.getBlue());
+    private static double calculateLuminance(Color color) {
+        return 0.2126 * linearizeChannel(color.getRed()) + 0.7152 * linearizeChannel(color.getGreen())
+                + 0.0722 * linearizeChannel(color.getBlue());
     }
 
-    private static double linear(double value) {
+    private static double linearizeChannel(double value) {
         return value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
     }
 }
