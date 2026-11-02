@@ -4,6 +4,9 @@ title: Developer Guide
 expandable_toc: true
 ---
 
+## Table of Contents
+{:.no_toc}
+
 * Table of Contents
 {:toc}
 
