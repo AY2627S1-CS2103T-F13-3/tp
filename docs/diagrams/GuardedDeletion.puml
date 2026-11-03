@@ -4,12 +4,13 @@
 ' CanonicalDeleteLessonCommand; PonHubData.removePerson/removeLesson.
 !include feature-sequence-style.iuml
 participant "session :\nCanonicalPeopleSession" as S
-participant "checkCopy :\nPonHubData" as D
-participant "executor :\nCanonicalCommandExecutor" as E
 
 alt delete INDEX preview
   S -> S : Resolve current position\nto immutable person record
-  S -> D : Test removePerson(id)\non disposable snapshot
+  create participant "checkCopy :\nPonHubData" as D
+  S -> D : new PonHubData(\ncurrent snapshot)
+  participant "executor :\nCanonicalCommandExecutor" as E
+  S -> D : Test removePerson(id)
   alt referenced by Lesson or attendance
     D --> S : dependency error
   else eligible

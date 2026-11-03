@@ -6,12 +6,14 @@
 !include feature-sequence-style.iuml
 participant "window :\nMainWindow" as W
 participant "<<class>>\nWindowPlacement" as P
-participant "peoplePanel :\nPersonRecordListPanel" as V
-participant "logic :\nLogic" as L
 
 W -> P : fit(saved settings,\nwork areas, primary area)
 P --> W : fitted bounds
-W -> W : Apply bounds/minimums;\nassemble split panes and CommandBox
+W -> W : Apply bounds and minimums
+create participant "peoplePanel :\nPersonRecordListPanel" as V
+W -> V : new PersonRecordListPanel(\nlogic's people list, ...)
+participant "logic :\nLogic" as L
+W -> W : Assemble split panes\nand CommandBox
 note over W
   Command entry stays below both columns.
   Bind result lists once; headings/feedback can scroll.
