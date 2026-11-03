@@ -134,9 +134,10 @@ I also coordinated release-readiness work, dependencies and verification evidenc
 PonHub builds on AddressBook-Level3 and the libraries credited in the
 [Developer Guide acknowledgements](../DeveloperGuide.html#acknowledgements).
 I used OpenAI Codex across implementation, tests, documentation, review and verification support,
-including preparation of this portfolio. I also used Claude (Anthropic) for the stored-subject
-compatibility fix, UML diagram corrections, manual-check tool cleanup, AboutUs portrait and wording
-updates, and review support. I remain responsible for my contributions.
+including preparation of this portfolio. I also used Claude (Anthropic) for implementation and
+tests (launch-argument validation, lesson-command parsing, command feedback and stored-subject
+compatibility), Developer and User Guide corrections, UML diagram corrections, manual-check tool
+cleanup, AboutUs and portfolio updates, print styling and review support. I remain responsible for my contributions.
 Vincent's underlying persistence work, Benjamin's core retrieval and view features, Yang Shuo's lesson
 and attendance features, and Ernest's help and person-edit command work retain their authorship;
 my integration and extensions above build on those contributions.
